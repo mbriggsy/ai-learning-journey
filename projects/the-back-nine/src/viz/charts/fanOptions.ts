@@ -12,7 +12,8 @@
  *   colour-blind test measures the ink against every band stop);
  * - the fills are one hue ordered by lightness (`RC_BAND` through `rcBandStopCss`): the inner range darker than the
  *   outer, so the order survives grayscale; they reach the chart as CSS custom properties (`fanBandVars`), styled mode;
- * - the x axis ticks every 5 years of the first person's age, and the tooltip names both ages;
+ * - the x axis ticks every 5 years of its number (the first person's age, or the calendar year: the Display drawer's
+ *   time axis, `src/ui/displaySettings.ts`; the composer's `tickAt`), and the tooltip names both ages;
  * - the named moments (today, work stops, the plan's end) are labelled plot lines, their labels staggered over two rows
  *   so neighbours never print over each other;
  * - the fan the caller passes is already cut where the cohort thins (`truncateFanAtThinCohort`); nothing here adds a
@@ -50,8 +51,9 @@ export interface FanLabels {
   readonly axisDollar: (ceiling: number) => (dollars: number) => string
   /** One projected figure, unhedged (the slots add the `~`). */
   readonly figure: (dollars: number) => string
-  /** The first person's age at a year from now (the x axis's tick words). */
-  readonly ageAt: (yearsFromNow: number) => number
+  /** The axis's number at a year from now: the first person's age, or the calendar year (the Display drawer's time
+   *  axis, `src/ui/displaySettings.ts`). The x axis's tick words, and where its ticks fall. */
+  readonly tickAt: (yearsFromNow: number) => number
   /** Both ages at a year from now, as the tooltip and the screen reader say them. */
   readonly agesAt: (yearsFromNow: number) => string
   readonly tipRange: (low: string, high: string) => string
@@ -123,10 +125,19 @@ export function fanBandVars(): ReadonlyArray<readonly [name: string, value: stri
   ]
 }
 
-/** The x-axis ticks: every year at which the first person's age is a multiple of 5, inside the drawn years. */
-export function ageTickYears(lastYear: number, ageAt: (yearsFromNow: number) => number): readonly number[] {
+/** A time axis's tick step: ages every 5; calendar years (four digits) every 10, or the last two collide at a phone's
+ *  width, where Highcharts pulls the end label inside the plot ("2055" over "2060", the RC18 look on `date` at 390 px).
+ *  Every chart over the plan's years reads it (the Display drawer's years switch, `src/ui/displaySettings.ts`). */
+export function timeTickStep(axisNumber: number): 5 | 10 {
+  return axisNumber >= 1000 ? 10 : 5
+}
+
+/** The x-axis ticks: every year at which the axis's number is a multiple of 5 for an age, of 10 for a calendar year,
+ *  inside the drawn years. */
+export function axisTicks(lastYear: number, tickAt: (yearsFromNow: number) => number): readonly number[] {
   const out: number[] = []
-  for (let t = 0; t <= lastYear; t++) if (ageAt(t) % 5 === 0) out.push(t)
+  const step = timeTickStep(tickAt(0))
+  for (let t = 0; t <= lastYear; t++) if (tickAt(t) % step === 0) out.push(t)
   return out
 }
 
@@ -356,10 +367,10 @@ export function fanOptions({ fan, moments, labels, height, onPlotBox }: FanInput
       type: 'linear',
       min: 0,
       max: last.yearsFromNow,
-      tickPositions: [...ageTickYears(last.yearsFromNow, labels.ageAt)],
+      tickPositions: [...axisTicks(last.yearsFromNow, labels.tickAt)],
       // The first person’s typed name rides this title: escaped, so it prints as typed (`hcPlain`).
       title: { text: hcPlain(labels.xAxisTitle) },
-      labels: { formatter: (ctx) => String(labels.ageAt(Number(ctx.value))) },
+      labels: { formatter: (ctx) => String(labels.tickAt(Number(ctx.value))) },
       plotLines: plotLines(moments, years, lattice.ceiling),
       crosshair: true,
     },

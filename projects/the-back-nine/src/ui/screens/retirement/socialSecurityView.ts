@@ -36,6 +36,7 @@ import { niceLattice, type DollarLattice } from '@viz/bandData'
 import type { LedgerYearRow, WhatIfLeverV6 } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
 import { copy, slots } from '../../copy'
+import { offsetFromAge, type TimeAxis } from '../../displaySettings'
 import { formatDeltaDollar, mmAxisFormatterFor } from '../../money'
 import { ringFace } from '../../ringReading'
 import { tablePerson, type TableMeta, type TablePerson } from '../../workbench/tableRun'
@@ -347,6 +348,8 @@ export interface ClaimsComparisonInput {
   readonly notes: ClaimsNotesInput
   /** Each strategy's steady-market rows (your plan's own: the plan's rows). */
   readonly rows: Partial<Record<StrategyId, RunRows>>
+  /** The Display drawer's time axis (`displaySettings.ts`): the charts' x axis on the first person's age or the year. */
+  readonly timeAxis: TimeAxis
 }
 
 export type ClaimsComparisonView =
@@ -365,7 +368,11 @@ export type ClaimsComparisonView =
       readonly b: StrategyId
       readonly items: readonly { readonly value: StrategyId; readonly label: string }[]
       readonly title: string
+      /** The x axis's title: whose age it is, or "Year" on the years axis. */
       readonly axisTitle: string
+      /** What to add to a point's age to put it on the axis (`offsetFromAge`: 0 on the ages axis). The points, the
+       *  crossing and its "Age N" words stay on the first person's age. */
+      readonly axisOffset: number
       readonly series: readonly [ClaimSeries, ClaimSeries]
       readonly lattice: DollarLattice
       readonly axisDollar: (dollars: number) => string
@@ -426,7 +433,8 @@ export function claimsComparisonView(input: ClaimsComparisonInput): ClaimsCompar
     b,
     items,
     title: slots.claimsInSteady(CLAIMS_CHARTS.find((c) => c.id === input.chart)!.label),
-    axisTitle: slots.claimsAgeAxis(capitalize(first.possessive)),
+    axisTitle: input.timeAxis === 'years' ? copy.chartAxisYear : slots.claimsAgeAxis(capitalize(first.possessive)),
+    axisOffset: offsetFromAge(input.timeAxis, { startYear: meta.startCalendarYear, startAge: first.currentAge }),
     series,
     lattice,
     axisDollar: mmAxisFormatterFor(lattice.ceiling),

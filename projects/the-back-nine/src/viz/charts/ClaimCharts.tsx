@@ -16,7 +16,7 @@ function useHeld<T>(key: string, build: () => T): T {
 
 export function ClaimPair(props: ClaimPairInput & { readonly chartId: string; readonly kind: 'annual' | 'cumulative' }) {
   const { chartId, kind, ...input } = props
-  const key = JSON.stringify([kind, input.series, input.lattice, input.words, input.height, input.axisTitle, input.crossing ?? null])
+  const key = JSON.stringify([kind, input.series, input.lattice, input.words, input.height, input.axisTitle, input.axisOffset, input.crossing ?? null])
   const options = useHeld<Options>(key, () => (kind === 'annual' ? claimAnnualOptions(input) : claimCumulativeOptions(input)))
   return <Chart key={key} options={options} chartId={chartId} className={kind === 'annual' ? 'b9-bar b9-claims' : 'b9-claims'} />
 }

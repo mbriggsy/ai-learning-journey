@@ -10,6 +10,7 @@
 import type { ReactNode, Ref } from 'react'
 import { Caveat, PageFrame } from '../../kit'
 import { copy } from '../../copy'
+import { DisplayDoor } from '../settings/DisplayDrawer'
 import { StrategiesPanel, type StrategiesPanelProps } from './Strategies'
 import type { StrategiesView } from './strategiesView'
 
@@ -25,6 +26,8 @@ const ALL_TABS = [
 const WORKING_TABS = [ALL_TABS[0]] as const
 
 export interface TaxStrategiesProps extends Omit<StrategiesPanelProps, 'view' | 'caveat'> {
+  /** "Today's dollars" beside the folder tabs opens the Display drawer (RC18); absent, the plain words. */
+  readonly onDisplay?: () => void
   readonly headingRef: Ref<HTMLHeadingElement>
   readonly strategies: StrategiesView
   readonly tab: TaxTab
@@ -36,7 +39,7 @@ export interface TaxStrategiesProps extends Omit<StrategiesPanelProps, 'view' | 
   readonly details: ReactNode
 }
 
-export function TaxStrategies({ headingRef, strategies, tab, onTab, caveat, summary, comparison, details, ...panel }: TaxStrategiesProps) {
+export function TaxStrategies({ headingRef, strategies, tab, onTab, caveat, summary, comparison, details, onDisplay, ...panel }: TaxStrategiesProps) {
   const working = strategies.kind === 'working-route'
   const shown: TaxTab = working ? 'strategies' : tab
   const caveatNode = <Caveat lines={caveat} />
@@ -46,7 +49,7 @@ export function TaxStrategies({ headingRef, strategies, tab, onTab, caveat, summ
         title={copy.shellPageTaxStrategies}
         headingRef={headingRef}
         tabs={{ label: copy.taxStratTabsLabel, items: working ? WORKING_TABS : ALL_TABS, value: shown, onValueChange: onTab }}
-        valuesNote={copy.probabilityTodaysDollars}
+        valuesNote={<DisplayDoor onOpen={onDisplay} />}
       >
         {strategies.kind === 'working-route' ? (
           <div className="flex flex-col gap-6" data-strategies="working-route">

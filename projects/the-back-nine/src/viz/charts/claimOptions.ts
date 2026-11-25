@@ -16,12 +16,15 @@
  *   side: blue and hatched, the others green and solid (two series, ungrouped, so each bar sits centred on its name).
  *
  * The y axis is linear from $0 on the composer's humane lattice, its ticks in the `mm` dialect; the comparison charts'
- * x axis is the first person's age, titled with whose age it is.
+ * x axis is the first person's age, titled with whose age it is, or the calendar year, titled "Year" (the Display
+ * drawer's time axis, `src/ui/displaySettings.ts`): the points stay keyed by age and `axisOffset` maps them once here.
+ * The crossing's printed words name an age on either axis; only its ring moves.
  */
 import type { Options, PointOptionsObject, SeriesColumnOptions, SeriesLineOptions, SeriesScatterOptions } from 'highcharts/highcharts.src'
 import { buildYTicks, type DollarLattice } from '../bandData'
 import { chartWordsOptions, hcPlain, type ChartWords } from './chartA11y'
 import { GROUPED_BAR_CLASSES } from './groupedBarsOptions'
+import { timeTickStep } from './fanOptions'
 
 export interface ClaimChartPoint {
   readonly age: number
@@ -44,12 +47,15 @@ interface Shared {
 
 export interface ClaimPairInput extends Shared {
   readonly series: readonly [ClaimChartSeries, ClaimChartSeries]
-  /** The x axis's title ("Alex’s age"). */
+  /** The x axis's title ("Alex’s age", or "Year" on the years axis). */
   readonly axisTitle: string
+  /** What to add to a point's age to put it on the axis: 0 on the ages axis, the calendar year less the age on the years
+   *  axis (`offsetFromAge`). The tooltip and the spoken words read the axis's number. */
+  readonly axisOffset: number
   /** A value as the tooltip and the end labels print it (`~` included). */
   readonly figure: (dollars: number) => string
-  /** A point's spoken sentence (the age, the series' name, its figure), the composer's words. */
-  readonly pointWords: (age: number, name: string, dollars: number) => string
+  /** A point's spoken sentence (the axis's number, the series' name, its figure), the composer's words. */
+  readonly pointWords: (axisNumber: number, name: string, dollars: number) => string
   /** The cumulative chart's crossing: a ring at the point and its label above it. */
   readonly crossing?: { readonly age: number; readonly value: number; readonly label: string }
 }
@@ -76,8 +82,8 @@ function yAxis(shared: Shared, sparse = false): Options['yAxis'] {
 
 function pairFrame(input: ClaimPairInput, type: 'column' | 'line'): Options {
   const spoken = chartWordsOptions(input.words)
-  const first = input.series[0].points[0]?.age ?? 0
-  const last = input.series[0].points.at(-1)?.age ?? first
+  const first = (input.series[0].points[0]?.age ?? 0) + input.axisOffset
+  const last = (input.series[0].points.at(-1)?.age ?? 0) + input.axisOffset
   return {
     // The running totals print the higher line's figure above its last point: room for it above the plot.
     chart: { type, height: input.height, spacingTop: type === 'line' ? 34 : 20, spacingRight: 16 },
@@ -95,7 +101,7 @@ function pairFrame(input: ClaimPairInput, type: 'column' | 'line'): Options {
         return [`${hcPlain(input.axisTitle)} ${ctx.x}`, ...pts.map((p) => `${p.series.name}: ${input.figure(p.y)}`)].join('<br/>')
       },
     },
-    xAxis: { type: 'linear', min: first - 0.5, max: last + 0.5, allowDecimals: false, tickInterval: 5, lineWidth: 1, title: { text: hcPlain(input.axisTitle) } },
+    xAxis: { type: 'linear', min: first - 0.5, max: last + 0.5, allowDecimals: false, tickInterval: timeTickStep(first), lineWidth: 1, title: { text: hcPlain(input.axisTitle) } },
     yAxis: yAxis(input, type === 'line'),
   }
 }
@@ -119,7 +125,7 @@ export function claimAnnualOptions(input: ClaimPairInput): Options {
         name: s.name,
         colorIndex: s.role === 'alternative' ? 1 : 0,
         className: GROUPED_BAR_CLASSES[s.role],
-        data: s.points.map((p) => ({ x: p.age, y: p.value })),
+        data: s.points.map((p) => ({ x: p.age + input.axisOffset, y: p.value })),
       }),
     ),
   }
@@ -141,7 +147,7 @@ export function claimCumulativeOptions(input: ClaimPairInput): Options {
       marker: { enabled: false },
       data: s.points.map(
         (p, i): PointOptionsObject => ({
-          x: p.age,
+          x: p.age + input.axisOffset,
           y: p.value,
           ...(i === last
             ? {
@@ -177,7 +183,7 @@ export function claimCumulativeOptions(input: ClaimPairInput): Options {
             marker: { enabled: true, symbol: 'circle', radius: 7 },
             data: [
               {
-                x: crossing.age,
+                x: crossing.age + input.axisOffset,
                 y: crossing.value,
                 dataLabels: {
                   enabled: true,

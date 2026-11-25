@@ -12,6 +12,11 @@
  * ONE FUTURE, NAMED. Every chart title and the table's heading names its market ("in the steady market"), so a single
  * path is never read as the odds (plan 4.0). Income tax is `taxPaid`, headed "Income tax", the page's one state clause
  * beneath it (plan 4.0's "tax figures say only what they hold").
+ *
+ * THE TIME AXIS (the Display drawer, `src/ui/displaySettings.ts`). Comparison's charts keep each point on its calendar
+ * year; the axis reads the first person's age (the default, as every other chart over the plan's years) or the year
+ * (`axisOffset`, added once in `stackedAreasOptions.ts`), titled with whose age it is or "Year", and each point's spoken
+ * sentence names the axis's number with that title.
  */
 import type { SolveRecommendation } from '@engine/solver/solve'
 import { irmaa } from '@engine/constants/health'
@@ -22,6 +27,7 @@ import type { LedgerYearRow, RothConversionPlan, WhatIfLeverV6 } from '@shared/m
 import type { ScenarioDraft } from '@store/memoryModel'
 import type { TableMeta } from '../../workbench/tableRun'
 import { copy, slots } from '../../copy'
+import { offsetFromYear, type TimeAxis } from '../../displaySettings'
 import { formatDeltaDollar, formatEnteredDollar, mmAxisFormatterFor } from '../../money'
 import type { RunRows } from '../retirement/cashFlowsView'
 import type { StrategiesView } from './strategiesView'
@@ -103,6 +109,18 @@ export interface ComparisonInput {
   readonly baseline: RunRows
   /** The page's one state clause (`composeVerdictStateNote`), under the income tax chart. */
   readonly stateClause: string | null
+  /** The Display drawer's time axis (`displaySettings.ts`): the charts' x axis on the first person's age or the year. */
+  readonly timeAxis: TimeAxis
+}
+
+/** The charts' x axis, as both kinds of chart read it. */
+export interface ComparisonAxis {
+  /** "Alex’s age", or "Year" on the years axis. */
+  readonly axisTitle: string
+  /** What to add to a point's calendar year to put it on the axis (`offsetFromYear`: 0 on the years axis). */
+  readonly axisOffset: number
+  /** A point's spoken sentence from the axis's number: the title and the number, the series' name, its figure. */
+  readonly pointWords: (axisNumber: number, name: string, dollars: number) => string
 }
 
 export interface StackPicture {
@@ -113,7 +131,7 @@ export interface StackPicture {
 export type ComparisonView =
   | { readonly kind: 'waiting'; readonly words: string }
   | { readonly kind: 'withheld'; readonly words: string }
-  | {
+  | (ComparisonAxis & {
       readonly kind: 'pair'
       readonly title: string
       readonly series: readonly [PairSeries, PairSeries]
@@ -122,8 +140,8 @@ export type ComparisonView =
       readonly metric: string
       readonly notes: readonly string[]
       readonly updating: boolean
-    }
-  | {
+    })
+  | (ComparisonAxis & {
       readonly kind: 'stacks'
       readonly title: string
       readonly stacks: readonly [StackPicture, StackPicture]
@@ -131,7 +149,7 @@ export type ComparisonView =
       readonly axisDollar: (dollars: number) => string
       readonly notes: readonly string[]
       readonly updating: boolean
-    }
+    })
 
 const endTotal = (r: LedgerYearRow): number => r.end.taxable + r.end.pretax + r.end.roth + r.end.hsa
 
@@ -175,6 +193,20 @@ function ranOutWindow(
   return { through, note: (counted) => slots.taxStratRanOut(w.ranOut ? w.year : null, b.ranOut ? b.year : null, steady, counted) }
 }
 
+/** The charts' axis for a run's meta: the first person's age (titled whose) or the calendar year (titled "Year"). The
+ *  years axis speaks each point as the bare year, as before the Display drawer; the ages axis names whose age. */
+export function comparisonAxis(meta: TableMeta, timeAxis: TimeAxis): ComparisonAxis {
+  const first = meta.people[0]!
+  const axisOffset = offsetFromYear(timeAxis, { startYear: meta.startCalendarYear, startAge: first.currentAge })
+  if (timeAxis === 'years') {
+    return { axisTitle: copy.chartAxisYear, axisOffset, pointWords: (year, name, dollars) => slots.taxStratChartPoint(year, name, formatDeltaDollar(dollars)) }
+  }
+  const axisTitle = slots.claimsAgeAxis(capitalize(first.possessive))
+  return { axisTitle, axisOffset, pointWords: (age, name, dollars) => slots.claimsYearPoint(axisTitle, age, name, formatDeltaDollar(dollars)) }
+}
+
+const capitalize = (s: string): string => (s === '' ? s : s[0]!.toUpperCase() + s.slice(1))
+
 /** A value as the charts print it. */
 export const chartFigure = (dollars: number): string => slots.taxStratValue(formatDeltaDollar(dollars))
 
@@ -186,6 +218,7 @@ export function comparisonView(input: ComparisonInput): ComparisonView {
   if (winner.kind !== 'ready' || baseline.kind !== 'ready') return { kind: 'waiting', words: copy.taxStratRunsWaiting }
   const updating = winner.updating || baseline.updating
   const title = slots.taxStratInMarket(COMPARISON_CHARTS.find((c) => c.id === chart)!.label, steady)
+  const axis = comparisonAxis(baseline.meta, input.timeAxis)
 
   const out = ranOutWindow(winner, baseline, steady)
 
@@ -203,6 +236,7 @@ export function comparisonView(input: ComparisonInput): ComparisonView {
     const lattice = niceLattice(Math.max(1, ...tops))
     return {
       kind: 'stacks',
+      ...axis,
       title,
       stacks: [stack(copy.recVizWithLabel, winner), stack(copy.recVizWithoutLabel, baseline)],
       lattice,
@@ -235,6 +269,7 @@ export function comparisonView(input: ComparisonInput): ComparisonView {
   const chartNotes = chart === 'tax' && input.stateClause !== null ? [input.stateClause] : chart === 'assets' ? [copy.taxStratAssetsNote] : []
   return {
     kind: 'pair',
+    ...axis,
     title,
     series: [
       { id: 'pair-recommended', name: copy.recVizWithLabel, role: 'alternative', points: ours },

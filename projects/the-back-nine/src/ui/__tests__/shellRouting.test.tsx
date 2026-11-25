@@ -264,8 +264,12 @@ describe('the shell’s history', () => {
     expect(within(drawer).queryByRole('button', { name: copy.profileDrawerSave })).toBeNull()
     fireEvent.click(within(drawer).getByRole('button', { name: copy.profileDrawerCancel }))
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
-    // No sheet mounts on a read-only tab, so no door that would open one: no gear, no health-cost door.
-    expect(screen.queryByRole('button', { name: copy.shellGearLabel })).toBeNull()
+    // The gear opens Settings on a read-only tab too (RC18): every value shows, and no row carries a door (plan 4.0).
+    fireEvent.click(screen.getByRole('button', { name: copy.shellGearLabel }))
+    expect(await screen.findByRole('heading', { name: copy.settingsTitle, level: 1 })).toBeInTheDocument()
+    expect(screen.getByText(copy.settingsIntroReadOnly)).toBeInTheDocument()
+    expect(document.querySelectorAll('[data-assumption-seat]').length).toBeGreaterThan(0)
+    expect(document.querySelector('[data-settings-door]')).toBeNull()
     // A household with a marketplace quote and someone under 65 (the page's door would show on a writable tab).
     act(() =>
       appModel.update((d) => ({
@@ -392,7 +396,7 @@ describe('an unkept what-if (plan 6, section 3.1)', () => {
     expect(screenShown()).toBe('snapshot')
   })
 
-  it('the re-walk (the gear’s panel) asks first and names the what-if: Stay keeps the shell, Go back leaves for the walk', async () => {
+  it('the re-walk (on the gear’s Settings page since RC18) asks first and names the what-if: Stay keeps the shell, Go back leaves for the walk', async () => {
     await landHydrated()
     await holdAWhatIf()
     fireEvent.click(screen.getByRole('button', { name: copy.shellGearLabel }))
@@ -400,7 +404,7 @@ describe('an unkept what-if (plan 6, section 3.1)', () => {
     expect(await screen.findByText(copy.shellLeaveWhatIf)).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: copy.workbenchLeaveStay }))
     expect(shellUp()).toBe(true)
-    expect(screenShown()).toBe('probability')
+    expect(screenShown()).toBe('settings')
 
     fireEvent.click(screen.getByRole('button', { name: copy.shellGearLabel }))
     fireEvent.click(await screen.findByRole('button', { name: copy.assumptionRewalkCta }))

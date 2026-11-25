@@ -12,6 +12,7 @@
 import { lazy, Suspense, type ReactNode, type Ref } from 'react'
 import { Caveat, ChartTitle, LoadingVeil, PageFrame, PickerPair, Select, Tray, useWide } from '../../kit'
 import { copy, slots } from '../../copy'
+import { DisplayDoor } from '../settings/DisplayDrawer'
 import { formatDeltaDollar } from '../../money'
 import { verdictDescribedBy } from '../../disclaimerId'
 import { ChartBoundary } from '../ChartBoundary'
@@ -52,6 +53,8 @@ export type SocialSecurityPage =
   | { readonly kind: 'choices'; readonly comparison: ClaimsComparisonView; readonly summary: ClaimsSummaryView; readonly steps: ClaimsSteps }
 
 export interface SocialSecurityProps {
+  /** "Today's dollars" beside the folder tabs opens the Display drawer (RC18); absent, the plain words. */
+  readonly onDisplay?: () => void
   readonly headingRef: Ref<HTMLHeadingElement>
   readonly page: SocialSecurityPage
   readonly tab: ClaimsTab
@@ -67,8 +70,8 @@ export interface SocialSecurityProps {
 
 const TRAY_ID = 'b9-claims-steps'
 
-/** A point's spoken sentence: whose age, the series' name, its figure. */
-const pointWordsFor = (axisTitle: string) => (age: number, name: string, dollars: number): string => slots.claimsYearPoint(axisTitle, age, name, formatDeltaDollar(dollars))
+/** A point's spoken sentence: the axis's title and number (whose age, or the year), the series' name, its figure. */
+const pointWordsFor = (axisTitle: string) => (axisNumber: number, name: string, dollars: number): string => slots.claimsYearPoint(axisTitle, axisNumber, name, formatDeltaDollar(dollars))
 const figure = (dollars: number): string => slots.claimsFigure(formatDeltaDollar(dollars))
 /** The same figure in the axis's `mm` dialect, three figures: a phone's narrow plot has no room for the full one. */
 const compactFigure = (dollars: number): string => slots.claimsFigure(compactDollars(dollars))
@@ -138,6 +141,7 @@ function ComparisonBody({ view, chart, onChart, onPickA, onPickB }: { readonly v
                     kind={view.chart}
                     series={view.series}
                     axisTitle={view.axisTitle}
+                    axisOffset={view.axisOffset}
                     lattice={view.lattice}
                     axisDollar={view.axisDollar}
                     figure={wide ? figure : compactFigure}
@@ -235,7 +239,7 @@ function Steps({ steps }: { readonly steps: ClaimsSteps }) {
   )
 }
 
-export function SocialSecurity({ headingRef, page, tab, onTab, chart, onChart, onPickA, onPickB, caveat, trayOpen, onTrayOpen }: SocialSecurityProps) {
+export function SocialSecurity({ headingRef, page, tab, onTab, chart, onChart, onPickA, onPickB, caveat, trayOpen, onTrayOpen, onDisplay }: SocialSecurityProps) {
   const choices = page.kind === 'choices'
   const caveatNode = <Caveat lines={caveat} />
   const body =
@@ -265,7 +269,7 @@ export function SocialSecurity({ headingRef, page, tab, onTab, chart, onChart, o
         title={copy.shellPageSocialSecurity}
         headingRef={headingRef}
         intro={copy.claimsIntro}
-        valuesNote={copy.probabilityTodaysDollars}
+        valuesNote={<DisplayDoor onOpen={onDisplay} />}
         {...(choices ? { tabs: { label: copy.claimsTabsLabel, items: TABS, value: tab, onValueChange: onTab } } : {})}
         caveat={caveatNode}
         {...(choices

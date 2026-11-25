@@ -3,7 +3,7 @@ import { converter, parse } from 'culori'
 import type { BandFan, BandFanYear } from '@shared/model'
 import { truncateFanAtThinCohort } from '../../cohort'
 import { niceLattice } from '../../bandData'
-import { ageTickYears, FAN_CLASSES, FAN_SERIES, fanBandVars, fanLatticeFor, fanOptions, labelSides, momentSeat, wordSeat, type FanLabels } from '../fanOptions'
+import { FAN_CLASSES, axisTicks, FAN_SERIES, fanBandVars, fanLatticeFor, fanOptions, labelSides, momentSeat, wordSeat, type FanLabels } from '../fanOptions'
 
 /**
  * The fan's options (Act 6 · RC3, the plan's fanOptions scenarios): the y axis linear from $0 on the one humane
@@ -33,7 +33,7 @@ const labels: FanLabels = {
   words: { title: 'T', credits: 'C {creditsStr}', end: 'E', legend: 'L', legendItem: 'S {itemName}' },
   axisDollar: () => (d) => `$${d}`,
   figure: (d) => `$${d}`,
-  ageAt: (t) => 63 + t,
+  tickAt: (t) => 63 + t,
   agesAt: (t) => `${63 + t}/${61 + t}`,
   tipRange: (a, b) => `${a}-${b}`,
   tipInner: (a, b) => `${a}~${b}`,
@@ -112,7 +112,19 @@ describe('fanOptions', () => {
   })
 
   it('the x ticks fall every 5 years of the first person’s age', () => {
-    expect(ageTickYears(30, (t) => 63 + t)).toEqual([2, 7, 12, 17, 22, 27])
+    expect(axisTicks(30, (t) => 63 + t)).toEqual([2, 7, 12, 17, 22, 27])
+  })
+
+  it('on the years axis the ticks fall on calendar years that are multiples of 10 (four digits every 5 collide on a phone), and print the year', () => {
+    // One plan, the first person 61 in 2028: the age ticks (65, 70, …) fall at years 4, 9, …; the year ticks (2030,
+    // 2040, …) at years 2, 12, ….
+    const x = (tickAt: (t: number) => number) => fanOptions({ fan: FAN, moments: [], labels: { ...labels, tickAt }, height: 300 }).xAxis as { tickPositions: number[]; labels: { formatter: (c: { value: number }) => string } }
+    const ages = x((t) => 61 + t)
+    const years = x((t) => 2028 + t)
+    expect(ages.tickPositions).toEqual([4, 9, 14, 19, 24, 29])
+    expect(years.tickPositions).toEqual([2, 12, 22])
+    expect(ages.labels.formatter({ value: 4 })).toBe('65')
+    expect(years.labels.formatter({ value: 2 })).toBe('2030')
   })
 
   it('a word seat sits where its range is widest in the middle stretch', () => {

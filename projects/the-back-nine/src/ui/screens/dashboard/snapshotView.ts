@@ -42,6 +42,7 @@ import { recommendationView } from '../../recommendationView'
 import { savedRecordCardView, type RecommendationSaveView, type SavedRecordStanding } from '../../recommendationSaveView'
 import { ringReading, type RingView } from '../../ringReading'
 import { SAVED_RECORD_COPY } from '../../savedRecordCopy'
+import { axisNumberAt, type TimeAxis } from '../../displaySettings'
 import { composeVerdictStateNote } from '../../stateTaxDisclosure'
 import { recommendationBundle } from '../../workbench/railChrome'
 import type { TableMeta } from '../../workbench/tableRun'
@@ -71,6 +72,8 @@ export interface SnapshotInput {
   readonly steady: SteadyRows
   readonly agedBalancesYear?: number
   readonly recommendation: SnapshotRecommendationInput
+  /** The Display drawer's time axis (`displaySettings.ts`): the fan's x axis on the first person's age or the year. */
+  readonly timeAxis: TimeAxis
 }
 
 export interface StatFigure {
@@ -254,24 +257,26 @@ export function chartWords(title: string): { readonly title: string; readonly cr
 
 // ── The fan ─────────────────────────────────────────────────────────────────────────────────────────────────────
 
-/** One labels object per answered draft and ages (Snapshot's card and Confidence share it: one fan, one set of words),
- *  so a recompute that changes nothing about the fan hands the chart
+/** One labels object per answered draft, ages and time axis (Snapshot's card and Confidence share it: one fan, one set of
+ *  words), so a recompute that changes nothing about the fan hands the chart
  *  the same words (`FanChart.tsx` redraws only when the picture or its words change). */
 const labelCache = new WeakMap<object, Map<string, FanLabels>>()
 
-export function fanLabels(draft: MemoryModelSnapshot['draft'], ageA: number, ageB: number): FanLabels {
-  const key = `${ageA}/${ageB}`
+export function fanLabels(draft: MemoryModelSnapshot['draft'], ageA: number, ageB: number, timeAxis: TimeAxis): FanLabels {
+  const key = `${ageA}/${ageB}/${timeAxis}`
   const byAges = labelCache.get(draft) ?? new Map<string, FanLabels>()
   labelCache.set(draft, byAges)
   const hit = byAges.get(key)
   if (hit !== undefined) return hit
-  const made = composeFanLabels(draft, ageA, ageB)
+  const made = composeFanLabels(draft, ageA, ageB, timeAxis)
   byAges.set(key, made)
   return made
 }
 
-function composeFanLabels(draft: MemoryModelSnapshot['draft'], ageA: number, ageB: number): FanLabels {
+function composeFanLabels(draft: MemoryModelSnapshot['draft'], ageA: number, ageB: number, timeAxis: TimeAxis): FanLabels {
   const name = (draft.people[0]?.name ?? '').trim()
+  // The fan's year 0 is the plan's build year (`startCalendarYear`), at the first person's current age.
+  const clock = { startYear: draft.startCalendarYear, startAge: ageA }
   return {
     outer: copy.snapshotFanOuter,
     inner: copy.snapshotFanInner,
@@ -279,12 +284,12 @@ function composeFanLabels(draft: MemoryModelSnapshot['draft'], ageA: number, age
     outerWords: copy.snapshotFanOuterWords,
     innerWords: copy.snapshotFanInnerWords,
     yAxisTitle: copy.bandYAxis,
-    xAxisTitle: name === '' ? copy.snapshotFanAgeAxisYou : slots.snapshotFanAgeAxis(name),
+    xAxisTitle: timeAxis === 'years' ? copy.chartAxisYear : name === '' ? copy.snapshotFanAgeAxisYou : slots.snapshotFanAgeAxis(name),
     description: copy.snapshotFanDescription,
     words: chartWords(copy.snapshotFanTitle),
     axisDollar: mmAxisFormatterFor,
     figure: formatMmDollar,
-    ageAt: (t) => Math.round(ageA + t),
+    tickAt: (t) => Math.round(axisNumberAt(timeAxis, clock, t)),
     agesAt: (t) => slots.bandClockAgesDesc(Math.round(ageA + t), Math.round(ageB + t)),
     tipRange: slots.snapshotFanTipRange,
     tipInner: slots.snapshotFanTipInner,
@@ -299,6 +304,7 @@ function fanView(
   anchor: BandPlanClockAnchor,
   agedBalancesYear: number | undefined,
   readOnly: boolean,
+  timeAxis: TimeAxis,
 ): FanCardView {
   const answer = snapshot.answer
   if (answer.kind !== 'headline' && answer.kind !== 'date') return { kind: 'words', words: copy.snapshotFanWaiting }
@@ -312,7 +318,7 @@ function fanView(
       kind: 'chart',
       fan,
       moments,
-      labels: fanLabels(draft, ageA, ageB),
+      labels: fanLabels(draft, ageA, ageB, timeAxis),
       ...(trackNote !== null ? { trackNote } : {}),
       ...(premise !== null ? { premise } : {}),
     }
@@ -387,7 +393,7 @@ function recView(snapshot: MemoryModelSnapshot, rec: SnapshotRecommendationInput
 // ── The page ────────────────────────────────────────────────────────────────────────────────────────────────────
 
 export function snapshotView(input: SnapshotInput): SnapshotView {
-  const { snapshot, wallCalendarYear, readOnly, onRetry, steady, agedBalancesYear, recommendation } = input
+  const { snapshot, wallCalendarYear, readOnly, onRetry, steady, agedBalancesYear, recommendation, timeAxis } = input
   const anchor = planClockAnchor(snapshot.draft.startCalendarYear, wallCalendarYear)
   const elevated = selectElevatedAnswer(snapshot, onRetry, anchor)
   const view = ringReading(elevated, planReadingFor(snapshot.answer), snapshot, anchor)
@@ -407,7 +413,7 @@ export function snapshotView(input: SnapshotInput): SnapshotView {
     ring: { title: copy.snapshotRingTitle, view, ...(missing !== undefined ? { missing } : {}), stateClause },
     stats: statsView(steady, isDateRoute(shown?.draft ?? snapshot.draft)),
     invested: investedView(snapshot.draft, agedBalancesYear),
-    fan: { title: copy.snapshotFanTitle, valuesLine: copy.bandYAxis, view: fanView(snapshot, elevated, anchor, agedBalancesYear, readOnly) },
+    fan: { title: copy.snapshotFanTitle, valuesLine: copy.bandYAxis, view: fanView(snapshot, elevated, anchor, agedBalancesYear, readOnly, timeAxis) },
     rec: { title: copy.snapshotRecTitle, view: recView(snapshot, recommendation, readOnly, wallCalendarYear) },
     caveat: [staticDisclosures.honestLimitsScope, staticDisclosures.honestLimitsValidate],
   }

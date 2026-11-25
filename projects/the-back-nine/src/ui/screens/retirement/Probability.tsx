@@ -43,6 +43,8 @@ export interface ProbabilityPanelProps {
 function Bar({ bars, half }: { readonly bars: BarsView | undefined; readonly half: HalfView }) {
   if (bars === undefined) return null
   const figure = bars.figures[half.side]
+  // This side's scale: the one both share (the default), or its own (the Display drawer's "same scale" off).
+  const scale = bars.scales[half.side]
   if (figure === undefined || half.barMedian === undefined) {
     // The bar's seat stays reserved while its side has no figure, so the landing moves nothing beside it.
     return <div aria-hidden="true" className="w-36 shrink-0" data-bar-seat="" />
@@ -54,9 +56,9 @@ function Bar({ bars, half }: { readonly bars: BarsView | undefined; readonly hal
         <BalanceBar
           role={half.side}
           median={half.barMedian}
-          lattice={bars.lattice}
+          lattice={scale.lattice}
           figure={figure}
-          axisDollar={bars.axisDollar}
+          axisDollar={scale.axisDollar}
           sideName={half.title}
           point={slots.probabilityBarPoint(half.title, figure)}
           description={bars.description}
@@ -171,6 +173,8 @@ function BarsCaption({ view, captionRef, className }: { readonly view: ReadingVi
     return (
       <p ref={captionRef} className={className} data-bar-label="">
         {view.bars.caption}
+        {/* Two bars on two scales: said with what the bars hold, so their heights are never read against each other. */}
+        {view.bars.ownScales !== undefined ? <span data-bar-own-scales="">{` ${view.bars.ownScales}`}</span> : null}
       </p>
     )
   }

@@ -433,7 +433,7 @@ const perMonth = (v: number | undefined): string => (v === undefined ? copy.prof
 
 /** One person's Medicare extras, from the run's own read (`medicareExtrasView`: an affirmed zero reads "$0 a month", an
  *  entered figure exactly, and the tool's own figure says it is the tool's), else the stored answer exactly. */
-function extrasValue(d: ScenarioDraft, i: 0 | 1): string {
+export function extrasValue(d: ScenarioDraft, i: 0 | 1): string {
   const view = medicareExtrasView(d)
   if (view !== null) {
     const p = view[i]

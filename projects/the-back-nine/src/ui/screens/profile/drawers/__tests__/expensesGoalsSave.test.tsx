@@ -159,3 +159,83 @@ describe('the W face in its drawer (the pay check spec’s laws)', () => {
     expect(within(seat).getByRole('note')).toBeInTheDocument()
   })
 })
+
+/**
+ * The left-over seat under ONE hold with the W face (build 2's KTD8), in the drawer: ported by Act 6 · RC18 from the
+ * assumption panel's arms in `src/intake/__tests__/gestureHold.test.tsx` when the panel was deleted. A press while W's
+ * figure has focus blurs it (the box commits into the buffer); the seat still draws the figure the press saw until one
+ * task after the click, "All of it" stores that figure, and a press whose blur closes R5's gate stores nothing.
+ */
+describe('the W drawer’s left-over seat under one hold with the W face (ported from the panel, RC18)', () => {
+  const letGo = async (): Promise<void> => {
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0))
+    })
+  }
+  /** `date` with its $84,000 W ENTERED a year, so the figure box shows at once: fresh, so the seat asks (R5). Year 0's
+   *  Left over, hand-derived (the build-2 record's `year0check.mts`, quoted in `workingYearCredit.test.ts`): pay 150,000 −
+   *  payroll tax 11,475 − the tax on the outside income 17,540 − deposits 20,000 − W 84,000 = $16,985; W comes off year
+   *  0 dollar for dollar, so W $85,000 prints $15,985 and W $101,000 prints −$15, below R5's $1. */
+  const dateW = DEV_SEEDS.date.workingYearCost
+  if (dateW === undefined) throw new Error('date carries a W')
+  const enteredYearly: ScenarioDraft = {
+    ...DEV_SEEDS.date,
+    workingYearCost: { kind: 'entered', amountReal: 84_000, entryPeriod: 'year', stateTaxReading: dateW.stateTaxReading },
+  }
+  function open() {
+    const store = profileStore(enteredYearly)
+    render(<DrawerFor target={{ kind: 'working-cost' }} model={store.model} open readOnly={false} onClose={() => {}} onClosed={() => {}} finalFocus={() => null} />)
+    const dialog = screen.getByRole('dialog', { name: copy.profileWorkingCostName })
+    const seat = () => dialog.querySelector<HTMLElement>('[data-left-over-seat]')
+    const figureLine = (amount: string) => within(seat()!).queryByText(slots.workingLedgerLeftOverFigure(amount))
+    const allOfIt = () => within(seat()!).getByRole('radio', { name: copy.workingLedgerLeftOverSaved }).closest('label')!
+    /** Type into W's figure, then the press half of a tap on `target` (its focus move blurs the figure: the commit). */
+    const typeThenPress = (digits: string, target: HTMLElement) => {
+      const input = within(dialog).getByLabelText(copy.workingCostAmountLabel)
+      act(() => input.focus())
+      fireEvent.change(input, { target: { value: digits } })
+      fireEvent.pointerDown(target)
+      fireEvent.mouseDown(target)
+      act(() => input.blur())
+    }
+    const release = (target: HTMLElement) => {
+      fireEvent.pointerUp(target)
+      fireEvent.mouseUp(target)
+      fireEvent.click(target) // the label forwards its click to the radio, in this same task
+    }
+    const save = () => act(() => fireEvent.click(within(dialog).getByRole('button', { name: copy.profileDrawerSave })))
+    return { ...store, dialog, seat, figureLine, allOfIt, typeThenPress, release, save }
+  }
+
+  it('W retyped from $84,000 to $85,000, then "All of it" pressed: the seat holds the $16,985 it showed until one task after the click, and Save stores that figure, never the $15,985 under the new W', async () => {
+    const d = open()
+    expect(d.figureLine('16,985'), 'the seat shows $16,985 under W $84,000').toBeInTheDocument()
+    const target = d.allOfIt()
+    d.typeThenPress('85000', target)
+    expect(d.figureLine('16,985'), 'held at the press’s figure').toBeInTheDocument()
+    expect(d.figureLine('15,985'), 'the new W’s figure has not landed in the seat').toBeNull()
+    d.release(target)
+    expect(d.figureLine('16,985'), 'still held in the click’s own task').toBeInTheDocument()
+    await letGo()
+    expect(d.figureLine('15,985'), 'the live figure under W $85,000, one task later').toBeInTheDocument()
+    expect(within(d.seat()!).getByText(slots.workingLedgerLeftOverFellLine('16,985', '15,985'))).toBeInTheDocument()
+    d.save()
+    const saved = d.model.getSnapshot().draft
+    expect(saved.workingYearCost).toMatchObject({ kind: 'entered', amountReal: 85_000 })
+    expect(saved.workingYearLeftOver, 'the figure the seat showed at the press').toEqual({ kind: 'saved', quotedReal: 16_985 })
+  })
+
+  it('W retyped to $101,000, then "All of it" pressed: the held seat still offers its replies, but the blur closed R5’s gate (year 0 below $1), so the click stores nothing and the seat goes', async () => {
+    const d = open()
+    const target = d.allOfIt()
+    d.typeThenPress('101000', target)
+    expect(within(d.seat()!).getAllByRole('radio'), 'the held seat still draws its three replies').toHaveLength(3)
+    d.release(target)
+    await letGo()
+    expect(d.seat(), 'not asked: the seat is gone').toBeNull()
+    d.save()
+    const saved = d.model.getSnapshot().draft
+    expect(saved.workingYearCost).toMatchObject({ kind: 'entered', amountReal: 101_000 })
+    expect(saved.workingYearLeftOver, 'the gate closed under the press: nothing stored').toBeUndefined()
+  })
+})

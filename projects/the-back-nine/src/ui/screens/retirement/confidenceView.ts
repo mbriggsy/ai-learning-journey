@@ -11,7 +11,8 @@
  * `deriveDateBandAnnotations`, which carries the stop-year marker at the band's `offsetYears`; an aged plan's "Plan built"
  * and "Today"). It reads the plan only: a what-if run carries no fan, so the title names your plan and takes no picker.
  *
- * THE RUN-OUT SHARE (retired route only). Under the fan, on its age axis, how many futures in every 100 have run out of
+ * THE RUN-OUT SHARE (retired route only). Under the fan, on its time axis (the first person's age or the calendar year,
+ * the Display drawer's choice, `src/ui/displaySettings.ts`; its words say "age" or "year" with it), how many futures in every 100 have run out of
  * money by each year: the count of `distribution.depletionYears` that are real depletions (`isDepleted`: the
  * never-depleted sentinel never counts) and fell in a year before that one, over every path the run made. A path that
  * depletes in simulated year d is at $0 at the end of that year, which the fan's grid calls `yearsFromNow` d + 1
@@ -39,6 +40,7 @@ import type { RunOutLabels, RunOutPoint } from '@viz/charts/runOutOptions'
 import type { AnswerNotes } from '../../answerNotes'
 import { selectElevatedAnswer } from '../../answerView'
 import { copy, slots } from '../../copy'
+import type { TimeAxis } from '../../displaySettings'
 import { bandTrackNote, fanPremise, type FanPremise } from '../../fanNotes'
 import { chartWords, fanLabels } from '../dashboard/snapshotView'
 
@@ -131,6 +133,8 @@ export interface ConfidenceInput {
   readonly onRetry: () => void
   /** A read-only tab: the premise carries no door. */
   readonly readOnly: boolean
+  /** The Display drawer's time axis (`displaySettings.ts`): both charts' x axis on the first person's age or the year. */
+  readonly timeAxis: TimeAxis
 }
 
 /** The run-out chart's view and the two metric sentences, from a retired run. */
@@ -140,6 +144,7 @@ function retiredRunOut(
   ageA: number,
   ageB: number,
   labels: FanLabels,
+  timeAxis: TimeAxis,
 ): { readonly view: RunOutView; readonly lines: readonly string[] } | null {
   const paths = depletionYears.length
   if (paths === 0 || lastDrawn < 1) return null
@@ -159,15 +164,16 @@ function retiredRunOut(
   // One question, one answer: where the charts reach the plan's end their last point IS the whole plan's share and is
   // said once; where they stop short (the cohort cut) the whole plan's share names its span, never a second answer.
   const sameSpan = counts[lastDrawn] === wholeCount
+  const years = timeAxis === 'years'
   return {
     view: {
-      title: slots.confidenceRunOutTitle(),
+      title: slots.confidenceRunOutTitle(years ? 'year' : 'age'),
       points,
       labels: {
         yTick: (n) => String(n),
-        ageAt: labels.ageAt,
-        description: slots.confidenceRunOutDescription(),
-        words: chartWords(copy.confidenceRunOutName),
+        tickAt: labels.tickAt,
+        description: slots.confidenceRunOutDescription(years ? 'year' : 'age'),
+        words: chartWords(years ? copy.confidenceRunOutNameYear : copy.confidenceRunOutName),
       },
     },
     lines: sameSpan
@@ -186,7 +192,7 @@ function cutNote(raw: BandFan | undefined, lastDrawn: number, ageA: number, ageB
   return rawLast !== undefined && lastDrawn < rawLast ? [slots.confidenceCutNote(ageA + lastDrawn, ageB + lastDrawn)] : []
 }
 
-export function confidenceView({ snapshot, notes, onRetry, readOnly }: ConfidenceInput): ConfidenceView {
+export function confidenceView({ snapshot, notes, onRetry, readOnly, timeAxis }: ConfidenceInput): ConfidenceView {
   const title = copy.confidenceChartTitle
   // The page's notes, as Probability's key-metric column carries them; its footnote row likewise.
   const noteLines: string[] = []
@@ -212,9 +218,9 @@ export function confidenceView({ snapshot, notes, onRetry, readOnly }: Confidenc
     const fan = elevated.view.band
     const moments = elevated.view.bandAnnotations
     if (fan === undefined || moments === undefined || ageA === undefined || ageB === undefined) return words(copy.snapshotFanNone)
-    const labels = fanLabels(draft, ageA, ageB)
+    const labels = fanLabels(draft, ageA, ageB, timeAxis)
     const lastDrawn = fan.byYear[fan.byYear.length - 1]!.yearsFromNow
-    const run = retiredRunOut(answer.result.distribution.depletionYears, lastDrawn, ageA, ageB, labels)
+    const run = retiredRunOut(answer.result.distribution.depletionYears, lastDrawn, ageA, ageB, labels, timeAxis)
     const cut = cutNote(answer.result.distribution.bandFan, lastDrawn, ageA, ageB)
     return {
       kind: 'chart',
@@ -244,8 +250,8 @@ export function confidenceView({ snapshot, notes, onRetry, readOnly }: Confidenc
       title,
       fan,
       moments,
-      labels: fanLabels(draft, ageA, ageB),
-      stopgap: copy.confidenceRunOutStopgap,
+      labels: fanLabels(draft, ageA, ageB, timeAxis),
+      stopgap: timeAxis === 'years' ? copy.confidenceRunOutStopgapYear : copy.confidenceRunOutStopgap,
       ...(trackNote !== null ? { trackNote } : {}),
       ...premiseFor(moments),
       metrics: [

@@ -273,20 +273,20 @@ describe('U17 §S0.1 — ONE exported arrived predicate, consumed (never re-type
       /passed: offsetHasPassed\(startYearOffset, anchor\.yearsSincePlanBuilt\)/,
     )
 
-    const panel = read('../../intake/AssumptionPanel.tsx')
-    expect(panel, 'the panel row derives through the producer').toMatch(
-      /rothPlanStartFor\(savedAnchor, draft\.rothConversion\.startYearOffset\)/,
-    )
+    // RE-BOUND IN ACT 6's RC18 (the bind moves with the call): the assumption panel's Roth row left; Settings' Roth row
+    // (`settingsView.ts`) echoes the plan now.
+    const panel = read('../screens/settings/settingsView.ts')
+    expect(panel, 'Settings’ Roth row derives through the producer').toMatch(/rothPlanStartFor\(anchor, roth\.startYearOffset\)/)
     // ⚠️ THIS WAS `/rothPlanEcho\([^)]*startYearOffset/` and could never fire: `[^)]*` halts at
     // the `)` of `formatMoney(...)`, which is argument ONE, so arguments 2+ — exactly where a
     // raw offset or a re-typed year sum would be handed in — were unreachable by it. An
-    // occurrence count over the same source is both simpler and stronger: the panel reads the
-    // raw offset EXACTLY once, at the producer call (`AssumptionPanel.tsx:437`), so any second
+    // occurrence count over the same source is both simpler and stronger: the row reads the
+    // raw offset EXACTLY once, at the producer call, so any second
     // read — handed to the echo, or re-summed against the anchor — reds regardless of argument
     // position or nesting depth.
     expect(
       (panel.match(/startYearOffset/g) ?? []).length,
-      'the panel reads the raw offset EXACTLY once — at the producer call; never handed to the echo, never re-summed',
+      'Settings reads the raw offset EXACTLY once — at the producer call; never handed to the echo, never re-summed',
     ).toBe(1)
 
     // RE-BOUND IN ACT 6's RC4b (the bind moves with the call): the Roth sheet (`RothLever.tsx`) left; the write side

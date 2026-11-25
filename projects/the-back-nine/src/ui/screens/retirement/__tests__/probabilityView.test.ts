@@ -9,12 +9,13 @@ import type { MemoryModelSnapshot, ModelAnswer, ScenarioDraft, StickyDisplay } f
 import type { SavedRecommendationStatus } from '@store/savedRecommendation'
 import { isDepleted, type DateOffsetReading, type DateSearchOutcome, type DateTrackOutcome, type Headline, type SavedRecommendationV3, type SimulationResult } from '@shared/model'
 import { BAR_RUNG } from '@viz/curveMarks'
+import { niceLattice } from '@viz/bandData'
 import { composeAnswerNotes } from '../../../answerNotes'
 import { copy, slots } from '../../../copy'
 import { dateOddsText } from '../../../dateOdds'
 import { DEV_SEEDS } from '../../../devSeeds'
 import { spendingBasisLine } from '../../../survivorLines'
-import { formatDeltaDollar, formatPerMonth } from '../../../money'
+import { formatDeltaDollar, formatPerMonth, mmAxisFormatterFor } from '../../../money'
 import { recommendationBundle } from '../../../workbench/railChrome'
 import { createWhatIfSlot, headlineExtras, whatIfSlotView, type WhatIfReading, type WhatIfSlotLanes, type WhatIfSlotView } from '../../../workbench/whatIfRun'
 import { snapshotView } from '../../dashboard/snapshotView'
@@ -108,6 +109,7 @@ function input(snapshot: MemoryModelSnapshot, over: Partial<ProbabilityInput> = 
     notes: composeAnswerNotes(snapshot, { readOnly: false, stalenessNote: false, leftOverClauseHost: false, wallCalendarYear }),
     whatIf: { pick: 'new', bundle: [], view: null },
     chart: 'rings',
+    sameScale: true,
     ...over,
   }
 }
@@ -138,7 +140,7 @@ describe('RAW, everywhere the clone prints a count (RC4’s ruling): a held stic
     const nine = slots.xOfTen(9)
     const eight = slots.xOfTen(8)
     // Snapshot's ring.
-    const home = snapshotView({ snapshot: s, wallCalendarYear: RETIRED.startCalendarYear, readOnly: false, onRetry: () => {}, steady: { kind: 'waiting' }, recommendation: { solve: s.solve, save: { kind: 'none' }, todayEpochDay: 20_000 } })
+    const home = snapshotView({ snapshot: s, wallCalendarYear: RETIRED.startCalendarYear, readOnly: false, onRetry: () => {}, steady: { kind: 'waiting' }, recommendation: { solve: s.solve, save: { kind: 'none' }, todayEpochDay: 20_000 }, timeAxis: 'ages' })
     expect(home.ring.view.kind === 'reading' && home.ring.view.face.centre).toBe(nine)
     // Probability: both rings (the empty what-if reads the plan), the intro sentence, the difference line.
     const v = reads(probabilityView(input(s)))
@@ -235,10 +237,37 @@ describe('Probability, the retired route (`retired`, a real engine run)', () => 
     expect(JSON.stringify(v)).not.toMatch(/ending assets/i)
     // The empty what-if is the plan itself: its bar reads the plan's median, on one shared scale.
     expect(v.halves.alternative.barMedian).toBe(median)
-    expect(v.bars!.lattice.ceiling).toBeGreaterThanOrEqual(median)
+    expect(v.bars!.scales.alternative).toBe(v.bars!.scales.compared)
+    expect(v.bars!.scales.compared.lattice.ceiling).toBeGreaterThanOrEqual(median)
     // Each printed figure is a projected dollar figure: it wears "~".
     expect(v.bars!.figures.compared?.startsWith('~')).toBe(true)
     expect(v.bars!.figures.alternative?.startsWith('~')).toBe(true)
+  })
+
+  it('the Display drawer’s "same scale" (Act 6 · RC18): on, ONE lattice for both bars and no line; off, each bar on the lattice over its own median and the line that says the heights don’t compare', () => {
+    const planExtras = headlineExtras(RETIRED_RUN)
+    const median = v.halves.compared.barMedian!
+    // A what-if whose median is 40% of the plan's: on one scale its bar stands well short of the plan's.
+    const small = median * 0.4
+    const plan: WhatIfReading = { kind: 'headline', headline: RETIRED_RUN.headline }
+    const at = (sameScale: boolean) =>
+      reads(probabilityView(input(s, { sameScale, whatIf: { pick: 'new', bundle: SPEND_LEVER, view: readyView(plan, plan, { ...planExtras, terminalMedianReal: small }) } }))).bars!
+    const one = at(true)
+    expect(one.scales.alternative).toBe(one.scales.compared)
+    expect(one.scales.compared.lattice).toEqual(niceLattice(median))
+    expect(one.ownScales).toBeUndefined()
+    const own = at(false)
+    expect(own.scales.alternative.lattice).toEqual(niceLattice(small))
+    expect(own.scales.compared.lattice).toEqual(niceLattice(median))
+    expect(own.scales.alternative.lattice.ceiling, '[test setup] the two own scales differ').toBeLessThan(own.scales.compared.lattice.ceiling)
+    expect(own.scales.alternative.axisDollar(own.scales.alternative.lattice.ceiling)).toBe(mmAxisFormatterFor(own.scales.alternative.lattice.ceiling)(own.scales.alternative.lattice.ceiling))
+    expect(own.ownScales).toBe(copy.probabilityBarOwnScales)
+    expect(own.figures).toEqual(one.figures)
+    // Off, but both medians the same (no lever pulled: the empty what-if IS the plan): one lattice, so the heights
+    // still compare and no line says otherwise.
+    const same = reads(probabilityView(input(s, { sameScale: false }))).bars!
+    expect(same.scales.alternative.lattice).toEqual(same.scales.compared.lattice)
+    expect(same.ownScales).toBeUndefined()
   })
 
   it('every median at $0 (half or more of the futures use their savings up first): words in the bars’ place, never a silent gap', () => {

@@ -24,6 +24,11 @@
  * sits at calendar start + k − 1, at each person's current age + k − 1, as `healthSheetChrome.ts` dates its figures. A
  * ledger row t is sim-year t itself.
  *
+ * THE TIME AXIS (the Display drawer, `src/ui/displaySettings.ts`). Every bar and stretch is keyed by the first person's
+ * age; the axis reads that age or the calendar year (`axisOffset`, added once in `healthPartsOptions.ts`). A bar's
+ * sentence names both its age and its year either way; a stretch's sentence names the axis's own numbers with its title
+ * (an age on the ages axis, a year on the years axis, never "Year 64").
+ *
  * EVERY SENTENCE THE SHEET ALREADY WORDS COMES FROM ITS COMPOSERS (`composeHealthSheet`, `composeMedicareExtrasLines`,
  * `composeMedicareExtrasTypicalNote`; the Medicare residual from `composeVerdictMedicareResidual`). The readout is the
  * household's together, never per person (insight 132: who is enrolled is the engine's decision on the wire, never an
@@ -40,6 +45,7 @@ import { COHORT_FADE } from '@viz/cohort'
 import { healthcarePriced, medicareExtrasDisclosureView, pricedStateForRun } from '@intake/intakeMap'
 import type { WhatIfLeverKind } from '@shared/model'
 import { copy, slots } from '../../copy'
+import { offsetFromAge, type TimeAxis } from '../../displaySettings'
 import { composeHealthSheet, composeMedicareExtrasLines, composeMedicareExtrasTypicalNote, quotableYears, type HealthFact } from '../../healthSheetChrome'
 import { composeControlHealthOmissionsNote, composeVerdictMedicareResidual } from '../../stateTaxDisclosure'
 import { formatDeltaDollar, mmAxisFormatterFor } from '../../money'
@@ -111,7 +117,10 @@ export interface HealthChartsView {
   readonly route: 'retired' | 'working'
   readonly title: string
   readonly description: string
+  /** The x axis's title: whose age it is, or "Year" on the years axis. */
   readonly axisTitle: string
+  /** What to add to a bar's age to put it on the axis (`offsetFromAge`: 0 on the ages axis). */
+  readonly axisOffset: number
   /** The four parts, in {@link HEALTH_PARTS} order, every one drawn on {@link lattice} and the same age range. */
   readonly parts: readonly HealthPartChart[]
   readonly ages: { readonly first: number; readonly last: number }
@@ -184,18 +193,30 @@ export function ledgerYears(rows: readonly LedgerYearRow[], last: number): reado
   }))
 }
 
+/** The axis a stretch's sentence names: its title, and what to add to an age to reach its number. */
+export interface CliffAxis {
+  readonly title: string
+  readonly offset: number
+}
+
 /**
  * The marketplace cliff's stretches: over the quotable years where at least half the futures buy marketplace cover,
  * the count of 10 (`Math.round(overCliffFraction × 10)`, the sheet's own rule), nothing under 1; consecutive years with
  * the same count join one stretch. A year where fewer than half buy cover breaks a stretch and prints nothing. `years`
- * is the charted years (the page passes {@link chartableYears}), so a bracket never stands over an undrawn year.
+ * is the charted years (the page passes {@link chartableYears}), so a bracket never stands over an undrawn year. The
+ * stretch keeps its ages (the chart maps them); its sentence names the axis's numbers with the axis's title.
  */
-export function cliffRuns(readout: HealthReadout, firstAge: number, axisTitle: string, years: readonly HealthReadoutYear[] = quotableYears(readout)): readonly CliffRun[] {
+export function cliffRuns(readout: HealthReadout, firstAge: number, axis: CliffAxis, years: readonly HealthReadoutYear[] = quotableYears(readout)): readonly CliffRun[] {
   const out: CliffRun[] = []
   let open: { from: number; to: number; ofTen: number; k: number } | null = null
   const close = () => {
     if (open === null) return
-    out.push({ fromAge: open.from, toAge: open.to, label: slots.healthCliffLabel(open.ofTen), point: slots.healthCliffPoint(open.from, open.to, axisTitle, open.ofTen) })
+    out.push({
+      fromAge: open.from,
+      toAge: open.to,
+      label: slots.healthCliffLabel(open.ofTen),
+      point: slots.healthCliffPoint(open.from + axis.offset, open.to + axis.offset, axis.title, open.ofTen),
+    })
     open = null
   }
   for (const y of years) {
@@ -270,6 +291,13 @@ export interface HealthCareInput {
   readonly sincePlanBuilt: number
   /** The store is figuring the answer again (`snapshot.refiguring`): the committed answer's charts stay, veiled. */
   readonly refiguring: boolean
+  /** The Display drawer's time axis (`displaySettings.ts`): the charts' x axis on the first person's age or the year. */
+  readonly timeAxis: TimeAxis
+}
+
+/** The page's x axis: its title (whose age, or "Year") and what to add to an age to reach its number. */
+function healthAxis(timeAxis: TimeAxis, ageTitle: string, startYear: number, startAge: number): CliffAxis {
+  return { title: timeAxis === 'years' ? copy.chartAxisYear : ageTitle, offset: offsetFromAge(timeAxis, { startYear, startAge }) }
 }
 
 /** The lines every figured route carries after the part groups. */
@@ -314,8 +342,10 @@ export function healthCareView(input: HealthCareInput): HealthCareView {
     const years = readoutYears(charted)
     const firstPerson = tablePerson(draft, 0, draft.people[0]?.currentAge ?? 0, draft.people[0]?.currentAge ?? 0)
     const firstAge = firstPerson.currentAge
+    // Whose age: a bar's sentence names it on either axis (with its year), as does the line where the charts stop.
     const axisTitle = slots.claimsAgeAxis(capitalize(firstPerson.possessive))
-    const cliff = cliffRuns(readout, firstAge, axisTitle, charted)
+    const axis = healthAxis(input.timeAxis, axisTitle, draft.startCalendarYear, firstAge)
+    const cliff = cliffRuns(readout, firstAge, axis, charted)
     const parts = partCharts(years, { age: firstAge, start: draft.startCalendarYear }, axisTitle, false, cliff)
     const lattice = niceLattice(Math.max(1, ...parts.flatMap((p) => p.bars.map((b) => b.value))))
     const life = lifetimeMedians(answer.taxAware)
@@ -342,7 +372,8 @@ export function healthCareView(input: HealthCareInput): HealthCareView {
       route: 'retired',
       title: copy.healthChartTitle,
       description: copy.healthDescription,
-      axisTitle,
+      axisTitle: axis.title,
+      axisOffset: axis.offset,
       parts,
       ages: { first: firstAge + years[0]!.t, last: firstAge + years.at(-1)!.t },
       lattice,
@@ -366,15 +397,16 @@ export function healthCareView(input: HealthCareInput): HealthCareView {
   if (rows.kind === 'withheld') return { kind: 'words', words: rows.words }
   if (rows.kind === 'error') return { kind: 'words', words: copy.healthRowsError }
   if (rows.kind === 'loading') return { kind: 'words', words: copy.healthRowsWaiting }
-  return workingView(rows.rows, rows.meta, rows.updating, draft, acaLines)
+  return workingView(rows.rows, rows.meta, rows.updating, draft, acaLines, input.timeAxis)
 }
 
-function workingView(rows: readonly LedgerYearRow[], meta: TableMeta, updating: boolean, draft: ScenarioDraft, acaLines: readonly string[]): HealthCareView {
+function workingView(rows: readonly LedgerYearRow[], meta: TableMeta, updating: boolean, draft: ScenarioDraft, acaLines: readonly string[], timeAxis: TimeAxis): HealthCareView {
   const last = lastIndexOf(meta, rows)
   const years = ledgerYears(rows, last)
   if (years.length === 0) return { kind: 'words', words: copy.healthNone }
   const first = meta.people[0]!
   const axisTitle = slots.claimsAgeAxis(capitalize(first.possessive))
+  const axis = healthAxis(timeAxis, axisTitle, meta.startCalendarYear, first.currentAge)
   const parts = partCharts(years, { age: first.currentAge, start: meta.startCalendarYear }, axisTitle, true, [])
   const lattice = niceLattice(Math.max(1, ...parts.flatMap((p) => p.bars.map((b) => b.value))))
   // One path: its parts add up to its total exactly.
@@ -398,7 +430,8 @@ function workingView(rows: readonly LedgerYearRow[], meta: TableMeta, updating: 
     route: 'working',
     title: slots.healthInSteady(copy.healthChartTitle),
     description: copy.healthDescriptionSteady,
-    axisTitle,
+    axisTitle: axis.title,
+    axisOffset: axis.offset,
     parts,
     ages: { first: first.currentAge + years[0]!.t, last: first.currentAge + years.at(-1)!.t },
     lattice,

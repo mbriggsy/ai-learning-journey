@@ -12,6 +12,7 @@
 import type { ReactNode, Ref } from 'react'
 import { Caveat, PageFrame, type PageFrameHandle } from '../../kit'
 import { copy } from '../../copy'
+import { DisplayDoor } from '../settings/DisplayDrawer'
 import { ConfidencePanel } from './Confidence'
 import type { ConfidenceView } from './confidenceView'
 import { ProbabilityPanel, ProbabilityWaiting, type ProbabilityPanelProps } from './Probability'
@@ -20,6 +21,8 @@ import type { ProbabilityView } from './probabilityView'
 export type AnalysisTab = 'probability' | 'confidence'
 
 export interface AnalysisProps extends Omit<ProbabilityPanelProps, 'view'> {
+  /** "Today's dollars" beside the folder tabs opens the Display drawer (RC18); absent, the plain words. */
+  readonly onDisplay?: () => void
   readonly view: ProbabilityView
   readonly headingRef: Ref<HTMLHeadingElement>
   /** The folder tab on show, and the move to another (a route: the shell navigates). */
@@ -39,7 +42,7 @@ const TABS = [
   { id: 'confidence', label: copy.confidenceTab },
 ] as const
 
-export function Analysis({ view, headingRef, tab, onTab, confidence, onReconfirm, handle, tray, ...panel }: AnalysisProps) {
+export function Analysis({ view, headingRef, tab, onTab, confidence, onReconfirm, handle, tray, onDisplay, ...panel }: AnalysisProps) {
   const intro =
     view.kind === 'reading' ? (
       <div className="flex flex-col gap-1" data-analysis-intro="">
@@ -76,13 +79,15 @@ export function Analysis({ view, headingRef, tab, onTab, confidence, onReconfirm
         valuesNote={
           view.kind === 'reading' && view.intro.eyebrow !== undefined ? (
             <span className="flex flex-wrap items-baseline gap-x-4">
-              <span>{copy.probabilityTodaysDollars}</span>
+              <span>
+                <DisplayDoor onOpen={onDisplay} />
+              </span>
               <span className="hidden font-semibold text-stone-900 wide:inline" data-intro-eyebrow="">
                 {view.intro.eyebrow}
               </span>
             </span>
           ) : (
-            copy.probabilityTodaysDollars
+            <DisplayDoor onOpen={onDisplay} />
           )
         }
         {...(onConfidence ? {} : { caveat })}

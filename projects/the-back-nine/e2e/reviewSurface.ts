@@ -355,7 +355,7 @@ export async function gotoVaultFinal(page: Page, key: string): Promise<void> {
 /**
  * Re-walk a dev seed's intake to the step headed `heading` — the ONE route into the intake flow with
  * a real household behind it. `?seed=` applies a complete draft and lands on the home (there are no
- * steps to advance there); the AssumptionPanel's re-walk door (behind the gear since Act 6 · RC4) remounts
+ * steps to advance there); Settings' re-walk door (behind the gear; the assumption panel's until Act 6 · RC18) remounts
  * the flow at index 0 over that draft, which is what a returning reader does. Lives HERE because two specs drive it (intake-fold's
  * own spec-local copy predates it, and vertical-fit's pay-check arms need it) and a spec cannot import
  * another spec.
@@ -376,9 +376,9 @@ export async function rewalkSeedTo(
   if (opts.final === true) {
     await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
   }
-  // Since Act 6 · RC4 the seed lands on the shell (the home), and the gear opens the assumption panel.
+  // Since Act 6 · RC4 the seed lands on the shell (the home); since RC18 the gear opens Settings, which holds the re-walk.
   const door = page.locator('[data-gear]')
-  await expect(door, `?seed=${seed}: no gear — the home never offered the re-walk's panel`).toBeVisible({
+  await expect(door, `?seed=${seed}: no gear — the home never offered Settings and its re-walk`).toBeVisible({
     timeout: FINAL_TIER_MS,
   })
   await door.click()
@@ -387,7 +387,7 @@ export async function rewalkSeedTo(
 }
 
 /**
- * Advance the re-walk the page has just opened (the panel's `assumptionRewalkCta`) to the step headed
+ * Advance the re-walk the page has just opened (Settings' `assumptionRewalkCta`) to the step headed
  * `heading`, and settle layout. Advances are IN-PAGE clicks on the step's primary button (no Playwright
  * auto-scroll), and a step that will not advance fails loud. `who` names the route in the errors. The
  * second half of `rewalkSeedTo`, for a caller that changed the draft in the panel before re-walking.

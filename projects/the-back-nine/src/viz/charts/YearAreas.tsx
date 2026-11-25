@@ -17,14 +17,14 @@ function useHeld<T>(key: string, build: () => T): T {
 
 export function PairAreas(props: PairAreasInput & { readonly chartId: string }) {
   const { chartId, ...input } = props
-  const key = JSON.stringify([input.series, input.lattice, input.words, input.height])
+  const key = JSON.stringify([input.series, input.lattice, input.words, input.height, input.axisTitle, input.axisOffset])
   const options = useHeld<Options>(key, () => pairAreasOptions(input))
   return <Chart key={key} options={options} chartId={chartId} className="b9-pair" />
 }
 
 export function StackedAreas(props: StackedAreasInput & { readonly chartId: string }) {
   const { chartId, ...input } = props
-  const key = JSON.stringify([input.sources, input.lattice, input.words, input.height])
+  const key = JSON.stringify([input.sources, input.lattice, input.words, input.height, input.axisTitle, input.axisOffset])
   const options = useHeld<Options>(key, () => stackedAreasOptions(input))
   return <Chart key={key} options={options} chartId={chartId} className="b9-stack" />
 }

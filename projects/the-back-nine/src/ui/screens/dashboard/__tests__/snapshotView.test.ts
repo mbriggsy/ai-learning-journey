@@ -11,7 +11,8 @@ import { ringFace } from '../../../ringReading'
 import { tableRunFor, type TableMeta } from '../../../workbench/tableRun'
 import { planReadingFor, whatIfRunFor } from '../../../workbench/whatIfRun'
 import type { RecommendationView } from '../../../recommendationView'
-import { retiredRows, snapshotView, steadyStats, type SnapshotInput, type SteadyRows } from '../snapshotView'
+import { axisTicks, fanOptions } from '@viz/charts/fanOptions'
+import { fanLabels, retiredRows, snapshotView, steadyStats, type SnapshotInput, type SteadyRows } from '../snapshotView'
 import { taxAllocationView } from '../../investment/investmentView'
 
 /**
@@ -83,6 +84,7 @@ const input = (snapshot: MemoryModelSnapshot, over: Partial<SnapshotInput> = {})
   onRetry: () => {},
   steady: { kind: 'waiting' },
   recommendation: { solve: snapshot.solve, save: { kind: 'none' }, todayEpochDay: 20_000 },
+  timeAxis: 'ages',
   ...over,
 })
 
@@ -398,5 +400,41 @@ describe('Snapshot: the Recommendations card', () => {
       expect(labelsOf(v.rec)).not.toMatch(/\bApply\b/)
     }
     plantedRec.view = null
+  })
+})
+
+describe('Snapshot: the fan’s time axis (Act 6 · RC18, the Display drawer)', () => {
+  // The first person 60 in 2026, the second 58: at year 5 the age axis reads 65 and the years axis 2031.
+  const sixty: ScenarioDraft = {
+    ...RETIRED,
+    startCalendarYear: 2026,
+    people: [{ ...RETIRED.people[0]!, currentAge: 60 }, { ...RETIRED.people[1]!, currentAge: 58 }],
+  } as ScenarioDraft
+  const fan = { byYear: Array.from({ length: 31 }, (_, t) => ({ yearsFromNow: t, p10: 1, p25: 2, p50: 3, p75: 4, p90: 5, cohortFraction: 1 })) }
+
+  it('the default ages axis reads as before: the first person’s age, titled whose, ticks every 5 years of it', () => {
+    const l = fanLabels(sixty, 60, 58, 'ages')
+    expect(l.tickAt(5)).toBe(65)
+    expect(l.xAxisTitle).toBe(slots.snapshotFanAgeAxis('Alex'))
+    expect(axisTicks(30, l.tickAt)).toEqual([0, 5, 10, 15, 20, 25, 30])
+    expect(l.agesAt(5)).toBe(slots.bandClockAgesDesc(65, 63))
+  })
+
+  it('the years axis puts the same point on its calendar year, ticks on years that are multiples of 10 (four digits every 5 collide at a phone’s width), titled "Year"; the tooltip still names both ages', () => {
+    const l = fanLabels(sixty, 60, 58, 'years')
+    expect(l.tickAt(5)).toBe(2031)
+    expect(l.xAxisTitle).toBe(copy.chartAxisYear)
+    expect(axisTicks(30, l.tickAt)).toEqual([4, 14, 24])
+    expect(l.agesAt(5)).toBe(slots.bandClockAgesDesc(65, 63))
+    const x = fanOptions({ fan, moments: [], labels: l, height: 300 }).xAxis as { tickPositions: number[]; title: { text: string }; labels: { formatter: (c: { value: number }) => string } }
+    expect(x.tickPositions).toEqual([4, 14, 24])
+    expect(x.labels.formatter({ value: 4 })).toBe('2030')
+    expect(x.title.text).toBe('Year')
+  })
+
+  it('one labels object per draft, ages and axis: the axis is part of the cache key', () => {
+    expect(fanLabels(sixty, 60, 58, 'ages')).toBe(fanLabels(sixty, 60, 58, 'ages'))
+    expect(fanLabels(sixty, 60, 58, 'years')).toBe(fanLabels(sixty, 60, 58, 'years'))
+    expect(fanLabels(sixty, 60, 58, 'years')).not.toBe(fanLabels(sixty, 60, 58, 'ages'))
   })
 })

@@ -8,6 +8,8 @@ import { NEVER_DEPLETED, type BandFanYear, type DateOffsetReading, type DateSear
 import { composeAnswerNotes } from '../../../answerNotes'
 import { copy, slots } from '../../../copy'
 import { DEV_SEEDS } from '../../../devSeeds'
+import type { TimeAxis } from '../../../displaySettings'
+import { axisTicks } from '@viz/charts/fanOptions'
 import { confidenceView, runOutCounts, runOutShare, type ConfidenceView } from '../confidenceView'
 
 /**
@@ -45,12 +47,13 @@ const snap = (draft: ScenarioDraft, answer: ModelAnswer): MemoryModelSnapshot =>
 const view = (
   s: MemoryModelSnapshot,
   wallCalendarYear = s.draft.startCalendarYear,
-  over: { readonly readOnly?: boolean; readonly agedBalancesYear?: number } = {},
+  over: { readonly readOnly?: boolean; readonly agedBalancesYear?: number; readonly timeAxis?: TimeAxis } = {},
 ): ConfidenceView =>
   confidenceView({
     snapshot: s,
     onRetry: () => {},
     readOnly: over.readOnly ?? false,
+    timeAxis: over.timeAxis ?? 'ages',
     notes: composeAnswerNotes(s, {
       readOnly: over.readOnly ?? false,
       stalenessNote: false,
@@ -232,6 +235,31 @@ describe('Confidence on the retired route (`retired`, a real engine run)', () =>
     const b = RETIRED.people[1]!.currentAge! + last
     expect(w.metrics.slice(0, 2)).toEqual([slots.confidenceRunOutWhole(slots.confidenceShareFewer(), true), slots.confidenceCutNote(a, b)])
   })
+
+  it('the time axis (Act 6 · RC18): ages by default, as before; on the years axis both charts tick on the calendar year and their words say "year"', () => {
+    const age0 = RETIRED.people[0]!.currentAge!
+    const year0 = RETIRED.startCalendarYear
+    const last = v.fan.byYear.at(-1)!.yearsFromNow
+    // The default: the fan and the run-out chart on the first person's age, the run-out words about an age.
+    expect(v.labels.tickAt(5)).toBe(age0 + 5)
+    expect(v.labels.xAxisTitle).toBe(slots.snapshotFanAgeAxis(RETIRED.people[0]!.name!))
+    expect(v.runOut!.labels.tickAt(5)).toBe(age0 + 5)
+    expect(v.runOut!.title).toBe(slots.confidenceRunOutTitle())
+    expect(v.runOut!.labels.words.title).toBe(copy.confidenceRunOutName)
+    expect(v.runOut!.labels.description).toBe(slots.confidenceRunOutDescription())
+    // The years axis: the same points (the run-out chart's years and its words are untouched), on the calendar year.
+    const y = chart(view(s, undefined, { timeAxis: 'years' }))
+    expect(y.labels.tickAt(5)).toBe(year0 + 5)
+    expect(y.labels.xAxisTitle).toBe(copy.chartAxisYear)
+    expect(y.runOut!.labels.tickAt(5)).toBe(year0 + 5)
+    expect(axisTicks(last, y.runOut!.labels.tickAt).every((t) => (year0 + t) % 10 === 0)).toBe(true)
+    expect(y.runOut!.points).toEqual(v.runOut!.points)
+    expect(y.runOut!.title).toBe('Futures that have run out of money by this year, out of every 100')
+    expect(y.runOut!.labels.words.title).toBe(copy.confidenceRunOutNameYear)
+    expect(y.runOut!.labels.description).toBe(slots.confidenceRunOutDescription('year'))
+    expect(y.runOut!.labels.description).toContain('by each year')
+    expect(y.metrics).toEqual(v.metrics)
+  })
 })
 
 describe('Confidence on the working route (`dip`)', () => {
@@ -300,6 +328,7 @@ describe('Confidence on the working route (`dip`)', () => {
     expect(stop?.yearsFromNow).toBe(3)
     expect(v.runOut).toBeUndefined()
     expect(v.stopgap).toBe(copy.confidenceRunOutStopgap)
+    expect(chart(view(snap(DIP, answer), undefined, { timeAxis: 'years' })).stopgap).toBe(copy.confidenceRunOutStopgapYear)
     // This hand-built band is never cut (its cohort stays whole): its edge is the plan's horizon and no cut line shows.
     expect(v.moments.find((m) => m.yearsFromNow === 29)?.label).toBe(copy.bandClockHorizonLabel)
     expect(v.metrics.some((l) => l.startsWith('The charts stop'))).toBe(false)

@@ -13,7 +13,9 @@ import { copy } from '../copy'
 
 /** The top bar's modules, in RightCapital's order (ref 1.2). A module shows only when a row names it. */
 export const MODULE_ORDER = ['dashboard', 'investment', 'retirement', 'tax', 'profile'] as const
-export type ModuleId = (typeof MODULE_ORDER)[number]
+/** The top bar's modules, plus Settings (RC18): the gear's page, never a module word in the bar (no row of its module
+ *  is in `MODULE_ORDER`, so `navModules` never lists it), reached by the gear and by its own address. */
+export type ModuleId = (typeof MODULE_ORDER)[number] | 'settings'
 
 /** The screens the shell can draw. RC3's Snapshot, RC4's Probability (with its Action Items tray, RC4b), RC7's
  *  Confidence (Analysis's second folder tab, a route of its own like Probability) and RC6's Cash
@@ -21,7 +23,8 @@ export type ModuleId = (typeof MODULE_ORDER)[number]
  *  folder tabs the page's own state too), RC9's Social Security (its Comparison and Summary tabs the same) and RC10's Health
  *  Care are rebuilt, RC11's Stress Test is new (RightCapital's slot, between Analysis and Social Security), and RC12 adds Investment's Asset Allocation and Tax Allocation; RC13a adds Profile's Net Worth, Income, Savings and
  *  Family, and RC13b its Goals and Expenses (RightCapital's order, ref 1.2), every saved fact in a drawer of theirs: the
- *  workbench room's facts page, the last interim tab, is gone. */
+ *  workbench room's facts page, the last interim tab, is gone. RC18 adds Settings, the gear's page (no module word: the gear
+ *  reaches it). */
 export type ScreenId =
   | 'snapshot'
   | 'probability'
@@ -39,6 +42,7 @@ export type ScreenId =
   | 'profile-savings'
   | 'profile-expenses'
   | 'profile-family'
+  | 'settings'
 
 export interface RouteRow {
   readonly module: ModuleId
@@ -103,6 +107,8 @@ export const ROUTE_ROWS: readonly RouteRow[] = [
   { module: 'profile', page: 'savings', pageLabel: copy.shellPageSavings, screen: 'profile-savings', title: copy.shellPageSavings },
   { module: 'profile', page: 'expenses', pageLabel: copy.shellPageExpenses, screen: 'profile-expenses', title: copy.shellPageExpenses },
   { module: 'profile', page: 'family', pageLabel: copy.shellPageFamily, screen: 'profile-family', title: copy.shellPageFamily },
+  // RC18: the gear's page. Its folder tabs are the page's own state, not routes (as Cash Flows' and Tax Strategies' are).
+  { module: 'settings', page: 'plan', pageLabel: copy.settingsTitle, screen: 'settings', title: copy.settingsTitle },
 ]
 
 /** The home: setup's end, a reopened vault and every dev seed land on Dashboard → Snapshot (RC4; RC3's door landed here). */

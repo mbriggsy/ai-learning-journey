@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { DEFAULT_DISPLAY, type TimeAxis } from '../../../displaySettings'
 import { irmaa } from '@engine/constants/health'
 import { simulate } from '@engine/simulate'
 import type { LedgerYearRow } from '@shared/model'
@@ -118,7 +119,7 @@ describe('Comparison', () => {
   it('every chart is named for its market, steady or rough', () => {
     for (const { id, label } of COMPARISON_CHARTS) {
       for (const future of ['steady', 'rough'] as const) {
-        const v = comparisonView({ chart: id, future, winner: ready(), baseline: ready(), stateClause: null })
+        const v = comparisonView({ timeAxis: 'ages', chart: id, future, winner: ready(), baseline: ready(), stateClause: null })
         if (v.kind !== 'pair' && v.kind !== 'stacks') throw new Error(v.kind)
         expect(v.title).toBe(slots.taxStratInMarket(label, future === 'steady'))
       }
@@ -126,7 +127,7 @@ describe('Comparison', () => {
   })
 
   it('income tax: the recommendation green and solid, your plan today compared; the difference in words; the page’s one state clause beneath', () => {
-    const v = comparisonView({ chart: 'tax', future: 'steady', winner: ready(lowerTax), baseline: ready(), stateClause: copy.verdictStateUnpricedNote })
+    const v = comparisonView({ timeAxis: 'ages', chart: 'tax', future: 'steady', winner: ready(lowerTax), baseline: ready(), stateClause: copy.verdictStateUnpricedNote })
     if (v.kind !== 'pair') throw new Error(v.kind)
     expect(v.series.map((s) => [s.name, s.role])).toEqual([
       [copy.recVizWithLabel, 'alternative'],
@@ -137,17 +138,17 @@ describe('Comparison', () => {
     expect(v.notes).toEqual([copy.verdictStateUnpricedNote])
     expect(v.lattice.ceiling).toBeGreaterThanOrEqual(Math.max(...steady.rows.map((r) => r.taxPaid)))
     // Only the tax chart carries the state clause; invested assets carry their own note.
-    const assets = comparisonView({ chart: 'assets', future: 'steady', winner: ready(), baseline: ready(), stateClause: copy.verdictStateUnpricedNote })
+    const assets = comparisonView({ timeAxis: 'ages', chart: 'assets', future: 'steady', winner: ready(), baseline: ready(), stateClause: copy.verdictStateUnpricedNote })
     expect(assets.kind === 'pair' && assets.notes, 'the assets chart says what its balance counts').toEqual([copy.taxStratAssetsNote])
   })
 
   it('the same two runs read "about the same", never a $0 difference', () => {
-    const v = comparisonView({ chart: 'rmd', future: 'rough', winner: ready(), baseline: ready(), stateClause: null })
+    const v = comparisonView({ timeAxis: 'ages', chart: 'rmd', future: 'rough', winner: ready(), baseline: ready(), stateClause: null })
     expect(v.kind === 'pair' && v.metric).toBe(slots.taxStratCompareRmd('0', 'same', false))
   })
 
   it('withdrawals: two stacks side by side on ONE scale, the stack order listed', () => {
-    const v = comparisonView({ chart: 'withdrawals', future: 'steady', winner: ready(lowerTax), baseline: ready(), stateClause: null })
+    const v = comparisonView({ timeAxis: 'ages', chart: 'withdrawals', future: 'steady', winner: ready(lowerTax), baseline: ready(), stateClause: null })
     if (v.kind !== 'stacks') throw new Error(v.kind)
     expect(v.stacks.map((s) => s.title)).toEqual([copy.recVizWithLabel, copy.recVizWithoutLabel])
     const top = Math.max(...steady.rows.map((r) => r.draw.taxable + r.draw.pretax + r.draw.roth + r.hsaSpend))
@@ -163,21 +164,21 @@ describe('Comparison', () => {
     const short = lowerTax.slice(0, k + 1).map((r, i) => (i === k ? { ...r, ranOut: true } : r))
     const through = steady.meta.startCalendarYear + steady.rows[k]!.t
     const sumTo = (rows: readonly LedgerYearRow[]) => rows.slice(0, k + 1).reduce((a, r) => a + Math.max(0, r.taxPaid), 0)
-    const v = comparisonView({ chart: 'tax', future: 'rough', winner: ready(short), baseline: ready(), stateClause: null })
+    const v = comparisonView({ timeAxis: 'ages', chart: 'tax', future: 'rough', winner: ready(short), baseline: ready(), stateClause: null })
     if (v.kind !== 'pair') throw new Error(v.kind)
     expect(v.metric).toBe(slots.taxStratCompareTax(formatDeltaDollar(sumTo(lowerTax) - sumTo(steady.rows)), 'less', false, through))
     expect(v.notes).toEqual([slots.taxStratRanOut(through, null, false, true)])
     // Required withdrawals and conversions read the same window; your plan's run running out names it instead.
-    const rmd = comparisonView({ chart: 'rmd', future: 'steady', winner: ready(), baseline: ready(short), stateClause: null })
+    const rmd = comparisonView({ timeAxis: 'ages', chart: 'rmd', future: 'steady', winner: ready(), baseline: ready(short), stateClause: null })
     if (rmd.kind !== 'pair') throw new Error(rmd.kind)
     expect(rmd.metric).toBe(slots.taxStratCompareRmd('0', 'same', true, through))
     expect(rmd.notes).toEqual([slots.taxStratRanOut(null, through, true, true)])
     // The assets metric reads the same last shared year.
-    const assets = comparisonView({ chart: 'assets', future: 'steady', winner: ready(short), baseline: ready(), stateClause: null })
+    const assets = comparisonView({ timeAxis: 'ages', chart: 'assets', future: 'steady', winner: ready(short), baseline: ready(), stateClause: null })
     expect(assets.kind === 'pair' && assets.metric).toContain(String(through))
     expect(assets.kind === 'pair' && assets.notes).toEqual([slots.taxStratRanOut(through, null, true, true), copy.taxStratAssetsNote])
     // The withdrawal stacks draw every year of each run and count nothing: the note names the run-out, never a count.
-    const stacks = comparisonView({ chart: 'withdrawals', future: 'steady', winner: ready(short), baseline: ready(), stateClause: null })
+    const stacks = comparisonView({ timeAxis: 'ages', chart: 'withdrawals', future: 'steady', winner: ready(short), baseline: ready(), stateClause: null })
     if (stacks.kind !== 'stacks') throw new Error(stacks.kind)
     expect(stacks.notes).toEqual([copy.taxStratStackOrder, slots.taxStratRanOut(through, null, true, false)])
     expect(stacks.notes.join(' ')).not.toMatch(/counts only/)
@@ -193,7 +194,7 @@ describe('Comparison', () => {
     const early = steady.meta.startCalendarYear + steady.rows[k]!.t
     const late = steady.meta.startCalendarYear + steady.rows[j]!.t
     // Your plan today runs out first; the recommended strategy later (never left looking as if it lasts).
-    const v = comparisonView({ chart: 'tax', future: 'rough', winner: ready(cut(lowerTax, j)), baseline: ready(cut(steady.rows, k)), stateClause: null })
+    const v = comparisonView({ timeAxis: 'ages', chart: 'tax', future: 'rough', winner: ready(cut(lowerTax, j)), baseline: ready(cut(steady.rows, k)), stateClause: null })
     if (v.kind !== 'pair') throw new Error(v.kind)
     expect(v.notes).toEqual([slots.taxStratRanOut(late, early, false, true)])
     expect(v.notes[0]).toBe(
@@ -202,10 +203,38 @@ describe('Comparison', () => {
     expect(v.metric).toContain(`Through ${early}`)
   })
 
+  it('the time axis (Act 6 · RC18): by default the first person’s age (it was the calendar year before the Display drawer), on the years axis the year; the points keep their years and each spoken point names the axis’s number', () => {
+    const start = steady.meta.startCalendarYear
+    const age0 = steady.meta.people[0]!.currentAge
+    expect(age0, '[test setup] Alex is 66 in the plan’s first year').toBe(66)
+    const at = (timeAxis: TimeAxis, chart: 'tax' | 'withdrawals') => {
+      const v = comparisonView({ timeAxis, chart, future: 'steady', winner: ready(lowerTax), baseline: ready(), stateClause: null })
+      if (v.kind !== 'pair' && v.kind !== 'stacks') throw new Error(v.kind)
+      return v
+    }
+    // The default (the drawer's own default): Alex's age, 66 at the plan's first year.
+    const ages = at(DEFAULT_DISPLAY.timeAxis, 'tax')
+    expect(ages.axisTitle).toBe('Alex’s age')
+    expect(ages.axisOffset).toBe(66 - start)
+    if (ages.kind !== 'pair') throw new Error(ages.kind)
+    expect(ages.series[0].points[0]!.year, 'the points keep their calendar year; the chart maps them').toBe(start)
+    expect(ages.series[0].points[0]!.year + ages.axisOffset).toBe(66)
+    expect(ages.pointWords(71, copy.recVizWithLabel, 12_000)).toBe(slots.claimsYearPoint('Alex’s age', 71, copy.recVizWithLabel, '12,000'))
+    expect(at('ages', 'withdrawals')).toMatchObject({ axisTitle: 'Alex’s age', axisOffset: 66 - start })
+    // The years axis: no offset, titled "Year", each point spoken as its year (the words before the drawer).
+    const years = at('years', 'tax')
+    expect(years.axisTitle).toBe(copy.chartAxisYear)
+    expect(years.axisOffset).toBe(0)
+    expect(years.pointWords(start + 5, copy.recVizWithLabel, 12_000)).toBe(slots.taxStratChartPoint(start + 5, copy.recVizWithLabel, '12,000'))
+    expect(at('years', 'withdrawals')).toMatchObject({ axisTitle: copy.chartAxisYear, axisOffset: 0 })
+    // The metric and the notes are the same words on either axis.
+    expect(years.kind === 'pair' && years.metric).toBe(ages.metric)
+  })
+
   it('a run still working, refused or failed shows words, never a half picture', () => {
-    expect(comparisonView({ chart: 'tax', future: 'steady', winner: { kind: 'loading' }, baseline: ready(), stateClause: null })).toEqual({ kind: 'waiting', words: copy.taxStratRunsWaiting })
-    expect(comparisonView({ chart: 'tax', future: 'steady', winner: ready(), baseline: { kind: 'withheld', words: 'w' }, stateClause: null })).toEqual({ kind: 'withheld', words: 'w' })
-    expect(comparisonView({ chart: 'tax', future: 'steady', winner: { kind: 'error' }, baseline: ready(), stateClause: null })).toEqual({ kind: 'withheld', words: copy.taxStratRunsError })
+    expect(comparisonView({ timeAxis: 'ages', chart: 'tax', future: 'steady', winner: { kind: 'loading' }, baseline: ready(), stateClause: null })).toEqual({ kind: 'waiting', words: copy.taxStratRunsWaiting })
+    expect(comparisonView({ timeAxis: 'ages', chart: 'tax', future: 'steady', winner: ready(), baseline: { kind: 'withheld', words: 'w' }, stateClause: null })).toEqual({ kind: 'withheld', words: 'w' })
+    expect(comparisonView({ timeAxis: 'ages', chart: 'tax', future: 'steady', winner: { kind: 'error' }, baseline: ready(), stateClause: null })).toEqual({ kind: 'withheld', words: copy.taxStratRunsError })
   })
 })
 

@@ -10,7 +10,7 @@ import { healthPartOptions, type HealthPartInput } from './healthPartsOptions'
 
 export function HealthPartChart(props: HealthPartInput & { readonly chartId: string }) {
   const { chartId, ...input } = props
-  const key = JSON.stringify([input.id, input.bars, input.cliff, input.ages, input.lattice, input.words, input.height, input.axisTitle])
+  const key = JSON.stringify([input.id, input.bars, input.cliff, input.ages, input.axisOffset, input.lattice, input.words, input.height, input.axisTitle])
   const held = useRef<{ readonly key: string; readonly options: Options } | null>(null)
   if (held.current === null || held.current.key !== key) held.current = { key, options: healthPartOptions(input) }
   return <Chart key={key} options={held.current.options} chartId={chartId} className="b9-health" />

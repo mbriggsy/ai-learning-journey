@@ -35,7 +35,7 @@
  * RETIREMENT → HEALTH CARE (RC10, `HealthCare.tsx` over `healthCareView.ts`): the plan's own health premiums, one small
  * chart per part, from the committed answer's readout (retired) or the steady market's rows above (working). Its Action
  * Items tray holds B9's health inputs: the subsidy rules open Analysis's tray at that lever (`tryLever`), each plan fact
- * its own Profile drawer, over this page. The assumption panel's subsidy-rules row opens this page.
+ * its own Profile drawer, over this page.
  *
  * RETIREMENT → STRESS TEST (RC11, `StressTest.tsx` over `stressView.ts`): one bar per stress on the plan's own futures, each
  * a copy of the committed plan with one input made worse (`src/intake/stress.ts`), run on its own slot (`useStress`, made
@@ -55,9 +55,15 @@
  * shell's Back ask is asked inside it (the drawer is modal), never on the page beneath.
  *
  * THE OUTSIDE DOORS (RC13b): the StaleBanner's standing line (the pay check's W and the left-over answer), Health Care's
- * tray facts and the assumption panel's budget row open their Profile drawer HERE, over the page that shows
- * (`useDrawerHost`, the same host the Profile pages use), so a Save lands and the page's figures redraw where the
- * household is reading. The assumption panel's withdrawal-order and Roth rows open the tray at the lever's row.
+ * tray facts and Settings' rows open their Profile drawer HERE, over the page that shows (`useDrawerHost`, the same host
+ * the Profile pages use), so a Save lands and the page's figures redraw where the household is reading. Settings'
+ * withdrawal-order, Roth and subsidy-rules rows open Probability's tray at the lever's row (`tryLever`).
+ *
+ * SETTINGS AND THE DISPLAY DRAWER (RC18; `Settings.tsx` over `settingsView.ts`, `DisplayDrawer.tsx`): the gear opens
+ * Settings, the assumptions behind the plan, on every tab (a read-only tab reads it with no door). "Today's dollars"
+ * beside a value page's folder tabs opens the Display drawer; its two choices (`displaySettings.ts`: years or ages on
+ * every time axis, one scale or two for Probability's balance bars) are held here for the session and handed to every
+ * composer that draws a chart over the plan's years.
  *
  * THE TWO-UP AND THE PLAN LIST (RC5): Probability's right side runs on its own slot (`useSlotRun`, made once here), so any
  * two of your plan, the kept what-ifs, Recommended and the new what-if sit side by side. The pencil beside the right
@@ -66,7 +72,7 @@
  * what-if (a leave past the shell asks first). Opening another what-if on the left over an unkept one asks first.
  */
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { missingRequiredFacts, pricedStateForRun } from '@intake/intakeMap'
+import { pricedStateForRun } from '@intake/intakeMap'
 import { unsavedBuffersHeld } from '@intake/unsavedBuffer'
 import { engineRunLane, type EngineRunRequest, type Lane } from '@store/runLanes'
 import { roughWindow, ROUGH_WINDOW_YEARS } from '@engine/reference/roughSequence'
@@ -78,7 +84,7 @@ import { Button, Caveat, SubNav } from '../kit'
 import { copy, slots } from '../copy'
 import { appModel } from '../appModel'
 import { planClockAnchor } from '../bandAnnotations'
-import { useEditorSheets } from '../editorSheets'
+import { DEFAULT_DISPLAY, type DisplaySettings } from '../displaySettings'
 import { useSaveAnnouncer, type ResultSaveProp } from '../saveAnnouncer'
 import { pinnedLines, reserveForms } from '../workbench/pinnedLines'
 // The leave ask's own look (`.workbench__ask*`), the last of the room's sheet that the shell still draws.
@@ -134,6 +140,9 @@ import { ActionItemsTray, type TrayFocus } from '../screens/retirement/ActionIte
 import { keptIdOf, landingPick, probabilityView, type LeftPick, type ProbabilityChart, type RightPick } from '../screens/retirement/probabilityView'
 import { PlanListDrawer, type NameBox } from '../screens/retirement/PlanListDrawer'
 import { copyEdit, deleteEdit, keepEdit, listWrites, nameError, orderEdit, outcomeWords, planListView, renameEdit, type KeptEdit, type KeptWriteOutcome } from '../screens/retirement/planListView'
+import { Settings } from '../screens/settings/Settings'
+import { DisplayDrawer } from '../screens/settings/DisplayDrawer'
+import { settingsView, type SettingsDoor, type SettingsTab } from '../screens/settings/settingsView'
 import { composeLockMenu, type LockMenuAction } from './lockMenu'
 import { composeStaleLines } from './staleLines'
 import { StaleBannerStack } from './StaleBannerStack'
@@ -160,8 +169,8 @@ export interface ShellProps {
   /** The re-offer: a returning, writable session with no backup file on record (IntakeApp's `needsBackup`). The lock
    *  menu says so beside its Back up (the old answer page's backup door, RC4). */
   readonly backupOffered?: boolean
-  /** The assumption panel's guided re-walk: back to the walk-through with every answer kept (IntakeApp asks first over
-   *  anything the leave would drop). */
+  /** The guided re-walk (the aged line's re-confirm door): back to the walk-through with every answer kept (IntakeApp
+   *  asks first over anything the leave would drop). */
   readonly onReview?: () => void
   /** P3·U13 — a staleness clock fired at unlock: the StaleBanner carries the "figured fresh under today's rules" note. */
   readonly stalenessNote?: boolean
@@ -426,9 +435,8 @@ export default function Shell({
 
   // ── The plan's facts as they stand (the live draft) ────────────────────────────────────────────────────────────
   const { draft } = snapshot
-  const missing = useMemo(() => missingRequiredFacts(draft), [draft])
   const anchor = useMemo(() => planClockAnchor(draft.startCalendarYear, wallCalendarYear), [draft.startCalendarYear, wallCalendarYear])
-  // Where a sheet's focus lands on close when its opening control has unmounted: the page's own heading.
+  // Where a drawer's focus lands on close when its opening control has unmounted: the page's own heading.
   const restoreFallback = useCallback((): HTMLElement | null => headingRef.current, [])
   // THE OUTSIDE DOORS' DRAWER (RC13b; the header): one Profile drawer opened over the page that shows.
   const drawers = useDrawerHost(restoreFallback)
@@ -459,7 +467,7 @@ export default function Shell({
   const [trayHidden, setTrayHidden] = useState<ReadonlySet<string>>(() => new Set())
   const [trayAwaiting, setTrayAwaiting] = useState<ReadonlyMap<string, number>>(() => new Map())
   const [trayFocus, setTrayFocus] = useState<TrayFocus | undefined>(undefined)
-  /** A door into a lever (a facts-page "Try a change", the panel's withdrawal-order and Roth rows): Probability with the
+  /** A door into a lever (Settings' withdrawal-order, Roth and subsidy-rules rows; Health Care's tray): Probability with the
    *  tray open at that lever's row, the row shown again if the Edit drawer hid it. The left side is the household's own
    *  what-if (the recommendation's mode shows no lever rows), and the page's first-showing landing pick never overrides it. */
   const setWhatIfMode = whatIf.setMode
@@ -476,36 +484,24 @@ export default function Shell({
     [onNavigate, setWhatIfMode],
   )
 
-  const editors = useEditorSheets({
-    model,
-    snapshot,
-    missing,
-    savedAnchor: anchor,
-    restoreFallback,
-    onOpenSequencing: () => tryLever('withdrawal-order'),
-    onOpenRoth: () => tryLever('roth'),
-    onOpenHealth: () => onNavigate(routeOfScreen('health-care')),
-    // The panel's governed-spend row: the Living expenses drawer, over the page that shows (RC13b).
-    onOpenBudget: () => openDrawer({ kind: 'living' }, null),
-    // The panel's guided re-walk (the old answer page's Review, RC4): the shell is the home now, so the walk-through is
-    // left for from here. No separate collections door: Profile's pages hold the accounts and the other income.
-    ...(onReview !== undefined ? { onReview } : {}),
-  })
-  // A sheet belongs to the page it was opened on: a page change (a leave ask's Go, a plain Back or Forward) closes every
-  // one, so none stays open over the new page (the room's Back unmounted them; the shell's sheets outlive a page). The
-  // plan list drawer too: it draws only on Probability, and a state left open would reopen it there unasked. And an outside
-  // door's Profile drawer: a leave's Go over it drops its changes, as its words say.
+  // ── The Display drawer's choices (RC18): held for the session, handed to every chart composer below ──
+  const [display, setDisplay] = useState<DisplaySettings>(DEFAULT_DISPLAY)
+  const [displayOpen, setDisplayOpen] = useState(false)
+  const openDisplay = useCallback(() => setDisplayOpen(true), [])
+  // A drawer belongs to the page it was opened on: a page change (a leave ask's Go, a plain Back or Forward) closes every
+  // one, so none stays open over the new page. The plan list drawer too: it draws only on Probability, and a state left
+  // open would reopen it there unasked. And an outside door's Profile drawer: a leave's Go over it drops its changes, as
+  // its words say.
   const [planListOpen, setPlanListOpen] = useState(false)
-  const closeSheets = editors.closeAll
   const closeDrawer = drawers.close
   const sheetsRoute = useRef(routeKey)
   useLayoutEffect(() => {
     if (sheetsRoute.current === routeKey) return
     sheetsRoute.current = routeKey
-    closeSheets()
+    setDisplayOpen(false)
     closeDrawer()
     setPlanListOpen(false)
-  }, [routeKey, closeSheets, closeDrawer])
+  }, [routeKey, closeDrawer])
 
   // ── The right side (RC5's two-up): your plan by default, or a kept what-if or the recommendation on its own slot ──
   const [rightPickState, setRightPick] = useState<RightPick>('plan')
@@ -583,6 +579,7 @@ export default function Shell({
             readOnly,
             onRetry: retryAnswer,
             steady,
+            timeAxis: display.timeAxis,
             ...(agedBalancesYear !== undefined ? { agedBalancesYear } : {}),
             recommendation: {
               solve: snapshot.solve,
@@ -592,7 +589,7 @@ export default function Shell({
             },
           })
         : null,
-    [screen, snapshot, wallCalendarYear, readOnly, retryAnswer, steady, agedBalancesYear, recSave?.view, recordCard, todayEpochDay],
+    [screen, snapshot, wallCalendarYear, readOnly, retryAnswer, steady, display.timeAxis, agedBalancesYear, recSave?.view, recordCard, todayEpochDay],
   )
   const doorTo = (screenId: ScreenId) => {
     const to = routeOfScreen(screenId)
@@ -670,14 +667,15 @@ export default function Shell({
             compared: { pick: rightPick, bundle: rightBundle, view: right.view, landed: right.landed },
             ...(recordCard !== undefined ? { record: recordCard } : {}),
             chart,
+            sameScale: display.sameScale,
           })
         : null,
-    [analysisTab, snapshot, wallCalendarYear, readOnly, retryAnswer, notes, whatIf.mode, whatIf.source, whatIf.shown, whatIf.view, whatIf.landed, whatIf.changedFromKept, rightPick, rightBundle, right.view, right.landed, recordCard, chart],
+    [analysisTab, snapshot, wallCalendarYear, readOnly, retryAnswer, notes, whatIf.mode, whatIf.source, whatIf.shown, whatIf.view, whatIf.landed, whatIf.changedFromKept, rightPick, rightBundle, right.view, right.landed, recordCard, chart, display.sameScale],
   )
   // ── Retirement → Analysis → Confidence (RC7): the plan's fan full size and, retired, the run-out share ──────────────
   const conf = useMemo(
-    () => (screen === 'confidence' ? confidenceView({ snapshot, notes, onRetry: retryAnswer, readOnly }) : null),
-    [screen, snapshot, notes, retryAnswer, readOnly],
+    () => (screen === 'confidence' ? confidenceView({ snapshot, notes, onRetry: retryAnswer, readOnly, timeAxis: display.timeAxis }) : null),
+    [screen, snapshot, notes, retryAnswer, readOnly, display.timeAxis],
   )
 
   // ── Retirement → Cash Flows (RC6): its tab, drill, table and pick held here, so a page move keeps them ─────────────
@@ -908,7 +906,7 @@ export default function Shell({
     const comparison =
       taxTab === 'comparison' ? (
         <ComparisonPanel
-          view={comparisonView({ chart: taxChart, future: taxFuture, winner: winnerRows, baseline: baselineRows, stateClause: taxStateClause })}
+          view={comparisonView({ chart: taxChart, future: taxFuture, winner: winnerRows, baseline: baselineRows, stateClause: taxStateClause, timeAxis: display.timeAxis })}
           chart={taxChart}
           onChart={setTaxChart}
           future={taxFuture}
@@ -1007,12 +1005,12 @@ export default function Shell({
     const a = claimChoices.strategies.find((st) => st.id === picked.a)!
     return {
       kind: 'choices',
-      comparison: claimsComparisonView({ chart: claimsChart, a: claimsA, b: claimsB, notes, rows }),
+      comparison: claimsComparisonView({ chart: claimsChart, a: claimsA, b: claimsB, notes, rows, timeAxis: display.timeAxis }),
       summary: claimsSummaryView({ notes, rows, readings }),
       steps: claimsSteps(a, claimChoices.people, start, clock),
     }
     // `claimOthers` is derived from `claimChoices`; the slot views are the runs' own.
-  }, [onClaims, claimsAnswer, claimChoices, run, results.steady, snapshot.refiguring, snapshot.answer, taxStateClause, claimRun0.view, claimRun1.view, claimRun2.view, claimsChart, claimsA, claimsB, anchor.yearsSincePlanBuilt, noAnswerWords])
+  }, [onClaims, claimsAnswer, claimChoices, run, results.steady, snapshot.refiguring, snapshot.answer, taxStateClause, claimRun0.view, claimRun1.view, claimRun2.view, claimsChart, claimsA, claimsB, anchor.yearsSincePlanBuilt, noAnswerWords, display.timeAxis])
 
   // ── Retirement → Health Care (RC10): the committed answer's readout (retired) or the steady market's rows (working); the
   // tray's open state held here so a page move keeps it.
@@ -1037,8 +1035,9 @@ export default function Shell({
       todayEpochDay,
       sincePlanBuilt: anchor.yearsSincePlanBuilt,
       refiguring: snapshot.refiguring,
+      timeAxis: display.timeAxis,
     })
-  }, [onHealth, committedAnswer, run, results.steady, snapshot.refiguring, todayEpochDay, anchor.yearsSincePlanBuilt, noAnswerWords])
+  }, [onHealth, committedAnswer, run, results.steady, snapshot.refiguring, todayEpochDay, anchor.yearsSincePlanBuilt, noAnswerWords, display.timeAxis])
   // The tray's facts are the plan as it stands (the live draft, as the Profile cards print it): a door opens the fact's
   // Profile drawer over this page, so an edit's figures redraw here.
   const healthTray = useMemo(
@@ -1116,6 +1115,19 @@ export default function Shell({
     [figured, notes, readOnly, onReview],
   )
 
+  // ── Settings (RC18): its folder tab held here, so a page move keeps it ──
+  const [settingsTab, setSettingsTab] = useState<SettingsTab>('methodology')
+  const settingsPage = useMemo(
+    () => (screen === 'settings' ? settingsView({ draft, tab: settingsTab, readOnly, anchor }) : null),
+    [screen, draft, settingsTab, readOnly, anchor],
+  )
+  /** A row's door: its drawer over Settings, the tray at the lever's row on Probability, or Tax Strategies. */
+  const onSettingsDoor = (door: SettingsDoor) => {
+    if (door.kind === 'drawer') openDrawer(door.target, null)
+    else if (door.kind === 'tray') tryLever(door.lever)
+    else onNavigate(routeOfScreen('tax-strategies'))
+  }
+
   // The Invested accounts card's door: Profile → Net Worth, where the accounts are (RC13b; the facts page is gone).
   const snapshotDoors: SnapshotDoors = { analysis: doorTo('probability'), cashFlows: doorTo('cash-flows'), facts: doorTo('profile-net-worth') }
   const strategiesDoor = doorTo('tax-strategies')
@@ -1146,20 +1158,20 @@ export default function Shell({
     onAnnounced?.()
   }, [landed, onAnnounced, announcer])
 
-  const anySheetOpen = editors.sheetOpen
+  const anySheetOpen = displayOpen
   // The committed answer's tier and the store's refiguring flag, stamped on the shell's `main.result` below: the harnesses'
   // signal that an edit's answer has landed (`SETTLED_RESULT`).
   const answerTier = snapshot.answer.kind === 'headline' || snapshot.answer.kind === 'date' ? snapshot.answer.tier : undefined
   const names = draft.people.map((p) => (p.name ?? '').trim()).filter((n) => n !== '')
 
-  // A leave's Go makes its words true before the leave moves: every sheet closes (`workbenchLeaveAsk`,
+  // A leave's Go makes its words true before the leave moves: the Display drawer closes (`workbenchLeaveAsk`,
   // `shellCeremonyOpenEntry`); a Profile drawer's unsaved changes go with it (its own words, asked inside it).
   const shownAsk: ShellLeaveAsk | undefined =
     leaveAsk !== undefined
       ? {
           ...leaveAsk,
           onGo: () => {
-            editors.closeAll()
+            setDisplayOpen(false)
             leaveAsk.onGo()
           },
         }
@@ -1276,9 +1288,8 @@ export default function Shell({
     <StaleBannerStack
       lines={staleLines}
       // The pay check's standing line (W stale, typed below, the left over moved, W unanswered) opens the Pre-retirement
-      // living expenses drawer over this page (plan 4.0's disclosure map): the W question and the left-over question live
-      // there; any other seat, the panel's.
-      onOpenSeat={(seat) => (seat === 'working-year-cost' || seat === 'working-year-left-over' ? openDrawer({ kind: 'working-cost' }, null) : editors.openAssumptions(seat))}
+      // living expenses drawer over this page (plan 4.0's disclosure map): both its seats' questions live there.
+      onOpenSeat={() => openDrawer({ kind: 'working-cost' }, null)}
       {...(onReview !== undefined && !readOnly ? { onReconfirm: onReview } : {})}
     />
   )
@@ -1293,8 +1304,11 @@ export default function Shell({
         onHome={onHome}
         lock={lock}
         onLockAction={onLockAction}
-        // A read-only tab mounts no sheet (below), so it draws no gear: a door must open something.
-        {...(readOnly ? {} : { onGear: () => editors.openAssumptions() })}
+        // Settings on every tab: a read-only tab reads it with no door (RC18).
+        onGear={() => {
+          const to = routeOfScreen('settings')
+          if (!routeEquals(to, route)) onNavigate(to)
+        }}
       />
       <SubNav
         label={copy.shellPagesLabel}
@@ -1304,7 +1318,7 @@ export default function Shell({
           const page = module.pages.find((p) => p.id === id)
           if (page !== undefined && !routeEquals(page.route, route)) onNavigate(page.route)
         }}
-        className="hidden wide:block"
+        className={screen === 'settings' ? 'hidden' : 'hidden wide:block'}
       />
       <main
         className={inFrameCaveat ? 'result flex flex-1 flex-col bg-bg pb-10' : 'result flex flex-1 flex-col pb-10'}
@@ -1356,6 +1370,7 @@ export default function Shell({
                 setPlanListOpen(true)
               }}
               onChart={setChart}
+              onDisplay={openDisplay}
               strategies={strategiesDoor}
               handle={{ label: copy.trayHandle, open: trayOpen, onOpenChange: setTrayOpen, controls: trayId }}
               {...(tray !== undefined ? { tray } : {})}
@@ -1379,6 +1394,7 @@ export default function Shell({
               onBracket={setPickedBracket}
               onFind={onFind}
               onRepick={() => setRepick(true)}
+              onDisplay={openDisplay}
               {...(onTaxKeep !== undefined ? { onKeep: onTaxKeep } : {})}
               onTry={onTry}
               announce={announce}
@@ -1400,6 +1416,7 @@ export default function Shell({
               caveat={CASH_FLOWS_CAVEAT}
               trayOpen={claimsTray}
               onTrayOpen={setClaimsTray}
+              onDisplay={openDisplay}
             />
           </>
         ) : stressPage !== null ? (
@@ -1450,6 +1467,7 @@ export default function Shell({
               onTrayOpen={setHealthTrayOpen}
               onTryLever={tryLever}
               onOpenFact={(target) => openDrawer(target, null)}
+              onDisplay={openDisplay}
             />
           </>
         ) : isProfileScreen(screen) ? (
@@ -1468,6 +1486,11 @@ export default function Shell({
               onDrawerOpen={setProfileDrawerOpen}
             />
           </>
+        ) : settingsPage !== null ? (
+          <>
+            {leave}
+            <Settings view={settingsPage} headingRef={headingRef} onTab={setSettingsTab} onDoor={onSettingsDoor} {...(onReview !== undefined && !readOnly ? { onReview } : {})} />
+          </>
         ) : cfView !== null && cfIntro !== null ? (
           <>
             {leave}
@@ -1485,10 +1508,11 @@ export default function Shell({
               onAccounts={setCfAccounts}
               onFuture={setView}
               onPick={setCfPick}
+              onDisplay={openDisplay}
             />
           </>
         ) : null}
-        {!readOnly && editors.node}
+        <DisplayDrawer open={displayOpen} settings={display} onSave={setDisplay} onClose={() => setDisplayOpen(false)} />
         {drawers.render({ model, readOnly, ...(shownAsk !== undefined ? { leaveAsk: shownAsk } : {}) })}
       </main>
     </>

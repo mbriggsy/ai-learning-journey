@@ -76,13 +76,12 @@ export function isVerdictKey(key: string): boolean {
 export function isSurvivorKey(key: string): boolean {
   return /survivor/i.test(key)
 }
-/** Mortality-facing copy that must carry NO catastrophe/alarm lexicon — survivor copy PLUS four
+/** Mortality-facing copy that must carry NO catastrophe/alarm lexicon — survivor copy PLUS the
  *  worst-moment keys that aren't survivor-scoped: the dead-cohort scrub note
  *  (`bandReadoutThinNote`, council 2026-06-28), the already-failing verdict clause
  *  (`verdictRethinkClause`, council 2026-06-29 — a 0-of-10 plan invites "destitute"/"ruin"/"disaster"),
- *  and the U12 truer-picture line (`assumptionTruerPicture` — it renders exactly when an edit
- *  just WORSENED the displayed verdict, the same worst-moment class; the spec joins it to this
- *  gate BY NAME so a future dramatic edit can't ship green), and the generic recommendation HOLD
+ *  and the generic recommendation HOLD (the U12 truer-picture line joined BY NAME until Act 6 · RC18
+ *  deleted it with the assumption panel, its one host)
  *  (`recHoldGeneric` — the FAIL-CLOSED line for any hold whose true reason has no authored sentence:
  *  `withheldReasonText`'s default and, since 2026-09-04, the interim line of the UNWITNESSABLE
  *  refusal. That set of readers INCLUDES the already-failing household (`?seed=failing`) though the
@@ -94,7 +93,6 @@ export function isMortalityKey(key: string): boolean {
     isSurvivorKey(key) ||
     key === 'bandReadoutThinNote' ||
     key === 'verdictRethinkClause' ||
-    key === 'assumptionTruerPicture' ||
     key === 'recHoldGeneric' ||
     // The health sheet's no-era line (council wf_9921d7e3-55b, 2026-09-13 late): it renders exactly when
     // the middle path never carries both spouses on Medicare — a spouse gone or never enrolled — the

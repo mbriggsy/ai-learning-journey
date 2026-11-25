@@ -10,6 +10,11 @@
  * height) and the labels object (the composer hands the same one while the household's draft and ages stand), and a
  * re-render with the same picture hands Highcharts the same options. The plot-box listener rides a ref for the same
  * reason: a new callback each render must never rebuild the options.
+ *
+ * THE TIME AXIS IS BUILT, NEVER UPDATED (`BalanceBar.tsx`'s rule, docs/landmines.md "UI and product"): the Display drawer
+ * moves the x axis between the first person's age and the calendar year, and a live chart handed a new axis as an update
+ * was seen not to hold it. So the chart is keyed on the axis's first number (an age or a year, never the same number):
+ * a new axis builds a fresh chart.
  */
 import { useRef } from 'react'
 import type { Options } from 'highcharts/highcharts.src'
@@ -35,5 +40,5 @@ export function FanChart({ fan, moments, labels, height, onPlotBox }: FanChartPr
   if (held.current === null || held.current.key !== key || held.current.labels !== labels) {
     held.current = { key, labels, options: fanOptions({ fan, moments, labels, height, onPlotBox: (box) => listener.current?.(box) }) }
   }
-  return <Chart options={held.current.options} chartId="fan" className="b9-fan" />
+  return <Chart key={labels.tickAt(0)} options={held.current.options} chartId="fan" className="b9-fan" />
 }

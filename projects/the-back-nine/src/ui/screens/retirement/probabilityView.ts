@@ -19,8 +19,9 @@
  * - retired (`answer.kind === 'headline'`): the intro is the confidence statement; each half shows its ring, the survivor
  *   row (with its spending basis) and the essentials row, each only where present, and the balance bar: the median of
  *   the run's `terminalValuesReal`, labelled for what it is (each future's balance when the second of you dies, capped
- *   at the plan's last year), never "ending assets"; the two bars share one scale. The key-metric column carries the
- *   statement's spend clause, the difference line and the state clause.
+ *   at the plan's last year), never "ending assets"; the two bars share one scale (the Display drawer's default; turned
+ *   off, each bar takes its own and a line says the heights no longer compare, `src/ui/displaySettings.ts`). The
+ *   key-metric column carries the statement's spend clause, the difference line and the state clause.
  * - working (`answer.kind === 'date'`): the intro is the two-dates sentence (the graded date first, under the provisional
  *   tag while provisional); each ring reads the odds at the stop year its half runs at and names it ("if you stop in
  *   2031"); no balance bar and no survivor row on either half (the survivor stopgap line stands in their place, until
@@ -117,6 +118,9 @@ export interface ProbabilityInput {
   /** The DISK's remembered recommendation and the store's verdict on it (IntakeApp's `recordCard`). */
   readonly record?: { readonly record: SavedRecommendationV3; readonly status: SavedRecommendationStatus }
   readonly chart: ProbabilityChart
+  /** The Display drawer's "same scale for both halves" (`displaySettings.ts`): the two balance bars on one scale, or
+   *  each on its own. */
+  readonly sameScale: boolean
 }
 
 // ── The view ──────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -148,14 +152,24 @@ export interface HalfView {
   readonly barMedian?: number
 }
 
+/** One bar's dollar scale: its lattice and its tick words. */
+export interface BarScale {
+  readonly lattice: DollarLattice
+  readonly axisDollar: (dollars: number) => string
+}
+
 export interface BarsView {
   readonly label: string
   readonly note: string
   /** The line under the halves that names what the bars hold: the label, then its note. */
   readonly caption: string
   readonly description: string
-  readonly lattice: DollarLattice
-  readonly axisDollar: (dollars: number) => string
+  /** Each half's scale, keyed by side: ONE object on both sides while the bars share a scale (the default), else each
+   *  side's own (the lattice over its own median). `BalanceBar` keys its chart on the lattice it is handed. */
+  readonly scales: { readonly alternative: BarScale; readonly compared: BarScale }
+  /** Present exactly when the two sides stand on different scales: the line that says their heights don't compare,
+   *  printed with the caption. */
+  readonly ownScales?: string
   /** Each half's printed figure (`~`), keyed by side; absent where the half has no bar to draw. */
   readonly figures: { readonly alternative?: string; readonly compared?: string }
 }
@@ -582,13 +596,20 @@ export function probabilityView(input: ProbabilityInput): ProbabilityView {
         ? { line: healthLine(right.view, rightInSentence, planRanOut), reserve: withRanOut(slots.subsidyRegimeCostDeltaWith(rightInSentence, HEALTH_RESERVE_FIGURE, HEALTH_RESERVE_FIGURE)) }
         : undefined
 
-  // ── The bars: the retired route only, one shared scale ──
+  // ── The bars: the retired route only, one shared scale unless the Display drawer turns it off ──
   const bars = ((): BarsView | undefined => {
     if (answer.kind !== 'headline') return undefined
     const medians = [alternative.barMedian, compared.barMedian].filter((m): m is number => m !== undefined && Number.isFinite(m))
     const max = Math.max(0, ...medians)
     if (!(max > 0)) return undefined // the words stand in its place (`barsNone`)
-    const lattice = niceLattice(max)
+    const scaleOf = (lattice: DollarLattice): BarScale => ({ lattice, axisDollar: mmAxisFormatterFor(lattice.ceiling) })
+    const shared = scaleOf(niceLattice(max))
+    // Its own scale: the lattice over its own median. A side with no positive median draws no bar above $0 (or none at
+    // all), and a $0 lattice has no honest gridlines, so it keeps the shared one.
+    const own = (m: number | undefined): BarScale => (m !== undefined && Number.isFinite(m) && m > 0 ? scaleOf(niceLattice(m)) : shared)
+    const scales = input.sameScale ? { alternative: shared, compared: shared } : { alternative: own(alternative.barMedian), compared: own(compared.barMedian) }
+    // Said only where the two scales really differ: two own scales that land on one lattice still compare.
+    const differ = scales.alternative.lattice.ceiling !== scales.compared.lattice.ceiling || scales.alternative.lattice.step !== scales.compared.lattice.step
     const figure = (m: number | undefined) => (m === undefined ? undefined : slots.probabilityBarFigure(formatMmDollar(m)))
     const alt = figure(alternative.barMedian)
     const cmp = figure(compared.barMedian)
@@ -597,8 +618,8 @@ export function probabilityView(input: ProbabilityInput): ProbabilityView {
       note: copy.probabilityBarNote,
       caption: `${copy.probabilityBarLabel}. ${copy.probabilityBarNote}`,
       description: copy.probabilityBarDescription,
-      lattice,
-      axisDollar: mmAxisFormatterFor(lattice.ceiling),
+      scales,
+      ...(differ ? { ownScales: copy.probabilityBarOwnScales } : {}),
       figures: { ...(alt !== undefined ? { alternative: alt } : {}), ...(cmp !== undefined ? { compared: cmp } : {}) },
     }
   })()
@@ -795,6 +816,7 @@ export function oddsChartView(
  *  when the picture or its words change, `OddsByStopYear.tsx`). */
 const ODDS_LABELS: OddsChartView['labels'] = {
   barLabel: copy.ladderBarLabel,
+  // Calendar years on either time axis (`displaySettings.ts`): the rows ARE stop years, the answer's own unit.
   xAxisTitle: copy.oddsAxisYear,
   yTick: (rung) => slots.xOfTen(rung),
   xTick: slots.oddsYearTick,

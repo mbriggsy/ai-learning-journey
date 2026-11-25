@@ -5,13 +5,11 @@ import '@testing-library/jest-dom/vitest'
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { intakeSteps } from '../questions'
 import { IntakeFlow } from '../flow'
-import { AssumptionPanel } from '../AssumptionPanel'
 import { GESTURE_HOLD_FALLBACK_MS, useGestureHold } from '../gestureHold'
 import { createMemoryModel, type MemoryModel, type ScenarioDraft } from '@store/memoryModel'
 import type { EngineClient } from '@store/engineClient'
 import { copy, slots } from '@ui/copy'
 import { DEV_SEEDS } from '@ui/devSeeds'
-import { planClockAnchor } from '@ui/bandAnnotations'
 
 /**
  * The h2 cure (`src/intake/gestureHold.ts`; the register's Tier 0 "On a screen taller than his laptop's,
@@ -375,7 +373,7 @@ describe('useGestureHold — what a face showed at a press stands until that pre
   })
 })
 
-// ── the W face, walk and panel ───────────────────────────────────────────────────────────────
+// ── the W face in the walk (the panel's arms moved to the W drawer's test with RC18: expensesGoalsSave.test.tsx) ───────────────────────────────────────────────────────────────
 
 const nullClient: EngineClient = {
   runningInWorker: true,
@@ -411,25 +409,6 @@ function Walk({ model }: { readonly model: MemoryModel }) {
     return all.slice(all.findIndex((s) => s.id === 'working-cost'))
   }, [snap.draft])
   return <IntakeFlow steps={steps} model={model} />
-}
-
-function WiredPanel({ model }: { readonly model: MemoryModel }) {
-  const snapshot = useSyncExternalStore(model.subscribe, model.getSnapshot)
-  return (
-    <AssumptionPanel
-      open
-      snapshot={snapshot}
-      missing={[]}
-      savedAnchor={planClockAnchor(2026, 2026)}
-      onCommitEdit={(mutate) => model.update(mutate)}
-      onOpenBudget={() => {}}
-      onOpenSequencing={() => {}}
-      onOpenRoth={() => {}}
-      onOpenHealth={() => {}}
-      onReview={() => {}}
-      onClose={() => {}}
-    />
-  )
 }
 
 const w = (m: MemoryModel) => m.getSnapshot().draft.workingYearCost
@@ -526,256 +505,5 @@ describe('the walk: a tap on "Each month" right after typing — the note above 
     expect(screen.queryByText(copy.periodConfirmPrompt), 'the door named its unit: no period question').toBeNull()
     fireEvent.click(screen.getByRole('button', { name: copy.flowNext }))
     expect(screen.getByRole('heading', { level: 2 }).textContent).toBe(copy.qWorkingLedgerHeading)
-  })
-})
-
-describe('the panel: the row’s value line and money picture above the question stand until the click', () => {
-  const row = () => document.querySelector<HTMLElement>('[data-assumption-seat="working-year-cost"]')!
-  const valueLine = () => row().querySelector('.ap-row__value')!.textContent
-
-  it('stale → fresh: the picture does not mount under the press; the click lands it, and the unit moved', async () => {
-    const m = modelWith(staleEnteredYearly)
-    render(<WiredPanel model={m} />)
-    const staleLine = valueLine()
-    expect(staleLine).toBe(slots.assumptionWorkingCostStale('84,000'))
-    expect(row().querySelector('.wy-ledger')).toBeNull()
-    const month = label(row(), 'periodMonth')
-    typeThenPress(row(), '7000', month)
-    expect(w(m)).toEqual({ kind: 'entered', amountReal: 7_000, entryPeriod: 'year', stateTaxReading: 'class-based' })
-    expect(row().querySelector('.wy-ledger'), 'no picture mounts above the control mid-tap').toBeNull()
-    expect(valueLine()).toBe(staleLine)
-    expect(within(row()).getByRole('note')).toHaveTextContent(STALE_NOTE)
-    expect(within(row()).getByLabelText(copy.workingCostAmountLabel), 'the question reads the live draft').toHaveValue('7,000')
-    await release(month)
-    expect(w(m)).toEqual({ kind: 'entered', amountReal: 84_000, entryPeriod: 'month', stateTaxReading: 'class-based' })
-    expect(row().querySelector('.wy-ledger')).not.toBeNull()
-    expect(valueLine()).toBe(slots.assumptionWorkingCostEntered('84,000'))
-    expect(within(row()).queryByRole('note')).toBeNull()
-  })
-
-  it('fresh: a retyped figure does not re-size the picture under the press; the click lands the new one', async () => {
-    const dateshortW = DEV_SEEDS.dateshort.workingYearCost
-    if (dateshortW === undefined) throw new Error('dateshort carries a W')
-    const fresh: ScenarioDraft = {
-      ...DEV_SEEDS.dateshort,
-      workingYearCost: { kind: 'entered', amountReal: 70_000, entryPeriod: 'year', stateTaxReading: dateshortW.stateTaxReading },
-    }
-    const m = modelWith(fresh)
-    render(<WiredPanel model={m} />)
-    const picture0 = row().querySelector('.wy-ledger')!.innerHTML
-    const month = label(row(), 'periodMonth')
-    typeThenPress(row(), '5000', month) // meant: $5,000 a month
-    expect(w(m)).toMatchObject({ kind: 'entered', amountReal: 5_000, entryPeriod: 'year' })
-    expect(row().querySelector('.wy-ledger')!.innerHTML, 'the picture above the control is the press’s').toBe(picture0)
-    expect(within(row()).getByLabelText(copy.workingCostAmountLabel)).toHaveValue('5,000')
-    await release(month)
-    expect(w(m)).toMatchObject({ kind: 'entered', amountReal: 60_000, entryPeriod: 'month' })
-    expect(row().querySelector('.wy-ledger')!.innerHTML).not.toBe(picture0)
-  })
-
-  it('a tap on the Keep door right after typing keeps $84,000 here too', async () => {
-    const m = modelWith(staleEnteredYearly)
-    render(<WiredPanel model={m} />)
-    const keep = within(row()).getByRole('button', { name: KEEP })
-    typeThenPress(row(), '7000', keep)
-    expect(w(m)).toMatchObject({ amountReal: 7_000 })
-    await release(keep)
-    expect(w(m)).toEqual({ kind: 'entered', amountReal: 84_000, entryPeriod: 'year', stateTaxReading: 'class-based' })
-    expect(valueLine()).toBe(slots.assumptionWorkingCostEntered('84,000'))
-    expect(document.activeElement).toBe(row().querySelector('input[type="radio"]:checked'))
-  })
-
-  /** `datecoststale` as seeded: a YES to $84,000, spending since lowered to $78,000 — stale on the quote,
-   *  its door shown ($84,000 is not below today's quote). */
-  const seed = DEV_SEEDS.datecoststale
-  const seedW = seed.workingYearCost
-  if (seedW?.kind !== 'confirmed') throw new Error('datecoststale holds a confirmed W')
-
-  it('a held YES: "a different figure", a figure typed, then the door — keeps the $84,000 it was quoted, yearly', async () => {
-    const m = modelWith(seed)
-    render(<WiredPanel model={m} />)
-    fireEvent.click(within(row()).getByRole('radio', { name: copy.workingCostDifferent })) // the panel keeps W
-    const keep = within(row()).getByRole('button', { name: KEEP })
-    typeThenPress(row(), '5000', keep) // under the untapped month: $60,000 a year commits at the blur
-    expect(w(m)).toMatchObject({ kind: 'entered', amountReal: 60_000, entryPeriod: 'month' })
-    await release(keep)
-    // Kept, so stamped with the $78,000 quote the note showed (build 2's KTD10), and the row says so.
-    expect(w(m)).toEqual({
-      kind: 'entered',
-      amountReal: 84_000,
-      entryPeriod: 'year',
-      stateTaxReading: seedW.stateTaxReading,
-      keptOverQuoteReal: 78_000,
-    })
-    expect(valueLine()).toBe(slots.assumptionWorkingCostKept('84,000'))
-  })
-
-  it('a commit from ANOTHER row under the same press re-gates the door at once: spending raised past $84,000, the keep is withheld', async () => {
-    const m = modelWith(seed)
-    render(<WiredPanel model={m} />)
-    const keep = within(row()).getByRole('button', { name: KEEP })
-    const spend = screen.getByLabelText(copy.spendLabel)
-    act(() => spend.focus())
-    fireEvent.change(spend, { target: { value: seed.spendEntryPeriod === 'month' ? '7917' : '95000' } })
-    // The tap on the door blurs the spending field: $95,000 lands, and today's quote now sits ABOVE the
-    // held yes — ruling 34 withholds the door, and a held door must not slip past it.
-    fireEvent.pointerDown(keep)
-    fireEvent.mouseDown(keep)
-    act(() => keep.focus())
-    expect(m.getSnapshot().draft.annualSpendingReal).toBeGreaterThan(84_000)
-    expect(within(row()).queryByRole('button', { name: KEEP }), 'the door is withheld the moment the quote moves').toBeNull()
-    await release(keep)
-    expect(w(m), 'the yes stands, stale, as it was').toEqual(seedW)
-    expect(within(row()).getByRole('note')).toHaveTextContent(slots.workingCostStaleLeansBetter('84,000'))
-  })
-})
-
-describe('the typed-below note under the hold (the Tier 0 retype entry’s prescription (1); the round review): a press while W’s figure has focus draws the face the press saw, so the note mounts only after the click', () => {
-  const costRow = () => document.querySelector<HTMLElement>('[data-assumption-seat="working-year-cost"]')!
-  const yes = DEV_SEEDS.datesavedrisen.workingYearCost
-  if (yes?.kind !== 'confirmed') throw new Error('[test setup] datesavedrisen holds a yes')
-  // `datesavedrisen` (spending raised to $90,000) with W TYPED at the $90,000 quote: no note. Retyped to $84,000.
-  const typedAtQuote: ScenarioDraft = {
-    ...DEV_SEEDS.datesavedrisen,
-    workingYearCost: { kind: 'entered', amountReal: 90_000, entryPeriod: 'year', stateTaxReading: yes.stateTaxReading },
-  }
-  const NOTE =
-    'Your $84,000 a year is below your spending figure of $90,000 a year. A working year almost always costs at least what you spend, so this answer can look better than it really is.'
-
-  it('$84,000 typed, then a press elsewhere in the panel (the spending field): the blur commits it, but no note mounts above the press’s target until the click lands; then it shows', async () => {
-    const m = modelWith(typedAtQuote)
-    render(<WiredPanel model={m} />)
-    expect(within(costRow()).queryByText(NOTE), 'no note at the quote').toBeNull()
-    const spend = screen.getByLabelText(copy.spendLabel)
-    typeThenPress(costRow(), '84000', spend)
-    expect(w(m), 'the press’s blur committed the typed figure').toMatchObject({ kind: 'entered', amountReal: 84_000 })
-    expect(within(costRow()).queryByText(NOTE), 'held: the note waits for the click').toBeNull()
-    await release(spend)
-    expect(within(costRow()).getByText(NOTE)).toBeInTheDocument()
-  })
-})
-
-describe('the panel’s left-over seat, under one hold with the W row (build 2’s KTD8): a press while W’s figure has focus leaves the seat as drawn until the click, and "All of it" stores the figure the seat showed', () => {
-  const costRow = () => document.querySelector<HTMLElement>('[data-assumption-seat="working-year-cost"]')!
-  const seat = () => document.querySelector<HTMLElement>('[data-assumption-seat="working-year-left-over"]')!
-  const answer = (m: MemoryModel) => m.getSnapshot().draft.workingYearLeftOver
-  /** The seat's year-0 figure line for a formatted amount (a described-by line above its radios). */
-  const figureLine = (amount: string) => within(seat()).queryByText(slots.workingLedgerLeftOverFigure(amount))
-
-  /** `date` with its $84,000 W ENTERED a year, so W's figure input shows at once, stamped with `date`'s own
-   *  reading: fresh, so the seat asks (R5). Year 0's Left over, hand-derived (the build-2 record's
-   *  `year0check.mts`, quoted in `workingYearCredit.test.ts`): pay 150,000 − payroll tax 11,475 − the tax on
-   *  the outside income 17,540 − deposits 20,000 − W 84,000 = $16,985. W reaches year 0 only as its own line:
-   *  `simulate.ts`'s check terms carry it apart from the income the tax reads (the pay and the ongoing
-   *  income, never W), and `taxOverlay.ts`'s `workingYearCashLines` subtracts it once. So W $85,000 prints
-   *  exactly $1,000 less: $15,985. */
-  const dateW = DEV_SEEDS.date.workingYearCost
-  if (dateW === undefined) throw new Error('date carries a W')
-  const enteredYearly: ScenarioDraft = {
-    ...DEV_SEEDS.date,
-    workingYearCost: { kind: 'entered', amountReal: 84_000, entryPeriod: 'year', stateTaxReading: dateW.stateTaxReading },
-  }
-
-  it('a W retyped from $84,000 to $85,000, then "All of it" pressed (the press blurs W): stores the $16,985 the seat showed, never the $15,985 under the new W, and the hold lets go one task after the click', async () => {
-    // This arm cannot show the real-browser race insight 149 measured: there, the label's own click reaches
-    // the window listener and its microtask re-renders BEFORE the label forwards a second click to the radio.
-    // jsdom keeps that listener order, but its scripted dispatch runs no microtask in between and fireEvent's
-    // act() holds React's render until the event returns, so here the forwarded click stores from the held
-    // render whatever the release does. It pins that the seat draws, and the write stores, the face the press
-    // saw, and the release's timing. Only a coordinate tap in a real browser can gate the race itself; that
-    // arm belongs in `e2e/vertical-fit.spec.ts`.
-    const m = modelWith(enteredYearly)
-    render(<WiredPanel model={m} />)
-    expect(answer(m), 'unanswered before the press (R1)').toBeUndefined()
-    expect(figureLine('16,985'), 'the seat shows $16,985 under W $84,000').toBeInTheDocument()
-    const allOfIt = within(seat()).getByRole('radio', { name: copy.workingLedgerLeftOverSaved }).closest('label')!
-    typeThenPress(costRow(), '85000', allOfIt)
-    // The press's blur committed the new W at once …
-    expect(w(m)).toEqual({ kind: 'entered', amountReal: 85_000, entryPeriod: 'year', stateTaxReading: dateW.stateTaxReading })
-    // … but both rows still draw the draft the press found (one hold over the two, KTD8).
-    expect(figureLine('16,985'), 'the seat is held at the press’s figure').toBeInTheDocument()
-    expect(figureLine('15,985'), 'the new W’s figure has not landed in the seat').toBeNull()
-    expect(within(costRow()).getByText(slots.assumptionWorkingCostEntered('84,000')), 'the W row is held too').toBeInTheDocument()
-    fireEvent.pointerUp(allOfIt)
-    fireEvent.mouseUp(allOfIt)
-    fireEvent.click(allOfIt) // the label forwards its click to the radio, in this same task
-    expect(answer(m), 'the figure the seat showed at the press, never the $15,985 under the new W').toEqual({
-      kind: 'saved',
-      quotedReal: 16_985,
-    })
-    // The release is a zero-delay timer: in the click's own task the face is still the held one.
-    expect(figureLine('16,985'), 'still held in the click’s own task').toBeInTheDocument()
-    expect(figureLine('15,985')).toBeNull()
-    await letGo()
-    // One task later the live draft lands: the seat shows the figure under W $85,000, and the stored answer
-    // reads "saved, moved" against it at once (KTD8; R6's moved line names both figures).
-    expect(figureLine('16,985'), 'the held figure is gone').toBeNull()
-    expect(figureLine('15,985'), 'the live figure under W $85,000').toBeInTheDocument()
-    expect(within(seat()).getByText(slots.workingLedgerLeftOverFellLine('16,985', '15,985'))).toBeInTheDocument()
-    expect(within(seat()).getByRole('radio', { name: copy.workingLedgerLeftOverSaved })).toBeChecked()
-    expect(within(costRow()).getByText(slots.assumptionWorkingCostEntered('85,000'))).toBeInTheDocument()
-    expect(answer(m), 'the release stores nothing more').toEqual({ kind: 'saved', quotedReal: 16_985 })
-  })
-
-  it('with focus still in W’s figure, a press ELSEWHERE in the panel (the spending field) holds the seat as drawn until the click lands, then shows the figure under the new W, and stores no reply (plan U7)', async () => {
-    // The press lands outside both rows: only W's focus arms the hold (`gestureHold.ts`'s "anywhere while
-    // focus is inside"), so this arm pins the hold's focus arm on the W row's ref. The arm above, pressed
-    // inside the seat with focus in W, is held by either the seat's ref or that focus arm alone.
-    const m = modelWith(enteredYearly)
-    render(<WiredPanel model={m} />)
-    const spend = screen.getByLabelText(copy.spendLabel)
-    const figure = within(costRow()).getByLabelText(copy.workingCostAmountLabel)
-    act(() => figure.focus())
-    fireEvent.change(figure, { target: { value: '85000' } })
-    expect(w(m), 'typing alone commits nothing: the figure commits on its blur').toMatchObject({ amountReal: 84_000 })
-    fireEvent.pointerDown(spend)
-    fireEvent.mouseDown(spend)
-    act(() => spend.focus()) // the press moves focus to the field it landed on, and W's figure blurs
-    expect(w(m), 'the blur committed the new W').toEqual({
-      kind: 'entered',
-      amountReal: 85_000,
-      entryPeriod: 'year',
-      stateTaxReading: dateW.stateTaxReading,
-    })
-    expect(figureLine('16,985'), 'the seat is held at the figure it showed at the press').toBeInTheDocument()
-    expect(figureLine('15,985')).toBeNull()
-    expect(within(seat()).getByText(slots.workingLedgerLeftOverAbsentLine('16,985')), 'the line below the group too').toBeInTheDocument()
-    expect(within(costRow()).getByText(slots.assumptionWorkingCostEntered('84,000')), 'and the W row above it').toBeInTheDocument()
-    fireEvent.pointerUp(spend)
-    fireEvent.mouseUp(spend)
-    fireEvent.click(spend)
-    expect(figureLine('16,985'), 'still held in the click’s own task').toBeInTheDocument()
-    await letGo()
-    expect(figureLine('15,985'), 'the live figure under W $85,000').toBeInTheDocument()
-    expect(figureLine('16,985')).toBeNull()
-    expect(within(seat()).getByText(slots.workingLedgerLeftOverAbsentLine('15,985'))).toBeInTheDocument()
-    expect(within(costRow()).getByText(slots.assumptionWorkingCostEntered('85,000'))).toBeInTheDocument()
-    // A press outside the seat is no reply (R1); its positive twin is the arm above, where a press on "All of
-    // it" stores one.
-    expect(answer(m), 'nothing stored').toBeUndefined()
-    const radios = within(seat()).getAllByRole('radio')
-    expect(radios, 'the seat still asks, with its three replies').toHaveLength(3)
-    for (const r of radios) expect(r, 'no reply checked').not.toBeChecked()
-  })
-
-  it('a W retyped to $101,000, then "All of it" pressed: the held seat still offers the replies, but the press’s blur closed R5’s gate (year 0 now prints below $1, "not asked"), so the click stores NOTHING and the seat goes', async () => {
-    // Hand-derived as above: W comes off year 0 dollar for dollar, so W $101,000 prints $16,985 − $17,000 =
-    // −$15, a short year, below R5's $1. The write re-checks the gate on the store's CURRENT draft
-    // (`writeWorkingYearLeftOver`); the held face cannot carry the press past it. The gate's other half (a press
-    // that stales W) is `assumptionPanel.test.tsx`'s spend-staling arm; the positive twin is the first arm here.
-    const m = modelWith(enteredYearly)
-    render(<WiredPanel model={m} />)
-    const allOfIt = within(seat()).getByRole('radio', { name: copy.workingLedgerLeftOverSaved }).closest('label')!
-    typeThenPress(costRow(), '101000', allOfIt)
-    expect(w(m), 'the press’s blur committed the new W').toMatchObject({ amountReal: 101_000 })
-    expect(within(seat()).getAllByRole('radio'), 'the held seat still draws its three replies').toHaveLength(3)
-    expect(figureLine('16,985'), 'at the figure it showed at the press').toBeInTheDocument()
-    fireEvent.pointerUp(allOfIt)
-    fireEvent.mouseUp(allOfIt)
-    fireEvent.click(allOfIt)
-    expect(answer(m), 'the gate closed under the press: nothing stored').toBeUndefined()
-    await letGo()
-    expect(answer(m)).toBeUndefined()
-    expect(document.querySelector('[data-assumption-seat="working-year-left-over"]'), 'not asked: the seat is gone').toBeNull()
   })
 })

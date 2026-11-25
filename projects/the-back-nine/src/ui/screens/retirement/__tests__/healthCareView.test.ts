@@ -15,6 +15,8 @@ import { copy, slots } from '../../../copy'
 import { composeHealthSheet } from '../../../healthSheetChrome'
 import { expensesView, goalsView } from '../../profile/profileView'
 import type { TableMeta } from '../../../workbench/tableRun'
+import type { TimeAxis } from '../../../displaySettings'
+import { healthPartOptions } from '@viz/charts/healthPartsOptions'
 import { cliffRuns, healthCareView, healthTrayView, HEALTH_PARTS, lifetimeMedians, type HealthChartsView } from '../healthCareView'
 
 const FRESH = epochDayFromIsoDate(acaEnhancedSubsidyStatus.value.verifiedOn) + 1
@@ -58,13 +60,14 @@ const taxAware = {
   lifetimeMedicareCostReal: [300_000, 200_000, 100_000],
 } as unknown as TaxAwareDistribution
 
-const retired = (over: { readout?: HealthReadout; taxAware?: TaxAwareDistribution; depletionYears?: readonly number[]; refiguring?: boolean; draft?: typeof draft } = {}) =>
+const retired = (over: { readout?: HealthReadout; taxAware?: TaxAwareDistribution; depletionYears?: readonly number[]; refiguring?: boolean; draft?: typeof draft; timeAxis?: TimeAxis } = {}) =>
   healthCareView({
     answer: { kind: 'headline', draft: over.draft ?? draft, readout: 'readout' in over ? over.readout : readout, taxAware: over.taxAware ?? taxAware, depletionYears: over.depletionYears ?? [-1, -1, -1] },
     steady: { kind: 'loading' },
     todayEpochDay: FRESH,
     sincePlanBuilt: 0,
     refiguring: over.refiguring ?? false,
+    timeAxis: over.timeAxis ?? 'ages',
   })
 
 const charts = (v: ReturnType<typeof healthCareView>): HealthChartsView => {
@@ -126,7 +129,7 @@ describe('the marketplace cliff share', () => {
 
   it('a year where 10% of futures price the marketplace prints no share', () => {
     const only = { byYear: [year(1, { acaNetPremiumP50: 9_000, acaPricedFraction: 0.1, overCliffFraction: 0.9 })] }
-    expect(cliffRuns(only, 61, 'Alex’s age')).toEqual([])
+    expect(cliffRuns(only, 61, { title: 'Alex’s age', offset: 0 })).toEqual([])
   })
 
   it('never prints "10 of 10" and never good-news words (insight 089)', () => {
@@ -195,7 +198,7 @@ describe('the words come from the sheet’s composers', () => {
   it('the HSA line rides only where the plan holds an HSA (the old sheet’s own rule)', () => {
     expect(charts(retired()).footnotes).not.toContain(copy.controlHealthHsaNote)
     const withHsa = { ...draft, enteredAccounts: [...draft.enteredAccounts, { id: 'acct-0-hsa', ownerIndex: 0 as const, kind: 'hsa' as const, valueToday: 20_000 }] }
-    const v = healthCareView({ answer: { kind: 'headline', draft: withHsa, readout, taxAware, depletionYears: [-1] }, steady: { kind: 'loading' }, todayEpochDay: FRESH, sincePlanBuilt: 0, refiguring: false })
+    const v = healthCareView({ answer: { kind: 'headline', draft: withHsa, readout, taxAware, depletionYears: [-1] }, steady: { kind: 'loading' }, todayEpochDay: FRESH, sincePlanBuilt: 0, refiguring: false, timeAxis: 'ages' })
     expect(charts(v).footnotes).toContain(copy.controlHealthHsaNote)
   })
 
@@ -277,7 +280,7 @@ const meta = {
   ],
 } as unknown as TableMeta
 
-function working(over: Partial<TableMeta> = {}) {
+function working(over: Partial<TableMeta> = {}, timeAxis: TimeAxis = 'ages') {
   const rows = [
     row(0, { acaNet: 0, medicare: 3_000, irmaaSurcharge: 400, medicareExtras: 2_900 }),
     row(1, { acaNet: 0, medicare: 3_100, irmaaSurcharge: 0, medicareExtras: 2_900 }),
@@ -291,6 +294,7 @@ function working(over: Partial<TableMeta> = {}) {
     todayEpochDay: FRESH,
     sincePlanBuilt: 0,
     refiguring: false,
+    timeAxis,
   })
 }
 
@@ -334,9 +338,74 @@ describe('the working route: the steady market’s own rows', () => {
   })
 
   it('waits for the steady rows, and says so when they fail', () => {
-    const at = (steady: never) => healthCareView({ answer: { kind: 'date', draft: DEV_SEEDS.date65 }, steady, todayEpochDay: FRESH, sincePlanBuilt: 0, refiguring: false })
+    const at = (steady: never) => healthCareView({ answer: { kind: 'date', draft: DEV_SEEDS.date65 }, steady, todayEpochDay: FRESH, sincePlanBuilt: 0, refiguring: false, timeAxis: 'ages' })
     expect(at({ kind: 'loading' } as never)).toEqual({ kind: 'words', words: copy.healthRowsWaiting })
     expect(at({ kind: 'error' } as never)).toEqual({ kind: 'words', words: copy.healthRowsError })
+  })
+})
+
+// ── The time axis (Act 6 · RC18, the Display drawer) ────────────────────────────────────────────────────────────
+
+describe('the time axis: the first person’s age by default, the calendar year on the years axis', () => {
+  const start = draft.startCalendarYear
+  /** The chart the page draws for a part, as `HealthCare.tsx` hands it over. */
+  const drawn = (v: HealthChartsView, id: string) => {
+    const part = v.parts.find((p) => p.id === id)!
+    const o = healthPartOptions({
+      id,
+      name: part.title,
+      bars: part.bars,
+      cliff: part.cliff,
+      ages: v.ages,
+      axisOffset: v.axisOffset,
+      axisTitle: v.axisTitle,
+      lattice: v.lattice,
+      axisDollar: v.axisDollar,
+      words: { title: 'T', credits: 'C', end: 'E', legend: 'L', legendItem: 'I', description: 'D' },
+      height: 120,
+    })
+    const series = o.series as { id: string; data: { x: number }[] }[]
+    return { x: o.xAxis as { min: number; max: number }, bars: series[0]!.data.map((d) => d.x), cliff: series.slice(1).map((s) => s.data.map((d) => d.x)) }
+  }
+
+  it('ages (the default) read as before: whose age, no offset, the stretches spoken in ages', () => {
+    const v = charts(retired())
+    expect(v.axisTitle).toBe('Alex’s age')
+    expect(v.axisOffset).toBe(0)
+    const cliff = v.parts[0]!.cliff
+    expect(cliff[0]!.point).toBe(slots.healthCliffPoint(62, 63, 'Alex’s age', 2))
+    const d = drawn(v, 'aca')
+    expect(d.bars[0]).toBe(61)
+    expect([d.x.min, d.x.max]).toEqual([60.5, 68.5])
+  })
+
+  it('years: every bar, bracket and the min/max on the calendar year, titled "Year"; the stretches spoken in years, never "Year 62"', () => {
+    const v = charts(retired({ timeAxis: 'years' }))
+    expect(v.axisTitle).toBe(copy.chartAxisYear)
+    expect(v.axisOffset).toBe(start - 61)
+    // The view keeps its ages (the chart maps them once); a bar's sentence names its age and its year on either axis.
+    expect(v.ages).toEqual({ first: 61, last: 68 })
+    expect(v.parts[0]!.bars[0]!.point).toBe(charts(retired()).parts[0]!.bars[0]!.point)
+    const cliff = v.parts[0]!.cliff
+    expect(cliff.map((r) => [r.fromAge, r.toAge])).toEqual([
+      [62, 63],
+      [65, 65],
+    ])
+    expect(cliff[0]!.point).toBe(slots.healthCliffPoint(start + 1, start + 2, copy.chartAxisYear, 2))
+    expect(cliff[0]!.point).not.toMatch(/Year \d{2}\b/)
+    const d = drawn(v, 'aca')
+    expect(d.bars).toEqual(Array.from({ length: 8 }, (_, i) => start + i))
+    expect([d.x.min, d.x.max]).toEqual([start - 0.5, start + 7 + 0.5])
+    // The first stretch (ages 62 to 63) brackets years start + 1 to start + 2.
+    expect(d.cliff[0]).toEqual([start + 1 - 0.4, start + 1 - 0.4, start + 1.5, start + 2 + 0.4, start + 2 + 0.4])
+  })
+
+  it('the working route: the steady rows on the calendar year (Alex 66 in 2026)', () => {
+    expect(charts(working()).axisOffset).toBe(0)
+    const v = charts(working({}, 'years'))
+    expect(v.axisTitle).toBe(copy.chartAxisYear)
+    expect(v.axisOffset).toBe(2026 - 66)
+    expect(drawn(v, 'medicare').bars).toEqual([2026, 2027, 2028, 2029])
   })
 })
 

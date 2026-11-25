@@ -1,10 +1,11 @@
 /*
  * src/ui/assumptionRegistry.ts — the R7 COMPILE-ENFORCED assumption registry (U12 · C1;
- * council wf_dff75c2f-9e3 supersession #6: "R7 completeness is compile-enforced").
+ * council wf_dff75c2f-9e3 supersession #6: "R7 completeness is compile-enforced"). Since Act 6 · RC18 its rows are
+ * Settings' (the gear's page, `src/ui/screens/settings/settingsView.ts`), which replaced the old assumption panel.
  *
  * R7 says every assumption behind the answer is visible and editable. The old way to hold
  * that promise was author discipline — a new ScenarioDraft field could silently ship with
- * no seat in the assumption panel and nobody would notice until a cold read. This registry
+ * no row in Settings and nobody would notice until a cold read. This registry
  * makes the omission a BUILD ERROR instead:
  *
  *  - {@link DRAFT_DISPOSITIONS} is a `Record<keyof ScenarioDraft, AssumptionDisposition>`
@@ -20,15 +21,13 @@
  *    engine behavior, not draft fields, so the compiler cannot tie them to a model key;
  *    the rendered-seat test walks this list instead (the runtime half of the pin).
  *
- * THE SEAT WALK (the R7 completeness pin, tested in assumptionPanel.test.tsx): every
- * `row-*` / `via-*` disposition names the panel seat(s) where it renders
- * (`data-assumption-seat` stamps in AssumptionPanel.tsx). The test renders the panel and
- * asserts every named seat exists — delete a row and the pin goes red. `internal` entries
- * carry a one-line justification instead of a seat: the WHY a user never sees this knob,
- * auditable in one screen.
- *
- * ui-layer home: the panel (src/intake) and the tests both read it; ui is the established
- * meeting point (intake→@ui/copy is the standing carve-out).
+ * THE SEAT WALK (the R7 completeness pin, tested in `src/ui/screens/settings/__tests__/settingsView.test.ts`): every
+ * `setting` disposition names the Settings row(s) where it shows (each row's `seat`, stamped `data-assumption-seat` by
+ * `Settings.tsx`). The test composes every Settings tab over households that hold every gated row between them and
+ * asserts every named seat is there — delete a row and the pin goes red. A `profile` entry is a fact the household gave:
+ * its one home is its Profile drawer, proven by the fact registry's field walk (`src/ui/workbench/factRegistry.ts`), so
+ * Settings never grows a second door to it (insight 058). `internal` entries carry a one-line justification instead of
+ * a seat: the WHY a user never sees this knob, auditable in one screen.
  */
 import type { WorkingYearStateTaxReading } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
@@ -36,55 +35,38 @@ import type { ScenarioDraft } from '@store/memoryModel'
 import type { LeftOverShownState } from '@intake/workingYearLeftOverState'
 import { LEFT_OVER_WAITING_COPY, type CopyKey, type LeftOverWaitingWords } from './copy'
 
-/** A rendering seat in the AssumptionPanel — the `data-assumption-seat` vocabulary the
- *  completeness test walks. Adding a seat here without stamping it in the panel fails the
- *  walk; stamping an unnamed seat is inert (the walk is one-directional by design — the
- *  panel may render MORE than the registry demands, never less). */
+/** A Settings row — the `data-assumption-seat` vocabulary the completeness test walks. Adding a seat here without a
+ *  row in `settingsView.ts` fails the walk; a row with an unnamed seat is inert (the walk is one-directional by design —
+ *  Settings may show MORE than the registry demands, never less). */
 export type AssumptionSeat =
-  | 'survivor-ratio' // the ONE real R7-editable methodology knob (council F1/F3)
-  | 'heir-bracket' // the assumed heir tax bracket — leave-more ONLY (it ranks nothing under pay-less-tax, so no hollow door)
-  | 'spend-period' // the entry-period toggle (hidden while a budget governs — the period is inert there)
+  | 'survivor-ratio' // the ONE real R7-editable methodology knob (council F1/F3); its door is the Living expenses drawer
+  | 'heir-bracket' // the assumed heir tax bracket — leave-more ONLY (it ranks nothing under pay-less-tax, so no hollow door); set on Tax Strategies
   | 'market' // the productionMarket disclosure block (visible-with-provenance; editor FILED behind the sourced-bounds flip)
   | 'longevity' // SSA cohort tables — disclosure (a baked constant, not a parameter)
   | 'survivor-ss' // §202 RIB-LIM law — disclosure (law-computed, not a parameter)
   | 'outlive-order' // the per-path sampled death-order mixture — disclosure (no conditional knob exists)
   | 'conversion-tax' // the v1 per-policy gross-up funding rule — disclosure + its conservative direction
   | 'working-year-tax' // the working-year tax floor (2026-10-20, R13) — how a working year's investment income is priced, and what is left out
-  | 'drawdown' // via-sheet → SequencingControl (one editor home per fact, insight 058)
-  | 'roth-conversion' // via-sheet → RothLever
-  | 'subsidy-regime' // via the Health Care page (RC10; the old HealthcareSheet is gone)
-  | 'spend' // the spend row (inline editor ungoverned; routes to the BudgetBuilder when a budget governs)
-  | 'person-birth' // per-person birth year (refuse-to-commit blanks)
-  | 'person-stop' // per-person stop age (retired members only — a working member's date IS the answer)
-  | 'person-ss-amount' // per-person monthly benefit at FRA
-  | 'person-ss-claim' // per-person Social Security start age
-  | 'health-oop' // OOP medical (re-reconciles atomically under a governing budget — the oopStep pattern)
-  | 'health-quote' // the ACA quote pair (pre-65 households)
-  | 'work-investment' // working-year investment income (date route, per working member)
-  | 'working-year-cost' // W, what a year costs while someone still works (date route; the pay check's question + money picture)
-  | 'working-year-left-over' // build 2's left-over question (date route; its own seat below W, its own hold, a waiting face while W is stale)
-  | 'medicare-extras' // the per-person Medicare-extras payment fork (the ask-for-Medicare-extras unit — the refine path + the details home for the funded typical)
-  | 'retirement-state' // the household's retirement state (the state-tax unit S3 — a changeable best guess; edit → re-run the SC-vs-GA what-if)
-  | 'collections' // accounts + other income — via-intake ("edit in the walk-through")
+  | 'drawdown' // the withdrawal order — tried and applied in the Action Items tray (U15's rule; one home per fact, insight 058)
+  | 'roth-conversion' // the Roth plan — tried and applied in the Action Items tray
+  | 'subsidy-regime' // the marketplace subsidy rules — tried and applied in the Action Items tray
+  | 'working-year-cost' // W, what a year costs while someone still works (date route); its door is the W drawer
+  | 'working-year-left-over' // build 2's left-over answer (date route, where the question is asked); the W drawer holds it
+  | 'medicare-extras' // the per-person Medicare-extras answer (the details home for the funded typical); its door is the Medicare drawer
+  | 'retirement-state' // the household's retirement state (the state-tax unit S3 — a changeable best guess); its door is the state drawer
 
-/** The seats a door outside the panel can open it onto (`AssumptionPanel`'s `initialSeat`): the W row (the
- *  result's stale-W line, KTD21), build 2's left-over seat (its moved line), and the two methodology knobs the
- *  workbench's facts page lists as choices (Act 5, U8): the survivor's spending and the heirs' bracket, whose one
- *  door is this panel, and the Medicare-extras answer where the walk asks no extras step (a household under 64). A seat here must have a landing in the panel's exhaustive landing record, or the prop
- *  would silently do nothing. */
-export type AssumptionLandingSeat = Extract<
-  AssumptionSeat,
-  'working-year-cost' | 'working-year-left-over' | 'survivor-ratio' | 'heir-bracket' | 'medicare-extras'
->
+/** The seats the StaleBanner's standing line opens (`answerNotes.ts`'s `StandingNote.seat`): the W answer (the stale,
+ *  typed-below and unanswered lines) and build 2's left-over answer (its moved line). Both open the Pre-retirement living
+ *  expenses drawer, which holds the two questions (RC13b). */
+export type AssumptionLandingSeat = Extract<AssumptionSeat, 'working-year-cost' | 'working-year-left-over'>
 
-/** How one draft field reaches the panel. The four visible kinds name their seat(s); an
- *  `internal` field instead carries the one-line justification for why no user-facing row
- *  exists (the auditable half of the R7 claim — "every assumption visible OR accounted for"). */
+/** How one draft field reaches the household. A `setting` names the Settings row(s) where it shows; a `profile` field
+ *  is a fact the household gave, edited in its Profile drawer (the fact registry proves the drawer); an `internal` field
+ *  carries the one-line justification for why no user-facing row exists (the auditable half of the R7 claim — "every
+ *  assumption visible OR accounted for"). */
 export type AssumptionDisposition =
-  | {
-      readonly kind: 'row-editable' | 'row-disclosure' | 'via-sheet' | 'via-intake'
-      readonly seats: readonly AssumptionSeat[]
-    }
+  | { readonly kind: 'setting'; readonly seats: readonly AssumptionSeat[] }
+  | { readonly kind: 'profile'; readonly why: string }
   | { readonly kind: 'internal'; readonly why: string }
 
 /**
@@ -123,36 +105,34 @@ export type AssumptionDisposition =
  * is a scope decision to be argued, not a comment to be written.
  */
 export const DRAFT_DISPOSITIONS: Record<keyof ScenarioDraft, AssumptionDisposition> = {
-  people: {
-    kind: 'row-editable',
-    seats: ['person-birth', 'person-stop', 'person-ss-amount', 'person-ss-claim'],
-  },
-  enteredAccounts: { kind: 'via-intake', seats: ['collections'] },
-  incomeStreams: { kind: 'via-intake', seats: ['collections'] },
+  people: { kind: 'profile', why: 'Names, birth years, work, stop ages, pay and Social Security: Profile → Family and Income.' },
+  enteredAccounts: { kind: 'profile', why: 'The accounts, their balances, deposits and mix: Profile → Net Worth and Savings.' },
+  incomeStreams: { kind: 'profile', why: 'Pensions and other income: Profile → Income.' },
   tickerClassifications: {
     kind: 'internal',
-    why: 'Rides the accounts: a per-ticker classification is edited where its account is edited (the walk-through), never as a free-floating row.',
+    why: 'Rides the accounts: a per-ticker classification is edited where its account is edited (its Profile drawer), never as a free-floating row.',
   },
-  health: { kind: 'row-editable', seats: ['health-oop', 'health-quote', 'work-investment'] },
-  annualSpendingReal: { kind: 'row-editable', seats: ['spend'] },
-  spendEntryPeriod: { kind: 'row-editable', seats: ['spend-period'] },
-  survivorSpendingRatio: { kind: 'row-editable', seats: ['survivor-ratio'] },
+  health: { kind: 'profile', why: 'The marketplace quote, out-of-pocket medical, working-year investment income and the Medicare look-back income: Profile → Goals, Expenses and Income.' },
+  annualSpendingReal: { kind: 'profile', why: 'The spending figure: Profile → Expenses → Living expenses.' },
+  spendEntryPeriod: { kind: 'profile', why: 'The spending figure’s unit, asked with the figure in its drawer.' },
+  // The survivor's share is methodology the household may change (council F1/F3), so it has a Settings row; its one
+  // editor is the Living expenses drawer, which the row opens.
+  survivorSpendingRatio: { kind: 'setting', seats: ['survivor-ratio'] },
   // The assumed heir bracket. A REAL ranking parameter for a leave-more solve (it sets the IRD rate
   // the pre-tax + HSA bequest is scored at, and the recommendation surface already discloses it as
   // `r7-editable`) — so it owes a genuine editor, not a disclosure. The row is gated on
   // `chosenGoal === 'leave-more'`, the only goal whose objective reads it.
-  heirBracket: { kind: 'row-editable', seats: ['heir-bracket'] },
-  // W, the pay check's answer. A household fact the run uses in every working year, so it owes a
-  // real editor: the panel row answers, corrects or re-confirms it, and shows the money picture.
-  // Gated on the date route (W is a working-household answer; the spine never reads it).
-  workingYearCost: { kind: 'row-editable', seats: ['working-year-cost'] },
-  // Build 2's left-over answer. A household fact the run uses (a "saved" answer credits each working
-  // year's left over while W is fresh), so it owes a real editor: its OWN seat below the W row, with
-  // its own gesture hold, never a control inside the W row (the W row's whole-draft hold is safe only
-  // while no control lives above the question in it — KTD8). Gated like W, on the date route.
-  workingYearLeftOver: { kind: 'row-editable', seats: ['working-year-left-over'] },
-  drawdownPolicy: { kind: 'via-sheet', seats: ['drawdown'] },
-  drawdownOrder: { kind: 'via-sheet', seats: ['drawdown'] },
+  heirBracket: { kind: 'setting', seats: ['heir-bracket'] },
+  // W, the pay check's answer. A household fact the run uses in every working year, so Settings shows how the run reads
+  // it (its value line) and opens its one editor, the W drawer (RC13b), which answers, corrects or re-confirms it and
+  // shows the money picture. Gated on the date route (W is a working-household answer; the spine never reads it).
+  workingYearCost: { kind: 'setting', seats: ['working-year-cost'] },
+  // Build 2's left-over answer. A household fact the run uses (a "saved" answer credits each working year's left over
+  // while W is fresh): Settings shows its methodology line by shown state and opens the W drawer, where the question
+  // sits in its own seat under W's, with its own gesture hold (KTD8). Gated like W, on the date route, where asked.
+  workingYearLeftOver: { kind: 'setting', seats: ['working-year-left-over'] },
+  drawdownPolicy: { kind: 'setting', seats: ['drawdown'] },
+  drawdownOrder: { kind: 'setting', seats: ['drawdown'] },
   filing: {
     kind: 'internal',
     why: 'mfj IS the product — the married-couple posture is the precondition, not a setting.',
@@ -173,17 +153,13 @@ export const DRAFT_DISPOSITIONS: Record<keyof ScenarioDraft, AssumptionDispositi
     kind: 'internal',
     why: 'Minted once and persisted unchanged — the CRN anchor that keeps the saved headline byte-reproducible; a knob here would be a jitter machine.',
   },
-  budget: { kind: 'via-sheet', seats: ['spend'] },
-  rothConversion: { kind: 'via-sheet', seats: ['roth-conversion'] },
-  enhancedSubsidies: { kind: 'via-sheet', seats: ['subsidy-regime'] },
-  medicareExtrasByPerson: { kind: 'row-editable', seats: ['medicare-extras'] },
-  retirementState: {
-    // S3: the changeable best guess IS an R7-editable row (edit → re-run answers the SC-vs-GA
-    // what-if manually; no new lever in v1). Stamped in AssumptionPanel via <Row seat> over the
-    // shared StateResidencePicker, committed through commitOpen.
-    kind: 'row-editable',
-    seats: ['retirement-state'],
-  },
+  budget: { kind: 'profile', why: 'The budget lines: Profile → Expenses → Living expenses’ worksheet.' },
+  rothConversion: { kind: 'setting', seats: ['roth-conversion'] },
+  enhancedSubsidies: { kind: 'setting', seats: ['subsidy-regime'] },
+  medicareExtrasByPerson: { kind: 'setting', seats: ['medicare-extras'] },
+  // S3: the changeable best guess decides whether the plan prices a state income tax at all, so Settings shows it (with
+  // the unset note's honesty); its one editor is the state drawer, which the row opens.
+  retirementState: { kind: 'setting', seats: ['retirement-state'] },
   healthcareVintage: {
     kind: 'internal',
     why: 'Stamped fresh at Save from the current build’s constants (scenarioFromDraft) — whatever the draft carries mid-session is never the written truth.',
@@ -206,7 +182,7 @@ export const DRAFT_DISPOSITIONS: Record<keyof ScenarioDraft, AssumptionDispositi
   },
   chosenGoal: {
     kind: 'internal',
-    why: 'The recommender’s Tier-2 goal (leave-more / pay-less-tax) — NOT an assumption behind the FIRST answer (the spine): it is the recommendation-time pick set via the U16 GoalPicker (the second beat’s first interaction), never a silent default (burned/062). The solve is refused while it is unset, so no panel row asserts a goal the user never chose; its editable home is the GoalPicker, not the intake assumption panel.',
+    why: 'The recommender’s Tier-2 goal (leave-more / pay-less-tax) — NOT an assumption behind the FIRST answer (the spine): it is the recommendation-time pick made on Tax Strategies, never a silent default (burned/062). The solve is refused while it is unset, so no Settings row asserts a goal the user never chose; its editable home is Tax Strategies’ goal picker.',
   },
   savedRecommendation: {
     kind: 'internal',
@@ -214,14 +190,14 @@ export const DRAFT_DISPOSITIONS: Record<keyof ScenarioDraft, AssumptionDispositi
   },
   keptWhatIfs: {
     kind: 'internal',
-    why: 'The workbench’s kept what-ifs (schema version 6): alternatives the household is trying BESIDE the plan, never an assumption behind the current answer — each runs on a copy of the draft (workbench plan KTD10), so nothing in the plan’s own projection reads them and no R7 row could honestly say “this is what we assumed.” Their door is the workbench’s saved list (U16), where Keep and Apply live, never the assumption panel.',
+    why: 'The workbench’s kept what-ifs (schema version 6): alternatives the household is trying BESIDE the plan, never an assumption behind the current answer — each runs on a copy of the draft (workbench plan KTD10), so nothing in the plan’s own projection reads them and no R7 row could honestly say “this is what we assumed.” Their door is Probability’s plan list (RC5), where Keep and Apply live, never Settings.',
   },
 }
 
 /** One non-draft methodology constant’s disclosure row: where it renders (`seat`), what the
  *  row is called (`nameKey`), and its static disclosure/provenance sentences (`lineKeys`).
  *  The market row ALSO renders live figures read from `productionMarket.value` (never
- *  re-typed) plus the standing market-floor line — composed in the panel, pinned in tests. */
+ *  re-typed) plus the standing market-floor line — composed in `settingsView.ts`, pinned in tests. */
 export interface MethodologyDisclosure {
   readonly id: 'market' | 'longevity' | 'survivor-ss' | 'outlive-order' | 'conversion-tax' | 'working-year-tax'
   readonly seat: AssumptionSeat
@@ -287,12 +263,12 @@ const LEFT_OVER_KEY: Readonly<Record<LeftOverShownState, Readonly<Record<LeftOve
 const LEFT_OVER_FAMILY: ReadonlySet<CopyKey> = new Set(Object.values(LEFT_OVER_KEY).flatMap((byAct) => Object.values(byAct)))
 
 /** Build 2's left-over line for a shown state in the draft's waiting words: the ONE selector over `LEFT_OVER_KEY`, read by
- *  {@link methodologyLines} and by the workbench's facts page (Act 5, U8), so the two never word one state two ways. */
+ *  {@link methodologyLines}, by Settings' left-over row and by Profile's Expenses card, so none words one state two ways. */
 export function leftOverLineKey(leftOver: LeftOverShownState, waiting: LeftOverWaitingWords): CopyKey {
   return LEFT_OVER_KEY[leftOver][waiting]
 }
 
-/** A methodology row's lines for an arm — the ONE selector the panel and the disclosure test both
+/** A methodology row's lines for an arm — the ONE selector Settings and the disclosure test both
  *  call, so the arm choice cannot drift between them (insight 086). A row without a W arm reads its
  *  `lineKeys` on both arms. Both readings are REQUIRED, so no caller can skip a family's choice: of the K7
  *  family in the list, only the draft's working-year state-tax reading's key reads (the W step's own,
@@ -409,12 +385,12 @@ export const METHODOLOGY_DISCLOSURES: readonly MethodologyDisclosure[] = [
 ]
 
 /** Every seat the registry PROMISES a rendering home for — the set the completeness test
- *  walks against the rendered panel (`data-assumption-seat`). Pure derivation, exported so
+ *  walks against Settings' rows (`data-assumption-seat`). Pure derivation, exported so
  *  the test cannot drift from the registry it verifies (burned/063 single-source-the-gate). */
 export function requiredSeats(): readonly AssumptionSeat[] {
   const seats = new Set<AssumptionSeat>()
   for (const disposition of Object.values(DRAFT_DISPOSITIONS)) {
-    if (disposition.kind !== 'internal') for (const s of disposition.seats) seats.add(s)
+    if (disposition.kind === 'setting') for (const s of disposition.seats) seats.add(s)
   }
   for (const m of METHODOLOGY_DISCLOSURES) seats.add(m.seat)
   return [...seats]

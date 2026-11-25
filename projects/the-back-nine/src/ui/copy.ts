@@ -162,7 +162,6 @@ export const copy = {
   //     (Full-axis label measured single-line in the Result quiet row at 1280×800, 2026-07-03 —
   //     the row wraps to the same two lines with or without it.)
   budgetCta: 'Split what must hold from what could give',
-  budgetEditCta: 'Edit your budget',
   budgetSheetTitle: 'What must hold — and what could give',
   budgetSheetIntro:
     'Essentials are the part that has to hold; extras are what could give if it ever came to that. Mark which is which, and the answer takes each on its own terms.',
@@ -680,7 +679,6 @@ export const copy = {
   // Build 2's seat below the W row. Its name only: nothing above its radios reads the answer (R6).
   assumptionWorkingCostLeftOverName: 'Money left over in a working year',
   assumptionWorkingCostUnanswered: 'Not answered yet — the working years aren’t checked until it is.',
-  assumptionWorkingCostStaleAnnounce: 'Your figure for a working year no longer matches your spending or state.',
   // --- the provisional answer strip (D1 — surfaces and sharpens during entry;
   //     D2 builds the full state-adaptive surface over U6/U7) ---
   // A STABLE, state-agnostic region name: the strip's accessible label must not
@@ -1161,7 +1159,6 @@ export const copy = {
    * silently promotes this line into free-numeral/superlative scope. */
   leverPreviewNoDate:
     'This comparison anchors to your fuck-off date, and this plan doesn’t have one yet. Applying a change still updates the answer above.',
-  leverCancel: 'Close',
   // Plan-moving READOUTS (require-hedge-swept; the numbers arrive via slots below).
   // The funding note: back since Act 6 · RC4b under the Action Items tray's Roth row (it left with the Roth sheet and
   // was ported with its surface, plan 5.2).
@@ -1204,9 +1201,6 @@ export const copy = {
   // --- P3·U11 — the health picture (the Healthcare sheet's words; since Act 6 · RC10 Retirement → Health Care's). Chrome
   // rides lever* (hedge-exempt, the prefix law above); plan-moving READOUTS ride the U11 control prefixes (shadowRate* /
   // irmaaStep* / acaCost*) or control* — each swept by require-hedge. ---
-  // The assumption panel's subsidy-rules door opens Retirement -> Health Care (RC10 deleted the health-cost sheet).
-  leverHealthDoorCta: 'See the Health Care page',
-  leverHealthDoorEditCta: 'Revisit the Health Care page',
   // The fact-readout eyebrows (cold-read 2026-07-03: "why isn't the content a first class
   // citizen?" — each empirical fact renders as eyebrow + tabular-nums dollar anchor + the
   // honed sentence, the stepped readout the U11 ratification named). Sentence-case calm labels
@@ -1476,31 +1470,8 @@ export const copy = {
   // and `assumptionTruerPicture` joins isMortalityKey BY NAME (it renders at the worst
   // moment). FIRST-DRAFT craftsman's-lead wording throughout — the market-floor line and the
   // truer-picture line are N=1 cold-read subjects (the Act-3 exit condition). ---
-  assumptionTitle: 'The assumptions behind this answer',
-  assumptionIntro:
-    'Everything the answer leans on, in one place — yours to check, most of it yours to change. Edits land as you leave each field.',
-  assumptionSectionMethodology: 'On your behalf',
-  assumptionSectionFacts: 'Your facts',
-  // The echo's quiet arm (date route / no standing spine verdict): a plain statement of
-  // where edits land — never a fabricated verdict echo.
-  assumptionEchoQuiet: 'Edits here flow straight into your answer.',
-  // W9-R7 (KTD6): the echo while a run on the panel's newest inputs is in flight
-  // (`snapshot.refiguring`) — in place of the quiet line above on the date route, and in place of
-  // the held verdict readout on the spine (inside the echo's reserved box, never an added line:
-  // insight 035). The quiet line's "flow straight into your answer" is false through that window.
-  assumptionEchoRefiguring: 'Your answer is being figured again with this change.',
-  // The truer-picture line (R8's honest-worsening arm; F8/council 2026-07-08): renders ONLY
-  // when an edit lands the displayed verdict BELOW the panel-open baseline. The moved
-  // numbers live in the echo above it (word + count + dollars — the non-color signal
-  // grammar); this line only frames the move. Catastrophe-gated by name (copyGuard.ts).
-  assumptionTruerPicture:
-    'The odds above stepped down — that’s the picture getting truer to what you entered, not the plan itself changing.',
-  // The guided re-walk, moved INSIDE the panel (F4 — the Review door left the quiet row).
+  // The guided re-walk: Settings' button under the Methodology tab since RC18 (the assumption panel's footer before it).
   assumptionRewalkCta: 'Walk through everything again',
-  assumptionViaIntakeCta: 'Edit in the walk-through',
-  assumptionCollectionsName: 'Accounts & other income',
-  assumptionCollectionsValue:
-    'Balances, account kinds, tickers, and any pension or other income — edited where they were entered, so nothing gets out of step.',
   // The Medicare-extras refine seat (the ask-for-Medicare-extras unit) — the standing
   // DETAILS HOME for the funded figure (corpus rule 38: general terms need a place to see
   // the dollars) and the refine path for the conservative typical.
@@ -1560,35 +1531,6 @@ export const copy = {
   assumptionHeirBracketLabel: 'The tax bracket your heirs are likely in when they inherit',
   assumptionHeirBracketHelp:
     'Money left in a pre-tax account is taxed at your heirs’ rate when they inherit it; a Roth is not. Set this lower and converting reads as less worthwhile than it may prove.',
-  assumptionPeriodLegend: 'Your spending figure reads as…',
-  // The panel's period toggle RE-LABELS the committed figure; it never re-bases it (the
-  // intake segment re-bases mid-entry, where the typed digits are the truth — here the
-  // canonical annual is the truth, and a silent 12× re-base would be the cardinal sin).
-  //
-  // ⚠️ THE TOGGLE SETS THE ENTRY UNIT TOO, AND THE OLD SENTENCE HID IT (fixed 2026-08-03).
-  // It read "switching this never changes the amount" — but the SHOWN figure jumps exactly 12×
-  // (`spendDisplayed`, AssumptionPanel.tsx:619-624), so the reader watches the number move while
-  // being told nothing moved. The natural repair is to retype the old digits, and the panel's own
-  // commit (AssumptionPanel.tsx:895-905, the `entered * 12` arm at :902) then multiplies by 12
-  // under 'month' — so a household "correcting" 78,000 back to 6,500 under 'Each year' commits a
-  // $6,500/yr plan. Nothing catches it: PANEL_PROVENANCE (AssumptionPanel.tsx:519) hard-disarms
-  // `spend-period-unconfirmed` (sanity.ts:392-415, the disarm read at :403) on this surface, and
-  // 6,500 is under SPEND_AMBIGUOUS_MIN (sanity.ts:92) regardless — so the rule could not have
-  // caught it even armed. The replacement must therefore say BOTH halves — the money is
-  // unchanged AND the next figure you enter is read in the unit you just picked. A draft that said
-  // only "the same money either way" was REJECTED for exactly that omission.
-  //
-  // THE THIRD SENTENCE IS LOAD-BEARING; DO NOT COMPRESS IT BACK. A second draft ended "…and
-  // anything you enter next is read the same way" — correct, but "the same way" is an ANAPHOR the
-  // reader must resolve against the previous clause, and Briggsy's cold read stopped to ask what it
-  // pointed at (2026-08-03). That stumble IS the defect class this whole entry exists to close, so
-  // the unit is now named OUTRIGHT and quotes the toggle's own visible label (`periodMonth`) rather
-  // than gesturing at it. Three sentences under a control is chattier than house style on purpose:
-  // terseness is what produced the original trap.
-  // No spatial referent ("the figure below") — U12 dropped it because this control sits ABOVE the
-  // spend field in the panel and BELOW it in intake (see `periodConfirmPrompt`).
-  assumptionPeriodHelp:
-    'This sets the unit, not the money. Your plan keeps running on the same yearly spending — the figure here just shows as one month’s worth or a full year’s. With “Each month” showing, a number you type is read as dollars a month.',
   assumptionMarketName: 'Market returns',
   assumptionMarketProvenance:
     'A deliberately conservative default — the high-valuation planning assumptions (Pfau/Kitces), figured in today’s dollars.',
@@ -1789,8 +1731,6 @@ export const copy = {
     'If Social Security has already held back some of your checks because of your pay, before this plan starts, those months aren’t credited back later, so your later benefit can read a little low.',
   assumptionWorkingYearCheckSpouseMedicare:
     'If one of you is on the other’s plan at work and starts Medicare while the other still works, your working-year figure keeps paying for that plan after Medicare starts, so those years can look a little worse than they really are.',
-  assumptionSsClaimAgeLabel: 'The age Social Security starts',
-  errBirthYearBlank: 'The plan needs a birth year to run — mind putting one back?',
   // --- P3·U13 — the re-entry gate + the staleness notes ---------------------------------
   // LAW: `reentry*` / `staleness*` are chrome/note prefixes (the `assumption*` precedent) —
   // factual read-back labels + calm drift disclosures, hedge-EXEMPT and verdict-EXEMPT
@@ -2525,9 +2465,56 @@ export const copy = {
   shellModuleTax: 'Tax',
   shellPageTaxStrategies: 'Tax Strategies',
   shellPageHealthCare: 'Health Care',
-  // The gear (RC18's settings later): today it opens the assumptions behind the plan, in the old panel.
-  shellGear: 'Assumptions',
-  shellGearLabel: 'The assumptions behind your plan',
+  // The gear (RC18): it opens Settings, the assumptions behind the plan.
+  shellGear: 'Settings',
+  shellGearLabel: 'Settings: the assumptions behind your plan',
+  // --- Act 6 · RC18, Settings (`settingsView.ts`, `Settings.tsx`; ref 2.20) ---
+  settingsTitle: 'Settings',
+  settingsIntro:
+    'How your plan is figured, and the choices it runs on. Under each setting, a line says what it means for your answer; to change one, its button opens the place where it’s changed.',
+  settingsIntroReadOnly:
+    'How your plan is figured, and the choices it runs on. This tab is read-only: it shows each setting and changes nothing.',
+  settingsTabsLabel: 'Groups of settings',
+  settingsTabMethodology: 'Methodology',
+  settingsTabReturns: 'Return Assumptions',
+  settingsTabTax: 'Tax Assumptions',
+  settingsTabHealth: 'Health Care Assumptions',
+  settingsTabOther: 'Other Assumptions',
+  settingsHeadMethodology: 'Calculation options',
+  settingsHeadReturns: 'What the markets are assumed to do',
+  settingsHeadTax: 'How taxes are figured',
+  settingsHeadHealth: 'How health costs are figured',
+  settingsHeadOther: 'Lifespans and Social Security',
+  settingsRothNoneLine:
+    'No money moves from pre-tax savings to Roth. A conversion pays some tax now so less is taxed later: try one in the action items, and apply it there if it helps.',
+  settingsRothPlanLine:
+    'Each year of the conversion, that much moves from pre-tax savings to Roth. Tax Assumptions says how its tax is paid.',
+  settingsSurvivorRatioDoor: 'Change it in Living expenses',
+  settingsWorkingCostDoor: 'Open Pre-retirement living expenses',
+  settingsLeftOverDoor: 'Answer it in Pre-retirement living expenses',
+  settingsStateDoor: 'Change your retirement state',
+  settingsStateLine:
+    'The plan prices this state’s income tax on your retirement income where B9 knows the state’s rules; each figured page’s state line says whether it does.',
+  settingsHeirDoor: 'Change it on Tax Strategies',
+  settingsAcaDoor: 'Try the other rules in the action items',
+  settingsMedicareDoor: 'Change it in Medicare',
+  settingsNotShownHere:
+    'The facts you gave (your ages, savings, income and spending) live on the Profile pages, each in its own card.',
+  // --- Act 6 · RC18, the Display drawer (`DisplayDrawer.tsx`; ref 2.20, `FRAME_display-settings-drawer.png`) ---
+  displayTitle: 'Display settings',
+  displayLead: 'How the figures and charts read',
+  displayDoorLabel: 'Display settings: today’s dollars',
+  displayTodaysDollars: 'Today’s dollars',
+  displayTodaysDollarsLine:
+    'Every figure is in today’s dollars: what the money would buy now, with inflation taken out. A view in future dollars isn’t offered yet.',
+  displaySameScale: 'Same scale for both halves',
+  displaySameScaleOn: 'Probability’s two balance bars share one scale, so their heights compare.',
+  displaySameScaleOff:
+    'Each balance bar on Probability takes its own scale: each reads more easily alone, but their heights no longer compare.',
+  displayYears: 'Show years instead of ages',
+  displayYearsOn: 'Every chart over the plan’s years counts along the calendar year.',
+  displayYearsOff: 'Every chart over the plan’s years counts along the first person’s age.',
+  displaySessionNote: 'These choices last until you close B9; they aren’t saved with your plan.',
   analysisTitle: 'Retirement Analysis',
   analysisTabsLabel: 'Ways to read your plan',
   probabilityTab: 'Probability',
@@ -2552,6 +2539,15 @@ export const copy = {
     'Each side’s savings when the second of you dies, or at the plan’s last year if that comes first, in the middle future, in today’s dollars.',
   probabilityTodaysDollars: 'Today’s dollars',
   probabilityOpenStrategies: 'Open the Tax Strategies page',
+  // --- Act 6 · RC18, the Display drawer's choices as the charts read them (`displaySettings.ts`) ---
+  // A time axis on the calendar year ("Show years instead of ages").
+  chartAxisYear: 'Year',
+  // "Same scale for both halves" turned off: each balance bar on its own scale, so heights stop comparing (said in words).
+  probabilityBarOwnScales: 'Each bar is drawn on its own scale here, so their heights don’t compare: read the figures above them.',
+  // Confidence's run-out chart on the calendar-year axis: its words say "year" where the age axis's say "age".
+  confidenceRunOutNameYear: 'Futures run out by this year',
+  confidenceRunOutStopgapYear:
+    'How many futures run out of money by each year will show here once your plan is read in full at the year you stop working.',
   // --- Act 6 · RC4b, the Action Items tray (`trayView.ts`, `ActionItemsTray.tsx`) ---
   trayHandle: 'Action items',
   trayClose: 'Close the action items',
@@ -4003,7 +3999,7 @@ export const slots = {
    *
    *  ⚠️ DO NOT "FIX" THIS BY DROPPING THE TODAY TICK. That inverts the contradiction into the
    *  defect U13/§S0 already fixed — `bandAnnotations.ts:51-56` records it live from the first
-   *  `?vault=datestale` walk, and `e2e/vertical-fit.spec.ts:3702-3705` (the `?vault=datearrived` arm — "must still
+   *  `?vault=datestale` walk, and `e2e/vertical-fit.spec.ts:3481-3484` (the `?vault=datearrived` arm — "must still
    *  mark WALL-TIME today") forbids a band that loses its wall clock BY NAME. The tick is right; the sentence was wrong. */
   bandAgedPremiseFresh: (buildYear: number): string =>
     `This range runs from ${buildYear}, when the plan was built — the years since are modeled, not records. What you actually hold today is undetermined until you re-confirm.`,
@@ -6001,9 +5997,10 @@ export const slots = {
   taxAllocListTitle: (bucket: string, n: number): string => `${bucket}: ${n === 1 ? 'one account' : `${n} accounts`}`,
   confidenceShareFewer: (): string => 'fewer than 1 in 100 futures',
   confidenceShareMore: (): string => 'more than 99 in 100 futures',
-  confidenceRunOutTitle: (): string => 'Futures that have run out of money by this age, out of every 100',
-  confidenceRunOutDescription: (): string =>
-    'How many futures in every 100 have used up their savings by each age, out of every future the plan ran.',
+  /** `unit`: the run-out chart's time axis (the Display drawer, `displaySettings.ts`): the first person's age or the year. */
+  confidenceRunOutTitle: (unit: 'age' | 'year' = 'age'): string => `Futures that have run out of money by this ${unit}, out of every 100`,
+  confidenceRunOutDescription: (unit: 'age' | 'year' = 'age'): string =>
+    `How many futures in every 100 have used up their savings by each ${unit}, out of every future the plan ran.`,
   confidenceRunOutTip: (share: string): string => `Run out by then: ${share}`,
   confidenceRunOutPoint: (ages: string, share: string): string => `${ages}. Run out by then: ${share}.`,
   confidenceRunOutBy: (ageA: number, ageB: number, share: string, plural: boolean): string =>

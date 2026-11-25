@@ -14,12 +14,14 @@
  *   HSA lined (each pattern in its own source's ink), the stack order listed in the legend from the bottom. The two
  *   side-by-side stacks share ONE scale (the composer's lattice): two charts that compare need one scale (RC4b).
  *
- * The y axis is linear from $0 on the composer's humane lattice, its ticks in the `mm` dialect; the x axis is the
- * calendar year.
+ * The y axis is linear from $0 on the composer's humane lattice, its ticks in the `mm` dialect; the x axis is the first
+ * person's age, titled with whose age it is, or the calendar year, titled "Year" (the Display drawer's time axis,
+ * `src/ui/displaySettings.ts`): the points stay keyed by calendar year and `axisOffset` maps them once here. The
+ * tooltip and the spoken words read the axis's number.
  */
 import type { Options, SeriesAreaOptions } from 'highcharts/highcharts.src'
 import { buildYTicks, type DollarLattice } from '../bandData'
-import { chartWordsOptions, type ChartWords } from './chartA11y'
+import { chartWordsOptions, hcPlain, type ChartWords } from './chartA11y'
 
 export interface YearPoint {
   readonly year: number
@@ -31,10 +33,15 @@ interface Shared {
   readonly axisDollar: (dollars: number) => string
   /** A value as the tooltip and the end labels print it (`~` included). */
   readonly figure: (dollars: number) => string
-  /** A point's spoken sentence (the year, the series' name, its figure), the composer's words. */
-  readonly pointWords: (year: number, name: string, dollars: number) => string
+  /** A point's spoken sentence (the axis's number, the series' name, its figure), the composer's words. */
+  readonly pointWords: (axisNumber: number, name: string, dollars: number) => string
   readonly words: ChartWords
   readonly height: number
+  /** The x axis's title ("Alex’s age", or "Year" on the years axis). */
+  readonly axisTitle: string
+  /** What to add to a point's calendar year to put it on the axis: 0 on the years axis, the age less the year on the ages
+   *  axis (`offsetFromYear`). */
+  readonly axisOffset: number
 }
 
 export interface PairSeries {
@@ -69,7 +76,9 @@ function axes(shared: Shared): Pick<Options, 'xAxis' | 'yAxis'> {
   const ticks = buildYTicks(shared.lattice, shared.axisDollar)
   const tickLabel = new Map(ticks.map((t) => [t.dollars, t.label]))
   return {
-    xAxis: { type: 'linear', allowDecimals: false, tickInterval: 5, lineWidth: 1 },
+    // The axis title carries the first person's typed name: escaped wherever it is drawn (`hcPlain`).
+    // Its points are keyed by calendar year, so a zero offset is the years axis (`timeTickStep`'s 10; ages tick every 5).
+    xAxis: { type: 'linear', allowDecimals: false, tickInterval: shared.axisOffset === 0 ? 10 : 5, lineWidth: 1, title: { text: hcPlain(shared.axisTitle) } },
     yAxis: {
       type: 'linear',
       min: 0,
@@ -107,7 +116,7 @@ export function pairAreasOptions(input: PairAreasInput): Options {
       shared: true,
       formatter: function () {
         const ctx = this as unknown as { x: number; points?: { series: { name: string }; y: number }[] }
-        return [String(ctx.x), ...(ctx.points ?? []).map((p) => `${p.series.name}: ${figure(p.y)}`)].join('<br/>')
+        return [`${hcPlain(input.axisTitle)} ${ctx.x}`, ...(ctx.points ?? []).map((p) => `${p.series.name}: ${figure(p.y)}`)].join('<br/>')
       },
     },
     plotOptions: { area: { marker: { enabled: false }, fillOpacity: 1 } },
@@ -121,7 +130,7 @@ export function pairAreasOptions(input: PairAreasInput): Options {
         colorIndex: s.role === 'alternative' ? 1 : 0,
         className: s.role === 'alternative' ? 'b9-pair-alternative' : 'b9-pair-compared',
         data: s.points.map((p, i) => ({
-          x: p.year,
+          x: p.year + input.axisOffset,
           y: p.value,
           ...(i === last
             ? {
@@ -153,7 +162,7 @@ export function stackedAreasOptions(input: StackedAreasInput): Options {
       shared: true,
       formatter: function () {
         const ctx = this as unknown as { x: number; points?: { series: { name: string }; y: number }[] }
-        return [String(ctx.x), ...[...(ctx.points ?? [])].reverse().map((p) => `${p.series.name}: ${figure(p.y)}`)].join('<br/>')
+        return [`${hcPlain(input.axisTitle)} ${ctx.x}`, ...[...(ctx.points ?? [])].reverse().map((p) => `${p.series.name}: ${figure(p.y)}`)].join('<br/>')
       },
     },
     plotOptions: { area: { stacking: 'normal', marker: { enabled: false }, fillOpacity: 1, lineWidth: 1 } },
@@ -164,7 +173,7 @@ export function stackedAreasOptions(input: StackedAreasInput): Options {
         name: sources[src].name,
         colorIndex: STACK_SOURCES[src].colorIndex,
         className: STACK_SOURCES[src].className,
-        data: sources[src].points.map((p) => ({ x: p.year, y: p.value })),
+        data: sources[src].points.map((p) => ({ x: p.year + input.axisOffset, y: p.value })),
       }),
     ),
   }

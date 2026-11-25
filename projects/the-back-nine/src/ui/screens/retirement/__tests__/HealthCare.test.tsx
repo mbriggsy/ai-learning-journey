@@ -19,6 +19,7 @@ const view: HealthChartsView = {
   title: copy.healthChartTitle,
   description: copy.healthDescription,
   axisTitle: 'Alex’s age',
+  axisOffset: 0,
   parts: [],
   ages: { first: 61, last: 80 },
   lattice: { ceiling: 10_000, step: 2_500, intervals: 4 },

@@ -3,8 +3,8 @@
  * The room sentence's `within-a-step` form on the shipped `steer` seed, through the REAL pipeline
  * (the register's Tier 0 *The room sentence says there is room to spend more when the spend lane
  * found there is not…*): buildSpineParams → the engine's own run → the spend solve → the ONE gate →
- * Probability's key-metric column (since Act 6 · RC4, the confidence statement's home: `probabilityView.ts`) AND the
- * assumptions echo, rendered.
+ * Probability's key-metric column (since Act 6 · RC4, the confidence statement's home: `probabilityView.ts`). The
+ * assumption panel's echo, which spoke the same clause, left with the panel (RC18): Probability is its one home.
  *
  * `steer` enters $6,500 a month and reads on track with room; the spend lane RUNS both sides of the
  * next $100 step and finds it fails (a refuter's probe, 2026-09-26: $6,550 reads room, $6,600 on the
@@ -14,15 +14,13 @@
  */
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import '@testing-library/jest-dom/vitest'
-import { cleanup, render } from '@testing-library/react'
+import { cleanup } from '@testing-library/react'
 import { DEV_SEEDS } from '@ui/devSeeds'
 import { buildSpineParams } from '@intake/intakeMap'
 import { runEngine } from '@engine/engineProtocol'
 import { solveSpend } from '@engine/spendSolve'
 import { simulate } from '@engine/simulate'
 import { summarize } from '@engine/confidence'
-import { AssumptionPanel } from '@intake/AssumptionPanel'
-import { planClockAnchor } from '@ui/bandAnnotations'
 import { composeAnswerNotes } from '@ui/answerNotes'
 import { probabilityView } from '@ui/screens/retirement/probabilityView'
 import { composeVerdictReading, spendClauseFor, type VerdictDisplay } from '@ui/verdictSentence'
@@ -62,7 +60,7 @@ describe('the room sentence on `steer` — the lane found no room to quote, and 
     expect(outcome).toMatchObject({ kind: 'unsized', reason: 'within-a-step' })
   }, 300_000)
 
-  it('Probability AND the echo render the within-a-step form — never "room to spend more", never "doesn’t work out how much more"', async () => {
+  it('Probability renders the within-a-step form — never "room to spend more", never "doesn’t work out how much more"', async () => {
     const { draft, wire, result, spend, display } = await steerRun()
     expect(result.headline.outcomeState).toBe(wire.headline.outcomeState) // the two views of one run agree
     const clause = composeVerdictReading(display, spendClauseFor(spend, display, wire.headline.outcomeState))!.clause
@@ -85,37 +83,12 @@ describe('the room sentence on `steer` — the lane found no room to quote, and 
       notes: composeAnswerNotes(shown, { readOnly: false, stalenessNote: false, leftOverClauseHost: false, wallCalendarYear: draft.startCalendarYear }),
       whatIf: { pick: 'new', bundle: [], view: null },
       chart: 'rings',
+      sameScale: true,
     })
     if (page.kind !== 'reading') throw new Error(`steer: Probability shows ${page.kind}`)
     // The statement's clause is the key-metric column's first line.
     expect(page.metrics.lines[0]).toBe(slots.verdictRoomWithinStep('6,500'))
     expect(page.metrics.lines[0]).not.toMatch(/room/i)
 
-    const echo = render(
-      <AssumptionPanel
-        open
-        snapshot={{
-          draft,
-          answer: { kind: 'headline', result, tier: 'final', draft, inputKey: 'test' },
-          displayed: display,
-          solve: { kind: 'idle' },
-          spend,
-          refiguring: false,
-          runningInWorker: true,
-        }}
-        missing={[]}
-        savedAnchor={planClockAnchor(2026, 2026)}
-        onCommitEdit={vi.fn()}
-        onOpenBudget={vi.fn()}
-        onOpenSequencing={vi.fn()}
-        onOpenRoth={vi.fn()}
-        onOpenHealth={vi.fn()}
-        onReview={vi.fn()}
-        onClose={vi.fn()}
-      />,
-    )
-    expect(document.body.textContent).toContain(slots.verdictRoomWithinStep('6,500'))
-    expect(document.body.textContent).not.toContain(slots.verdictRoomClause('6,500'))
-    echo.unmount()
   }, 300_000)
 })

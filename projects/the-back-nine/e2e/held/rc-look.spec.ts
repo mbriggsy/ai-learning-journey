@@ -19,7 +19,8 @@ import { copy } from '../../src/ui/copy'
  * RC13a the Profile pages (Net Worth, Income, Savings, Family), each with a drawer open (on the phone, its full-screen
  * sheet), and a drawer refusing a Save (a Social Security figure over its ceiling) with the error under its field; since
  * RC13b Goals and Expenses with every card's drawer, the budget worksheet, and the Pre-retirement living expenses drawer
- * stale and kept (opened from the standing line). Screenshots land in the repo's gitignored `temp/rc-shots/<unit>/`, named
+ * stale and kept (opened from the standing line); since RC18 Settings, each folder tab (and the W row's drawer over it on
+ * a working seed), and the Display drawer open over Analysis. Screenshots land in the repo's gitignored `temp/rc-shots/<unit>/`, named
  * `<screen>-<seed>-<size>.png`, for Briggsy to review the output.
  *
  *     RC_UNIT=RC2 pnpm exec playwright test --config e2e/held/shots.config.ts rc-look
@@ -44,6 +45,8 @@ const ALL_SCREENS = [
   { id: 'family', screen: 'profile-family', module: copy.shellModuleProfile, page: copy.shellPageFamily },
   { id: 'goals', screen: 'profile-goals', module: copy.shellModuleProfile, page: copy.shellPageGoals },
   { id: 'expenses', screen: 'profile-expenses', module: copy.shellModuleProfile, page: copy.shellPageExpenses },
+  // RC18: the gear's page, reached by the gear (no module word names it).
+  { id: 'settings', screen: 'settings', module: copy.shellGear, page: copy.settingsTitle },
 ] as const
 /** `RC_ONLY=stress-test` captures only the named screens (comma-separated ids), and Probability's tray and odds
  *  captures only where Probability is among them. */
@@ -140,7 +143,9 @@ async function settleProbability(page: Page): Promise<void> {
 }
 
 async function showScreen(page: Page, target: (typeof SCREENS)[number], phone: boolean): Promise<void> {
-  if (phone) {
+  if (target.screen === 'settings') {
+    await page.locator('[data-gear]').click()
+  } else if (phone) {
     await page.getByRole('button', { name: copy.shellMenuOpen, exact: true }).click()
     await page.getByRole('dialog', { name: copy.shellMenuTitle }).getByRole('link', { name: target.page, exact: true }).click()
     await expect(page.getByRole('dialog', { name: copy.shellMenuTitle })).toHaveCount(0)
@@ -330,8 +335,10 @@ for (const size of SIZES) {
           if (asset !== undefined) {
             await showScreen(page, PROBABILITY, size.phone)
             if ((await page.locator('[data-probability="pending"], [data-probability="fallback"], [data-probability="error"]').count()) === 0) {
-              await page.getByRole('button', { name: copy.trayHandle, exact: true }).click()
               const tray = page.locator('#b9-action-items')
+              // The tray's open state lives on the shell, so at the laptop width the tray the capture above left open is
+              // still open here: the handle opens it only when it is shut (a click on an open tray shuts it).
+              if ((await tray.count()) === 0) await page.getByRole('button', { name: copy.trayHandle, exact: true }).click()
               await expect(tray).toBeVisible()
               await page.waitForTimeout(400)
               for (const [k, v] of [['stock', '80'], ['bond', '15'], ['cash', '5']] as const) {
@@ -976,5 +983,76 @@ for (const size of SIZES) {
         expect.soft(a.tiny, `${id}: text under 12 px`).toEqual([])
       }
     })
+  })
+}
+
+// ── RC18 · Settings, each folder tab; its W row's drawer over it (a working seed); the Display drawer ─────────────────────
+const SETTINGS_TABS = [
+  ['methodology', copy.settingsTabMethodology],
+  ['returns', copy.settingsTabReturns],
+  ['tax', copy.settingsTabTax],
+  ['health', copy.settingsTabHealth],
+  ['other', copy.settingsTabOther],
+] as const
+
+for (const size of SIZES) {
+  test.describe(`${UNIT} look, Settings and the Display drawer at ${size.tag}`, () => {
+    test.use({ ...size.use, reducedMotion: 'reduce' })
+    for (const seed of SEEDS) {
+      test(`?seed=${seed}: Settings, each folder tab (whole page too), the W row's drawer where there is one, and the Display drawer`, async ({ page }) => {
+        test.setTimeout(FINAL_TIER_MS + 180_000)
+        await enterShell(page, seed)
+        const findings: Record<string, Audit> = {}
+        await showScreen(page, screenById('settings'), size.phone)
+        for (const [id, word] of SETTINGS_TABS) {
+          await page.getByRole('tab', { name: word, exact: true }).click()
+          await page.evaluate(() => window.scrollTo(0, 0))
+          await shot(page, findings, `settings-${id}`, seed, size.tag)
+          await page.screenshot({ path: `${OUT}/settings-${id}-${seed}-${size.tag}-full.png`, fullPage: true })
+        }
+        await page.getByRole('tab', { name: copy.settingsTabMethodology, exact: true }).click()
+        const w = page.locator('[data-assumption-seat="working-year-cost"]')
+        if ((await w.count()) > 0) {
+          await w.getByRole('button', { name: copy.settingsWorkingCostDoor }).click()
+          await expect(page.getByRole('dialog', { name: copy.profileWorkingCostName })).toBeVisible()
+          await page.waitForTimeout(450)
+          await shot(page, findings, 'settings-w-drawer', seed, size.tag)
+          await page.keyboard.press('Escape')
+          await expect(page.getByRole('dialog')).toHaveCount(0)
+        }
+        await showScreen(page, PROBABILITY, size.phone)
+        await page.getByRole('button', { name: copy.displayDoorLabel, exact: true }).click()
+        const display = page.getByRole('dialog', { name: copy.displayTitle })
+        await expect(display).toBeVisible()
+        await page.waitForTimeout(450)
+        await shot(page, findings, 'display-drawer', seed, size.tag)
+        await display.getByRole('switch', { name: copy.displayYears }).click()
+        await display.getByRole('switch', { name: copy.displaySameScale }).click()
+        await page.waitForTimeout(200)
+        await shot(page, findings, 'display-drawer-moved', seed, size.tag)
+        await display.getByRole('button', { name: copy.profileDrawerSave, exact: true }).click()
+        await expect(display).toHaveCount(0)
+        // What the two choices draw: Probability's bars on their own scales (retired), Confidence's fan on years.
+        await settleProbability(page)
+        await shot(page, findings, 'probability-own-scales', seed, size.tag)
+        await page.getByRole('tab', { name: copy.confidenceTab, exact: true }).click()
+        await expect(page.locator('main.result[data-shell-screen="confidence"]')).toBeAttached()
+        await expect(page.locator('[data-chart="fan"] .highcharts-series-group, main.result [data-card="fan"] p').first()).toBeAttached({ timeout: 30_000 })
+        await page.waitForTimeout(600)
+        await shot(page, findings, 'confidence-years', seed, size.tag)
+        // The other charts over the plan's years, on the years axis.
+        await showScreen(page, screenById('health-care'), size.phone)
+        await shot(page, findings, 'health-care-years', seed, size.tag)
+        await showScreen(page, screenById('social-security'), size.phone)
+        await shot(page, findings, 'social-security-years', seed, size.tag)
+        console.log(`[rc-look ${UNIT} settings ${seed} ${size.tag}] ${JSON.stringify(findings)}`)
+        for (const [id, a] of Object.entries(findings)) {
+          expect.soft(a.sideways, `${id}: sideways scroll`).toBeLessThanOrEqual(0)
+          expect.soft(a.clipped, `${id}: clipped text`).toEqual([])
+          expect.soft(a.overlaps, `${id}: overlapping controls`).toEqual([])
+          expect.soft(a.tiny, `${id}: text under 12 px`).toEqual([])
+        }
+      })
+    }
   })
 }

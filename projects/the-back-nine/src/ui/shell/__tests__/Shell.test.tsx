@@ -560,11 +560,53 @@ describe('Shell — RC4: the home’s new pages and the gear', () => {
     expect(document.querySelector('main.result .result-page')).toBeNull()
   })
 
-  it('the gear opens the assumptions panel (the old answer page’s Assumptions door), on every page', async () => {
+  it('the gear opens Settings (RC18; the assumption panel before it), with no sub-nav of a module beneath it', async () => {
     const { lanes } = heldLanes()
     renderRoom(snapshotWith(finalAnswer()), lanes)
     fireEvent.click(screen.getByRole('button', { name: copy.shellGearLabel }))
-    expect(await screen.findByRole('heading', { name: copy.assumptionTitle })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: copy.settingsTitle, level: 1 })).toBeInTheDocument()
+    expect(document.querySelector('main.result')).toHaveAttribute('data-shell-screen', 'settings')
+    expect(screen.getAllByRole('tab').map((t) => t.textContent)).toEqual([copy.settingsTabMethodology, copy.settingsTabReturns, copy.settingsTabTax, copy.settingsTabHealth, copy.settingsTabOther])
+  })
+
+  it('Settings’ W row opens the Pre-retirement living expenses drawer over Settings, and the survivor’s share opens Living expenses (RC18)', async () => {
+    const { lanes } = heldLanes()
+    renderRoom({ ...snapshotWith(finalAnswer()), draft: DEV_SEEDS.datecoststale }, lanes)
+    fireEvent.click(screen.getByRole('button', { name: copy.shellGearLabel }))
+    await screen.findByRole('heading', { name: copy.settingsTitle, level: 1 })
+    const wRow = document.querySelector<HTMLElement>('[data-assumption-seat="working-year-cost"]')!
+    fireEvent.click(within(wRow).getByRole('button', { name: copy.settingsWorkingCostDoor }))
+    const w = await screen.findByRole('dialog', { name: copy.profileWorkingCostName })
+    expect(document.querySelector('main.result')).toHaveAttribute('data-shell-screen', 'settings')
+    fireEvent.click(within(w).getByRole('button', { name: copy.profileDrawerCancel }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+    const survivor = document.querySelector<HTMLElement>('[data-assumption-seat="survivor-ratio"]')!
+    fireEvent.click(within(survivor).getByRole('button', { name: copy.settingsSurvivorRatioDoor }))
+    expect(await screen.findByRole('dialog', { name: copy.profileKindLiving })).toBeInTheDocument()
+    expect(document.querySelector('main.result')).toHaveAttribute('data-shell-screen', 'settings')
+  })
+
+  it('“Today’s dollars” on Analysis opens the Display drawer; a Save holds its choices for the session, Cancel drops them (RC18)', async () => {
+    const { lanes } = heldLanes()
+    renderRoom(snapshotWith(finalAnswer()), lanes)
+    showPage('probability')
+    const openIt = async () => {
+      fireEvent.click(screen.getByRole('button', { name: copy.displayDoorLabel }))
+      return screen.findByRole('dialog', { name: copy.displayTitle })
+    }
+    let drawer = await openIt()
+    fireEvent.click(within(drawer).getByRole('switch', { name: copy.displayYears }))
+    fireEvent.click(within(drawer).getByRole('button', { name: copy.profileDrawerSave }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+    // A page move keeps it: the shell holds the choices, not the page.
+    showPage('table')
+    drawer = await openIt()
+    expect(within(drawer).getByRole('switch', { name: copy.displayYears })).toBeChecked()
+    fireEvent.click(within(drawer).getByRole('switch', { name: copy.displayYears }))
+    fireEvent.click(within(drawer).getByRole('button', { name: copy.profileDrawerCancel }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+    drawer = await openIt()
+    expect(within(drawer).getByRole('switch', { name: copy.displayYears }), 'Cancel dropped the moved switch').toBeChecked()
   })
 })
 

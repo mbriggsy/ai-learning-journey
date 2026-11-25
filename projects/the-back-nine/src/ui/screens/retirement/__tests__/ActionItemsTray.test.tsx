@@ -589,11 +589,11 @@ describe('doors into a lever open the tray at its row, and no sheet', () => {
   it('with a current saved recommendation, a door’s first trip to Probability shows the household’s own what-if at the row it asked for, never Recommended', async () => {
     const record = { action: { candidateId: 'opaque', policy: 'custom', drawdownOrder: ['roth', 'taxable', 'pretax'], rothConversion: { kind: 'none' } } } as unknown as SavedRecommendationV3
     // A Profile page first: Probability has not shown yet this session, so its landing pick (Recommended) is still owed.
-    // The door is the assumption panel's withdrawal-order row (RC13b: the facts page's "Try a change" links left with it).
+    // The door is Settings' withdrawal-order row (RC18; the assumption panel's row before it).
     openTray(DEV_SEEDS.retired, { open: false, initialRoute: PAGES.expenses, recommendation: { record, current: true } })
     fireEvent.click(screen.getByRole('button', { name: copy.shellGearLabel }))
-    const panel = await screen.findByRole('dialog')
-    fireEvent.click(within(panel).getByRole('button', { name: new RegExp(`^(${copy.leverSequencingCta}|${copy.leverSequencingEditCta})$`) }))
+    const row = await waitFor(() => document.querySelector<HTMLElement>('[data-assumption-seat="drawdown"]')!)
+    fireEvent.click(within(row).getByRole('button', { name: new RegExp(`^(${copy.leverSequencingCta}|${copy.leverSequencingEditCta})$`) }))
     expect(shownScreen()).toBe('probability')
     expect(handle()).toHaveAttribute('aria-expanded', 'true')
     await waitFor(() => expect(tray().querySelector('[data-tray-group="withdrawal-order"]')!.contains(document.activeElement)).toBe(true), { timeout: 5_000 })
@@ -601,11 +601,11 @@ describe('doors into a lever open the tray at its row, and no sheet', () => {
     expect(document.querySelector('[data-half="alternative"]')!.getAttribute('aria-label')).toBe(copy.probabilityPickNew)
   })
 
-  it('the assumption panel’s withdrawal-order row opens the tray at its row (the sheet it opened is gone)', async () => {
+  it('Settings’ withdrawal-order row opens the tray at its row (RC18)', async () => {
     openTray(DEV_SEEDS.retired, { open: false })
     fireEvent.click(screen.getByRole('button', { name: copy.shellGearLabel }))
-    const panel = await screen.findByRole('dialog')
-    fireEvent.click(within(panel).getByRole('button', { name: new RegExp(`^(${copy.leverSequencingCta}|${copy.leverSequencingEditCta})$`) }))
+    const row = await waitFor(() => document.querySelector<HTMLElement>('[data-assumption-seat="drawdown"]')!)
+    fireEvent.click(within(row).getByRole('button', { name: new RegExp(`^(${copy.leverSequencingCta}|${copy.leverSequencingEditCta})$`) }))
     await waitFor(() => expect(handle()).toHaveAttribute('aria-expanded', 'true'), { timeout: 5_000 })
     expect(shownScreen()).toBe('probability')
     await waitFor(() => expect(tray().querySelector('[data-tray-group="withdrawal-order"]')!.contains(document.activeElement)).toBe(true), { timeout: 5_000 })

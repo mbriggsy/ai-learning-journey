@@ -7,8 +7,7 @@
  */
 import { lazy, Suspense, type ReactNode } from 'react'
 import { ChartTitle, LoadingVeil, Select } from '../../kit'
-import { copy, slots } from '../../copy'
-import { formatDeltaDollar } from '../../money'
+import { copy } from '../../copy'
 import { verdictDescribedBy } from '../../disclaimerId'
 import { ChartBoundary } from '../ChartBoundary'
 import { chartWords } from '../dashboard/snapshotView'
@@ -16,9 +15,6 @@ import { chartFigure, COMPARISON_CHARTS, type ComparisonChart, type ComparisonVi
 
 const PairAreas = lazy(() => import('@viz/charts/YearAreas').then((m) => ({ default: m.PairAreas })))
 const StackedAreas = lazy(() => import('@viz/charts/YearAreas').then((m) => ({ default: m.StackedAreas })))
-
-/** A point's spoken sentence: the year, whose figure, the figure. */
-const pointWords = (year: number, name: string, dollars: number): string => slots.taxStratChartPoint(year, name, formatDeltaDollar(dollars))
 
 export const COMPARISON_HEIGHT = 320
 export const STACK_HEIGHT = 280
@@ -80,7 +76,9 @@ export function ComparisonPanel({
                     lattice={view.lattice}
                     axisDollar={view.axisDollar}
                     figure={chartFigure}
-                    pointWords={pointWords}
+                    pointWords={view.pointWords}
+                    axisTitle={view.axisTitle}
+                    axisOffset={view.axisOffset}
                     words={{ ...chartWords(view.title), description: view.metric }}
                     height={COMPARISON_HEIGHT}
                   />
@@ -114,7 +112,9 @@ export function ComparisonPanel({
                         lattice={view.lattice}
                         axisDollar={view.axisDollar}
                         figure={chartFigure}
-                        pointWords={pointWords}
+                        pointWords={view.pointWords}
+                        axisTitle={view.axisTitle}
+                        axisOffset={view.axisOffset}
                         words={{ ...chartWords(`${view.title}: ${s.title}`), description: view.notes[0] ?? s.title }}
                         height={STACK_HEIGHT}
                       />

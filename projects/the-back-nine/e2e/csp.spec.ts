@@ -231,7 +231,7 @@ test.describe('CSP — real browser enforcement', () => {
     expect(v.some((x) => /worker-src|script-src/.test(x.violatedDirective))).toBe(false)
   })
 
-  test('the shell loads under the enforced CSP: the home, Probability and its Action Items tray, Confidence, Cash Flows, Stress Test, Social Security, Health Care, Asset Allocation and Tax Allocation, Tax Strategies, Net Worth and one Profile drawer, Expenses and its Living expenses drawer, and both its menus, no violation, and no request outside the build’s own files', async ({ page }) => {
+  test('the shell loads under the enforced CSP: the home, Probability and its Action Items tray, Confidence, Cash Flows, Stress Test, Social Security, Health Care, Asset Allocation and Tax Allocation, Tax Strategies, Net Worth and one Profile drawer, Expenses and its Living expenses drawer, Settings and the Display drawer, and both its menus, no violation, and no request outside the build’s own files', async ({ page }) => {
     // Act 6 · RC2 (plan 6, section 3.1's Verification; the workbench room's arm before it, U6 to U15), re-pointed at RC4:
     // the real intake lands on the home (Dashboard → Snapshot), the shell's lazy chunk and its styles load with it on the
     // served build, Probability draws its rings and its two balance bars (Highcharts again), and every page is
@@ -240,7 +240,9 @@ test.describe('CSP — real browser enforcement', () => {
     // steady view lands first, then the future select shows the rough one, each read by its own words over its own rows; a
     // drill opens and goes back, the CSV downloads (a blob built in the page), and the Accounts tab opens. Expenses
     // opens and closes its Living expenses drawer (RC13b, in place of the facts page's step sheet); Probability's Action Items tray (RC4b: a Base UI collapsible, its Edit drawer a
-    // portaled dialog) runs one what-if through its Refresh; the lock menu (a portaled Base UI menu)
+    // portaled dialog) runs one what-if through its Refresh, and its "Today's dollars" opens the Display drawer (RC18, a portaled
+    // dialog with two Base UI switches); the gear opens Settings (RC18, in place of the assumption panel), whose folder tabs
+    // are walked and whose survivor row opens the Living expenses drawer over it; the lock menu (a portaled Base UI menu)
     // opens and closes; at a phone width the menu (a portaled Base UI dialog that animates) moves the page. The way home
     // is the wordmark.
     test.setTimeout(180_000)
@@ -476,6 +478,36 @@ test.describe('CSP — real browser enforcement', () => {
     // Shut again by its handle (open, it would become the phone's full-height sheet when the window narrows below).
     await page.getByRole('button', { name: copy.trayHandle, exact: true }).click()
     await expect(tray, 'the tray never shut').toBeHidden()
+
+    // The Display drawer (RC18): "Today's dollars" beside the folder tabs opens it; a switch flipped, then Save, so the
+    // shell hands the years axis to every chart, then back to ages the same way.
+    for (const want of [true, false]) {
+      await page.getByRole('button', { name: copy.displayDoorLabel, exact: true }).click()
+      const display = page.getByRole('dialog', { name: copy.displayTitle })
+      await expect(display, 'the Display drawer never opened').toBeVisible()
+      const years = display.getByRole('switch', { name: copy.displayYears })
+      await years.click()
+      await expect(years).toHaveAttribute('aria-checked', String(want))
+      await display.getByRole('button', { name: copy.profileDrawerSave, exact: true }).click()
+      await expect(display, 'the Display drawer never closed').toHaveCount(0)
+    }
+    expect(await page.evaluate(() => document.querySelectorAll('style').length), 'the Display drawer injected a <style> element').toBe(0)
+
+    // Settings (RC18): the gear's page, each folder tab, then the survivor row's door opens the Living expenses drawer
+    // over Settings, shut by Cancel with nothing changed.
+    await page.locator('[data-gear]').click()
+    await expect(page.locator('main.result[data-shell-screen="settings"]'), 'Settings never showed').toBeAttached()
+    for (const tab of [copy.settingsTabReturns, copy.settingsTabTax, copy.settingsTabHealth, copy.settingsTabOther, copy.settingsTabMethodology]) {
+      await page.getByRole('tab', { name: tab, exact: true }).click()
+      await expect(page.getByRole('tab', { name: tab, exact: true })).toHaveAttribute('aria-selected', 'true')
+    }
+    await page.locator('[data-assumption-seat="survivor-ratio"]').getByRole('button', { name: copy.settingsSurvivorRatioDoor }).click()
+    const overSettings = page.getByRole('dialog', { name: copy.profileKindLiving })
+    await expect(overSettings, 'the drawer never opened over Settings').toBeVisible()
+    await overSettings.getByRole('button', { name: copy.profileDrawerCancel, exact: true }).click()
+    await expect(overSettings, 'the drawer never closed').toHaveCount(0)
+    await expect(page.locator('main.result[data-shell-screen="settings"]'), 'the drawer left Settings').toBeAttached()
+    expect(await page.evaluate(() => document.querySelectorAll('style').length), 'Settings injected a <style> element').toBe(0)
 
     // At a phone width the menu (a portaled, animated dialog) reaches Cash Flows and closes on the choice.
     await page.setViewportSize({ width: 390, height: 844 })

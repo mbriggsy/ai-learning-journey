@@ -138,7 +138,7 @@ const focused = (page: Page) =>
  * The ONLY entry that reaches the intake flow with a real household behind it.
  *
  * `?seed=…` applies a COMPLETE draft and lands on the result surface — there are no steps to
- * advance there. The AssumptionPanel's re-walk door remounts IntakeFlow at index 0 over that
+ * advance there. Settings' re-walk door (the assumption panel's until RC18) remounts IntakeFlow at index 0 over that
  * seeded draft, which is what a returning reader actually does.
  *
  * `datesolo` deliberately, and NOT `gotoSeedFinal`: it is the refusal witness (the engine cannot
@@ -154,8 +154,8 @@ async function rewalkFromDateSolo(page: Page): Promise<void> {
     'datesolo did not land on the withheld hero — the seed or the refusal route moved',
   ).toBeVisible({ timeout: 60_000 })
   await settleLayout(page)
-  // Act 6 · RC4: the answer page and its assumptions door are gone; the panel opens from the shell's gear (its name
-  // holds at every width, the icon alone on the phone), and its re-walk leaves the shell for the walk-through.
+  // Act 6 · RC4: the answer page and its assumptions door are gone; since RC18 the shell's gear (its name holds at every
+  // width, the icon alone on the phone) opens Settings, whose re-walk leaves the shell for the walk-through.
   await page.getByRole('button', { name: copy.shellGearLabel, exact: true }).click()
   await page.getByRole('button', { name: copy.assumptionRewalkCta }).click()
   await expect(page.locator('.intake-shell')).toBeVisible({ timeout: 30_000 })

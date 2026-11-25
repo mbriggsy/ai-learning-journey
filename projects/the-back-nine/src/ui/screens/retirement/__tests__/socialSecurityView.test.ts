@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { claimCumulativeOptions } from '@viz/charts/claimOptions'
 import { simulate } from '@engine/simulate'
 import { DATE_SEARCH_PATHS, offsetReading } from '@engine/dateSearch'
 import { householdBenefits } from '@engine/socialSecurityBenefit'
@@ -236,7 +237,7 @@ describe('the break-even', () => {
 
   it('the comparison view: two changes of lead mark the ring at the second, never "No break-even"', () => {
     const c = choicesOf(RETIRED)
-    const v = claimsComparisonView({ chart: 'cumulative', a: 'seventy', b: 'plan', notes: NOTES(c), rows: { seventy: handRun(EVEN_FRA, 8), plan: handRun(EVEN_PLAN, 8) } })
+    const v = claimsComparisonView({ timeAxis: 'ages', chart: 'cumulative', a: 'seventy', b: 'plan', notes: NOTES(c), rows: { seventy: handRun(EVEN_FRA, 8), plan: handRun(EVEN_PLAN, 8) } })
     if (v.kind !== 'pair') throw new Error(v.kind)
     expect(v.hero).toBe(slots.claimsBreakEvenAge(66 + 7))
     expect(v.crossing?.age).toBe(66 + 7)
@@ -247,7 +248,7 @@ describe('the break-even', () => {
     const c = choicesOf(RETIRED)
     // Running totals: claiming at 70 [0, 0, 35,000, 40,000], your plan [10,000, 20,000, 30,000, 40,000]: 70 passes the
     // plan at index 2, then the two print the same in the last year read, so nothing "stays ahead" through it.
-    const v = claimsComparisonView({ chart: 'cumulative', a: 'seventy', b: 'plan', notes: NOTES(c), rows: { seventy: handRun([0, 0, 35_000, 5_000], 3), plan: handRun([10_000, 10_000, 10_000, 10_000], 3) } })
+    const v = claimsComparisonView({ timeAxis: 'ages', chart: 'cumulative', a: 'seventy', b: 'plan', notes: NOTES(c), rows: { seventy: handRun([0, 0, 35_000, 5_000], 3), plan: handRun([10_000, 10_000, 10_000, 10_000], 3) } })
     if (v.kind !== 'pair') throw new Error(v.kind)
     expect(breakEvenIndex(cumulative([0, 0, 35_000, 5_000]), cumulative([10_000, 10_000, 10_000, 10_000])), 'the crossing exists').toBe(2)
     expect(v.crossing).toBeUndefined()
@@ -265,7 +266,7 @@ describe('the break-even', () => {
     const late = Array.from({ length: 20 }, (_, t) => (t < 4 ? 0 : 30_000))
     const cut = 18 // the crossing lands inside 20 years
     const both = (lastT: number) =>
-      claimsComparisonView({ chart: 'cumulative', a: 'seventy', b: 'plan', notes: NOTES(c), rows: { seventy: handRun(late, lastT), plan: handRun(early, lastT) } })
+      claimsComparisonView({ timeAxis: 'ages', chart: 'cumulative', a: 'seventy', b: 'plan', notes: NOTES(c), rows: { seventy: handRun(late, lastT), plan: handRun(early, lastT) } })
     const inside = both(cut)
     if (inside.kind !== 'pair') throw new Error(inside.kind)
     const tCross = breakEvenIndex(cumulative(late), cumulative(early))!
@@ -288,19 +289,64 @@ describe('the break-even', () => {
     expect(earlier.hero).toBe(copy.claimsNoBreakEven)
   })
 
+  it('the time axis (Act 6 · RC18): ages by default; on the years axis the points, the ring and the range move to the calendar year, titled "Year", and the ring still says its age', () => {
+    const c = choicesOf(RETIRED)
+    const early = Array.from({ length: 20 }, () => 20_000)
+    const late = Array.from({ length: 20 }, (_, t) => (t < 4 ? 0 : 30_000))
+    const at = (timeAxis: 'ages' | 'years') => {
+      const v = claimsComparisonView({ timeAxis, chart: 'cumulative', a: 'seventy', b: 'plan', notes: NOTES(c), rows: { seventy: handRun(late, 18), plan: handRun(early, 18) } })
+      if (v.kind !== 'pair') throw new Error(v.kind)
+      return v
+    }
+    const tCross = breakEvenIndex(cumulative(late), cumulative(early))!
+    const start = RETIRED.startCalendarYear
+    const ages = at('ages')
+    expect(ages.axisTitle).toBe('Alex’s age')
+    expect(ages.axisOffset).toBe(0)
+    const years = at('years')
+    expect(years.axisTitle).toBe(copy.chartAxisYear)
+    // Alex is 66 in the plan's first year: the years axis adds that year less 66.
+    expect(years.axisOffset).toBe(start - 66)
+    // The view's points, crossing and words are unchanged: only the chart maps them, once.
+    expect(years.series).toEqual(ages.series)
+    expect(years.crossing).toEqual(ages.crossing)
+    expect(years.hero).toBe(slots.claimsBreakEvenAge(66 + tCross))
+    expect(years.heroLine).toBe(ages.heroLine)
+    const drawn = claimCumulativeOptions({
+      series: years.series,
+      axisTitle: years.axisTitle,
+      axisOffset: years.axisOffset,
+      lattice: years.lattice,
+      axisDollar: years.axisDollar,
+      figure: String,
+      pointWords: (n, name, d) => slots.claimsYearPoint(years.axisTitle, n, name, String(d)),
+      crossing: years.crossing!,
+      words: { title: 'T', description: 'D', credits: 'C', end: 'E', legend: 'L', legendItem: 'I' },
+      height: 240,
+    })
+    const series = drawn.series as unknown as { id: string; data: { x: number; dataLabels?: { formatter: () => string } }[] }[]
+    expect(series.find((s) => s.id === 'claims-a')!.data.map((d) => d.x)).toEqual(Array.from({ length: 19 }, (_, t) => start + t))
+    const ring = series.find((s) => s.id === 'b9-claims-cross')!.data[0]!
+    expect(ring.x).toBe(start + tCross)
+    expect(ring.dataLabels!.formatter()).toBe(slots.claimsBreakEvenAge(66 + tCross))
+    expect(drawn.xAxis).toMatchObject({ min: start - 0.5, max: start + 18.5, title: { text: 'Year' } })
+    const say = (drawn.accessibility as { point: { descriptionFormatter: (p: { x: number; y: number; series: { name: string } }) => string } }).point.descriptionFormatter
+    expect(say({ x: start + 1, y: 40_000, series: { name: 'A' } })).toBe(`Year ${start + 1}, A: ~$40000`)
+  })
+
   it('no break-even: the side that leads is the one with the last lead, never the side a tie in the last year falls to', () => {
     const c = choicesOf(RETIRED)
     // Running totals: claiming at 70 [0, 0, 30,000], your plan [10,000, 20,000, 30,000]: the plan led, then a tie.
-    const v = claimsComparisonView({ chart: 'cumulative', a: 'seventy', b: 'plan', notes: NOTES(c), rows: { seventy: handRun([0, 0, 30_000], 2), plan: handRun([10_000, 10_000, 10_000], 2) } })
+    const v = claimsComparisonView({ timeAxis: 'ages', chart: 'cumulative', a: 'seventy', b: 'plan', notes: NOTES(c), rows: { seventy: handRun([0, 0, 30_000], 2), plan: handRun([10_000, 10_000, 10_000], 2) } })
     if (v.kind !== 'pair') throw new Error(v.kind)
     // The two totals print the same in the last year: no side leads there, so the line says they come out about the
     // same by then (the yearly view's "About the same"), never that the plan "stays ahead through" it.
     expect(v.hero).toBe(copy.claimsAboutSame)
     expect(v.heroLine).toBe(slots.claimsLevelByLine(RETIRED.startCalendarYear + 2, 'Alex’s', 68, copy.claimsPhraseSeventy, copy.claimsPhrasePlan))
-    const annual = claimsComparisonView({ chart: 'annual', a: 'seventy', b: 'plan', notes: NOTES(c), rows: { seventy: handRun([0, 0, 30_000], 2), plan: handRun([10_000, 10_000, 10_000], 2) } })
+    const annual = claimsComparisonView({ timeAxis: 'ages', chart: 'annual', a: 'seventy', b: 'plan', notes: NOTES(c), rows: { seventy: handRun([0, 0, 30_000], 2), plan: handRun([10_000, 10_000, 10_000], 2) } })
     expect(annual.kind === 'pair' && annual.hero).toBe(copy.claimsAboutSame)
     // A lead that holds through the last year still says so, naming the side that led.
-    const held = claimsComparisonView({ chart: 'cumulative', a: 'seventy', b: 'plan', notes: NOTES(c), rows: { seventy: handRun([0, 0, 25_000], 2), plan: handRun([10_000, 10_000, 10_000], 2) } })
+    const held = claimsComparisonView({ timeAxis: 'ages', chart: 'cumulative', a: 'seventy', b: 'plan', notes: NOTES(c), rows: { seventy: handRun([0, 0, 25_000], 2), plan: handRun([10_000, 10_000, 10_000], 2) } })
     if (held.kind !== 'pair') throw new Error(held.kind)
     expect(held.hero).toBe(copy.claimsNoBreakEven)
     expect(held.heroLine).toBe(slots.claimsNoBreakEvenLine(RETIRED.startCalendarYear + 2, 'Alex’s', 68, copy.claimsPhrasePlan, copy.claimsPhraseSeventy))
@@ -316,7 +362,7 @@ describe('the break-even', () => {
     const deaths = plan.meta.people.map((p) => p.lastAge - p.currentAge)
     expect(Math.min(...deaths)).toBeLessThan(Math.max(...deaths))
     const rows = { seventy: ready(late), plan: ready(plan) }
-    const v = claimsComparisonView({ chart: 'cumulative', a: 'seventy', b: 'plan', notes: NOTES(c), rows })
+    const v = claimsComparisonView({ timeAxis: 'ages', chart: 'cumulative', a: 'seventy', b: 'plan', notes: NOTES(c), rows })
     if (v.kind !== 'pair') throw new Error(v.kind)
     const last = Math.max(...deaths)
     const ya = late.rows.slice(0, last + 1).map((r) => r.socialSecurity)
@@ -332,7 +378,7 @@ describe('the break-even', () => {
       const leaderA = snapToGrain(ca[t]!) > snapToGrain(cb[t]!)
       for (let k = t; k <= last; k++) expect(leaderA ? snapToGrain(ca[k]!) >= snapToGrain(cb[k]!) : snapToGrain(cb[k]!) >= snapToGrain(ca[k]!), `year ${k} holds the lead`).toBe(true)
     }
-    const yearly = claimsComparisonView({ chart: 'annual', a: 'seventy', b: 'plan', notes: NOTES(c), rows })
+    const yearly = claimsComparisonView({ timeAxis: 'ages', chart: 'annual', a: 'seventy', b: 'plan', notes: NOTES(c), rows })
     if (yearly.kind !== 'pair') throw new Error(yearly.kind)
     const diff = snapToGrain(lifetimeTotal(ya)) - snapToGrain(lifetimeTotal(yb))
     expect(yearly.hero).toBe(formatDeltaDollar(diff) === '0' ? copy.claimsAboutSame : slots.claimsMoreHero(formatDeltaDollar(diff), diff > 0 ? 'more' : 'less'))
@@ -397,7 +443,7 @@ describe('the lifetime totals and the Summary', () => {
     const summary = claimsSummaryView({ notes: NOTES(c), rows: { plan: floor(), earliest: floor(true), seventy: floor() }, readings })
     if (summary.kind !== 'bars') throw new Error(summary.kind)
     expect(summary.notes).toContain(copy.claimsFloorTrack)
-    const pair = claimsComparisonView({ chart: 'annual', a: 'earliest', b: 'plan', notes: NOTES(c), rows: { earliest: floor(true), plan: floor() } })
+    const pair = claimsComparisonView({ timeAxis: 'ages', chart: 'annual', a: 'earliest', b: 'plan', notes: NOTES(c), rows: { earliest: floor(true), plan: floor() } })
     expect(pair.kind === 'pair' && pair.notes).toContain(copy.claimsFloorTrack)
     // The full budget's rows: no such line.
     const fullRun = claimsSummaryView({ notes: NOTES(c), rows: { plan: handRun(full, 19), earliest: handRun(full, 19), seventy: handRun(full, 19) }, readings })
@@ -425,11 +471,11 @@ describe('the lifetime totals and the Summary', () => {
     if (summary.kind !== 'bars') throw new Error(summary.kind)
     expect(summary.notes.at(-1)).toBe('STATE')
     const run = (route: 'dated' | 'no-date') => handRun([20_000, 20_000, 20_000], 2, false, { route, stopYear: 2031 })
-    const dated = claimsComparisonView({ chart: 'annual', a: 'seventy', b: 'plan', notes: NOTES(c, 'STATE'), rows: { seventy: run('dated'), plan: run('dated') } })
+    const dated = claimsComparisonView({ timeAxis: 'ages', chart: 'annual', a: 'seventy', b: 'plan', notes: NOTES(c, 'STATE'), rows: { seventy: run('dated'), plan: run('dated') } })
     if (dated.kind !== 'pair') throw new Error(dated.kind)
     expect(dated.notes).toContain(slots.claimsWorkStops(2031))
     expect(dated.notes.at(-1)).toBe('STATE')
-    const noDate = claimsComparisonView({ chart: 'annual', a: 'seventy', b: 'plan', notes: NOTES(c), rows: { seventy: run('no-date'), plan: run('no-date') } })
+    const noDate = claimsComparisonView({ timeAxis: 'ages', chart: 'annual', a: 'seventy', b: 'plan', notes: NOTES(c), rows: { seventy: run('no-date'), plan: run('no-date') } })
     if (noDate.kind !== 'pair') throw new Error(noDate.kind)
     expect(noDate.notes).toContain(slots.claimsWorkStopsNoDate(2031))
   })
@@ -440,26 +486,26 @@ describe('the lifetime totals and the Summary', () => {
   })
 
   it('a run whose money ran out before the steady market’s end prints no lifetime total and says why', () => {
-    const v = claimsComparisonView({ chart: 'annual', a: 'seventy', b: 'plan', notes: NOTES(c), rows: { seventy: handRun([20_000, 20_000, 20_000], 10, true), plan: handRun([20_000, 20_000, 20_000, 20_000], 10) } })
+    const v = claimsComparisonView({ timeAxis: 'ages', chart: 'annual', a: 'seventy', b: 'plan', notes: NOTES(c), rows: { seventy: handRun([20_000, 20_000, 20_000], 10, true), plan: handRun([20_000, 20_000, 20_000, 20_000], 10) } })
     if (v.kind !== 'pair') throw new Error(v.kind)
     expect(v.hero).toBe(copy.claimsNoTotal)
     expect(v.heroLine).toBe(slots.claimsRanOut(copy.claimsStrategySeventy, RETIRED.startCalendarYear + 2))
   })
 
   it('the same two strategies picked: words, never a picture of one against itself', () => {
-    expect(claimsComparisonView({ chart: 'annual', a: 'plan', b: 'plan', notes: NOTES(c), rows }).kind).toBe('words')
+    expect(claimsComparisonView({ timeAxis: 'ages', chart: 'annual', a: 'plan', b: 'plan', notes: NOTES(c), rows }).kind).toBe('words')
   })
 
   it('the pickers default to the first strategy that is not the plan, against your plan’s ages', () => {
-    const v = claimsComparisonView({ chart: 'annual', a: undefined, b: undefined, notes: NOTES(c), rows })
+    const v = claimsComparisonView({ timeAxis: 'ages', chart: 'annual', a: undefined, b: undefined, notes: NOTES(c), rows })
     expect([v.a, v.b]).toEqual(['earliest', 'plan'])
   })
 
   it('"optimal" and "best" appear nowhere on the page', () => {
     const all = JSON.stringify([
       claimsSummaryView({ notes: NOTES(c), rows, readings }),
-      claimsComparisonView({ chart: 'annual', a: 'seventy', b: 'plan', notes: NOTES(c), rows }),
-      claimsComparisonView({ chart: 'cumulative', a: 'earliest', b: 'seventy', notes: NOTES(c), rows }),
+      claimsComparisonView({ timeAxis: 'ages', chart: 'annual', a: 'seventy', b: 'plan', notes: NOTES(c), rows }),
+      claimsComparisonView({ timeAxis: 'ages', chart: 'cumulative', a: 'earliest', b: 'seventy', notes: NOTES(c), rows }),
       claimsSteps(c.strategies[2]!, c.people, RETIRED.startCalendarYear, 0),
       c,
       Object.entries(copy).filter(([k]) => k.startsWith('claims') || k === 'shellPageSocialSecurity'),
@@ -488,10 +534,10 @@ describe('the filing steps (Action Items)', () => {
     expect(claimsSteps(seventy, c.people, RETIRED.startCalendarYear, 1).asOf).toBe(asOf)
     expect(claimsSteps(seventy, c.people, RETIRED.startCalendarYear, 0).asOf).toBeUndefined()
     const rows = { seventy: handRun([20_000, 20_000, 20_000], 2), plan: handRun([20_000, 20_000, 20_000], 2) }
-    const aged = claimsComparisonView({ chart: 'annual', a: 'seventy', b: 'plan', notes: NOTES(c, null, 1), rows })
+    const aged = claimsComparisonView({ timeAxis: 'ages', chart: 'annual', a: 'seventy', b: 'plan', notes: NOTES(c, null, 1), rows })
     if (aged.kind !== 'pair') throw new Error(aged.kind)
     expect(aged.notes).toContain(asOf)
-    const fresh = claimsComparisonView({ chart: 'annual', a: 'seventy', b: 'plan', notes: NOTES(c), rows })
+    const fresh = claimsComparisonView({ timeAxis: 'ages', chart: 'annual', a: 'seventy', b: 'plan', notes: NOTES(c), rows })
     if (fresh.kind !== 'pair') throw new Error(fresh.kind)
     expect(fresh.notes).not.toContain(asOf)
   })

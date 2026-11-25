@@ -15,6 +15,7 @@ const input = (over: Partial<HealthPartInput> = {}): HealthPartInput => ({
   ],
   cliff: [{ fromAge: 62, toAge: 63, label: '2 of 10', point: 'c62' }],
   ages: { first: 61, last: 90 },
+  axisOffset: 0,
   axisTitle: 'Alex’s age',
   lattice: niceLattice(9_050),
   axisDollar: (d) => `$${d}`,
@@ -84,6 +85,18 @@ describe('healthPartOptions', () => {
     }
     expect(tipOf('<a href="https://x">P</a>’s age 61')).toBe('&lt;a href="https://x"&gt;P&lt;/a&gt;’s age 61')
     expect(tipOf('A & B’s age 61')).toBe('A &amp; B’s age 61')
+  })
+
+  it('on the years axis (the age plus `axisOffset`, Alex 61 in 2026): every bar, the bracket and the min/max on the calendar year', () => {
+    const o = healthPartOptions(input({ axisOffset: 2026 - 61 }))
+    const series = (o.series ?? []) as { type?: string; data: { x: number; y: number }[] }[]
+    expect(series.find((s) => s.type === 'column')!.data.map((d) => d.x)).toEqual([2026, 2027, 2028])
+    expect(series.find((s) => s.type === 'line')!.data.map((d) => d.x)).toEqual([2026.6, 2026.6, 2027.5, 2028.4, 2028.4])
+    const x = o.xAxis as { min: number; max: number; tickInterval: number }
+    expect([x.min, x.max]).toEqual([2025.5, 2055.5])
+    // Four-digit years tick every 10 (every 5 the last two collided at the phone's width, the RC18 look); ages every 5.
+    expect(x.tickInterval).toBe(10)
+    expect((healthPartOptions(input({ axisOffset: 0 })).xAxis as { tickInterval: number }).tickInterval).toBe(5)
   })
 
   it('the credit stays on (the Personal Use licence)', () => {

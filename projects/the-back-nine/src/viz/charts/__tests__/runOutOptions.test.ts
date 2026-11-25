@@ -12,7 +12,7 @@ const input = (points: readonly RunOutPoint[]): RunOutInput => ({
   points,
   labels: {
     yTick: (n) => `T${n}`,
-    ageAt: (t) => 63 + t,
+    tickAt: (t) => 63 + t,
     description: 'd',
     words: { title: 'RUN-OUT', credits: 'C {creditsStr}', end: 'E', legend: 'L', legendItem: 'S {itemName}' },
   },
@@ -38,6 +38,15 @@ describe('runOutOptions', () => {
     expect([x.min, x.max]).toEqual([0, 30])
     expect(x.tickPositions).toEqual([2, 7, 12, 17, 22, 27])
     expect(o.chart).toMatchObject({ marginLeft: 70, marginRight: 12 })
+  })
+
+  it('on the years axis the ticks are the fan’s calendar years that are multiples of 10, printed as years', () => {
+    const base = input(POINTS)
+    const o = runOutOptions({ ...base, labels: { ...base.labels, tickAt: (t) => 2026 + t } })
+    const x = o.xAxis as { min: number; max: number; tickPositions: number[]; labels: { formatter: (c: { value: number }) => string } }
+    expect([x.min, x.max]).toEqual([0, 30])
+    expect(x.tickPositions).toEqual([4, 14, 24])
+    expect(x.labels.formatter({ value: 4 })).toBe('2030')
   })
 
   it('every year is drawn as its exact share; its words are the tooltip and the screen reader’s; nothing printed on the plot', () => {

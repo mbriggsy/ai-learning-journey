@@ -54,6 +54,7 @@ describe('claim pair charts — a typed name prints as typed', () => {
       { id: 'b', name: 'B', role: 'compared', points: [{ age: 62, value: 5 }, { age: 63, value: 25 }] },
     ],
     axisTitle,
+    axisOffset: 0,
     figure: (d) => `~$${d}`,
     pointWords: () => '',
     lattice: niceLattice(25),
@@ -74,4 +75,51 @@ describe('claim pair charts — a typed name prints as typed', () => {
       }
     })
   }
+})
+
+/** The Display drawer's time axis (Act 6 · RC18): the points stay keyed by age; `axisOffset` puts them on the year. */
+describe('claim pair charts — the time axis', () => {
+  // Alex 62 in 2026: the years axis adds 2026 − 62.
+  const pair = (axisOffset: number, axisTitle: string): ClaimPairInput => ({
+    series: [
+      { id: 'a', name: 'A', role: 'alternative', points: [{ age: 62, value: 10 }, { age: 63, value: 30 }, { age: 64, value: 50 }] },
+      { id: 'b', name: 'B', role: 'compared', points: [{ age: 62, value: 20 }, { age: 63, value: 30 }, { age: 64, value: 40 }] },
+    ],
+    axisTitle,
+    axisOffset,
+    figure: (d) => `~$${d}`,
+    pointWords: (n, name, d) => `${axisTitle} ${n}, ${name}: ${d}`,
+    crossing: { age: 63, value: 30, label: 'Age 63' },
+    lattice: niceLattice(50),
+    axisDollar: (d) => String(d),
+    words: { title: 'T', description: 'D', credits: 'C', end: 'E', legend: 'L', legendItem: 'I' },
+    height: 240,
+  })
+  type Drawn = { id?: string; data: { x: number; dataLabels?: { formatter: () => string } }[] }
+  const xs = (o: ReturnType<typeof claimCumulativeOptions>, id: string) => (o.series as unknown as Drawn[]).find((s) => s.id === id)!.data.map((d) => d.x)
+
+  it('ages (offset 0): the points, the ring and the range on the first person’s age, as before', () => {
+    const o = claimCumulativeOptions(pair(0, 'Alex’s age'))
+    expect(xs(o, 'a')).toEqual([62, 63, 64])
+    expect(xs(o, 'b9-claims-cross')).toEqual([63])
+    expect(o.xAxis).toMatchObject({ min: 61.5, max: 64.5, title: { text: 'Alex’s age' } })
+  })
+
+  it('years: every bar, line point and the break-even ring on the calendar year, titled "Year"; the ring still says "Age 63"', () => {
+    const off = 2026 - 62
+    const annual = claimAnnualOptions(pair(off, 'Year'))
+    expect(xs(annual, 'a')).toEqual([2026, 2027, 2028])
+    expect(xs(annual, 'b')).toEqual([2026, 2027, 2028])
+    const o = claimCumulativeOptions(pair(off, 'Year'))
+    expect(xs(o, 'a')).toEqual([2026, 2027, 2028])
+    const ring = (o.series as unknown as Drawn[]).find((s) => s.id === 'b9-claims-cross')!.data[0]!
+    expect(ring.x).toBe(2027)
+    expect(ring.dataLabels!.formatter()).toBe('Age 63')
+    expect(o.xAxis).toMatchObject({ min: 2025.5, max: 2028.5, title: { text: 'Year' } })
+    // The tooltip and the spoken words read the axis's number, with its title.
+    const tip = (o.tooltip as { formatter: (this: unknown) => string }).formatter.call({ x: 2027, points: [{ series: { name: 'A', options: { id: 'a' } }, y: 30 }] })
+    expect(tip).toBe('Year 2027<br/>A: ~$30')
+    const say = (o.accessibility as { point: { descriptionFormatter: (p: { x: number; y: number; series: { name: string } }) => string } }).point.descriptionFormatter
+    expect(say({ x: 2027, y: 30, series: { name: 'A' } })).toBe('Year 2027, A: 30')
+  })
 })

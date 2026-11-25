@@ -19,6 +19,7 @@ import { useEffect, useId, useRef, type ReactNode, type Ref } from 'react'
 import { Download } from 'lucide-react'
 import { Button, Caveat, DataTable, PageFrame, Select, type DataTableColumn } from '../../kit'
 import { copy } from '../../copy'
+import { DisplayDoor } from '../settings/DisplayDrawer'
 import type { TableView } from '../../workbench/tableRun'
 import type { AccountsTable, CashFlowsPick, CashFlowsTab, CashFlowsView, CfNode, CfRow, SummaryDrill } from './cashFlowsView'
 
@@ -52,6 +53,8 @@ function Stack({ lines, className }: { readonly lines: readonly string[]; readon
 }
 
 export interface CashFlowsProps {
+  /** "Today's dollars" beside the folder tabs opens the Display drawer (RC18); absent, the plain words. */
+  readonly onDisplay?: () => void
   readonly view: CashFlowsView
   readonly headingRef: Ref<HTMLHeadingElement>
   readonly intro: PinnedIntroWords
@@ -128,7 +131,7 @@ function downloadCsv(csv: string, name: string): void {
   setTimeout(() => URL.revokeObjectURL(url), 30_000)
 }
 
-export function CashFlows({ view, headingRef, intro, caveat, onTab, onDrill, onAccounts, onFuture, onPick }: CashFlowsProps) {
+export function CashFlows({ view, headingRef, intro, caveat, onTab, onDrill, onAccounts, onFuture, onPick, onDisplay }: CashFlowsProps) {
   const titleId = useId()
   const titleRef = useRef<HTMLHeadingElement>(null)
   // A drill, a crumb or a table switch: focus on the panel's title, which names where the reader now is.
@@ -188,7 +191,7 @@ export function CashFlows({ view, headingRef, intro, caveat, onTab, onDrill, onA
         headingRef={headingRef}
         intro={<PinnedIntro words={intro} />}
         tabs={{ label: view.tabs.label, items: view.tabs.items, value: view.tabs.value, onValueChange: onTab }}
-        valuesNote={copy.probabilityTodaysDollars}
+        valuesNote={<DisplayDoor onOpen={onDisplay} />}
         caveat={<Caveat lines={caveat} />}
       >
         <div className="flex min-w-0 flex-col gap-4">

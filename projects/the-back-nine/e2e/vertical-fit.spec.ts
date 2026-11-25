@@ -20,57 +20,16 @@ import { copy, slots, workingCostExtras, type TypedBelowAmount } from '../src/ui
  * retires; RC7 rebuilds the band's honesty floor and legend on Confidence, RC8 the recommendation's arms on Tax
  * Strategies).
  *
- * What stays binds surfaces that still live: the assumption panel's vertical extent (until RC18), the walk's W step and
- * money picture and the panel's left-over seat with their coordinate taps (until RC13 ports them to the drawers), the
- * year-by-year table (until RC6) and the facts page (until RC13). Each enters as a reader does on the home: the seed's
- * settled answer lands on the shell, the gear opens the panel, the module words move between pages.
+ * What stays binds surfaces that still live: the walk's W step and money picture with their coordinate taps (until RC14
+ * replaces the walk with the stepper; the panel's and the facts page's arms left with RC13 and RC18, ported to the
+ * drawers in `e2e/rc-screens.spec.ts`). Each enters as a reader does on the home: the seed's settled answer lands on the
+ * shell, the gear opens Settings, whose drawers set a household up and whose re-walk leaves for the walk-through.
  */
 
-/** The home's presence companion (insight 029 — geometry over an unresolved or blank page passes vacuously): the seed
- *  landed on the shell's Snapshot with its ring card reading, and the gear (the panel's door since RC4) is offered. */
-async function assertResolvedHome(page: Page): Promise<void> {
-  await expect(page.locator('main.result[data-shell-screen="snapshot"]')).toBeAttached()
-  await expect(page.locator('[data-ring-reading]')).toBeVisible()
-  await expect(page.locator('[data-gear]')).toBeVisible()
-}
+// ── U12: the AssumptionPanel's own vertical extent — RETIRED at Act 6 · RC18 with the panel (an old-layout arm, plan 5.2):
+// Settings is a scrolling page (its first frame and phone order are `e2e/rc-screens.spec.ts`'s "RC18 · Settings" arms),
+// and every drawer it opens is the kit's, held inside the window by the RC13 drawer arms. ──────────────────────────────
 
-// ── U12: the AssumptionPanel's OWN vertical extent (the F4 council mandate) ───────────────────
-// "Door count stays 5" proves the RESULT frame fits; it says nothing about the panel. The full
-// assumption inventory (two sections, ~20 rows) is a density surface no other arm measures: the
-// family shell caps the sheet at 94dvh and the content scrolls chrome-lessly INSIDE it — if a
-// regression lets the dialog itself outgrow the viewport, the footer (Close / the re-walk) walks
-// off-screen with no scrollbar to reach it. The assertion is on the DIALOG BOX, not the content.
-
-test.describe(`the assumption panel's vertical extent (${REAL.width}×${REAL.height})`, () => {
-  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
-  test('the open panel is fully inside the viewport; its content scrolls internally', async ({ page }) => {
-    await gotoSeedFinal(page, 'retired')
-    await assertResolvedHome(page)
-    await page.locator('[data-gear]').click()
-    const dialog = page.getByRole('dialog')
-    await expect(dialog).toBeVisible()
-    // Let the enter transition settle before measuring (transform/opacity only, ~200ms).
-    await page.waitForTimeout(400)
-    const box = await dialog.boundingBox()
-    expect(box, 'the dialog reported no bounding box').not.toBeNull()
-    expect(box!.y, 'the panel top sits above the viewport').toBeGreaterThanOrEqual(0)
-    expect(
-      box!.y + box!.height,
-      `the panel bottom (${Math.round(box!.y + box!.height)}px) walks past the ${REAL.height}px viewport — the footer is unreachable`,
-    ).toBeLessThanOrEqual(REAL.height)
-    // The full inventory is TALLER than the box — the chrome-less internal scroll must own the
-    // difference (if this ever fails the inventory shrank below one screen, which is fine, but
-    // then the box bound above is the only live assertion — keep both honest).
-    const scroll = await dialog.evaluate((el) => {
-      const scroller = el.querySelector('.control-sheet__body, .sheet-body, [class*="body"]') ?? el
-      return { scrollHeight: scroller.scrollHeight, clientHeight: scroller.clientHeight }
-    })
-    expect(
-      scroll.scrollHeight,
-      'the inventory no longer overflows its scroller — re-check which element owns the scroll',
-    ).toBeGreaterThan(scroll.clientHeight)
-  })
-})
 /** The typed-below line's runs (the whole-window rebuild, `docs/plans/features/typed-below-whole-window-rebuild-spec.md`
  *  KTD6/KTD7, in the walk-9 form council's form, `docs/plans/features/typed-below-walk9-form-build-spec.md`): each working
  *  year this answer's credit beside the credit the answer at today's quote would give, the years grouped into runs, every
@@ -196,38 +155,6 @@ async function assertIntakeStepHolds(page: Page, where: string, minBoxes: number
   const nav = await page.locator('.intake-nav').boundingBox()
   expect(body !== null && nav !== null, `${where}: the step body and its nav must render`).toBe(true)
   expect(nav!.y, `${where}: Continue overlaps the step's content`).toBeGreaterThanOrEqual(body!.y + body!.height - 0.5)
-}
-
-/** Build 2's left-over seat in the open assumptions panel — its own row BELOW the W row (KTD8). */
-const LEFT_OVER_SEAT = '[role="dialog"] [data-assumption-seat="working-year-left-over"]'
-
-/** The seat's face once its replies show (R5, R6): exactly the three replies under the static legend, `checked`
- *  the one reply checked (or none), the year-0 figure line, and the one line below the group — every string the
- *  shipped one, every count exact, so a seat that rendered nothing (or rendered its replies elsewhere) reds.
- *  Then nothing in the seat spills sideways, over a counted floor. The caller has scrolled the seat in. */
-async function assertLeftOverSeatFace(
-  page: Page,
-  where: string,
-  face: { readonly checked: string | null; readonly figure: string; readonly line: string },
-): Promise<void> {
-  const seat = page.locator(LEFT_OVER_SEAT)
-  await expect(seat, `${where}: the left-over seat renders once`).toHaveCount(1)
-  await expect(seat.locator('.ap-row__name')).toHaveText(copy.assumptionWorkingCostLeftOverName)
-  const group = seat.getByRole('group', { name: copy.workingLedgerLeftOverLegend })
-  await expect(group).toHaveCount(1)
-  await expect(group.getByRole('radio'), `${where}: exactly the three replies, in the group`).toHaveCount(3)
-  await expect(seat.getByRole('radio'), `${where}: no reply outside the group`).toHaveCount(3)
-  await expect(seat.getByRole('radio', { checked: true }), `${where}: the checked reply`).toHaveCount(face.checked === null ? 0 : 1)
-  if (face.checked !== null) await expect(group.getByRole('radio', { name: face.checked, exact: true })).toBeChecked()
-  await expect(seat.locator('.left-over__figure'), `${where}: the year-0 figure line`).toHaveText(face.figure)
-  await expect(seat.locator('.left-over__line'), `${where}: the line below the group`).toHaveText(face.line)
-  const sideways = await sidewaysReport(page, LEFT_OVER_SEAT)
-  // The boxes inside the seat's row (the walk reads its descendants): its name, the question's root, the
-  // figure and check lines, the fieldset, its legend and the legend's text, the track, three replies, and the
-  // line below — 12, measured at both sizes (the radios themselves are `.sr-only`, which the walk skips).
-  expect(sideways.counted, `${where}: the walk counted too few boxes — the seat did not render`).toBeGreaterThanOrEqual(12)
-  expect(sideways.offenders, `${where}: the seat spills past the viewport`).toEqual([])
-  expect(sideways.docOverflow, `${where}: the document scrolls sideways`).toBeLessThanOrEqual(0)
 }
 
 const PAY_CHECK_VIEWPORTS = [
@@ -409,149 +336,10 @@ for (const vp of PAY_CHECK_VIEWPORTS) {
     })
   })
 
-  test.describe(`build 2’s left-over seat in the panel (${vp.name})`, () => {
-    test.use(vp.use)
-
-    test('?seed=datesaved: the panel seat below the W row — three replies, "All of it" checked at its figure, nothing sideways', async ({ page }) => {
-      await gotoSeedFinal(page, 'datesaved')
-      await assertResolvedHome(page)
-      await page.locator('[data-gear]').click()
-      const dialog = page.getByRole('dialog')
-      await expect(dialog).toBeVisible()
-      const row = dialog.locator('[data-assumption-seat="working-year-cost"]')
-      const seat = page.locator(LEFT_OVER_SEAT)
-      await expect(seat).toHaveCount(1)
-      // Its OWN row, after the W row's, never a control inside it (KTD8) — and the W row holds no reply.
-      const order = await page.evaluate((sel) => {
-        const w = document.querySelector('[role="dialog"] [data-assumption-seat="working-year-cost"]')
-        const s = document.querySelector(sel)
-        return w !== null && s !== null && !w.contains(s) && (w.compareDocumentPosition(s) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0
-      }, LEFT_OVER_SEAT)
-      expect(order, 'the seat is its own row after the W row').toBe(true)
-      await expect(row.getByRole('radio', { name: copy.workingLedgerLeftOverSaved, exact: true })).toHaveCount(0)
-      await seat.evaluate((el) => el.scrollIntoView({ block: 'start' }))
-      await settleLayout(page)
-      await assertLeftOverSeatFace(page, 'datesaved’s seat', {
-        checked: copy.workingLedgerLeftOverSaved,
-        figure: slots.workingLedgerLeftOverFigure('16,985'),
-        line: slots.workingLedgerLeftOverSavedLine('16,985'),
-      })
-      // The W row above draws the same household's picture, every figure whole (the shared memo's draft).
-      const panelFigures = await clippedFigures(page, '[role="dialog"]')
-      expect(panelFigures.counted, 'the panel picture read too few figures — "none clipped" would pass on nothing').toBeGreaterThanOrEqual(
-        DATE_PICTURE_FIGURES,
-      )
-      expect(panelFigures.offenders, 'a panel money-picture figure is clipped').toEqual([])
-    })
-
-    test('?seed=date: "All of it" tapped by coordinate right after typing W stores the figure on screen at the press', async ({ page }) => {
-      await gotoSeedFinal(page, 'date')
-      await page.locator('[data-gear]').click()
-      const dialog = page.getByRole('dialog')
-      await expect(dialog).toBeVisible()
-      const row = dialog.locator('[data-assumption-seat="working-year-cost"]')
-      const seat = page.locator(LEFT_OVER_SEAT)
-      const saved = seat.getByRole('radio', { name: copy.workingLedgerLeftOverSaved, exact: true })
-      await expect(seat.getByRole('radio')).toHaveCount(3)
-      await expect(saved, '`date` is unanswered').not.toBeChecked()
-      await expect(seat.locator('.left-over__line')).toHaveText(slots.workingLedgerLeftOverAbsentLine('16,985'))
-      // "A different figure": the panel never clears a confirmed W (KTD4), so nothing moves yet.
-      await row.getByRole('radio', { name: copy.workingCostDifferent }).evaluate((el) => (el as HTMLInputElement).click())
-      const input = row.getByRole('textbox', { name: copy.workingCostAmountLabel, exact: true })
-      await expect(input).toBeVisible()
-      await expect(row.getByRole('radio', { name: copy.periodMonth }), 'the untapped unit is a month (KTD17)').toBeChecked()
-      await input.scrollIntoViewIfNeeded()
-      await input.click()
-      await page.keyboard.press('Control+A')
-      await page.keyboard.type('6000')
-      const label = seat.locator('label.segment').filter({ hasText: copy.workingLedgerLeftOverSaved })
-      await expect(label).toHaveCount(1)
-      await label.scrollIntoViewIfNeeded()
-      await page.waitForTimeout(300)
-      await expect(input, 'the figure still has focus — the press is what blurs it').toBeFocused()
-      // What the seat SHOWS at the press, read off the screen — and it is `date`'s own $16,985 (the typed
-      // digits have not committed: the figure commits on blur).
-      const shownAtPress = await seat.locator('.left-over__figure').textContent()
-      expect(shownAtPress, 'the seat shows the old figure until the press').toBe(slots.workingLedgerLeftOverFigure('16,985'))
-      const box = await label.boundingBox()
-      expect(box).not.toBeNull()
-      const x = box!.x + box!.width / 2
-      const y = box!.y + box!.height / 2
-      // The hit-test at the point the tap will use (insight 119: what the input path hits).
-      const onLabel = await label.evaluate((el, [px, py]) => {
-        const hit = document.elementFromPoint(px, py)
-        return hit !== null && el.contains(hit)
-      }, [x, y] as const)
-      expect(onLabel, `the tap point is not on "${copy.workingLedgerLeftOverSaved}"`).toBe(true)
-      if (vp.use.viewport.width === PHONE.width) {
-        await page.touchscreen.tap(x, y)
-      } else {
-        await page.mouse.move(x, y)
-        await page.mouse.down()
-        await page.waitForTimeout(80) // a human press lasts tens of milliseconds
-        await page.mouse.up()
-      }
-      await expect(saved, 'the tap on "All of it" was lost').toBeChecked()
-      // The press's blur committed the typed figure, and the hold let go: the W row and the seat's figure now
-      // draw the live draft. The typed $72,000 sits below `date`'s $84,000 of spending, so the figure names it
-      // (U11 walk 7's R2).
-      await expect(row.locator('.ap-row__value')).toHaveText(slots.assumptionWorkingCostEntered('72,000'))
-      await expect(seat.locator('.left-over__figure')).toHaveText(slots.workingLedgerLeftOverFigureAt('72,000', '28,985'))
-      // THE GATE: what was STORED is the figure on screen at the press. The moved line names the stored figure
-      // as the one chosen against — never the plain saved line at the live figure — and the typed figure the live one
-      // rests on (R2).
-      await expect(seat.locator('.left-over__line'), 'the stored figure is not the one on screen at the press').toHaveText(
-        slots.workingLedgerLeftOverRoseLineAt('72,000', '16,985', '28,985'),
-      )
-      // …and below it, the typed-below line's runs (the whole-window rebuild, KTD6 host 3): ONE `same` run, a plain
-      // paragraph in the sheet. The sheet has no counts sentence (the W row above carries its "can look better" half), so
-      // its paragraph opens on the bare lean naming the quote's dollars (the walk-9 form council's call (2): "A working
-      // year almost always costs at least your spending of $84,000 a year."). The stored $16,985 caps both this answer and
-      // the answer at the $84,000 spending in every working year, so they add the same (KTD3), the figure stated (W8-R5
-      // (a)). Year 0 at the spending leaves the stored $16,985 itself, so no cap sentence is drawn, and the run's first
-      // sentence says "the answer at your spending" with no dollars and no floor aside (the lean said both). The only
-      // real-browser witness of the seat's line. `date`'s couple opens the survivor gate (the runs' docblock), so the one
-      // run opens "Each working year you’re both alive," and the survivor part's two sentences close the same paragraph:
-      // by hand, the default 0.75 survivor ratio of each W, $72,000 × 0.75 = $54,000 at the typed figure and $84,000 × 0.75
-      // = $63,000 at the spending, so at most $9,000 a year less. Typed by hand from the probe (`date6000Month`; the sheet
-      // names "this answer": the walk-8 form council's KD9).
-      const sameRun = (noun: TypedBelowNoun): string =>
-        [
-          'Each working year you’re both alive, the answer at your spending would add at most $16,985 a year.',
-          `${noun} answer adds at most $16,985 a year to your savings.`,
-          `At your spending, that’s the same in your savings${TB_RIDER}${TB_GLOSS}.`,
-          'In a working year with only one of you alive, that year’s costs count as $54,000 at your figure of $72,000 a year and $63,000 at your spending of $84,000 a year.',
-          `At your spending, that’s at most $9,000 a year less in your savings${TB_RIDER}.`,
-        ].join(' ')
-      await expect(seat.locator('p.left-over__at-quote')).toHaveText(
-        `A working year almost always costs at least your spending of $84,000 a year. ${sameRun('This')}`,
-      )
-      // A second reader of the stored answer, off the panel: the standing slot (the StaleBanner above the home since
-      // Act 6 · RC4) names the same two. The typed
-      // $72,000 sits below `date`'s $84,000 of spending, so R1's typed-below line holds the slot (U11 walk 6,
-      // `3000a04c`) and carries the moved figures as its clause right after its counts sentence (`TypedBelowHost`: no
-      // rules line hosts the clause here), naming the typed $72,000 its $28,985 rests on (the walk-6 round review's pair),
-      // then the lean in its own sentence naming the $84,000 (the walk-9 form council's call (2)), then the one `same` run
-      // and the survivor part. Stored from the live render, the clause would be absent and the run would read $28,985
-      // against the quote answer's $16,985; a lost tap would leave the counts sentence alone.
-      await page.keyboard.press('Escape')
-      await expect(dialog).toHaveCount(0)
-      const standing = page.locator('[data-stale-banner] p.cs-paycheck-note')
-      await expect(standing).toContainText(
-        [
-          'This answer counts a working year at your own figure of $72,000 a year, below your spending of $84,000 a year.',
-          'You said all the money left over in a working year goes into your savings, when your first working year had $16,985 left over.',
-          'At your figure of $72,000 a year, it has $28,985 left over now.',
-          'So each working year adds at most $16,985 of its left over to your savings, the smaller of the two.',
-          'A working year almost always costs at least your spending of $84,000 a year, so this answer can look better than it really is.',
-          sameRun('This'),
-        ].join(' '),
-        { timeout: FINAL_TIER_MS },
-      )
-      // ONE CAUSE, ONE LINE: the moved line's own lead never shares the slot this line holds.
-      await expect(standing).not.toContainText(copy.stalenessLeftOverNote)
-    })
-  })
+  // Build 2's left-over seat in the panel, both arms (the seat's face below the W row; "All of it" tapped by coordinate
+  // right after typing W) — RETIRED at Act 6 · RC18 with the panel. The same seat lives in the Pre-retirement living
+  // expenses drawer, and rc-screens.spec.ts's RC13b arms hold both laws there at both sizes: "?seed=datesaved: the
+  // left-over question below the whole picture" and "?seed=date: "All of it" tapped by coordinate right after typing W".
 }
 
 // ── the W period tap under its own blur-commit, on a screen taller than his (the h2 cure) ────────
@@ -577,32 +365,43 @@ const TALL_TOUCH = { deviceScaleFactor: 2, isMobile: true, hasTouch: true } as c
 const TALL_TAP_ARMS = [
   { host: 'walk', name: '1536×1300 window, mouse', touch: false, use: { viewport: { width: 1536, height: 1300 }, ...TALL_MOUSE } },
   { host: 'walk', name: '1024×1366 touch screen', touch: true, use: { viewport: { width: 1024, height: 1366 }, ...TALL_TOUCH } },
-  { host: 'panel', name: '1536×1400 window, mouse', touch: false, use: { viewport: { width: 1536, height: 1400 }, ...TALL_MOUSE } },
-  { host: 'panel', name: '1024×1466 touch screen', touch: true, use: { viewport: { width: 1024, height: 1466 }, ...TALL_TOUCH } },
+  // The panel's two tall arms (1536×1400 mouse, 1024×1466 touch) RETIRED at Act 6 · RC18 with the panel: the W face's
+  // hold in its drawer is rc-screens.spec.ts's "RC13b · the W period tap right after typing (drawer, …)" arms.
 ] as const
 
-/** `datecoststale` with its W kept through the Keep door as an entered $84,000 a year in the panel, then
- *  staled on the reading by a move to PA — the probe's set-up, through the panel the gear opens. Since build 2's U5 (`d4227774`) the Keep stamps the figure with the quote its note showed
- *  ($78,000), so the note reads "You kept", never "You entered" (KTD10), and a kept figure above today's
- *  quote stales on the state alone, exactly as the typed figure this set-up first held. */
-async function staleEnteredWInPanel(page: Page) {
+/** `datecoststale` with its W kept through the Keep door as an entered $84,000 a year, then staled on the reading by a
+ *  move to PA, then the walk-through re-opened at its W step — the probe's set-up. Since Act 6 · RC18 it runs through
+ *  Settings (the gear's page): its W row opens the Pre-retirement living expenses drawer (Keep, then Save), its state
+ *  row the state drawer (PA, then Save), and its re-walk leaves for the walk. Since build 2's U5 (`d4227774`) the Keep
+ *  stamps the figure with the quote its note showed ($78,000), so the note reads "You kept", never "You entered"
+ *  (KTD10), and a kept figure above today's quote stales on the state alone. */
+async function staleEnteredWInWalk(page: Page, who: string): Promise<void> {
   await gotoSeedFinal(page, 'datecoststale')
-  // The gear opens the panel (RC13b: the standing line's door opens the Pre-retirement living expenses drawer instead).
   await page.locator('[data-gear]').click()
-  const dialog = page.getByRole('dialog')
-  await expect(dialog).toBeVisible()
-  const row = dialog.locator('[data-assumption-seat="working-year-cost"]')
-  await row.getByRole('button', { name: slots.workingCostKeepYearly('84,000') }).click()
-  await expect(row.getByRole('note'), 'the kept figure is fresh').toHaveCount(0)
-  await dialog
-    .locator('[data-assumption-seat="retirement-state"]')
-    .getByRole('radio', { name: /Pennsylvania/ })
-    .first()
-    .evaluate((el) => (el as HTMLInputElement).click())
-  await expect(row.getByRole('note'), 'the move to PA stales the kept figure').toContainText(
-    slots.workingCostStaleStateKept('84,000'),
+  await expect(page.locator('main.result[data-shell-screen="settings"]')).toBeAttached()
+  const settingsRow = (seat: string) => page.locator(`[data-assumption-seat="${seat}"]`)
+  await settingsRow('working-year-cost').getByRole('button', { name: copy.settingsWorkingCostDoor }).click()
+  let drawer = page.getByRole('dialog', { name: copy.profileWorkingCostName })
+  await expect(drawer).toBeVisible()
+  await drawer.getByRole('button', { name: slots.workingCostKeepYearly('84,000') }).click()
+  await expect(drawer.getByRole('note'), 'the kept figure is fresh').toHaveCount(0)
+  await drawer.getByRole('button', { name: copy.profileDrawerSave }).click()
+  await expect(drawer).toBeHidden()
+  // The state lives on the Tax Assumptions tab; W and the re-walk on Methodology.
+  await page.getByRole('tab', { name: copy.settingsTabTax, exact: true }).click()
+  await settingsRow('retirement-state').getByRole('button', { name: copy.settingsStateDoor }).click()
+  drawer = page.getByRole('dialog')
+  await expect(drawer).toBeVisible()
+  await drawer.getByRole('combobox').click()
+  await page.getByRole('option', { name: copy.stateOptionPA }).click()
+  await drawer.getByRole('button', { name: copy.profileDrawerSave }).click()
+  await expect(drawer).toBeHidden()
+  await page.getByRole('tab', { name: copy.settingsTabMethodology, exact: true }).click()
+  await expect(settingsRow('working-year-cost'), 'the move to PA stales the kept figure').toContainText(
+    slots.assumptionWorkingCostStale('84,000'),
   )
-  return { dialog, row }
+  await page.getByRole('button', { name: copy.assumptionRewalkCta }).click()
+  await advanceIntakeTo(page, copy.qWorkingCostHeading, who)
 }
 
 for (const { host, ...vp } of TALL_TAP_ARMS) {
@@ -610,12 +409,8 @@ for (const { host, ...vp } of TALL_TAP_ARMS) {
     test.use(vp.use)
 
     test('"Each month" tapped by coordinate lands: the note above it stands until the click, and 7,000 is a month', async ({ page }) => {
-      const { dialog } = await staleEnteredWInPanel(page)
-      if (host === 'walk') {
-        await dialog.getByRole('button', { name: copy.assumptionRewalkCta }).click()
-        await advanceIntakeTo(page, copy.qWorkingCostHeading, `${host} ${vp.name}`)
-      }
-      const face = host === 'walk' ? page.locator('.intake-shell .working-cost') : dialog.locator('[data-assumption-seat="working-year-cost"] .working-cost')
+      await staleEnteredWInWalk(page, `${host} ${vp.name}`)
+      const face = page.locator('.intake-shell .working-cost')
       await expect(face.getByRole('note')).toContainText(slots.workingCostStaleStateKept('84,000'))
       const month = face.getByRole('radio', { name: copy.periodMonth })
       await expect(month, 'the held figure’s own unit, a year, is the one checked').not.toBeChecked()
@@ -702,11 +497,6 @@ for (const { host, ...vp } of TALL_TAP_ARMS) {
       await expect(month, `${host}: the tap on "${copy.periodMonth}" was lost`).toBeChecked()
       await expect(face.getByRole('note'), 'the commit landed and the hold let go').toHaveCount(0)
       await expect(input).toHaveValue('7,000')
-      if (host === 'panel') {
-        await expect(dialog.locator('[data-assumption-seat="working-year-cost"] .ap-row__value')).toHaveText(
-          slots.assumptionWorkingCostEntered('84,000'),
-        )
-      }
     })
   })
 }
@@ -723,8 +513,9 @@ for (const { host, ...vp } of TALL_TAP_ARMS) {
 // K-panel is the panel row's hold's only gate at his own laptop's size (mutant-measured, b9-1). The mouse
 // tall arms cannot red a release on pointerup (Chromium hit-tests a mouse release once, so pointerup,
 // mouseup and click share a target); the touch arms and these two can, and do.
+// K-panel (the panel's arm at his window, mouse) RETIRED at Act 6 · RC18 with the panel: the W face's Keep door in its
+// drawer is rc-screens.spec.ts's "RC13b · the W note's Keep door tapped right after typing (drawer, …)" arms.
 const KEEP_TAP_ARMS = [
-  { host: 'panel', name: `${REAL.width}×${REAL.height}, mouse`, touch: false, use: { viewport: REAL, deviceScaleFactor: REAL_DPR } },
   {
     host: 'walk',
     name: `phone ${PHONE.width}×${PHONE.height}, touch`,
@@ -738,13 +529,8 @@ for (const arm of KEEP_TAP_ARMS) {
     test.use(arm.use)
 
     test('"Keep $84,000 a year" tapped by coordinate keeps $84,000 — the figure it names — and focus lands on the answer', async ({ page }) => {
-      const { dialog } = await staleEnteredWInPanel(page)
-      if (arm.host === 'walk') {
-        await dialog.getByRole('button', { name: copy.assumptionRewalkCta }).click()
-        await advanceIntakeTo(page, copy.qWorkingCostHeading, `keep ${arm.name}`)
-      }
-      const face =
-        arm.host === 'walk' ? page.locator('.intake-shell .working-cost') : dialog.locator('[data-assumption-seat="working-year-cost"] .working-cost')
+      await staleEnteredWInWalk(page, `keep ${arm.name}`)
+      const face = page.locator('.intake-shell .working-cost')
       const input = face.getByRole('textbox', { name: copy.workingCostAmountLabel, exact: true })
       await input.scrollIntoViewIfNeeded()
       await input.click()
@@ -780,13 +566,6 @@ for (const arm of KEEP_TAP_ARMS) {
         return a instanceof HTMLInputElement && a.type === 'radio' && a.checked
       })
       expect(focused, 'focus never falls to the page: it lands on the answer that now stands').toBe(true)
-      if (arm.host === 'panel') {
-        // The door keeps the HELD answer, a kept figure, and a Keep carries its stamp (KTD10): typing
-        // digits and then keeping must never launder it into a typed figure that no quote can stale.
-        await expect(dialog.locator('[data-assumption-seat="working-year-cost"] .ap-row__value')).toHaveText(
-          slots.assumptionWorkingCostKept('84,000'),
-        )
-      }
     })
   })
 }

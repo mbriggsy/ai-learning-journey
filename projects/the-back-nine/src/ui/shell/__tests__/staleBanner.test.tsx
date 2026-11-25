@@ -1,12 +1,11 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import '@testing-library/jest-dom/vitest'
-import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { useSyncExternalStore } from 'react'
 import { appModel } from '../../appModel'
 import { resolvedFocusKey, selectElevatedAnswer } from '../../answerView'
 import { composeAnswerNotes } from '../../answerNotes'
-import { useEditorSheets } from '../../editorSheets'
 import { copy, slots, workingCostExtras } from '@ui/copy'
 import { DEV_SEEDS } from '../../devSeeds'
 import { DATE_FIXTURES, DATE_WINDOW_TOP } from '../../preview/dateFixtures'
@@ -99,7 +98,6 @@ afterEach(() => {
   appModel.update(() => pristineDraft)
   vi.mocked(resolvedFocusKey).mockReset()
   vi.mocked(selectElevatedAnswer).mockReset()
-  document.documentElement.classList.remove('control-sheet-open')
 })
 
 /** A resolved date hero over a planted answer: settled at the draft on screen, or committed at `answeredAt`. */
@@ -110,37 +108,18 @@ function plantDateHero(answeredAt: ScenarioDraft | null = null) {
 }
 
 
-/** The shell's StaleBanner host, alone: the notes for the store's answer, the banner, the gear's plain door, the panel. */
+/** The shell's StaleBanner host, alone: the notes for the store's answer, the banner, and the outside doors' drawer. */
 function StaleHarness({ readOnly = false, stalenessNote = false, leftOverClauseHost = false }: { readonly readOnly?: boolean; readonly stalenessNote?: boolean; readonly leftOverClauseHost?: boolean }) {
   const snapshot = useSyncExternalStore(appModel.subscribe, appModel.getSnapshot)
   const wallCalendarYear = epochDayToCalendarYear(currentEpochDay())
   const notes = composeAnswerNotes(snapshot, { readOnly, stalenessNote, leftOverClauseHost, wallCalendarYear })
   // The shell's outside doors (RC13b): the pay check's two seats open the Pre-retirement living expenses drawer over the
-  // page; any other seat, the panel's.
+  // page (since RC18 there is no other seat: the assumption panel is gone).
   const drawers = useDrawerHost(() => null)
-  const editors = useEditorSheets({
-    model: appModel,
-    snapshot,
-    missing: missingRequiredFacts(snapshot.draft),
-    savedAnchor: notes.planClock,
-    restoreFallback: () => null,
-    onOpenSequencing: () => {},
-    onOpenRoth: () => {},
-    onOpenHealth: () => {},
-    onOpenBudget: () => drawers.open({ kind: 'living' }, null),
-  })
   return (
     <>
-      <button type="button" onClick={() => editors.openAssumptions()}>
-        {copy.shellGearLabel}
-      </button>
-      {/* The panel opened at the W row's seat (the gear's drawer still lands on a seat until RC18 replaces it). */}
-      <button type="button" data-open-w-seat="" onClick={() => editors.openAssumptions('working-year-cost')} />
       <div data-hero-text="">
-        <StaleBannerStack
-          lines={composeStaleLines(notes, !readOnly)}
-          onOpenSeat={(seat) => (seat === 'working-year-cost' || seat === 'working-year-left-over' ? drawers.open({ kind: 'working-cost' }, null) : editors.openAssumptions(seat))}
-        />
+        <StaleBannerStack lines={composeStaleLines(notes, !readOnly)} onOpenSeat={() => drawers.open({ kind: 'working-cost' }, null)} />
         {/* The note lines Probability prints from the same notes (its key-metric column and footnote row). */}
         {[notes.stateNote, notes.medicarePriced?.affirmation, notes.medicarePriced?.residual, notes.medicarePricedNote ? notes.medicareExtrasTypicalNote : undefined]
           .filter((l): l is string => typeof l === 'string')
@@ -148,7 +127,6 @@ function StaleHarness({ readOnly = false, stalenessNote = false, leftOverClauseH
             <p key={l}>{l}</p>
           ))}
       </div>
-      {editors.node}
       {drawers.render({ model: appModel, readOnly })}
     </>
   )
@@ -160,8 +138,6 @@ const line = () => document.querySelector('.cs-paycheck-note')
 const wDrawerOpened = (): boolean =>
   document.activeElement?.textContent === copy.profileWorkingCostName && document.querySelector('[data-working-cost-face]') !== null
 const lineDoor = () => screen.queryByRole('button', { name: copy.stalenessPayCheckCta })
-const wRowName = () =>
-  document.querySelector('[data-assumption-seat="working-year-cost"] .ap-row__name') as HTMLElement | null
 
 describe('the pay check’s standing line through Result (KTD21)', () => {
   it('a STALE W puts the line on the date hero; its door opens the Pre-retirement living expenses drawer (RC13b)', async () => {
@@ -208,20 +184,6 @@ describe('the pay check’s standing line through Result (KTD21)', () => {
     // above $78,000 now — the safe side, so no lean is said).
     expect(line()?.textContent).toBe(`${copy.stalenessPayCheckNote} ${slots.workingCostStaleQuote('84,000', '78,000')}`)
     expect(lineDoor()).toBeNull()
-  })
-
-  it('the seat drops on close: the plain Assumptions door afterwards keeps the sheet’s own landing', async () => {
-    plantDateHero()
-    appModel.update(() => DEV_SEEDS.datecoststale)
-    render(<StaleHarness />)
-    fireEvent.click(document.querySelector<HTMLElement>('[data-open-w-seat]')!)
-    expect(document.activeElement).toBe(wRowName())
-    // Close through the panel's own quiet Close (the sheet animates out, so wait for it to go).
-    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: copy.leverCancel }))
-    await waitFor(() => expect(screen.queryByRole('heading', { name: copy.assumptionTitle })).toBeNull())
-    fireEvent.click(screen.getByRole('button', { name: copy.shellGearLabel }))
-    expect(screen.getByRole('heading', { name: copy.assumptionTitle })).toBeInTheDocument()
-    expect(document.activeElement).not.toBe(wRowName())
   })
 })
 

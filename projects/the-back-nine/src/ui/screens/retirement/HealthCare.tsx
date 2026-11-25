@@ -14,6 +14,7 @@
 import { lazy, Suspense, type Ref } from 'react'
 import { Button, Caveat, cn, LoadingVeil, PageFrame, Tray, useWide } from '../../kit'
 import { copy, slots } from '../../copy'
+import { DisplayDoor } from '../settings/DisplayDrawer'
 import { verdictDescribedBy } from '../../disclaimerId'
 import type { HealthFact } from '../../healthSheetChrome'
 import type { DrawerTarget } from '../profile/profileView'
@@ -35,6 +36,8 @@ const TABS = [{ id: 'cost', label: copy.healthTabCost }] as const
 const TRAY_ID = 'b9-health-inputs'
 
 export interface HealthCareProps {
+  /** "Today's dollars" beside the folder tabs opens the Display drawer (RC18); absent, the plain words. */
+  readonly onDisplay?: () => void
   readonly headingRef: Ref<HTMLHeadingElement>
   readonly view: HealthCareView
   /** The Action Items tray's view; absent where the page has no figure (no handle then). */
@@ -101,6 +104,7 @@ function Charts({ view, caveat }: { readonly view: HealthChartsView; readonly ca
                       bars={part.bars}
                       cliff={part.cliff}
                       ages={view.ages}
+                      axisOffset={view.axisOffset}
                       axisTitle={view.axisTitle}
                       lattice={view.lattice}
                       axisDollar={view.axisDollar}
@@ -213,7 +217,7 @@ function TrayBody({ tray, onTryLever, onOpenFact }: { readonly tray: HealthTrayV
   )
 }
 
-export function HealthCare({ headingRef, view, tray, caveat, trayOpen, onTrayOpen, onTryLever, onOpenFact }: HealthCareProps) {
+export function HealthCare({ headingRef, view, tray, caveat, trayOpen, onTrayOpen, onTryLever, onOpenFact, onDisplay }: HealthCareProps) {
   const charts = view.kind === 'charts'
   return (
     <div className="flex w-full flex-1 flex-col bg-bg" data-screen="health-care">
@@ -221,7 +225,7 @@ export function HealthCare({ headingRef, view, tray, caveat, trayOpen, onTrayOpe
         title={copy.shellPageHealthCare}
         headingRef={headingRef}
         intro={copy.healthIntro}
-        valuesNote={copy.probabilityTodaysDollars}
+        valuesNote={<DisplayDoor onOpen={onDisplay} />}
         tabs={{ label: copy.healthTabsLabel, items: TABS, value: 'cost', onValueChange: () => {} }}
         // The words view keeps the frame's own caveat (the panel's last line); the charts mount theirs under the charts.
         {...(charts ? {} : { caveat: <Caveat lines={caveat} /> })}

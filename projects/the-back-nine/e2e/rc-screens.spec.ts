@@ -1008,29 +1008,44 @@ async function visibleEdges(page: Page, sel: string): Promise<Edges> {
 
 /** The preview on `seed`, settled, then Probability; one engine-input edit through the gear's drawer (the survivor's
  *  spending share), the flag SEEN, the echo read before and after, the drawer closed. Returns the boxes read before. */
+/** One engine-input edit the way a household makes it since Act 6 · RC18 (the assumption panel's inline fields left with
+ *  it): the gear opens Settings, the survivor row's door opens the Living expenses drawer over Settings, the share is
+ *  moved (70% ↔ 65%, an engine input on every route) and saved, and the module word (the phone's menu) takes the reader
+ *  back to `back` ('retirement' lands on Analysis → Probability, 'dashboard' on Snapshot). For the held arms only: the
+ *  preview holds the run, so the flag still stands on the way back. Returns once the page named is back. */
+async function editThroughSettings(page: Page, back: 'retirement' | 'dashboard'): Promise<void> {
+  await page.locator('[data-gear]').click()
+  await expect(page.locator('main.result[data-shell-screen="settings"]')).toBeAttached()
+  await page.locator('[data-assumption-seat="survivor-ratio"]').getByRole('button', { name: copy.settingsSurvivorRatioDoor }).click()
+  const drawer = page.getByRole('dialog', { name: copy.profileKindLiving })
+  await expect(drawer).toBeVisible()
+  const field = drawer.getByLabel(copy.assumptionSurvivorRatioLabel)
+  const now = (await field.inputValue()).replace(/[^0-9]/g, '')
+  await field.fill(now === '70' ? '65' : '70')
+  await drawer.getByRole('button', { name: copy.profileDrawerSave }).click()
+  await expect(drawer).toBeHidden()
+  const modules = page.getByRole('navigation', { name: copy.shellModulesLabel })
+  if (await modules.isVisible()) await modules.getByRole('link', { name: back === 'retirement' ? copy.shellModuleRetirement : copy.shellModuleDashboard, exact: true }).click()
+  else {
+    await page.getByRole('button', { name: copy.shellMenuOpen, exact: true }).click()
+    await page.getByRole('dialog', { name: copy.shellMenuTitle }).getByRole('link', { name: back === 'retirement' ? copy.shellPageAnalysis : copy.shellPageSnapshot, exact: true }).click()
+    await expect(page.getByRole('dialog', { name: copy.shellMenuTitle })).toHaveCount(0)
+  }
+  await expect(page.locator(`main.result[data-shell-screen="${back === 'retirement' ? 'probability' : 'snapshot'}"]`)).toBeAttached()
+}
+
 async function enterHeldWindow(page: Page, seed: string) {
   await page.goto(`/?preview=refiguring&seed=${seed}`)
   await expect(page.locator(SETTLED_RESULT), `${seed}: the preview never settled`).toBeAttached({ timeout: FINAL_TIER_MS })
   await toProbability(page, seed)
   await expect(page.locator('[data-intro-eyebrow]').filter({ visible: true }), 'a settled landing shows no re-figuring line').toHaveCount(0)
   const before = { lead: await visibleEdges(page, '[data-intro-lead]'), caveat: await visibleEdges(page, 'main.result [data-caveat]') }
-  await page.locator('[data-gear]').click()
-  const dialog = page.getByRole('dialog')
-  await expect(dialog).toBeVisible()
-  await settleLayout(page)
-  const echoBefore = await visibleEdges(page, '[role="dialog"] .ap-echo')
-  const field = dialog.getByLabel(copy.assumptionSurvivorRatioLabel)
-  const now = (await field.inputValue()).replace(/[^0-9]/g, '')
-  await field.fill(now === '70' ? '65' : '70')
-  await field.press('Tab')
+  // The edit through Settings' drawer (RC18). The panel's echo box, which said "being figured again" beside the edit,
+  // left with the panel: the page's own line is the one that says it, and these arms read it.
+  await editThroughSettings(page, 'retirement')
   await expect(page.locator('main.result[data-answer-refiguring]'), 'the edit raised no re-figuring flag').toBeAttached({ timeout: 30_000 })
   await settleLayout(page)
-  const echoAfter = await visibleEdges(page, '[role="dialog"] .ap-echo')
-  const echoText = await dialog.locator('.ap-echo').textContent()
-  await dialog.getByRole('button', { name: /^(Close|Cancel)$/ }).first().click()
-  await expect(dialog).toBeHidden()
-  await settleLayout(page)
-  return { before, echoBefore, echoAfter, echoText }
+  return { before }
 }
 
 /** Read after the window's boxes: the flag still stands over the old final, so every box was read inside the window. */
@@ -1041,9 +1056,9 @@ async function expectStillHeld(page: Page): Promise<void> {
 test.describe(`RC4 ported · the re-figuring window, held (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr)`, () => {
   test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
 
-  test('spine (?seed=budget): the line on one line, in frame; the answer and the R13 caveat do not move; the echo says so in its own box', async ({ page }) => {
+  test('spine (?seed=budget): the line on one line, in frame; the answer and the R13 caveat do not move', async ({ page }) => {
     test.setTimeout(FINAL_TIER_MS + 90_000)
-    const { before, echoBefore, echoAfter, echoText } = await enterHeldWindow(page, 'budget')
+    const { before } = await enterHeldWindow(page, 'budget')
     const line = page.locator('[data-intro-eyebrow]').filter({ visible: true })
     await expect(line, 'one visible re-figuring line').toHaveCount(1)
     await expect(line).toHaveText(copy.answerRefiguringVerdict)
@@ -1057,14 +1072,12 @@ test.describe(`RC4 ported · the re-figuring window, held (${REAL.width}×${REAL
     expect(Math.abs(caveat.top - before.caveat!.top), `the R13 caveat moved ${(caveat.top - before.caveat!.top).toFixed(1)} px`).toBeLessThanOrEqual(0.5)
     expect(caveat.bottom, 'the R13 caveat left the frame').toBeLessThanOrEqual(REAL.height)
     await assertOneVisibleCaveat(page, REAL.height)
-    expect(echoText, 'the drawer’s echo says the answer is being figured again').toBe(copy.assumptionEchoRefiguring)
-    expect(Math.abs(echoAfter!.height - echoBefore!.height), 'the echo’s reserved box changed height').toBeLessThanOrEqual(0.5)
     await expectStillHeld(page)
   })
 
   test('date (?seed=date): the date’s own line, in frame; the answer does not move; the odds chart wears the caption’s clause', async ({ page }) => {
     test.setTimeout(FINAL_TIER_MS + 90_000)
-    const { before, echoText } = await enterHeldWindow(page, 'date')
+    const { before } = await enterHeldWindow(page, 'date')
     const line = page.locator('[data-intro-eyebrow]').filter({ visible: true })
     await expect(line).toHaveText(copy.answerRefiguringDate)
     const edges = (await visibleEdges(page, '[data-intro-eyebrow]'))!
@@ -1072,7 +1085,6 @@ test.describe(`RC4 ported · the re-figuring window, held (${REAL.width}×${REAL
     expect(edges.oneLine, `the line wraps (${edges.height.toFixed(1)} px)`).toBe(true)
     expect(edges.bottom, 'the line leaves the first frame').toBeLessThanOrEqual(REAL.height)
     expect(Math.abs(lead.top - before.lead!.top), `the answer moved ${(lead.top - before.lead!.top).toFixed(1)} px`).toBeLessThanOrEqual(0.5)
-    expect(echoText).toBe(copy.assumptionEchoRefiguring)
     await openOdds(page)
     await expect(page.locator('[data-odds-chart]').getByText(copy.answerRefiguringCaption, { exact: true }), 'the odds chart says its figures predate the change').toBeVisible()
     await expectStillHeld(page)
@@ -1101,25 +1113,30 @@ test.describe(`RC4 ported · the re-figuring window, held (phone ${PHONE.width}�
 
 test.describe(`RC4 ported · the re-figuring signal, live (?seed=retired, ${REAL.width}×${REAL.height})`, () => {
   test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
-  test('a spending edit in the gear’s drawer raises data-answer-refiguring over the old answer, and it clears in the commit that puts up the new one', async ({ page }) => {
+  test('a spending edit applied from the Action Items tray raises data-answer-refiguring over the old answer, and it clears in the commit that puts up the new one', async ({ page }) => {
     test.setTimeout(FINAL_TIER_MS * 2 + 60_000)
     await enterProbability(page, 'retired')
-    await page.locator('[data-gear]').click()
-    const dialog = page.getByRole('dialog')
-    await expect(dialog).toBeVisible()
-    const field = dialog.getByLabel(copy.spendLabel, { exact: true })
-    await expect(field, '`retired` enters its $78,000 a year by the month').toHaveValue('6,500')
-    await armRefiguringWatch(page)
     // $9,500 a month takes `retired` from on track to off track (measured 2026-11-20), so the answer's own words move in
-    // the commit that clears the flag; a raise that left them still would leave that commit unseen.
-    await field.click()
-    await field.press('ControlOrMeta+a')
-    await field.pressSequentially('9500')
-    await field.blur()
-    await expect(field).toHaveValue('9,500')
+    // the commit that clears the flag; a raise that left them still would leave that commit unseen. Since RC18 (the gear's
+    // panel, whose inline field made this edit over Probability, is gone) the edit is the tray's: the spending figure
+    // raised by the same share, Refresh, then Apply to my plan, which writes the plan and refigures it on this page (a
+    // drawer opened from Settings refigures it off the page: the spine's run lands in about a tenth of a second, measured
+    // 2026-11-25, before any trip back).
+    await page.getByRole('button', { name: copy.trayHandle, exact: true }).click()
+    const tray = page.locator('#b9-action-items')
+    await expect(tray).toBeVisible()
+    const spend = tray.locator('[data-tray-group="spending"] input[inputmode="decimal"]').first()
+    const planSpend = Number((await spend.inputValue()).replace(/[^0-9]/g, ''))
+    expect([6_500, 78_000], '`retired` enters its $78,000 a year by the month').toContain(planSpend)
+    await spend.fill(String(Math.round((planSpend * 9_500) / 6_500)))
+    await spend.press('Enter')
+    await tray.locator('[data-tray-refresh]').click()
+    await expect(page.locator('[data-half="alternative"] [aria-busy="true"]'), 'the what-if’s run never settled').toHaveCount(0, { timeout: 60_000 })
+    const apply = tray.getByRole('button', { name: copy.workbenchRailApply, exact: true })
+    await expect(apply).not.toHaveAttribute('aria-disabled', 'true', { timeout: 60_000 })
+    await armRefiguringWatch(page)
+    await apply.click()
     await expectRefiguringSeen(page, 'the live re-figuring arm')
-    await dialog.getByRole('button', { name: /^(Close|Cancel)$/ }).first().click()
-    await expect(dialog).toBeHidden()
     await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
     const log = await refiguringLog(page)
     const first = log[0]
@@ -1132,6 +1149,7 @@ test.describe(`RC4 ported · the re-figuring signal, live (?seed=retired, ${REAL
     expect(fell, `the flag never cleared: ${story}`).toBeGreaterThan(rose)
     for (const r of log.slice(rose, fell)) expect(r.verdict, `while the flag stood the page showed another answer: ${story}`).toBe(first!.verdict)
     expect(log[fell]!.verdict, `the flag cleared with the old answer still up: ${story}`).not.toBe(first!.verdict)
+    expect(log.slice(0, rose).every((r) => r.refiguring === false), `the flag stood before the edit: ${story}`).toBe(true)
     expect(log.slice(fell).every((r) => r.refiguring === false), `the flag rose again with no second edit: ${story}`).toBe(true)
   })
 })
@@ -1635,8 +1653,8 @@ test.describe(`RC8 · Tax Strategies on the phone (${PHONE.width}×${PHONE.heigh
 // Probability (`copy.answerRefiguringVerdict` / `answerRefiguringDate`, through `ringReading.ts`), and past the phone
 // tier its box is held, so the ring and the R13 caveat do not move when it shows or clears. Held through the preview.
 
-/** The preview on `seed`, settled on the home; one engine-input edit through the gear's drawer, the flag seen, the
- *  drawer closed. Returns the ring's and the caveat's tops read before the edit. */
+/** The preview on `seed`, settled on the home; one engine-input edit through Settings' drawer and back to the home, the
+ *  flag seen. Returns the ring's and the caveat's tops read before the edit. */
 async function enterHeldHome(page: Page, seed: string): Promise<{ ring: number; caveat: number }> {
   await page.goto(`/?preview=refiguring&seed=${seed}`)
   await expect(page.locator(SETTLED_RESULT), `${seed}: the preview never settled`).toBeAttached({ timeout: FINAL_TIER_MS })
@@ -1646,16 +1664,8 @@ async function enterHeldHome(page: Page, seed: string): Promise<{ ring: number; 
   await expect(page.locator('[data-ring-eyebrow] > span:not([aria-hidden])'), 'a settled home shows no re-figuring line').toHaveText('')
   const top = async (sel: string) => (await page.locator(sel).first().boundingBox())!.y
   const before = { ring: await top('[data-ring-reading]'), caveat: await top('main.result [data-caveat]') }
-  await page.locator('[data-gear]').click()
-  const dialog = page.getByRole('dialog')
-  await expect(dialog).toBeVisible()
-  const field = dialog.getByLabel(copy.assumptionSurvivorRatioLabel)
-  const now = (await field.inputValue()).replace(/[^0-9]/g, '')
-  await field.fill(now === '70' ? '65' : '70')
-  await field.press('Tab')
+  await editThroughSettings(page, 'dashboard')
   await expect(page.locator('main.result[data-answer-refiguring]'), 'the edit raised no re-figuring flag').toBeAttached({ timeout: 30_000 })
-  await dialog.getByRole('button', { name: /^(Close|Cancel)$/ }).first().click()
-  await expect(dialog).toBeHidden()
   await settleLayout(page)
   await page.evaluate(() => window.scrollTo(0, 0))
   return before
@@ -4059,6 +4069,157 @@ for (const arm of KEEP_DRAWER_ARMS) {
         return a instanceof HTMLInputElement && a.type === 'radio' && a.checked
       })
       expect(focused, 'focus never falls to the page: it lands on the answer that now stands').toBe(true)
+    })
+  })
+}
+
+// ── RC18 · Settings (the gear) and the Display drawer (plan 6, RC18; its Fit decision, Verification and Test scenarios) ──
+// - Settings is a scrolling page: at his window the first frame holds the title, the intro and the first row (its name and
+//   value); every folder tab draws its rows (each stamped `data-assumption-seat`) and nothing scrolls sideways, at both
+//   sizes; it prints no projected figure (the household's own figures and the methodology's), so its R13 disclaimer is
+//   the trailing mount, exactly one visible, as on the Profile pages with no figured total;
+// - on `datecoststale` the W row reads the stale value line, and its door opens the Pre-retirement living expenses drawer
+//   over Settings (inside the window; a full-screen sheet on the phone), Escape closing it back on Settings;
+// - the Display drawer opens from "Today's dollars" beside Analysis's folder tabs: inside the window (a full-screen sheet
+//   on the phone), named by its title, which takes focus, nothing sideways, two switches and no future-dollars one; Save
+//   with "Show years instead of ages" puts Confidence's fan on calendar-year ticks titled "Year", and back.
+const SETTINGS_TAB_WORDS = [copy.settingsTabMethodology, copy.settingsTabReturns, copy.settingsTabTax, copy.settingsTabHealth, copy.settingsTabOther] as const
+
+async function toSettings(page: Page): Promise<void> {
+  await page.locator('[data-gear]').click()
+  await expect(page.locator('main.result[data-shell-screen="settings"]')).toBeAttached()
+  await expect(page.getByRole('heading', { level: 1, name: copy.settingsTitle })).toBeVisible()
+  await settleLayout(page)
+}
+
+/** A kit drawer that is not a Profile drawer (the Display drawer): inside the window, docked right (a full-screen sheet on
+ *  the phone), named by its title, which holds focus, and nothing sideways. */
+async function assertKitDrawerFits(page: Page, who: string, phone: boolean): Promise<void> {
+  const dialog = page.getByRole('dialog')
+  await expect(dialog).toBeVisible()
+  await page.waitForTimeout(450)
+  const r = await dialog.evaluate((d) => {
+    const box = d.getBoundingClientRect()
+    const title = d.querySelector('h2')!
+    const label = d.getAttribute('aria-labelledby') ?? ''
+    return {
+      left: box.left,
+      right: box.right,
+      top: box.top,
+      bottom: box.bottom,
+      sideways: d.scrollWidth - d.clientWidth,
+      titleFocused: document.activeElement === title,
+      named: label !== '' && document.getElementById(label)?.textContent === title.textContent,
+      vw: window.innerWidth,
+      vh: window.innerHeight,
+    }
+  })
+  expect(r.top, `${who}: the drawer's top`).toBeGreaterThanOrEqual(-0.5)
+  expect(r.bottom, `${who}: the drawer inside the window`).toBeLessThanOrEqual(r.vh + 0.5)
+  expect(r.sideways, `${who}: the drawer scrolls sideways`).toBeLessThanOrEqual(0)
+  expect(r.named, `${who}: the drawer names itself by its title`).toBe(true)
+  expect(r.titleFocused, `${who}: the drawer takes focus on its title`).toBe(true)
+  if (phone) {
+    expect(r.left, `${who}: a full-screen sheet (left)`).toBeLessThanOrEqual(0.5)
+    expect(r.right, `${who}: a full-screen sheet (right)`).toBeGreaterThanOrEqual(r.vw - 0.5)
+  } else expect(Math.abs(r.right - r.vw), `${who}: docked right`).toBeLessThanOrEqual(1)
+  await noSidewaysScroll(page, who)
+}
+
+for (const size of RC12_SIZES) {
+  test.describe(`RC18 · Settings ${size.title}`, () => {
+    test.use(size.use)
+    for (const seed of ['retired', 'datecoststale'] as const) {
+      test(`?seed=${seed}: every folder tab's rows${size.phone ? '' : ', the first frame'}; nothing sideways; one R13 disclaimer${seed === 'datecoststale' ? '; the W row’s door opens its drawer over Settings' : ''}`, async ({ page }) => {
+        test.setTimeout(FINAL_TIER_MS + 90_000)
+        await gotoSeedFinal(page, seed)
+        await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
+        await toSettings(page)
+        if (!size.phone) {
+          const f = await page.evaluate(() => ({
+            scrollY: window.scrollY,
+            intro: document.querySelector('main.result h1')?.parentElement?.getBoundingClientRect().bottom ?? null,
+            first: document.querySelector('main.result [data-assumption-seat] [data-settings-value]')?.getBoundingClientRect().bottom ?? null,
+          }))
+          expect(f.scrollY).toBe(0)
+          expect(f.first, `${seed}: a first row to read`).not.toBeNull()
+          expect(f.first!, `${seed}: the first row's value inside the first frame`).toBeLessThanOrEqual(REAL.height)
+        }
+        for (const word of SETTINGS_TAB_WORDS) {
+          const who = `${seed} ${word}`
+          await page.getByRole('tab', { name: word, exact: true }).click()
+          await expect(page.getByRole('tab', { name: word, exact: true })).toHaveAttribute('aria-selected', 'true')
+          await settleLayout(page)
+          expect(await page.locator('main.result [data-assumption-seat]').count(), `${who}: the tab draws its rows`).toBeGreaterThan(0)
+          await noSidewaysScroll(page, who)
+          await expect(page.locator('main.result [data-caveat]'), `${who}: no in-frame caveat on a page with no projected figure`).toHaveCount(0)
+          const visible = await page.evaluate(
+            () => [...document.querySelectorAll('footer.disclaimer, [data-caveat]')].filter((el) => getComputedStyle(el).display !== 'none' && (el as HTMLElement).getClientRects().length > 0).length,
+          )
+          expect(visible, `${who}: exactly one visible R13 disclaimer`).toBe(1)
+        }
+        await page.getByRole('tab', { name: copy.settingsTabMethodology, exact: true }).click()
+        if (seed === 'datecoststale') {
+          const w = page.locator('[data-assumption-seat="working-year-cost"]')
+          await expect(w.locator('[data-settings-value]')).toHaveText(slots.assumptionWorkingCostStale('84,000'))
+          const door = w.getByRole('button', { name: copy.settingsWorkingCostDoor })
+          await door.click()
+          await assertDrawerFits(page, `${seed} W drawer over Settings`, size.phone)
+          await expect(page.getByRole('dialog', { name: copy.profileWorkingCostName })).toBeVisible()
+          await expect(page.locator('main.result[data-shell-screen="settings"]'), 'the drawer opens over Settings').toBeAttached()
+          await page.keyboard.press('Escape')
+          await expect(page.getByRole('dialog')).toHaveCount(0)
+          await expect(door, `${seed}: focus back on the row's door`).toBeFocused()
+        } else {
+          await expect(page.locator('[data-assumption-seat="working-year-cost"]'), 'a retired household has no W row').toHaveCount(0)
+        }
+      })
+    }
+  })
+
+  test.describe(`RC18 · the Display drawer ${size.title}`, () => {
+    test.use(size.use)
+    test(`?seed=retired: "Today’s dollars" opens it${size.phone ? ' as a full-screen sheet' : ' inside the window'}; two switches, no future dollars; years instead of ages moves Confidence's fan to calendar years and back`, async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 90_000)
+      await enterProbability(page, 'retired')
+      const open = async () => {
+        await page.getByRole('button', { name: copy.displayDoorLabel, exact: true }).click()
+        await assertKitDrawerFits(page, 'the Display drawer', size.phone)
+        const d = page.getByRole('dialog', { name: copy.displayTitle })
+        await expect(d.getByRole('switch')).toHaveCount(2)
+        await expect(d.getByRole('switch', { name: /dollars/i })).toHaveCount(0)
+        await expect(d.getByText(copy.displayTodaysDollarsLine)).toBeVisible()
+        return d
+      }
+      const fanAxis = async () => {
+        const fan = page.locator('[data-chart="fan"]')
+        await expect(fan).toBeVisible()
+        const title = ((await fan.locator('.highcharts-xaxis .highcharts-axis-title').textContent()) ?? '').trim()
+        const ticks = (await fan.locator('.highcharts-xaxis-labels text').allTextContents()).map((t) => Number(t.trim())).filter(Number.isFinite)
+        return { title, ticks }
+      }
+      await page.getByRole('tab', { name: copy.confidenceTab, exact: true }).click()
+      await expect(page.locator('main.result[data-shell-screen="confidence"]')).toBeAttached()
+      const ages = await fanAxis()
+      expect(ages.title, 'the ages axis is titled with whose age').not.toBe(copy.chartAxisYear)
+      expect(Math.max(...ages.ticks), 'the ages axis ticks at ages').toBeLessThan(130)
+      let d = await open()
+      await d.getByRole('switch', { name: copy.displayYears }).click()
+      await expect(d.getByText(copy.displayYearsOn)).toBeVisible()
+      await d.getByRole('button', { name: copy.profileDrawerSave, exact: true }).click()
+      await expect(page.getByRole('dialog')).toHaveCount(0)
+      await expect.poll(async () => (await fanAxis()).title, { message: 'the fan’s axis never switched to the year' }).toBe(copy.chartAxisYear)
+      const years = await fanAxis()
+      expect(years.ticks.length, 'the years axis prints its ticks').toBeGreaterThan(0)
+      for (const t of years.ticks) {
+        expect(t, 'a calendar year').toBeGreaterThan(2000)
+        expect(t % 10, 'ticked every 10 years').toBe(0)
+      }
+      d = await open()
+      await d.getByRole('switch', { name: copy.displayYears }).click()
+      await d.getByRole('button', { name: copy.profileDrawerSave, exact: true }).click()
+      await expect.poll(async () => (await fanAxis()).title, { message: 'the fan’s axis never came back to ages' }).toBe(ages.title)
+      await noSidewaysScroll(page, 'Confidence after the Display drawer')
     })
   })
 }

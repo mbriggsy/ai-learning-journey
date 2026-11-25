@@ -1,7 +1,9 @@
 /*
  * src/viz/charts/healthPartsOptions.ts: one of Retirement → Health Care's four small charts (plan
  * docs/plans/6-rightcapital-ui-plan.md, RC10; ref 2.15 corrected by critique 9). PURE: every figure, the shared scale,
- * the shared age range and every word arrive from the composer (`healthCareView.ts`).
+ * the shared age range and every word arrive from the composer (`healthCareView.ts`). The bars and stretches are keyed by
+ * the first person's age; the axis reads that age or the calendar year (the Display drawer's time axis,
+ * `src/ui/displaySettings.ts`), mapped once here by `axisOffset`.
  *
  * One part per chart, one column per year, never stacked on another part (a sum of middle costs is not the middle
  * total). The four charts share ONE dollar lattice and ONE age range, so a bar in one reads against a bar in another
@@ -15,6 +17,7 @@
 import type { Options, PointOptionsObject, SeriesColumnOptions, SeriesLineOptions } from 'highcharts/highcharts.src'
 import { buildYTicks, type DollarLattice } from '../bandData'
 import { chartWordsOptions, hcPlain, type ChartWords } from './chartA11y'
+import { timeTickStep } from './fanOptions'
 
 export interface HealthPartBar {
   readonly age: number
@@ -37,6 +40,9 @@ export interface HealthPartInput {
   readonly cliff: readonly HealthCliffStretch[]
   /** The four charts' shared age range (the first person's ages). */
   readonly ages: { readonly first: number; readonly last: number }
+  /** What to add to an age to put it on the axis: 0 on the ages axis, the calendar year less the age on the years axis
+   *  (`offsetFromAge`). */
+  readonly axisOffset: number
   readonly axisTitle: string
   readonly lattice: DollarLattice
   readonly axisDollar: (dollars: number) => string
@@ -59,6 +65,7 @@ export const HEALTH_CLIFF_ROW = 18
 
 export function healthPartOptions(input: HealthPartInput): Options {
   const { lattice, ages } = input
+  const at = (age: number): number => age + input.axisOffset
   const spoken = chartWordsOptions(input.words)
   const ticks = buildYTicks(lattice, input.axisDollar)
   // Words on $0 and the top only: the small plot set every gridline's words a few pixels apart. Every gridline stays.
@@ -70,10 +77,10 @@ export function healthPartOptions(input: HealthPartInput): Options {
     className: HEALTH_CLASSES.bar,
     // No entrance growth: a column grows by scaling its group, and a re-render mid-growth stopped it flat (RC4).
     animation: false,
-    data: input.bars.map((b): PointOptionsObject => ({ x: b.age, y: b.value, custom: { point: b.point } })),
+    data: input.bars.map((b): PointOptionsObject => ({ x: at(b.age), y: b.value, custom: { point: b.point } })),
   }
   const cliff = input.cliff.map((c, i): SeriesLineOptions => {
-    const mid = (c.fromAge + c.toAge) / 2
+    const mid = at((c.fromAge + c.toAge) / 2)
     return {
       type: 'line',
       id: `${input.id}-cliff-${i}`,
@@ -89,16 +96,16 @@ export function healthPartOptions(input: HealthPartInput): Options {
       // A bracket over the stretch's columns at the top of the plot, its two ends turned down so two stretches side by side
       // read as two; its count printed over its middle.
       data: [
-        { x: c.fromAge - 0.4, y: lattice.ceiling * HEALTH_BRACKET_END, custom: { point: c.point } },
-        { x: c.fromAge - 0.4, y: lattice.ceiling, custom: { point: c.point } },
+        { x: at(c.fromAge) - 0.4, y: lattice.ceiling * HEALTH_BRACKET_END, custom: { point: c.point } },
+        { x: at(c.fromAge) - 0.4, y: lattice.ceiling, custom: { point: c.point } },
         {
           x: mid,
           y: lattice.ceiling,
           custom: { point: c.point },
           dataLabels: { enabled: true, crop: false, overflow: 'allow' as const, verticalAlign: 'bottom' as const, y: i % 2 === 0 ? -1 : -1 - HEALTH_CLIFF_ROW, formatter: () => c.label },
         },
-        { x: c.toAge + 0.4, y: lattice.ceiling, custom: { point: c.point } },
-        { x: c.toAge + 0.4, y: lattice.ceiling * HEALTH_BRACKET_END, custom: { point: c.point } },
+        { x: at(c.toAge) + 0.4, y: lattice.ceiling, custom: { point: c.point } },
+        { x: at(c.toAge) + 0.4, y: lattice.ceiling * HEALTH_BRACKET_END, custom: { point: c.point } },
       ],
     }
   })
@@ -118,7 +125,7 @@ export function healthPartOptions(input: HealthPartInput): Options {
         return hcPlain(String(((this as unknown as { point: { options: { custom?: { point?: string } } } }).point.options.custom?.point) ?? ''))
       },
     },
-    xAxis: { type: 'linear', min: ages.first - 0.5, max: ages.last + 0.5, allowDecimals: false, tickInterval: 5, lineWidth: 1, title: { text: undefined } },
+    xAxis: { type: 'linear', min: at(ages.first) - 0.5, max: at(ages.last) + 0.5, allowDecimals: false, tickInterval: timeTickStep(at(ages.first)), lineWidth: 1, title: { text: undefined } },
     yAxis: {
       type: 'linear',
       min: 0,

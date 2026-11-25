@@ -63,6 +63,8 @@ describe('stackedAreasOptions', () => {
       pointWords: (y, n, d) => `${y} ${n} ${d}`,
       words,
       height: 280,
+      axisTitle: 'Year',
+      axisOffset: 0,
     })
     const series = opts.series as SeriesAreaOptions[]
     // Highcharts stacks the first series on top: the series run top-down, the legend reversed.
@@ -88,6 +90,8 @@ describe('stackedAreasOptions', () => {
       pointWords: (y, n, d) => `${y} ${n} ${d}`,
       words,
       height: 320,
+      axisTitle: 'Year',
+      axisOffset: 0,
     })
     const series = opts.series as SeriesAreaOptions[]
     expect(series.map((s) => [s.colorIndex, s.className])).toEqual([
@@ -112,10 +116,30 @@ describe('stackedAreasOptions', () => {
         pointWords: (y, n, d) => `${y} ${n} ${d}`,
         words,
         height: 320,
+        axisTitle: 'Year',
+        axisOffset: 0,
       })
       return (opts.series as SeriesAreaOptions[]).map((s) => (s.data as { dataLabels: { verticalAlign: string } }[])[0]!.dataLabels.verticalAlign)
     }
     expect(sides(4_230_000, 4_280_000)).toEqual(['top', 'bottom'])
     expect(sides(4_300_000, 4_280_000)).toEqual(['bottom', 'top'])
+  })
+
+  it('the time axis (Act 6 · RC18): the points keep their calendar years; `axisOffset` puts them on the first person’s age, titled whose, and the tooltip and spoken words read that number', () => {
+    // Alex 60 in 2026: the ages axis adds 60 − 2026, so 2030 draws at 64.
+    const shared = { lattice, axisDollar: axis, figure: (d: number) => `~$${d}`, pointWords: (n: number, s: string, d: number) => `Alex’s age ${n}, ${s}: ${d}`, words, axisTitle: 'Alex’s age', axisOffset: 60 - 2026 }
+    const stack = stackedAreasOptions({ ...shared, sources: { taxable: { name: 'Taxable', points: pts }, pretax: { name: 'Pre-tax', points: pts }, roth: { name: 'Roth', points: pts }, hsa: { name: 'HSA', points: pts } }, height: 280 })
+    for (const s of stack.series as SeriesAreaOptions[]) expect((s.data as { x: number }[]).map((d) => d.x)).toEqual([64, 65])
+    expect(stack.xAxis).toMatchObject({ title: { text: 'Alex’s age' } })
+    const pair = pairAreasOptions({ ...shared, series: [{ id: 'r', name: 'R', role: 'alternative', points: pts }, { id: 'p', name: 'P', role: 'compared', points: pts }], height: 320 })
+    for (const s of pair.series as SeriesAreaOptions[]) expect((s.data as { x: number }[]).map((d) => d.x)).toEqual([64, 65])
+    const tip = (pair.tooltip as { formatter: (this: unknown) => string }).formatter.call({ x: 64, points: [{ series: { name: 'R' }, y: 10_000 }] })
+    expect(tip).toBe('Alex’s age 64<br/>R: ~$10000')
+    const say = (pair.accessibility as { point: { descriptionFormatter: (p: { x: number; y: number; series: { name: string } }) => string } }).point.descriptionFormatter
+    expect(say({ x: 64, y: 10_000, series: { name: 'R' } })).toBe('Alex’s age 64, R: 10000')
+    // The years axis: the same points on their own years, titled "Year".
+    const years = pairAreasOptions({ ...shared, axisTitle: 'Year', axisOffset: 0, series: [{ id: 'r', name: 'R', role: 'alternative', points: pts }, { id: 'p', name: 'P', role: 'compared', points: pts }], height: 320 })
+    expect(((years.series as SeriesAreaOptions[])[0]!.data as { x: number }[]).map((d) => d.x)).toEqual([2030, 2031])
+    expect(years.xAxis).toMatchObject({ title: { text: 'Year' } })
   })
 })

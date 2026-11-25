@@ -7,8 +7,9 @@
  * THE HONEST-CHART LAWS, as they bind a share of futures:
  * - the y axis is the count of futures in every 100, LINEAR from 0, its top the smallest of 10, 20, 50 and 100 that
  *   holds the highest share drawn (`runOutCeiling`), its ticks at 0, half and the top: a small share reads small;
- * - the x axis is the fan's, to the year: the same first and last year, the same age ticks, and the same plot margins,
- *   handed over from the fan as it drew (`PlotBox`), so a year sits under the same year;
+ * - the x axis is the fan's, to the year: the same first and last year, the same ticks (an age or a calendar year, the
+ *   fan's `tickAt`), and the same plot margins, handed over from the fan as it drew (`PlotBox`), so a year sits under the
+ *   same year;
  * - every year's share is in words in the tooltip and in the screen reader's sentence for that year ("about 6 in 100
  *   futures", never a percent, never "0 in 100"); no value is printed on the plot, whose few rows of height would put
  *   any label over the line (RC4's lesson: a label over a mark passes every automated check). The key-metric column
@@ -18,7 +19,7 @@
  */
 import type { Options } from 'highcharts/highcharts.src'
 import { chartWordsOptions, type ChartWords } from './chartA11y'
-import { ageTickYears, type PlotBox } from './fanOptions'
+import { axisTicks, type PlotBox } from './fanOptions'
 
 /** One year of the run-out share: the futures (of every 100) that have run out by then, and the composer's words. */
 export interface RunOutPoint {
@@ -35,8 +36,8 @@ export interface RunOutPoint {
 export interface RunOutLabels {
   /** The y axis's tick words ("0", "5", "10"). */
   readonly yTick: (per100: number) => string
-  /** The first person's age at a year from now (the x axis's tick words, the fan's). */
-  readonly ageAt: (yearsFromNow: number) => number
+  /** The axis's number at a year from now, an age or a calendar year (the x axis's tick words, the fan's `tickAt`). */
+  readonly tickAt: (yearsFromNow: number) => number
   readonly description: string
   readonly words: Omit<ChartWords, 'description'>
 }
@@ -86,9 +87,9 @@ export function runOutOptions({ points, labels, height, box }: RunOutInput): Opt
       type: 'linear',
       min: first.x,
       max: last.x,
-      tickPositions: [...ageTickYears(last.x, labels.ageAt)],
+      tickPositions: [...axisTicks(last.x, labels.tickAt)],
       title: { text: undefined },
-      labels: { formatter: (ctx) => String(labels.ageAt(Number(ctx.value))) },
+      labels: { formatter: (ctx) => String(labels.tickAt(Number(ctx.value))) },
       crosshair: true,
     },
     yAxis: {

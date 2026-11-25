@@ -66,9 +66,9 @@ const CSS_INITIAL_FONT_PX = 16
  */
 const REQUIRED_MIRROR_FILES = [
   'src/intake/budget.css',
-  'src/intake/controls.css',
   'src/intake/sheetShell.css',
   'src/ui/styles/app.css',
+  // `controls.css` left this list at RC18 with the assumption panel (its last importer, `controlSheet.tsx`, went with it).
   // `recommendation.css` and `result.css` left this list at RC8 with the interim Tax Strategies tab (its old answer frame
   // and recommendation surface); the clone's Tax Strategies page reads the tiers through the kit's `laptop:` variant.
   // `e2e/vertical-fit.spec.ts` left this list at RC4: its `matchMedia` tier read served the answer page's two-pane arms,

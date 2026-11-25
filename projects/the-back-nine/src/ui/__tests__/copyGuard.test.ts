@@ -2395,21 +2395,18 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
   //     UNIVERSAL gates still cover every assumption* string via the catalog enumeration above. ---
   it('U12: assumption* chrome is exempt from the verdict + control sweeps (deliberate, pinned)', () => {
     for (const k of [
-      'assumptionTitle', 'assumptionMarketName', 'assumptionMarketFloorNote',
-      'assumptionLongevityValue', 'assumptionConversionTaxValue', 'assumptionTruerPicture',
+      'assumptionMarketName', 'assumptionMarketFloorNote', 'assumptionLongevityValue', 'assumptionConversionTaxValue',
     ]) {
       expect(isVerdictKey(k), `${k} must NOT be verdict-swept (factual numerals are legitimate)`).toBe(false)
       expect(isControlKey(k), `${k} must NOT be require-hedge-swept (chrome, not a plan-moving readout)`).toBe(false)
     }
     // The name deliberately avoids the swept substrings — a rename into 'readout'/'headline'
     // territory would silently change its gate set; these arms pin the vocabulary line.
-    expect(isVerdictKey('assumptionEchoQuiet')).toBe(false)
     expect(isControlKey('assumptionRothName'), 'assumptionRothName does not LEAD with the roth prefix').toBe(false)
   })
 
-  it('U12: the truer-picture line IS catastrophe-gated by name, and survivor-substring keys stay swept', () => {
+  it('U12: survivor-substring keys stay catastrophe-gated (the truer-picture line left with the panel, RC18)', () => {
     // Control arms (burned/070 — prove the scope extension is live, not vacuous):
-    expect(isMortalityKey('assumptionTruerPicture'), 'the worst-moment line joins the catastrophe net').toBe(true)
     expect(isMortalityKey('assumptionSurvivorRatioHelp'), 'survivor-substring keys ride the survivor net').toBe(true)
     expect(isMortalityKey('assumptionSurvivorSsValue')).toBe(true)
     expect(isMortalityKey('assumptionMarketFloorNote'), 'non-mortality panel chrome stays out').toBe(false)
@@ -2421,9 +2418,6 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     expect(isMortalityKey('recHoldGeneric'), 'the fail-closed hold line whose readers include the already-failing cohort').toBe(true)
     expect(isMortalityKey('recHoldDemotionAxis'), 'a hold that names its own reason stays out').toBe(false)
     expect(lintCopy(copy.recHoldGeneric, ['catastrophe'])).toEqual([])
-    // The line itself passes the gate it joined (the catalog sweep above covers it too — this
-    // arm keeps the pairing visible next to the scope pin).
-    expect(lintCopy(copy.assumptionTruerPicture, ['catastrophe'])).toEqual([])
   })
 
   it('staticDisclosures is deliberately OUT of the gate — proven meaningful: its directive WOULD trip', () => {
@@ -2498,7 +2492,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
   // 2026-09-08 — THE rec* SCOPE CANARY. copyGuard's scopes are prefix ALLOWLISTS, so a NEW `rec*` key
   // lands in NEITHER scope silently — the hole that left the RecommendationViz aria sentence outside
   // require-hedge until it was renamed `recDeltaVizAria`. `/^rec(?!over)/` is the net: a bare `/^rec/`
-  // would sweep the 16 `recovery*`/`recover*` intake keys (copy.ts:972-982, :1028-1045), which are correctly
+  // would sweep the 16 `recovery*`/`recover*` intake keys (copy.ts:970-980, :1026-1043), which are correctly
   // unscoped. The two allowlists are SPLIT because the surfaces differ: an unscoped FLAT key rides only
   // the three universal gates (the `entries` loops at the top of this file — superlative and free-numeral
   // are verdict-scoped); an unscoped SLOT rides the four voice gates (survival-claim included) + catastrophe (the SLOT_RENDER loop
@@ -2610,43 +2604,8 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     expect(lintCopy(slots.verdictRoomSurvivorShort('6,500'), ['require-hedge'])).toEqual([])
   })
 
-  // --- THE UNIT-INERTNESS BAN (Tier-0, fixed 2026-08-03; until now the string had NO pin at all).
-  //     The killed line was "…switching this never changes the amount." The panel toggle really
-  //     does leave `annualSpendingReal` alone — but the SHOWN figure jumps exactly 12×
-  //     (`spendDisplayed`, AssumptionPanel.tsx:619-624) while the sentence says nothing moved, and
-  //     the panel's own commit (:607-617) multiplies by 12 under 'month'. So the reader's natural
-  //     repair — retype the digits they remember — commits a plan off by 12× in the UNSAFE
-  //     direction, and nothing downstream catches it (PANEL_PROVENANCE disarms the force-confirm;
-  //     the resulting figure is under SPEND_AMBIGUOUS_MIN regardless). The copy IS the defense
-  //     here, so it gets a pin. ---
-  it('the spend-period help never claims the switch is inert, and still names the ENTRY-unit half', () => {
-    const INERTNESS_CLAIM =
-      /\b(never|does not|doesn'?t|won'?t|will not|no)\b[^.!?]*\b(change|changes|changing|affect|affects|alter|alters|move|moves)\b[^.!?]*\b(amount|figure|number|money|spending)\b/i
-    const help = copy.assumptionPeriodHelp
-    expect(help, `the inertness claim is the defect: "${help}"`).not.toMatch(INERTNESS_CLAIM)
-    // NON-VACUITY: the killed sentence must trip the net, and so must a terser evasion of it —
-    // a width or length gate provably cannot catch either, which is why the claim itself is banned.
-    expect(
-      'Only how that figure is entered and shown — the plan is figured in yearly terms underneath, and switching this never changes the amount.',
-      'the killed Tier-0 line must trip the ban',
-    ).toMatch(INERTNESS_CLAIM)
-    expect('Switching this never changes the amount.', 'the terser evasion trips it too').toMatch(INERTNESS_CLAIM)
-    expect('The same money either way — it does not change your spending.', 'and the paraphrase').toMatch(
-      INERTNESS_CLAIM,
-    )
-    // POSITIVE ANCHOR: silence is not a pass. Deleting the inertness claim without naming what the
-    // unit governs would leave the 12× retype trap wide open and unexplained, so the string must
-    // still say that the NEXT figure entered is read in the chosen unit.
-    expect(help, 'the entry-unit half is the whole point of the rewrite').toMatch(
-      /\b(enter|entered|type|typed|put in)\b/i,
-    )
-    expect(help, 'and it still says the committed money is unchanged').toMatch(/\bsame\b/i)
-    // ANTI-ANAPHORA: a draft that ended "…is read the same way" was correct but made the reader
-    // resolve a pointer to the previous clause — and the N=1 cold read stopped to ask what it
-    // pointed at, which is the same force-the-reader-to-derive failure as the original line. The
-    // unit must be NAMED, by quoting the toggle's own visible label rather than gesturing at it.
-    expect(help, 'the unit is named outright, not referred back to').toContain(copy.periodMonth)
-    // The universal gates still bind (it is intake help, so free-numeral is out of scope).
-    expect(lintCopy(help, ['false-certainty', 'advice-verb', 'superlative']), help).toEqual([])
-  })
+  // --- THE UNIT-INERTNESS BAN (Tier-0, 2026-08-03) pinned the assumption panel's spend-period help, the copy that defended
+  //     its re-label toggle against a 12× retype. RETIRED at Act 6 · RC18 with the panel: the toggle and its help are gone,
+  //     and the Living expenses drawer asks the unit WITH the figure (RC13b's walk rule, `spend-period-unconfirmed`), so no
+  //     surface re-labels a committed figure any more. ---
 })

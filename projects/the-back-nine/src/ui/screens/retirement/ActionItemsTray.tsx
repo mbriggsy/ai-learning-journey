@@ -140,16 +140,9 @@ export function ActionItemsTray(props: ActionItemsTrayProps) {
     if (focus === undefined) return
     let frames = 0
     let raf = 0
-    // A door inside a closing sheet (the assumption panel's rows): the sheet hands focus back to its own opener as its
-    // exit ends (`controlSheet.tsx`'s restore), so the row is focused only once no sheet is attached, two frames later.
-    let clear = 0
+    // (Until RC18 a door inside the closing assumption panel waited here for its sheet to hand focus back first; the
+    // doors that come here now are Settings' rows and Health Care's tray, page buttons with no sheet to close.)
     const look = () => {
-      if (document.querySelector('.control-sheet, .budget-sheet') !== null) clear = 0
-      else clear++
-      if (clear < 3) {
-        if (++frames < 240) raf = requestAnimationFrame(look)
-        return
-      }
       const row = document.querySelector<HTMLElement>(`#${CSS.escape(id)} [data-tray-group="${focus.lever}"]`)
       const target = row?.querySelector<HTMLElement>('input, [role="combobox"], [role="slider"], button:not([inert])')
       if (target !== null && target !== undefined) {

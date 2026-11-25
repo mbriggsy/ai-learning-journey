@@ -684,6 +684,14 @@ said squeaky clears `temp/` UNCONDITIONALLY; its step 4 now deletes only the clo
 
 ## Citations and the doc gates
 
+- **(b9-9, 11-25) A builder's re-anchor is verified by rebuilding it, and the orchestrator's own doc edits ride a second
+  commit.** RC9's builder applied `pnpm doc:reanchor HEAD --apply` twice and hand-restored; `verify:doc-stats` cannot see a
+  double shift. To check: snapshot every changed file, `git checkout HEAD --` the citation-only docs, apply once, put every
+  other file back from the snapshot, and `cmp` each doc against the builder's (b9-9: nine docs identical). A citation in a
+  file with real edits too (a `copy.ts` comment) reads "touched" whether it was shifted once or never: check it by content,
+  `git show HEAD:<cited file>` at the old line against the new. And never re-anchor the orchestrator's later doc edits
+  over the builder's already-shifted diff: commit the builder's verified state first, then re-anchor yours against that
+  new HEAD (`7072fecd`, then `11349a9d`).
 - **(b9-7, 11-24) Re-anchor and run `verify:doc-stats` on EVERY commit that moves cited lines, never once per batch.** Milestone 1's
   fix part 3 (`84b2611f`) skipped both: CI redded on its stale test count, and its shifted `copy.ts` / `IntakeApp.tsx` /
   `Shell.tsx` citations stayed wrong while doc-stats passed (a cited line only has to exist). The next re-anchor from HEAD
@@ -1181,6 +1189,10 @@ refusal witness), so `gotoSeedFinal` times out on it — anchor on `main.result`
 
 ## CI
 
+- **(b9-9, 11-25) Commits pushed together get CI on the push's head only.** RC9's code commit `7072fecd` and its docs
+  follow-up `11349a9d` went up in one push: GitHub ran both workflows on `11349a9d` alone (green, RC9's code included),
+  and a wait keyed on `7072fecd` found no runs and timed out. Read a pushed batch's CI by its last commit's full sha, or push
+  a unit alone when its own sha must carry the run.
 - **(b9-3, 11-20) Test stdout reaches the `verify-fit` job's log (the `verify` job's until the 2026-11-22 split) through a reporter nobody configured.**
   `playwright.fit.config.ts` lists `[['github'], ['html']]` on CI. The github reporter prints no test output
   (`printsToStdio()` is false), so Playwright prepends a `DotReporter` on CI, and that is what writes each arm's

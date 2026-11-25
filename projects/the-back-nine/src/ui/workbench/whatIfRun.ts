@@ -25,10 +25,10 @@
  * supersedes an older one. So every slot state carries a key — the answer key plus the bundle key, or the refusal's
  * key — and a result renders only on its key ({@link whatIfSlotView}). A refusal, the empty bundle and "back to the
  * plan" each move the key, so a late result from an earlier key is dropped. Nothing skips a request because the bundle
- * looks like what is shown: every `ask` with a runnable state sends its requests. Each slot's three lanes (the
- * many-futures run and the two named futures) are made ONCE, with the slot; they call only `engine.run`, never the date
- * search, the solve or the store's epoch setters, and an `EngineResetError` reaches the lane unwrapped, so the lane
- * re-sends (insight 113).
+ * looks like what is shown: every `ask` with a runnable state sends its requests. Each slot's lanes (the many-futures
+ * run, the two named futures, and the plan run that only the working route's subsidy-rules health line asks for,
+ * {@link PlanHealth}) are made ONCE, with the slot; they call only `engine.run`, never the date search, the solve or the
+ * store's epoch setters, and an `EngineResetError` reaches the lane unwrapped, so the lane re-sends (insight 113).
  */
 import { applyBundle, type WhatIfRefusal } from '@intake/whatIf'
 import { buildTableBase, carriedWorkingYearLeftOver, workingYearLeftOverShownState, type TableBase } from '@intake/intakeMap'
@@ -44,6 +44,7 @@ import {
   type SimulationParams,
   type SimulationResult,
   type SurvivorReading,
+  type TaxAwareDistribution,
   type WhatIfLeverV6,
 } from '@shared/model'
 import { answerKey, tableRequestsOn, type TableMeta, type TableRun, type TableView, type ViewRequest } from './tableRun'
@@ -68,6 +69,22 @@ export type WhatIfRunRefusal =
 
 type TableWithheldReason = Extract<TableRun, { kind: 'withheld' }>['reason']
 
+/**
+ * THE HEALTH LINE'S PLAN SIDE (the register's Tier 0 *The subsidy-rules comparison lost its lifetime health-cost line with
+ * RC10…*; council 2026-07-03: the rules move health costs far more than the odds). Where the bundle tries the subsidy
+ * rules, Analysis prints each side's lifetime health cost beside the odds, so the plan's figure must come off the same
+ * futures as the what-if's. All retired: the committed spine run kept its futures, so its figure is read off them (no
+ * run; `plan` is undefined where that run carried no tax surfaces). Working: the committed answer keeps only its curve,
+ * so the plan's own candidate at its base offset runs on the plan's seed (`planRun`, the same compile the empty bundle
+ * makes); this line is that run's one reader, and nothing else in the slot waits for it.
+ */
+export type PlanHealth =
+  | { readonly kind: 'known'; readonly plan: number | undefined }
+  | { readonly kind: 'run'; readonly planRun: EngineRunRequest }
+
+/** Does a bundle try the subsidy rules (the one lever the health line serves)? */
+export const triesSubsidyRules = (bundle: readonly WhatIfLeverV6[]): boolean => bundle.some((l) => l.kind === 'aca-subsidy')
+
 /** One what-if slot's state for a committed answer and a bundle. Every arm carries its key. */
 export type WhatIfRun =
   | {
@@ -84,6 +101,8 @@ export type WhatIfRun =
       /** The what-if's rows: the meta and the two named futures' requests, from the plan's table core. */
       readonly meta: TableMeta
       readonly views: Readonly<Record<TableView, ViewRequest>>
+      /** The plan's side of the health line (present only where the bundle tries the subsidy rules, {@link triesSubsidyRules}). */
+      readonly health?: PlanHealth
     }
   | { readonly kind: 'refused'; readonly key: string; readonly bundleKey: string; readonly refusal: WhatIfRunRefusal }
   | { readonly kind: 'withheld'; readonly key: string; readonly bundleKey: string; readonly reason: TableWithheldReason }
@@ -158,6 +177,14 @@ export function medianOf(values: readonly number[]): number | undefined {
   return sorted.length % 2 === 1 ? sorted[mid]! : (sorted[mid - 1]! + sorted[mid]!) / 2
 }
 
+/** A run's lifetime health cost: the median of each future's own total (its net marketplace premiums plus its Medicare
+ *  costs, summed per future first, in today's dollars), so the figure is one future's, never a sum of two medians.
+ *  Undefined where the run carried no tax surfaces or an empty sample. Health Care's hero reads the same statistic. */
+export function lifetimeHealthMedianReal(ta: TaxAwareDistribution | undefined): number | undefined {
+  if (ta === undefined || ta.lifetimeNetPremiumReal.length === 0) return undefined
+  return medianOf(ta.lifetimeNetPremiumReal.map((premium, i) => premium + (ta.lifetimeMedicareCostReal[i] ?? 0)))
+}
+
 /** The extras a spine run's result carries (the plan's from its committed answer; the what-if's from its own run). */
 export function headlineExtras(result: SimulationResult): HeadlineExtras {
   // A result with no sample (a test's hand-built answer) has no median: absent, never a guessed figure.
@@ -216,6 +243,12 @@ export function whatIfRunFor(answer: ModelAnswer, liveSeed: number | undefined, 
   const differ = futuresDiffer(planBase.params, plan.seed, base.params, liveSeed)
   if (differ !== null) return refused({ kind: 'futures-differ', field: differ })
   const { meta, views } = tableRequestsOn(applied.draft, base, workingYearLeftOverShownState(answer.draft))
+  // The spine's committed run kept its futures (a test's hand-built answer may carry none: no figure, never a guess).
+  const health: PlanHealth | undefined = !triesSubsidyRules(bundle)
+    ? undefined
+    : answer.kind === 'headline'
+      ? { kind: 'known', plan: lifetimeHealthMedianReal(answer.result.distribution?.taxAware) }
+      : { kind: 'run', planRun: { params: planBase.params, seed: plan.seed } }
   return {
     kind: 'run',
     key,
@@ -229,6 +262,7 @@ export function whatIfRunFor(answer: ModelAnswer, liveSeed: number | undefined, 
     ...(base.stopOffsetYears !== undefined ? { offsetYears: base.stopOffsetYears } : {}),
     meta,
     views,
+    ...(health !== undefined ? { health } : {}),
   }
 }
 
@@ -249,6 +283,9 @@ export interface ReadingPair {
   readonly whatIf: WhatIfReading
   /** The what-if run's extra readings on the spine (absent on the date route). */
   readonly extras?: HeadlineExtras
+  /** The what-if run's lifetime health cost ({@link lifetimeHealthMedianReal}), on both routes; read only where the bundle
+   *  tries the subsidy rules, and absent where the run carried no tax surfaces. */
+  readonly whatIfHealthReal?: number
 }
 
 /** The what-if's rows for one view, with the meta of the compile that produced them. */
@@ -266,13 +303,18 @@ export interface WhatIfSlotSnapshot {
   readonly many?: Part<ReadingPair>
   readonly steady?: Part<WhatIfRows>
   readonly rough?: Part<WhatIfRows>
+  /** The plan's lifetime health cost for the health line ({@link PlanHealth}); asked only where the bundle tries the
+   *  subsidy rules. */
+  readonly planHealth?: Part<number>
 }
 
-/** A slot's three lanes, made once with the slot. */
+/** A slot's lanes, made once with the slot. `plan` runs only the working route's plan side of the health line; a caller
+ *  that passes no `plan` lane (a test's three) asks for none, and the line stays unprinted. */
 export interface WhatIfSlotLanes {
   readonly many: Lane<EngineRunRequest, SimulationResult>
   readonly steady: Lane<EngineRunRequest, SimulationResult>
   readonly rough: Lane<EngineRunRequest, SimulationResult>
+  readonly plan?: Lane<EngineRunRequest, SimulationResult>
 }
 
 export interface WhatIfSlot {
@@ -284,7 +326,9 @@ export interface WhatIfSlot {
 }
 
 /** One what-if slot: its lanes (made here, once), its newest state and its newest delivered parts. */
-export function createWhatIfSlot(lanes: WhatIfSlotLanes = { many: engineRunLane(), steady: engineRunLane(), rough: engineRunLane() }): WhatIfSlot {
+export function createWhatIfSlot(
+  lanes: WhatIfSlotLanes = { many: engineRunLane(), steady: engineRunLane(), rough: engineRunLane(), plan: engineRunLane() },
+): WhatIfSlot {
   let snapshot: WhatIfSlotSnapshot = { run: { kind: 'waiting', key: 'waiting|', bundleKey: '' } }
   const listeners = new Set<() => void>()
   const set = (next: Partial<WhatIfSlotSnapshot>): void => {
@@ -300,7 +344,14 @@ export function createWhatIfSlot(lanes: WhatIfSlotLanes = { many: engineRunLane(
       const many = keep(snapshot.many)
       const steady = keep(snapshot.steady)
       const rough = keep(snapshot.rough)
-      snapshot = { run, ...(many !== undefined ? { many } : {}), ...(steady !== undefined ? { steady } : {}), ...(rough !== undefined ? { rough } : {}) }
+      const planHealth = keep(snapshot.planHealth)
+      snapshot = {
+        run,
+        ...(many !== undefined ? { many } : {}),
+        ...(steady !== undefined ? { steady } : {}),
+        ...(rough !== undefined ? { rough } : {}),
+        ...(planHealth !== undefined ? { planHealth } : {}),
+      }
       for (const l of listeners) l()
       if (run.kind !== 'run') return
       const tag: Tagged = { key: run.key, answerKey: run.answerKey, bundleKey: run.bundleKey }
@@ -308,13 +359,30 @@ export function createWhatIfSlot(lanes: WhatIfSlotLanes = { many: engineRunLane(
         if (res.kind === 'superseded') return
         const whatIf = res.kind === 'ok' ? whatIfReading(res.value, run.track, run.offsetYears) : null
         const extras = res.kind === 'ok' && run.offsetYears === undefined ? headlineExtras(res.value) : undefined
+        const health = res.kind === 'ok' && run.health !== undefined ? lifetimeHealthMedianReal(res.value.distribution.taxAware) : undefined
         set({
           many:
             whatIf === null
               ? { ...tag, kind: 'error' }
-              : { ...tag, kind: 'ok', value: { plan: run.plan, whatIf, ...(extras !== undefined ? { extras } : {}) } },
+              : {
+                  ...tag,
+                  kind: 'ok',
+                  value: { plan: run.plan, whatIf, ...(extras !== undefined ? { extras } : {}), ...(health !== undefined ? { whatIfHealthReal: health } : {}) },
+                },
         })
       })
+      // The health line's plan side: the spine's figure off its committed futures, at once; the working route's off the
+      // plan's own run on its own lane, so the ring never waits for it.
+      const h = run.health
+      if (h?.kind === 'known') {
+        set({ planHealth: h.plan === undefined ? { ...tag, kind: 'error' } : { ...tag, kind: 'ok', value: h.plan } })
+      } else if (h?.kind === 'run' && lanes.plan !== undefined) {
+        void lanes.plan.request(h.planRun).then((res) => {
+          if (res.kind === 'superseded') return
+          const figure = res.kind === 'ok' ? lifetimeHealthMedianReal(res.value.distribution.taxAware) : undefined
+          set({ planHealth: figure === undefined ? { ...tag, kind: 'error' } : { ...tag, kind: 'ok', value: figure } })
+        })
+      }
       for (const v of ['steady', 'rough'] as const) {
         const deliver = (part: Part<WhatIfRows>) => set(v === 'steady' ? { steady: part } : { rough: part })
         const view = run.views[v]
@@ -353,6 +421,8 @@ export type WhatIfSlotView =
       readonly many: PartView<ReadingPair>
       readonly steady: PartView<WhatIfRows>
       readonly rough: PartView<WhatIfRows>
+      /** The plan's side of the health line (loading where the bundle tries no subsidy rules: nothing asks for it). */
+      readonly planHealth: PartView<number>
     }
 
 /**
@@ -372,5 +442,5 @@ export function whatIfSlotView(s: WhatIfSlotSnapshot): WhatIfSlotView {
     if (part.kind === 'error') return current ? { kind: 'error' } : { kind: 'loading' }
     return { kind: 'ready', value: part.value, answerKey: part.answerKey, updating: !current }
   }
-  return { kind: 'shown', many: view(s.many), steady: view(s.steady), rough: view(s.rough) }
+  return { kind: 'shown', many: view(s.many), steady: view(s.steady), rough: view(s.rough), planHealth: view(s.planHealth) }
 }

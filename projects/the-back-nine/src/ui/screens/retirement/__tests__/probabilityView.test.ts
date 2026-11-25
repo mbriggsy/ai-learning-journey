@@ -3,6 +3,8 @@ import { runEngine } from '@engine/engineProtocol'
 import { fromWire } from '@engine/engineWire'
 import { DATE_OFFSET_WINDOW_TOP } from '@engine/dateSearch'
 import { buildSpineParams } from '@intake/intakeMap'
+import { applyBundle } from '@intake/whatIf'
+import { createLaneGroup, type EngineRunRequest } from '@store/runLanes'
 import type { MemoryModelSnapshot, ModelAnswer, ScenarioDraft, StickyDisplay } from '@store/memoryModel'
 import type { SavedRecommendationStatus } from '@store/savedRecommendation'
 import type { DateOffsetReading, DateSearchOutcome, DateTrackOutcome, Headline, SavedRecommendationV3, SimulationResult } from '@shared/model'
@@ -12,9 +14,9 @@ import { copy, slots } from '../../../copy'
 import { dateOddsText } from '../../../dateOdds'
 import { DEV_SEEDS } from '../../../devSeeds'
 import { spendingBasisLine } from '../../../survivorLines'
-import { formatPerMonth } from '../../../money'
+import { formatDeltaDollar, formatPerMonth } from '../../../money'
 import { recommendationBundle } from '../../../workbench/railChrome'
-import { headlineExtras, type WhatIfReading, type WhatIfSlotView } from '../../../workbench/whatIfRun'
+import { createWhatIfSlot, headlineExtras, whatIfSlotView, type WhatIfReading, type WhatIfSlotLanes, type WhatIfSlotView } from '../../../workbench/whatIfRun'
 import { snapshotView } from '../../dashboard/snapshotView'
 import { landingPick, probabilityView, recommendedOffer, shareRowNotes, type HalfView, type ProbabilityInput, type ProbabilityView } from '../probabilityView'
 
@@ -36,6 +38,12 @@ function realRun(draft: ScenarioDraft): SimulationResult {
   return decoded.result
 }
 const RETIRED_RUN = realRun(RETIRED)
+
+function applyBundleOk(draft: ScenarioDraft, bundle: ProbabilityInput['whatIf']['bundle']): ScenarioDraft {
+  const applied = applyBundle(draft, bundle)
+  if (!applied.ok) throw new Error(`[test setup] refused: ${applied.refusal.kind}`)
+  return applied.draft
+}
 
 const headlineAnswer = (draft: ScenarioDraft, result: SimulationResult): ModelAnswer =>
   ({ kind: 'headline', tier: 'final', draft, inputKey: 'k1', result }) as unknown as ModelAnswer
@@ -116,6 +124,7 @@ const readyView = (whatIf: WhatIfReading, plan: WhatIfReading, extras?: object):
   many: { kind: 'ready', value: { plan, whatIf, ...(extras !== undefined ? { extras } : {}) }, answerKey: 'a', updating: false },
   steady: { kind: 'loading' },
   rough: { kind: 'loading' },
+  planHealth: { kind: 'loading' },
 })
 
 const headline = (n: number, state: Headline['outcomeState'] = 'on-track'): Headline => ({ outcomeState: state, xOfTen: { value: n, marginToEdge: 0.1 }, stateMarginToEdge: 0.1 })
@@ -274,6 +283,7 @@ describe('Probability, the retired route (`retired`, a real engine run)', () => 
       many: { kind: 'ready', value: { plan: { kind: 'headline', headline: headline(7) }, whatIf: { kind: 'headline', headline: headline(6) } }, answerKey: 'old', updating: true },
       steady: { kind: 'loading' },
       rough: { kind: 'loading' },
+      planHealth: { kind: 'loading' },
     }
     const veiled = reads(probabilityView(input(s, { whatIf: { pick: 'new', bundle: SPEND_LEVER, view: older } })))
     expect(veiled.halves.alternative.loading).toBe(true)
@@ -712,5 +722,97 @@ describe('RC5: the two-up over kept what-ifs', () => {
     const a = probabilityView(input(s, { readOnly: true, compared: { pick: 'kept:b', bundle: KEPT[1]!.levers, view: null } }))
     const b = probabilityView(input(s, { readOnly: false, compared: { pick: 'kept:b', bundle: KEPT[1]!.levers, view: null } }))
     expect(JSON.stringify(a)).toBe(JSON.stringify(b))
+  })
+})
+
+describe('The subsidy-rules health line (the register’s Tier 0 line RC10 lost)', () => {
+  const HEALTH = DEV_SEEDS.health
+  const PLAN_RUN = realRun(HEALTH)
+  const answer = headlineAnswer(HEALTH, PLAN_RUN)
+  const s = snap(HEALTH, answer)
+  const flip = (enhanced: boolean) => [{ kind: 'aca-subsidy', enhanced }] as unknown as ProbabilityInput['whatIf']['bundle']
+  const FLIP = flip(HEALTH.enhancedSubsidies !== true)
+
+  /** Lanes over the real engine (the worker's own entry), settled as each request arrives. */
+  const engineLanes = (): WhatIfSlotLanes => {
+    const group = createLaneGroup({ runsInWorker: () => true })
+    const lane = () =>
+      group.lane(async (r: EngineRunRequest) => {
+        const decoded = fromWire(runEngine(r.params, r.seed, r.options))
+        return decoded.ok ? { ok: true as const, value: decoded.result } : { ok: false as const, reason: decoded.reason }
+      })
+    return { many: lane(), steady: lane(), rough: lane(), plan: lane() }
+  }
+  const settled = async (bundle: ProbabilityInput['whatIf']['bundle']): Promise<WhatIfSlotView> => {
+    const slot = createWhatIfSlot(engineLanes())
+    slot.ask(answer, HEALTH.seed, bundle)
+    for (let i = 0; i < 20; i++) await new Promise<void>((r) => setTimeout(r, 0))
+    return whatIfSlotView(slot.getSnapshot())
+  }
+  /** Each future's own lifetime health total, then the middle of them: computed here, apart from the code under test. */
+  const ownMedian = (r: SimulationResult): number => {
+    const ta = r.distribution.taxAware!
+    const totals = ta.lifetimeNetPremiumReal.map((p, i) => p + ta.lifetimeMedicareCostReal[i]!).sort((a, b) => a - b)
+    const m = totals.length / 2
+    return totals.length % 2 === 0 ? (totals[m - 1]! + totals[m]!) / 2 : totals[Math.floor(m)]!
+  }
+
+  it('red-first on `health`: each rule’s own lifetime health cost beside the odds, the plan’s off its committed futures', async () => {
+    const view = await settled(FLIP)
+    const w = reads(probabilityView(input(s, { whatIf: { pick: 'new', bundle: FLIP, view } })))
+    const flipped = fromWire(runEngine(buildSpineParams(applyBundleOk(HEALTH, FLIP))!, HEALTH.seed!, { survivorConditioned: true }))
+    if (!flipped.ok) throw new Error(flipped.reason)
+    // The raw figures, exactly: each side's own median of per-future totals (never the parts' medians added).
+    if (view.kind !== 'shown' || view.many.kind !== 'ready' || view.planHealth.kind !== 'ready') throw new Error('[test] not landed')
+    expect(view.many.value.whatIfHealthReal).toBe(ownMedian(flipped.result))
+    expect(view.planHealth.value).toBe(ownMedian(PLAN_RUN))
+    const a = formatDeltaDollar(ownMedian(flipped.result))
+    const b = formatDeltaDollar(ownMedian(PLAN_RUN))
+    expect(a, '[non-vacuity] the two rules print different lifetime costs on `health`').not.toBe(b)
+    expect(w.metrics.health?.line).toBe(slots.subsidyRegimeCostDelta(a, b))
+    expect(w.metrics.health!.reserve.length, 'the reserve holds the widest form').toBeGreaterThanOrEqual(w.metrics.health!.line!.length)
+  })
+
+  it('the two sides share futures: a what-if that keeps the plan’s own rules reads the plan’s figure exactly (the even arm)', async () => {
+    const same = flip(HEALTH.enhancedSubsidies === true)
+    const view = await settled(same)
+    if (view.kind !== 'shown' || view.many.kind !== 'ready' || view.planHealth.kind !== 'ready') throw new Error('[test] not landed')
+    expect(view.many.value.whatIfHealthReal).toBe(view.planHealth.value)
+    const w = reads(probabilityView(input(s, { whatIf: { pick: 'new', bundle: same, view } })))
+    expect(w.metrics.health?.line).toBe(slots.subsidyRegimeCostEven(formatDeltaDollar(ownMedian(PLAN_RUN))))
+  })
+
+  const landed = (whatIf: number | undefined, plan: Extract<WhatIfSlotView, { kind: 'shown' }>['planHealth'], updating = false): WhatIfSlotView => ({
+    kind: 'shown',
+    many: {
+      kind: 'ready',
+      value: { plan: { kind: 'headline', headline: headline(7) }, whatIf: { kind: 'headline', headline: headline(8) }, ...(whatIf !== undefined ? { whatIfHealthReal: whatIf } : {}) },
+      answerKey: 'a',
+      updating,
+    },
+    steady: { kind: 'loading' },
+    rough: { kind: 'loading' },
+    planHealth: plan,
+  })
+  const ready = (value: number) => ({ kind: 'ready' as const, value, answerKey: 'a', updating: false })
+
+  it('prints nothing until both sides land on the current key, but holds its cell from the first frame', () => {
+    for (const view of [null, landed(300_000, { kind: 'loading' }), landed(undefined, ready(330_000)), landed(300_000, ready(330_000), true), landed(300_000, { kind: 'error' })]) {
+      const w = reads(probabilityView(input(s, { whatIf: { pick: 'new', bundle: FLIP, view } })))
+      expect(w.metrics.health?.line).toBeNull()
+      expect(w.metrics.health?.reserve).toBe(slots.subsidyRegimeCostDelta('9,999,000', '9,999,000'))
+    }
+  })
+
+  it('only where the left side tries the subsidy rules beside your plan', () => {
+    const view = landed(300_000, ready(330_000))
+    const spend = reads(probabilityView(input(s, { whatIf: { pick: 'new', bundle: SPEND_LEVER, view } })))
+    expect(spend.metrics.health, 'a what-if that leaves the rules alone carries no health cell').toBeUndefined()
+    const kept = [{ id: 'k', name: 'Old rules', levers: SPEND_LEVER }] as unknown as NonNullable<ScenarioDraft['keptWhatIfs']>
+    const keptDraft: ScenarioDraft = { ...HEALTH, keptWhatIfs: kept }
+    const beside = reads(probabilityView(input(snap(keptDraft, headlineAnswer(keptDraft, PLAN_RUN)), { whatIf: { pick: 'new', bundle: FLIP, view }, compared: { pick: 'kept:k', bundle: SPEND_LEVER, view: null } })))
+    expect(beside.metrics.health, 'its words name your plan, so beside a kept what-if it is not printed').toBeUndefined()
+    const both = reads(probabilityView(input(s, { whatIf: { pick: 'new', bundle: [...SPEND_LEVER, ...FLIP], view } })))
+    expect(both.metrics.health?.line).toBe(slots.subsidyRegimeCostDelta('300,000', '330,000'))
   })
 })

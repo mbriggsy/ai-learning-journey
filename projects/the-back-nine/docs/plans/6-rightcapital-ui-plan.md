@@ -1551,8 +1551,9 @@ label passes the audit. Local look.
   facts page's `subsidy-regime` door and the assumption panel's subsidy-rules row now open this page.
 - *Lost with the sheet, filed for the register*: the subsidy-rules comparison's lifetime health-cost line ("Lifetime
   health costs could run around ~$X this way, versus ~$Y as figured now"; council 2026-07-03: the rules move health costs
-  more than the odds). The what-if on Analysis reads odds only; nothing on the wire carries a what-if's lifetime health
-  cost yet.
+  more than the odds). Ported 2026-11-25 (b9-10): Probability prints it under the difference line where the left side
+  tries the subsidy rules beside your plan, each side its own run's median of each future's total (the register's closed
+  entry *The subsidy-rules comparison lost its lifetime health-cost line with RC10…* records how).
 - *Deleted beyond the row's list, each with its last importer*: `src/store/controlPreview.ts`, `src/ui/twoFuturesChrome.ts`,
   `src/viz/twoFuturesData.ts`, `e2e/chartTextAudit.ts` (no importer since RC3), the held `e2e/held/medicare-cards-look.spec.ts`
   (it opened the sheet). The old palette: the Okabe–Ito set, the two-series pair and the old band's hue and chroma left;

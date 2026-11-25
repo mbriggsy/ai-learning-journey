@@ -748,6 +748,43 @@ test.describe(`RC4b · the Action Items tray at his window (${REAL.width}×${REA
     await trayHandle(page).click()
     await expect(tray(page).locator('[data-tray-row="spending:total"] [data-changed]'), 'the edit survived the page move').toHaveCount(1)
   })
+
+  // The subsidy-rules what-if's health line (the register's Tier 0 line RC10 lost): each side's lifetime health cost
+  // under the difference line, its cell held from the first frame, and the page still one frame with the tray shut. On
+  // the working route the plan's side is its own run, landing after the ring.
+  for (const seed of ['health', 'dip'] as const) {
+    test(`?seed=${seed}: the other subsidy rules, refreshed, print each side's lifetime health cost under the odds; the landing moves nothing; one frame with the tray shut`, async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 180_000)
+      await openTrayOn(page, seed)
+      await tray(page).locator('[data-tray-row="aca-subsidy"]').getByRole('combobox').click()
+      await page.getByRole('option', { name: copy.leverHealthRegimeEnhanced, exact: true }).click()
+      await expect(page.getByRole('listbox')).toHaveCount(0)
+      await tray(page).locator('[data-tray-refresh]').click()
+      const cell = page.locator('[data-health]')
+      await expect(cell, 'the health cell stands from the first frame of the what-if').toHaveCount(1)
+      const before = await cell.evaluate((el) => el.getBoundingClientRect().height)
+      const line = cell.locator('span').first()
+      await expect(line, 'the health line never landed').toHaveText(/^Lifetime health costs could run/, { timeout: 150_000 })
+      const text = (await line.textContent()) ?? ''
+      const figures = [...text.matchAll(/~\$([\d,]+)/g)].map((m) => m[1])
+      expect(figures.length, `two figures, each side's own: "${text}"`).toBe(2)
+      expect(figures[0], `the rules move the cost on ${seed}: "${text}"`).not.toBe(figures[1])
+      expect(await cell.evaluate((el) => el.getBoundingClientRect().height), 'the landing grows no cell').toBe(before)
+      await trayHandle(page).click()
+      await expect(tray(page)).toHaveCount(0)
+      await page.evaluate(() => window.scrollTo(0, 0))
+      await page.waitForTimeout(600)
+      await settleLayout(page)
+      const frame = await page.evaluate(() => ({
+        caveat: document.querySelector('main.result [data-caveat]')!.getBoundingClientRect().bottom,
+        health: document.querySelector('[data-health]')!.getBoundingClientRect().bottom,
+      }))
+      expect(frame.health, `${seed}: the health line in the first frame`).toBeLessThanOrEqual(REAL.height)
+      expect(frame.caveat, `${seed}: the R13 caveat in the first frame`).toBeLessThanOrEqual(REAL.height)
+      await assertOneVisibleCaveat(page, REAL.height)
+      await noSidewaysScroll(page, `${seed} REAL health line`)
+    })
+  }
 })
 
 test.describe(`RC4b · the Action Items tray on the phone (${PHONE.width}×${PHONE.height} @ ${PHONE_DPR}dpr)`, () => {

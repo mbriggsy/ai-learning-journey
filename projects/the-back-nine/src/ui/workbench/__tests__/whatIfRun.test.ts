@@ -53,7 +53,7 @@ import type {
 } from '@shared/model'
 import type { ModelAnswer, ScenarioDraft } from '@store/memoryModel'
 import { DEV_SEEDS } from '../../devSeeds'
-import { tableRunFor } from '../tableRun'
+import { answerKey, tableRunFor } from '../tableRun'
 import {
   createWhatIfSlot,
   futuresDiffer,
@@ -595,5 +595,93 @@ describe('createWhatIfSlot — its lanes call only engine.run, and a reset reach
     // The many lane's first call was killed by the reset and re-sent: four calls in all, and its part is the second
     // call's own answer (here a calm error from the stub), never the reset.
     expect(h.run).toHaveBeenCalledTimes(4)
+  })
+})
+
+describe('the health line’s plan side (asked only where the bundle tries the subsidy rules)', () => {
+  const ACA: WhatIfLeverV6 = { kind: 'aca-subsidy', enhanced: true }
+  const MIX: WhatIfLeverV6 = { kind: 'mix', stockPct: 40, bondPct: 60, cashPct: 0 }
+  /** A tax surface whose per-future totals are `totals` (premiums and Medicare split unevenly, so a sum of the parts'
+   *  medians would read differently from the median of the totals). */
+  const taxAwareOf = (totals: readonly number[]) => ({
+    lifetimeNetPremiumReal: totals.map((t, i) => (i % 2 === 0 ? t * 0.9 : t * 0.1)),
+    lifetimeMedicareCostReal: totals.map((t, i) => (i % 2 === 0 ? t * 0.1 : t * 0.9)),
+  })
+
+  it('a bundle that leaves the rules alone carries no plan side, on either route', () => {
+    expect(runOf(whatIfRunFor(dated(dip, 5), SEED, [MIX])).health).toBeUndefined()
+    expect(runOf(whatIfRunFor(spine(DEV_SEEDS.retired), SEED, [MIX])).health).toBeUndefined()
+  })
+
+  it('working: the plan’s own candidate at its base offset on the plan’s seed, the empty bundle’s own compile', () => {
+    const answer = dated(dip, 5)
+    const run = runOf(whatIfRunFor(answer, SEED, [ACA, { kind: 'stop-year', calendarYear: dip.startCalendarYear + 7 }]))
+    expect(run.health).toEqual({ kind: 'run', planRun: { params: planParams(answer), seed: SEED } })
+    expect(run.health?.kind === 'run' && run.health.planRun.params).toEqual(runOf(whatIfRunFor(answer, SEED, [])).many.params)
+  })
+
+  it('all retired: the committed run’s own figure, the median of each future’s total, with no run', () => {
+    const totals = [100, 400, 200, 300, 900]
+    const answer = { ...spine(DEV_SEEDS.retired), result: { headline: HEADLINE, seed: SEED, distribution: { taxAware: taxAwareOf(totals) } } } as unknown as ModelAnswer
+    expect(runOf(whatIfRunFor(answer, SEED, [ACA])).health).toEqual({ kind: 'known', plan: 300 })
+    // A committed run with no tax surfaces has no figure: undefined, never a guess.
+    expect(runOf(whatIfRunFor(spine(DEV_SEEDS.retired), SEED, [ACA])).health).toEqual({ kind: 'known', plan: undefined })
+  })
+
+  /** Four lanes whose results carry a tax surface: the plan run's totals centre on 500, every other run's on 300. */
+  function healthLanes(withPlan = true) {
+    const calls: { lane: string; req: EngineRunRequest; d: Deferred<LaneOutcome<SimulationResult>> }[] = []
+    const group = createLaneGroup({ runsInWorker: () => true })
+    const lane = (name: string) =>
+      group.lane((req: EngineRunRequest) => {
+        const d = deferred<LaneOutcome<SimulationResult>>()
+        calls.push({ lane: name, req, d })
+        return d.promise
+      })
+    const lanes: WhatIfSlotLanes = { many: lane('many'), steady: lane('steady'), rough: lane('rough'), ...(withPlan ? { plan: lane('plan') } : {}) }
+    const settle = async (which: (name: string) => boolean) => {
+      for (const c of calls.filter((x) => which(x.lane))) {
+        const centre = c.lane === 'plan' ? 500 : 300
+        const result = resultFor(c.req)
+        c.d.resolve({ ok: true, value: { ...result, distribution: { ...result.distribution, taxAware: taxAwareOf([centre - 50, centre, centre + 50]) } } as unknown as SimulationResult })
+      }
+      await flush()
+    }
+    return { lanes, calls, settle }
+  }
+  const shown = (slot: ReturnType<typeof createWhatIfSlot>) => {
+    const v = whatIfSlotView(slot.getSnapshot())
+    if (v.kind !== 'shown') throw new Error(`[test] ${v.kind}`)
+    return v
+  }
+
+  it('working: the plan side runs on its own lane, the ring never waits for it, and both land on the slot’s key', async () => {
+    const answer = dated(dip, 5)
+    const { lanes, calls, settle } = healthLanes()
+    const slot = createWhatIfSlot(lanes)
+    slot.ask(answer, SEED, [ACA])
+    const planCall = calls.find((c) => c.lane === 'plan')
+    expect(planCall?.req).toEqual({ params: planParams(answer), seed: SEED })
+    await settle((l) => l === 'many')
+    const early = shown(slot)
+    expect(early.many.kind === 'ready' && early.many.value.whatIfHealthReal).toBe(300)
+    expect(early.planHealth).toEqual({ kind: 'loading' })
+    await settle((l) => l === 'plan')
+    expect(shown(slot).planHealth).toEqual({ kind: 'ready', value: 500, answerKey: answerKey(answer as Extract<ModelAnswer, { kind: 'date' }>), updating: false })
+  })
+
+  it('all retired: the plan side lands at once, no plan run; a slot with no plan lane asks for none', async () => {
+    const totals = [100, 400, 200]
+    const answer = { ...spine(DEV_SEEDS.retired), result: { headline: HEADLINE, seed: SEED, distribution: { taxAware: taxAwareOf(totals) } } } as unknown as ModelAnswer
+    const { lanes, calls } = healthLanes()
+    const slot = createWhatIfSlot(lanes)
+    slot.ask(answer, SEED, [ACA])
+    expect(calls.map((c) => c.lane).sort()).toEqual(['many', 'rough', 'steady'])
+    expect(shown(slot).planHealth).toMatchObject({ kind: 'ready', value: 200, updating: false })
+    const three = healthLanes(false)
+    const bare = createWhatIfSlot(three.lanes)
+    bare.ask(dated(dip, 5), SEED, [ACA])
+    expect(three.calls.map((c) => c.lane).sort()).toEqual(['many', 'rough', 'steady'])
+    expect(shown(bare).planHealth).toEqual({ kind: 'loading' })
   })
 })

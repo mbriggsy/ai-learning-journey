@@ -56,7 +56,7 @@ import { floorLineText, heroLead } from '../../dateHero'
 import { composeDateSplit } from '../../dateSplit'
 import { dateTradeoffPoint } from '../../dateTradeoff'
 import { staticDisclosures } from '../../entryCopy'
-import { formatMmDollar, formatPerMonth, mmAxisFormatterFor } from '../../money'
+import { formatDeltaDollar, formatMmDollar, formatPerMonth, mmAxisFormatterFor } from '../../money'
 import { OUTCOME_PRESENTATION } from '../../outcomeStates'
 import { ringFace, type RingFace } from '../../ringReading'
 import { spendingBasisLine } from '../../survivorLines'
@@ -64,7 +64,7 @@ import { floorRelief } from '../../twoTier'
 import { composeVerdictReading, reserveClauseFor, spendClauseFor, verdictReadingText } from '../../verdictSentence'
 import { floorUnread, readingCount, readingText, recommendationBundle, refusalWords } from '../../workbench/railChrome'
 import type { TableRun } from '../../workbench/tableRun'
-import { headlineExtras, planReadingFor, type HeadlineExtras, type WhatIfReading, type WhatIfSlotView } from '../../workbench/whatIfRun'
+import { headlineExtras, planReadingFor, triesSubsidyRules, type HeadlineExtras, type WhatIfReading, type WhatIfSlotView } from '../../workbench/whatIfRun'
 import type { LandedFigure } from '../../workbench/useWhatIf'
 import { chartWords } from '../dashboard/snapshotView'
 
@@ -180,6 +180,10 @@ export interface MetricsView {
   readonly difference: string | null
   /** The difference line's widest form for the two names on show (held hidden in its cell). */
   readonly differenceReserve: string
+  /** The subsidy-rules health line ({@link healthLine}) in its own cell under the difference line: `line` null while
+   *  either side's figure is unread, `reserve` its widest form held hidden, so the landing moves nothing. Absent unless the
+   *  left side tries the subsidy rules beside your plan. */
+  readonly health?: { readonly line: string | null; readonly reserve: string }
 }
 
 export interface PickerView<Pick extends string = LeftPick> {
@@ -359,6 +363,32 @@ function sideState(side: { readonly bundle: readonly WhatIfLeverV6[]; readonly v
   return { kind: 'ready', reading: m.value.whatIf, ...(m.value.extras !== undefined ? { extras: m.value.extras } : {}), updating: m.updating }
 }
 
+// ── The subsidy-rules health line ───────────────────────────────────────────────────────────────────────────────
+
+/** The widest figure the health line's reserve holds (a seven-digit lifetime cost, wider than any the design reaches). */
+const HEALTH_RESERVE_FIGURE = '9,999,000'
+
+/**
+ * THE HEALTH LINE (the register's Tier 0 *The subsidy-rules comparison lost its lifetime health-cost line with RC10…*;
+ * council 2026-07-03: the rules' effect sits in the years before Medicare and can barely move the odds, so the odds alone
+ * read calmer than the cost). Printed only where the left side tries the subsidy rules and the right side is your plan
+ * (its words, "as figured now", name your plan). Each side's figure is its own run's median of each future's lifetime
+ * health cost (`lifetimeHealthMedianReal`), never a difference of two medians; both on the same futures (KTD11). Printed
+ * in Health Care's dialect (`formatDeltaDollar`, the hero that prints the plan's same figure), and only once both sides
+ * landed on the slot's current key: a half-landed pair prints nothing, never one side beside a stale other. Two figures
+ * that print alike read "about the same", quoted once.
+ */
+export function healthLine(view: WhatIfSlotView | null): string | null {
+  if (view === null || view.kind !== 'shown') return null
+  const { many, planHealth } = view
+  if (many.kind !== 'ready' || many.updating || planHealth.kind !== 'ready' || planHealth.updating) return null
+  const whatIf = many.value.whatIfHealthReal
+  if (whatIf === undefined) return null
+  const a = formatDeltaDollar(whatIf)
+  const b = formatDeltaDollar(planHealth.value)
+  return a === b ? slots.subsidyRegimeCostEven(a) : slots.subsidyRegimeCostDelta(a, b)
+}
+
 // ── The page ────────────────────────────────────────────────────────────────────────────────────────────────────
 
 export function probabilityView(input: ProbabilityInput): ProbabilityView {
@@ -524,6 +554,12 @@ export function probabilityView(input: ProbabilityInput): ProbabilityView {
   // Where the reason can take the cell (its bundle is known before its run lands, so the reserve is wide from the
   // first frame of the run): the reserve holds the longer, so the landing moves nothing.
   const differenceReserve = floorNote && copy.workbenchRailFloorUnread.length > widest.length ? copy.workbenchRailFloorUnread : widest
+  // The health line: its cell exists from the first frame of a subsidy-rules what-if (its bundle is known before its runs
+  // land), so the landing moves nothing below it.
+  const health =
+    rightPick === 'plan' && triesSubsidyRules(whatIf.bundle)
+      ? { line: healthLine(whatIf.view), reserve: slots.subsidyRegimeCostDelta(HEALTH_RESERVE_FIGURE, HEALTH_RESERVE_FIGURE) }
+      : undefined
 
   // ── The bars: the retired route only, one shared scale ──
   const bars = ((): BarsView | undefined => {
@@ -644,7 +680,14 @@ export function probabilityView(input: ProbabilityInput): ProbabilityView {
     ...shared,
     ...(bars !== undefined ? { bars } : {}),
     ...(answer.kind === 'headline' && bars === undefined && compared.barMedian !== undefined ? { barsNone: copy.probabilityBarNone } : {}),
-    metrics: { lines: metricLines, ...(clauseReserve !== undefined ? { clauseReserve } : {}), ...(spendState !== undefined ? { spend: spendState } : {}), difference, differenceReserve },
+    metrics: {
+      lines: metricLines,
+      ...(clauseReserve !== undefined ? { clauseReserve } : {}),
+      ...(spendState !== undefined ? { spend: spendState } : {}),
+      difference,
+      differenceReserve,
+      ...(health !== undefined ? { health } : {}),
+    },
     noteLines,
     footnotes,
     charts,

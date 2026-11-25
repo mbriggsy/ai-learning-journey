@@ -213,6 +213,15 @@ function Metrics({ view, seat, captionRef, metricsRef }: { readonly view: Readin
           {m.differenceReserve}
         </span>
       </p>
+      {/* The subsidy-rules what-if's health line, its cell held at its widest from the first frame of that what-if. */}
+      {m.health !== undefined ? (
+        <p className="grid text-body text-stone-900" data-health="">
+          <span className="col-start-1 row-start-1">{m.health.line ?? ''}</span>
+          <span aria-hidden="true" className="invisible col-start-1 row-start-1">
+            {m.health.reserve}
+          </span>
+        </p>
+      ) : null}
       {rest.map((line) => (
         <p key={line} className="text-label text-stone-600">
           {line}

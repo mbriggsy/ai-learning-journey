@@ -1175,6 +1175,8 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     trayAge: slots.trayAge(67),
     trayMixPlan: slots.trayMixPlan('60'),
     probabilityDifferenceBetween: slots.probabilityDifferenceBetween('Move to Florida', '7 of 10', 'new what-if', '8 of 10'),
+    subsidyRegimeCostDelta: slots.subsidyRegimeCostDelta('320,000', '330,000'),
+    subsidyRegimeCostEven: slots.subsidyRegimeCostEven('270,000'),
     probabilityKeptChanged: slots.probabilityKeptChanged('Move to Florida'),
     planListCopyName: slots.planListCopyName('Move to Florida', 2),
     planListNameLong: slots.planListNameLong(60),

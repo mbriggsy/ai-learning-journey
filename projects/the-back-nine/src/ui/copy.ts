@@ -4985,7 +4985,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:2238` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:2240` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,
@@ -5594,6 +5594,16 @@ export const slots = {
   /** The difference line when the right side is not your plan: each side named, the two printed counts and nothing else. */
   probabilityDifferenceBetween: (comparedName: string, compared: string, alternativeName: string, alternative: string): string =>
     `${comparedName} reads ${compared}; ${alternativeName} reads ${alternative}.`,
+  /** The subsidy-rules what-if's health line, under the difference line (council 2026-07-03: the rules move health costs
+   *  far more than the odds; ported from the health sheet's preview, which RC10 deleted). Each side's own median, never a
+   *  difference of two medians. */
+  subsidyRegimeCostDelta: (withFormatted: string, withoutFormatted: string): string =>
+    `Lifetime health costs could run around ~$${withFormatted} this way, versus ~$${withoutFormatted} as figured now.`,
+  /** The even arm (Caddie 2026-07-10): both medians can ROUND to one figure, and "~$99,800 … versus ~$99,800" reads as a
+   *  twin-number glitch — say "about the same" and quote the shared figure once. The compose gates on the FORMATTED
+   *  strings being equal. */
+  subsidyRegimeCostEven: (costFormatted: string): string =>
+    `Lifetime health costs could run about the same either way — around ~$${costFormatted}.`,
   /** A reopened kept what-if after an edit: its name, marked as not kept (the half's title and the picker's choice). */
   probabilityKeptChanged: (name: string): string => `${name} (changed, not kept)`,
   /** The plan list (RC5): a copy's name, numbered past the first copy. */

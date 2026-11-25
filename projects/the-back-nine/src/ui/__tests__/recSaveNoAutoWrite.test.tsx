@@ -260,8 +260,8 @@ async function landCommittedRecommendation(): Promise<ReturnType<typeof render>>
   await act(async () => {
     await appModel.dispatchSolve()
   })
-  // Since Act 6 · RC4 the shell is the home: the recommendation's save control lives on Tax → Tax Strategies (the
-  // interim tab), reached by its real nav link once the shell's lazy chunk lands.
+  // Since Act 6 · RC4 the shell is the home: the recommendation's save control (RC8: Keep on the Winner card) lives on
+  // Tax → Tax Strategies, reached by its real nav link once the shell's lazy chunk lands.
   const tax = await screen.findByRole('link', { name: copy.shellModuleTax }, { timeout: 15_000 })
   await act(async () => {
     fireEvent.click(tax)
@@ -270,7 +270,7 @@ async function landCommittedRecommendation(): Promise<ReturnType<typeof render>>
   return view
 }
 
-const saveCta = () => screen.queryByRole('button', { name: copy.recommendSaveCta })
+const saveCta = () => screen.queryByRole('button', { name: copy.snapshotRecKeep })
 
 beforeEach(async () => {
   wires.date = DATE_WIRE

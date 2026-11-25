@@ -75,7 +75,7 @@ refusal (`RothLever.tsx line 49 at 7f56682e9`).
 
 `Result.tsx` derives the anchor from `startCalendarYear`, which is the plan's **BUILD** year (written once
 at `memoryModel.ts:633`, never re-anchored, survives every re-save). Four separate comments already forbade
-attributing that quantity to the save (`staleness.ts:29`, `resultSave.ts:172`, `copy.ts:4842`,
+attributing that quantity to the save (`staleness.ts:29`, `resultSave.ts:172`, `copy.ts:4864`,
 `FuckOffDate.tsx line 112 at 95c715e19`) — and the band's `'saved'` label did exactly that.
 
 - **Renamed** `elapsedPlanYears` → **`yearsSincePlanBuilt`**, with zero orphans left behind, and every
@@ -154,7 +154,7 @@ Shipped 2026-07-25, commit `e4754134`, CI green by explicit run id 30136387827.
   `offsetHasPassed(year − startCalendarYear, yearsSincePlanBuilt)` (`RothLever.tsx lines 47-49 at 7f56682e9`) — one strict
   compare covers both "before the build year" and "already passed", and no second comparator was
   authored. It renders through the R19 `FieldError` grammar with the earliest startable year QUOTED
-  (`errRothStartPast`, `RothLever.tsx line 275 at 7f56682e9`, joined `SlottedErrorKey` at `copy.ts:2609`). The fresh default
+  (`errRothStartPast`, `RothLever.tsx line 275 at 7f56682e9`, joined `SlottedErrorKey` at `copy.ts:2558`). The fresh default
   start seeds the WALL year (build + clock), so an aged vault never pre-fills the exact start the write
   side refuses.
 - **"Suppress when unanchored" was satisfied STRUCTURALLY, not by a dead arm.** `savedAnchor` is REQUIRED
@@ -170,7 +170,7 @@ Shipped 2026-07-25, commit `e4754134`, CI green by explicit run id 30136387827.
 
 **The coverage hole this closed.** `rothPlanEcho` had **zero** aged coverage: both its tests ran at
 elapsed 0, one comparing the slot against its own output — pinning routing, not the sentence — and the
-other a bare string in the copy guard (`copyGuard.test.ts:815`). **The `RothLever` sheet echo had no assertions of any kind**, and
+other a bare string in the copy guard (`copyGuard.test.ts:816`). **The `RothLever` sheet echo had no assertions of any kind**, and
 while `RothLever` did receive a `savedAnchor`, it routed it only to `composeTwoFutures`; the echo sentence
 three lines above never saw it. The same verifier lesson landed on this stage's own first cut: the
 sheet-echo test's `toBe(slots.…)` was the insight-081 tautology and a tense-arm swap sailed through it, so
@@ -201,7 +201,7 @@ literal tense regexes pin it now. Three mutants red → reverted.
    the build anchor visible and lets the premise be **stated**.
 4. **The aged fan ships ONLY with** (a) an adjacent **premise line** naming the balance vintage and (b) a
    **RENDERED re-confirm control** (insight 100 — a copy promise is a UI contract). The residual is
-   disclosed as **UNDETERMINED, never "conservative."** Both ship as `.band-premise` (`result.css:252`,
+   disclosed as **UNDETERMINED, never "conservative."** Both ship as `.band-premise` (`result.css line 252 at b69c28483`,
    one family home) under BOTH routes' band panes — `ConfidenceStatement.tsx line 481-488 at 95c715e19` and
    `FuckOffDate.tsx line 494-509 at 95c715e19`; the OLD-SAVE arm names the `agedBalancesYearFor` vintage and the re-saver
    reads the build-anchor arm. **No premise line ⇒ no aged fan, and that law is STRUCTURAL:** the resolved
@@ -345,7 +345,7 @@ CI-green by explicit run id, against the fourteen steps of
 before any code was written (v1 five P0s, v2 two P0s, four lenses all `holds=false`).
 
 - The reserved slot became the real control — the five save arms in ONE reserved box
-  (`RecommendationSurface.tsx:604-619`); the U16 "layout space only" test was **replaced**, not deleted.
+  (`RecommendationSurface.tsx line 604-619 at b69c28483`); the U16 "layout space only" test was **replaced**, not deleted.
 - **The no-auto-save law survived:** saving stays an explicit gesture, and the existing pin was re-pointed
   rather than dropped (`solveNoAutoSave.test.ts` plus the new `recSaveNoAutoWrite.test.tsx`).
 - **Every save arm is a claim the disk can back.** `RecommendationSaveView` is a closed union —
@@ -367,7 +367,7 @@ backstop rather than a gate. The two non-writable states are detected separately
   `deriveResultSave(persist, ready, readOnly)` (`resultSave.ts:101`).
 
 `RecommendationSaveRefusal` is therefore the three-arm enum `'record-invalid' | 'write' | 'recovery-locked'`,
-each with its own heading and body (`copy.ts:2046-2055`). The recovery arm's name is deliberately **not**
+each with its own heading and body (`copy.ts line 2046-2055 at b69c28483`). The recovery arm's name is deliberately **not**
 `…Survivor…`: `copyGuard.ts`'s `isSurvivorKey` is a `/survivor/i` SUBSTRING net feeding `isMortalityKey`, so
 that spelling would have silently enrolled a plumbing key in the mortality-lexicon gate and made its guard
 arm pass for the wrong reason.
@@ -378,8 +378,8 @@ S3 built the whole substrate and S4 deliberately declined the copy; both created
 original thirteen lines could not name.
 
 **The copy register landed here, not in S4** (see S4 for why). It shipped as two families — the save
-GESTURE (`recommendSave*`) and the saved-record CARD (`recommendRecord*`), `copy.ts:2017-2142` — modelled on
-`recommendStale{Heading,Body,ReopenCta}` and on `RecommendationSurface.tsx:378-385`'s render shape, the
+GESTURE (`recommendSave*`) and the saved-record CARD (`recommendRecord*`), `copy.ts:2017-2137` — modelled on
+`recommendStale{Heading,Body,ReopenCta}` and on `RecommendationSurface.tsx line 378-385 at b69c28483`'s render shape, the
 `role="status"` card with heading, body and re-open button. `recommendRecordReopenCost` names the re-open's
 cost the way the pending label does: *"This can take a few minutes."* Exactly one key in either family may
 claim a completed save, and it is `recommendSaveSavedBadge`.
@@ -403,7 +403,7 @@ verdict prefix, unlike `staleness*`, so they clear the scoped gates rather than 
    (insight 100 — the gesture promised an affordance, so it owes a rendered outcome).
 3. `noDollarRegister` is **COPIED from the composed view, never re-derived record-side**
    (`savedRecommendationMint.ts:89`, `:100`, `:140`). The reachable register is
-   `RecommendedView.mode === 'no-change'` (`recommendationView.ts:248`, assigned `:695`), NOT the
+   `RecommendedView.mode === 'no-change'` (`recommendationView.ts:247`, assigned `:690`), NOT the
    module-local `noDollar` const at `:659`.
 4. The `fingerprint` has no type bind and cannot get one — `solverRunFingerprint.ts:61` is a bare
    `export type … = string` — so the bind is a TEST: mint from a REAL `solverRunFingerprint(...)` call,
@@ -501,9 +501,9 @@ A **new, stateless** plant for the arrived household — the aged surface's cold
   fixed 2026-07-30/31 (the Roth door calling an executed conversion a typo, `d8f35d8c`; the lever refusal
   denying a date the same screen plots, `72d638d9`; the premise line contradicting its own axis,
   `d5e7b466`; and the band flip onto the lifestyle crown, `8d4d4e58`). A fifth followed: **Cards 6–7's
-  record-card verb is closed too** — the showing-verb was replaced 2026-07-31 (`532cad82`; `copy.ts:2131`
+  record-card verb is closed too** — the showing-verb was replaced 2026-07-31 (`532cad82`; `copy.ts:2126`
   now reads "It may no longer fit the two of you.", with a standing prohibition on ever restoring it at
-  `copy.ts:2102-2109`), and the false "still matches" holds line 2026-08-03 (`bd851f24`; `copy.ts:2094`).
+  `copy.ts:2097-2104`), and the false "still matches" holds line 2026-08-03 (`bd851f24`; `copy.ts:2089`).
   Card 1's two-odds collision remains open, as does the OTHER half of Cards 6–7 — naming the strategy on
   the holds face, Briggsy's own ruling, carried in the register as "The saved-record card does not name
   the strategy".
@@ -529,7 +529,7 @@ as the council admitted it, and the reasons are the material the re-filed unit s
 
 Verified at council time: the bars carry arm **names** at their ends plus the delta hero and the
 `$0`/ceiling axis frame; each bar's own dollar value renders **only** in `ariaSummary`
-(`recommendationView.ts:744-750`, `copy.ts:5006` — the slot was renamed `recDeltaVizAria` 2026-09-08; re-anchored 2026-09-10). The
+(`recommendationView.ts line 744-750 at b69c28483`, `copy.ts:5028` — the slot was renamed `recDeltaVizAria` 2026-09-08; re-anchored 2026-09-10). The
 AT-over-sighted inversion is real and nobody disputed it.
 
 The admission was gated on a **deliberate dialect split** in `recommendationView.ts` — endpoints humane

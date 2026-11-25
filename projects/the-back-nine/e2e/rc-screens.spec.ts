@@ -311,7 +311,7 @@ test.describe(`RC3 · Snapshot on the phone (${PHONE.width}×${PHONE.height} @ $
 //   no year before the wall year is plotted;
 // - at the phone and at a 20 px browser default: the intro, the halves, then the caveat, in order and reachable;
 // - the saved recommendation (`?vault=rec`): Snapshot's "Try it in the plan" opens Probability with Recommended on the
-//   left; the interim Tax Strategies tab carries the record card.
+//   left; Tax Strategies (RC8) carries the record card.
 const RC4_FRAME_SEEDS = [
   { seed: 'retired', route: 'headline', state: null },
   // The split households: an essentials row under each ring (measured: before the halves shared their rows' second
@@ -503,7 +503,7 @@ test.describe(`RC4 · the home and Probability at his window (${REAL.width}×${R
     expect(Math.min(...ticks), 'no passed stop year is plotted').toBeGreaterThanOrEqual(pinnedYear(page))
   })
 
-  test('?vault=rec: Snapshot’s "Try it in the plan" opens Probability with Recommended on the left; the interim Tax Strategies tab carries the record card', async ({ page }) => {
+  test('?vault=rec: Snapshot’s "Try it in the plan" opens Probability with Recommended on the left; Tax Strategies carries the record card', async ({ page }) => {
     test.setTimeout(FINAL_TIER_MS + 90_000)
     await gotoVaultFinal(page, 'rec')
     await expect(page.locator('main.result[data-shell-screen="snapshot"]')).toBeAttached({ timeout: 30_000 })
@@ -514,7 +514,7 @@ test.describe(`RC4 · the home and Probability at his window (${REAL.width}×${R
     await expect(page.locator('[data-half="alternative"]'), 'the left half names the recommendation').toHaveAttribute('aria-label', copy.probabilityPickRecommended)
     await expect(page.locator('[data-half="alternative"] [data-ring-half]'), 'the recommendation’s side drew its ring').toBeVisible({ timeout: 60_000 })
     await page.getByRole('navigation', { name: copy.shellModulesLabel }).getByRole('link', { name: copy.shellModuleTax, exact: true }).click()
-    await expect(page.locator('main.result[data-shell-screen="interim-strategies"] .rec-record'), 'the record card on the interim tab').toBeVisible()
+    await expect(page.locator('main.result[data-shell-screen="tax-strategies"] [data-record]'), 'the record card on Tax Strategies').toBeVisible()
   })
 })
 
@@ -1206,44 +1206,6 @@ test.describe(`RC4 ported · the vault returns: the gate, then the echoed answer
     expect(crownYear, `two years on one screen: the hero says ${heroYear}, the crowned bar says ${crownYear}`).toBe(heroYear)
     await expect(page.locator('[data-odds-chart]').getByText('They also read from your account balances as you entered them in'), 'the aged-balances line rides the chart').toBeVisible()
   })
-
-  test('?vault=rec: no clock fires; the interim Tax Strategies tab paints the record’s HOLDS face with its re-open control and its cost', async ({ page }) => {
-    test.setTimeout(FINAL_TIER_MS + 120_000)
-    const affirm = await unlockToGate(page, 'rec')
-    await expect(page.locator('.reentry-notes p'), 'the rec plant ages no stamp: no clock fires').toHaveCount(0)
-    await affirmToEchoedHome(page, 'rec', affirm, false)
-    await page.getByRole('navigation', { name: copy.shellModulesLabel }).getByRole('link', { name: copy.shellModuleTax, exact: true }).click()
-    const card = page.locator('main.result[data-shell-screen="interim-strategies"] .rec-record')
-    await expect(card, 'the remembered record paints on the Tax Strategies tab').toBeVisible()
-    await expect(card.locator('.rec-note__head')).toHaveText(copy.recommendRecordHeading)
-    const standing = card.locator('.rec-record__standing')
-    await expect(standing).toHaveAttribute('data-standing', 'holds')
-    await expect(standing).toContainText(copy.recommendRecordHolds)
-    await expect(card.getByRole('button', { name: copy.recommendRecordReopenCta })).toBeVisible()
-    await expect(card.locator('.rec-record__cost')).toHaveText(copy.recommendRecordReopenCost)
-  })
-
-  test('?vault=recold: the SUPERSEDED face names every cause it has, in the producer’s order, and its mint year; the rules clause stays dark', async ({ page }) => {
-    test.setTimeout(FINAL_TIER_MS + 120_000)
-    const affirm = await unlockToGate(page, 'recold')
-    await affirmToEchoedHome(page, 'recold', affirm, false)
-    await page.getByRole('navigation', { name: copy.shellModulesLabel }).getByRole('link', { name: copy.shellModuleTax, exact: true }).click()
-    const card = page.locator('main.result[data-shell-screen="interim-strategies"] .rec-record')
-    await expect(card).toBeVisible()
-    const standing = card.locator('.rec-record__standing')
-    await expect(standing).toHaveAttribute('data-standing', 'superseded')
-    await expect(standing).toContainText(copy.recommendRecordSuperseded)
-    await expect(standing).not.toContainText(copy.recommendRecordHolds)
-    await expect(card.locator('.rec-record__causes li')).toHaveText([copy.recommendRecordSupersededInputs, copy.recommendRecordSupersededSolver])
-    await expect(card).not.toContainText(copy.recommendRecordSupersededRules)
-    const savedIn = card.locator('p.rec-note__line')
-    await expect(savedIn).toHaveCount(1)
-    const savedInText = (await savedIn.textContent()) ?? ''
-    const year = Number(/(\d{4})/.exec(savedInText)?.[1])
-    expect(Number.isFinite(year), `the age clause names no year: "${savedInText}"`).toBe(true)
-    expect(savedInText, 'the shipped slot, never a re-typed sentence').toBe(slots.recommendRecordSavedIn(year))
-    expect(year, 'a record minted this calendar year suppresses the clause instead').toBeLessThan(pinnedYear(page))
-  })
 })
 
 // HEAD :4851: the spend lane. The solved figure lands in the key-metric column's first line, and nothing below it moves:
@@ -1335,91 +1297,243 @@ test.describe('RC4 ported · the spend lane — the solved figure lands without 
   })
 })
 
-// HEAD :1250 / :1329: the recommend-second surface's steer note and pending frame, RE-POINTED to the interim Tax →
-// Tax Strategies tab, where `Result.tsx` still renders that surface until RC8. Their laws stand: the goal pick on a
-// household with no pre-tax savings lands a calm steer note, never a silent dead end; the pick's live dispatch shows the
-// pending tell with the shared breathe, and its well holds the committed grade lockup's height so the landing does not
-// jump. The posture and right-rail arms (:1207 / :1453) measured the old answer page's layout and retire.
+// RC8: Tax → Tax Strategies (plan 6, RC8's Verification). PORTED from RC4's interim tab (the "RC4 re-pointed" arms and
+// the record-card arms of "RC4 ported · the vault returns", lines at 31bf6d9e): the steer note in frame (a goal pick on a
+// household with no pre-tax money lands a calm note, never a silent dead end), the solve's start shown at once
+// (Calculating, `aria-busy`), the record card's HOLDS and SUPERSEDED faces. RETIRED with the old surface: the pending
+// well's height against the old grade lockup (the old layout; the clone's Calculating frame replaces the page's body,
+// as RightCapital's does). ADDED: the working route's one line, the Winner card in the first frame after a real
+// full-precision solve, the three-row list, the Summary bars drawn on one scale in the ratio of their printed figures,
+// and Keep pressed in a real browser for the first time (owed from RC4), its record read back after a reload as HOLDS.
 
-/** The interim Tax Strategies tab, from the home. */
-async function toStrategies(page: Page): Promise<void> {
-  await page.getByRole('navigation', { name: copy.shellModulesLabel }).getByRole('link', { name: copy.shellModuleTax, exact: true }).click()
-  await expect(page.locator('main.result[data-shell-screen="interim-strategies"]')).toBeAttached()
+/** Tax → Tax Strategies, from the home (the laptop's module word, or the phone's menu). */
+async function toTax(page: Page): Promise<void> {
+  const modules = page.getByRole('navigation', { name: copy.shellModulesLabel })
+  if (await modules.isVisible()) await modules.getByRole('link', { name: copy.shellModuleTax, exact: true }).click()
+  else {
+    await page.getByRole('button', { name: copy.shellMenuOpen, exact: true }).click()
+    const menu = page.getByRole('dialog', { name: copy.shellMenuTitle })
+    await menu.getByRole('link', { name: copy.shellPageTaxStrategies, exact: true }).click()
+    await expect(menu).toHaveCount(0)
+  }
+  await expect(page.locator('main.result[data-shell-screen="tax-strategies"]')).toBeAttached()
   await settleLayout(page)
 }
 
-/** The invite → the goal picker → "Leave more behind" → See the strategy: the solve dispatches. */
-async function pickLeaveMore(page: Page): Promise<void> {
-  await page.locator('.result-recommend-invite').click()
-  const dialog = page.getByRole('dialog')
-  await expect(dialog, 'the goal picker opens before the solve').toBeVisible()
-  const radio = dialog.getByRole('radio', { name: /Leave more behind/ })
-  await radio.evaluate((el) => (el as HTMLInputElement).click())
-  await expect(radio).toBeChecked()
-  await dialog.getByRole('button', { name: 'See the strategy', exact: true }).click()
-  await expect(dialog).toBeHidden()
+/** The goal picked on the page's own radio, then Find: the solve dispatches. */
+async function findStrategy(page: Page, goal: string = copy.goalLeaveMoreLabel): Promise<void> {
+  await page.getByRole('radio', { name: new RegExp(goal) }).check()
+  const find = page.getByRole('button', { name: copy.taxStratFind, exact: true })
+  await expect(find, 'a picked goal lets Find run').not.toHaveAttribute('aria-disabled', 'true')
+  await find.click()
 }
 
-test.describe(`RC4 re-pointed · the recommend-second surface on the interim Tax Strategies tab (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr)`, () => {
+/** The committed solve's Winner card, up to the RV gate's own budget (a full-precision solve: ~30 s here, up to ~3 min
+ *  on CI's 4-vCPU runner, `e2e/chart-text-rv.spec.ts`'s `COMMITTED_LOCKUP_MS`). A held card is a red here. */
+const WINNER_MS = 360_000
+
+async function bottomOf(page: Page, sel: string): Promise<number> {
+  return page.locator(sel).first().evaluate((el) => el.getBoundingClientRect().bottom)
+}
+
+test.describe(`RC8 · Tax Strategies at his window (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr)`, () => {
   test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
 
-  test('?seed=steer: the goal pick lands the calm steer note (never a silent dead end), no pending tell, the invite gone, the R13 caveat below it', async ({ page }) => {
+  test('?seed=retired: four folder tabs; the first frame holds the bold sentence, the goal picker and Find; Find held with no goal says why; one R13 caveat', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 60_000)
+    await enterShell(page)
+    await toTax(page)
+    await expect(page.locator('main.result')).toHaveCount(1)
+    await expect(page.getByRole('tab')).toHaveText([copy.taxStratTabStrategies, copy.taxStratTabSummary, copy.taxStratTabComparison, copy.taxStratTabDetails])
+    await expect(page.getByRole('radio')).toHaveCount(2)
+    const find = page.getByRole('button', { name: copy.taxStratFind, exact: true })
+    for (const sel of ['[data-ask-sentence]', '[data-goal="leave-more"]', '[data-find]', '[data-find-cost]']) {
+      expect(await bottomOf(page, sel), `${sel} inside the first frame`).toBeLessThanOrEqual(REAL.height)
+    }
+    // No goal yet (the retired seed picks none): Find is held, pressable, its reason at rest.
+    await expect(find).toHaveAttribute('aria-disabled', 'true')
+    await expect(page.locator('[data-find-held="goal"]')).toHaveText(copy.goalPickerConfirmBlocked)
+    await find.click({ force: true })
+    await expect(page.locator('[data-calculating]'), 'a held Find starts nothing').toHaveCount(0)
+    await assertOneVisibleCaveat(page, null)
+    await noSidewaysScroll(page, 'retired REAL Tax Strategies')
+  })
+
+  test('?seed=steer: Find lands the calm steer note (never a silent dead end) inside the first frame, no Calculating, the R13 caveat below it', async ({ page }) => {
     test.setTimeout(FINAL_TIER_MS + 90_000)
     await gotoSeedFinal(page, 'steer')
-    await toStrategies(page)
-    await pickLeaveMore(page)
-    const note = page.locator('.rec-note--no-pretax')
-    await expect(note, 'the steer note renders').toBeVisible()
-    await expect(page.locator('.solve-pending')).toHaveCount(0)
-    await expect(page.locator('.result-recommend-invite')).toHaveCount(0)
+    await toTax(page)
+    await findStrategy(page)
+    const note = page.locator('[data-steer="no-pretax"]')
+    await expect(note, 'the steer note renders').toHaveText(copy.recommendNoPretaxNote)
+    await expect(page.locator('[data-calculating]')).toHaveCount(0)
+    await page.evaluate(() => window.scrollTo(0, 0))
     const noteBox = (await note.boundingBox())!
-    const caveat = page.locator('footer.disclaimer')
-    await expect(caveat, 'the interim page’s one R13 caveat').toBeVisible()
+    expect(noteBox.y + noteBox.height, 'the steer note sits inside the first frame').toBeLessThanOrEqual(REAL.height)
+    const caveat = page.locator('main.result [data-caveat]')
     expect((await caveat.boundingBox())!.y, 'the R13 caveat sits below the note').toBeGreaterThan(noteBox.y + noteBox.height - 1)
+    await assertOneVisibleCaveat(page, null)
   })
 
   for (const seed of ['surplus', 'nc'] as const) {
-    test(`?seed=${seed}: the goal pick drives the pending tell with the shared breathe; its well holds the committed grade lockup’s height`, async ({ page }) => {
+    test(`?seed=${seed}: Find shows Calculating at once (busy, its bold sentence and label), in the first frame`, async ({ page }) => {
       test.setTimeout(FINAL_TIER_MS + 90_000)
       await gotoSeedFinal(page, seed)
-      await toStrategies(page)
-      await pickLeaveMore(page)
-      const panel = page.locator('.solve-pending-panel')
-      await expect(panel, 'the pending tell renders: the live dispatch fired').toBeVisible()
-      await expect(panel).toHaveAttribute('aria-busy', /.*/)
-      await expect(page.locator('.solve-pending')).toBeVisible()
-      const motion = await page.evaluate(() => {
-        const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-        const label = document.querySelector('.solve-pending')
-        const anims = label === null ? [] : label.getAnimations().map((a) => ({ name: (a as CSSAnimation).animationName, infinite: a.effect?.getTiming().iterations === Infinity, running: a.playState === 'running' }))
-        return { reduce, anims }
+      await toTax(page)
+      await findStrategy(page)
+      const calc = page.locator('[data-calculating]')
+      await expect(calc, 'the live dispatch fired').toBeVisible()
+      await expect(calc).toHaveAttribute('aria-busy', 'true')
+      await expect(calc).toContainText(copy.recommendPendingLabel)
+      await expect(calc).toContainText(copy.taxStratCalculating)
+      expect(await bottomOf(page, '[data-calculating]'), 'Calculating sits inside the first frame').toBeLessThanOrEqual(REAL.height)
+    })
+  }
+
+  test('?vault=rec: no clock fires; the record card’s HOLDS face in the first frame, above the empty state’s Find and its cost', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 120_000)
+    const affirm = await unlockToGate(page, 'rec')
+    await expect(page.locator('.reentry-notes p'), 'the rec plant ages no stamp: no clock fires').toHaveCount(0)
+    await affirmToEchoedHome(page, 'rec', affirm, false)
+    await toTax(page)
+    const card = page.locator('main.result[data-shell-screen="tax-strategies"] [data-record]')
+    await expect(card, 'the remembered record paints on Tax Strategies').toBeVisible()
+    await expect(card.locator('[data-record-heading]')).toHaveText(copy.recommendRecordHeading)
+    const standing = card.locator('[data-standing]')
+    await expect(standing).toHaveAttribute('data-standing', 'holds')
+    await expect(standing).toContainText(copy.recommendRecordHolds)
+    expect(await bottomOf(page, '[data-record]'), 'the record card inside the first frame').toBeLessThanOrEqual(REAL.height)
+    // The one door is the empty state's Find (the card carries no control of its own), its cost beside it.
+    await expect(page.getByRole('button', { name: copy.taxStratFind, exact: true })).toBeVisible()
+    await expect(page.locator('[data-find-cost]')).toHaveText(copy.recommendRecordReopenCost)
+    const cardBox = (await card.boundingBox())!
+    expect((await page.locator('[data-ask]').boundingBox())!.y, 'the card sits above the empty state').toBeGreaterThan(cardBox.y + cardBox.height - 1)
+  })
+
+  test('?vault=recold: the SUPERSEDED face names every cause it has, in the producer’s order, and its mint year; the rules clause stays dark', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 120_000)
+    const affirm = await unlockToGate(page, 'recold')
+    await affirmToEchoedHome(page, 'recold', affirm, false)
+    await toTax(page)
+    const card = page.locator('main.result[data-shell-screen="tax-strategies"] [data-record]')
+    await expect(card).toBeVisible()
+    const standing = card.locator('[data-standing]')
+    await expect(standing).toHaveAttribute('data-standing', 'superseded')
+    await expect(standing).toContainText(copy.recommendRecordSuperseded)
+    await expect(standing).not.toContainText(copy.recommendRecordHolds)
+    await expect(card.locator('[data-record-causes] li')).toHaveText([copy.recommendRecordSupersededInputs, copy.recommendRecordSupersededSolver])
+    await expect(card).not.toContainText(copy.recommendRecordSupersededRules)
+    const savedIn = card.locator('[data-record-saved-in]')
+    await expect(savedIn).toHaveCount(1)
+    const savedInText = (await savedIn.textContent()) ?? ''
+    const year = Number(/(\d{4})/.exec(savedInText)?.[1])
+    expect(Number.isFinite(year), `the age clause names no year: "${savedInText}"`).toBe(true)
+    expect(savedInText, 'the shipped slot, never a re-typed sentence').toBe(slots.recommendRecordSavedIn(year))
+    expect(year, 'a record minted this calendar year suppresses the clause instead').toBeLessThan(pinnedYear(page))
+  })
+
+  test('?seed=dip (working): the one stopgap line in the first frame; no goal picker, heirs’ bracket or Find; no other tab', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 60_000)
+    await gotoSeedFinal(page, 'dip')
+    await toTax(page)
+    await expect(page.locator('[data-working-route]')).toHaveText(copy.taxStratWorkingRoute)
+    expect(await bottomOf(page, '[data-working-route]'), 'the line inside the first frame').toBeLessThanOrEqual(REAL.height)
+    await expect(page.getByRole('radio')).toHaveCount(0)
+    await expect(page.locator('[data-heir-bracket]')).toHaveCount(0)
+    await expect(page.getByRole('button', { name: copy.taxStratFind })).toHaveCount(0)
+    await expect(page.getByRole('tab')).toHaveText([copy.taxStratTabStrategies])
+    await assertOneVisibleCaveat(page, REAL.height)
+  })
+
+  test('?vault=surplus: a full-precision solve; the Winner card in the first frame; three rows and no rank; Summary’s bars on one scale in one frame; Keep writes the record, its badge and Try; after a reload the record holds', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS * 2 + WINNER_MS + 180_000)
+    await gotoVaultFinal(page, 'surplus')
+    await toTax(page)
+    await findStrategy(page)
+    await expect(page.locator('[data-calculating]')).toBeVisible()
+    const winner = page.locator('[data-winner]')
+    await expect(winner, '?vault=surplus: no Winner card after the full-precision solve (a held card is a red: re-pick the plant)').toBeVisible({ timeout: WINNER_MS })
+    await expect(winner).toHaveAttribute('data-winner', 'active')
+    await settleLayout(page)
+    // THE FIRST FRAME holds the Winner card: its badge, its hero and Keep.
+    for (const sel of ['#tax-winner-badge', '[data-winner-hero]', '[data-keep]']) {
+      expect(await bottomOf(page, sel), `${sel} inside the first frame`).toBeLessThanOrEqual(REAL.height)
+    }
+    // The whole card (measured 698.4 of 731 on Windows, 2026-11-25): a CI wrap that pushes it out is a real red.
+    const cardBottom = await bottomOf(page, '[data-winner]')
+    console.log(`[rc8-winner] the Winner card's bottom at ${cardBottom.toFixed(1)} of ${REAL.height}`)
+    expect(cardBottom, 'the whole Winner card inside the first frame').toBeLessThanOrEqual(REAL.height)
+    await expect(page.locator('[data-winner-hero]')).toContainText(/^~\$[\d,]+ more left to your heirs$/)
+    // THE LIST: exactly three rows (winner, runner-up, baseline), no rank column, the rest counted in words.
+    const rows = page.locator('[data-ranked-list] tbody tr')
+    await expect(rows).toHaveCount(3)
+    await expect(page.locator('[data-ranked-list] [data-row-name]')).toHaveText([copy.taxStratRowWinner, copy.taxStratRowRunnerUp, copy.taxStratRowBaseline])
+    await expect(page.locator('[data-ranked-list] th[scope="col"]')).toHaveCount(2)
+    await expect(page.locator('[data-ranked-others]')).toContainText('other strategies were compared and ranked below these')
+    const values = await page.locator('[data-row-value]').allTextContents()
+    // SUMMARY: the bars print the list's own figures, drawn on one scale in their ratio (insight 169), in one frame.
+    await page.getByRole('tab', { name: copy.taxStratTabSummary }).click()
+    await expect(page.locator('[data-chart="tax-summary"] .highcharts-series-group')).toBeAttached({ timeout: 30_000 })
+    await page.waitForTimeout(600)
+    await settleLayout(page)
+    const bars = await page.evaluate(() => {
+      const pts = [...document.querySelectorAll('[data-chart="tax-summary"] .highcharts-series .highcharts-point')].map((p) => p.getBoundingClientRect().height)
+      const figs = [...document.querySelectorAll('[data-chart="tax-summary"] .highcharts-data-label text')].map((t) => (t.textContent ?? '').trim())
+      return { pts, figs }
+    })
+    expect(bars.figs, 'each bar prints the ranked list’s figure for its strategy').toEqual([values[0], values[2]])
+    const dollars = bars.figs.map((f) => Number(f.replace(/[^0-9]/g, '')))
+    expect(Math.abs(bars.pts[1]! - bars.pts[0]! * (dollars[1]! / dollars[0]!)), `the bars’ heights (${bars.pts.join(', ')}) in the ratio of ${bars.figs.join(' to ')}`).toBeLessThanOrEqual(5)
+    const floor = await hcFloorPx(page)
+    expect(hcTextFailures(await hcAudit(page, '[data-chart="tax-summary"]', '[data-summary-chart]'), floor, { texts: [copy.taxStratMetricLeaveMore, ...bars.figs], counts: { 'data-label': 2, 'legend-item': 2 } }), 'Summary’s text').toEqual([])
+    expect(hcMarkFailures(await hcMarks(page, '[data-chart="tax-summary"]', '[data-summary-chart]')), 'Summary’s marks').toEqual([])
+    await assertOneVisibleCaveat(page, REAL.height)
+    // KEEP, pressed in a real browser: the vault exists, so the write goes straight to it; the badge, then Try.
+    await page.getByRole('tab', { name: copy.taxStratTabStrategies }).click()
+    await page.getByRole('button', { name: copy.snapshotRecKeep, exact: true }).click()
+    await expect(page.locator('[data-keep-status="saved"]'), 'Keep reached the disk').toHaveText(copy.recommendSaveSavedBadge, { timeout: 30_000 })
+    await expect(page.getByRole('button', { name: copy.snapshotRecTry, exact: true }), 'a kept, current record offers Try it in the plan').toBeVisible()
+    await expect(page.locator('[data-record] [data-standing]')).toHaveAttribute('data-standing', 'holds')
+    // Through the real path: reload (the plant param is gone), unlock, the re-entry gate; the record HOLDS.
+    await page.reload()
+    await page.getByLabel('Passphrase', { exact: true }).fill(DEV_PASSPHRASE)
+    await page.getByRole('button', { name: 'Open my plan' }).click()
+    await page.getByRole('button', { name: /still about right/i }).click()
+    await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
+    await toTax(page)
+    const card = page.locator('[data-record]')
+    await expect(card.locator('[data-standing]'), 'the kept record, read back from the vault, holds').toHaveAttribute('data-standing', 'holds')
+    await expect(card).toContainText(copy.recommendRecordHolds)
+  })
+})
+
+test.describe(`RC8 · Tax Strategies on the phone (${PHONE.width}×${PHONE.height} @ ${PHONE_DPR}dpr)`, () => {
+  test.use({ viewport: PHONE, deviceScaleFactor: PHONE_DPR, isMobile: true, hasTouch: true })
+  for (const seed of ['retired', 'dip'] as const) {
+    test(`?seed=${seed}: the title, the tabs, the page's body, then one R13 caveat, in order and reachable; no sideways scroll`, async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 90_000)
+      await gotoSeedFinal(page, seed)
+      await toTax(page)
+      const order = await page.evaluate(() => {
+        const top = (sel: string) => document.querySelector(sel)!.getBoundingClientRect().top + window.scrollY
+        return {
+          title: top('main.result h1'),
+          tabs: top('[role="tablist"]'),
+          body: top('[data-ask], [data-working-route]'),
+          caveat: top('main.result [data-caveat]'),
+        }
       })
-      if (!motion.reduce) {
-        expect(motion.anims.some((a) => a.name === 'thinking-breathe' && a.infinite && a.running), 'the pending tell carries the shared infinite thinking-breathe').toBe(true)
+      expect(order.title).toBeLessThan(order.tabs)
+      expect(order.tabs).toBeLessThan(order.body)
+      expect(order.body).toBeLessThan(order.caveat)
+      if (seed === 'retired') {
+        const find = page.getByRole('button', { name: copy.taxStratFind, exact: true })
+        await find.scrollIntoViewIfNeeded()
+        await expect(find, 'Find is reachable').toBeInViewport()
       }
-      // The committed grade lockup planted beside the well, measured, removed: the well must hold its height.
-      const cls = await page.locator('.recommendation-surface').evaluate((surface) => {
-        const panelEl = document.querySelector('.solve-pending-panel') as HTMLElement | null
-        const panelWell = panelEl ? panelEl.getBoundingClientRect().height : 0
-        const el = document.createElement('div')
-        el.className = 'rec-committed'
-        el.innerHTML =
-          '<div class="rec-grade" role="group">' +
-          '<p class="rec-grade__head"><svg class="rec-grade__glyph" width="22" height="22" viewBox="0 0 22 22"></svg>' +
-          '<span class="rec-grade__word">A confident lean</span></p>' +
-          '<p class="rec-grade__hero">This keeps about $128,000 more for the two of you to pass on than staying on your current plan.</p>' +
-          '</div>'
-        surface.appendChild(el)
-        const word = el.querySelector('.rec-grade__word') as HTMLElement
-        const wordLineHeight = parseFloat(getComputedStyle(word).lineHeight)
-        const lockup = Math.round((el.querySelector('.rec-grade') as HTMLElement).getBoundingClientRect().height)
-        const wordOneLine = word.getBoundingClientRect().height <= wordLineHeight * 1.4
-        el.remove()
-        return { panelWell: Math.round(panelWell), lockup, wordOneLine }
-      })
-      expect(cls.wordOneLine, 'the grade word holds one line').toBe(true)
-      expect(cls.panelWell, `the pending well (${cls.panelWell}px) collapsed below the committed lockup (${cls.lockup}px): the landing would jump`).toBeGreaterThanOrEqual(cls.lockup - 8)
-      expect(cls.panelWell, `the pending well (${cls.panelWell}px) over-reserves against the committed lockup (${cls.lockup}px)`).toBeLessThanOrEqual(cls.lockup + 44)
+      await page.locator('main.result [data-caveat]').scrollIntoViewIfNeeded()
+      await assertOneVisibleCaveat(page, null)
+      await noSidewaysScroll(page, `${seed} PHONE Tax Strategies`)
     })
   }
 })

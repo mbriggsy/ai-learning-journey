@@ -32,14 +32,11 @@ import type { SolveRecommendation } from '@engine/solver/solve'
 import type { SolvePayload, SolveTokenWithheld, SolveUnwitnessable } from '@engine/solver/solveEntry'
 import { assertObjectiveMatchesHeadline } from '@engine/solver/objectiveHeadline'
 import type { SolveAnswer, SolvePreconditionGap } from '@store/memoryModel'
-import { twoFuturesCeiling } from '@viz/twoFuturesData'
-import type { RecommendationVizLabels } from '@viz/recommendationVizData'
 import type { ConfidenceStatementView } from './answerView'
 import { copy, slots, type CopyKey } from './copy'
 import {
   formatAbsoluteDollar,
   formatActionableDollar,
-  formatAxisDollar,
   formatBracketPercent,
   formatDeltaDollar,
   formatEnteredDollar,
@@ -199,13 +196,15 @@ export interface RecommendationGradeView {
   readonly ungradedNote: string | undefined
 }
 
-/** The two-arm comparison viz props (a pair of terminal seed-B magnitudes + resolved string-free
- *  labels) — shared by the PRIMARY delta viz (winner vs today's plan) and the S4 RUNNER-UP viz
- *  (winner vs runner-up). Both feed the SAME RecommendationViz grammar; only the arms + labels differ. */
-export interface RecommendationVizProps {
-  readonly withoutMagnitude: number
-  readonly withMagnitude: number
-  readonly labels: RecommendationVizLabels
+/** The Summary tab's two bars (Act 6 · RC8, Tax → Tax Strategies → Summary): the winner's and the no-action
+ *  baseline's seed-B headline statistic, the SAME figure the hero's delta is the difference of (insight 099: the bars
+ *  and the hero read one statistic, `headlineStatisticB`). Both goals: the bars print their values and the key-metric
+ *  column carries the goal's own hero words, so a shorter recommended bar on pay-less-tax reads as "less", which it is
+ *  (the 2026-09-08 omission came from a chart with no printed values and no metric noun; RC8's plan rules the bars back
+ *  on both goals). */
+export interface RecommendationBars {
+  readonly winner: number
+  readonly baseline: number
 }
 
 /**
@@ -267,12 +266,10 @@ export interface RecommendedView {
   /** The baseline nameplate (Q7) — a STATIC label, NO number. */
   readonly baselineNameplate: string
   /** The retained runner-up, one tap down (R23 — retained + reachable; stripping it fails the suite).
-   *  `why` is the hedged "why this beat it" TEXT (always); `viz` is the S4 comparative-depth two-arm
-   *  richness (winner vs runner-up) — present iff the goal is LEAVE-MORE (the grammar is wealth-shaped;
-   *  see `runnerUpVizFor`) AND active mode AND the winner DISPLAYS ahead at seed-B (an A-decides/B-displays
-   *  inversion drops the picture, never a chart contradicting the ranking).
+   *  `why` is the hedged "why this beat it" TEXT. Its own figure rides the ranked list (`strategiesView.ts`), so
+   *  the old winner-vs-runner-up picture retired with `RecommendationViz` (RC8).
    *  `undefined` only for a one-arm rankable set (never in a live solve). */
-  readonly runnerUp: { readonly why: string; readonly viz: RecommendationVizProps | undefined } | undefined
+  readonly runnerUp: { readonly why: string } | undefined
   /** The §S2 leave-more skew disclosure (QUOTES the median as the typical bequest) — present iff the
    *  skew is disclosure-worthy (upside AND the humane-rounded median differs from the mean shown). */
   readonly skew: { readonly medianQuote: string } | undefined
@@ -284,12 +281,10 @@ export interface RecommendedView {
    *  note, the leave-more heir bracket (r7-editable seat), the ACA SLCSP caveat by reference when the
    *  delta leans on ACA. Compile-enforced complete over `RecommendationDisclosureId`. */
   readonly disclosures: readonly RecommendationDisclosure[]
-  /** The two-arm comparison viz props (winner vs no-action baseline terminal magnitudes + resolved,
-   *  pre-formatted string-free labels). `undefined` in NO-CHANGE mode (which now includes a seed-B
-   *  display inversion) — the compose reassurance stands alone, never a fabricated two-bar delta of
-   *  ~$0 and never a winner-ahead bar the ranking would contradict — AND `undefined` on any goal but
-   *  LEAVE-MORE (the grammar is wealth-shaped; the reason is at the viz site in `recommendedView`). */
-  readonly viz: RecommendationVizProps | undefined
+  /** The Summary tab's two bars ({@link RecommendationBars}). `undefined` in NO-CHANGE mode (which includes a seed-B
+   *  display inversion and a delta that formats to $0): the compose reassurance stands alone, never a fabricated
+   *  two-bar delta of ~$0 and never a winner-ahead bar the ranking would contradict. */
+  readonly bars: RecommendationBars | undefined
 }
 
 /** The full recommend-second view — every SolveAnswer shape resolved to humane copy + structured flags. */
@@ -315,7 +310,7 @@ export type RecommendationView =
 
 /** The winning strategy → its plain-language `leverPolicy*` label key. `Record<DrawdownPolicy, …>` is
  *  EXHAUSTIVE: a policy added to the union fails tsc HERE, never silently renders an unnamed strategy. */
-const WINNER_STRATEGY_KEY: Record<DrawdownPolicy, CopyKey> = {
+export const WINNER_STRATEGY_KEY: Record<DrawdownPolicy, CopyKey> = {
   proportional: 'leverPolicyProportional',
   'taxable-first': 'leverPolicyTaxableFirst',
   'pre-tax-first': 'leverPolicyPreTaxFirst',
@@ -591,7 +586,7 @@ function winnerActionView(
       // exact (the provenance split), so a rail-anchored $21,900 against a typed $21,000 renders
       // "~$21,000" TWICE — a sentence announcing a change the reader cannot see, which is the
       // don't-make-them-think law inverted. Source-bound to the DISPLAYED strings, the same discipline
-      // `deltaCollapsesToZero` and `runnerUpVizFor`'s gap check already use on this layer.
+      // `deltaCollapsesToZero` already uses on this layer.
       const theirsFormatted = formatEnteredDollar(theirs.annualAmountReal)
       if (scheduleDiffers && theirsFormatted !== oursFormatted) {
         conversionNote = slots.rothPlanReplaces(theirsFormatted)
@@ -622,8 +617,8 @@ function recommendedView(payload: SolveRecommendation, opts: RecommendationViewO
   // below one display tenth (the grade's subTenthCollapse). Either way the compose reassurance shows.
   const isNoChange = payload.noChange || (payload.grade?.subTenthCollapse ?? false)
 
-  // The A-decides / B-displays INVERSION (wall #1's render corollary — the same gate runnerUpVizFor
-  // enforces for winner-vs-runner-up, here for winner-vs-baseline): the seed-A-crowned winner can
+  // The A-decides / B-displays INVERSION (wall #1's render corollary, for winner-vs-baseline; the ranked list
+  // in `strategiesView.ts` shows the runner-up's own figure): the seed-A-crowned winner can
   // DISPLAY behind the no-action baseline at seed-B on a near-tie (deltaReal's sign contradicts the goal
   // direction — leave-more wants winnerB ≥ baselineB, pay-less-tax the reverse). formatDeltaDollar strips
   // the sign, so a NEGATIVE advantage would render as a fabricated POSITIVE "keeps ~$X more", a
@@ -700,57 +695,14 @@ function recommendedView(payload: SolveRecommendation, opts: RecommendationViewO
     grade,
     survivalContext: opts?.spineConfidence,
     baselineNameplate: copy.recommendBaselineNameplate,
-    runnerUp:
-      payload.runnerUp !== undefined
-        ? { why: copy.recRunnerUpWhy, viz: runnerUpVizFor(payload, noDollar) }
-        : undefined,
+    runnerUp: payload.runnerUp !== undefined ? { why: copy.recRunnerUpWhy } : undefined,
     skew: skewQuote(payload),
     withheldConversion: withheldConversionView(payload),
     disclosures: disclosuresFor(payload, opts?.pricedState, healthcarePriced),
-    // The two-arm comparison viz — ACTIVE mode only (no-change AND the seed-B display inversion show no
-    // fabricated delta bars; the inversion would otherwise paint the winner AHEAD, contradicting the
-    // ranking). The winner/baseline seed-B headline magnitudes + pre-formatted string-free labels; the
-    // aria sentence carries BOTH magnitudes AND the delta (A2 AT-parity). The ceiling is source-bound to
-    // TwoFutures' humane ladder, so the bar geometry and the axis-max label can never disagree.
-    //
-    // AND LEAVE-MORE ONLY (2026-09-08). THE GRAMMAR IS WEALTH-SHAPED, so it cannot carry a lower-is-better
-    // statistic: the chart puts direction on which bar is LONGER (`RecommendationVizLabels.deltaLabel`,
-    // recommendationVizData.ts:9-10) and the aria sentence says an arm "lands near about $X" (recDeltaVizAria).
-    // On `pay-less-tax` the plotted headline is mean lifetime ALL-IN cost (income tax + health-insurance
-    // premiums, Briggsy's 2026-10-05 ruling) — LOWER is better (`goalHeadlineStatistic`, objective.ts) —
-    // and `winnerDisplaysAhead` above orients the winner to the SMALLER figure, so the recommended arm
-    // would draw the SHORTER bar and be narrated as landing near the smaller number: the reader reads "recommended = less", which is the truth, off a picture whose whole
-    // grammar says longer = better. Calm-but-wrong wearing the chart's face, so it is suppressed exactly the
-    // way the inversion is — a picture that contradicts its own grammar is worse than no picture.
-    // ⚑ THE FIX IS AN OMISSION, NEVER A SWAP: a goal-named caption + aria variant for pay-less-tax are
-    // Briggsy's words to author (filed in the register). Do not re-point these slots at the pay-less-tax (all-in) figures.
-    // The delta HERO is untouched and still ships on both goals — `recDeltaPayLessTax` is goal-WORDED,
-    // so the sentence carries its own direction where the bars cannot.
-    viz: noDollar || goal !== 'leave-more'
-      ? undefined
-      : (() => {
-          const winM = payload.winner.headlineStatisticB
-          const baseM = payload.noActionBaseline.headlineStatisticB
-          const ceiling = twoFuturesCeiling(Math.max(winM, baseM, 0))
-          const labels: RecommendationVizLabels = {
-            withLabel: copy.recVizWithLabel,
-            withoutLabel: copy.recVizWithoutLabel,
-            deltaLabel: `$${deltaFigure!}`,
-            floorLabel: formatAxisDollar(0),
-            axisMaxLabel: `~${formatAxisDollar(ceiling)}`,
-            // The ENDPOINTS are portfolio-scale ABSOLUTES → the humane $X.XM prose dialect
-            // (formatAbsoluteDollar); the DELTA between them stays grouped digits (deltaFigure), a smaller
-            // difference that reads naturally grouped — the spine's dialect for the lockup's absolutes.
-            ariaSummary: slots.recDeltaVizAria(
-              copy.recVizWithoutLabel,
-              formatAbsoluteDollar(baseM),
-              copy.recVizWithLabel,
-              formatAbsoluteDollar(winM),
-              deltaFigure!,
-            ),
-          }
-          return { withoutMagnitude: baseM, withMagnitude: winM, labels }
-        })(),
+    // The Summary tab's two bars: ACTIVE mode only. No-change, the seed-B display inversion and a $0 collapse show no
+    // bars (the inversion would paint the winner AHEAD against the ranking; a $0 collapse would draw a fabricated
+    // compare). Both goals since RC8: the bars print their values and the hero's own goal words sit beside them.
+    bars: noDollar ? undefined : { winner: payload.winner.headlineStatisticB, baseline: payload.noActionBaseline.headlineStatisticB },
   }
 }
 
@@ -848,65 +800,6 @@ function skewQuote(payload: SolveRecommendation): { readonly medianQuote: string
   // that dialect, quoting it is noise — test the actual formatted string, never a re-typed threshold.
   if (formatAbsoluteDollar(s.meanReal) === formatAbsoluteDollar(s.medianReal)) return undefined
   return { medianQuote: slots.recSkewMedian(formatAbsoluteDollar(s.medianReal)) }
-}
-
-/**
- * The S4 RUNNER-UP comparison viz (winner vs runner-up, one tap down) — the comparative-depth
- * richness the S3 text-only runner-up deferred. Reuses the SAME RecommendationViz grammar (the
- * recommended arm keeps its hatch/triangle identity; the runner-up takes the solid/circle "other
- * option" arm), and it is honest for the SAME reason the primary viz is: winner and runner-up share
- * the seed-B CRN draw, so the GAP between them is common-mode-cancelled (never the A↔B residual —
- * both are B-side arms, wall #3 intact; the objective≡headline guard already verified the runner-up's
- * displayed figure before this runs).
- *
- * THE HONESTY GATE (the A-decides / B-displays split, the cardinal rule made structural). The winner
- * is crowned on the seed-A mean; at seed-B a near-tie can DISPLAY the runner-up ahead. Drawing "the
- * recommended strategy" with a shorter bar than the runner-up would read as recommending the worse
- * one — calm-but-wrong wearing the product's most differentiated face. So the picture ships ONLY when
- * the winner displays at-least-tied-ahead (goal-oriented); on an inversion the runner-up keeps its
- * honest hedged TEXT ("came out ahead more often") with NO chart contradicting the ranking. Suppressed
- * in NO-CHANGE mode too (the primary viz is, and there is no meaningful winner-ahead delta to draw), and
- * on any goal but LEAVE-MORE (the primary viz's wealth-shaped-grammar gate, mirrored — the full reason is
- * at the viz site in `recommendedView`; this chart reuses the same grammar AND the same aria slot, so a
- * pay-less-tax picture would be wrong here in exactly the same way, one tap down where it is even less
- * likely to be re-read).
- * Pure; figures pre-formatted, ceiling source-bound to TwoFutures' humane ladder.
- */
-function runnerUpVizFor(payload: SolveRecommendation, isNoChange: boolean): RecommendationVizProps | undefined {
-  const runnerUp = payload.runnerUp
-  if (isNoChange || runnerUp === undefined) return undefined
-  if (payload.goal !== 'leave-more') return undefined
-  const winM = payload.winner.headlineStatisticB
-  const runM = runnerUp.headlineStatisticB
-  // The orientation stays GOAL-GENERAL though only the leave-more arm can run under the gate above:
-  // lifting that gate (the day the goal-named caption is authored) must not silently ship a chart
-  // oriented the wrong way — this is the fail-correct shape, not dead code. Its live twin is
-  // `winnerDisplaysAhead` in `recommendedView`, which DOES run on both goals (there it gates the
-  // no-dollar register and the delta hero, which ship on pay-less-tax; only the picture is withheld).
-  const winnerDisplaysAhead = payload.goal === 'leave-more' ? winM >= runM : winM <= runM
-  if (!winnerDisplaysAhead) return undefined
-  const gap = formatDeltaDollar(winM - runM)
-  // The zero-collapse MIRROR (recommendedView's deltaCollapsesToZero, here for winner-vs-runner-up): a
-  // gap under formatDeltaDollar's smallest step formats to '0' — drawing two display-tied bars labeled
-  // "$0" is the same absurd claim. Source-bound: test the formatted gap, never a re-typed threshold.
-  if (gap === '0') return undefined
-  const ceiling = twoFuturesCeiling(Math.max(winM, runM, 0))
-  const labels: RecommendationVizLabels = {
-    withLabel: copy.recVizWithLabel,
-    withoutLabel: copy.recVizRunnerUpLabel,
-    deltaLabel: `$${gap}`,
-    floorLabel: formatAxisDollar(0),
-    axisMaxLabel: `~${formatAxisDollar(ceiling)}`,
-    // The ENDPOINTS ride the absolute $X.XM prose dialect; the winner-vs-runner-up GAP stays grouped.
-    ariaSummary: slots.recDeltaVizAria(
-      copy.recVizRunnerUpLabel,
-      formatAbsoluteDollar(runM),
-      copy.recVizWithLabel,
-      formatAbsoluteDollar(winM),
-      gap,
-    ),
-  }
-  return { withoutMagnitude: runM, withMagnitude: winM, labels }
 }
 
 /** The conversion-only withheld hold — dedupe the levers' reasons (they share a reason today) to their

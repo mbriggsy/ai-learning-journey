@@ -27,6 +27,11 @@
  * own slot, which runs only while the page shows; your plan beside the what-if open on Analysis pairs the left half's
  * rows with your plan's (U15's paired form). Its folder tab, drill, table and pick are held here, so a page move keeps them.
  *
+ * TAX → TAX STRATEGIES (RC8, `TaxStrategies.tsx` over `strategiesView.ts`, `summaryView.ts` and `taxRunsView.ts`): the
+ * solve's page. Its folder tab, the goal and heirs' bracket held until Find writes them, the re-pick door, and the
+ * Comparison and Details picks are held here; the recommendation's and the baseline's year-by-year runs ride two slots
+ * of their own, asked only while Comparison or Details shows (the baseline reads the plan's own rows when it IS the plan).
+ *
  * THE INTERIM TABS: the room's pages ride in their current look (`InterimPage.tsx`, outside any `.rc-root`):
  * Profile → Your facts (`FactsPage.tsx`); the old What if page left with
  * RC4b, its levers now Probability's Action Items tray (`ActionItemsTray.tsx`). A facts-page "Try a change" and the
@@ -38,17 +43,17 @@
  * save path. Its typed name box lives here, so closing the drawer or moving page keeps it, and it holds like an unkept
  * what-if (a leave past the shell asks first). Opening another what-if on the left over an unkept one asks first.
  */
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { intakeSteps } from '@intake/questions'
-import { healthcarePriced, missingRequiredFacts } from '@intake/intakeMap'
+import { healthcarePriced, missingRequiredFacts, pricedStateForRun } from '@intake/intakeMap'
 import { unsavedBuffersHeld } from '@intake/unsavedBuffer'
 import { engineRunLane, type EngineRunRequest, type Lane } from '@store/runLanes'
 import { roughWindow, ROUGH_WINDOW_YEARS } from '@engine/reference/roughSequence'
 import type { MemoryModel, MemoryModelSnapshot } from '@store/memoryModel'
-import type { KeptWhatIfV6, LedgerYearRow, SavedRecommendationV3, SimulationResult, WhatIfLeverKind, WhatIfLeverV6 } from '@shared/model'
+import type { KeptWhatIfV6, LedgerYearRow, RecommendationGoal, SavedRecommendationV3, SimulationResult, WhatIfLeverKind, WhatIfLeverV6 } from '@shared/model'
 import { freshStableId, idsInUse } from '@shared/stableIds'
 import type { SavedRecommendationStatus } from '@store/savedRecommendation'
-import { SubNav } from '../kit'
+import { Button, Caveat, SubNav } from '../kit'
 import { copy, slots } from '../copy'
 import { appModel } from '../appModel'
 import { planClockAnchor } from '../bandAnnotations'
@@ -68,11 +73,17 @@ import { staticDisclosures } from '../entryCopy'
 import { canonicalIdentityToken } from '@shared/model'
 import { CashFlows, type PinnedIntroWords } from '../screens/retirement/CashFlows'
 import { cashFlowsView, planSelect, type AccountsTable, type CashFlowsPick, type CashFlowsTab, type RunRows, type SummaryDrill } from '../screens/retirement/cashFlowsView'
-import type { RecommendationSaveProp } from '../RecommendationSurface'
+import type { RecommendationSaveProp } from '../recommendationSaveView'
 import { currentEpochDay } from '../scenarioFromDraft'
 import { epochDayToCalendarYear } from '@store/staleness'
 import { composeAnswerNotes } from '../answerNotes'
-import { Result } from '../Result'
+import { TaxStrategies, type TaxTab } from '../screens/tax/TaxStrategies'
+import { DEFAULT_HEIR_BRACKET, strategiesView } from '../screens/tax/strategiesView'
+import { summaryView } from '../screens/tax/summaryView'
+import { SummaryPanel } from '../screens/tax/Summary'
+import { ComparisonPanel } from '../screens/tax/Comparison'
+import { DetailsPanel } from '../screens/tax/Details'
+import { comparisonView, detailsView, taxBundles, type ComparisonChart, type DetailsPick, type DetailsTable, type TaxFuture } from '../screens/tax/taxRunsView'
 import { Snapshot, type SnapshotDoors } from '../screens/dashboard/Snapshot'
 import { snapshotView, type SteadyRows } from '../screens/dashboard/snapshotView'
 import { Analysis } from '../screens/retirement/Analysis'
@@ -199,6 +210,9 @@ function slotRows(v: WhatIfSlotView | null, future: TableView, startCalendarYear
 
 /** Cash Flows' R13 caveat, inside its panel (plan 4.0), as Probability's and Snapshot's. */
 const CASH_FLOWS_CAVEAT = [staticDisclosures.honestLimitsScope, staticDisclosures.honestLimitsValidate] as const
+
+/** No levers: a slot shown nothing asks nothing (one array, so the slot's key never moves on a re-render). */
+const NO_LEVERS: readonly WhatIfLeverV6[] = []
 
 /** The lever doors and the panel seats a facts-page door opens (every non-step door, exhaustive). */
 type SheetDoor = Exclude<FactDoorId, StepSectionId>
@@ -815,8 +829,127 @@ export default function Shell({
       />
     ) : undefined
 
+  // ── Tax → Tax Strategies (RC8): the folder tab, the held picks, the re-pick door, Comparison's and Details' picks ──
+  const [taxTab, setTaxTab] = useState<TaxTab>('strategies')
+  const [pickedGoal, setPickedGoal] = useState<RecommendationGoal | undefined>(undefined)
+  const [pickedBracket, setPickedBracket] = useState<number | undefined>(undefined)
+  const [repick, setRepick] = useState(false)
+  const [taxFuture, setTaxFuture] = useState<TaxFuture>('steady')
+  const [taxChart, setTaxChart] = useState<ComparisonChart>('assets')
+  const [detailsTable, setDetailsTable] = useState<DetailsTable>('withdrawals')
+  const [detailsPick, setDetailsPick] = useState<DetailsPick>('recommended')
+  const onTaxScreen = screen === 'tax-strategies'
+  // The picks shown: the page's own until Find writes them, else the plan's.
+  const goalShown = pickedGoal ?? draft.chosenGoal
+  const bracketShown = pickedBracket ?? draft.heirBracket ?? DEFAULT_HEIR_BRACKET
+  // A solve that starts closes the re-pick door (its result brings the door back under the new Winner card).
+  const solveKind = snapshot.solve.kind
+  useEffect(() => {
+    if (solveKind === 'pending') setRepick(false)
+  }, [solveKind])
+  const strat = useMemo(
+    () =>
+      onTaxScreen
+        ? strategiesView({
+            snapshot,
+            picked: { goal: goalShown, heirBracket: bracketShown },
+            save: recSave?.view ?? { kind: 'none' },
+            ...(recordCard !== undefined ? { record: recordCard } : {}),
+            readOnly,
+            todayEpochDay,
+            wallCalendarYear,
+            repick,
+          })
+        : null,
+    [onTaxScreen, snapshot, goalShown, bracketShown, recSave?.view, recordCard, readOnly, todayEpochDay, wallCalendarYear, repick],
+  )
+  /** Find: the held picks written to the plan (only what moved, so an untouched default adds nothing), then the solve. */
+  const onFind = useCallback(() => {
+    const goal = pickedGoal ?? model.getSnapshot().draft.chosenGoal
+    if (goal === undefined) return
+    model.update((d) => {
+      const bracket = pickedBracket ?? d.heirBracket ?? DEFAULT_HEIR_BRACKET
+      const next = d.chosenGoal === goal ? d : { ...d, chosenGoal: goal }
+      return goal === 'leave-more' && bracket !== (d.heirBracket ?? DEFAULT_HEIR_BRACKET) ? { ...next, heirBracket: bracket } : next
+    })
+    setPickedGoal(undefined)
+    setPickedBracket(undefined)
+    void model.dispatchSolve()
+  }, [model, pickedGoal, pickedBracket])
+  const taxPayload = snapshot.solve.kind === 'committed' && snapshot.solve.payload.kind === 'recommended' ? snapshot.solve.payload : null
+  const taxRuns = onTaxScreen && (taxTab === 'comparison' || taxTab === 'details') && committedAnswer !== null && taxPayload !== null && !taxPayload.noChange
+  const bundles = useMemo(() => (taxPayload !== null && committedAnswer !== null ? taxBundles(taxPayload, committedAnswer.draft) : null), [taxPayload, committedAnswer])
+  const taxWinnerRun = useSlotRun({ snapshot, shown: taxRuns && bundles !== null ? bundles.winner : NO_LEVERS, tag: 'tax-winner' })
+  const taxBaselineRun = useSlotRun({ snapshot, shown: taxRuns && bundles !== null && bundles.baseline !== 'plan' ? bundles.baseline : NO_LEVERS, tag: 'tax-baseline' })
+  const taxCaveat = <Caveat lines={CASH_FLOWS_CAVEAT} />
+  const taxStateClause = committedAnswer !== null ? composeVerdictStateNote(pricedStateForRun(committedAnswer.draft), false) : null
+  const taxPanels = ((): { readonly summary: ReactNode; readonly comparison: ReactNode; readonly details: ReactNode } => {
+    if (!onTaxScreen || strat === null || strat.kind === 'working-route') return { summary: null, comparison: null, details: null }
+    const toStrategies = () => setTaxTab('strategies')
+    const summary =
+      taxTab === 'summary' ? (
+        <SummaryPanel view={summaryView(snapshot)} caveat={taxCaveat} footnotes={taxStateClause !== null ? [taxStateClause] : []} onStrategies={toStrategies} />
+      ) : null
+    if (taxTab !== 'comparison' && taxTab !== 'details') return { summary, comparison: null, details: null }
+    // Before a solve, or where the recommendation IS the plan as it stands, there is nothing to run year by year.
+    const words = taxPayload === null ? copy.taxStratWaiting : taxPayload.noChange ? copy.taxStratSameAsPlan : null
+    if (words !== null) {
+      const waiting = (
+        <div className="flex flex-col gap-6" data-tax-runs="words">
+          <div className="flex flex-col items-center gap-4 px-4 py-12 text-center">
+            <p className="max-w-2xl text-body text-stone-900">{words}</p>
+            {taxPayload === null ? (
+              <Button variant="secondary" size="sm" onClick={toStrategies}>
+                {copy.taxStratToStrategies}
+              </Button>
+            ) : null}
+          </div>
+          {taxCaveat}
+        </div>
+      )
+      return { summary, comparison: taxTab === 'comparison' ? waiting : null, details: taxTab === 'details' ? waiting : null }
+    }
+    const start = committedAnswer?.draft.startCalendarYear ?? snapshot.draft.startCalendarYear
+    const winnerRows = slotRows(taxWinnerRun.view, taxFuture, start, snapshot.refiguring)
+    const baselineRows = bundles?.baseline === 'plan' ? planRows(run, results[taxFuture], snapshot.refiguring) : slotRows(taxBaselineRun.view, taxFuture, start, snapshot.refiguring)
+    const comparison =
+      taxTab === 'comparison' ? (
+        <ComparisonPanel
+          view={comparisonView({ chart: taxChart, future: taxFuture, winner: winnerRows, baseline: baselineRows, stateClause: taxStateClause })}
+          chart={taxChart}
+          onChart={setTaxChart}
+          future={taxFuture}
+          onFuture={setTaxFuture}
+          caveat={taxCaveat}
+        />
+      ) : null
+    const details =
+      taxTab === 'details' ? (
+        <DetailsPanel
+          view={detailsView({ table: detailsTable, pick: detailsPick, future: taxFuture, rows: detailsPick === 'recommended' ? winnerRows : baselineRows })}
+          table={detailsTable}
+          onTable={setDetailsTable}
+          pick={detailsPick}
+          onPick={setDetailsPick}
+          future={taxFuture}
+          onFuture={setTaxFuture}
+          caveat={taxCaveat}
+        />
+      ) : null
+    return { summary, comparison, details }
+  })()
+  const taxKeep = strat?.kind === 'solve' ? strat.winner?.keep : undefined
+  const onTaxKeep =
+    taxKeep !== undefined && snapshot.solve.kind === 'committed' && recSave !== undefined
+      ? (() => {
+          const ticket = { fingerprint: snapshot.solve.fingerprint, noDollarRegister: taxKeep.noDollarRegister }
+          return () => recSave.onSave(ticket)
+        })()
+      : undefined
+
   // ── The StaleBanner (RC4): the old answer page's staleness note, aged-balances line and standing line ──────────────
   const figured = screen === 'snapshot' || screen === 'probability' || screen === 'confidence' || screen === 'cash-flows'
+  const inFrameCaveat = figured || screen === 'tax-strategies'
   // Cash Flows too, aged line and door included: its row-one line (`workbenchAged`) names the build year and claims nothing
   // about the balances, so the two lines say two causes (round 3 of the milestone-1 review).
   const staleLines = useMemo(
@@ -825,7 +958,7 @@ export default function Shell({
   )
 
   const snapshotDoors: SnapshotDoors = { analysis: doorTo('probability'), cashFlows: doorTo('cash-flows'), facts: doorTo('interim-facts') }
-  const strategiesDoor = doorTo('interim-strategies')
+  const strategiesDoor = doorTo('tax-strategies')
   const recView = snap?.rec.view
   const solve = snapshot.solve
   const onKeep =
@@ -843,9 +976,9 @@ export default function Shell({
     landedOnProbability.current = true
     snapshotDoors.analysis!.onOpen()
   }
-  // A keep that lands while Snapshot shows speaks once through the shell's one live region (the durability event,
+  // A keep that lands while Snapshot or Tax Strategies shows speaks once through the shell's one live region (the durability event,
   // `RecommendationSaveProp.landed`), and is acknowledged so it never repeats later.
-  const landed = screen === 'snapshot' && recSave?.landed === true
+  const landed = (screen === 'snapshot' || screen === 'tax-strategies') && recSave?.landed === true
   const onAnnounced = recSave?.onAnnounced
   useEffect(() => {
     if (!landed) return
@@ -1008,12 +1141,12 @@ export default function Shell({
         className="hidden wide:block"
       />
       <main
-        className={figured ? 'result flex flex-1 flex-col bg-bg pb-10' : 'result flex flex-1 flex-col pb-10'}
+        className={inFrameCaveat ? 'result flex flex-1 flex-col bg-bg pb-10' : 'result flex flex-1 flex-col pb-10'}
         data-shell-screen={screen}
         data-answer-tier={answerTier}
         data-answer-refiguring={snapshot.refiguring ? true : undefined}
         // A figured page carries its own R13 caveat inside its frame, so app.css hides App.tsx's trailing mount (plan 4.0).
-        data-inframe-disclaimer={figured ? true : undefined}
+        data-inframe-disclaimer={inFrameCaveat ? true : undefined}
       >
         <div ref={announcer.ref} className="sr-only" role="status" aria-live="polite" aria-atomic="true" />
         {/* A failed save speaks on insertion (the save slot's alert arm); its sentence is also first in the lock menu. */}
@@ -1063,6 +1196,27 @@ export default function Shell({
             />
             {planListDrawer}
           </>
+        ) : strat !== null ? (
+          <>
+            {leave}
+            <TaxStrategies
+              headingRef={headingRef}
+              strategies={strat}
+              tab={taxTab}
+              onTab={setTaxTab}
+              caveat={CASH_FLOWS_CAVEAT}
+              summary={taxPanels.summary}
+              comparison={taxPanels.comparison}
+              details={taxPanels.details}
+              onPickGoal={setPickedGoal}
+              onBracket={setPickedBracket}
+              onFind={onFind}
+              onRepick={() => setRepick(true)}
+              {...(onTaxKeep !== undefined ? { onKeep: onTaxKeep } : {})}
+              onTry={onTry}
+              announce={announce}
+            />
+          </>
         ) : cfView !== null && cfIntro !== null ? (
           <>
             {leave}
@@ -1093,11 +1247,6 @@ export default function Shell({
             {screen === 'interim-facts' && (
               <div className="wb-panel">
                 <FactsPage sections={sections} onTry={tryLever} {...(readOnly ? {} : { onOpen: openDoor })} />
-              </div>
-            )}
-            {screen === 'interim-strategies' && (
-              <div className="wb-panel">
-                <Result {...(recSave !== undefined ? { recSave } : {})} {...(recordCard !== undefined ? { recordCard } : {})} />
               </div>
             )}
             {screen === 'interim-health' && (

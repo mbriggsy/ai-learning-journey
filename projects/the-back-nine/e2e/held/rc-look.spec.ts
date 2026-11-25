@@ -27,7 +27,7 @@ const SCREENS = [
   { id: 'probability', screen: 'probability', module: copy.shellModuleRetirement, page: copy.shellPageAnalysis },
   { id: 'health-care', screen: 'interim-health', module: copy.shellModuleRetirement, page: copy.shellPageHealthCare },
   { id: 'cash-flows', screen: 'cash-flows', module: copy.shellModuleRetirement, page: copy.shellPageCashFlows },
-  { id: 'tax-strategies', screen: 'interim-strategies', module: copy.shellModuleTax, page: copy.shellPageTaxStrategies },
+  { id: 'tax-strategies', screen: 'tax-strategies', module: copy.shellModuleTax, page: copy.shellPageTaxStrategies },
   { id: 'facts', screen: 'interim-facts', module: copy.shellModuleProfile, page: copy.workbenchPageFacts },
 ] as const
 
@@ -230,12 +230,12 @@ for (const size of SIZES) {
   })
 }
 
-// The interim Tax Strategies tab over a vault plant carrying a saved recommendation (`?vault=rec`): the record card in its
-// old look (RC4's "Interim homes"), at both sizes, and Snapshot's Recommendations card over the same record.
+// Tax Strategies over a vault plant carrying a saved recommendation (`?vault=rec`): the record card above the empty state
+// (RC8), at both sizes, and Snapshot's Recommendations card over the same record.
 for (const size of SIZES) {
   test.describe(`${UNIT} look, the saved recommendation at ${size.tag}`, () => {
     test.use(size.use)
-    test('?vault=rec: the interim Tax Strategies tab, and the home’s Recommendations card', async ({ page }) => {
+    test('?vault=rec: Tax Strategies with the record card, and the home’s Recommendations card', async ({ page }) => {
       test.setTimeout(FINAL_TIER_MS + 120_000)
       await gotoVaultFinal(page, 'rec')
       await expect(page.locator('main.result[data-shell-screen="snapshot"]')).toBeAttached({ timeout: 30_000 })
@@ -518,5 +518,76 @@ for (const size of SIZES) {
         }
       })
     }
+  })
+}
+
+// RC8: Tax → Tax Strategies, on a retired household with a full-precision solve driven (`surplus`: the empty state, the
+// Calculating frame, the Winner card with the ranked list, Summary, Comparison's invested assets and withdrawals, and
+// Details' two tables) and on a working household (`dip`: the one stopgap line). Reduced motion (the harness's pinned
+// clock would catch a chart's morph in its first frame).
+const TAX = SCREENS[4]
+const SOLVE_MS = 360_000
+
+for (const size of SIZES) {
+  test.describe(`${UNIT} look, Tax Strategies at ${size.tag}`, () => {
+    test.use({ ...size.use, reducedMotion: 'reduce' })
+    test('?seed=surplus: the empty state, Calculating, the Winner card and list, Summary, Comparison, Details', async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + SOLVE_MS + 240_000)
+      await enterShell(page, 'surplus')
+      const findings: Record<string, Audit> = {}
+      await showScreen(page, TAX, size.phone)
+      await shot(page, findings, 'tax-strategies-empty', 'surplus', size.tag)
+      await page.getByRole('radio', { name: new RegExp(copy.goalLeaveMoreLabel) }).check()
+      await page.getByRole('button', { name: copy.taxStratFind, exact: true }).click()
+      await expect(page.locator('[data-calculating]')).toBeVisible()
+      await shot(page, findings, 'tax-strategies-calculating', 'surplus', size.tag)
+      await expect(page.locator('[data-winner]')).toBeVisible({ timeout: SOLVE_MS })
+      await shot(page, findings, 'tax-strategies', 'surplus', size.tag)
+      await page.screenshot({ path: `${OUT}/tax-strategies-surplus-${size.tag}-full.png`, fullPage: true })
+      await page.getByRole('tab', { name: copy.taxStratTabSummary }).click()
+      await expect(page.locator('[data-chart="tax-summary"] .highcharts-series-group')).toBeAttached({ timeout: 30_000 })
+      await page.waitForTimeout(400)
+      await shot(page, findings, 'tax-summary', 'surplus', size.tag)
+      await page.getByRole('tab', { name: copy.taxStratTabComparison }).click()
+      await expect(page.locator('[data-chart="tax-pair"] .highcharts-series-group')).toBeAttached({ timeout: 120_000 })
+      await page.waitForTimeout(400)
+      await shot(page, findings, 'tax-comparison', 'surplus', size.tag)
+      await page.screenshot({ path: `${OUT}/tax-comparison-surplus-${size.tag}-full.png`, fullPage: true })
+      await page.getByRole('button', { name: copy.taxStratChartAssets }).click()
+      await page.getByRole('menuitemradio', { name: copy.taxStratChartWithdrawals, exact: true }).click()
+      await expect(page.locator('[data-chart="tax-stack-plan"] .highcharts-series-group')).toBeAttached({ timeout: 60_000 })
+      await page.waitForTimeout(400)
+      await shot(page, findings, 'tax-comparison-withdrawals', 'surplus', size.tag)
+      await page.screenshot({ path: `${OUT}/tax-comparison-withdrawals-surplus-${size.tag}-full.png`, fullPage: true })
+      await page.getByRole('tab', { name: copy.taxStratTabDetails }).click()
+      await expect(page.locator('[data-details="table"]')).toBeVisible({ timeout: 60_000 })
+      await shot(page, findings, 'tax-details', 'surplus', size.tag)
+      await page.getByRole('combobox', { name: copy.taxStratTableLabel }).click()
+      await page.getByRole('option', { name: copy.taxStratTableMedicare }).click()
+      await expect(page.locator('[data-details-table="medicare"]')).toBeVisible()
+      await shot(page, findings, 'tax-details-medicare', 'surplus', size.tag)
+      console.log(`[rc-look ${UNIT} tax surplus ${size.tag}] ${JSON.stringify(findings)}`)
+      for (const [id, a] of Object.entries(findings)) {
+        expect.soft(a.sideways, `${id}: sideways scroll`).toBeLessThanOrEqual(0)
+        expect.soft(a.clipped, `${id}: clipped text`).toEqual([])
+        expect.soft(a.overlaps, `${id}: overlapping controls`).toEqual([])
+        expect.soft(a.tiny, `${id}: text under 12 px`).toEqual([])
+      }
+    })
+
+    test('?seed=dip: the working route’s one line', async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 60_000)
+      await enterShell(page, 'dip')
+      const findings: Record<string, Audit> = {}
+      await showScreen(page, TAX, size.phone)
+      await shot(page, findings, 'tax-strategies', 'dip', size.tag)
+      console.log(`[rc-look ${UNIT} tax dip ${size.tag}] ${JSON.stringify(findings)}`)
+      for (const [id, a] of Object.entries(findings)) {
+        expect.soft(a.sideways, `${id}: sideways scroll`).toBeLessThanOrEqual(0)
+        expect.soft(a.clipped, `${id}: clipped text`).toEqual([])
+        expect.soft(a.overlaps, `${id}: overlapping controls`).toEqual([])
+        expect.soft(a.tiny, `${id}: text under 12 px`).toEqual([])
+      }
+    })
   })
 }

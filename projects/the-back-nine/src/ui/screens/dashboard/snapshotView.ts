@@ -324,7 +324,7 @@ function fanView(
 // ── Recommendations ─────────────────────────────────────────────────────────────────────────────────────────────
 
 function recView(snapshot: MemoryModelSnapshot, rec: SnapshotRecommendationInput, readOnly: boolean, wallCalendarYear: number): RecCardView {
-  if (isDateRoute(snapshot.draft)) return { kind: 'working-route', words: copy.snapshotRecWorkingRoute }
+  if (isDateRoute(snapshot.draft)) return { kind: 'working-route', words: copy.taxStratWorkingRoute }
   const record = rec.record
   const tryIt = record !== undefined && record.status.current && recommendationBundle(record.record) !== null ? { label: copy.snapshotRecTry } : undefined
   const solve = rec.solve

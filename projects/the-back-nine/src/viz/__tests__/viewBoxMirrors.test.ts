@@ -8,21 +8,16 @@ import { TF_VIEW } from '../twoFuturesData'
  * src/viz/__tests__/viewBoxMirrors.test.ts — the chart viewBox SOURCE-BIND (the 2026-09-13 council on
  * the phone's above-bar labels, wf_8c8ee877-cda, fix-now (b)).
  *
- * THE LAW: each chart draws into ONE fixed viewBox declared in its component (`RV_VIEW` 560×210 in
- * RecommendationViz.tsx, `TF_VIEW` 560×280 in TwoFutures.tsx, `VIEWBOX` 560×380 in bandGeometry.ts).
+ * THE LAW: each chart draws into ONE fixed viewBox declared in its component (`TF_VIEW` 560×280 in
+ * TwoFutures.tsx, `VIEWBOX` 560×380 in bandGeometry.ts; RecommendationViz's 560×210 left at Act 6's RC8).
  * A viewBox alone gives an <svg> no intrinsic ratio, so the same two numbers are RE-TYPED as a CSS
- * `aspect-ratio` on the chart (recommendationViz.css, twoFutures.css) and, for the lazy-chunked
- * recommendation chart, a THIRD time on the CLS reservation box (src/ui/styles/recommendation.css
- * `.rec-viz-box`) — plus the prose mirrors in the comments beside them. Nothing tied the copies to the
- * declaration: a viewBox change would leave the placeholder and the chart disagreeing in height (the
- * lockup reflows on land — the CLS law), and the comment beside it lying. The council found the three
- * 560×210 mirrors unpinned while ruling on the label column; this file reads the REAL bytes of every
- * mirror and pins each against the component's own constant.
+ * `aspect-ratio` on the chart (twoFutures.css) — plus the prose mirrors in the comments beside them.
+ * Nothing tied the copies to the declaration: a viewBox change would leave the chart's box and its
+ * drawing disagreeing in height, and the comment beside it lying. This file reads the REAL bytes of
+ * every mirror and pins each against the component's own constant.
  *
- * Deliberately TOTAL per file, comments included (the breakpoint-mirrors precedent): a stale "560×210"
- * in prose beside a moved viewBox is exactly the quiet lie a source-bind exists to stop. `RV_VIEW` is
- * module-private, so it is read from the component's source with the same regex discipline the
- * breakpoint test applies to tokens.css — never re-typed here.
+ * Deliberately TOTAL per file, comments included (the breakpoint-mirrors precedent): a stale ratio in
+ * prose beside a moved viewBox is exactly the quiet lie a source-bind exists to stop.
  */
 
 const ROOT = process.cwd()
@@ -37,24 +32,8 @@ function ratioPairs(src: string): readonly (readonly [number, number])[] {
 }
 
 describe('the chart viewBoxes and their CSS / prose mirrors are one declaration each', () => {
-  it('RecommendationViz: RV_VIEW in the component, the aspect-ratio in recommendationViz.css and the CLS box in recommendation.css, and every prose mirror', () => {
-    const tsx = read('src/viz/RecommendationViz.tsx')
-    const decl = /const RV_VIEW = \{ w: (\d+), h: (\d+) \} as const/.exec(tsx)
-    expect(decl, 'RecommendationViz.tsx no longer declares `const RV_VIEW = { w: N, h: N } as const` — re-point this bind').not.toBeNull()
-    const rv = [Number(decl![1]), Number(decl![2])] as const
-    expect(rv[0], 'the viewBox width is a positive number').toBeGreaterThan(0)
-    expect(rv[1], 'the viewBox height is a positive number').toBeGreaterThan(0)
-    for (const file of ['src/viz/recommendationViz.css', 'src/ui/styles/recommendation.css']) {
-      const css = read(file)
-      const decls = [...css.matchAll(/aspect-ratio:\s*(\d+)\s*\/\s*(\d+)\s*;/g)].map((m) => [Number(m[1]), Number(m[2])] as const)
-      expect(decls.length, `${file}: the aspect-ratio mirror is gone — the box no longer reserves the chart's ratio (CLS)`).toBeGreaterThan(0)
-      for (const d of decls) expect(d, `${file}: aspect-ratio ${d[0]} / ${d[1]} disagrees with RV_VIEW ${rv[0]}×${rv[1]}`).toEqual(rv)
-      // the prose mirrors ("mirrors RV_VIEW 560×210") — comments are scanned on purpose
-      const prose = ratioPairs(css).filter((p) => p[0] === 560 || p[0] === rv[0])
-      expect(prose.length, `${file}: no ratio pair found at all — the mirror comment moved; re-point this bind`).toBeGreaterThan(0)
-      for (const p of prose) expect(p, `${file}: a prose mirror reads ${p[0]}×${p[1]} beside RV_VIEW ${rv[0]}×${rv[1]}`).toEqual(rv)
-    }
-  })
+  // RecommendationViz's arm (RV_VIEW against its two CSS mirrors) retired with the chart at Act 6's RC8: Tax Strategies'
+  // Summary bars are a Highcharts chart, which draws at real pixel size with no viewBox to mirror.
 
   it('TwoFutures: TF_VIEW and the aspect-ratio + prose mirror in twoFutures.css', () => {
     const css = read('src/viz/twoFutures.css')
@@ -70,10 +49,10 @@ describe('the chart viewBoxes and their CSS / prose mirrors are one declaration 
   // The band's arm (VIEWBOX against band.css's prose mirror) retired with band.css at Act 6's RC4: the old band and its
   // enlarge modal left with the answer page; VIEWBOX stays in bandGeometry.ts for the charts that still read it.
 
-  it('the three families are distinct declarations, not one copied number (non-vacuity)', () => {
+  it('the two families are distinct declarations, not one copied number (non-vacuity)', () => {
     // A bind that passed because every chart happened to share one ratio would prove nothing about
-    // the mirrors; the heights differ by construction (210 / 280 / 380), so a mirror copied from the
+    // the mirrors; the heights differ by construction (280 / 380), so a mirror copied from the
     // wrong chart reds above.
-    expect(new Set([TF_VIEW.h, VIEWBOX.height, /const RV_VIEW = \{ w: \d+, h: (\d+) \}/.exec(read('src/viz/RecommendationViz.tsx'))![1]]).size).toBe(3)
+    expect(new Set([TF_VIEW.h, VIEWBOX.height]).size).toBe(2)
   })
 })

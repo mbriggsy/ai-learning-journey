@@ -6,26 +6,24 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
 /**
- * Act-4 · U17 §S5 — THE SAVE GESTURE AT THE COMPONENT: the REAL `IntakeApp` over the REAL
- * `Result` → `RecommendationSurface` chain, with nothing stubbed in between.
+ * Act-4 · U17 §S5 — THE SAVE GESTURE AT THE COMPONENT: the REAL `IntakeApp` over the REAL shell and its
+ * Tax → Tax Strategies page (Act 6 · RC8, `TaxStrategies.tsx` → `Strategies.tsx`), with nothing stubbed in between.
  *
  * WHY THIS FILE EXISTS AT ALL (insights 032/081). Every OTHER battery in this feature proves a
  * FUNCTION: `recommendationSaveView.test.ts` drives `deriveRecommendationSave` over a hand-built
  * input table, `savedRecommendationMint.test.ts` drives the mint over hand-built payloads,
- * `RecommendationSurface.test.tsx` drives the surface over hand-built props. Not one of them can
+ * `Strategies.test.tsx` drives the panel over hand-built views. Not one of them can
  * witness the COMPOSITION — and the composition is where this feature's whole honesty argument
  * lives: an ORDER (validate, probe, only then touch the store), a ROUTE (no vault ⇒ the ceremony),
  * and an OPERAND (the disk, never the draft). The two existing IntakeApp mounts cannot host any of
- * it: `IntakeApp.test.tsx` module-mocks `'../Result'` to a props-echo stub, and `App.test.tsx`
- * mocks `'../IntakeApp'` outright.
+ * it: `App.test.tsx` mocks `'../IntakeApp'` outright.
  *
  * THE HARNESS, AND WHY EACH SEAM IS FAKED THE WAY IT IS:
  *  - `'../vaultSession'` is module-mocked (IntakeApp.test.tsx's fake-session idiom) — it is the ONE
  *    injection seam this gesture has. `saveNow` is a `useCallback` local to IntakeApp with no prop,
  *    so "stub the write" can only mean "stub the session the write goes through".
  *  - the SOLVE and ANSWER channels are planted by WRAPPING `appModel.getSnapshot` (the
- *    recommendInvite idiom): both resolve only through the real worker, and Result withholds the
- *    whole actions row — where this surface mounts — while the answer is unresolved. The DRAFT is
+ *    old recommendInvite idiom): both resolve only through the real worker. The DRAFT is
  *    deliberately NOT faked: it flows from the real store, so every `appModel.update` this gesture
  *    makes (and every one it must NOT make) is observable on the real singleton.
  *  - `SaveFlow` and `IntakeFlow` are stubbed to their controls only (the ceremony's crypto/zxcvbn
@@ -353,15 +351,17 @@ const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
 // ---- driving the surface -------------------------------------------------------------------------
 
-const saveCta = () => screen.queryByRole('button', { name: copy.recommendSaveCta })
-const refusalCard = () => document.querySelector('.rec-note--refused')
-const savedRecordCard = () => document.querySelector('.rec-record')
-const savedBadge = () => document.querySelector('.rec-save__badge')
-const pendingLine = () => document.querySelector('.rec-save__pending')
+// Since Act 6 · RC8 the gesture lives on the clone's Tax Strategies page: Keep on the Winner card, its status and refusal
+// beside it, the record card under the ranked list (`Strategies.tsx`'s hooks).
+const saveCta = () => screen.queryByRole('button', { name: copy.snapshotRecKeep })
+const refusalCard = () => document.querySelector('[data-keep-refused]')
+const savedRecordCard = () => document.querySelector('[data-record]')
+const savedBadge = () => document.querySelector('[data-keep-status="saved"]')
+const pendingLine = () => document.querySelector('[data-keep-status="saving"]')
 const draftRecord = (): SavedRecommendationV3 | undefined => realGetSnapshot().draft.savedRecommendation
 
-/** Since Act 6 · RC4 the completion lands on the shell (the home): the recommendation's save control lives on the
- *  interim Tax Strategies tab, reached by its real nav link once the shell's lazy chunk lands. */
+/** Since Act 6 · RC4 the completion lands on the shell (the home): the recommendation's save control lives on Tax →
+ *  Tax Strategies (RC8's clone), reached by its real nav link once the shell's lazy chunk lands. */
 async function toStrategies() {
   const tax = await screen.findByRole('link', { name: copy.shellModuleTax }, { timeout: 15_000 })
   await act(async () => {
@@ -861,11 +861,11 @@ describe('the record-card memo — a DATE route refuses the card structurally', 
      * (`savedRecommendation.ts:88-94`) — but it is reachable the other way round: a household saves
      * a record while retired, then a spouse un-retires. That is exactly this fixture.
      *
-     * WHY THE CONJUNCT IS THE ONLY THING STANDING THERE — the reason a mutant here is dangerous
-     * rather than redundant. `Result.tsx` gates the whole RECOMMENDATION SURFACE off on a date route
-     * (`:515`), but `SavedRecordCard` mounts OUTSIDE that gate (`:559`). So Result's own date
-     * suppression does NOT cover the card: delete the memo's conjunct and a crowned-date frame draws
-     * a record card fed by an exposure read its own producer forbids.
+     * TWO GATES NOW STAND THERE (Act 6 · RC8). The old interim tab mounted its record card outside its
+     * own date gate, so the memo's conjunct was the only thing standing. The clone's Tax Strategies page
+     * shows the working route's one line and nothing else (`strategiesView.ts`), so the card is refused
+     * by the page too; deleting the memo's conjunct alone no longer reds this arm, and the arm stands as
+     * the frame's outcome: no card fed by an exposure read its own producer forbids.
      *
      * WHY BOTH HALVES LIVE IN ONE ARM. The memo has five conjuncts and only one is under test, so an
      * absent card proves nothing on its own. The control below runs the SAME helper over the SAME
@@ -899,15 +899,10 @@ describe('the record-card memo — a DATE route refuses the card structurally', 
     expect(document.querySelector('main.result'), 'conjunct 1: the result phase was reached').not.toBeNull()
     // …and the record really is live on the hydrated draft.
     expect(draftRecord(), 'conjunct 3: the vault carries a record').not.toBeUndefined()
-    // Result's own date gate is visibly in force — and it is NOT what suppresses the card (:559
-    // mounts outside it), which is precisely why the memo's conjunct has to.
-    expect(
-      document.querySelector('.recommendation-surface'),
-      "Result's date gate withholds the recommendation surface (but not the card)",
-    ).toBeNull()
+    // The page's own working-route line is in force (RC8: the solve runs on the all-retired route only).
+    expect(document.querySelector('[data-working-route]'), 'the page shows the working route’s one line').not.toBeNull()
 
-    // …so the only conjunct left that can explain the silence is the date route.
-    expect(savedRecordCard(), 'the crowned-date frame refuses the card at the producer').toBeNull()
+    expect(savedRecordCard(), 'the crowned-date frame draws no record card').toBeNull()
   })
 })
 

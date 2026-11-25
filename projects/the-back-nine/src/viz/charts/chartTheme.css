@@ -273,4 +273,65 @@
     fill: none;
     stroke: none;
   }
+
+  /* ── Tax Strategies (RC8). The Summary's grouped bars ride `.b9-bar` above (the hatch ink, the printed values); the
+     group's name under it in body ink. Comparison's pair: the recommendation a solid green area under a solid line,
+     your plan today an outline only with a dashed top line (plan 4.0's second cue), each line's last figure printed.
+     The withdrawal stacks: each pattern in its own source's ink (taxable solid blue, pre-tax hatched orange, Roth dotted
+     green, HSA lined sky). ── */
+  .b9-grouped .highcharts-xaxis-labels text {
+    fill: var(--color-stone-900);
+    font-size: var(--text-label);
+  }
+  .b9-pair .b9-pair-alternative .highcharts-area {
+    fill: var(--highcharts-color-1);
+    fill-opacity: 0.35;
+  }
+  .b9-pair .b9-pair-alternative .highcharts-graph {
+    stroke: var(--highcharts-color-1);
+    stroke-width: 2;
+  }
+  .b9-pair .b9-pair-compared .highcharts-area {
+    fill: none;
+  }
+  .b9-pair .b9-pair-compared .highcharts-graph {
+    stroke: var(--highcharts-color-0);
+    stroke-width: 2;
+    stroke-dasharray: 6 4;
+  }
+  .highcharts-legend-item.b9-pair-compared .highcharts-graph {
+    stroke-dasharray: 4 3;
+  }
+  .highcharts-legend-item.b9-pair-compared .highcharts-point {
+    fill: none;
+    stroke: var(--highcharts-color-0);
+    stroke-width: 1.5;
+  }
+  .b9-pair .highcharts-data-label text,
+  .b9-stack .highcharts-data-label text {
+    fill: var(--color-stone-900);
+    font-size: var(--text-label);
+    font-weight: 600;
+  }
+  .b9-stack {
+    --b9-ink-hatch: var(--highcharts-color-2);
+    --b9-ink-dots: var(--highcharts-color-1);
+    --b9-ink-lines: var(--highcharts-color-4);
+  }
+  .b9-stack .highcharts-area {
+    fill-opacity: 1;
+  }
+  .b9-stack .b9-stack-taxable .highcharts-area,
+  .highcharts-legend-item.b9-stack-taxable .highcharts-point {
+    fill: var(--highcharts-color-0);
+  }
+  .b9-stack .b9-stack-pretax .highcharts-graph {
+    stroke: var(--highcharts-color-2);
+  }
+  .b9-stack .b9-stack-roth .highcharts-graph {
+    stroke: var(--highcharts-color-1);
+  }
+  .b9-stack .b9-stack-hsa .highcharts-graph {
+    stroke: var(--highcharts-color-4);
+  }
 }

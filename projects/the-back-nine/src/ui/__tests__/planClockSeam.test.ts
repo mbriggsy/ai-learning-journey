@@ -141,7 +141,7 @@ describe('U17 §S0.1 — ONE exported arrived predicate, consumed (never re-type
     expect(filterLine, 'never a re-typed inline compare').not.toMatch(/planOffsetYears\s*[<>]=?/)
   })
 
-  it('RESULT consumes the ONE mint — through the notes composer, which mints it; neither re-types the plan-clock arithmetic', () => {
+  it('the strategy surface consumes the ONE mint — the notes composer and Tax Strategies’ composer call it; none re-types the plan-clock arithmetic', () => {
     // THE MUTANT THIS KILLS, verbatim from the U17 §S0 verifier: `... - startCalendarYear + 3`
     // planted in the component left 1096 tests green, because the seam test had copied the
     // arithmetic instead of binding to it. Calling `planClockAnchor` from this file is only half
@@ -154,6 +154,9 @@ describe('U17 §S0.1 — ONE exported arrived predicate, consumed (never re-type
     // composer. So the bind is three-sided: the composer mints with the build year and the wall year it is
     // handed; Result hands it the chain's year and keeps no mint of its own; neither re-types a subtraction.
     // (`answerNotes.test.ts` pins the composer's anchor behaviourally, a plan built in 2024 opened in 2026.)
+    // RE-BOUND AGAIN IN ACT 6's RC8: `Result.tsx` is deleted, and the strategy surface's composer
+    // (`screens/tax/strategiesView.ts`, the winner's conversion start) mints through the shared producer off the build
+    // year and the wall year the shell hands it (read through the ONE chain below), never a subtraction of its own.
     const notes = read('../answerNotes.ts')
     expect(notes, 'the mint is imported, not re-declared').toMatch(
       /import \{ planClockAnchor, type BandPlanClockAnchor \} from '\.\/bandAnnotations'/,
@@ -161,12 +164,11 @@ describe('U17 §S0.1 — ONE exported arrived predicate, consumed (never re-type
     expect(notes, 'the anchor is minted by the shared producer, off the build year and the handed wall year').toMatch(
       /planClockAnchor\(\s*snapshot\.draft\.startCalendarYear,\s*wallCalendarYear,?\s*\)/,
     )
-    const src = read('../Result.tsx')
-    expect(src, 'Result reads the wall year through the ONE local-calendar chain').toMatch(
-      /const wallCalendarYear = useMemo\(\(\) => epochDayToCalendarYear\(currentEpochDay\(\)\), \[snapshot\.draft\.startCalendarYear\]\)/,
+    const src = read('../screens/tax/strategiesView.ts')
+    expect(src, 'the mint is imported, not re-declared').toMatch(/import \{ planClockAnchor \} from '\.\.\/\.\.\/bandAnnotations'/)
+    expect(src, 'Tax Strategies mints through the shared producer, off the build year and the handed wall year').toMatch(
+      /planClockAnchor\((?:snapshot\.)?draft\.startCalendarYear, input\.wallCalendarYear\)/,
     )
-    expect(src, 'Result takes the anchor the composer minted').toMatch(/const dateAnchor = notes\.planClock\b/)
-    expect(src, 'Result keeps no mint of its own').not.toMatch(/planClockAnchor\(/)
     // Since RC4 the shell hosts the figured pages: it hands the composer the chain's year too, and keeps no mint.
     const shell = read('../shell/Shell.tsx')
     expect(shell, 'the shell reads the wall year through the ONE local-calendar chain').toMatch(
@@ -180,7 +182,7 @@ describe('U17 §S0.1 — ONE exported arrived predicate, consumed (never re-type
     // `const startCalendarYear = snapshot.draft.startCalendarYear`). So the realistic mutant,
     // `… - snapshot.draft.startCalendarYear + 3`, walked straight past it.
     // Same discipline as the clock arm below, which tolerates its own intervening paren.
-    for (const [file, text] of [['answerNotes.ts', notes], ['Result.tsx', src]] as const) {
+    for (const [file, text] of [['answerNotes.ts', notes], ['strategiesView.ts', src]] as const) {
       expect(text, `${file}: never a re-typed subtraction against the build year`).not.toMatch(
         /-\s*(?:[\w$.]+\.)?startCalendarYear/,
       )
@@ -330,7 +332,7 @@ describe('U17 §S6 — the aged premise and the Today tick must not contradict e
    *
    * WHY THIS ARM HAD TO BE WRITTEN RATHER THAN ASSUMED: every existing consumer renders THROUGH the
    * slot — `FuckOffDate.test.tsx:331,336`, `ConfidenceStatement.test.tsx:743,735`,
-   * `copyGuard.test.ts:749-750` all call `slots.bandAgedPremise*(...)` and compare to its own
+   * `copyGuard.test.ts:750-751` all call `slots.bandAgedPremise*(...)` and compare to its own
    * output. They follow ANY reword silently, in both directions. Without the arm below, the §S6 fix
    * passes green and so does a future revert of it — the wording would be pinned by nothing at all.
    *

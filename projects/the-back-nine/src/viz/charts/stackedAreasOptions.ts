@@ -1,0 +1,171 @@
+/*
+ * src/viz/charts/stackedAreasOptions.ts: Tax → Tax Strategies → Comparison's year-by-year charts (plan
+ * docs/plans/6-rightcapital-ui-plan.md, RC8; `rc-cashflow-tax/help-tax-tax-strategies-comparison-tab-03.png`, `-05.png`).
+ * PURE: every value, the shared scale and every word arrive from the composer (`taxRunsView.ts`).
+ *
+ * Two kinds:
+ * - `pairAreasOptions`: two overlapping areas over the years, one measure (invested assets, income tax, required
+ *   withdrawals, Roth conversions). Plan 4.0's colour roles: the recommendation green, solid fill and solid line; your
+ *   plan today blue, outline only with a dashed top line (`chartTheme.css`, `.b9-pair-compared`), so the two read apart
+ *   with the colour removed. Each line ends in its own printed figure: the higher line's above its last point, the
+ *   lower line's below it, so a figure never sits over the other line (RC8's look: a fixed side put the lower line's
+ *   figure on top, where it read as the higher line's).
+ * - `stackedAreasOptions`: one strategy's withdrawals stacked by source, taxable solid, pre-tax hatched, Roth dotted,
+ *   HSA lined (each pattern in its own source's ink), the stack order listed in the legend from the bottom. The two
+ *   side-by-side stacks share ONE scale (the composer's lattice): two charts that compare need one scale (RC4b).
+ *
+ * The y axis is linear from $0 on the composer's humane lattice, its ticks in the `mm` dialect; the x axis is the
+ * calendar year.
+ */
+import type { Options, SeriesAreaOptions } from 'highcharts/highcharts.src'
+import { buildYTicks, type DollarLattice } from '../bandData'
+import { chartWordsOptions, type ChartWords } from './chartA11y'
+
+export interface YearPoint {
+  readonly year: number
+  readonly value: number
+}
+
+interface Shared {
+  readonly lattice: DollarLattice
+  readonly axisDollar: (dollars: number) => string
+  /** A value as the tooltip and the end labels print it (`~` included). */
+  readonly figure: (dollars: number) => string
+  /** A point's spoken sentence (the year, the series' name, its figure), the composer's words. */
+  readonly pointWords: (year: number, name: string, dollars: number) => string
+  readonly words: ChartWords
+  readonly height: number
+}
+
+export interface PairSeries {
+  readonly id: string
+  readonly name: string
+  readonly role: 'alternative' | 'compared'
+  readonly points: readonly YearPoint[]
+}
+
+export interface PairAreasInput extends Shared {
+  readonly series: readonly [PairSeries, PairSeries]
+}
+
+export type StackSource = 'taxable' | 'pretax' | 'roth' | 'hsa'
+
+/** Each source's colour slot and pattern (RC_PAIRS rows: blue/orange, orange/green, blue/sky, sky/green). */
+export const STACK_SOURCES: Readonly<Record<StackSource, { readonly colorIndex: number; readonly className: string }>> = {
+  taxable: { colorIndex: 0, className: 'b9-stack-taxable' },
+  pretax: { colorIndex: 2, className: 'b9-stack-pretax b9-hatch' },
+  roth: { colorIndex: 1, className: 'b9-stack-roth b9-dots' },
+  hsa: { colorIndex: 4, className: 'b9-stack-hsa b9-lines' },
+}
+
+/** The stack from the bottom up. */
+export const STACK_ORDER: readonly StackSource[] = ['taxable', 'pretax', 'roth', 'hsa']
+
+export interface StackedAreasInput extends Shared {
+  readonly sources: Readonly<Record<StackSource, { readonly name: string; readonly points: readonly YearPoint[] }>>
+}
+
+function axes(shared: Shared): Pick<Options, 'xAxis' | 'yAxis'> {
+  const ticks = buildYTicks(shared.lattice, shared.axisDollar)
+  const tickLabel = new Map(ticks.map((t) => [t.dollars, t.label]))
+  return {
+    xAxis: { type: 'linear', allowDecimals: false, tickInterval: 5, lineWidth: 1 },
+    yAxis: {
+      type: 'linear',
+      min: 0,
+      max: shared.lattice.ceiling,
+      startOnTick: false,
+      endOnTick: false,
+      tickPositions: ticks.map((t) => t.dollars),
+      title: { text: undefined },
+      labels: { formatter: (ctx) => tickLabel.get(Number(ctx.value)) ?? '' },
+    },
+  }
+}
+
+function frame(shared: Shared): Options {
+  const spoken = chartWordsOptions(shared.words)
+  return {
+    chart: { type: 'area', height: shared.height, spacingTop: 20, spacingRight: 16 },
+    title: { text: undefined },
+    lang: spoken.lang,
+    // Each point's spoken sentence is the composer's (Highcharts' own reads the raw float).
+    accessibility: { ...spoken.accessibility, point: { descriptionFormatter: (p) => shared.pointWords(Number(p.x), p.series.name, Number(p.y ?? 0)) } },
+    legend: { enabled: true, align: 'center', verticalAlign: 'bottom' },
+    credits: { enabled: true, position: { align: 'right', verticalAlign: 'bottom', x: -4, y: -2 } },
+    ...axes(shared),
+  }
+}
+
+export function pairAreasOptions(input: PairAreasInput): Options {
+  const { series, figure } = input
+  const lastOf = (s: PairSeries) => s.points.at(-1)?.value ?? 0
+  const higher = lastOf(series[0]) >= lastOf(series[1]) ? series[0].id : series[1].id
+  return {
+    ...frame(input),
+    tooltip: {
+      shared: true,
+      formatter: function () {
+        const ctx = this as unknown as { x: number; points?: { series: { name: string }; y: number }[] }
+        return [String(ctx.x), ...(ctx.points ?? []).map((p) => `${p.series.name}: ${figure(p.y)}`)].join('<br/>')
+      },
+    },
+    plotOptions: { area: { marker: { enabled: false }, fillOpacity: 1 } },
+    series: series.map((s): SeriesAreaOptions => {
+      const last = s.points.length - 1
+      const above = s.id === higher
+      return {
+        type: 'area',
+        id: s.id,
+        name: s.name,
+        colorIndex: s.role === 'alternative' ? 1 : 0,
+        className: s.role === 'alternative' ? 'b9-pair-alternative' : 'b9-pair-compared',
+        data: s.points.map((p, i) => ({
+          x: p.year,
+          y: p.value,
+          ...(i === last
+            ? {
+                dataLabels: {
+                  enabled: true,
+                  crop: false,
+                  overflow: 'allow' as const,
+                  align: 'right' as const,
+                  verticalAlign: above ? ('bottom' as const) : ('top' as const),
+                  y: above ? -6 : 6,
+                  formatter: () => figure(p.value),
+                },
+              }
+            : {}),
+        })),
+      }
+    }),
+  }
+}
+
+export function stackedAreasOptions(input: StackedAreasInput): Options {
+  const { sources, figure } = input
+  // Highcharts stacks the FIRST series on top, so the series run top-down and the legend runs reversed (bottom-up).
+  const topDown = [...STACK_ORDER].reverse()
+  return {
+    ...frame(input),
+    legend: { enabled: true, align: 'center', verticalAlign: 'bottom', reversed: true },
+    tooltip: {
+      shared: true,
+      formatter: function () {
+        const ctx = this as unknown as { x: number; points?: { series: { name: string }; y: number }[] }
+        return [String(ctx.x), ...[...(ctx.points ?? [])].reverse().map((p) => `${p.series.name}: ${figure(p.y)}`)].join('<br/>')
+      },
+    },
+    plotOptions: { area: { stacking: 'normal', marker: { enabled: false }, fillOpacity: 1, lineWidth: 1 } },
+    series: topDown.map(
+      (src): SeriesAreaOptions => ({
+        type: 'area',
+        id: `stack-${src}`,
+        name: sources[src].name,
+        colorIndex: STACK_SOURCES[src].colorIndex,
+        className: STACK_SOURCES[src].className,
+        data: sources[src].points.map((p) => ({ x: p.year, y: p.value })),
+      }),
+    ),
+  }
+}

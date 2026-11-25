@@ -585,7 +585,7 @@ tests
   and each REVIEW line (a citation inside a modified hunk is never moved), and move the second number of a comma pair by hand
   (the tool moves only the first).
 - **`verify:fit` does NOT measure the recommendation surface** (`e2e/vertical-fit.spec.ts line 1295-1305 at 95c715e19`
-  excludes the committed + held renders — the exclusion dates from 2026-07-22, before the worker pool, when a dev-server solve ran 80–200 s+ against the then-120 s per-test budget (now 180 s, `playwright.fit.config.ts:61`); on the pool a dev-server `solve:nc` / `solve:surplus` takes ~30 s at the laptop (`e2e/caddie-walk.spec.ts:1064-1066`), and on CI's 4-vCPU runner (pool P = 2) the RV gate's `?seed=surplus` pending-to-lockup wait — measured on the v9 build, its per-arm figures in `COMMITTED_LOCKUP_MS`'s docblock (`e2e/chart-text-rv.spec.ts:50-53`, `12e40395`) — has run with its worst arm close to this harness's 180 s per-test budget, but the fit arms still inject the committed lockup and never wait for a committed solve). So *"seat it and re-measure
+  excludes the committed + held renders — the exclusion dates from 2026-07-22, before the worker pool, when a dev-server solve ran 80–200 s+ against the then-120 s per-test budget (now 180 s, `playwright.fit.config.ts:61`); on the pool a dev-server `solve:nc` / `solve:surplus` takes ~30 s at the laptop (`e2e/caddie-walk.spec.ts:1064-1066`), and on CI's 4-vCPU runner (pool P = 2) the RV gate's `?seed=surplus` pending-to-lockup wait — measured on the v9 build, its per-arm figures in `COMMITTED_LOCKUP_MS`'s docblock (`e2e/chart-text-rv.spec.ts line 50-53 at b69c28483`, `12e40395`) — has run with its worst arm close to this harness's 180 s per-test budget, but the fit arms still inject the committed lockup and never wait for a committed solve). So *"seat it and re-measure
   under `verify:fit`"* is **unexecutable** for anything in `.rec-committed__rest`; it needs a MANUAL
   measure at `REAL`, his window, 1440×731 @ 2 (1536×791 @ 2.5 until the 2026-11-20 re-point). And the *"~89px headroom"* number is the SPINE idle frame (`vertical-fit.spec.ts line 4394-4396 at 95c715e19`, measured at the Dell's 1536×791 @ 2.5), a once-measured
   prose figure the spec never asserts — **never budget a different surface against it.** The DATE route's
@@ -1303,10 +1303,11 @@ rasterizer SILENTLY
   the 24-character bar label (104.8 px in a 104.8 px column) broke to three lines over the delta figure on CI's ubuntu
   metrics only (run 45477118575; Windows fit it on two). Measure a re-hosted component's box at PHONE on the real
   surface, and run its spec's PHONE arm, not only REAL.
-- **(b9-6, 2026-11-24) Keep `.shell-interim`, `.shell-interim__title` and `.shell-interim .result-page` in
-  `src/ui/workbench/workbench.css` until the last interim tab is rebuilt** (Tax Strategies until RC8, Health Care
-  until RC10, Profile until RC13). The third rule removes the doubled gutter above (`d01dcc7f`). A unit that clears
-  "workbench.css's remaining rules" deletes only the rules nothing reads (grep each selector over `src` and `e2e`).
+- **(b9-6, 2026-11-24) Keep `.shell-interim` and `.shell-interim__title` in
+  `src/ui/workbench/workbench.css` until the last interim tab is rebuilt** (Health Care until RC10, Profile until
+  RC13). The third rule, `.shell-interim .result-page` (the doubled gutter above, `d01dcc7f`), went with RC8, whose
+  Tax Strategies page was its only reader. A unit that clears "workbench.css's remaining rules" deletes only the rules
+  nothing reads (grep each selector over `src` and `e2e`).
 
 ## Research and re-verification
 

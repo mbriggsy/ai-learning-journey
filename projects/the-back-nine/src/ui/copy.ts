@@ -2042,11 +2042,7 @@ export const copy = {
   // gated), no figure to hedge — the recommendNoPretaxNote precedent.
   recommendStaleHeading: 'This strategy read is out of date',
   recommendStaleBody:
-    'Some of your numbers have changed. Your answer above already reflects them — this strategy read doesn’t yet.',
-  // The in-card re-open control (F-B): the promise and its action share ONE home. Names the outcome the
-  // button leads to (the goal choice precedes the solve, the invite/re-pick precedent), never an
-  // imperative — "see" is not a directive verb, so no copyGuard trip.
-  recommendStaleReopenCta: 'See the current strategy',
+    'Some of your numbers have changed. Your plan’s answer already reflects them; this strategy read doesn’t yet.',
 
   // --- Act-4 · U17 §S5 — the save GESTURE (`recommendSave*`) + the saved-record CARD
   //     (`recommendRecord*`) ---
@@ -2063,7 +2059,6 @@ export const copy = {
   // the recommendation" — was drafted for a save-proceeds-then-drops-the-atom flow that
   // scenarioCodec.ts:901-905 instructs S5 to make UNREACHABLE. Shipping that sentence would have
   // been the cardinal sin pointed the other way: a save reported that never happened.
-  recommendSaveCta: 'Keep this strategy read',
   // R1 AND R2, both named BEFORE the tap. The no-vault route escalates a "keep this" tap into vault
   // setup, and the write is whole-plan either way (`session.save()` commits the entire scenario) —
   // so the CONTROL says both, rather than letting a confirmation explain what already happened.
@@ -2127,7 +2122,7 @@ export const copy = {
   // below): 50 chars, one line, verified under `pnpm verify:fit` on the `rec` plant.
   recommendRecordHolds: 'It still lines up with the numbers you’ve entered.',
   // THE SUPERSEDED LEAD — the negative mirror of `recommendRecordHolds`, and it exists because the
-  // superseded arm's cause clauses MAY BE EMPTY (`SavedRecordStanding`, recommendationSaveView.ts:237-242:
+  // superseded arm's cause clauses MAY BE EMPTY (`SavedRecordStanding`, recommendationSaveView.ts:254-259:
   // the fail-closed output of the broken-contract split, where the store demoted the record without
   // reporting a cause). Without a lead the card would draw a heading over nothing — a blank exactly
   // where the disclosure belongs — so this line is what the non-colour marker stands on with zero
@@ -2145,7 +2140,7 @@ export const copy = {
   // WHY "may … fit" AND NOT THE TIDY MIRROR. "It no longer matches your plan" is FALSE on the
   // 'inputs-unavailable' cause, which says the opposite — that we cannot line it up at all. The hedge
   // is therefore load-bearing rather than soft: this sentence must be true across FIVE arms, not four
-  // — the four named causes plus the fail-CLOSED broken-contract arm (recommendationSaveView.ts:305-308),
+  // — the four named causes plus the fail-CLOSED broken-contract arm (recommendationSaveView.ts:322-325),
   // where the card renders this line ALONE over an empty list. "May no longer fit" is honest on all
   // five, including the one where the honest content is our own uncertainty, and it claims no
   // knowledge the trichotomy does not have. It speaks the household's frame ("the two of you"), never
@@ -2217,9 +2212,6 @@ export const copy = {
   // a status line carry no figure to hedge — the require-hedge scope must stay on the GRADE/figure keys
   // S3 adds, never a bare `recommend` sweep that would demand a modal on THESE two). No count-up, no ETA.
   //
-  // The invited affordance — the recommend-second door in the doors region (R11: invited, never a nag;
-  // R12: no imperative). A DOOR, calm-styled like its siblings; the goal choice precedes the solve.
-  recommendInviteCta: 'See the recommended strategy',
   // Act-4 · U16 §S1/§Q5 (F3, REWORDED by the steer-seed increment 2026-07-23) — the pre-dispatch
   // `blocked{no-pretax}` calm steer. THE OLD LINE WAS FALSE ON EVERY REACHABLE HOUSEHOLD (insight
   // 100's class): it claimed "your savings are entered as one lump sum", but the intake's account
@@ -2251,7 +2243,7 @@ export const copy = {
   // This arm names the true dependency without re-diagnosing the missing fact (the answer's own
   // incomplete strip above already names it). Same calm declarative register.
   recommendSpineUnreadyNote:
-    'This strategy read builds on the answer above. Once that answer is complete again, this can run.',
+    'This strategy builds on your plan’s answer. Once that answer is complete again, this can run.',
   // Act-4 · U16 §S4 — the goal RE-PICK door (the committed beat's "aim at something else"): the
   // un-saved hypothetical is freely re-aimable, and a re-pick VISIBLY re-solves (both futures
   // update). A calm door label, NOT an imperative advice verb ("aim" is not a directive verb, so it
@@ -2272,7 +2264,6 @@ export const copy = {
   // pay-less-tax} today (live-bigger-now is deferred). Unset sentinel — no goal is pre-selected.
   goalPickerTitle: 'What should your plan aim for?',
   goalPickerIntro: 'With the basics covered, pick the one thing your plan should lean toward.',
-  goalPickerConfirmCta: 'See the strategy',
   // Card 14(a) — the blocked confirm's REASON, rendered at rest above the actions row AND announced on
   // a blocked press through the same key, so the seen word and the spoken word cannot drift. It states
   // the DIALOG'S precondition ("no radio is selected"), never the household's situation — which is why
@@ -2339,42 +2330,8 @@ export const copy = {
   // baseline's contents, so neither half can drift silently.
   recommendBaselineNameplate: 'Compared with your plan today',
 
-  // ── THE WINNING-PLAN CARD (2026-08-05) — the answer to "…by doing what?" ───────────────────────
-  // The hero states a dollar and, until this card, nothing on the surface said what earns it:
-  // `winnerStrategyKey` was computed and had ZERO render consumers, the winner's conversion figures
-  // rendered nowhere, and `RecommendationSurface` contained no strategy name at all.
-  // BRIGGSY RULED 2026-08-03: NAME IT, NO DOOR. No control back into the sequencing/Roth sheets —
-  // following one fires `invalidateStaleSolve` and demotes the very card that pointed there.
-  //
-  // A SETTINGS LIST, NOT AN INSTRUCTION LIST, AND THAT FRAMING IS LOAD-BEARING. `applyCandidate`
-  // STRIPS the base's conversions before installing the candidate's, so the winner's conversion
-  // REPLACES the household's rather than adding to it — every "also"/"alongside"/"on top of" phrasing
-  // is a false implicature. A row that NAMES a control and STATES its setting cannot carry that
-  // implicature, and it needs no imperative (which the universal advice-verb gate bans outright, and
-  // which is why every shipped `leverPolicy*Help` gloss is third-person).
-  //
-  // ⚠️ ACTIVE REGISTER ONLY — and that is what makes the figures safe. See `winnerActionView`
-  // (recommendationView.ts) for the three-part proof; the short version is that in ACTIVE mode the
-  // crowned plan is provably NOT the household's own, so the winner is always a grid arm: its amount
-  // is rail-floored, its window horizon-clamped, and its policy can never be `custom`.
-  //
-  // These three are `recommend*` ⇒ VERDICT-scoped, so free-numeral reds any digit written into them
-  // and the superlative gate reds a crowned "best". Every figure rides a `roth*` SLOT instead.
-  // DELIBERATE: a `recAction*` spelling would have matched NEITHER prefix list (`isVerdictKey` needs
-  // the full `recommend`; `isControlKey` needs one of the enumerated `recDelta`/`recSkew`/… stems),
-  // so a plan-moving dollar would have shipped past free-numeral AND require-hedge both.
-  // ⚠️ NOT "How this plan gets there" (the first draft, killed on its own real-browser frame
-  // 2026-08-05): "there" has NO REFERENT on this surface. The undefined-referent ban is copy LAW here
-  // — the reader is never wrong — and the anaphora a heading like that leans on is broken by the
-  // nameplate, which sits between the hero's dollar and this card. Worse on a close call, where "gets
-  // there" implies arrival at a destination nothing ever named. This states what the list IS and makes
-  // the rows do the work. Equally NOT "…does differently": the crowned plan differs from theirs in at
-  // least one control (that is what ACTIVE mode proves), but not necessarily in EVERY row — a
-  // household whose order already matches and whose conversion is the whole recommendation would read
-  // a false claim over the order row.
-  recommendActionHeading: 'What this plan does',
-  recommendActionOrderLabel: 'Which accounts you spend first',
-  recommendActionConversionLabel: 'Roth conversions',
+  // The winning-plan card's three labels (`recommendAction*`) retired with `RecommendationSurface.tsx` at Act 6's RC8: the
+  // Winner card names the winner's levers as chips and states the crowned plan in one sentence (`strategiesView.ts`).
   // The calm couldn't-work-it-out state (a solve refusal / mint-failure / demotion-withhold — each a
   // structured bin, surfaced as ONE honest retry line, never a raw reason code or a blank).
   recommendUnavailable:
@@ -2481,17 +2438,11 @@ export const copy = {
   // The ACA SLCSP/CSR caveat, by reference — shown only when the delta LEANS ON ACA. "could" hedges.
   recDiscAcaSlcsp:
     'This leans on your marketplace benchmark and cost-sharing figures; if those shift, the edge here could move.',
-  // The viz arm labels (string-free viz; DIRECT end-of-line labels, never a color legend). Plain nouns.
+  // The two sides' names, on the Summary bars' legend and the Comparison charts (RC8). Plain nouns.
   recVizWithLabel: 'The recommended strategy',
   // Names the household's OWN plan — true only while `solve.ts` displays `search.userBaseline`.
   // See the coupling warning on `recommendBaselineNameplate`; all five strings move together.
   recVizWithoutLabel: 'Your plan today',
-  // Act-4 · U16 §S4 — the RUNNER-UP comparison viz arm label (winner vs runner-up, one tap down). A
-  // plain noun (not a plan-moving claim — the hedged claim is `recRunnerUpWhy`); the recommended arm
-  // keeps its `recVizWithLabel` identity so the hatch/triangle means "recommended" across both vizzes.
-  recVizRunnerUpLabel: 'The runner-up strategy',
-  // The grade signal's standalone aria name (the ungraded glyph, drawn with no adjacent verdict word).
-  recGradeAriaUngraded: 'Confidence rating unavailable',
   // The runner-up's one-tap-down toggle label (R23: retained + reachable). NOT control-scoped (a
   // disclosure TOGGLE, never a plan-moving claim — the claim itself is `recRunnerUpWhy`, hedged).
   recSeeRunnerUp: 'How the runner-up compared',
@@ -2589,8 +2540,6 @@ export const copy = {
   snapshotRecFindOne: 'Find one on the Tax Strategies page',
   snapshotRecKeep: 'Keep this recommendation',
   snapshotRecTry: 'Try it in the plan',
-  snapshotRecWorkingRoute:
-    'Strategy recommendations come later for a plan with working years still ahead; this page will show one once they do.',
   snapshotRecSuperseded: 'No longer current',
   // --- Act 6 · RC4, Retirement → Analysis → Probability (plan docs/plans/6-rightcapital-ui-plan.md, RC4;
   // `probabilityView.ts`). Every count rides the X-of-10 slots; every projected figure wears `~`. The shell is the home
@@ -2735,9 +2684,6 @@ export const copy = {
     'Your health costs before Medicare, and the marketplace subsidy rules your plan uses, live in a sheet that only opens in a tab that can change your plan.',
   healthInterimNone:
     'The health-cost sheet covers marketplace coverage before Medicare. Your plan has no one under 65 with a marketplace quote, so there’s nothing for it to show.',
-  // The interim Tax Strategies page on the working route (until RC8): the recommendation isn't worked out there yet.
-  strategiesInterimWorkingRoute:
-    'Strategy recommendations come later for a plan with working years still ahead; this page will show one once they do.',
   // --- The year-by-year table (Act 5, U7). The pilot's drafts, shipped flagged for Briggsy's cold read. The heading
   // is bound by `docs/decisions/workbench-one-future.md` §5: steady is never typical, average, expected or median, nor
   // placed in the middle of the range (copyGuard's ONE_FUTURE_BANNED sweeps every workbench string), and the rough
@@ -3036,6 +2982,82 @@ export const copy = {
   // of none is never "no future" (a sample's zero is a bound, the false certainty the 10-of-10 clamp refuses): it reads
   // as `confidenceShareFewer`, true of any sample with none run out.
   confidenceShareEvery: 'every future',
+  // --- Tax → Tax Strategies (Act 6 · RC8; `strategiesView.ts`, `summaryView.ts`, `taxRunsView.ts`): the solve's page.
+  // The Strategies tab finds the recommendation; Summary, Comparison and Details read it. A one-future chart or table
+  // names its market (steady or rough) in its title, so a single path is never read as the odds. ---
+  taxStratTabsLabel: 'Tax strategy views',
+  taxStratTabStrategies: 'Strategies',
+  taxStratTabSummary: 'Summary',
+  taxStratTabComparison: 'Comparison',
+  taxStratTabDetails: 'Details',
+  // The working route's stopgap (plan RC8): the solve runs on the all-retired route only (`solveDispatch.ts`), so a plan
+  // with working years ahead gets this line and no goal picker, Find button or other tab. Snapshot's card reads it too.
+  taxStratWorkingRoute:
+    'B9 works out a withdrawal and Roth strategy once everyone in the plan has stopped working; that build comes next.',
+  taxStratTopTitle: 'Top strategies',
+  taxStratAsk:
+    'Pick a goal, and B9 compares withdrawal orders and Roth conversion plans to find the strategy that does the most for it.',
+  taxStratFind: 'Find the best strategy',
+  taxStratAnswerWaiting: 'Your plan’s answer is still being worked out. Once it lands, this can run.',
+  taxStratCalculating: 'Calculating',
+  taxStratWinner: 'Winner',
+  taxStratHeroAverage: '(average across futures)',
+  taxStratLevers: 'What it changes',
+  taxStratNoConversion: 'No Roth conversions',
+  taxStratRowWinner: 'Recommended',
+  taxStratRowRunnerUp: 'Runner-up',
+  taxStratRowBaseline: 'Your plan today',
+  taxStratRowBaselineRunnerUp: 'Your plan today, the runner-up',
+  taxStratRowNearTie: 'Too close to call apart',
+  taxStratListStrategy: 'Strategy',
+  taxStratMetricLeaveMore: 'Left to your heirs, after taxes',
+  taxStratMetricPayLessTax: 'Lifetime tax and health premiums',
+  taxStratMetricPayLessTaxUnpriced: 'Lifetime income tax',
+  taxStratListCaption: 'The recommended strategy, the runner-up and your plan today, each with its average across futures.',
+  taxStratWaiting: 'This view fills in once the Strategies tab has found a strategy.',
+  taxStratToStrategies: 'Go to Strategies',
+  taxStratSameAsPlan: 'The recommended strategy is your plan as it stands, so there is nothing to compare year by year.',
+  taxStratSummaryTitle: 'Summary of the recommendation',
+  taxStratSummaryDescription:
+    'Two bars: the recommended strategy’s average across futures beside your plan today’s, each with its value printed above it.',
+  taxStratMarketLabel: 'Market',
+  taxStratPlanLabel: 'Strategy shown',
+  taxStratChartAssets: 'Invested assets',
+  taxStratChartTax: 'Income tax',
+  taxStratChartRmd: 'Required withdrawals',
+  taxStratChartWithdrawals: 'Withdrawals',
+  taxStratChartConversions: 'Roth conversions',
+  taxStratSourceTaxable: 'Taxable',
+  taxStratSourcePretax: 'Pre-tax',
+  taxStratSourceRoth: 'Roth',
+  taxStratSourceHsa: 'HSA',
+  // Invested assets count pre-tax money at its full balance; the leave-more figure on Strategies is what heirs keep after the
+  // tax on it, so a strategy that converts can hold less here and still leave more (insight 160: explain the figure).
+  taxStratAssetsNote:
+    'Invested assets count pre-tax savings at their full balance, before the income tax owed when the money comes out. A strategy that moves money to Roth pays that tax sooner, so it can hold less here and still leave more after tax.',
+  taxStratStackOrder: 'Stacked from the bottom: taxable (solid), pre-tax (hatched), Roth (dotted), HSA (lined).',
+  taxStratRunsWaiting: 'Working out both strategies year by year…',
+  taxStratRunsError: 'These year-by-year runs couldn’t be worked out just now.',
+  taxStratDetailsTitle: 'Details',
+  taxStratTableLabel: 'Table',
+  taxStratTableWithdrawals: 'Withdrawal and conversion',
+  taxStratTableMedicare: 'Medicare premium',
+  taxStratColYear: 'Year',
+  taxStratColAge: 'Age',
+  taxStratColConversion: 'Moved to Roth',
+  taxStratColFromTaxable: 'From taxable',
+  taxStratColFromPretax: 'From pre-tax',
+  taxStratColFromRoth: 'From Roth',
+  taxStratColTaxableEnd: 'Taxable at year’s end',
+  taxStratColPretaxEnd: 'Pre-tax at year’s end',
+  taxStratColRothEnd: 'Roth at year’s end',
+  // The ledger records each year's income for the Medicare bill two years later (the lookback, `irmaaIncome`), so the row's
+  // income never sets the same row's bill.
+  taxStratColIrmaaIncome: 'This year’s income, which sets the Medicare bill two years later',
+  taxStratColMedicareBase: 'Medicare premium before the surcharge',
+  taxStratColSurcharge: 'Income surcharge',
+  taxStratColMedicareTotal: 'Medicare premium in all',
+  taxStratMedicareNone: 'No Medicare years in this run.',
   // THE ENTRY SLICE, composed in LAST: the words the first-load chunk renders live in `entryCopy.ts` (see its
   // header). Spread last, a key typed above that the slice also holds fails to compile (TS2783), so the two
   // halves stay disjoint and `copy` stays ONE whole catalog for `CopyKey`, every copyGuard sweep and every lazy surface.
@@ -4920,7 +4942,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:2191` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:2201` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,
@@ -5274,7 +5296,7 @@ export const slots = {
    *  repeated sentence (the anaphora-density class). "about" is the require-hedge modal. Both figures
    *  arrive pre-formatted in the DELTA dialect (formatDeltaDollar — the hero's own ruler). */
   recDeltaTypical: (deltaFormatted: string, medianFormatted: string): string =>
-    `The “$${deltaFormatted} more” above is an average across the futures we tested. In the typical future the edge is closer to about $${medianFormatted}.`,
+    `The ~$${deltaFormatted} above is an average across the futures we tested. In the typical future the edge is closer to about $${medianFormatted}.`,
   /** The qualification's NO-DOLLAR arm: the typical per-future advantage sits at zero (or under
    *  the display step in EITHER direction), so quoting a median dollar would fabricate a figure —
    *  the honest sentence is that at least half the tested futures gain little or nothing from the
@@ -5283,7 +5305,7 @@ export const slots = {
    *  {@link slots.recDeltaTypicalBehind} instead (review wf_6f89fe6f-35a P2 — "little or nothing"
    *  floors a real loss at zero, the optimistic direction). */
   recDeltaTypicalNone: (deltaFormatted: string): string =>
-    `The “$${deltaFormatted} more” above is an average across the futures we tested. In at least half of them, this change likely gains little or nothing.`,
+    `The ~$${deltaFormatted} above is an average across the futures we tested. In at least half of them, this change likely gains little or nothing.`,
   /** The qualification's BEHIND arm (review wf_6f89fe6f-35a P2, refuters 4-0 across two lenses):
    *  when the typical per-future advantage is MATERIALLY negative — the median future actively
    *  loses vs doing nothing while a few strong futures prop the average up — "gains little or
@@ -5292,7 +5314,7 @@ export const slots = {
    *  futures sit at-or-beyond the median, so "about $Y or more behind" is exact). "likely" + "about"
    *  carry require-hedge. */
   recDeltaTypicalBehind: (deltaFormatted: string, behindFormatted: string): string =>
-    `The “$${deltaFormatted} more” above is an average across the futures we tested. In about half of them, this change likely comes out about $${behindFormatted} or more behind.`,
+    `The ~$${deltaFormatted} above is an average across the futures we tested. In about half of them, this change likely comes out about $${behindFormatted} or more behind.`,
   /** The withheld reason for `state-certification-pending` (Q5): the STATE by name, the TRUE reason
    *  (rates not officially set), the DIRECTION honestly, framed as REFUSING to guess. "could" carries
    *  require-hedge on its own. `stateName` arrives from the existing stateOption* copy (no re-typed
@@ -5328,30 +5350,6 @@ export const slots = {
    *  The note and the row ship together or not at all. */
   recDiscHeirBracket: (percentFormatted: string): string =>
     `Assumes your heirs are in roughly the ${percentFormatted}% tax bracket when they inherit — adjust it in your assumptions if that’s off.`,
-  /** The RecommendationViz accessible sentence (the role="img" name): both arms' magnitudes AND the
-   *  delta, so the whole comparison is reachable in the a11y tree (A2 AT-parity). "about" carries the
-   *  hedge; every figure arrives pre-formatted, so the sentence carries no bare numeral — the ENDPOINTS in
-   *  the humane "$X.XM" prose dialect (`formatAbsoluteDollar`, money.ts:75), the DELTA in grouped digits
-   *  (`formatDeltaDollar`, money.ts:56). NOT formatAxisDollar's exact-when-round RULER precision (money.ts:189):
-   *  that dialect never touches this sentence, and naming it here would point a reader at the wrong rounding law.
-   *
-   *  ⚠️ WEALTH-SHAPED ⇒ LEAVE-MORE ONLY (2026-09-08). "lands near about $X" describes a level the reader
-   *  wants HIGHER. On `pay-less-tax` the same slots would carry mean lifetime ALL-IN cost (income tax +
-   *  health-insurance premiums since 2026-10-05; lower is better, `goalHeadlineStatistic` in
-   *  src/engine/solver/objective.ts) and the sentence would read backwards — so recommendationView.ts
-   *  suppresses BOTH vizzes off leave-more (`recommendedView` + `runnerUpVizFor` — named, not line-cited:
-   *  a cross-file line number is the drift class this docblock was just re-anchored for) and this slot
-   *  renders on no other goal. A goal-named caption + aria variant for pay-less-tax are ⚑ Briggsy's
-   *  words to author (filed in the register) — an OMISSION, never a swap of the other goal's figures
-   *  into this template.
-   *  NAMED onto the `recDelta*` control prefix (`CONTROL_KEY_PREFIXES`, copyGuard.ts:124) so `require-hedge`
-   *  BITES it the way it bites its visual twin `recDeltaTypical`: the AT reader hears the same figures the
-   *  sighted reader sees, so the same modal law must hold. A `recViz` prefix was rejected — it would red the
-   *  three correctly hedge-free arm labels (`recVizWithLabel`/`recVizWithoutLabel`/`recVizRunnerUpLabel` —
-   *  each reds `require-hedge` on its own, measured 2026-09-08); a by-NAME arm on
-   *  `isControlKey` was rejected — it breaks that predicate's "by prefix ALONE" law (copyGuard.ts:130). */
-  recDeltaVizAria: (withoutLabel: string, withoutFig: string, withLabel: string, withFig: string, deltaFig: string): string =>
-    `${withoutLabel} lands near about $${withoutFig}; ${withLabel} about $${withFig} — a difference of about $${deltaFig}.`,
   // --- Act-4 · U17 §S5 — the saved record's AGE on the card. ---
   /** The mint year, spoken as a calendar year rather than a day count. It rides a SLOT because the
    *  free-numeral gate (/\d/) reds any digit written into a static `recommend*` line — and because
@@ -5610,6 +5608,40 @@ export const slots = {
   // kinds outside it have their own words: fewer than 1 (none reads so too), more than 99, every). `plural` follows the
   // share's own noun ("about 6 in 100 futures have", "every future has"). ---
   confidenceShareAbout: (n: number): string => `about ${n} in 100 futures`,
+  // --- Tax → Tax Strategies (Act 6 · RC8). The Winner card's hero follows the goal and the run's built health pricing
+  // (`recommendationView.ts`'s two pay-less-tax arms); the figure arrives in the delta dialect (`formatDeltaDollar`). ---
+  taxStratHeroLeaveMore: (fig: string): string => `~$${fig} more left to your heirs`,
+  taxStratHeroPayLessTax: (fig: string): string => `~$${fig} less in tax and health premiums`,
+  taxStratHeroPayLessTaxUnpriced: (fig: string): string => `~$${fig} less in income tax`,
+  taxStratCompared: (n: number): string => `${n} strategies compared`,
+  /** The ranked list's closing line: every ranked candidate the list does not show, counted, never drawn (a pruned
+   *  candidate carries no figure we can show and no levers we can name). */
+  taxStratOthers: (n: number): string =>
+    n === 1
+      ? '1 other strategy was compared and ranked below these; its figure isn’t shown.'
+      : `${n} other strategies were compared and ranked below these; their figures aren’t shown.`,
+  taxStratValue: (fig: string): string => `~$${fig}`,
+  taxStratRothRow: (amount: string, years: number): string =>
+    `Roth: ~$${amount} a year for ${years === 1 ? '1 year' : `${years} years`}`,
+  /** A one-future chart or table, named for its market (plan 4.0: a one-path picture is never read as the odds). */
+  taxStratInMarket: (title: string, steady: boolean): string => `${title}, in the ${steady ? 'steady' : 'rough'} market`,
+  taxStratCompareAssets: (fig: string, dir: 'more' | 'less' | 'same', year: number, steady: boolean): string =>
+    dir === 'same'
+      ? `At the end of ${year}, both strategies hold about the same in savings, in the ${steady ? 'steady' : 'rough'} market.`
+      : `At the end of ${year}, the recommended strategy holds ~$${fig} ${dir} in savings than your plan today, in the ${steady ? 'steady' : 'rough'} market.`,
+  taxStratCompareTax: (fig: string, dir: 'more' | 'less' | 'same', steady: boolean): string =>
+    dir === 'same'
+      ? `Over the years shown, both strategies pay about the same income tax, in the ${steady ? 'steady' : 'rough'} market.`
+      : `Over the years shown, the recommended strategy pays ~$${fig} ${dir} income tax than your plan today, in the ${steady ? 'steady' : 'rough'} market.`,
+  taxStratCompareRmd: (fig: string, dir: 'more' | 'less' | 'same', steady: boolean): string =>
+    dir === 'same'
+      ? `Over the years shown, both strategies take about the same in required withdrawals, in the ${steady ? 'steady' : 'rough'} market.`
+      : `Over the years shown, the recommended strategy takes ~$${fig} ${dir} in required withdrawals than your plan today, in the ${steady ? 'steady' : 'rough'} market.`,
+  taxStratCompareConversions: (ours: string, theirs: string, steady: boolean): string =>
+    `Over the years shown, the recommended strategy moves ~$${ours} to Roth and your plan today moves ~$${theirs}, in the ${steady ? 'steady' : 'rough'} market.`,
+  taxStratBarPoint: (name: string, fig: string): string => `${name}: ~$${fig}`,
+  taxStratChartPoint: (year: number, name: string, fig: string): string => `${year}, ${name}: ~$${fig}`,
+  taxStratDetailsOf: (who: string, steady: boolean): string => `${who}, in the ${steady ? 'steady' : 'rough'} market`,
   confidenceShareFewer: (): string => 'fewer than 1 in 100 futures',
   confidenceShareMore: (): string => 'more than 99 in 100 futures',
   confidenceRunOutTitle: (): string => 'Futures that have run out of money by this age, out of every 100',

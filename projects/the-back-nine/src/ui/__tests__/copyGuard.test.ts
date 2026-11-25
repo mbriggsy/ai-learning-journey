@@ -553,15 +553,16 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
   //     HELD card (nothing is "found" on a hold), so the body must never claim a find; (2) the body must
   //     positively affirm the ANSWER above is current (only the strategy read went stale) — the honest
   //     truth the coherent card carries. Planted mutant (b): restoring the old wording reds this pin. ---
-  it('the stale card body kills "since we found this" and affirms the answer above is current (F-B drift-pin)', () => {
+  it('the stale card body kills "since we found this" and affirms the plan’s answer is current (F-B drift-pin)', () => {
     const body = copy.recommendStaleBody
     // (1) the false "found" claim is dead (untrue whenever the predecessor was the HELD card).
     expect(body, 'the "since we found this" falsehood must stay dead').not.toMatch(/found this/i)
     // Broadened past the one lexeme (insight 087 spirit): no "found"/"we made"/"we worked out" claim
     // that a HOLD predecessor would falsify — a synonym reword resurrecting the falsehood trips this.
     expect(body, 'no find/produce claim a hold predecessor would falsify').not.toMatch(/\b(found|we made|worked out|we built)\b/i)
-    // (2) the positive anchor (non-vacuity — burned/070): the body affirms the answer above is current.
-    expect(body, 'the body affirms the answer above already reflects the change').toContain('Your answer above already reflects them')
+    // (2) the positive anchor (non-vacuity — burned/070): the body affirms the plan's answer is current (Act 6 · RC8: no
+    // answer sits ABOVE it on Tax Strategies, so "your answer above" named nothing there).
+    expect(body, 'the body affirms the plan’s answer already reflects the change').toContain('Your plan’s answer already reflects them')
     // The heading names the state calmly (the strategy READ is out of date — true for held OR recommended).
     expect(copy.recommendStaleHeading, 'the heading names the strategy read out of date').toContain('out of date')
   })
@@ -913,17 +914,10 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     recDeltaTypicalNone: slots.recDeltaTypicalNone('48,000'),
     recDeltaTypicalBehind: slots.recDeltaTypicalBehind('48,000', '9,000'),
     recHoldStateCert: slots.recHoldStateCert('North Carolina'),
-    // Act-4 · U16 §S3b — the heir-bracket disclosure AND the viz aria sentence, both control-scoped
-    // (recDisc* / recDelta* ⇒ require-hedge-swept). The aria sentence was renamed onto recDelta* on
-    // 2026-09-08: an AT reader hears the same figures the chart shows, so the same modal law binds it.
-    // Its labels are the SHIPPED copy keys, never re-typed literals (2026-09-08): a sample only gates
-    // what ships if it composes the slot the way `recommendedView` does — literals cannot see a label
-    // reword, and those labels are themselves unscoped exceptions whose only other pin is the canary at
-    // the foot of this file. This is the PRIMARY composition (winner vs the household's own plan);
-    // `runnerUpVizFor`'s second composition has its own sample under the control sweep below.
+    // Act-4 · U16 §S3b — the heir-bracket disclosure, control-scoped (recDisc* ⇒ require-hedge-swept). The viz aria
+    // sentence (`recDeltaVizAria`) retired with RecommendationViz (Act 6 · RC8).
     recDiscHeirBracket: slots.recDiscHeirBracket('24'),
     assumptionHeirBracketOption: slots.assumptionHeirBracketOption('24'),
-    recDeltaVizAria: slots.recDeltaVizAria(copy.recVizWithoutLabel, '740,000', copy.recVizWithLabel, '788,000', '48,000'),
     recommendRecordSavedIn: slots.recommendRecordSavedIn(2026),
     // The pay check's W step, money picture and panel row (U8) — one representative render each.
     workingCostQuoteMonthly: slots.workingCostQuoteMonthly('7,000', '84,000'),
@@ -1209,6 +1203,22 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     confidenceRunOutBy: slots.confidenceRunOutBy(92, 90, 'about 6 in 100 futures', true),
     confidenceRunOutWhole: slots.confidenceRunOutWhole('every future', false),
     confidenceRunOutWholePast: slots.confidenceRunOutWholePast(93, 92, 'about 12 in 100 futures', true),
+    // Act 6 · RC8, Tax → Tax Strategies.
+    taxStratHeroLeaveMore: slots.taxStratHeroLeaveMore('128,000'),
+    taxStratHeroPayLessTax: slots.taxStratHeroPayLessTax('48,000'),
+    taxStratHeroPayLessTaxUnpriced: slots.taxStratHeroPayLessTaxUnpriced('48,000'),
+    taxStratCompared: slots.taxStratCompared(62),
+    taxStratOthers: slots.taxStratOthers(59),
+    taxStratValue: slots.taxStratValue('4,240,000'),
+    taxStratRothRow: slots.taxStratRothRow('21,000', 5),
+    taxStratInMarket: slots.taxStratInMarket('Income tax', true),
+    taxStratCompareAssets: slots.taxStratCompareAssets('120,000', 'more', 2061, true),
+    taxStratCompareTax: slots.taxStratCompareTax('48,000', 'less', false),
+    taxStratCompareRmd: slots.taxStratCompareRmd('210,000', 'less', true),
+    taxStratCompareConversions: slots.taxStratCompareConversions('105,000', '0', true),
+    taxStratBarPoint: slots.taxStratBarPoint('The recommended strategy', '4,240,000'),
+    taxStratChartPoint: slots.taxStratChartPoint(2034, 'Your plan today', '12,000'),
+    taxStratDetailsOf: slots.taxStratDetailsOf('The recommended strategy', true),
     confidenceCutNote: slots.confidenceCutNote(93, 92),
     bandClockCutDesc: slots.bandClockCutDesc(93, 92),
   }
@@ -2374,17 +2384,6 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     }
   })
 
-  it('the viz-aria RUNNER-UP composition is swept too (SLOT_RENDER holds one sample per slot — and it is the PRIMARY one)', () => {
-    // 2026-09-08. `recDeltaVizAria` is composed TWICE in recommendationView.ts: by `recommendedView`
-    // (winner vs the household's own plan — the SLOT_RENDER sample above) and by `runnerUpVizFor`, which
-    // seats `recVizRunnerUpLabel` in the without-arm. One-sample-per-slot can never reach the second, so
-    // it is swept here — again off the SHIPPED keys, so a label reword lands in this gate too.
-    const runnerUpAria = slots.recDeltaVizAria(
-      copy.recVizRunnerUpLabel, '740,000', copy.recVizWithLabel, '788,000', '48,000',
-    )
-    expect(lintCopy(runnerUpAria, controlGates), runnerUpAria).toEqual([])
-  })
-
   it('the require-hedge machinery works end-to-end (predicate scope + gate polarity — non-vacuity canary)', () => {
     // predicate: control readouts IN, chart chrome + terse verdicts OUT
     expect(isControlKey('rothDeltaReadout'), 'a roth readout is control-scoped').toBe(true)
@@ -2430,8 +2429,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
   // calendar year and no modal belongs — BY NAME, never by prefix.
   const REC_SCOPED = /^rec(?!over)/
   const UNSCOPED_FLAT_REC: readonly string[] = [
-    'recVizWithLabel', 'recVizWithoutLabel', 'recVizRunnerUpLabel',
-    'recGradeAriaUngraded', 'recSeeRunnerUp',
+    'recVizWithLabel', 'recVizWithoutLabel', 'recSeeRunnerUp',
   ]
   const VERDICT_ONLY_REC_SLOTS: readonly string[] = ['recommendRecordSavedIn']
 
@@ -2449,9 +2447,9 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     expect(unscopedFlat.slice().sort()).toEqual([...UNSCOPED_FLAT_REC].sort())
     // Every exception is figure-free chrome: a numeral or a dollar sign makes it a plan-moving claim,
     // which belongs in a scope, not on this list. AND every one must crown nothing: `superlative` is
-    // VERDICT-scoped (copyGuard.ts:19-23), so these five ride only the three universal gates — and
+    // VERDICT-scoped (copyGuard.ts:19-23), so these ride only the three universal gates — and
     // without the second arm `recVizWithLabel: 'The best strategy'` (R12's crowning sin) would ship green
-    // as the recommended arm's on-chart label AND inside the spoken aria sentence.
+    // as the recommended side's legend name on Tax Strategies' Summary and Comparison charts.
     for (const k of UNSCOPED_FLAT_REC) {
       expect(copy[k as CopyKey], `${k} is allowlisted, so it must speak no figure`).not.toMatch(/[\d$]/)
       expect(lintCopy(copy[k as CopyKey], ['superlative']), `${k} is unscoped, so it must crown nothing`).toEqual([])

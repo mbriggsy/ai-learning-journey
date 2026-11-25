@@ -69,8 +69,8 @@ const REQUIRED_MIRROR_FILES = [
   'src/intake/controls.css',
   'src/intake/sheetShell.css',
   'src/ui/styles/app.css',
-  'src/ui/styles/recommendation.css',
-  'src/ui/styles/result.css',
+  // `recommendation.css` and `result.css` left this list at RC8 with the interim Tax Strategies tab (its old answer frame
+  // and recommendation surface); the clone's Tax Strategies page reads the tiers through the kit's `laptop:` variant.
   // `e2e/vertical-fit.spec.ts` left this list at RC4: its `matchMedia` tier read served the answer page's two-pane arms,
   // which left with the answer page (the shell's own fit arms read the tiers through `e2e/rc-screens.spec.ts`'s sizes).
 ] as const

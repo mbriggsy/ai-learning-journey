@@ -518,118 +518,42 @@ describe('recommendationView — the disclosures adjacent to the delta', () => {
   })
 })
 
-// ---- §S3b — the two-arm comparison viz view model ------------------------------------------------
+// ---- Act 6 · RC8 — the Summary tab's two bars (ported from the §S3b two-arm viz and the §S4 runner-up viz) ----------
 
-describe('recommendationView — the two-arm viz props', () => {
-  it('ACTIVE mode composes the viz: winner/baseline magnitudes + resolved labels; the aria carries all figures', () => {
+describe('recommendationView — the Summary bars (RC8: the hero’s statistic, both goals, never in the no-dollar register)', () => {
+  it('ACTIVE leave-more: the bars are the winner’s and the baseline’s seed-B headline, the figures the hero’s delta is the difference of (insight 099)', () => {
     const payload = leaveMoreRec()
     const v = asRec(recommendationView(committed(payload), { spineConfidence: spine }))
-    expect(v.viz, 'an active delta shows the two-arm viz').toBeDefined()
-    expect(v.viz!.withoutMagnitude).toBe(payload.noActionBaseline.headlineStatisticB)
-    expect(v.viz!.withMagnitude).toBe(payload.winner.headlineStatisticB)
-    expect(v.viz!.labels.withLabel).toBe(copy.recVizWithLabel)
-    expect(v.viz!.labels.withoutLabel).toBe(copy.recVizWithoutLabel)
-    // A2 AT-parity: the delta magnitude is reachable inside the role="img" aria sentence.
-    const delta = formatDeltaDollar(payload.winner.headlineStatisticB - payload.noActionBaseline.headlineStatisticB)
-    expect(v.viz!.labels.deltaLabel).toBe(`$${delta}`)
-    expect(v.viz!.labels.ariaSummary).toContain(delta)
+    expect(v.bars, 'an active delta shows the two bars').toBeDefined()
+    expect(v.bars!.winner).toBe(payload.winner.headlineStatisticB)
+    expect(v.bars!.baseline).toBe(payload.noActionBaseline.headlineStatisticB)
+    expect(formatDeltaDollar(v.bars!.winner - v.bars!.baseline), 'the bars differ by the hero’s own figure').toBe(v.grade.deltaFigure)
   })
 
-  it('F-E: the viz aria ENDPOINTS join the $X.XM prose dialect (≥ $1M absolutes); the DELTA stays grouped', () => {
-    // Portfolio-scale absolutes (≥ $1M): winner mean 5,760,000 vs baseline mean 5,560,000, delta 200,000.
-    const winner = armFor('leave-more', HB, 'taxable-first', 'taxable-first', { terminalTaxableReal: [4_000_000, 6_000_000], terminalPretaxReal: [1_000_000, 1_000_000], terminalRothReal: [0, 0], terminalHsaReal: [0, 0] })
-    const baseline = armFor('leave-more', HB, 'proportional', 'proportional', { terminalTaxableReal: [3_800_000, 5_800_000], terminalPretaxReal: [1_000_000, 1_000_000], terminalRothReal: [0, 0], terminalHsaReal: [0, 0] })
-    const payload = leaveMoreRec({ winner, noActionBaseline: baseline, skewDisclosure: { meanReal: winner.headlineStatisticB, medianReal: winner.headlineStatisticB, p10Real: 0, p90Real: 0, skewDirection: 'symmetric', meanMinusMedianReal: 0 } })
-    const v = asRec(recommendationView(committed(payload), { spineConfidence: spine }))
-    const aria = v.viz!.labels.ariaSummary
-    // each portfolio ENDPOINT reads the humane "$X.XM" prose, never full grouped digits.
-    expect(aria).toContain(`$${formatAbsoluteDollar(winner.headlineStatisticB)}`)
-    expect(aria).toContain(`$${formatAbsoluteDollar(baseline.headlineStatisticB)}`)
-    expect(aria, 'the endpoints are the $X.XM dialect').toMatch(/\$\d+(\.\d+)?M/)
-    // the DELTA between them stays grouped digits (a smaller difference reads naturally grouped).
-    const delta = formatDeltaDollar(winner.headlineStatisticB - baseline.headlineStatisticB)
-    expect(aria, 'the delta stays grouped digits').toContain(`$${delta}`)
-    // the delta label (the bar) is unchanged — grouped digits.
-    expect(v.viz!.labels.deltaLabel).toBe(`$${delta}`)
-  })
-
-  it('NO-CHANGE mode shows NO viz (never a fabricated ~$0 two-bar delta)', () => {
-    const v = asRec(recommendationView(committed(leaveMoreRec({ noChange: true })), { spineConfidence: spine }))
-    expect(v.mode).toBe('no-change')
-    expect(v.viz, 'the compose reassurance stands alone').toBeUndefined()
-  })
-})
-
-// ---- §S4 — the runner-up comparison viz (winner vs runner-up, one tap down) -----------------------
-
-describe('recommendationView — the §S4 runner-up comparison viz', () => {
-  it('ACTIVE leave-more, winner AHEAD at seed-B: the runner-up carries the two-arm viz (recommended vs runner-up)', () => {
-    const payload = leaveMoreRec() // default fixture: winner (576k) displays ahead of runner-up (546k)
-    const v = asRec(recommendationView(committed(payload), { spineConfidence: spine }))
-    const rv = v.runnerUp!.viz
-    expect(rv, 'the winner displays ahead → the picture ships').toBeDefined()
-    // the recommended arm = the winner (its hatch/triangle identity is preserved across both vizzes).
-    expect(rv!.withMagnitude).toBe(payload.winner.headlineStatisticB)
-    expect(rv!.withoutMagnitude).toBe(payload.runnerUp!.headlineStatisticB)
-    expect(rv!.labels.withLabel).toBe(copy.recVizWithLabel)
-    expect(rv!.labels.withoutLabel).toBe(copy.recVizRunnerUpLabel)
-    // A2 AT-parity: the winner-vs-runner-up GAP is reachable in the delta label AND the role="img" aria.
-    const gap = formatDeltaDollar(payload.winner.headlineStatisticB - payload.runnerUp!.headlineStatisticB)
-    expect(rv!.labels.deltaLabel).toBe(`$${gap}`)
-    expect(rv!.labels.ariaSummary).toContain(gap)
-  })
-
-  it('the A-decides / B-displays INVERSION drops the picture (never a chart contradicting the ranking); the hedged TEXT is kept', () => {
-    // The runner-up DISPLAYS ahead of the winner at seed-B (a near-tie inverted on the display seed).
-    // Drawing "the recommended strategy" with a shorter bar than the runner-up is calm-but-wrong, so
-    // the view model suppresses the viz; the honest "came out ahead more often" text is retained.
-    const higherRunnerUp = armFor('leave-more', HB, 'bracket-fill', 'bracket-fill', { terminalTaxableReal: [700_000, 900_000], terminalPretaxReal: [100_000, 100_000], terminalRothReal: [0, 0], terminalHsaReal: [0, 0] })
-    const payload = leaveMoreRec({ runnerUp: higherRunnerUp })
-    expect(higherRunnerUp.headlineStatisticB, 'the runner-up displays ahead of the winner').toBeGreaterThan(payload.winner.headlineStatisticB)
-    const v = asRec(recommendationView(committed(payload), { spineConfidence: spine }))
-    expect(v.runnerUp!.viz, 'no picture on a display inversion').toBeUndefined()
-    expect(v.runnerUp!.why, 'the runner-up is still retained as hedged text').toBe(copy.recRunnerUpWhy)
-  })
-
-  it('pay-less-tax draws NEITHER picture — the wealth-shaped grammar cannot carry a lower-is-better statistic; the leave-more control still ships both', () => {
-    // C1 (2026-09-08): the bars put direction on which one is LONGER and the aria says an arm "lands near
-    // about $X", but pay-less-tax plots mean lifetime ALL-IN cost (income tax + health-insurance
-    // premiums since 2026-10-05), where LOWER is better — so the recommended
-    // arm draws the SHORTER bar under a longer-is-better grammar. Both pictures are withheld until a
-    // goal-named caption + aria variant are authored (an OMISSION, never a swap of the tax figures into
-    // the wealth sentence); the goal-WORDED dollar hero carries its own direction and still ships.
-    // This REPLACES the runner-up ORIENTATION arm that stood here: under the goal gate that arm is
-    // unreachable (`runnerUpVizFor` keeps the goal-general orientation anyway, as the fail-correct shape
-    // for the day the gate lifts), and the live orientation proof is the leave-more inversion test above.
+  it('ACTIVE pay-less-tax draws the bars too (RC8’s ruling: printed values and the goal’s own words carry the direction), the winner’s the LOWER', () => {
     const goal: RecommendationGoal = 'pay-less-tax'
     const winner = armFor(goal, undefined, 'bracket-fill', 'bracket-fill', { lifetimeTaxPaidReal: [40_000, 40_000] })
     const baseline = armFor(goal, undefined, 'proportional', 'proportional', { lifetimeTaxPaidReal: [55_000, 55_000] })
     const runnerUp = armFor(goal, undefined, 'taxable-first', 'taxable-first', { lifetimeTaxPaidReal: [50_000, 50_000] })
     const payload = { ...leaveMoreRec(), goal, heirBracket: undefined, winner, noActionBaseline: baseline, runnerUp, gradeStatistic: 'pay-less-tax' as const, skewDisclosure: undefined }
     const v = asRec(recommendationView(committed(payload), { spineConfidence: spine }))
-    // NON-VACUITY: this is the payload that WOULD have drawn — active mode, a real hero dollar, and the
-    // winner displaying ahead of BOTH other arms (paying less). Without these, the two undefined arms
-    // below would pass on a no-dollar payload for the wrong reason.
-    expect(v.mode, 'an ACTIVE pay-less-tax delta (not the no-dollar register)').toBe('active')
-    expect(v.grade.deltaFigure, 'the goal-worded dollar hero still ships').toBeDefined()
-    expect(winner.headlineStatisticB, 'the winner pays less than the baseline').toBeLessThan(baseline.headlineStatisticB)
-    expect(winner.headlineStatisticB, 'and less than the runner-up').toBeLessThan(runnerUp.headlineStatisticB)
-    expect(v.viz, 'no primary picture on pay-less-tax').toBeUndefined()
-    expect(v.runnerUp!.viz, 'no runner-up picture on pay-less-tax').toBeUndefined()
-    expect(v.runnerUp!.why, 'the hedged runner-up TEXT is still retained (R23)').toBe(copy.recRunnerUpWhy)
-    // CONTROL: the gate is GOAL-scoped, not a blanket suppression — the same shape on leave-more still
-    // draws both. (Mutant: drop `goal !== 'leave-more'` at the viz site, or the mirrored early return in
-    // `runnerUpVizFor`, and the matching undefined arm above goes red while this control stays green.)
-    const control = asRec(recommendationView(committed(leaveMoreRec()), { spineConfidence: spine }))
-    expect(control.viz, 'leave-more still draws the primary picture').toBeDefined()
-    expect(control.runnerUp!.viz, 'and the runner-up picture').toBeDefined()
+    expect(v.mode).toBe('active')
+    expect(v.bars).toEqual({ winner: winner.headlineStatisticB, baseline: baseline.headlineStatisticB })
+    expect(v.bars!.winner).toBeLessThan(v.bars!.baseline)
+    expect(v.runnerUp!.why, 'the hedged runner-up TEXT is retained (R23)').toBe(copy.recRunnerUpWhy)
   })
 
-  it('NO-CHANGE mode carries NO runner-up viz (the primary viz is suppressed too — never a fabricated compare)', () => {
+  it('NO-CHANGE mode shows NO bars (never a fabricated ~$0 two-bar compare); the runner-up text stays', () => {
     const v = asRec(recommendationView(committed(leaveMoreRec({ noChange: true })), { spineConfidence: spine }))
     expect(v.mode).toBe('no-change')
-    expect(v.runnerUp!.viz, 'no winner-ahead delta to draw in no-change').toBeUndefined()
-    expect(v.runnerUp!.why, 'the runner-up text is still retained').toBe(copy.recRunnerUpWhy)
+    expect(v.bars, 'the compose reassurance stands alone').toBeUndefined()
+    expect(v.runnerUp!.why).toBe(copy.recRunnerUpWhy)
+  })
+
+  it('the runner-up carries its hedged TEXT only: its figure rides the ranked list, so no picture field survives', () => {
+    const higherRunnerUp = armFor('leave-more', HB, 'bracket-fill', 'bracket-fill', { terminalTaxableReal: [700_000, 900_000], terminalPretaxReal: [100_000, 100_000], terminalRothReal: [0, 0], terminalHsaReal: [0, 0] })
+    const v = asRec(recommendationView(committed(leaveMoreRec({ runnerUp: higherRunnerUp })), { spineConfidence: spine }))
+    expect(v.runnerUp).toEqual({ why: copy.recRunnerUpWhy })
   })
 })
 
@@ -657,7 +581,7 @@ describe('recommendationView — the grade signal state + the ShapeDisclosure se
 // ---- F1 — the winner-vs-baseline seed-B display inversion (wall #1's render corollary) ------------
 
 describe('recommendationView — the A-decides / B-displays inversion suppresses the fabricated dollar hero', () => {
-  it('leave-more, winner DISPLAYS BEHIND the no-action baseline at seed-B: NO dollar hero, NO viz, the honest compose register', () => {
+  it('leave-more, winner DISPLAYS BEHIND the no-action baseline at seed-B: NO dollar hero, NO bars, the honest compose register', () => {
     // The seed-A-crowned winner shows a SMALLER bequest than the baseline at seed-B (a near-tie inverted
     // on the display seed). "keeps ~$X more" here would sign-strip a NEGATIVE advantage into a fabricated
     // positive claim, and a winner-ahead bar would contradict the ranking — both calm-but-wrong.
@@ -672,9 +596,8 @@ describe('recommendationView — the A-decides / B-displays inversion suppresses
     expect(v.grade.deltaFigure, 'no fabricated dollar magnitude').toBeUndefined()
     expect(v.grade.heroLine, 'the "already on a strong path" reassurance, never "keeps ~$X more"').toBe(copy.recComposeAlready)
     expect(v.grade.heroLine).not.toMatch(/more/)
-    // no primary viz (so no positive winner-ahead aria claim) AND no runner-up picture on the inversion.
-    expect(v.viz, 'no fabricated winner-ahead bars / positive aria').toBeUndefined()
-    expect(v.runnerUp?.viz, 'no runner-up picture in the no-dollar register').toBeUndefined()
+    // no Summary bars (so no winner-ahead picture against the ranking) on the inversion.
+    expect(v.bars, 'no fabricated winner-ahead bars').toBeUndefined()
     expect(v.runnerUp?.why, 'the runner-up TEXT is still retained (R23)').toBe(copy.recRunnerUpWhy)
   })
 
@@ -691,7 +614,7 @@ describe('recommendationView — the A-decides / B-displays inversion suppresses
     // OVER-DETERMINED since the C1 goal gate (2026-09-08): the picture is now withheld on EVERY
     // pay-less-tax payload, inverted or not. The three assertions above are this test's live inversion
     // proof (mode + hero); this one stays as the no-fabricated-bars belt.
-    expect(v.viz).toBeUndefined()
+    expect(v.bars).toBeUndefined()
   })
 
   it('CONTROL: winner DISPLAYS AHEAD ⇒ the normal active delta-as-hero path is unchanged (the guard is scoped to real inversions)', () => {
@@ -702,7 +625,7 @@ describe('recommendationView — the A-decides / B-displays inversion suppresses
     expect(v.mode).toBe('active')
     expect(v.grade.deltaFigure).toBe(expectedDelta)
     expect(v.grade.heroLine).toBe(slots.recDeltaLeaveMore(expectedDelta))
-    expect(v.viz, 'the active two-arm viz still ships').toBeDefined()
+    expect(v.bars, 'the active Summary bars still ship').toBeDefined()
   })
 })
 
@@ -866,7 +789,7 @@ describe('recommendationView — the pay-less-tax ALL-IN hero follows the run’
 // ---- the ZERO-COLLAPSE sibling: a winner-ahead delta that FORMATS to $0 (no zero-floor) ------------
 
 describe('recommendationView — a winner-ahead delta that formats to $0 routes to the no-dollar register', () => {
-  it('leave-more: winner DISPLAYS AHEAD but the seed-B delta rounds to a formatted $0 ⇒ NO "$0 more" hero, NO viz, the compose register', () => {
+  it('leave-more: winner DISPLAYS AHEAD but the seed-B delta rounds to a formatted $0 ⇒ NO "$0 more" hero, NO bars, the compose register', () => {
     // The winner leads the baseline by $40 at seed-B — a REAL survival winner (not the prior, not sub-tenth,
     // and winnerDisplaysAhead is TRUE so this is NOT the inversion arm) — but formatDeltaDollar has no
     // zero-floor: $40 rounds to '0'. "Leaves about $0 more" is an absurd active claim (calm-but-wrong).
@@ -884,26 +807,7 @@ describe('recommendationView — a winner-ahead delta that formats to $0 routes 
     expect(v.grade.deltaFigure, 'no fabricated $0 magnitude').toBeUndefined()
     expect(v.grade.heroLine, 'the "already on a strong path" reassurance, never "…about $0 more"').toBe(copy.recComposeAlready)
     expect(v.grade.heroLine).not.toMatch(/\$?0/)
-    expect(v.viz, 'no $0-delta two-bar viz').toBeUndefined()
-    expect(v.runnerUp?.viz, 'no runner-up picture in the no-dollar register').toBeUndefined()
-  })
-
-  it('MIRROR: an active winner (real primary delta) whose winner-vs-runner-up GAP formats to $0 draws NO runner-up viz', () => {
-    // The PRIMARY delta (winner 576k vs baseline 426k = 150,000) does not collapse ⇒ active mode, primary
-    // viz ships. But the runner-up is a near-tie: winner leads it by $40 (winnerDisplaysAhead TRUE), which
-    // formatDeltaDollar rounds to '0' — a $0-gap two-bar picture is the same absurd compare, so it's dropped.
-    const nearTieRunnerUp = armFor('leave-more', HB, 'bracket-fill', 'bracket-fill', {
-      terminalTaxableReal: [499_960, 499_960], terminalPretaxReal: [100_000, 100_000], terminalRothReal: [0, 0], terminalHsaReal: [0, 0],
-    })
-    const payload = leaveMoreRec({ runnerUp: nearTieRunnerUp })
-    const gap = payload.winner.headlineStatisticB - payload.runnerUp!.headlineStatisticB
-    expect(gap, 'the winner leads the runner-up by a hair').toBeGreaterThan(0)
-    expect(formatDeltaDollar(gap), 'the gap formats to a bare $0').toBe('0')
-    const v = asRec(recommendationView(committed(payload), { spineConfidence: spine }))
-    expect(v.mode, 'the primary delta (150k) still makes this an active rec').toBe('active')
-    expect(v.grade.deltaFigure, 'the primary dollar hero still shows').toBeDefined()
-    expect(v.runnerUp!.viz, 'no $0-gap runner-up picture').toBeUndefined()
-    expect(v.runnerUp!.why, 'the runner-up TEXT is still retained (R23)').toBe(copy.recRunnerUpWhy)
+    expect(v.bars, 'no $0-delta two-bar compare').toBeUndefined()
   })
 
   it('CONTROL: a delta JUST ABOVE the collapse threshold ($100) still renders the dollar hero (the guard is scoped to real $0 collapses)', () => {
@@ -921,7 +825,7 @@ describe('recommendationView — a winner-ahead delta that formats to $0 routes 
     expect(v.mode).toBe('active')
     expect(v.grade.deltaFigure).toBe(expectedDelta)
     expect(v.grade.heroLine).toBe(slots.recDeltaLeaveMore(expectedDelta))
-    expect(v.viz, 'the active two-arm viz still ships').toBeDefined()
+    expect(v.bars, 'the active Summary bars still ship').toBeDefined()
   })
 })
 

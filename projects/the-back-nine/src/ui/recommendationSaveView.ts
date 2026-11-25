@@ -38,6 +38,8 @@ import type {
   SavedRecommendationSupersededCause,
 } from '@store/savedRecommendation'
 import { epochDayToCalendarYear } from '@store/staleness'
+// Type-only: `IntakeApp` owns the gesture, and an erased import closes no runtime cycle.
+import type { RecommendationSaveTicket } from './IntakeApp'
 import type { PersistState } from './resultSave'
 import type { SaveReady } from './scenarioFromDraft'
 
@@ -80,6 +82,21 @@ export type RecommendationSaveView =
   | { readonly kind: 'saved' }
   /** A promised affordance that did not complete owes a rendered outcome (insight 100). */
   | { readonly kind: 'refused'; readonly reason: RecommendationSaveRefusal }
+
+/** The strategy slot's save state + the callbacks IntakeApp attaches (moved here from the deleted
+ *  `RecommendationSurface.tsx` by Act 6 · RC8; Tax Strategies' Winner card and Snapshot's card read it). */
+export interface RecommendationSaveProp {
+  readonly view: RecommendationSaveView
+  /** The tap. The TICKET is composed by the caller from the two producers on screen (the committed solve's
+   *  fingerprint and the view's register), never re-derived by the gesture (insight 081). */
+  readonly onSave: (ticket: RecommendationSaveTicket) => void
+  /** THE DURABILITY EVENT: a write carrying this record reached disk. A flag rather than a view transition, because
+   *  the ceremony route unmounts the shell, so a ref seeded from the current view sees `saved` on both sides of the
+   *  remount and stays silent about the very save it mounted to announce. */
+  readonly landed: boolean
+  /** Acknowledge the event so it fires once (clear-after-announce, burned/045). */
+  readonly onAnnounced: () => void
+}
 
 export interface RecommendationSaveInput {
   /** What is on disk (`resultSave.ts`) — the ONLY evidence a save happened. */

@@ -66,7 +66,7 @@ export default defineConfig({
     // by construction (`violatedDirective.startsWith('script-src')` at e2e/csp.spec.ts:189, and the same
     // prefix match at :215 / :229 / :247 / :263 — written so Chromium's granular `script-src-elem` and a
     // bare `script-src` both pass). What holds IT back is COST: its worker/intake walk is a full intake
-    // plus two engine round trips on a Chromium-tuned budget (`test.setTimeout(180_000)`, csp.spec.ts:316 —
+    // plus two engine round trips on a Chromium-tuned budget (`test.setTimeout(180_000)`, csp.spec.ts:314 —
     // and since 2026-10-03 a SECOND walk to the pooled solve's spawn, `test.setTimeout(240_000)` at :321;
     // both sized for a 4-vCPU runner), so tagging the spec would drive those walks a second time on an
     // engine whose wall clock nobody has measured. Its fast enforced/control arms (six today) COULD be

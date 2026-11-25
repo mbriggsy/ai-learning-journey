@@ -11,7 +11,8 @@
  * headless — the real browser, never the headless shell). The household arrives by a PLANT
  * (`solveTimingPlant.ts`: the dev seed written into the app's own IndexedDB — the seed routes are
  * DCE'd from dist/), then the drive is the user's: unlock → (the re-entry gate, if it mounts) → the
- * final-tier verdict → the invite → the GoalPicker → "See the strategy" → the lockup.
+ * final-tier verdict → Tax → Tax Strategies → the goal radio → Find → the Winner card (Act 6 · RC8's page; before it, the
+ * old invite and GoalPicker).
  *
  * THE CLOCK IS IN THE PAGE. Every mark is `performance.now()` in the app's own renderer: a click mark
  * is stamped in the same task that fires the native click, and a render mark by a 250 ms POLL that
@@ -72,9 +73,9 @@ const LOCKUP_MS = 95 * 60_000
 /** The in-page probes: first-seen time of each, read by the poll. */
 const PROBES = {
   verdict: SETTLED_RESULT,
-  invite: '.result-recommend-invite',
-  pending: '.solve-pending',
-  lockup: '.rec-held, .rec-committed',
+  invite: '[data-find]',
+  pending: '[data-calculating]',
+  lockup: '[data-winner], [data-notice="held"]',
 } as const
 
 interface TimingState {
@@ -135,7 +136,7 @@ async function installClock(page: Page): Promise<void> {
         state.marks[key] = now
         const text = (el.textContent ?? '').replace(/\s+/g, ' ').trim().slice(0, 400)
         state.notes[key] = text
-        if (key === 'lockup') state.notes.lockupKind = el.classList.contains('rec-committed') ? 'committed' : 'held'
+        if (key === 'lockup') state.notes.lockupKind = el.hasAttribute('data-winner') ? 'committed' : 'held'
       }
     }
     setInterval(tick, 250)
@@ -184,16 +185,14 @@ for (const { seed, goal } of TARGETS) {
     if (await affirm.isVisible()) await stampClick(affirm, 'affirmClick')
     await expect(page.locator(PROBES.verdict), `${seed}: no final-tier verdict`).toBeAttached({ timeout: VERDICT_MS })
 
-    // 4. The invite → the GoalPicker → the goal → "See the strategy" (the stamped click).
+    // 4. Tax → Tax Strategies → the goal radio → Find (the stamped click).
+    await page.getByRole('link', { name: 'Tax', exact: true }).first().click()
     const invite = page.locator(PROBES.invite)
-    await expect(invite, `${seed}: the recommend-second invite never mounted — this household cannot be timed`).toBeVisible({ timeout: 60_000 })
-    await invite.click()
-    const dialog = page.getByRole('dialog')
-    await expect(page.getByRole('heading', { name: 'What should your plan aim for?' }), `${seed}: the GoalPicker did not open`).toBeVisible()
-    const radio = dialog.getByRole('radio', { name: GOALS[goal] })
+    await expect(invite, `${seed}: Find never mounted — this household cannot be timed`).toBeVisible({ timeout: 60_000 })
+    const radio = page.getByRole('radio', { name: GOALS[goal] })
     await radio.evaluate((el) => (el as HTMLInputElement).click())
     await expect(radio, `${seed}: the goal radio did not commit`).toBeChecked()
-    await stampClick(dialog.getByRole('button', { name: 'See the strategy', exact: true }), 'confirmClick')
+    await stampClick(invite, 'confirmClick')
 
     // 5. The lockup — polled in the page, never slept on.
     await page.waitForFunction(() => window.__solveTiming?.marks.lockup !== undefined, null, {

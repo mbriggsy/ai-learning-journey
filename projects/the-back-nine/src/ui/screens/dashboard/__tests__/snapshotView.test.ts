@@ -368,7 +368,7 @@ describe('Snapshot: the Recommendations card', () => {
 
   it('on a working household (dip): the working-route line and no link', () => {
     const d = DEV_SEEDS.dip
-    expect(snapshotView(input(snap(d, dateAnswer(d, 6)))).rec.view).toEqual({ kind: 'working-route', words: copy.snapshotRecWorkingRoute })
+    expect(snapshotView(input(snap(d, dateAnswer(d, 6)))).rec.view).toEqual({ kind: 'working-route', words: copy.taxStratWorkingRoute })
   })
 
   it('no action anywhere is labelled Apply', () => {

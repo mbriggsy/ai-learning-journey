@@ -210,15 +210,13 @@ test.describe('CSP — real browser enforcement', () => {
     await expect(page.locator(SETTLED_RESULT), 'no final-tier verdict — the invite cannot mount').toBeAttached({ timeout: 120_000 })
     expect(page.workers(), 'before the solve: the spine worker alone').toHaveLength(1)
 
-    // Act 6 · RC4: the recommend-second invite lives on Tax → Tax Strategies (the interim tab until RC8).
+    // Act 6 · RC8: Tax → Tax Strategies' empty state: the goal on the page's own radio, then Find.
     await page.getByRole('navigation', { name: copy.shellModulesLabel }).getByRole('link', { name: copy.shellModuleTax, exact: true }).click()
-    const invite = page.locator('.result-recommend-invite')
-    await expect(invite, 'the recommend-second invite never mounted').toBeVisible({ timeout: 60_000 })
-    await invite.click()
-    const dialog = page.getByRole('dialog')
-    await dialog.getByRole('radio', { name: /Pay less tax/ }).check({ force: true })
-    await dialog.getByRole('button', { name: 'See the strategy', exact: true }).click()
-    await expect(page.locator('.solve-pending'), 'the solve never went pending').toBeAttached({ timeout: 30_000 })
+    const find = page.getByRole('button', { name: copy.taxStratFind, exact: true })
+    await expect(find, 'Find never mounted').toBeVisible({ timeout: 60_000 })
+    await page.getByRole('radio', { name: new RegExp(copy.goalPayLessTaxLabel) }).check()
+    await find.click()
+    await expect(page.locator('[data-calculating]'), 'the solve never went pending').toBeAttached({ timeout: 30_000 })
 
     // The spine + ONE coordinator + TWO eval workers, all through the one `new URL` literal.
     await expect.poll(() => page.workers().length, { message: 'the pool never spawned', timeout: 30_000 }).toBe(4)
@@ -227,13 +225,13 @@ test.describe('CSP — real browser enforcement', () => {
     // window is far past a cached chunk's load; the solve is still minutes from done.
     await page.waitForTimeout(10_000)
     expect(page.workers(), 'a pool member died — the lane tore down').toHaveLength(4)
-    await expect(page.locator('.solve-pending'), 'the solve settled inside the window — the arm proved nothing about a LIVE pool').toBeAttached()
+    await expect(page.locator('[data-calculating]'), 'the solve settled inside the window — the arm proved nothing about a LIVE pool').toBeAttached()
 
     const v = await violations(page)
     expect(v.some((x) => /worker-src|script-src/.test(x.violatedDirective))).toBe(false)
   })
 
-  test('the shell loads under the enforced CSP: the home, Probability and its Action Items tray, Confidence, every interim tab and both its menus, no violation, and no request outside the build’s own files', async ({ page }) => {
+  test('the shell loads under the enforced CSP: the home, Probability and its Action Items tray, Confidence, Cash Flows, Tax Strategies, every interim tab and both its menus, no violation, and no request outside the build’s own files', async ({ page }) => {
     // Act 6 · RC2 (plan 6, section 3.1's Verification; the workbench room's arm before it, U6 to U15), re-pointed at RC4:
     // the real intake lands on the home (Dashboard → Snapshot), the shell's lazy chunk and its styles load with it on the
     // served build, Probability draws its rings and its two balance bars (Highcharts again), and every interim tab is
@@ -334,6 +332,19 @@ test.describe('CSP — real browser enforcement', () => {
     await page.getByRole('tab', { name: copy.cashFlowsTabAccounts }).click()
     await expect(page.getByRole('combobox', { name: copy.cashFlowsAccountsLabel })).toBeVisible()
     expect(await page.evaluate(() => document.querySelectorAll('style').length), 'Cash Flows injected a <style> element').toBe(0)
+
+    // Tax → Tax Strategies (RC8): its folder tabs (the page's own state), the empty state's goal radios and Find, and
+    // Summary's waiting words before a solve; the solve's own workers are the pooled arm's above.
+    await page.getByRole('navigation', { name: copy.shellModulesLabel }).getByRole('link', { name: copy.shellModuleTax, exact: true }).click()
+    await expect(page.getByRole('heading', { level: 1, name: copy.shellPageTaxStrategies })).toBeVisible({ timeout: 30_000 })
+    expect(new URL(page.url()).hash).toBe('#/tax/strategies')
+    await expect(page.getByRole('button', { name: copy.taxStratFind, exact: true }), 'Find never showed').toBeVisible()
+    await page.getByRole('radio', { name: new RegExp(copy.goalLeaveMoreLabel) }).check()
+    await expect(page.locator('[data-heir-bracket]'), 'the heirs’ bracket beside the leave-more pick').toBeVisible()
+    await page.getByRole('tab', { name: copy.taxStratTabSummary }).click()
+    await expect(page.locator('[data-summary="waiting"]'), 'Summary’s words before a solve').toBeVisible()
+    await page.getByRole('tab', { name: copy.taxStratTabStrategies }).click()
+    expect(await page.evaluate(() => document.querySelectorAll('style').length), 'Tax Strategies injected a <style> element').toBe(0)
 
     // The lock menu: a portaled menu, opened and closed by Escape.
     await page.getByRole('button', { name: new RegExp(`^${copy.lockMenuLabel}`) }).click()

@@ -647,6 +647,10 @@ said squeaky clears `temp/` UNCONDITIONALLY; its step 4 now deletes only the clo
   first frame.** A legend toggle then measures a stale plot edge and half-drawn ticks in e2e while it works in a live
   browser. Any arm or look capture that reads a chart after a redraw (a toggle, a resize, new data) runs under reduced
   motion (`page.emulateMedia({ reducedMotion: 'reduce' })`), which the shared chart default turns into no animation.
+  The same pin holds a DEFERRED data label at opacity 0 for good (b9-10, 2026-11-25): Health Care's cliff counts read
+  missing in every motion-on capture while a real clock faded them in within 1.5 s. A probe that finds a chart word
+  missing runs once on a plain `@playwright/test` page (no pin) before calling it a product bug; and a chart's printed
+  values are never deferred (`defer: false` on the SERIES' `dataLabels`: a point-level `defer` is ignored).
 
 ## The mutation harness
 

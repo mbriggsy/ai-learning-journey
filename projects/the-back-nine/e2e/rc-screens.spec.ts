@@ -2856,6 +2856,15 @@ test.describe(`RC10 · Health Care at his window (${REAL.width}×${REAL.height} 
       const cliff = (await page.locator('[data-chart="health-aca"] .highcharts-data-label text').allTextContents()).map((t) => t.trim()).filter((t) => t !== '')
       for (const c of cliff) expect(c, `${seed}: a cliff count in the sheet’s words`).toMatch(/^\d of 10$|^more than 9 in 10$/)
       await assertCliffCountsApart(page, `${seed} REAL`)
+      // The count's key sits in the marketplace chart's own box whenever a count prints, inside the first frame (b9-10:
+      // it lived only in the notes below the frame).
+      const key = page.locator('[data-health-part="aca"] [data-health-cliff-key]')
+      await expect(key, `${seed}: the count's key prints exactly when a count does`).toHaveCount(cliff.length > 0 ? 1 : 0)
+      if (cliff.length > 0) {
+        await expect(key).toHaveText(copy.healthCliffCaption)
+        const keyBottom = await key.evaluate((el) => el.getBoundingClientRect().bottom)
+        expect(keyBottom, `${seed}: the count's key inside the first frame`).toBeLessThanOrEqual(REAL.height)
+      }
       if (seed === 'healthgap') {
         expect(cliff.length, 'healthgap: its marketplace years carry a cliff share').toBeGreaterThan(0)
         await expect(page.locator('[data-health-note]', { hasText: copy.healthCliffKey })).toHaveCount(1)
@@ -2881,6 +2890,31 @@ test.describe(`RC10 · Health Care at his window (${REAL.width}×${REAL.height} 
       await expect(page.locator('[data-health-tray-aca]')).toHaveCount(route === 'retired' ? 1 : 0)
     })
   }
+})
+
+// The arms above run under reduced motion, where Highcharts shows a deferred label at once. With motion on the cliff's
+// counts waited on a fade after the morph: in a live browser they read missing for about half a second, and under the
+// harnesses' pinned clock (the RC7 landmine) the fade never ran, so a motion-on capture showed a bracket with no count
+// (b9-10, 2026-11-25; measured on a real clock: opacity 0 at once, 1 by 1.5 s). Printed values are never deferred
+// (`fanOptions.ts`' rule); this arm reads the counts painted at once with motion on.
+test.describe(`RC10 · Health Care's cliff counts paint with motion on (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr)`, () => {
+  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR, reducedMotion: 'no-preference' })
+  test('?seed=healthgap: every cliff count is painted, its opacity up the tree at least 0.9', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 120_000)
+    await enterHealth(page, 'healthgap')
+    const labels = page.locator('[data-chart="health-aca"] .highcharts-data-label')
+    await expect(labels.first(), 'healthgap: its marketplace years carry a cliff share').toBeAttached({ timeout: 60_000 })
+    const painted = () =>
+      labels.evaluateAll((els) =>
+        els.map((el) => {
+          let op = 1
+          for (let n: Element | null = el; n !== null && n.tagName.toLowerCase() !== 'svg'; n = n.parentElement) op *= parseFloat(getComputedStyle(n).opacity)
+          return Math.round(op * 100) / 100
+        }),
+      )
+    // A fade, if any, has a second to finish: the morph is 250 ms.
+    await expect.poll(async () => (await painted()).every((op) => op >= 0.9), { timeout: 3_000, message: 'healthgap: a cliff count never painted' }).toBe(true)
+  })
 })
 
 test.describe(`RC10 · Health Care on the phone (${PHONE.width}×${PHONE.height} @ ${PHONE_DPR}dpr)`, () => {

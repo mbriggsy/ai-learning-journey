@@ -82,6 +82,10 @@ export function healthPartOptions(input: HealthPartInput): Options {
       showInLegend: false,
       enableMouseTracking: false,
       marker: { enabled: false },
+      // The count is never deferred (`fanOptions.ts`' rule), set on the series: Highcharts reads `defer` for the series'
+      // label group, never a point's. Deferred, the count faded in after the morph (missing for about half a second), and
+      // under the harnesses' pinned clock the fade never ran at all (b9-10, 2026-11-25).
+      dataLabels: { defer: false },
       // A bracket over the stretch's columns at the top of the plot, its two ends turned down so two stretches side by side
       // read as two; its count printed over its middle.
       data: [

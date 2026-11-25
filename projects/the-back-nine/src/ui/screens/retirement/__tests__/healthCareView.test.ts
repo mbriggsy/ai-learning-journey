@@ -143,6 +143,16 @@ describe('the marketplace cliff share', () => {
     for (const p of v.parts.filter((x) => x.id !== 'aca')) expect(p.cliff).toEqual([])
     for (const p of charts(working()).parts) expect(p.cliff).toEqual([])
   })
+
+  it('the count’s key rides the marketplace chart exactly when a bracket draws, naming its base', () => {
+    const v = charts(retired())
+    const aca = v.parts.find((p) => p.id === 'aca')!
+    expect(aca.cliff.length, '[test setup] the retired draft draws a bracket').toBeGreaterThan(0)
+    expect(aca.cliffKey).toBe(copy.healthCliffCaption)
+    expect(copy.healthCliffCaption).toContain('futures that buy marketplace cover')
+    for (const p of v.parts.filter((x) => x.id !== 'aca')) expect(p.cliffKey).toBeUndefined()
+    for (const p of charts(working()).parts) expect(p.cliffKey).toBeUndefined()
+  })
 })
 
 describe('the words come from the sheet’s composers', () => {

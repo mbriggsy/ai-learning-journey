@@ -105,6 +105,12 @@ function Charts({ view }: { readonly view: HealthChartsView }) {
                     />
                   </Suspense>
                 </ChartBoundary>
+                {/* The cliff count's key, in the chart's own box whenever a bracket draws. */}
+                {part.cliffKey !== undefined ? (
+                  <p className="text-axis text-stone-600" data-health-cliff-key="">
+                    {part.cliffKey}
+                  </p>
+                ) : null}
               </div>
             ))}
           </div>

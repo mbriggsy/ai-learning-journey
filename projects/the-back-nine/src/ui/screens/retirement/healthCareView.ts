@@ -89,6 +89,9 @@ export interface HealthPartChart {
   readonly bars: readonly HealthBar[]
   /** The marketplace part only, the retired route only. */
   readonly cliff: readonly CliffRun[]
+  /** The count's key, printed under the chart inside its own box: present exactly when a bracket draws, so a count is
+   *  never read in the first frame without it (its full words stay in the notes). */
+  readonly cliffKey?: string
 }
 
 /** A group of notes under the charts, headed by the part it speaks for. */
@@ -215,6 +218,7 @@ function partCharts(years: readonly PartYear[], first: { readonly age: number; r
       return { age, year, value: y[id], point: slots.healthYearPoint(axisTitle, age, year, PART_TITLE[id], formatDeltaDollar(y[id])) }
     }),
     cliff: id === 'aca' ? cliff : [],
+    ...(id === 'aca' && cliff.length > 0 ? { cliffKey: copy.healthCliffCaption } : {}),
   }))
 }
 

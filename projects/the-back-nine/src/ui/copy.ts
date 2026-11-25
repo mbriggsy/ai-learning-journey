@@ -3092,6 +3092,9 @@ export const copy = {
   healthLifetimeEachOwn: 'Each figure is the middle of its own spread of futures, so the parts need not add up to the total.',
   healthCliffKey:
     'The count over a bracket: about how many of 10 of the futures that buy marketplace cover that year have income past the line, so that year’s discount disappears entirely.',
+  /** The count's key inside the marketplace chart's own box, whenever a bracket draws (the full key above stays in the
+   *  notes; this one is read in the first frame, beside the count it explains). */
+  healthCliffCaption: 'Over a bracket: about how many of 10 futures that buy marketplace cover lose the whole discount that year.',
   healthIrmaaStopgap:
     'A middle cost of $0 means fewer than half the futures pay a surcharge that year. How many do pay one isn’t shown here yet.',
   healthWorkingStopgap:

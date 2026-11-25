@@ -429,7 +429,7 @@ test.describe(`RC4 · the home and Probability at his window (${REAL.width}×${R
         // `retired`'s basis is steady, so the line is drawn (`probabilityView.test.ts` pins the same on its real run).
         if (seed === 'retired') {
           await expect(page.locator('[data-shared-notes]'), `${seed}: the survivor’s spending basis`).toContainText('This assumes about $')
-          await expect(page.locator('[data-shared-notes]'), `${seed}: the survivor’s income step-down, said once under both halves`).toContainText('the household’s monthly income steps down about $')
+          await expect(page.locator('[data-shared-notes]'), `${seed}: the survivor’s income step-down, said once under both halves`).toContainText('the household’s monthly income steps down about ~$')
         }
         const floor = await hcFloorPx(page)
         assertHcText(await hcAudit(page, '[data-bar="compared"] [data-chart="bar-compared"]', '[data-half="compared"]'), floor, { texts: [], counts: { 'data-label': 1, 'axis-label': 2 } }, `${seed} REAL bar`)
@@ -1921,10 +1921,11 @@ test.describe(`RC6 · Cash Flows: the plan select, the paired form and the CSV (
       expect(g.runs, `${g.year}: your plan’s row over the what-if’s, each named`).toEqual([copy.workbenchRailPlanLabel, 'Pre-tax savings first'])
       expect(g.span).toBe('2')
     }
-    // The CSV: exactly the cells shown (header rows first; a spanned year on each of its rows), read off the real file.
+    // The CSV: exactly the cells shown (header rows first, a header's no-break spaces as plain ones; a spanned year on
+    // each of its rows), read off the real file.
     const shown = await cfFrame(page).evaluate((frame) => {
       const head = [...frame.querySelectorAll('thead tr')].map((tr) =>
-        [...tr.querySelectorAll('th')].flatMap((th) => [th.textContent ?? '', ...Array.from({ length: Number(th.getAttribute('colspan') ?? '1') - 1 }, () => '')]),
+        [...tr.querySelectorAll('th')].flatMap((th) => [(th.textContent ?? '').replace(/\u00a0/g, ' '), ...Array.from({ length: Number(th.getAttribute('colspan') ?? '1') - 1 }, () => '')]),
       )
       const body = [...frame.querySelectorAll('tbody')].flatMap((tb) => {
         const year = tb.querySelector('th[scope="rowgroup"]')?.textContent ?? null

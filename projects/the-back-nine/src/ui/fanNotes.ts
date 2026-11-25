@@ -47,7 +47,7 @@ export function bandTrackNote(view: Pick<DatesView, 'band' | 'spendLevels' | 'wo
 /** The aged fan's premise line and its door. */
 export interface FanPremise {
   readonly text: string
-  /** The guided re-walk (re-confirm your numbers); absent on a read-only tab. */
+  /** The guided re-walk (re-confirm your numbers); absent on a read-only tab, whose words say where it happens. */
   readonly door?: { readonly label: string }
 }
 
@@ -59,8 +59,7 @@ export function fanPremise(
   readOnly: boolean,
 ): FanPremise | null {
   if (!moments.some((m) => m.id === 'built')) return null
-  return {
-    text: agedBalancesYear !== undefined ? slots.bandAgedPremiseSaved(agedBalancesYear) : slots.bandAgedPremiseFresh(buildYear),
-    ...(readOnly ? {} : { door: { label: copy.bandPremiseReconfirmCta } }),
-  }
+  const text = agedBalancesYear !== undefined ? slots.bandAgedPremiseSaved(agedBalancesYear) : slots.bandAgedPremiseFresh(buildYear)
+  // "Until you re-confirm" with no door would point at nothing: a read-only tab says where it happens.
+  return readOnly ? { text: `${text} ${copy.bandPremiseReadOnly}` } : { text, door: { label: copy.bandPremiseReconfirmCta } }
 }

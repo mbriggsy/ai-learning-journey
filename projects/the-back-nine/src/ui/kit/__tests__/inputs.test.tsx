@@ -153,6 +153,19 @@ describe('MoneyInput', () => {
     await user.tab()
     expect(onCommit).not.toHaveBeenCalled()
   })
+
+  it('a box focused while locked keeps no draft: unlocked with a new figure, it shows that figure, and a tab through commits nothing', async () => {
+    const onCommit = vi.fn()
+    const user = userEvent.setup()
+    const view = render(<MoneyInput label="Line" value={9_600} onCommit={onCommit} readOnly invalidMessage="x" />)
+    await user.click(screen.getByLabelText('Line'))
+    await user.tab()
+    view.rerender(<MoneyInput label="Line" value={12_000} onCommit={onCommit} invalidMessage="x" />)
+    expect(screen.getByLabelText('Line')).toHaveValue('12,000')
+    await user.click(screen.getByLabelText('Line'))
+    await user.tab()
+    expect(onCommit).not.toHaveBeenCalled()
+  })
 })
 
 describe('PercentInput', () => {

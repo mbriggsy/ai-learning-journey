@@ -18,16 +18,22 @@
  * `PANEL_PROVENANCE`): this sheet exists only after the answer, and completing the walk is the receipt that the spend
  * period was answered.
  *
- * EVERY WAY THE SHEET ENDS ENDS THE EDIT THE SAME WAY (Done, dismiss, the room unmounting under it, the step
- * leaving the walk): the discard rule, then, if the draft moved at ANY point while the sheet was open, the
- * route-aware recompute (`recomputeAfterEdit`, the panel's cadence), so the pinned answer and the table redraw once
+ * EVERY WAY THE SHEET ENDS ENDS THE EDIT THE SAME WAY (Done, dismiss, the host's page change, the room unmounting under
+ * it, the step leaving the walk): a draft the step's own Continue would refuse goes back to the draft at open (a walk
+ * step hosted outside the walk has no later Continue), the discard rule, then, if the draft moved at ANY point while
+ * the sheet was open, the route-aware recompute (`recomputeAfterEdit`, the panel's cadence), so the pinned answer and the table redraw once
  * per edit, never per field. Never "differs at the close": an edit put back to its value at open can have sent a
  * recompute in flight whose final reads the live draft, and the shown answer would describe the draft the household
  * undid (U8's review, A3). Once the edit has ended, the body's writes are inert through the sheet's exit, so no write
  * lands with no recompute behind it. While the draft differs from the draft at open, the sheet holds the
  * unsaved-buffer guard (`useUnsavedBufferHold`): a Back press asks first (IntakeApp's popstate handler; insight 112).
+ *
+ * A PAGE CHANGE ENDS THE EDIT THROUGH THE SHEET, never by unmounting it (`endRef`, the host's): the field under focus
+ * commits first, as on Done and dismiss (the ending's own cleanup runs after the body has gone, where a blur reaches
+ * nothing), then the refusal check, then the close. Unlike dismiss it never stays for an open entry: a leave's Go says
+ * an entry not yet added is dropped, and a plain page move only comes when nothing is held.
  */
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type MutableRefObject } from 'react'
 import { ControlSheet } from '@intake/controlSheet'
 import { useStepApi } from '@intake/flow'
 import { continueCheck, discardRefusedOnLeave, type StepDef } from '@intake/stepChecks'
@@ -54,9 +60,19 @@ export interface StepSheetProps {
   readonly onClose: () => void
   /** Where focus lands on close when the opening door has unmounted (re-queried at close). */
   readonly restoreFallback: () => HTMLElement | null
+  /** Set while a step is open to the sheet's own ending for a page change (commit the focused field, put a refused
+   *  draft back, close); null while closed. The host calls it instead of dropping its open step. */
+  readonly endRef?: MutableRefObject<(() => void) | null>
 }
 
-export function StepSheet({ model, step, title, onClose, restoreFallback }: StepSheetProps) {
+/** A draft the step's own Continue would refuse goes back to the draft at open (a walk step hosted outside the walk has
+ *  no later Continue: `docs/landmines.md`). Only when the draft moved: a baseline is never rewritten over itself. */
+function restoreIfRefused(model: MemoryModel, step: StepDef, touched: ReadonlySet<FieldPath>, baseline: ScenarioDraft): void {
+  if (draftIdentityKey(model.getSnapshot().draft) === draftIdentityKey(baseline)) return
+  if (continueCheck(model, step, touched, PERIOD_CONFIRMED).blocked) model.update(() => baseline)
+}
+
+export function StepSheet({ model, step, title, onClose, restoreFallback, endRef }: StepSheetProps) {
   const announcerRef = useRef<Announcer | null>(null)
   const { api, touched, setTouched } = useStepApi(model, { periodConfirmed: PERIOD_CONFIRMED })
   const openId = step?.id ?? null
@@ -116,6 +132,8 @@ export function StepSheet({ model, step, title, onClose, restoreFallback }: Step
       const baseline = atOpenRef.current
       if (def === null || def.id !== openId || baseline === null) return
       endedRef.current = true
+      // An ending no close path ran first (the room unmounting under the sheet): the refusal check still holds.
+      restoreIfRefused(model, def, touchedRef.current, baseline)
       discardRefusedOnLeave(model, def, touchedRef.current, PERIOD_CONFIRMED)
       const movedNow = draftIdentityKey(model.getSnapshot().draft) !== draftIdentityKey(baseline)
       if (everMovedRef.current || movedNow) recomputeAfterEdit(model)
@@ -133,15 +151,25 @@ export function StepSheet({ model, step, title, onClose, restoreFallback }: Step
     const active = document.activeElement
     if (active instanceof HTMLElement && bodyRef.current?.contains(active) === true) active.blur()
   }
-  const dismiss = () => {
-    if (bodyRef.current?.querySelector(OPEN_ENTRY) != null) return
+  /** The walk's Back, from inside the sheet or from the host: commit the focused field, put a refused draft back, close. */
+  const end = () => {
     commitFocused()
     const baseline = atOpenRef.current
-    if (step !== null && baseline !== null && continueCheck(model, step, touched, PERIOD_CONFIRMED).blocked) {
-      model.update(() => baseline)
-    }
+    if (step !== null && baseline !== null) restoreIfRefused(model, step, touchedRef.current, baseline)
     onClose()
   }
+  const dismiss = () => {
+    if (bodyRef.current?.querySelector(OPEN_ENTRY) != null) return
+    end()
+  }
+  // The host's page change ends the edit here (see the header); kept current each commit, before the host's effects.
+  useLayoutEffect(() => {
+    if (endRef === undefined) return
+    endRef.current = step !== null ? end : null
+  })
+  useEffect(() => () => {
+    if (endRef !== undefined) endRef.current = null
+  }, [endRef])
 
   const done = () => {
     // Hidden while an entry is open (`workbench.css`); a press that reaches it anyway does nothing, as a dismiss.

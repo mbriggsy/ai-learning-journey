@@ -14,6 +14,7 @@ import { requiredSeats, METHODOLOGY_DISCLOSURES } from '@ui/assumptionRegistry'
 import { copy, slots } from '@ui/copy'
 import { planClockAnchor } from '@ui/bandAnnotations'
 import { formatMoney } from '../moneyFormat'
+import { unsavedBuffersHeld } from '../unsavedBuffer'
 import { missingRequiredFacts } from '../intakeMap'
 import { commitBudgetPatch } from '@budget/budgetToSpending'
 import type { BudgetLineItem, SimulationResult } from '@shared/model'
@@ -1086,6 +1087,9 @@ describe('the W row — four faces, one question (U8)', () => {
     expect(props.onCommitEdit).not.toHaveBeenCalled()
     expect(within(row()).getByRole('alert')).toHaveTextContent(copy.periodConfirmPrompt)
     expect(within(row()).getByLabelText(copy.workingCostAmountLabel)).toHaveValue('40,000')
+    // The held digits are typed work not yet in the plan: a leave asks before it drops them (a page change closes the
+    // panel, the milestone-1 review's round 2).
+    expect(unsavedBuffersHeld(), 'the held figure holds the leave guard').toBe(1)
     fireEvent.click(within(row()).getByRole('radio', { name: copy.periodYear }))
     // A tap on an unchecked segment reaches its handler twice (SegmentedControl's click AND change —
     // the register's *A tap on a segmented control commits twice…*); every commit lands the same answer.
@@ -1099,6 +1103,7 @@ describe('the W row — four faces, one question (U8)', () => {
       })
     }
     expect(within(row()).queryByRole('alert')).toBeNull()
+    expect(unsavedBuffersHeld(), 'committed: nothing held').toBe(0)
   })
 
   it('…and "each month" commits them as a monthly figure: 9,000 a month is 108,000 a year (B3)', () => {

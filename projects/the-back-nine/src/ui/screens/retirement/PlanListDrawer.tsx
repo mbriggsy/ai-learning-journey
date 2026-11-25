@@ -59,7 +59,12 @@ export function PlanListDrawer(props: PlanListDrawerProps) {
   const order = dragOrder ?? ids
   const rows = order.map((id) => view.rows.find((r) => r.id === id)).filter((r) => r !== undefined)
   const keepBox = box?.kind === 'keep' ? box : null
-  // A drawer that closes mid-drag stops listening (and writes nothing).
+  // A drawer that closes mid-drag (Escape, the scrim, the X) stops listening and writes nothing; so does one that
+  // unmounts. The drawer stays mounted while shut, so its close is read off `open`, never the unmount alone.
+  if (!open && dragOrder !== null) setDragOrder(null)
+  useEffect(() => {
+    if (!open) drag.current?.stop()
+  }, [open])
   useEffect(() => () => drag.current?.stop(), [])
 
   // The pointer is followed on the WINDOW, not the handle: a row moved down is re-inserted in the list, and a node taken

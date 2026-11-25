@@ -199,7 +199,9 @@ export function formatAxisDollar(dollars: number): string {
     // 999,500 to 999,999 round up to a thousand thousands: a million, in the million's own unit (never "$1000k").
     return k >= 1_000 ? '$1M' : `$${k}k`
   }
-  return `$${Math.round(v)}`
+  // 999.50 to 999.99 round up to a thousand dollars: a thousand in its own unit (never "$1000").
+  const whole = Math.round(v)
+  return whole >= 1_000 ? '$1k' : `$${whole}`
 }
 
 /** ONE dialect per axis lattice (O8, 2026-07-17 — corpus rule 36, the fcc35556 axis family):

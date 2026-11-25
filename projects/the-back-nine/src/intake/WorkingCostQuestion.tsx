@@ -6,6 +6,7 @@ import { CurrencyField, SegmentedControl } from './fields'
 import { formatMoney } from './moneyFormat'
 import { threeThenMore } from './missingFacts'
 import { useGestureHold } from './gestureHold'
+import { useUnsavedBufferHold } from './unsavedBuffer'
 import { workingYearCostFigure } from './intakeMap'
 import { WORKING_COST_ANSWER_FIELD, WORKING_COST_FIELD } from './sanity'
 import {
@@ -177,6 +178,9 @@ export function WorkingCostQuestion({
   // A figure the host REFUSED on blur (the panel's period rule — the only refusal a figure above $0
   // can meet), kept on screen so the prompt's own period tap can commit it (B3 of the Phase B review).
   const [heldFigure, setHeldFigure] = useState<number | undefined>(undefined)
+  // Held digits are typed work not yet in the plan (an entry not yet added): a leave asks before it drops them, as
+  // over an open entry (insight 112). Only the panel ever holds them: the walk never refuses a figure.
+  useUnsavedBufferHold(heldFigure !== undefined)
   // A blur commits only after a keystroke since focus: a focus that merely passes through the field
   // (a keyboard user tabbing to Continue) is not an answer, so it never re-stamps a stale figure.
   // The Keep door is the explicit keep (refines Phase B ruling 21; the review's hand-verified find).

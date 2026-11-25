@@ -137,6 +137,9 @@ function NumberInput({
           aria-invalid={invalid || undefined}
           aria-describedby={describedBy === '' ? undefined : describedBy}
           onFocus={() => {
+            // A locked box takes no edit, so it holds no draft: one kept from a locked focus would freeze the shown
+            // figure, and a tab through it once unlocked would commit that old text (no seed to match).
+            if (readOnly) return
             seed.current = draft === null ? shown : null
             setDraft(shown)
           }}

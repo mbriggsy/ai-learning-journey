@@ -605,7 +605,7 @@ describe('the save gesture — R1: with no vault the tap MINTS and opens the cer
      *
      * So this arm FORCES the two apart — the only way the difference becomes observable — by
      * making the fresh read return a sentinel no committed run could produce. The gesture consumes
-     * `currentDraftFingerprint()` nowhere (`IntakeApp.tsx:699-830` reads only the snapshot), so the
+     * `currentDraftFingerprint()` nowhere (`IntakeApp.tsx:704-835` reads only the snapshot), so the
      * mock cannot perturb the path under test.
      *
      * MUTANT: `s.solve.fingerprint` → `appModel.currentDraftFingerprint()` at the mint — this reds.
@@ -667,6 +667,33 @@ describe('the save gesture — R1: with no vault the tap MINTS and opens the cer
     } finally {
       release()
     }
+  })
+
+  it('the wordmark on the home over Snapshot’s Keep ask (a move to nowhere) takes the ask away with the minted record: no later Go saves without it', async () => {
+    // MUTANT: `dropSaveAsk` restores the record but leaves the ask: the wordmark on the home moves nowhere, so the ask
+    // stands and its Go runs the save steps with no record (Keep pressed, nothing kept) — this reds.
+    appModel.update(() => LIVE_DRAFT)
+    plant.solve = committedOn()
+    render(<IntakeApp />)
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'complete-stub' }))
+    })
+    const keep = await screen.findByRole('button', { name: copy.snapshotRecKeep }, { timeout: 15_000 })
+    // The ask's cause (here an open entry) cleared before the wordmark, so the wordmark raises no ask of its own.
+    const release = holdUnsavedBuffer()
+    await act(async () => {
+      fireEvent.click(keep)
+    })
+    await act(async () => {})
+    expect(screen.getByText(copy.shellCeremonyOpenEntry), 'Keep asks first over the open entry').toBeInTheDocument()
+    expect(draftRecord(), 'the keep minted its record').not.toBeUndefined()
+    release()
+    await act(async () => {
+      fireEvent.click(screen.getByRole('link', { name: copy.shellHomeLabel }))
+    })
+    expect(screen.queryByText(copy.shellCeremonyOpenEntry), 'the ask went with the wordmark').toBeNull()
+    expect(draftRecord(), 'the unanswered keep put nothing on the draft').toBeUndefined()
+    expect(screen.queryByTestId('ceremony')).toBeNull()
   })
 })
 

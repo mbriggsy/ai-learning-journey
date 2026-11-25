@@ -66,6 +66,9 @@ describe('formatAxisDollar — exact-when-round gridline labels', () => {
     // sub-$1k stays whole dollars
     expect(formatAxisDollar(999)).toBe('$999')
     expect(formatAxisDollar(412.4)).toBe('$412')
+    // ...and just under a thousand rounds to a thousand in its own unit, never "$1000".
+    expect(formatAxisDollar(999.5)).toBe('$1k')
+    expect(formatAxisDollar(999.49)).toBe('$999')
   })
 
   it('the round-ness gate is integer arithmetic, not a float round-trip: 1.1M (not binary-exact in M units) still labels exactly', () => {

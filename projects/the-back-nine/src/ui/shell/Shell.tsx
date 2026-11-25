@@ -406,6 +406,14 @@ export default function Shell({
   const openStep = openStepId === null ? null : (steps.find((s) => s.id === openStepId) ?? null)
   if (openStepId !== null && openStep === null) setOpenStepId(null)
   const openStepTitle = useMemo(() => (openStepId === null ? '' : stepSectionTitle(openStepId, draft)), [openStepId, draft])
+  // A page change ends the open step's edit through the sheet's own ending (the focused field commits, a draft its
+  // Continue would refuse goes back), never by dropping the open step under it (`StepSheet`'s `endRef`).
+  const stepEndRef = useRef<(() => void) | null>(null)
+  const endStep = useCallback(() => {
+    const end = stepEndRef.current
+    if (end !== null) end()
+    else setOpenStepId(null)
+  }, [])
 
   // ── The one what-if (U14, U15; the tray's since RC4b), kept across page switches ─────────────────────────────────
   const kept: readonly KeptWhatIfV6[] = snapshot.draft.keptWhatIfs ?? []
@@ -462,15 +470,18 @@ export default function Shell({
     ...(onReview !== undefined ? { onReview } : {}),
   })
   // A sheet belongs to the page it was opened on: a page change (a leave ask's Go, a plain Back or Forward) closes every
-  // one, so none stays open over the new page (the room's Back unmounted them; the shell's sheets outlive a page).
+  // one, so none stays open over the new page (the room's Back unmounted them; the shell's sheets outlive a page). The
+  // plan list drawer too: it draws only on Probability, and a state left open would reopen it there unasked.
+  const [planListOpen, setPlanListOpen] = useState(false)
   const closeSheets = editors.closeAll
   const sheetsRoute = useRef(routeKey)
   useLayoutEffect(() => {
     if (sheetsRoute.current === routeKey) return
     sheetsRoute.current = routeKey
-    setOpenStepId(null)
+    endStep()
     closeSheets()
-  }, [routeKey, closeSheets])
+    setPlanListOpen(false)
+  }, [routeKey, closeSheets, endStep])
   const sheetDoors: Readonly<Record<SheetDoor, () => void>> = {
     budget: editors.openBudget,
     'subsidy-regime': editors.openHealth,
@@ -496,22 +507,25 @@ export default function Shell({
   const rightPick: RightPick = rightPickState === 'recommended' ? (rightRec !== null ? 'recommended' : 'plan') : rightKept !== undefined ? rightPickState : 'plan'
   const rightBundle = useMemo((): readonly WhatIfLeverV6[] => (rightPick === 'recommended' && rightRec !== null ? rightRec : (rightKept?.levers ?? [])), [rightPick, rightRec, rightKept])
   const right = useSlotRun({ snapshot, ...(compareLanes !== undefined ? { lanes: compareLanes } : {}), shown: rightBundle, tag: rightPick })
-  // ── The plan list drawer (RC5): open or shut, the typed name box (kept here, so a close or a page move drops nothing)
-  // and what its last write said.
-  const [planListOpen, setPlanListOpen] = useState(false)
+  // ── The plan list drawer (RC5): open or shut (declared with the sheets above: a page change shuts it), the typed name
+  // box (kept here, so a close or a page move drops nothing) and what its last write said.
   const [nameBox, setNameBox] = useState<NameBox | null>(null)
   const [planListSaid, setPlanListSaid] = useState<string | null>(null)
   const boxHeld = nameBox !== null && nameBox.text.trim() !== nameBox.seed.trim()
   // A Keep box names the what-if it was opened over (and `replaces` the kept one that what-if reopened): another what-if
   // on the left (opened from a picker or the list, or Apply's new one) drops it, so it never keeps a different what-if or
-  // writes over a different kept one. Opening another asks first over a typed name (`onPick`). Reset keeps the source,
-  // and so the box (its kept one is still the one it replaces).
-  const sourceKey = whatIf.source.kind === 'kept' ? `kept:${whatIf.source.id}` : 'new'
+  // writes over a different kept one. Opening another asks first over a typed name (`onPick`). A new what-if is keyed on
+  // its epoch (Apply and Reset start another, though the source still reads 'new'); a reopened kept one by its id alone,
+  // so Reset keeps its box (its kept one is still the one it replaces).
+  const sourceKey = whatIf.source.kind === 'kept' ? `kept:${whatIf.source.id}` : `new:${whatIf.epoch}`
   const [boxSource, setBoxSource] = useState(sourceKey)
   if (boxSource !== sourceKey) {
     setBoxSource(sourceKey)
     if (nameBox?.kind === 'keep') setNameBox(null)
   }
+  // A box over a kept what-if the list no longer holds (deleted meanwhile) can write nothing it names: it goes.
+  const boxTarget = nameBox === null ? undefined : nameBox.kind === 'rename' ? nameBox.id : nameBox.replaces
+  if (boxTarget !== undefined && !kept.some((k) => k.id === boxTarget)) setNameBox(null)
   const keepBoxHeld = boxHeld && nameBox?.kind === 'keep'
   // An ask the page raises itself (opening another what-if over an unkept one), beside IntakeApp's leave asks.
   const [pageAsk, setPageAsk] = useState<ShellLeaveAsk | null>(null)
@@ -529,6 +543,12 @@ export default function Shell({
   if (trayEpoch !== whatIf.epoch) {
     setTrayEpoch(whatIf.epoch)
     if (trayAwaiting.size > 0) setTrayAwaiting(new Map())
+  }
+  // A wait names an account the plan still offers a deposit for: a plan edit that removes the account (or its owner's
+  // work) takes the wait with it, so no ask names a deposit change that is no longer there.
+  if (trayAwaiting.size > 0) {
+    const offered = new Set(railOffers(snapshot.draft, undefined).deposits.map((d) => d.accountId))
+    if ([...trayAwaiting.keys()].some((id) => !offered.has(id))) setTrayAwaiting(new Map([...trayAwaiting].filter(([id]) => offered.has(id))))
   }
   const announce = useCallback((text: string) => announcer.announce(text), [announcer])
 
@@ -791,10 +811,13 @@ export default function Shell({
 
   // ── The StaleBanner (RC4): the old answer page's staleness note, aged-balances line and standing line ──────────────
   const figured = screen === 'snapshot' || screen === 'probability' || screen === 'confidence' || screen === 'cash-flows'
-  // On Cash Flows without its aged line: the table's own row-one line (`workbenchAged`) says that cause there.
+  // Without its aged line exactly where Cash Flows' own row-one line (`workbenchAged`) says that cause for the same year:
+  // a Cash Flows body with no table (loading, refused, failed, withheld), or a re-saver whose save year is not row one,
+  // keeps the banner's line and its door.
+  const cfAgedYear = cfView?.agedYear ?? null
   const staleLines = useMemo(
-    () => (figured ? composeStaleLines(notes, !readOnly && onReview !== undefined, screen !== 'cash-flows') : []),
-    [figured, notes, readOnly, onReview, screen],
+    () => (figured ? composeStaleLines(notes, !readOnly && onReview !== undefined, cfAgedYear === null || cfAgedYear !== notes.agedBalancesYear) : []),
+    [figured, notes, readOnly, onReview, cfAgedYear],
   )
 
   const snapshotDoors: SnapshotDoors = { analysis: doorTo('probability'), cashFlows: doorTo('cash-flows'), facts: doorTo('interim-facts') }
@@ -839,7 +862,7 @@ export default function Shell({
       ? {
           ...leaveAsk,
           onGo: () => {
-            setOpenStepId(null)
+            endStep()
             editors.closeAll(true)
             leaveAsk.onGo()
           },
@@ -871,10 +894,16 @@ export default function Shell({
     setPlanListSaid(outcomeWords(outcome))
     return outcome
   }
+  /** A landed write closes only the box it was sent from, still holding what it wrote: a box opened (or typed on) while
+   *  the write was in flight stays. */
+  const closeSentBox = (sent: NameBox) =>
+    setNameBox((cur) =>
+      cur !== null && cur.kind === sent.kind && cur.text === sent.text && (cur.kind !== 'rename' || (sent.kind === 'rename' && cur.id === sent.id)) ? null : cur,
+    )
   const confirmName = (box: NameBox) => {
     if (box.kind === 'rename') {
       void writeKept(renameEdit(box.id, box.text)).then((o) => {
-        if (o !== null && o.kind !== 'refused') setNameBox(null)
+        if (o !== null && o.kind !== 'refused') closeSentBox(box)
       })
       return
     }
@@ -892,7 +921,7 @@ export default function Shell({
       void writeKept(keepEdit(id, name, levers, box.replaces !== undefined), id).then((o) => {
         if (o === null || o.kind === 'refused' || o.kind === 'ceremony') return
         whatIf.markKept(id)
-        setNameBox(null)
+        closeSentBox(box)
         if (o.kind !== 'failed') {
           const words = slots.planListKept(name)
           setPlanListSaid(words)
@@ -1086,7 +1115,7 @@ export default function Shell({
         )}
         {!readOnly && (
           <>
-            <StepSheet model={model} step={openStep} title={openStepTitle} onClose={() => setOpenStepId(null)} restoreFallback={restoreFallback} />
+            <StepSheet model={model} step={openStep} title={openStepTitle} onClose={() => setOpenStepId(null)} restoreFallback={restoreFallback} endRef={stepEndRef} />
             {editors.node}
           </>
         )}

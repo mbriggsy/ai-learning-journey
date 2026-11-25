@@ -146,6 +146,8 @@ describe('whatIfRunFor — the empty bundle is the plan itself', () => {
     if (table.kind !== 'run') throw new Error('[test setup] no table run')
     expect(run.views).toEqual(table.views)
     expect(run.meta).toEqual(table.meta)
+    // The stop year is the answer's own, said so (Cash Flows credits it to the answer's date, never to a lever).
+    expect(run.meta.stopFrom).toBe('answer')
     expect(run.plan).toEqual({ kind: 'offset', reading: answer.kind === 'date' && answer.outcome.kind === 'dates' ? answer.outcome.lifestyle.curve[5] : null, track: 'full' })
   })
 
@@ -168,6 +170,8 @@ describe('whatIfRunFor — each lever kind moves only its own fields of the comp
     expect(run.many.params).toEqual(buildCandidateParams(buildDateInput(dip)!, 3, DATE_SEARCH_PATHS.final))
     expect(run.offsetYears).toBe(3)
     expect(run.meta.stopYear).toBe(dip.startCalendarYear + 3)
+    // ...and the year is the lever's, said so (Cash Flows never credits it to the answer's date: the review's c7).
+    expect(run.meta.stopFrom).toBe('lever')
     expect(run.many.params.people.map((p) => p.retirementAge)).toEqual(dip.people.map((p) => p.currentAge! + 3))
   })
 

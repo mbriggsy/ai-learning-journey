@@ -282,12 +282,12 @@ describe('Snapshot on a floor-keyed answer (`datemixed`: the floor dated at 7, t
     expect(fan.kind === 'chart' && fan.premise).toBeUndefined()
   })
 
-  it('an aged plan’s fan ships beside its premise; a read-only tab gets the words with no door', () => {
+  it('an aged plan’s fan ships beside its premise; a read-only tab gets the words with no door, and where re-confirming happens', () => {
     const wall = mixed.startCalendarYear + 2
     const aged = snapshotView(input(s, { wallCalendarYear: wall })).fan.view
     expect(aged.kind === 'chart' && aged.premise).toEqual({ text: slots.bandAgedPremiseFresh(mixed.startCalendarYear), door: { label: copy.bandPremiseReconfirmCta } })
     const saved = snapshotView(input(s, { wallCalendarYear: wall, agedBalancesYear: mixed.startCalendarYear + 1, readOnly: true })).fan.view
-    expect(saved.kind === 'chart' && saved.premise).toEqual({ text: slots.bandAgedPremiseSaved(mixed.startCalendarYear + 1) })
+    expect(saved.kind === 'chart' && saved.premise).toEqual({ text: `${slots.bandAgedPremiseSaved(mixed.startCalendarYear + 1)} ${copy.bandPremiseReadOnly}` })
   })
 })
 

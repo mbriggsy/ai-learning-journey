@@ -384,11 +384,16 @@ export default function IntakeApp({
       return withoutRecord
     })
   }, [])
-  /** A Back, a Forward, the wordmark or the re-walk over the recommendation's keep ask (`go: 'save'`) leaves it
-   *  unanswered, as its Stay does: the record the keep minted comes back off the draft (nothing saved it, and no later
-   *  save may carry it unnamed, R2). A no-op over the lock menu's own save ask, which minted nothing. */
+  /** A Back, a Forward, the wordmark or the re-walk over a save ask (`go: 'save'`) leaves it unanswered, as its Stay
+   *  does: the ask goes, and the record the recommendation's keep minted comes back off the draft (nothing saved it, and
+   *  no later save may carry it unnamed, R2; `restoreRecMint` is a no-op over the lock menu's own save, which minted
+   *  nothing). The ask goes here, not only where the move lands: the wordmark on the home moves nowhere, and an ask
+   *  left standing would run the save steps with no record. A caller's own ask, set after this, stands. */
   const dropSaveAsk = useCallback(() => {
-    if (leaveAskRef.current?.go === 'save') restoreRecMint()
+    if (leaveAskRef.current?.go !== 'save') return
+    restoreRecMint()
+    leaveAskRef.current = null
+    setLeaveAsk(null)
   }, [restoreRecMint])
   /** The wordmark: home to Snapshot, asking first over an open drawer's edit (the what-if survives a page move). */
   const goHome = useCallback(() => {

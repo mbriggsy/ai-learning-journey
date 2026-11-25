@@ -20,7 +20,7 @@
 import { useEffect, useId, useState, type ReactNode } from 'react'
 import { Undo2 } from 'lucide-react'
 import type { ScenarioDraft } from '@store/memoryModel'
-import type { BudgetTier, DrawdownPolicy, WhatIfBudgetLineV6, WhatIfLeverKind, WhatIfLeverV6 } from '@shared/model'
+import { canonicalIdentityToken, type BudgetTier, type DrawdownPolicy, type WhatIfBudgetLineV6, type WhatIfLeverKind, type WhatIfLeverV6 } from '@shared/model'
 import { freshStableId, idsInUse } from '@shared/stableIds'
 import { AddMenu, Button, Checkbox, Drawer, DrawerFields, MoneyInput, Select, Slider, Tray, TrayColumn, TrayRow, TraySection, WholeInput, cn } from '../../kit'
 import { copy, slots } from '../../copy'
@@ -113,12 +113,20 @@ export function ActionItemsTray(props: ActionItemsTrayProps) {
   const { id, open, onOpenChange, whatIf, draft, offers, editedLabel, anchor, crownedOffset, wallCalendarYear, readOnly, current, recommendation, hidden, onHidden, awaiting, onAwaiting, focus, announce } = props
   const view = trayView({ draft, offers, pending: whatIf.pending, committed: whatIf.own, hidden, awaitingEmployer: awaiting, anchor, ...(crownedOffset !== undefined ? { crownedOffset } : {}) })
   const apply = trayApply({ draft, committed: recommendation !== undefined ? whatIf.shown : whatIf.own, pendingDiffers: recommendation === undefined && view.pendingDiffers, current, readOnly })
-  // What Apply last said, held for the bundle it was said under (after a write, the empty bundle).
-  const [said, setSaid] = useState<{ readonly words: string; readonly key: string } | null>(null)
-  // Said once: the words go when the bundle moves on, so a later return to the same bundle (a Reset back to the empty
+  // What Apply last said, held for the state it was said in: a write's words for the bundle after it (the empty one); a
+  // refusal's for the bundle shown, the edits typed and Apply's own state together, so "waits until this what-if is
+  // worked out" goes when the run lands and "waits for Refresh" when Back undoes the edit (an aria-disabled Apply still
+  // takes a press). A writer's refusal over an open Apply stays until one of them moves. A refusal's state is read on
+  // the render after the press (`key: null` until then): a figure the press's own blur committed has moved the edits
+  // by then, and the press's render never saw it (insight 036).
+  const [said, setSaid] = useState<{ readonly words: string; readonly applied: boolean; readonly key: string | null } | null>(null)
+  const refusalKey = `${whatIf.shownKey}|${canonicalIdentityToken(whatIf.pending)}|${apply.kind}`
+  if (said !== null && said.key === null) setSaid({ ...said, key: refusalKey })
+  // Said once: the words go when their state moves on, so a later return to the same bundle (a Reset back to the empty
   // one after a write) never brings back "Applied" for a write that press did not make.
-  if (said !== null && said.key !== whatIf.shownKey) setSaid(null)
-  const saidNow = said !== null && said.key === whatIf.shownKey ? said.words : null
+  const saidStands = said !== null && (said.key === null || said.key === (said.applied ? whatIf.shownKey : refusalKey))
+  if (said !== null && !saidStands) setSaid(null)
+  const saidNow = saidStands ? said.words : null
   const [editOpen, setEditOpen] = useState(false)
   const [line, setLine] = useState<{ readonly open: boolean; readonly editing?: WhatIfBudgetLineV6 }>({ open: false })
   const applyId = useId()
@@ -190,7 +198,7 @@ export function ActionItemsTray(props: ActionItemsTrayProps) {
             className="aria-disabled:cursor-not-allowed aria-disabled:opacity-50"
             onClick={() => {
               const { words: w, applied } = whatIf.apply()
-              setSaid({ words: w, key: applied ? '[]' : whatIf.shownKey })
+              setSaid({ words: w, applied, key: applied ? '[]' : null })
               announce(w)
             }}
           >

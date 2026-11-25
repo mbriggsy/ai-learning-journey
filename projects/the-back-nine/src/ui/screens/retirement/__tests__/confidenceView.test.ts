@@ -221,7 +221,7 @@ describe('Confidence on the retired route (`retired`, a real engine run)', () =>
     const saved = chart(view(s, RETIRED.startCalendarYear + 3, { agedBalancesYear: RETIRED.startCalendarYear + 1 }))
     expect(saved.premise?.text).toBe(slots.bandAgedPremiseSaved(RETIRED.startCalendarYear + 1))
     const readOnly = chart(view(s, RETIRED.startCalendarYear + 3, { readOnly: true }))
-    expect(readOnly.premise).toEqual({ text: slots.bandAgedPremiseFresh(RETIRED.startCalendarYear) })
+    expect(readOnly.premise).toEqual({ text: `${slots.bandAgedPremiseFresh(RETIRED.startCalendarYear)} ${copy.bandPremiseReadOnly}` })
   })
 
   it('a cut fan with no run-out past the cut: the one whole-plan line, then the cut line (never dropped)', () => {

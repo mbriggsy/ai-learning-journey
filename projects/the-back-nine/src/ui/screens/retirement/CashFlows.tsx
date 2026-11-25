@@ -215,8 +215,10 @@ export function CashFlows({ view, headingRef, intro, caveat, onTab, onDrill, onA
                 variant="secondary"
                 icon={<Download size={18} strokeWidth={1.5} aria-hidden="true" />}
                 aria-label={copy.cashFlowsDownloadLabel}
-                // Off with no table, and while the rows are from before the latest change (the Updating line says so).
+                // Off with no table, and while the rows are from before the latest change (the Updating line says so). Still
+                // focusable while off, so a keyboard user's focus stays put when the table goes busy under it.
                 disabled={view.csv === null}
+                focusableWhenDisabled
                 onClick={() => {
                   if (view.csv !== null) downloadCsv(view.csv, view.csvName)
                 }}

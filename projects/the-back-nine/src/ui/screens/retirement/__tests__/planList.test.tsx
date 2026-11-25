@@ -117,8 +117,8 @@ function Room(props: {
   )
 }
 
-function mount(opts: { readonly kept?: readonly KeptWhatIfV6[]; readonly save?: ResultSaveProp; readonly readOnly?: boolean; readonly onWriteKept?: (edit: KeptEdit, keep?: string) => Promise<KeptWriteOutcome>; readonly onWhatIfHeld?: (held: boolean) => void } = {}) {
-  const draft: ScenarioDraft = { ...DEV_SEEDS.retired, seed: SEED, keptWhatIfs: opts.kept ?? KEPT }
+function mount(opts: { readonly kept?: readonly KeptWhatIfV6[]; readonly save?: ResultSaveProp; readonly readOnly?: boolean; readonly onWriteKept?: (edit: KeptEdit, keep?: string) => Promise<KeptWriteOutcome>; readonly onWhatIfHeld?: (held: boolean) => void; readonly base?: ScenarioDraft } = {}) {
+  const draft: ScenarioDraft = { ...(opts.base ?? DEV_SEEDS.retired), seed: SEED, keptWhatIfs: opts.kept ?? KEPT }
   act(() => appModel.update(() => draft))
   const left = slotLanes()
   const right = slotLanes()
@@ -246,6 +246,73 @@ describe('the plan list drawer', () => {
     fireEvent.pointerUp(window, { pointerId: 7 })
     expect(write).toHaveBeenCalledTimes(1)
   })
+
+  it('a drawer shut mid-drag (Escape) writes no order on the release that follows', async () => {
+    const write = vi.fn(async (): Promise<KeptWriteOutcome> => ({ kind: 'saved' }))
+    mount({ onWriteKept: write })
+    const drawer = await openList()
+    const handle = within(drawer).getByRole('button', { name: slots.planListMove('Spend less') })
+    fireEvent.pointerDown(handle, { button: 0, pointerId: 7, clientY: 100 })
+    fireEvent.pointerMove(window, { pointerId: 7, clientY: 160 })
+    fireEvent.keyDown(handle, { key: 'Escape' })
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: copy.planListTitle })).toBeNull())
+    fireEvent.pointerUp(window, { pointerId: 7, clientY: 160 })
+    await act(async () => {})
+    expect(write, 'the shut drawer wrote nothing').not.toHaveBeenCalled()
+  })
+
+  it('a rename landing closes only its own box: another row’s box opened while it was in flight stays', async () => {
+    let land: () => void = () => {}
+    const write = vi.fn(async (edit: KeptEdit): Promise<KeptWriteOutcome> => {
+      const next = edit(appModel.getSnapshot().draft.keptWhatIfs ?? [], new Set())
+      act(() => appModel.update((d) => ({ ...d, keptWhatIfs: next! })))
+      await new Promise<void>((r) => (land = r))
+      return { kind: 'saved' }
+    })
+    mount({ onWriteKept: write })
+    const drawer = await openList()
+    const rowA = () => drawer.querySelector('[data-kept-row="kept-a"]') as HTMLElement
+    const rowB = () => drawer.querySelector('[data-kept-row="kept-b"]') as HTMLElement
+    fireEvent.click(within(rowA()).getByRole('button', { name: copy.planListRename }))
+    fireEvent.change(within(rowA()).getByRole('textbox'), { target: { value: 'Lean years' } })
+    fireEvent.click(within(rowA()).getByRole('button', { name: copy.planListRenameConfirm }))
+    await waitFor(() => expect(write).toHaveBeenCalledTimes(1))
+    fireEvent.click(within(rowB()).getByRole('button', { name: copy.planListRename }))
+    expect(within(rowB()).getByRole('textbox')).toHaveValue('Spend a lot less')
+    await act(async () => land())
+    expect(within(rowB()).getByRole('textbox'), 'the box opened meanwhile stays').toHaveValue('Spend a lot less')
+  })
+
+  it('a Keep box over a kept what-if deleted meanwhile goes with it; the next Keep is a new one', async () => {
+    const user = userEvent.setup()
+    const write = vi.fn(async (edit: KeptEdit): Promise<KeptWriteOutcome> => {
+      const next = edit(appModel.getSnapshot().draft.keptWhatIfs ?? [], new Set((appModel.getSnapshot().draft.keptWhatIfs ?? []).map((k) => k.id)))
+      act(() => appModel.update((d) => ({ ...d, keptWhatIfs: next! })))
+      return { kind: 'saved' }
+    })
+    const { left } = mount({ onWriteKept: write })
+    await pick(user, copy.probabilityPickerLabel, 'Spend less')
+    await left.settle()
+    fireEvent.click(screen.getByRole('button', { name: copy.trayHandle }))
+    const tray = document.getElementById('b9-action-items') as HTMLElement
+    const field = within(tray)
+      .getAllByLabelText(copy.workbenchRailSpendTotalLabel)
+      .find((el) => el instanceof HTMLInputElement && el.type === 'text')!
+    act(() => field.focus())
+    fireEvent.change(field, { target: { value: '40,000' } })
+    act(() => field.blur())
+    fireEvent.click(within(tray).getByRole('button', { name: copy.trayRefresh }))
+    await left.settle()
+    const drawer = await openList()
+    fireEvent.click(within(drawer).getByRole('button', { name: copy.planListKeep }))
+    fireEvent.change(within(drawer).getByLabelText(copy.planListNameLabel), { target: { value: 'Leaner' } })
+    const row = drawer.querySelector('[data-kept-row="kept-a"]') as HTMLElement
+    fireEvent.click(within(row).getByRole('button', { name: copy.planListDelete }))
+    fireEvent.click(within(drawer).getByRole('button', { name: copy.planListDeleteGo }))
+    await waitFor(() => expect(write).toHaveBeenCalledTimes(1))
+    await waitFor(() => expect(within(drawer).queryByLabelText(copy.planListNameLabel), 'the box went with the kept what-if it would replace').toBeNull())
+    expect(within(drawer).getByRole('button', { name: copy.planListKeep }), 'Keep is offered again, as a new one').toBeInTheDocument()
+  })
 })
 
 describe('Keep, a changed kept what-if, and the ask before another drops it', () => {
@@ -340,6 +407,32 @@ describe('Keep, a changed kept what-if, and the ask before another drops it', ()
     }
   })
 
+  it('with no saved plan yet, a Keep over a deposit change still waiting for the employer’s figure asks first, naming it', async () => {
+    const write = vi.fn(async (): Promise<KeptWriteOutcome> => ({ kind: 'ceremony' }))
+    const { left } = mount({ base: { ...DEV_SEEDS.dip, budget: undefined }, kept: [], save: { kind: 'first', onKeep: () => {} }, onWriteKept: write })
+    fireEvent.click(screen.getByRole('button', { name: copy.trayHandle }))
+    const tray = document.getElementById('b9-action-items') as HTMLElement
+    const type = (field: HTMLElement, text: string) => {
+      act(() => field.focus())
+      fireEvent.change(field, { target: { value: text } })
+      act(() => field.blur())
+    }
+    // A lowered deposit waits for the employer's figure (it is in no bundle), and a spending change is run.
+    type(within(tray).getByLabelText(/^Into .*401\(k\), dollars a year$/), '6,000')
+    expect(within(tray).getByText(copy.workbenchRailEmployerWaiting)).toBeInTheDocument()
+    type(within(tray).getAllByLabelText(copy.workbenchRailSpendTotalLabel).find((el) => el instanceof HTMLInputElement && el.type === 'text')!, '30,000')
+    fireEvent.click(within(tray).getByRole('button', { name: copy.trayRefresh }))
+    await left.settle()
+    const drawer = await openList()
+    fireEvent.click(within(drawer).getByRole('button', { name: copy.planListKeep }))
+    fireEvent.change(within(drawer).getByLabelText(copy.planListNameLabel), { target: { value: 'Lean years' } })
+    fireEvent.click(within(drawer).getByRole('button', { name: copy.planListNameConfirm }))
+    const ask = await screen.findByRole('alertdialog')
+    expect(ask).toHaveTextContent(copy.shellKeepDropsWaiting)
+    expect(ask).not.toHaveTextContent(copy.shellCeremonyOpenEntry)
+    expect(write).not.toHaveBeenCalled()
+  })
+
   it('a Keep box left open over a changed kept what-if never keeps another one over it: opening another drops the box, and the next Keep is a new one', async () => {
     const user = userEvent.setup()
     const write = vi.fn(async (edit: KeptEdit): Promise<KeptWriteOutcome> => {
@@ -384,6 +477,38 @@ describe('Keep, a changed kept what-if, and the ask before another drops it', ()
     expect(kept[0], '"Spend less" is untouched').toEqual(KEPT[0])
     expect(kept.map((k) => k.name)).toEqual(['Spend less', 'Spend a lot less', 'Lean years'])
     expect(kept[2]!.levers).toEqual([{ kind: 'spending', op: 'total', annualSpendingReal: 30_000 }])
+  })
+
+  it('a Keep box typed over a new what-if goes with it when Apply writes it to the plan: the next new what-if never comes back under that name', async () => {
+    const write = vi.fn(async (): Promise<KeptWriteOutcome> => ({ kind: 'saved' }))
+    const { left } = mount({ kept: [], onWriteKept: write })
+    fireEvent.click(screen.getByRole('button', { name: copy.trayHandle }))
+    const typeSpend = (text: string) => {
+      const tray = document.getElementById('b9-action-items') as HTMLElement
+      const field = within(tray)
+        .getAllByLabelText(copy.workbenchRailSpendTotalLabel)
+        .find((el) => el instanceof HTMLInputElement && el.type === 'text')!
+      act(() => field.focus())
+      fireEvent.change(field, { target: { value: text } })
+      act(() => field.blur())
+      fireEvent.click(within(tray).getByRole('button', { name: copy.trayRefresh }))
+    }
+    typeSpend('30,000')
+    await left.settle()
+    let drawer = await openList()
+    fireEvent.click(within(drawer).getByRole('button', { name: copy.planListKeep }))
+    fireEvent.change(within(drawer).getByLabelText(copy.planListNameLabel), { target: { value: 'Lean years' } })
+    fireEvent.click(within(drawer).getByRole('button', { name: copy.planListDone }))
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: copy.planListTitle })).toBeNull())
+    // Apply writes the what-if to the plan; the left side starts a new one (its source still reads 'new').
+    const tray = document.getElementById('b9-action-items') as HTMLElement
+    fireEvent.click(within(tray).getByRole('button', { name: copy.workbenchRailApply }))
+    await waitFor(() => expect(appModel.getSnapshot().draft.annualSpendingReal).toBe(30_000))
+    typeSpend('20,000')
+    await left.settle()
+    drawer = await openList()
+    expect(within(drawer).queryByLabelText(copy.planListNameLabel), 'the box went with the what-if it named').toBeNull()
+    expect(write).not.toHaveBeenCalled()
   })
 
   it('a successful Keep never flashes "name taken" while its write lands (the list holds the new name at once)', async () => {

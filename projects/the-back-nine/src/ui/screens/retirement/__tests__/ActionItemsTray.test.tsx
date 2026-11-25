@@ -317,6 +317,25 @@ describe('Apply — the one write (R16, R22; insight 158)', () => {
     expect(within(tray()).getByText(copy.trayApplyRefreshFirst)).toBeInTheDocument()
   })
 
+  it('a refusal Apply said goes when its state moves on: pressed mid-run it goes when the run lands; "waits for Refresh" goes when Back undoes the edit', async () => {
+    const l = openTray(DEV_SEEDS.retired)
+    const words = () => tray().querySelector('[data-tray-words]')!.textContent
+    typeIn(copy.workbenchRailSpendTotalLabel, '60,000')
+    fireEvent.click(refresh())
+    // An aria-disabled Apply still takes a press.
+    fireEvent.click(applyButton())
+    expect(words()).toBe(copy.workbenchRailApplyWaiting)
+    await l.settleWhatIf()
+    expect(applyButton()).toHaveAttribute('aria-disabled', 'false')
+    expect(words(), 'the run landed: Apply is open, and no longer said to wait').toBe('')
+    typeIn(copy.workbenchRailSpendTotalLabel, '50,000')
+    fireEvent.click(applyButton())
+    expect(within(tray()).getByText(copy.trayApplyRefreshFirst)).toBeInTheDocument()
+    fireEvent.click(within(tray()).getByRole('button', { name: slots.workbenchRailBackName(copy.workbenchRailSpendTitle) }))
+    expect(within(tray()).queryByText(copy.trayApplyRefreshFirst), 'Back undid the edit Apply waited on').toBeNull()
+    expect(draftNow().annualSpendingReal).toBe(DEV_SEEDS.retired.annualSpendingReal)
+  })
+
   it('leaving without Apply changes nothing: Reset, or another page and away', async () => {
     const l = openTray(DEV_SEEDS.retired)
     const before = draftNow()
@@ -407,6 +426,19 @@ describe('deposits — the employer’s figure at a lower deposit (D7)', () => {
     act(() => employer.blur())
     fireEvent.click(refresh())
     expect(l.many.request).toHaveBeenCalledTimes(1)
+    expect(within(tray()).queryByText(copy.workbenchRailEmployerWaiting)).toBeNull()
+  })
+
+  it('a plan edit that removes the account takes its wait with it: nothing still says it waits for the employer', async () => {
+    const draft = DEV_SEEDS.dip
+    openTray(draft, { answer: dated({ ...draft, seed: SEED }, 5) })
+    const own = depositField()
+    act(() => own.focus())
+    fireEvent.change(own, { target: { value: '6,000' } })
+    act(() => own.blur())
+    expect(within(tray()).getByText(copy.workbenchRailEmployerWaiting)).toBeInTheDocument()
+    // The account leaves the plan (a facts-page edit); the answer shown is still the one figured before it.
+    act(() => appModel.update((d) => ({ ...d, enteredAccounts: d.enteredAccounts.filter((a) => a.kind !== '401k') })))
     expect(within(tray()).queryByText(copy.workbenchRailEmployerWaiting)).toBeNull()
   })
 

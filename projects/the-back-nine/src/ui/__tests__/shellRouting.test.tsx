@@ -41,7 +41,7 @@ import IntakeApp from '../IntakeApp'
 import { appModel } from '../appModel'
 import { scenarioFromDraft } from '../scenarioFromDraft'
 import { DEV_SEEDS } from '../devSeeds'
-import { copy } from '../copy'
+import { copy, slots } from '../copy'
 import { holdUnsavedBuffer, unsavedBuffersHeld } from '@intake/unsavedBuffer'
 import type { MemoryModelSnapshot, ModelAnswer } from '@store/memoryModel'
 
@@ -370,6 +370,50 @@ describe('the facts page through the real phase machine (U8)', () => {
     expect(screenShown()).toBe('snapshot')
     expect(unsavedBuffersHeld(), 'the row not yet added was dropped').toBe(0)
   })
+
+  /** Open the Social Security step's sheet and type a monthly benefit for the first person, focused (never blurred). */
+  function typeABenefit(monthly: string) {
+    goToFacts()
+    fireEvent.click(screen.getAllByRole('button', { name: slots.workbenchFactsEditName(copy.workbenchFactsSocialSecurity) })[0]!)
+    const sheet = screen.getByRole('dialog', { name: copy.workbenchFactsSocialSecurity })
+    const field = within(sheet).getAllByLabelText(copy.ssAmountLabel)[0]!
+    act(() => field.focus())
+    fireEvent.change(field, { target: { value: monthly } })
+    return field
+  }
+
+  it('Go back over a figure the step refuses puts the draft back to what it held at open: a refused value never reaches the answer', async () => {
+    await landHydrated()
+    const before = appModel.getSnapshot().draft.people[0].pia
+    // A yearly figure in the monthly box: 360,000 a year, over the benefit ceiling (the step's Continue refuses it).
+    const field = typeABenefit('30,000')
+    act(() => field.blur())
+    expect(appModel.getSnapshot().draft.people[0].pia, 'the blur wrote it, as the walk does').toBe(360_000)
+    await pressBack()
+    const ask = screen.getByRole('alertdialog', { name: copy.workbenchLeaveAsk })
+    await backAndSettle(() => fireEvent.click(within(ask).getByRole('button', { name: copy.workbenchLeaveGo })))
+    expect(screenShown()).toBe('snapshot')
+    expect(appModel.getSnapshot().draft.people[0].pia, 'the refused figure went with the sheet').toBe(before)
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+    expect(unsavedBuffersHeld()).toBe(0)
+  })
+
+  it('a plain Back over a figure typed and never blurred ends the edit through the sheet: a figure the step takes is kept, a refused one is not', async () => {
+    await landHydrated()
+    const before = appModel.getSnapshot().draft.people[0].pia
+    typeABenefit('2,100')
+    await pressBack()
+    expect(screen.queryByText(copy.workbenchLeaveAsk), 'nothing committed yet: no ask').toBeNull()
+    expect(screenShown()).toBe('snapshot')
+    expect(appModel.getSnapshot().draft.people[0].pia, 'the typed figure committed as the sheet closed').toBe(25_200)
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+
+    typeABenefit('30,000')
+    await pressBack()
+    expect(screenShown()).toBe('snapshot')
+    expect(appModel.getSnapshot().draft.people[0].pia, 'a refused figure never leaves').toBe(25_200)
+    expect(before).not.toBe(25_200)
+  })
 })
 
 describe('an unkept what-if (plan 6, section 3.1)', () => {
@@ -423,6 +467,19 @@ describe('an unkept what-if (plan 6, section 3.1)', () => {
     fireEvent.click(await screen.findByRole('button', { name: copy.workbenchLeaveGo }))
     await waitFor(() => expect(shellUp()).toBe(false))
     expect(window.location.hash, 'the walk-through’s address names no page').toBe('')
+  })
+
+  it('the plan list drawer shuts with the page: a plain Back leaves it shut, and coming back never reopens it unasked', async () => {
+    await landHydrated()
+    goToAnalysis()
+    fireEvent.click(await screen.findByRole('button', { name: copy.planListOpenLabel }))
+    expect(await screen.findByRole('dialog', { name: copy.planListTitle })).toBeInTheDocument()
+    await pressBack()
+    expect(screenShown()).toBe('snapshot')
+    await pressForward()
+    expect(screenShown()).toBe('probability')
+    await act(async () => {})
+    expect(screen.queryByRole('dialog', { name: copy.planListTitle }), 'the drawer stayed shut').toBeNull()
   })
 
   it('Reset gives the edit back to the plan: the re-walk then asks nothing', async () => {

@@ -412,14 +412,14 @@ describe('cashFlowsView — the CSV holds exactly the shown cells', () => {
     return out
   }
 
-  it('header rows as drawn, then every row’s cell words in column order, nothing else', () => {
+  it('header rows as drawn (no-break spaces made plain), then every row’s cell words in column order, nothing else', () => {
     for (const over of [{}, { drill: 'income' as const }, { tab: 'accounts' as const, accounts: 'withdrawals' as const }]) {
       const v = cashFlowsView(input(over))
       const t = tableOf(v)
       const lines = v.csv!.split('\r\n').map(parse)
       const leaves = leavesOf(t.columns)
       const heads = headerRows(t.columns)
-      expect(lines.slice(0, heads.length)).toEqual(heads)
+      expect(lines.slice(0, heads.length)).toEqual(heads.map((cells) => cells.map((c) => c.replace(/\u00a0/g, ' '))))
       expect(heads.at(-1)).toEqual(leaves.map((l) => l.header))
       expect(lines.slice(heads.length)).toEqual(t.rows.map((r) => leaves.map((l) => r.cells[l.id]!.text)))
       for (const line of lines) expect(line).toHaveLength(leaves.length)
@@ -522,7 +522,22 @@ describe('cashFlowsView — the paired view keeps the pay check’s taxes (the m
       expect(r.cells['payroll']!.value).toBe(ROWS[k]!.workingYear!.payrollTax)
     })
     expect(leavesOf(t.columns).find((l) => l.id === 'tax-on-pay')!.header).toBe(copy.cashFlowsColPayIncomeTax)
+    // The page's header keeps its words together with no-break spaces; the file carries plain spaces.
+    expect(copy.cashFlowsColPayIncomeTax).toContain('\u00a0')
+    expect(v.csv!.split('\r\n')[0]).toContain(copy.cashFlowsColPayIncomeTax.replace(/\u00a0/g, ' '))
+    expect(v.csv).not.toContain('\u00a0')
     expect(v.footnotes).toEqual(expect.arrayContaining([copy.workbenchPayCheckNoteFederalState]))
+  })
+
+  it('the paired notes ride beside their columns too: the match with a put-in, Required (with no "the row says so": paired rows carry no such sentence), the no-spending note with a blank working year', () => {
+    const blank = ROWS.map((r, k) => (k === 0 ? ({ ...r, spending: undefined } as LedgerYearRow) : r))
+    const v = cashFlowsView(input({ offers, pick: 'paired', plan: ready(retired(ROWS)), other: ready(retired(blank)), otherName: 'Work to 63', pairedColumns: ['spending', 'put-in-pretax', 'required', 'income-tax', 'end-total'] }))
+    expect(leafIds(tableOf(v).columns)).toEqual(expect.arrayContaining(['spending', 'put-in-pretax', 'required']))
+    expect(v.footnotes).toEqual([copy.workbenchApproxNote, copy.workbenchMatchNote, copy.workbenchRequiredPairedNote, copy.workbenchNoSpendingNote, copy.cashFlowsPairedNote])
+    expect(v.footnotes).not.toContain(copy.workbenchRequiredNote)
+    // Every spending figure given: no blank-year note.
+    const given = cashFlowsView(input({ offers, pick: 'paired', plan: ready(retired(ROWS)), other: ready(retired(ROWS)), otherName: 'Work to 63', pairedColumns: ['spending', 'income-tax', 'end-total'] }))
+    expect(given.footnotes).toEqual([copy.workbenchApproxNote, copy.cashFlowsPairedNote])
   })
 
   it('two retired runs: no pay check columns and no pay check notes', () => {

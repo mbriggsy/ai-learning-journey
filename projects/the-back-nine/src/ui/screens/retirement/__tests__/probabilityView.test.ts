@@ -181,7 +181,7 @@ describe('Probability, the retired route (`retired`, a real engine run)', () => 
   })
 
   const stepDownLine = (drop: string) =>
-    `If one of you is on your own later, the household’s monthly income steps down about $${drop} — as one Social Security benefit ends. Taxes also move to a single filer’s brackets.`
+    `If one of you is on your own later, the household’s monthly income steps down about ~$${drop} — as one Social Security benefit ends. Taxes also move to a single filer’s brackets.`
 
   it('the survivor row carries the income step-down after its basis (the old survivor card’s context), said once under both halves when both match', () => {
     const sr = RETIRED_RUN.survivorReading
@@ -395,6 +395,15 @@ describe('Probability, a floor-dated household (`datemixed`): both rings read th
     const fullAt: WhatIfReading = { kind: 'offset', reading: DIP_CURVE[5]!, track: 'full' }
     const f = reads(probabilityView(input(full, { whatIf: { pick: 'new', bundle: extras, view: readyView(fullAt, fullAt) } })))
     expect(f.metrics.difference).not.toBe(copy.workbenchRailFloorUnread)
+  })
+
+  it('your plan on the LEFT (the empty what-if) beside an extras-only kept what-if says the same reason, never "Both read"', () => {
+    const extras = [{ kind: 'spending', op: 'remove', lineId: 'line-travel' }] as unknown as ProbabilityInput['whatIf']['bundle']
+    const dk: ScenarioDraft = { ...d, keptWhatIfs: [{ id: 'x', name: 'Fewer trips', levers: extras }] as unknown as NonNullable<ScenarioDraft['keptWhatIfs']> }
+    const sk = snap(dk, dateAnswer(dk, floor, life, { offsetYears: 1, track: 'floor' }))
+    const v = reads(probabilityView(input(sk, { whatIf: { pick: 'new', bundle: [], view: null }, compared: { pick: 'kept:x', bundle: extras, view: readyView(floorAt(1), floorAt(1)) } })))
+    expect(v.halves.compared.title).toBe('Fewer trips')
+    expect(v.metrics.difference).toBe(copy.workbenchRailFloorUnread)
   })
 })
 

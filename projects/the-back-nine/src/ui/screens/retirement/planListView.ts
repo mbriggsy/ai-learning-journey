@@ -82,11 +82,11 @@ export function keepState(input: KeepInput): KeepState {
   if (recommendation) return { kind: 'withheld', words: copy.planListKeepRecommended }
   if (!same(own, pending)) return { kind: 'withheld', words: copy.planListKeepRefreshFirst }
   const from = sourceKept(source, kept)
-  if (from !== undefined) {
-    if (same(from.levers, own)) return { kind: 'withheld', words: slots.planListKeepAlready(from.name) }
-    return { kind: 'open', replaces: { id: from.id, name: from.name } }
-  }
+  if (from !== undefined && same(from.levers, own)) return { kind: 'withheld', words: slots.planListKeepAlready(from.name) }
+  // An empty what-if is your plan itself: never kept, new or over a reopened one (a Reset over a reopened kept what-if
+  // would otherwise offer to replace it with nothing).
   if (own.length === 0) return { kind: 'withheld', words: copy.planListKeepEmpty }
+  if (from !== undefined) return { kind: 'open', replaces: { id: from.id, name: from.name } }
   return { kind: 'open' }
 }
 

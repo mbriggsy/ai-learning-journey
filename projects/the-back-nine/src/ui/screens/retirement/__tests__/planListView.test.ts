@@ -43,8 +43,8 @@ describe('keepState', () => {
   it('a reopened kept what-if unchanged is already kept; changed, Keep replaces it under its id and name', () => {
     expect(keepState({ ...base, source: { kind: 'kept', id: 'a' } })).toEqual({ kind: 'withheld', words: slots.planListKeepAlready('Spend less') })
     expect(keepState({ ...base, source: { kind: 'kept', id: 'a' }, own: [OTHER], pending: [OTHER] })).toEqual({ kind: 'open', replaces: { id: 'a', name: 'Spend less' } })
-    // Reset on a reopened one (the empty bundle) is a change too: keeping it replaces the kept one with the plan itself.
-    expect(keepState({ ...base, source: { kind: 'kept', id: 'a' }, own: [], pending: [] })).toEqual({ kind: 'open', replaces: { id: 'a', name: 'Spend less' } })
+    // Reset on a reopened one (the empty bundle): your plan itself, never kept, so never written over the kept one.
+    expect(keepState({ ...base, source: { kind: 'kept', id: 'a' }, own: [], pending: [] })).toEqual({ kind: 'withheld', words: copy.planListKeepEmpty })
     // Its kept one deleted meanwhile: a new keep.
     expect(keepState({ ...base, source: { kind: 'kept', id: 'gone' } })).toEqual({ kind: 'open' })
   })

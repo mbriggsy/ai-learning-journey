@@ -494,10 +494,14 @@ export function probabilityView(input: ProbabilityInput): ProbabilityView {
   const rightReading = printed(rightState)
   // THE FLOOR TRACK'S REASON (U15's floorUnread line, which RC4b's port dropped): where the plan's odds read the
   // essentials-only pass and the what-if beside your plan changes only extra lines, the two counts can't differ, and the
-  // line says why in place of "Both read". Only beside your plan (its words name your plan's odds), and only where the
-  // even line would print.
+  // line says why in place of "Both read". Only where your plan is one of the two (its words name your plan's odds):
+  // on the right beside the what-if, or on the left (its empty bundle) beside a kept what-if; and only where the even
+  // line would print.
   const planFloor = plan?.kind === 'offset' && plan.track === 'floor'
-  const floorNote = planFloor && rightPick === 'plan' && floorUnread('floor', answer.draft, whatIf.bundle)
+  const floorNote =
+    planFloor &&
+    ((rightPick === 'plan' && floorUnread('floor', answer.draft, whatIf.bundle)) ||
+      (alt.kind === 'empty' && rightPick !== 'plan' && right !== undefined && floorUnread('floor', answer.draft, right.bundle)))
   const difference = ((): string | null => {
     if (alt.kind === 'empty' && rightPick === 'plan') return copy.probabilityNoChanges
     if (leftReading === undefined || leftReading === null || rightReading === undefined || rightReading === null) return null

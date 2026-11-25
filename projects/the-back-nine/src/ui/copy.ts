@@ -901,6 +901,8 @@ export const copy = {
   // insight 100: a copy string that promises an affordance is a UI contract). Routes to the
   // guided re-walk (values pre-filled).
   bandPremiseReconfirmCta: 'Re-confirm your numbers',
+  // A read-only tab's premise: no door here, so the words say where re-confirming happens.
+  bandPremiseReadOnly: 'This tab can’t change your plan, so re-confirming happens in a tab that can.',
   // The AGED-vault year-0 endpoint (U13 follow-up — caught live on the first `?vault=datestale`
   // walk, 2026-07-10): a re-opened old plan's fan starts where the PLAN does, not today, and
   // calling that column "Today" put two time bases on one screen (the exact class the U13
@@ -2762,6 +2764,9 @@ export const copy = {
   workbenchRequiredNote:
     'Required is the least that must come out of pre-tax savings in a year. It’s paid through what’s taken out, not on top of it; any part the year doesn’t need moves to taxable, and the row says so.',
   workbenchNoSpendingNote: 'A working year whose cost you haven’t given shows no spending.',
+  // The paired table's Required note: its rows carry no per-year sentence for the part that moved, so no "the row says so".
+  workbenchRequiredPairedNote:
+    'Required is the least that must come out of pre-tax savings in a year. It’s paid through what’s taken out, not on top of it; any part the year doesn’t need moves to taxable.',
   // The two stopgap lines (KTD32 and the kinds U10 and U13 add); each comes out with its build.
   workbenchYieldAllYears:
     'The tool leaves out the interest and dividends your taxable savings earn each year: they aren’t in any year’s income or tax here, and in real life they are taxed every year.',
@@ -4733,7 +4738,7 @@ export const slots = {
    *  it is an OPEN register entry ("The survivor step-down attribution"); a household whose cliff is
    *  mostly a lost pension reads this sentence wrong until it lands. */
   verdictSurvivorStepDown: (perMonthDropFormatted: string): string =>
-    `If one of you is on your own later, the household’s monthly income steps down about $${perMonthDropFormatted} — as one Social Security benefit ends. Taxes also move to a single filer’s brackets.`,
+    `If one of you is on your own later, the household’s monthly income steps down about ~$${perMonthDropFormatted} — as one Social Security benefit ends. Taxes also move to a single filer’s brackets.`,
   /** The survivor card's SPENDING BASIS — HIS sentence, RULED by Briggsy 2026-10-14 (b9-toronto1, "All three
    *  recs") on the register's Tier 1 *The survivor card's "still covers you" never says what spending it
    *  assumes…* (filed by the 2026-10-09 survivor-medical Caddie walk, wf_c275da70-4d8; measured
@@ -5585,7 +5590,7 @@ export const slots = {
     return `Stopping in ${year}, ${series.toLowerCase()}: ${odds}${tail}.`
   },
   // --- Retirement → Analysis → Confidence (Act 6 · RC7; `confidenceView.ts`). `n` is a whole count from 1 to 99 (the
-  // kinds outside it have their own words in `copy`: none, fewer than 1, more than 99, every). `plural` follows the
+  // kinds outside it have their own words: fewer than 1 (none reads so too), more than 99, every). `plural` follows the
   // share's own noun ("about 6 in 100 futures have", "every future has"). ---
   confidenceShareAbout: (n: number): string => `about ${n} in 100 futures`,
   confidenceShareFewer: (): string => 'fewer than 1 in 100 futures',

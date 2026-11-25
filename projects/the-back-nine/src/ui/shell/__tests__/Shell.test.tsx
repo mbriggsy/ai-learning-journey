@@ -410,11 +410,32 @@ describe('Shell — RC6: Retirement → Cash Flows', () => {
     render(
       <RoutedShell save={{ kind: 'none' }} snapshot={snapshotWith(finalAnswer())} lanes={lanes} wallCalendarYear={BUILD_YEAR + 1} stalenessNote agedBalancesYear={BUILD_YEAR} />,
     )
+    // Before the table lands, no row-one line says the cause: the banner keeps its aged line.
+    expect(screen.queryByText(slots.workbenchAged(BUILD_YEAR))).toBeNull()
+    expect(screen.getByText(slots.staleAgedBalances(BUILD_YEAR)), 'no table yet: the banner says it').toBeInTheDocument()
     await settleAll('run')
     expect(document.querySelector('main.result')).toHaveAttribute('data-shell-screen', 'cash-flows')
     expect(screen.getByText(copy.stalenessHeroNote)).toBeInTheDocument()
     expect(screen.getByText(slots.workbenchAged(BUILD_YEAR))).toBeInTheDocument()
     expect(screen.queryByText(slots.staleAgedBalances(BUILD_YEAR)), 'one cause, one line').toBeNull()
+  })
+
+  it('a re-saver on Cash Flows (saved after the year the plan was built) keeps the banner’s aged line: row one’s year is not the save’s', async () => {
+    const { lanes, settleAll } = heldLanes()
+    render(<RoutedShell save={{ kind: 'none' }} snapshot={snapshotWith(finalAnswer())} lanes={lanes} wallCalendarYear={BUILD_YEAR + 2} agedBalancesYear={BUILD_YEAR + 1} />)
+    await settleAll('run')
+    expect(screen.getByText(slots.workbenchAged(BUILD_YEAR))).toBeInTheDocument()
+    expect(screen.getByText(slots.staleAgedBalances(BUILD_YEAR + 1))).toBeInTheDocument()
+  })
+
+  it('Download is off with no rows to save, yet keeps its place in the keyboard order (focus never drops to the page when the table goes busy)', async () => {
+    const { lanes, settleAll } = heldLanes()
+    renderRoom(snapshotWith(finalAnswer()), lanes)
+    const download = () => screen.getByRole('button', { name: copy.cashFlowsDownloadLabel })
+    expect(download()).toHaveAttribute('aria-disabled', 'true')
+    expect(download(), 'focusable while off').not.toHaveAttribute('disabled')
+    await settleAll('run')
+    expect(download()).not.toHaveAttribute('aria-disabled', 'true')
   })
 
   it('the download hands the browser a CSV of the shown cells, built in the page (no request)', async () => {

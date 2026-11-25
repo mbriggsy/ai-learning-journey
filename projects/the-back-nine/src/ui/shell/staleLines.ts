@@ -2,7 +2,8 @@
  * src/ui/shell/staleLines.ts: what the StaleBanner says on the figured pages (plan docs/plans/6-rightcapital-ui-plan.md,
  * RC4 "Interim homes"; section 4.0's disclosure map). Pure. The old answer page carried these three in its hero; RC4
  * moved each to the StaleBanner above Snapshot and Probability, unchanged in what it says (fix round 1 of the milestone-1
- * review put it above Cash Flows too, without the aged line, which that page's own row-one line already says):
+ * review put it above Cash Flows too, without the aged line wherever that page's own row-one line says it for the same
+ * year):
  * - the staleness note (P3·U13: a rules clock fired at unlock), with build 2's moved left over as its clause where a
  *   rules line hosts it (`composeReentry` decided the host once; insight 101: one cause, one line);
  * - the aged-balances line (the save is at least one calendar year old, `agedBalancesYearFor`), its door the guided
@@ -40,8 +41,9 @@ export type StaleLine =
     }
 
 /** The StaleBanner's lines for the shown answer, in order. `canReconfirm`: the tab can write, so the aged line carries
- *  the re-walk's door. `withAged` false: the page already says the aged cause in its own words (Cash Flows' row-one
- *  line, `workbenchAged`), so the banner leaves its aged line out there (insight 101: one cause, one line). */
+ *  the re-walk's door. `withAged` false: the page already says the aged cause in its own words, for the same year (Cash
+ *  Flows' row-one line, `workbenchAged`, over a table), so the banner leaves its aged line out there (insight 101: one
+ *  cause, one line). */
 export function composeStaleLines(notes: AnswerNotes, canReconfirm: boolean, withAged = true): readonly StaleLine[] {
   const out: StaleLine[] = []
   if (notes.stalenessNote) {

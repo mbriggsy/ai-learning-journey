@@ -32,7 +32,8 @@ playbook/temp/
 # can hold a user-folder path (a hook command, say) or
 # screenshots, so they stay out on every machine, not only where a global git
 # ignore covers them. (Other projects track their settings.local.json on
-# purpose: no wildcard here.)
+# purpose: no wildcard for those. The browser tool's `.playwright-mcp/` is
+# ignored at every depth: a session started at the repo root dumps it there.)
 playbook/.claude/settings.local.json
-playbook/.playwright-mcp/
+.playwright-mcp/
 projects/skills/ultramode-code-review/.claude/settings.local.json

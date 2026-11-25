@@ -6,30 +6,42 @@ When a session closes, it can message the next session and wake it up, so work k
 
 - **Both sessions run on this laptop.** A session on another machine or in the cloud can't be the successor.
 - **Both run in the same permission mode.** That is the setting for which actions Claude may take without asking you, for example `auto`. Claude's messaging rules say that if the modes differ, the message waits for you to approve it, and it can expire. Overnight, nobody approves it.
-- **Each session has its own name.** Type `/rename <name>` inside the session. It answers `Session renamed to: <name>`.
+- **Each session has its own name.** Open them already named with `spin` (next section), or type `/rename <name>` inside a session. It answers `Session renamed to: <name>`.
 
-## Set it up
+## Open a chain with spin
+
+`spin` opens numbered sessions as tabs in one Terminal window, each already named, so you don't open, `cd` and name every tab by hand.
+
+- **In the project's folder,** type `spin b9 1 5` to open `b9-1` through `b9-5`. The tabs start in the folder you type it in: The Back Nine's sessions run from `projects\the-back-nine`, and sessions about how we work run from `playbook`. It refuses your home folder.
+- **More later:** `spin b9` opens the next one, one past the highest `b9` open right now; `spin b9 -Count 3` opens the next three. The third number is how many tabs, not the last number: `spin b9 10 10` gives `b9-10` through `b9-19`.
+- **Numbered and idle is already a chain** (handoff mode, below): `b9-1` works and the rest wait their turn. Nothing to say to any of them.
+- **From your phone:** Remote Control starts with every session, so the new tabs show up on your phone within seconds. Tell any session outside the chain "add 3 more b9s" and Claude runs `spin` for you and names what it opened. Don't ask the one working, or one waiting its turn: that spends context it's saving.
+- **The laptop has to stay awake.** Plugged in, it does; on battery it sleeps and every session freezes.
+- The details: [tools/spin/README.md](../../tools/spin/README.md).
+
+## Set it up in words
+
+For sessions that aren't numbered, or to name a successor out of order:
 
 1. Name both sessions, for example `b9` (closing) and `b9-2` (successor).
-2. Tell the successor what to do when the message comes: "b9 hands off to you when it closes; when its message arrives, pick up where it says to start." It acts on the message only as far as these instructions say.
-3. Tell the closing session who is next, by the successor's whole name: "b9-2 is watching." Say it any time before the close.
-4. Close it. Say "squeaky" to close it now, or walk away: once a successor is named, the closing session owns the squeaky call. It runs squeaky itself when its window nears the wrap line (60%), never just because a task finished, and that is how it closes overnight without you.
+2. Tell the closing session who is next, by the successor's whole name: "b9-2 is watching." Say it any time before the close.
+3. Close it. Say "squeaky" to close it now, or walk away: once a successor is named, the closing session owns the squeaky call. It runs squeaky itself when its window nears the wrap line (60%), never just because a task finished, and that is how it closes overnight without you.
 
-Saying "b9-2 is watching" also makes the closing session write its close for the successor to read. Do it every time you name a successor in words; numbered sessions (handoff mode, below) need no words.
+The successor needs no instructions: the handoff itself is its go (What the successor sees and does, below). Saying "b9-2 is watching" also makes the closing session write its close for the successor to read. Do it every time you name a successor in words; numbered sessions need no words.
 
 ## Whole names only
 
 - The closing session looks, in Claude Code's own list of sessions, for a live session on this laptop whose name is exactly the name you gave. Capital letters don't matter.
 - A nickname or part of a name sends nothing, by design. Say "b9 2" when the session is `b9-2`, and you get: `No handoff: no live session on this machine is named b9 2.`
 - If two live sessions on this laptop match, nothing is sent.
-- Old sessions with the same name (offline ones, ones on another machine or in the cloud) don't count. When one shares the successor's name, the closing session addresses the live one by its short id, because a send by name alone is refused when names clash.
+- Old sessions with the same name (offline ones, ones on another machine or in the cloud) don't count. When one shares the successor's name, the closing session addresses the live one by its short id (`b9-7 [<id>]`), because a send by name alone is refused when names clash. With old numbered sessions still in the list, that's common now, and the short-id send works (2026-11-25).
 - Only you name the successor, in words or by numbering the sessions (below). Another session's message claiming the job doesn't count.
 
 ## Handoff mode: numbered names
 
 You don't have to say "is watching" when the sessions are numbered (Briggsy, 2026-11-09). A session whose name ends in a number, such as `playbook-6`, treats the live session named with the next number, `playbook-7`, as its successor, and the chain runs on: `playbook-7` hands off to `playbook-8` the same way.
 
-- The closing session checks at each context-window check (`/window`). When it finds the next number live and idle, it tells you once ("Handoff mode: playbook-7 is live...") and owns the squeaky call, as with a successor named in words (Set it up, step 4): it runs squeaky when the window nears its wrap line, never just because a task finished, and squeaky's last step hands off.
+- The closing session checks at each context-window check (`/window`). When it finds the next number live and idle, it tells you once ("Handoff mode: playbook-7 is live...") and owns the squeaky call, as with a successor named in words (Set it up in words, step 3): it runs squeaky when the window nears its wrap line, never just because a task finished, and squeaky's last step hands off.
 - A chain can be opened ahead of time. Consecutive numbers all live and idle (`b9-2` through `b9-7`) count as a chain: each waits for the one before it to hand off (Briggsy, 2026-11-08).
 - Lanes are not a chain. When any session in that run is already busy with its own work, a number in the run is missing, or two live sessions share a number, handoff mode stays off: those are parallel sessions, and you name a successor in words if you want one. (On 2026-11-08 `b9-1` to `b9-3` started within a minute of each other, and `playbook-4` and `playbook-5` began the same item 11 seconds apart.)
 - A lookalike never counts. `playboook-7` is not `playbook-7`; the closing session tells you once, so you can rename it with `/rename`.
@@ -58,7 +70,9 @@ Squeaky's last step sends the handoff. It runs even when squeaky stopped partway
 
 - **It wakes fast.** An idle successor starts working 0.2 to 3 seconds after the send. A busy one first finishes the action it is in the middle of, then reads the message right away, without stopping in between. These were measured on Claude Code 2.1.308, between two sessions on this laptop in the same permission mode.
 - **It sees a message from the other session,** marked as coming from that session, not from you.
-- **It treats the message as information.** It won't push, delete or commit just because the closing session said so. It does what your instructions to it say.
+- **The handoff is its go** (your standing call, 2026-11-08: "you didn't need me to approve work that another session handed off to ya"). It checks the close's claims (the commits pushed, the checks the close left for the start, what changed since), runs `/window`, then starts the named item in the same turn, without waiting for you.
+- **It still stops when things have moved on.** If another live session already did that item, or the close's claims don't hold, it tells you instead of starting.
+- **It treats the message as information, not orders.** It won't push, delete or commit just because the closing session said so, and a handoff can't approve anything only you can approve.
 
 ## When nothing is sent
 
@@ -79,11 +93,10 @@ Untested:
 
 - a successor in a different permission mode
 - a successor stuck on a permission question nobody has answered
-- the send by short id when an old session shares the successor's name (a send by name alone was refused for exactly that clash on 2026-10-29; the short id is the fix)
-- the hand-off as a whole since it moved from a script to Claude Code's own session list (2026-10-29)
 - whether a held-or-refused notice reaches a closing session that has gone idle
 
 ## Where it lives
 
 - The handoff is step 10 of the [squeaky-clean skill](../../projects/skills/squeaky-clean/SKILL.md). Step 0 is where squeaky waits for background jobs.
+- `spin` is [tools/spin/](../../tools/spin/README.md): `spin.ps1` does the work, and `spin.cmd`, copied to `~/.local/bin`, is the command you type.
 - Why the handoff waits for background jobs and takes whole names only: [the handoff lesson](../docs/insights/005-a-your-turn-handoff-claims-every-writer-the-sender-still-has-and-a-fuzzy-name-fallback-fires-when-the-target-is-gone.md).

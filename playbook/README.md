@@ -65,7 +65,7 @@ The end-of-session checklist. Other sessions share the same files, so every step
 4. Delete the temp files this session made. A file it only read (a screenshot you dropped in) goes too, except while another live session is working in the same project: then it stays.
 5. Check that docs it changed don't now contradict other docs.
 6. Commit only this session's own files.
-7. Push, unless GitHub already has commits this laptop doesn't.
+7. Push, unless GitHub already has commits this laptop doesn't. Then back up our setup: `~/.claude` (rules, memory, settings, our skills) to its private GitHub copy, and the secrets, which no repo may hold, to OneDrive.
 8. Stop leftover background programs: dev servers only when no other session is live, and this session's own background commands always.
 9. Run a final check. It says "Squeaky clean." only when that check proves it.
 10. Hand off to the successor, when one is named ([the next play](#7-hand-off-to-the-next-session)).
@@ -77,7 +77,7 @@ The end-of-session checklist. Other sessions share the same files, so every step
 
 When you have named the session that takes over, in words or by numbering it next (`playbook-6`, then `playbook-7`: handoff mode), the closing session calls squeaky itself when its window nears the wrap line, never just because a task finished, and squeaky's last step sends the successor one message saying how the close went and where to start. An idle successor wakes within seconds; a busy one reads the message as soon as its current step finishes.
 
-- **Start it:** tell the closing session the next session's whole name, for example "b9-2 is watching"; numbered sessions need no words. Both sessions must run on this laptop (a session anywhere else gets no message) and in the same permission mode (the setting for which actions Claude may take without asking you); if the modes differ, the successor holds the message for your approval, and overnight that approval can run out. The full rules: [how-to/session-chains.md](how-to/session-chains.md).
+- **Start it:** open numbered sessions with `spin`: in the project's folder, `spin b9 1 5` opens `b9-1` through `b9-5` as tabs, already a chain, and `spin b9` adds the next one. Away from the laptop, tell any session outside the chain "add 3 more b9s". Sessions that aren't numbered take words instead: tell the closing one the next session's whole name, for example "b9-2 is watching". Both sessions must run on this laptop (a session anywhere else gets no message) and in the same permission mode (the setting for which actions Claude may take without asking you); if the modes differ, the successor holds the message for your approval, and overnight that approval can run out. The full rules: [how-to/session-chains.md](how-to/session-chains.md).
 - **Lives in:** step 10 of [projects/skills/squeaky-clean/SKILL.md](../projects/skills/squeaky-clean/SKILL.md).
 
 ## Always on
@@ -108,4 +108,5 @@ These fire by themselves.
 - **Skills we built:** [projects/skills/](../projects/skills/) holds brief and distill, squeaky-clean, ultramode-code-review, window and doc-audit. Claude Code loads them from `~/.claude/skills/`.
 - **Plugin skills:** `ce-plan` and `ce-doc-review` come from the compound-engineering plugin, installed under `~/.claude/plugins/`. It updates itself; its settings for this repo are in [.compound-engineering/config.yaml](../.compound-engineering/config.yaml).
 - **Lessons:** each project keeps its own `docs/insights/` folder, with the lessons that project's work discovered. `/distill` writes to it; `/brief` reads from it. For example: [the-back-nine](../projects/the-back-nine/docs/insights/), [burned](../projects/burned/docs/insights/), and [this folder's](docs/insights/), about how we work. Each one names the files it is about.
-- **Claude's private memory:** under `~/.claude`, outside this public repo.
+- **Tools we built:** [tools/spin/](../tools/spin/README.md) opens numbered session chains as Terminal tabs.
+- **Claude's private memory:** under `~/.claude`, outside this public repo. Squeaky backs it up to a private GitHub copy at every close.

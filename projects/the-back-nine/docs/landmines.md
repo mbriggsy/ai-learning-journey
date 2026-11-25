@@ -1193,6 +1193,11 @@ refusal witness), so `gotoSeedFinal` times out on it — anchor on `main.result`
 
 ## CI
 
+- **(b9-11, 11-25) `jq` is not installed in this Git Bash: filter with `gh`'s own `--jq`.** b9-11's CI wait piped
+  `gh run list` into `jq`; every probe printed "jq: command not found", the loop's test read an empty count, and it spun
+  silently for its whole hour while RC11's fit job had already gone red. A deadline alone is not fail-loud: a wait loop
+  must also stop on its first probe that errors, and its filter must use a tool the shell has
+  (`gh run list --commit <full sha> --json status --jq '…'`).
 - **(b9-9, 11-25) Commits pushed together get CI on the push's head only.** RC9's code commit `7072fecd` and its docs
   follow-up `11349a9d` went up in one push: GitHub ran both workflows on `11349a9d` alone (green, RC9's code included),
   and a wait keyed on `7072fecd` found no runs and timed out. Read a pushed batch's CI by its last commit's full sha, or push

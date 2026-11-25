@@ -390,6 +390,16 @@ tests
 
 ## The fit gate and e2e
 
+- **(b9-2, 11-25) A second Vite server on this project breaks the fit harness's:** a `pnpm dev --port 5199` left from
+  a real-app check shared `node_modules/.vite/deps` with the harness's server on 4190, and a 30-arm run failed 27 with
+  `ERR_CONNECTION_REFUSED` at 4190 and "Execution context was destroyed" (the two optimizing deps over each other);
+  with it killed the same 30 passed. TaskStop on the background `pnpm dev` does NOT end its child `node … vite.js` on
+  Windows: `netstat -ano | grep :<port>`, check the PID's command line, `Stop-Process -Id <pid>`, before any fit run.
+- **(b9-2, 11-25) `rc-look.spec.ts` stamps `${UNIT}` into every describe title,** so `-g "RC18"` with `RC_UNIT=RC18`
+  matches all 52 look tests, not the unit's block: filter by the block's own words (`-g "Settings and the Display"`).
+  And a capture that toggles shell-level state (the tray handle; its open state lives on the shell, so it survives a
+  page change) must act only from a known state: RC12's Investment capture clicked an already-open tray shut and
+  waited 270 s for a row (fixed in `6fef3010`, it now opens only when shut).
 - **(b9-5, 11-24) When a surface moves, specs you did not open still drive it:** RC4a deleted the answer page and ran the
   arms it knew; CI then redded `e2e/intake-fold.spec.ts` (its re-walk pressed the old page's `copy.assumptionDoorCta`)
   and `e2e/chart-text-rv.spec.ts` (it waited for the recommend invite there). `pnpm typecheck` never sees `e2e/`, and a
@@ -1001,6 +1011,10 @@ chair; chair from a digest script, never the raw result, and expect the window t
 
 ## Claude Code, workflows and sessions
 
+- **(b9-2, 11-25) A builder's report past about 1,500 words arrives cut off** in its idle notice ("result truncated"),
+  twice in three Act 6 builds; asking for the rest costs a round trip. Brief each builder to send its report in at
+  most two messages of about 1,200 words. A builder's own helper subagent can also report to the orchestrator instead
+  of the builder: read it as the builder's input and wait for the builder's report.
 - **(b9-7, 11-24) Workflow's `scriptPath` must be a path the tool returned or a file in a folder the session can Read:** a
   copy placed beside a returned script under `~/.claude/projects/<folder>/<session>/workflows/scripts/` was refused, and so
   was the returned path itself after an overwrite; the same file in the session scratchpad ran. Iterate a review script

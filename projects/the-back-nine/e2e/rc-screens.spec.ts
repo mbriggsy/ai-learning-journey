@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 import { expect, type Page } from '@playwright/test'
 import { FINAL_TIER_MS, FLOOR, PHONE, PHONE_DPR, REAL, REAL_DPR, SETTLED_RESULT, armRefiguringWatch, expectRefiguringSeen, gotoSeedFinal, gotoVaultFinal, pinPlantDay, pinnedDay, pinnedYear, refiguringLog, settleLayout, test } from './reviewSurface'
 import { copy, slots } from '../src/ui/copy'
+import { navModules } from '../src/ui/shell/routes'
 import { ENGINE_PRICING_LEDGER } from '../src/engine/pricingVersion'
 import { DEV_VAULT_PASSPHRASE as DEV_PASSPHRASE } from '../src/ui/devSeeds'
 import { FAN, assertHcText, enterSnapshot, hcAudit, hcFloorPx, hcMarkFailures, hcMarks, hcTextFailures, hoverMedian } from './hcTextAudit'
@@ -163,15 +164,12 @@ test.describe(`RC2 · the shell on the phone (${PHONE.width}×${PHONE.height} @ 
         expect(face.family, `the menu heading "${face.text}" renders in Figtree, never the legacy serif`).toMatch(/^Figtree Variable(,|$)/)
         expect(face.color, `the menu heading "${face.text}" never wears the legacy brand colour`).not.toBe(LEGACY_BRAND)
       }
-      expect(await sheet.getByRole('link').allTextContents(), 'the menu holds every page, in the nav’s order').toEqual([
-        copy.shellPageSnapshot,
-        copy.shellPageAnalysis,
-        copy.shellPageSocialSecurity,
-        copy.shellPageHealthCare,
-        copy.shellPageCashFlows,
-        copy.shellPageTaxStrategies,
-        copy.workbenchPageFacts,
-      ])
+      // Every page the route table names, in its order (read from `navModules`, the menu's own source; the order itself is
+      // pinned module by module in `routes.test.ts`), so a unit that adds a route never reds this arm by a stale hand list
+      // (RC11 and RC12 each did, b9-11).
+      const pages = navModules().flatMap((m) => m.pages.map((p) => p.label))
+      expect(pages.length, '[test setup] the route table names pages').toBeGreaterThan(5)
+      expect(await sheet.getByRole('link').allTextContents(), 'the menu holds every page, in the nav’s order').toEqual(pages)
       await sheet.getByRole('link', { name: target.page, exact: true }).click()
       await expect(sheet, 'the menu closes on the choice').toHaveCount(0)
       await expect(menuButton, 'focus returns to the menu button').toBeFocused()

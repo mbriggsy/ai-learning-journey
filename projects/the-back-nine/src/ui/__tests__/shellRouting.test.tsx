@@ -95,7 +95,12 @@ async function pressForward() {
 }
 
 const modulesNav = () => screen.getAllByRole('navigation', { name: copy.shellModulesLabel })[0]!
-const goToFacts = () => fireEvent.click(within(modulesNav()).getByRole('link', { name: copy.shellModuleProfile }))
+/** Profile → Your facts in ONE move (one history entry), by the phone menu: since RC13a the Profile word lands on Net
+ *  Worth, its first page. */
+const goToFacts = () => {
+  fireEvent.click(screen.getByRole('button', { name: copy.shellMenuOpen }))
+  fireEvent.click(within(screen.getByRole('dialog', { name: copy.shellMenuTitle })).getByRole('link', { name: copy.workbenchPageFacts }))
+}
 /** Retirement → Analysis (the module's first page: Probability). */
 const goToAnalysis = () => fireEvent.click(within(modulesNav()).getByRole('link', { name: copy.shellModuleRetirement }))
 /** Probability's Action Items tray (RC4b): Retirement → Analysis, then the handle. */

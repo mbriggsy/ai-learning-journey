@@ -1,14 +1,20 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { copy, type CopyKey } from '@ui/copy'
-import type { ColaMode, IncomeStream, IncomeTaxTreatment, IncomeType } from '@shared/model'
+import type { ColaMode, IncomeStream } from '@shared/model'
 import { INCOME_TYPES } from '@shared/model'
-import { colaRateInRange } from '@shared/incomeBounds'
 import type { ScenarioDraft } from '@store/memoryModel'
 import { CurrencyField, IntegerField, PercentField, SegmentedControl } from './fields'
 import { FieldError } from './FieldError'
 import { focusHeading } from './a11y'
 import { bufferMoved, useUnsavedBufferHold } from './unsavedBuffer'
 import { incomeTypeLabel } from './otherIncome'
+import {
+  buildIncomeStream,
+  incomeFormFrom as fromInitial,
+  INCOME_ERROR_OWNER_FIELD as ERROR_OWNER_FIELD,
+  isContinuingType,
+  type IncomeFormState as FormState,
+} from './incomeForm'
 
 /**
  * One other-income stream, one focused form (R40 · KTD-3/4/6/7/8). Named
@@ -49,22 +55,6 @@ import { incomeTypeLabel } from './otherIncome'
  * reinforcement (the reader is color-blind); all copy routes through copy.ts.
  */
 
-/** A CONTINUING type surfaces the survivor-% (alimony terminates by law → 0). */
-const isContinuingType = (type: IncomeType | undefined): boolean =>
-  type === 'pension' || type === 'rental' || type === 'annuity' || type === 'other'
-
-/** The field each in-range/format error belongs to — so the ONE rendered FieldError's id matches the
- *  invalid field's `aria-describedby` (`err-income-<field>`), never a dangling reference (the field
- *  set aria-invalid + pointed here, but the error had always rendered at `income.save`). The
- *  required/missing errors have no single invalid field → they fall through to `income.save`. */
-const ERROR_OWNER_FIELD: Partial<Record<CopyKey, string>> = {
-  errIncomeColaPct: 'income.colaPct',
-  errIncomeColaRange: 'income.colaPct',
-  errIncomeSurvivorRange: 'income.survivorPct',
-  errIncomeTaxableRange: 'income.taxableFraction',
-  errIncomeExclusionRange: 'income.exclusionFraction',
-}
-
 /** Errors whose owning field lives INSIDE the collapsed advanced tier. When Save blocks on one of
  *  these, the tier must be revealed — else the calm `role="alert"` names an out-of-range field the
  *  user can't see (and its `aria-describedby` target is unmounted). Only taxableFraction is advanced. */
@@ -76,57 +66,6 @@ export interface OtherIncomeEntryProps {
   readonly initial?: IncomeStream
   readonly onSave: (stream: IncomeStream) => void
   readonly onCancel: () => void
-}
-
-interface FormState {
-  ownerIndex: 0 | 1
-  type: IncomeType | undefined
-  annualRealToday: number | undefined
-  receivingNow: boolean | undefined
-  startAge: number | undefined
-  endAge: number | undefined
-  colaMode: ColaMode | undefined
-  colaPct: number | undefined
-  survivorPct: number | undefined
-  taxableFraction: number | undefined
-  // alimony
-  executedAfter2018: boolean | undefined
-  modifiedAdoptsPost2018Rules: boolean
-  // annuity
-  annuityQualified: boolean | undefined
-  exclusionFraction: number | undefined
-}
-
-/** Reconstruct the form state from a persisted entity (the union → flat form). */
-function fromInitial(initial: IncomeStream | undefined, draft: ScenarioDraft): FormState {
-  const ownerIndex = (initial?.ownerIndex as 0 | 1) ?? 0
-  const currentAge = draft.people[ownerIndex]?.currentAge
-  const receivingNow =
-    initial === undefined || currentAge === undefined
-      ? undefined
-      : initial.startAge <= currentAge
-  return {
-    ownerIndex,
-    type: initial?.type,
-    annualRealToday: initial?.annualRealToday,
-    receivingNow,
-    startAge: initial?.startAge,
-    endAge: initial?.endAge,
-    colaMode: initial?.colaMode,
-    colaPct: initial?.colaPct,
-    survivorPct: initial?.survivorPct,
-    taxableFraction:
-      initial !== undefined &&
-      (initial.type === 'pension' || initial.type === 'rental' || initial.type === 'other')
-        ? initial.taxableFraction
-        : undefined,
-    executedAfter2018: initial?.type === 'alimony' ? initial.executedAfter2018 : undefined,
-    modifiedAdoptsPost2018Rules:
-      initial?.type === 'alimony' ? initial.modifiedAdoptsPost2018Rules === true : false,
-    annuityQualified: initial?.type === 'annuity' ? initial.qualified : undefined,
-    exclusionFraction:
-      initial?.type === 'annuity' && initial.qualified === false ? initial.exclusionFraction : undefined,
-  }
 }
 
 export function OtherIncomeEntry({ draft, initial, onSave, onCancel }: OtherIncomeEntryProps) {
@@ -148,121 +87,15 @@ export function OtherIncomeEntry({ draft, initial, onSave, onCancel }: OtherInco
 
   const patch = (p: Partial<FormState>) => setForm((f) => ({ ...f, ...p }))
 
-  const owner = draft.people[form.ownerIndex]
-  const currentAge = owner?.currentAge
   const isAlimony = form.type === 'alimony'
   const isAnnuity = form.type === 'annuity'
   const isNonQualAnnuity = isAnnuity && form.annuityQualified === false
   const directTaxableType =
     form.type === 'pension' || form.type === 'rental' || form.type === 'other'
 
-  // A share fraction is in range iff present AND ∈ [0,1]. An out-of-range scalar
-  // (parsePercent has NO upper clamp — "150" → 1.5) is a TRUE impossibility (a
-  // survivor can't keep 120% of a benefit; an exclusion > 1 drives effective
-  // taxable NEGATIVE — the optimistic-MAGI sin). It must NEVER commit, and it is
-  // NEVER silently coerced (clamping 1.5→1 is the calm-but-wrong coercion the form
-  // exists to refuse; burned/062). The form is the in-flow gate — sanity's
-  // income-*-range rules + U8's codec are the restore backstops, not this path.
-  const shareInRange = (v: number): boolean => v >= 0 && v <= 1
-
-  /** Build the persisted entity, OR the specific reason a no-safe-default fact is
-   *  missing / out of range. A discriminated result (not bare null) so the gate
-   *  and the calm message share ONE decision tree — a blocked Save always names
-   *  WHAT is missing (WCAG 3.3.1), never a silent dead button. */
-  const buildStream = (): { ok: true; stream: IncomeStream } | { ok: false; error: CopyKey } => {
-    if (form.type === undefined) return { ok: false, error: 'errIncomeTypeRequired' }
-    if (form.annualRealToday === undefined) return { ok: false, error: 'errIncomeAmountRequired' }
-    if (form.receivingNow === undefined) return { ok: false, error: 'errIncomeTimingRequired' }
-    if (form.colaMode === undefined) return { ok: false, error: 'errIncomeColaModeRequired' }
-    // The start age: already-receiving anchors at the owner's CURRENT age (KTD-8b
-    // clamps it to t=0); a future stream needs an explicit start age.
-    let startAge: number
-    if (form.receivingNow) {
-      if (currentAge === undefined) return { ok: false, error: 'errIncomeStartAgeRequired' } // can't anchor
-      startAge = currentAge
-    } else {
-      if (form.startAge === undefined) return { ok: false, error: 'errIncomeStartAgeRequired' }
-      startAge = form.startAge
-    }
-    // fixed-pct requires a finite COLA rate (KTD-2 — never coerced to 0)…
-    if (form.colaMode === 'fixed-pct') {
-      if (form.colaPct === undefined || !Number.isFinite(form.colaPct)) {
-        return { ok: false, error: 'errIncomeColaPct' }
-      }
-      // …AND within the grounded band. A rate outside it (a fat-fingered 30%/yr) compounds to fantasy
-      // real income the confidence fan is structurally blind to — the never-deplete sin. HARD refuse
-      // at the SAME 0.05 the restore codec enforces (@shared/incomeBounds, council 2026-07-01), never
-      // a soft override (nothing legitimate sits between the ceiling and the sin band).
-      if (!colaRateInRange(form.colaPct)) {
-        return { ok: false, error: 'errIncomeColaRange' }
-      }
-    }
-    // The optional advanced taxableFraction (pension/rental/other) — when entered,
-    // it MUST be in range (out-of-range understates/over-states MAGI; never commits).
-    if (form.taxableFraction !== undefined && !shareInRange(form.taxableFraction)) {
-      return { ok: false, error: 'errIncomeTaxableRange' }
-    }
-    // The tax-treatment union arm (KTD-6) — each type's MUST-ASK field gates here.
-    // Typed as the real union so an arm's literal is checked against its member at
-    // authoring time (a `{ type:'pension', exclusionFraction }` contradiction won't
-    // compile — KTD-6's "unrepresentable" promise, locally enforced).
-    let treatment: IncomeTaxTreatment
-    let survivorPct: number
-    switch (form.type) {
-      case 'pension':
-      case 'rental':
-      case 'other': {
-        if (form.survivorPct === undefined) return { ok: false, error: 'errIncomeSurvivorRequired' }
-        if (!shareInRange(form.survivorPct)) return { ok: false, error: 'errIncomeSurvivorRange' }
-        survivorPct = form.survivorPct
-        treatment = {
-          type: form.type,
-          ...(form.taxableFraction !== undefined ? { taxableFraction: form.taxableFraction } : {}),
-        }
-        break
-      }
-      case 'alimony': {
-        if (form.executedAfter2018 === undefined) return { ok: false, error: 'errIncomeAlimonyDateRequired' }
-        survivorPct = 0 // terminates at death by law (§71(b)(1)(D))
-        treatment =
-          form.executedAfter2018 === false
-            ? {
-                type: 'alimony',
-                executedAfter2018: false,
-                modifiedAdoptsPost2018Rules: form.modifiedAdoptsPost2018Rules,
-              }
-            : { type: 'alimony', executedAfter2018: true }
-        break
-      }
-      case 'annuity': {
-        if (form.annuityQualified === undefined) return { ok: false, error: 'errIncomeAnnuityKindRequired' }
-        if (form.survivorPct === undefined) return { ok: false, error: 'errIncomeSurvivorRequired' }
-        if (!shareInRange(form.survivorPct)) return { ok: false, error: 'errIncomeSurvivorRange' }
-        survivorPct = form.survivorPct
-        if (form.annuityQualified) {
-          treatment = { type: 'annuity', qualified: true }
-        } else {
-          if (form.exclusionFraction === undefined) return { ok: false, error: 'errIncomeExclusionRequired' }
-          if (!shareInRange(form.exclusionFraction)) return { ok: false, error: 'errIncomeExclusionRange' }
-          treatment = { type: 'annuity', qualified: false, exclusionFraction: form.exclusionFraction }
-        }
-        break
-      }
-    }
-    const stream = {
-      ownerIndex: form.ownerIndex,
-      annualRealToday: form.annualRealToday,
-      startAge,
-      ...(form.endAge !== undefined ? { endAge: form.endAge } : {}),
-      colaMode: form.colaMode,
-      ...(form.colaMode === 'fixed-pct' && form.colaPct !== undefined ? { colaPct: form.colaPct } : {}),
-      survivorPct,
-      ...treatment,
-      // TS collapses a union under object spread, so the final cast can't be fully
-      // eliminated — but `treatment` is the real union, so each ARM is checked above.
-    } as IncomeStream
-    return { ok: true, stream }
-  }
+  /** Build the persisted entity, OR the specific reason a no-safe-default fact is missing / out of range
+   *  (`incomeForm.ts`: the one decision tree, shared with the Profile pages' income drawer). */
+  const buildStream = () => buildIncomeStream(form, draft)
 
   const save = () => {
     const result = buildStream()

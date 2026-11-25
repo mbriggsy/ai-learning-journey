@@ -1,22 +1,17 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { copy, type SlottedErrorKey, type SlottedErrorParams } from '@ui/copy'
-import type { AccountKind, EnteredAccount, TickerClassification } from '@shared/model'
+import type { EnteredAccount } from '@shared/model'
 import { ACCOUNT_KINDS } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
-import { freshStableId, idsInUse } from '@shared/stableIds'
 import { CurrencyField, SegmentedControl } from './fields'
 import { FieldError } from './FieldError'
 import { focusHeading } from './a11y'
 import { AllocationEntry } from './AllocationEntry'
-import { classifyLegs, legsOf, type AllocationReport } from './allocation'
+import { type AllocationReport } from './allocation'
 import { kindLabel } from './accountKinds'
 import { bufferMoved, useUnsavedBufferHold } from './unsavedBuffer'
-import {
-  annualAdditionsCeilingFor,
-  ceilingParams,
-  contributionCeilingFor,
-  isEmployerPlanKind,
-} from './sanity'
+import { isEmployerPlanKind } from './sanity'
+import { accountFormFrom as formFrom, buildAccount as buildAccountFrom, type AccountFormState as FormState } from './accountForm'
 
 /**
  * One account, one focused screen (R35/R36/R37/R31). Conditional anatomy:
@@ -64,46 +59,6 @@ export interface AccountEntryProps {
   readonly onCancel: () => void
 }
 
-interface FormState {
-  ownerIndex: 0 | 1
-  kind: AccountKind | undefined
-  valueToday: number | undefined
-  basis: number | undefined
-  annualContribution: number | undefined
-  employerMatchAnnual: number | undefined
-  hsaEmployerAnnual: number | undefined
-  manualBlend: TickerClassification | undefined
-  /** The child reported a typed-but-not-100 split — Add must not commit (see AllocationEntry). */
-  allocationInvalid: boolean
-}
-
-/** The reason Add could not build the account — the ONE decision tree the gate and the calm
- *  message share (the OtherIncomeEntry pattern). Each arm names the fact in plain text. */
-type AddBlock =
-  | { readonly kind: 'missing'; readonly error: 'errAccountKindRequired' | 'errAccountValueRequired' }
-  | { readonly kind: 'allocation' }
-  | { readonly kind: 'ceiling'; readonly messageKey: SlottedErrorKey; readonly params: SlottedErrorParams }
-
-/** The form as seeded from a committed account (or blank for a new one) — ONE producer, read by
- *  the initial state AND by the unsaved-buffer compare below, so "has this form moved?" is
- *  measured against exactly what it opened with. */
-function formFrom(initial: EnteredAccount | undefined): FormState {
-  return {
-    ownerIndex: (initial?.ownerIndex as 0 | 1) ?? 0,
-    kind: initial?.kind,
-    valueToday: initial?.valueToday,
-    basis: initial?.basis,
-    annualContribution: initial?.annualContribution,
-    employerMatchAnnual: initial?.employerMatchAnnual,
-    hsaEmployerAnnual: initial?.hsaEmployerAnnual,
-    manualBlend: initial?.manualBlend,
-    // A seeded blend is READ, never trusted: the codec's exact arm checks finiteness only, so
-    // a stored 60/50/10 would otherwise re-commit untouched under a screen showing 60/50/10.
-    allocationInvalid:
-      initial?.manualBlend !== undefined && classifyLegs(legsOf(initial.manualBlend)).kind === 'invalid',
-  }
-}
-
 export function AccountEntry({ draft, initial, onSave, onCancel }: AccountEntryProps) {
   const id = useId()
   // THE EDITOR'S OWN HEADING (2026-09-08). This form REPLACES the step body; the step heading
@@ -140,82 +95,9 @@ export function AccountEntry({ draft, initial, onSave, onCancel }: AccountEntryP
   const ownerWorking = owner?.workStatus === 'working'
   const isHsa = form.kind === 'hsa'
 
-  /** Build the account, OR the specific reason Add cannot — one decision tree, in form order,
-   *  so the gate and the calm message can never desync (the OtherIncomeEntry pattern). */
-  const buildAccount = (): { ok: true; account: EnteredAccount } | { ok: false; block: AddBlock } => {
-    if (form.kind === undefined) return { ok: false, block: { kind: 'missing', error: 'errAccountKindRequired' } }
-    if (form.valueToday === undefined) {
-      return { ok: false, block: { kind: 'missing', error: 'errAccountValueRequired' } }
-    }
-    // A typed split that does not make 100% never commits — and never silently drops
-    // to "no blend" either (that was the 2026-08-20 discard). Blank legs are not this
-    // arm: they commit blend-less and the missing-fact gate names them.
-    if (form.allocationInvalid) return { ok: false, block: { kind: 'allocation' } }
-    // Ceiling pre-check at Add time (same helpers as the sanity rules — the
-    // advance-time rules remain the backstop for combined-across-accounts).
-    if (
-      ownerWorking &&
-      owner?.currentAge !== undefined &&
-      Number.isInteger(owner.currentAge) &&
-      owner.currentAge >= 0 &&
-      owner.currentAge <= 120
-    ) {
-      const ceiling = contributionCeilingFor(form.kind, owner.currentAge)
-      // HSA: employer + personal share ONE family ceiling. Every other capped kind:
-      // the personal elective ceiling (an employer-plan match is the §415(c) check).
-      const ownContribution =
-        (form.annualContribution ?? 0) + (isHsa ? (form.hsaEmployerAnnual ?? 0) : 0)
-      if (ceiling !== null && ownContribution > ceiling) {
-        return {
-          ok: false,
-          block: { kind: 'ceiling', messageKey: 'errContributionCeiling', params: ceilingParams(ceiling) },
-        }
-      }
-      const additionsCeiling = annualAdditionsCeilingFor(owner.currentAge)
-      if (
-        isEmployerPlanKind(form.kind) &&
-        (form.annualContribution ?? 0) + (form.employerMatchAnnual ?? 0) > additionsCeiling
-      ) {
-        return {
-          ok: false,
-          block: {
-            kind: 'ceiling',
-            messageKey: 'errAdditionsCeiling',
-            params: ceilingParams(additionsCeiling),
-          },
-        }
-      }
-    }
-    return {
-      ok: true,
-      account: {
-        // THE ID RIDES THROUGH THE REBUILD (schema version 6): this form rebuilds the account from its
-        // fields, so an edit carries the committed account's id across by hand — dropping it would
-        // silently orphan every kept what-if's deposits lever that names this account. A new account
-        // (Add) mints a random id no live account or line holds and no kept what-if names. An edit
-        // never mints: ids enter a draft only at its open (`draftFromScenario`) and at an Add.
-        ...(initial === undefined
-          ? { id: freshStableId(idsInUse(draft)) }
-          : initial.id !== undefined
-            ? { id: initial.id }
-            : {}),
-        ownerIndex: form.ownerIndex,
-        kind: form.kind,
-        valueToday: form.valueToday,
-        ...(form.kind === 'brokerage' && form.basis !== undefined ? { basis: form.basis } : {}),
-        ...(ownerWorking && form.annualContribution !== undefined
-          ? { annualContribution: form.annualContribution }
-          : {}),
-        ...(ownerWorking && isEmployerPlanKind(form.kind) && form.employerMatchAnnual !== undefined
-          ? { employerMatchAnnual: form.employerMatchAnnual }
-          : {}),
-        ...(ownerWorking && isHsa && form.hsaEmployerAnnual !== undefined
-          ? { hsaEmployerAnnual: form.hsaEmployerAnnual }
-          : {}),
-        ...(form.manualBlend !== undefined ? { manualBlend: form.manualBlend } : {}),
-      },
-    }
-  }
+  /** Build the account, OR the specific reason Add cannot (`accountForm.ts`: the one decision tree, shared with the
+   *  Profile pages' account drawer, so the gate and the calm message can never desync). */
+  const buildAccount = () => buildAccountFrom(form, draft, initial)
 
   const save = () => {
     const result = buildAccount()

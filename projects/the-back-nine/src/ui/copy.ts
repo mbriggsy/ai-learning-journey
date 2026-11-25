@@ -3228,6 +3228,98 @@ export const copy = {
   investBucketPretax: 'Pre-tax',
   investBucketRoth: 'Roth',
   investBucketHsa: 'HSA',
+  // --- Profile → Family, Income, Savings and Net Worth (Act 6 · RC13a; `profileView.ts`, the drawers in
+  // `src/ui/screens/profile/drawers/`): RightCapital's card grids and right drawers over B9's own facts. A drawer's fields
+  // reuse the walk's labels and help (written once, above); these are the pages', the cards' and the drawer frame's own
+  // words. Every figure here is one the household entered (a fact, so no "~"). ---
+  shellPageNetWorth: 'Net Worth',
+  shellPageIncome: 'Income',
+  shellPageSavings: 'Savings',
+  shellPageFamily: 'Family',
+  profileFamilyIntro: 'The two of you, and the state you live in. Pick a card to change it.',
+  profileIncomeIntro: 'Pay, Social Security and the other income your plan counts. Pick a card to change it.',
+  profileSavingsIntro: 'What goes into each account every year while its owner still works. Pick a card to change it.',
+  profileSavingsIntroNoCards: 'What goes into each account every year while its owner still works.',
+  profileNetWorthIntro: 'Your accounts and what each holds today. Pick an account to change it.',
+  profileAddIncome: 'Add income',
+  profileAddSaving: 'Add saving',
+  profileAddAccount: 'Add account',
+  profileKindClient: 'Client',
+  profileKindCoClient: 'Co-client',
+  profileKindHomeState: 'Home state',
+  profileKindSalary: 'Salary',
+  profileKindSocialSecurity: 'Social Security',
+  profileKindWorkInvest: 'Investment income',
+  profileRowBorn: 'Born',
+  profileRowWork: 'Work',
+  profileRowYearlyPay: 'Yearly pay',
+  profileRowMonthlyAtFra: 'Monthly at full retirement age',
+  profileRowStarts: 'Starts',
+  profileRowClaiming: 'Already claiming',
+  profileRowEachYear: 'Each year',
+  profileRowPays: 'Pays',
+  profileRowWhileWorking: 'Each year while working',
+  profileRowLimit: 'Yearly limit',
+  profileYes: 'Yes',
+  profileNo: 'No',
+  profileNone: 'None',
+  profileNotAnswered: 'Not answered yet',
+  profileNoLimit: 'No legal limit',
+  profilePaysNow: 'Now',
+  profileHomeStateName: 'Where you live in retirement',
+  profileStateUnanswered: 'Not answered yet: no state’s income tax is in your numbers until you pick one.',
+  profileSavingsNoneWorking: 'Deposits count only while their owner still works, and neither of you is working, so there are none to set.',
+  profileSavingsNoAccounts: 'No accounts belong to someone still working yet. Add one with Add saving.',
+  profileSavingsLimitsNote:
+    'Each person’s deposits are held to this year’s legal limits, counted across all of that person’s accounts of one kind. Open an account to see its limit.',
+  profileIncomeOtherNone: 'No other income is entered. Add a pension, rental, annuity or other income with Add income.',
+  profileSalaryStopgap:
+    'B9 holds pay as one steady yearly figure in today’s dollars until work stops. Raises and part-time years come with a later build.',
+  profileNetWorthInvestment: 'Investment',
+  profileNetWorthNoAccounts: 'No accounts yet. Add one with Add account.',
+  profileInheritedIraStopgap: 'An inherited IRA can’t be entered as its own kind yet; entered as a traditional IRA it reads too rosy.',
+  profileNetWorthCategoriesLabel: 'Kinds of account',
+  profileNetWorthAccountsLabel: 'Your accounts',
+  profileMixNone: 'No mix yet: your plan needs one before it can run.',
+  profileMixTickerNone: 'A fund B9 doesn’t know: its mix is still needed before your plan can run.',
+  // The drawer frame (`ProfileDrawer.tsx`).
+  profileDrawerClose: 'Close',
+  profileDrawerCancel: 'Cancel',
+  profileDrawerSave: 'Save',
+  profileDrawerDelete: 'Delete',
+  profileDrawerDeleteConfirm: 'Press again to delete',
+  profileUnsavedAsk: 'These changes aren’t saved yet.',
+  profileUnsavedKeep: 'Keep editing',
+  profileUnsavedDrop: 'Drop the changes',
+  // In the shell's own Back ask while a drawer holds changes (`workbenchLeaveAsk`'s place there): the drawer's changes
+  // are not in the plan until Save, so Go drops them.
+  profileLeaveAskUnsaved: 'You have changes in this drawer that aren’t saved. Going back closes it and drops them.',
+  profileChoose: 'Choose one',
+  profileInvalidMoney: 'That didn’t read as a dollar figure, like 80,000.',
+  profileInvalidAge: 'That didn’t read as a whole number, like 65.',
+  profileInvalidYear: 'That didn’t read as a year, like 1962.',
+  profileInvalidPercent: 'That didn’t read as a percent, like 50.',
+  profilePlaceOther: 'another of your facts',
+  // The account drawer's mix and deposits.
+  profileOwnerLabel: 'Owner',
+  profileKindLabel: 'Kind of account',
+  profileMixHow: 'How its mix is entered',
+  profileMixByHand: 'Typed in by hand',
+  profileMixByTicker: 'By the fund it holds',
+  profileTickerLabel: 'The fund’s ticker',
+  profileTickerHelp: 'One fund for the whole account, like VTI or VFIFX. B9 knows the mix of about 160 common funds.',
+  profileTickerUnknownLegend: 'B9 doesn’t know this fund. How is it invested?',
+  profileTickerUnknownHelp: 'From the fund’s fact sheet. B9 uses this mix for every account that holds this fund.',
+  errProfileTickerRequired: 'Still need the fund’s ticker.',
+  profileDepositsHeading: 'Each year, while its owner still works',
+  profileDepositsRetired: 'Its owner has stopped working, so nothing more goes in.',
+  profileHoldingsHeading: 'What it holds',
+  profileRecordGone: 'This record is gone, so there is nothing here to change.',
+  // The income drawer's choice words.
+  profileIncomeTypeLabel: 'Kind of income',
+  profileIncomeWhen: 'When it pays',
+  // The person drawer.
+  profileStateLabel: 'Your home state',
   // THE ENTRY SLICE, composed in LAST: the words the first-load chunk renders live in `entryCopy.ts` (see its
   // header). Spread last, a key typed above that the slice also holds fails to compile (TS2783), so the two
   // halves stay disjoint and `copy` stays ONE whole catalog for `CopyKey`, every copyGuard sweep and every lazy surface.
@@ -3923,7 +4015,7 @@ export const slots = {
    *
    *  ⚠️ DO NOT "FIX" THIS BY DROPPING THE TODAY TICK. That inverts the contradiction into the
    *  defect U13/§S0 already fixed — `bandAnnotations.ts:51-56` records it live from the first
-   *  `?vault=datestale` walk, and `e2e/vertical-fit.spec.ts:3927-3930` (the `?vault=datearrived` arm — "must still
+   *  `?vault=datestale` walk, and `e2e/vertical-fit.spec.ts:3930-3933` (the `?vault=datearrived` arm — "must still
    *  mark WALL-TIME today") forbids a band that loses its wall clock BY NAME. The tick is right; the sentence was wrong. */
   bandAgedPremiseFresh: (buildYear: number): string =>
     `This range runs from ${buildYear}, when the plan was built — the years since are modeled, not records. What you actually hold today is undetermined until you re-confirm.`,
@@ -5081,7 +5173,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:2267` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:2291` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,
@@ -5956,6 +6048,37 @@ export const slots = {
     `Over the whole plan, ${share} ${plural ? 'run' : 'runs'} out of money while one of you is still living.`,
   /** The whole plan's share where the charts stop before the plan does: why they stop, then the longer span named, so
    *  it never reads as a second answer to the chart's question. */
+  // --- Profile (Act 6 · RC13a). The figures are the household's own entries (facts), so no "~". ---
+  profileBornIn: (year: number, age: number | undefined): string => (age === undefined ? `${year}` : `${year} (age ${age})`),
+  profileStoppedAt: (age: number): string => `Stopped at ${age}`,
+  profileStartsAt: (age: number, year: number): string => `At ${age}, in ${year}`,
+  profilePaysFrom: (age: number): string => `From age ${age}`,
+  profileSalaryOf: (possessive: string): string => upperFirst(`${possessive} salary`),
+  profileSocialSecurityOf: (possessive: string): string => upperFirst(`${possessive} Social Security`),
+  profileWorkInvestOf: (possessive: string): string => upperFirst(`${possessive} investment income while working`),
+  profileNewAccountTitle: (kind: string): string => `New account: ${kind}`,
+  profileNewIncomeTitle: (type: string): string => `New income: ${type}`,
+  profileMixLine: (stock: number, bond: number, cash: number): string => `Mix: ${stock}% stocks, ${bond}% bonds, ${cash}% cash`,
+  profileMixFund: (ticker: string, name: string): string => `Mix: the fund ${ticker} (${name})`,
+  profileMixFundYours: (ticker: string): string => `Mix: the fund ${ticker}, its mix as you entered it`,
+  profileFundKnown: (name: string, stock: number, bond: number, cash: number): string =>
+    `${name}: about ${stock}% stocks, ${bond}% bonds and ${cash}% cash, from its fund company’s own figures.`,
+  profileAccountMeta: (treatment: string, owner: string): string => `${treatment} · ${owner}`,
+  profileInvestmentTotal: (category: string, total: string): string => `${category}: ${total}`,
+  /** The legal limit a deposit drawer prints (computed, never typed: `contributionCeilingFor`). `family` names whose
+   *  accounts share it. */
+  profileLimitShared: (owner: string, limit: string, family: string): string =>
+    `This year’s legal limit for ${owner}: ${limit} across ${family}.`,
+  profileLimitAdditions: (limit: string): string => `Deposits and the employer’s match into this plan together: up to ${limit}.`,
+  profileLimitFamilyPlan: (): string => 'every 401(k), 403(b) and Roth 401(k)',
+  profileLimitFamilyIra: (): string => 'every traditional and Roth IRA',
+  profileLimitFamilyHsa: (): string => 'every HSA, the employer’s money included',
+  profileLimitNone: (): string => 'A taxable account has no legal limit on deposits.',
+  /** A Save refused for a fact on another card: the edit would make it impossible there (insight 158: a drawer has no
+   *  later Continue). */
+  profileRefusedElsewhere: (place: string, message: string): string => `Not saved: this change would leave a problem with ${place}. ${message}`,
+  /** A refusal on a field the drawer's facet doesn't show (the account's deposits, from its Net Worth drawer). */
+  profileRefusedHidden: (field: string, message: string): string => `${field}: ${message}`,
   confidenceRunOutWholePast: (ageA: number, ageB: number, share: string, plural: boolean): string =>
     `The charts stop at ages ${ageA} and ${ageB}: past them, fewer than half of the futures still have one of you living. Over the whole plan, ${share} ${plural ? 'run' : 'runs'} out of money.`,
 } as const

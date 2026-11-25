@@ -15,7 +15,9 @@ import { copy } from '../../src/ui/copy'
  * The phone's menu is captured open too, and since RC4b Probability's Action Items tray: open with one changed row, after
  * its Refresh (Apply's words on the working seed, a stop year pulled), and its Edit drawer; since RC11 Stress Test's tray,
  * open after a Refresh with the Social Security stress moved one step; since RC12 Investment's Asset Allocation (Summary,
- * its picker switched, Detail) and Tax Allocation (a part's accounts listed), then both again with a what-if mix set. Screenshots land in the repo's gitignored `temp/rc-shots/<unit>/`, named
+ * its picker switched, Detail) and Tax Allocation (a part's accounts listed), then both again with a what-if mix set; since
+ * RC13a the Profile pages (Net Worth, Income, Savings, Family), each with a drawer open (on the phone, its full-screen
+ * sheet), and a drawer refusing a Save (a Social Security figure over its ceiling) with the error under its field. Screenshots land in the repo's gitignored `temp/rc-shots/<unit>/`, named
  * `<screen>-<seed>-<size>.png`, for Briggsy to review the output.
  *
  *     RC_UNIT=RC2 pnpm exec playwright test --config e2e/held/shots.config.ts rc-look
@@ -35,6 +37,10 @@ const ALL_SCREENS = [
   { id: 'stress-test', screen: 'stress-test', module: copy.shellModuleRetirement, page: copy.shellPageStressTest },
   { id: 'asset-allocation', screen: 'asset-allocation', module: copy.shellModuleInvestment, page: copy.shellPageAssetAllocation },
   { id: 'tax-allocation', screen: 'tax-allocation', module: copy.shellModuleInvestment, page: copy.shellPageTaxAllocation },
+  { id: 'net-worth', screen: 'profile-net-worth', module: copy.shellModuleProfile, page: copy.shellPageNetWorth },
+  { id: 'income', screen: 'profile-income', module: copy.shellModuleProfile, page: copy.shellPageIncome },
+  { id: 'savings', screen: 'profile-savings', module: copy.shellModuleProfile, page: copy.shellPageSavings },
+  { id: 'family', screen: 'profile-family', module: copy.shellModuleProfile, page: copy.shellPageFamily },
 ] as const
 /** `RC_ONLY=stress-test` captures only the named screens (comma-separated ids), and Probability's tray and odds
  *  captures only where Probability is among them. */
@@ -78,6 +84,23 @@ async function audit(page: Page): Promise<Audit> {
       .map(name)
     // A chart word Highcharts cut to fit ends in "…" with no CSS to show it (RC11's phone look: "Combined every…").
     for (const t of document.querySelectorAll('svg text')) if (shown(t) && (t.textContent ?? '').includes('…')) clipped.push(name(t))
+    // A control's box as it is SEEN: cut by every ancestor that hides or scrolls its overflow (RC13a: a drawer body's field
+    // scrolled under its footer is clipped by the body, never drawn over the footer's buttons). Null: nothing of it shows.
+    const seen = (el: Element): DOMRect | null => {
+      let r = el.getBoundingClientRect()
+      for (let up = el.parentElement; up !== null; up = up.parentElement) {
+        const cs = getComputedStyle(up)
+        if (cs.overflowX === 'visible' && cs.overflowY === 'visible') continue
+        const c = up.getBoundingClientRect()
+        const left = Math.max(r.left, c.left)
+        const top = Math.max(r.top, c.top)
+        const right = Math.min(r.right, c.right)
+        const bottom = Math.min(r.bottom, c.bottom)
+        if (right - left <= 1 || bottom - top <= 1) return null
+        r = new DOMRect(left, top, right - left, bottom - top)
+      }
+      return r
+    }
     const controls = all.filter((el) => el.matches('a[href], button, input, select, textarea, summary, label.segment, [role="menuitem"]'))
     const overlaps: string[] = []
     for (let i = 0; i < controls.length; i++) {
@@ -85,8 +108,9 @@ async function audit(page: Page): Promise<Audit> {
         const a = controls[i]!
         const b = controls[j]!
         if (a.contains(b) || b.contains(a)) continue
-        const ra = a.getBoundingClientRect()
-        const rb = b.getBoundingClientRect()
+        const ra = seen(a)
+        const rb = seen(b)
+        if (ra === null || rb === null) continue
         const ix = Math.min(ra.right, rb.right) - Math.max(ra.left, rb.left)
         const iy = Math.min(ra.bottom, rb.bottom) - Math.max(ra.top, rb.top)
         if (ix > 1 && iy > 1) overlaps.push(`${name(a)} × ${name(b)}`)
@@ -797,6 +821,78 @@ for (const size of SIZES) {
           await page.screenshot({ path: `${OUT}/health-tray-${seed}-${size.tag}-full.png`, fullPage: true })
         }
         console.log(`[rc-look ${UNIT} health ${seed} ${size.tag}] ${JSON.stringify(findings)}`)
+        for (const [id, a] of Object.entries(findings)) {
+          expect.soft(a.sideways, `${id}: sideways scroll`).toBeLessThanOrEqual(0)
+          expect.soft(a.clipped, `${id}: clipped text`).toEqual([])
+          expect.soft(a.overlaps, `${id}: overlapping controls`).toEqual([])
+          expect.soft(a.tiny, `${id}: text under 12 px`).toEqual([])
+        }
+      })
+    }
+  })
+}
+
+// ── RC13a · the Profile pages and their drawers ─────────────────────────────────────────────────────────────────────────
+const PROFILE_PAGES = [screenById('net-worth'), screenById('income'), screenById('savings'), screenById('family')] as const
+
+/** Open the first card or row on the page (its drawer), shoot it, and shut it with nothing changed. */
+async function shootDrawer(page: Page, findings: Record<string, Audit>, id: string, seed: string, tag: string, card: string): Promise<void> {
+  const opener = page.locator(`[data-profile-card="${card}"]`)
+  if ((await opener.count()) === 0) return
+  await opener.click()
+  const dialog = page.getByRole('dialog')
+  await expect(dialog).toBeVisible()
+  await page.waitForTimeout(450)
+  await shot(page, findings, `${id}-drawer`, seed, tag)
+  await page.keyboard.press('Escape')
+  await expect(dialog).toHaveCount(0)
+}
+
+for (const size of SIZES) {
+  test.describe(`${UNIT} look, the Profile pages at ${size.tag}`, () => {
+    test.use({ ...size.use, reducedMotion: 'reduce' })
+    for (const seed of SEEDS) {
+      test(`?seed=${seed}: Net Worth, Income, Savings and Family, each page and a drawer open, and a refused Save`, async ({ page }) => {
+        test.setTimeout(FINAL_TIER_MS + 180_000)
+        await enterShell(page, seed)
+        const findings: Record<string, Audit> = {}
+        for (const target of PROFILE_PAGES) {
+          await showScreen(page, target, size.phone)
+          await shot(page, findings, target.id, seed, size.tag)
+          await page.screenshot({ path: `${OUT}/${target.id}-${seed}-${size.tag}-full.png`, fullPage: true })
+          // A page with no card (Savings on an all-retired seed) shoots no drawer.
+          if ((await page.locator('[data-profile-card]').count()) > 0) {
+            const first = await page.locator('[data-profile-card]').first().getAttribute('data-profile-card')
+            if (first !== null) await shootDrawer(page, findings, target.id, seed, size.tag, first)
+          }
+        }
+        // A new account from Net Worth's Add menu (both facets in one drawer), and a Savings drawer on the working seed.
+        await showScreen(page, screenById('net-worth'), size.phone)
+        await page.getByRole('button', { name: copy.profileAddAccount }).click()
+        await page.getByRole('menuitem', { name: copy.investBucketPretax }).click()
+        await page.getByRole('menuitem', { name: copy.kind401k }).click()
+        await expect(page.getByRole('dialog')).toBeVisible()
+        await page.waitForTimeout(450)
+        await shot(page, findings, 'net-worth-add', seed, size.tag)
+        await page.getByRole('dialog').getByRole('button', { name: copy.profileDrawerCancel }).click()
+        await expect(page.getByRole('dialog')).toHaveCount(0)
+        // A refused Save: a yearly figure typed into the monthly Social Security box (the 12× misentry its ceiling guards).
+        await showScreen(page, screenById('income'), size.phone)
+        await page.locator('[data-profile-card="ss-0"]').click()
+        const ss = page.getByRole('dialog')
+        await expect(ss).toBeVisible()
+        await ss.getByLabel(copy.ssAmountLabel).fill('30000')
+        await ss.getByRole('button', { name: copy.profileDrawerSave }).click()
+        await expect(ss.getByRole('alert').first()).toBeVisible()
+        await page.waitForTimeout(300)
+        await shot(page, findings, 'income-refused', seed, size.tag)
+        // Escape over the unsaved figure asks first, in the drawer.
+        await page.keyboard.press('Escape')
+        await expect(page.locator('[data-profile-ask]')).toBeVisible()
+        await shot(page, findings, 'income-ask', seed, size.tag)
+        await page.getByRole('button', { name: copy.profileUnsavedDrop }).click()
+        await expect(ss).toHaveCount(0)
+        console.log(`[rc-look ${UNIT} profile ${seed} ${size.tag}] ${JSON.stringify(findings)}`)
         for (const [id, a] of Object.entries(findings)) {
           expect.soft(a.sideways, `${id}: sideways scroll`).toBeLessThanOrEqual(0)
           expect.soft(a.clipped, `${id}: clipped text`).toEqual([])

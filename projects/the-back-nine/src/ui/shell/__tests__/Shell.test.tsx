@@ -483,6 +483,10 @@ describe('Shell — the phone menu (plan 3.1, "The phone shape")', () => {
       copy.shellPageHealthCare,
       copy.shellPageCashFlows,
       copy.shellPageTaxStrategies,
+      copy.shellPageNetWorth,
+      copy.shellPageIncome,
+      copy.shellPageSavings,
+      copy.shellPageFamily,
       copy.workbenchPageFacts,
     ])
     expect(within(sheet).getByRole('heading', { name: copy.shellModuleDashboard })).toBeInTheDocument()

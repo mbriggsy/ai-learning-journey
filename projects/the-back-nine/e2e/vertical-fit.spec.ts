@@ -885,8 +885,11 @@ const LANDING_SEED = 'date'
 /** The shell's Profile tab: the top bar's module word at a laptop, the phone menu's page on the phone. */
 async function showFactsPage(page: Page): Promise<void> {
   const modules = page.getByRole('navigation', { name: copy.shellModulesLabel })
-  if (await modules.isVisible()) await modules.getByRole('link', { name: copy.shellModuleProfile, exact: true }).click()
-  else {
+  if (await modules.isVisible()) {
+    // Since RC13a the Profile word lands on Net Worth (its first page); the interim facts page is its sub-nav's last word.
+    await modules.getByRole('link', { name: copy.shellModuleProfile, exact: true }).click()
+    await page.getByRole('navigation', { name: copy.shellPagesLabel }).getByRole('link', { name: copy.workbenchPageFacts, exact: true }).click()
+  } else {
     await page.getByRole('button', { name: copy.shellMenuOpen, exact: true }).click()
     await page.getByRole('dialog', { name: copy.shellMenuTitle }).getByRole('link', { name: copy.workbenchPageFacts, exact: true }).click()
     await expect(page.getByRole('dialog', { name: copy.shellMenuTitle })).toHaveCount(0)

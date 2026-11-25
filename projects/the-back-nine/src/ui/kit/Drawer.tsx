@@ -7,15 +7,20 @@
  * the right. On the phone it is a full-screen sheet.
  *
  * Read-only (plan 4.0): a drawer with no `onSave` shows no Save, and one with no `onDelete` shows no Delete, so a
- * view-only tab passes neither. Every word is a prop (plan 2.1 decision 10). Save closes the drawer unless its handler
- * returns `false` (a refused figure keeps it open).
+ * view-only tab passes neither. Every word is a prop (plan 2.1 decision 10). Save and Delete close the drawer unless their
+ * handler returns `false` (a refused figure, a delete waiting for its second press, keeps it open).
+ *
+ * Since Act 6 · RC13a (the Profile drawers): `notice` is a slot between the band and the scrolling body that never scrolls
+ * away (a drawer's "these changes aren't saved" ask); `focusTitle` moves focus to the title on open (it names the drawer
+ * and pops no phone keyboard), and `finalFocus` names where focus goes on close when the opener may be gone (a card the
+ * drawer just added or deleted).
  *
  * Motion (plan 2.1 decision 8): Base UI's CSS transitions, the panel sliding in from the right in 300 ms on the drawer
  * curve and out in 200 ms, the scrim fading; under reduced motion both only fade. Focus moves into the drawer on open
  * and returns to the element that opened it on close (Base UI's focus manager; the real-browser check is in
  * `e2e/csp.spec.ts`'s kit arm, insight 071).
  */
-import { useState, type ReactElement, type ReactNode } from 'react'
+import { useRef, useState, type ReactElement, type ReactNode } from 'react'
 import { Dialog } from '@base-ui/react/dialog'
 import { ChevronDown, ChevronUp, X } from 'lucide-react'
 import { Button, buttonClasses } from './Button'
@@ -30,6 +35,8 @@ export interface DrawerProps {
   /** Controlled open state; leave both out to let `trigger` own it. */
   readonly open?: boolean
   readonly onOpenChange?: (open: boolean) => void
+  /** After a close's exit has run (the caller may unmount the drawer's body then). */
+  readonly onClosed?: () => void
   /** The element that opens the drawer (focus returns to it on close). */
   readonly trigger?: ReactElement
   readonly title: string
@@ -47,8 +54,14 @@ export interface DrawerProps {
   readonly onSave?: () => boolean | void
   readonly saveDisabled?: boolean
   readonly deleteLabel?: string
-  /** Absent in a read-only drawer, and on a record that cannot be deleted. */
-  readonly onDelete?: () => void
+  /** Absent in a read-only drawer, and on a record that cannot be deleted. Return `false` to keep the drawer open. */
+  readonly onDelete?: () => boolean | void
+  /** Drawn between the band and the body, outside its scroll. */
+  readonly notice?: ReactNode
+  /** Focus the title on open (it names the drawer), instead of the first control. */
+  readonly focusTitle?: boolean
+  /** Where focus goes on close; Base UI's default (the opener) when absent or when it returns null. */
+  readonly finalFocus?: () => HTMLElement | null
   readonly children: ReactNode
 }
 
@@ -58,6 +71,7 @@ const bandButton =
 export function Drawer({
   open,
   onOpenChange,
+  onClosed,
   trigger,
   title,
   icon,
@@ -71,9 +85,13 @@ export function Drawer({
   saveDisabled = false,
   deleteLabel,
   onDelete,
+  notice,
+  focusTitle = false,
+  finalFocus,
   children,
 }: DrawerProps) {
   const [ownOpen, setOwnOpen] = useState(false)
+  const titleRef = useRef<HTMLHeadingElement>(null)
   const isOpen = open ?? ownOpen
   const setOpen = (next: boolean) => {
     if (open === undefined) setOwnOpen(next)
@@ -88,6 +106,7 @@ export function Drawer({
         if (!next) onCancel?.()
         setOpen(next)
       }}
+      {...(onClosed !== undefined ? { onOpenChangeComplete: (o: boolean) => { if (!o) onClosed() } } : {})}
     >
       {trigger !== undefined ? <Dialog.Trigger render={trigger} /> : null}
       <Dialog.Portal className="rc-root">
@@ -98,6 +117,8 @@ export function Drawer({
           )}
         />
         <Dialog.Popup
+          {...(focusTitle ? { initialFocus: titleRef } : {})}
+          {...(finalFocus !== undefined ? { finalFocus: () => finalFocus() ?? true } : {})}
           className={cn(
             'fixed inset-y-0 right-0 z-50 flex h-dvh w-full flex-col bg-bg shadow-drawer outline-none',
             'wide:w-[max(45vw,34rem)] wide:max-w-full',
@@ -108,7 +129,13 @@ export function Drawer({
         >
           <header className="flex min-h-14 shrink-0 items-center gap-3 bg-plum py-2 pr-3 pl-6 text-bg">
             {icon !== undefined ? <span className="flex shrink-0 [&_svg]:size-6">{icon}</span> : null}
-            <Dialog.Title className="min-w-0 flex-1 break-words text-intro font-regular">{title}</Dialog.Title>
+            <Dialog.Title
+              ref={titleRef}
+              {...(focusTitle ? { tabIndex: -1 } : {})}
+              className="min-w-0 flex-1 break-words text-intro font-regular outline-none"
+            >
+              {title}
+            </Dialog.Title>
             {previous !== undefined ? (
               <button type="button" className={bandButton} aria-label={previous.label} onClick={previous.onSelect}>
                 <ChevronUp size={20} strokeWidth={1.5} aria-hidden="true" />
@@ -124,14 +151,14 @@ export function Drawer({
               <X size={20} strokeWidth={1.5} aria-hidden="true" />
             </Dialog.Close>
           </header>
+          {notice !== undefined && notice !== null ? <div className="shrink-0 border-b border-stone-300 bg-stone-100 px-6 py-4">{notice}</div> : null}
           <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6 text-body text-stone-900">{children}</div>
           <footer className="flex shrink-0 flex-wrap items-center gap-3 bg-stone-200 px-6 py-4">
             {onDelete !== undefined && deleteLabel !== undefined ? (
               <Button
                 variant="destructive"
                 onClick={() => {
-                  onDelete()
-                  setOpen(false)
+                  if (onDelete() !== false) setOpen(false)
                 }}
               >
                 {deleteLabel}

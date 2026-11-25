@@ -10,6 +10,9 @@
  * shows the caller's words beside a mark, tied by `aria-invalid` and `aria-describedby`; editing again clears it. The
  * shown figure is reformatted after the commit, never per keystroke.
  *
+ * A caller's own refusal (`error`: a Profile drawer's Save that the walk's checks refuse, Act 6 · RC13a) shows the same
+ * way, under the box beside the mark; the caller clears it when the field is edited again.
+ *
  * Two tray marks: `readOnly` fills the box `--stone-200` (RightCapital's locked field), and `changed` is the tray's
  * changed value: blue-ink words on the pale blue box, medium weight and a 2 px left bar, so colour is never the only
  * cue (ref 2.8; Briggsy is colour-blind).
@@ -30,6 +33,8 @@ interface NumberInputProps {
   readonly onCommit?: (value: number | undefined) => void
   /** The words shown when the typed text is not a figure. */
   readonly invalidMessage: string
+  /** The caller's refusal of the committed figure, shown under the box (the typed-text refusal wins while it shows). */
+  readonly error?: string
   /** A help line under the field, read with it. */
   readonly description?: string
   readonly readOnly?: boolean
@@ -59,6 +64,7 @@ function NumberInput({
   value,
   onCommit,
   invalidMessage,
+  error,
   description,
   readOnly = false,
   changed = false,
@@ -107,7 +113,8 @@ function NumberInput({
     if (e.key === 'Enter') commit()
   }
 
-  const describedBy = [description !== undefined ? helpId : null, invalid ? errorId : null].filter(Boolean).join(' ')
+  const shownError = invalid ? invalidMessage : error
+  const describedBy = [description !== undefined ? helpId : null, shownError !== undefined ? errorId : null].filter(Boolean).join(' ')
 
   return (
     <div className={cn('flex flex-col gap-1', className)}>
@@ -121,7 +128,7 @@ function NumberInput({
           'focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-blue-ink',
           readOnly && 'bg-stone-200',
           changed && 'border-l-2 border-l-blue-ink bg-blue-changed font-medium text-blue-ink',
-          invalid && 'border-stone-900',
+          shownError !== undefined && 'border-stone-900',
         )}
       >
         {affix.prefix !== undefined ? <span aria-hidden="true">{affix.prefix}</span> : null}
@@ -134,7 +141,7 @@ function NumberInput({
           spellCheck={false}
           readOnly={readOnly}
           value={shown}
-          aria-invalid={invalid || undefined}
+          aria-invalid={shownError !== undefined || undefined}
           aria-describedby={describedBy === '' ? undefined : describedBy}
           onFocus={() => {
             // A locked box takes no edit, so it holds no draft: one kept from a locked focus would freeze the shown
@@ -162,10 +169,10 @@ function NumberInput({
           {description}
         </p>
       ) : null}
-      {invalid ? (
-        <p id={errorId} role="alert" className="flex items-center gap-1.5 text-label text-stone-900">
-          <CircleAlert size={16} strokeWidth={1.5} aria-hidden="true" />
-          {invalidMessage}
+      {shownError !== undefined ? (
+        <p id={errorId} role="alert" className="flex items-start gap-1.5 text-label text-stone-900">
+          <CircleAlert size={16} strokeWidth={1.5} aria-hidden="true" className="mt-0.5 shrink-0" />
+          {shownError}
         </p>
       ) : null}
     </div>

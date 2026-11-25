@@ -3636,3 +3636,203 @@ for (const size of RC12_SIZES) {
     }
   })
 }
+
+// ── RC13a · Profile → Net Worth, Income, Savings and Family (plan 6, RC13; its Fit decision, Verification and Test scenarios) ──
+// - scrolling pages: at his window the first frame holds the page's title, its sentence and its first row of cards (Net
+//   Worth: the band and the first account row); no page and no drawer scrolls sideways, at either size;
+// - each page's first card opens its drawer: at his window the drawer sits inside the 1440×731 window, header to footer,
+//   its body scrolling on its own; on the phone it is a full-screen sheet that names itself and takes focus (its title);
+//   Escape with nothing changed closes it and hands focus back to the card (insight 071: a real browser's order);
+// - one R13 disclaimer visible on every Profile page: Net Worth's in-frame caveat, tied to its band's figure; the trailing
+//   mount on the others (no figure);
+// - Back over a drawer holding a change asks INSIDE the drawer (the drawer is modal); Stay keeps the change; a Save the
+//   walk's check refuses shows its words under the field and writes nothing.
+const PROFILE = {
+  'net-worth': { screen: 'profile-net-worth', page: copy.shellPageNetWorth },
+  income: { screen: 'profile-income', page: copy.shellPageIncome },
+  savings: { screen: 'profile-savings', page: copy.shellPageSavings },
+  family: { screen: 'profile-family', page: copy.shellPageFamily },
+} as const
+const PROFILE_SEEDS = ['budget', 'date', 'retired', 'tablewidest'] as const
+
+async function toProfile(page: Page, target: (typeof PROFILE)[keyof typeof PROFILE], phone: boolean): Promise<void> {
+  if (phone) {
+    await page.getByRole('button', { name: copy.shellMenuOpen, exact: true }).click()
+    await page.getByRole('dialog', { name: copy.shellMenuTitle }).getByRole('link', { name: target.page, exact: true }).click()
+    await expect(page.getByRole('dialog', { name: copy.shellMenuTitle })).toHaveCount(0)
+  } else await showPage(page, { screen: target.screen, module: copy.shellModuleProfile, page: target.page })
+  await expect(page.locator(`main.result[data-shell-screen="${target.screen}"]`)).toBeAttached()
+  await expect(page.getByRole('heading', { level: 1, name: target.page })).toBeVisible()
+  await settleLayout(page)
+}
+
+/** Exactly one R13 disclaimer shows: Net Worth's in-frame caveat (tied to the band), the trailing mount elsewhere. */
+async function assertProfileDisclaimer(page: Page, screen: string): Promise<void> {
+  if (screen === 'profile-net-worth') {
+    await assertOneVisibleCaveat(page, null)
+    return
+  }
+  await expect(page.locator('main.result [data-caveat]'), `${screen}: no in-frame caveat on a page with no figure`).toHaveCount(0)
+  const visible = await page.evaluate(
+    () => [...document.querySelectorAll('footer.disclaimer, [data-caveat]')].filter((el) => getComputedStyle(el).display !== 'none' && (el as HTMLElement).getClientRects().length > 0).length,
+  )
+  expect(visible, `${screen}: exactly one visible R13 disclaimer`).toBe(1)
+}
+
+/** The first frame at his window: the title, its sentence and the first card (or Net Worth's first row) inside it. */
+async function assertProfileFirstFrame(page: Page, who: string): Promise<void> {
+  const f = await page.evaluate(() => ({
+    scrollY: window.scrollY,
+    first: document.querySelector('main.result [data-profile-card], main.result [data-networth-empty], main.result [data-profile-line]')?.getBoundingClientRect().bottom ?? null,
+  }))
+  expect(f.scrollY).toBe(0)
+  expect(f.first, `${who}: a first row to read`).not.toBeNull()
+  expect(f.first!, `${who}: the first row of cards inside the first frame`).toBeLessThanOrEqual(REAL.height)
+}
+
+/** The open drawer: inside the window, header to footer, nothing sideways, named and focused on its title; on the phone a
+ *  full-screen sheet. */
+async function assertDrawerFits(page: Page, who: string, phone: boolean): Promise<void> {
+  const dialog = page.getByRole('dialog')
+  await expect(dialog).toBeVisible()
+  await page.waitForTimeout(450)
+  const r = await dialog.evaluate((d) => {
+    const box = d.getBoundingClientRect()
+    const body = d.querySelector('[data-profile-drawer-body]')!.parentElement!
+    const footer = d.querySelector('footer')!.getBoundingClientRect()
+    const title = d.querySelector('h2')!
+    const label = d.getAttribute('aria-labelledby') ?? ''
+    return {
+      left: box.left,
+      right: box.right,
+      top: box.top,
+      bottom: box.bottom,
+      footerBottom: footer.bottom,
+      bodySideways: body.scrollWidth - body.clientWidth,
+      titleFocused: document.activeElement === title,
+      named: label !== '' && document.getElementById(label)?.textContent === title.textContent,
+      vw: window.innerWidth,
+      vh: window.innerHeight,
+    }
+  })
+  expect(r.top, `${who}: the drawer's top`).toBeGreaterThanOrEqual(-0.5)
+  expect(r.bottom, `${who}: the drawer inside the window`).toBeLessThanOrEqual(r.vh + 0.5)
+  expect(r.footerBottom, `${who}: Save and Cancel inside the window`).toBeLessThanOrEqual(r.vh + 0.5)
+  expect(r.bodySideways, `${who}: the drawer's body scrolls sideways`).toBeLessThanOrEqual(0)
+  expect(r.named, `${who}: the drawer names itself by its title`).toBe(true)
+  expect(r.titleFocused, `${who}: the drawer takes focus on its title`).toBe(true)
+  if (phone) {
+    expect(r.left, `${who}: a full-screen sheet (left)`).toBeLessThanOrEqual(0.5)
+    expect(r.right, `${who}: a full-screen sheet (right)`).toBeGreaterThanOrEqual(r.vw - 0.5)
+    expect(r.bottom - r.top, `${who}: a full-screen sheet (height)`).toBeGreaterThanOrEqual(r.vh - 1)
+  } else expect(Math.abs(r.right - r.vw), `${who}: docked right`).toBeLessThanOrEqual(1)
+  await noSidewaysScroll(page, who)
+}
+
+for (const size of RC12_SIZES) {
+  test.describe(`RC13a · the Profile pages ${size.title}`, () => {
+    test.use(size.use)
+    for (const seed of PROFILE_SEEDS) {
+      test(`?seed=${seed}: Net Worth, Income, Savings and Family${size.phone ? '' : ', each first frame'}; each first card's drawer${size.phone ? ' a full-screen sheet' : ' inside the window'}, closed back to its card; one disclaimer`, async ({ page }) => {
+        test.setTimeout(FINAL_TIER_MS + 120_000)
+        await gotoSeedFinal(page, seed)
+        await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
+        for (const [id, target] of Object.entries(PROFILE)) {
+          const who = `${seed} ${id}`
+          await toProfile(page, target, size.phone)
+          if (!size.phone) await assertProfileFirstFrame(page, who)
+          await noSidewaysScroll(page, who)
+          await assertProfileDisclaimer(page, target.screen)
+          const card = page.locator('main.result [data-profile-card]').first()
+          if ((await card.count()) === 0) {
+            await expect(page.locator('[data-profile-line]'), `${who}: a page with no card says why`).not.toHaveCount(0)
+            continue
+          }
+          await card.click()
+          await assertDrawerFits(page, who, size.phone)
+          await page.keyboard.press('Escape')
+          await expect(page.getByRole('dialog'), `${who}: Escape with nothing changed closes the drawer`).toHaveCount(0)
+          await expect(card, `${who}: focus back on the card`).toBeFocused()
+        }
+        // Net Worth's band names its total as the invested accounts, never a net worth B9 cannot know, and both stopgaps show.
+        await toProfile(page, PROFILE['net-worth'], size.phone)
+        await expect(page.locator('[data-networth-band]')).toContainText(copy.snapshotInvestedTitle)
+        await expect(page.locator('[data-networth-band]')).not.toContainText(/net worth/i)
+        await expect(page.locator('[data-networth-note]').filter({ hasText: copy.snapshotInvestedStopgap })).toHaveCount(1)
+        await expect(page.locator('[data-networth-note]').filter({ hasText: copy.profileInheritedIraStopgap })).toHaveCount(1)
+        await assertCaveatReachable(page, `${seed} net-worth`)
+      })
+    }
+
+    test(`?seed=date: a new account from the Add menu opens on both its facets${size.phone ? ' as a full-screen sheet' : ' inside the window'}`, async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 60_000)
+      await gotoSeedFinal(page, 'date')
+      await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
+      await toProfile(page, PROFILE['net-worth'], size.phone)
+      await page.getByRole('button', { name: copy.profileAddAccount }).click()
+      await page.getByRole('menuitem', { name: copy.investBucketPretax }).click()
+      await page.getByRole('menuitem', { name: copy.kind401k }).click()
+      await assertDrawerFits(page, 'date new 401(k)', size.phone)
+      await expect(page.locator('[data-profile-section="holdings"]')).toBeAttached()
+      await expect(page.locator('[data-profile-section="deposits"]')).toBeAttached()
+      await page.getByRole('dialog').getByRole('button', { name: copy.profileDrawerCancel }).click()
+      await expect(page.getByRole('dialog')).toHaveCount(0)
+    })
+  })
+}
+
+test.describe(`RC13a · a Profile drawer's Save and Back (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr)`, () => {
+  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
+
+  test(`?seed=retired: a yearly figure in the monthly Social Security box is refused under its field and writes nothing; Escape over it asks inside the drawer`, async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 60_000)
+    await gotoSeedFinal(page, 'retired')
+    await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
+    await toProfile(page, PROFILE.income, false)
+    const card = page.locator('[data-profile-card="ss-0"]')
+    const before = await card.textContent()
+    await card.click()
+    const dialog = page.getByRole('dialog')
+    const field = dialog.getByLabel(copy.ssAmountLabel)
+    await field.fill('30000')
+    await dialog.getByRole('button', { name: copy.profileDrawerSave }).click()
+    await expect(dialog.getByRole('alert')).toHaveText(copy.errPiaCeiling)
+    await expect(field).toHaveAttribute('aria-invalid', 'true')
+    await expect(dialog, 'a refused Save keeps the drawer open').toBeVisible()
+    await page.keyboard.press('Escape')
+    const ask = dialog.locator('[data-profile-ask]')
+    await expect(ask, 'Escape over an unsaved change asks, inside the drawer').toBeVisible()
+    await expect(ask.getByRole('button', { name: copy.profileUnsavedKeep }), 'focus on the safe choice').toBeFocused()
+    await ask.getByRole('button', { name: copy.profileUnsavedDrop }).click()
+    await expect(dialog).toHaveCount(0)
+    await expect(card, 'nothing refused reached the plan').toHaveText(before!)
+    await expect(page.locator(SETTLED_RESULT), 'no re-figuring started').toBeAttached()
+  })
+
+  test(`?seed=date: Back over a drawer holding a change asks inside the drawer; Stay keeps the drawer and the change; Go back leaves with the plan untouched`, async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 60_000)
+    await gotoSeedFinal(page, 'date')
+    await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
+    await toProfile(page, PROFILE.family, false)
+    const before = page.url()
+    await page.locator('[data-profile-card="person-0"]').click()
+    const dialog = page.getByRole('dialog')
+    const name = dialog.getByLabel(copy.nameLabel)
+    await name.fill('Jordan')
+    await name.blur()
+    await page.goBack()
+    const ask = dialog.locator('[data-profile-ask]')
+    await expect(ask, 'Back with a change held asked nothing').toBeVisible()
+    await expect(ask).toContainText(copy.profileLeaveAskUnsaved)
+    expect(page.url(), 'the page’s entry went back on').toBe(before)
+    await expect(ask.getByRole('button', { name: copy.workbenchLeaveStay }), 'focus moves to the safe choice').toBeFocused()
+    await ask.getByRole('button', { name: copy.workbenchLeaveStay }).click()
+    await expect(ask).toHaveCount(0)
+    await expect(name, 'Stay keeps the change').toHaveValue('Jordan')
+    await page.goBack()
+    await dialog.locator('[data-profile-ask]').getByRole('button', { name: copy.workbenchLeaveGo }).click()
+    await expect(page.locator('main.result[data-shell-screen="profile-family"]')).toHaveCount(0)
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+    await expect(page.locator('header.rc-root p[data-shell-names]'), 'the change never reached the plan').not.toContainText('Jordan')
+  })
+})

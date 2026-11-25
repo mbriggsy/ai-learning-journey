@@ -36,7 +36,10 @@ const pagesNav = () => screen.getByRole('navigation', { name: copy.shellPagesLab
 /** Walk to a page by its real links: the module's word in the top bar, then the page's word in the sub-nav. */
 export function showPage(page: keyof typeof PAGES): void {
   if (page === 'facts') {
-    fireEvent.click(within(modulesNav()).getByRole('link', { name: copy.shellModuleProfile }))
+    // Since RC13a the Profile word lands on Net Worth (its first page); the phone menu reaches the interim facts page in
+    // one move, so a test still makes ONE history entry to get there.
+    fireEvent.click(screen.getByRole('button', { name: copy.shellMenuOpen }))
+    fireEvent.click(within(screen.getByRole('dialog', { name: copy.shellMenuTitle })).getByRole('link', { name: copy.workbenchPageFacts }))
     return
   }
   if (page === 'strategies') {

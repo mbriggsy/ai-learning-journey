@@ -12,6 +12,9 @@
  *   caveat line (`Caveat`) last, above
  * - the ACTION ITEMS (or DETAILS) handle centred on the panel's bottom edge, which opens the `Tray` under the panel.
  *
+ * A Profile page (Act 6 · RC13a; ref 2.4, 2.5) has no panel: its card grid or master-detail sits straight under the page
+ * head (`bare`), with the Add menu at the head's right.
+ *
  * The frame's root carries `.rc-root` (the scoped preflight). Every word is a prop.
  */
 import type { ReactNode, Ref } from 'react'
@@ -60,6 +63,8 @@ export interface PageFrameProps<Id extends string> {
   readonly handle?: PageFrameHandle
   /** The `Tray` the handle opens, drawn under the panel. */
   readonly tray?: ReactNode
+  /** No panel: the body sits straight under the page head (the Profile pages). Tabs and the handle need the panel. */
+  readonly bare?: boolean
   readonly className?: string
 }
 
@@ -85,6 +90,7 @@ export function PageFrame<Id extends string>({
   caveat,
   handle,
   tray,
+  bare = false,
   className,
 }: PageFrameProps<Id>) {
   const body = (
@@ -138,7 +144,9 @@ export function PageFrame<Id extends string>({
         </div>
         {headAction !== undefined ? <div className="shrink-0">{headAction}</div> : null}
       </header>
-      {tabs !== undefined ? (
+      {bare ? (
+        <div className="flex flex-col">{body}</div>
+      ) : tabs !== undefined ? (
         <FolderTabs
           label={tabs.label}
           items={tabs.items}

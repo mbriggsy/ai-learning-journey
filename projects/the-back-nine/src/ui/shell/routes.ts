@@ -19,7 +19,9 @@ export type ModuleId = (typeof MODULE_ORDER)[number]
  *  Confidence (Analysis's second folder tab, a route of its own like Probability) and RC6's Cash
  *  Flows (its Summary and Accounts folder tabs are the page's own state, not routes), RC8's Tax Strategies (its four
  *  folder tabs the page's own state too), RC9's Social Security (its Comparison and Summary tabs the same) and RC10's Health
- *  Care are rebuilt, RC11's Stress Test is new (RightCapital's slot, between Analysis and Social Security), and RC12 adds Investment's Asset Allocation and Tax Allocation; the workbench room's facts page rides as an interim tab in its old look until RC13 rebuilds it. */
+ *  Care are rebuilt, RC11's Stress Test is new (RightCapital's slot, between Analysis and Social Security), and RC12 adds Investment's Asset Allocation and Tax Allocation; RC13a adds Profile's Net Worth, Income, Savings and
+ *  Family (RightCapital's order, ref 1.2); the workbench room's facts page rides after them as an interim tab in its old
+ *  look until RC13b moves its last facts (Expenses, Goals) into drawers. */
 export type ScreenId =
   | 'snapshot'
   | 'probability'
@@ -32,6 +34,10 @@ export type ScreenId =
   | 'stress-test'
   | 'asset-allocation'
   | 'tax-allocation'
+  | 'profile-net-worth'
+  | 'profile-income'
+  | 'profile-savings'
+  | 'profile-family'
 
 export interface RouteRow {
   readonly module: ModuleId
@@ -89,6 +95,12 @@ export const ROUTE_ROWS: readonly RouteRow[] = [
   { module: 'retirement', page: 'health-care', pageLabel: copy.shellPageHealthCare, screen: 'health-care', title: copy.shellPageHealthCare },
   { module: 'retirement', page: 'cash-flows', pageLabel: copy.shellPageCashFlows, screen: 'cash-flows', title: copy.shellPageCashFlows },
   { module: 'tax', page: 'strategies', pageLabel: copy.shellPageTaxStrategies, screen: 'tax-strategies', title: copy.shellPageTaxStrategies },
+  // RC13a: Profile's pages in RightCapital's order (Net Worth · Goals · Income · Savings · Expenses · Family; Goals and
+  // Expenses arrive with RC13b), then the interim facts page until RC13b retires it.
+  { module: 'profile', page: 'net-worth', pageLabel: copy.shellPageNetWorth, screen: 'profile-net-worth', title: copy.shellPageNetWorth },
+  { module: 'profile', page: 'income', pageLabel: copy.shellPageIncome, screen: 'profile-income', title: copy.shellPageIncome },
+  { module: 'profile', page: 'savings', pageLabel: copy.shellPageSavings, screen: 'profile-savings', title: copy.shellPageSavings },
+  { module: 'profile', page: 'family', pageLabel: copy.shellPageFamily, screen: 'profile-family', title: copy.shellPageFamily },
   { module: 'profile', page: 'facts', pageLabel: copy.workbenchPageFacts, screen: 'interim-facts', title: copy.workbenchPageFacts },
 ]
 

@@ -640,7 +640,7 @@ Each entry below states 1536×791, 2.5 DPR or the 800 px law as a live instructi
 - `e2e/vertical-fit.spec.ts line 2051 at 95c715e19`: "at 24 px both 1536 and 1280 render the stacked tier".
 - `e2e/vertical-fit.spec.ts line 2079-2096 at 95c715e19`: the 20 px docblock's premise ("the 1536 laptop STAYS two-pane", "≤ 22.6 px"); its numbers are re-recorded.
 - `e2e/vertical-fit.spec.ts line 4530-4533 at 95c715e19`: the record arm's "TIGHT BY CONSTRUCTION (~10px at 1536×791)" note and its stale pointer to the copy length note.
-- `e2e/vertical-fit.spec.ts:899`, `e2e/vertical-fit.spec.ts line 1782 at 95c715e19`, `e2e/vertical-fit.spec.ts line 1795 at 95c715e19`: the "at the fit-law tier floor" describe titles.
+- `e2e/vertical-fit.spec.ts:902`, `e2e/vertical-fit.spec.ts line 1782 at 95c715e19`, `e2e/vertical-fit.spec.ts line 1795 at 95c715e19`: the "at the fit-law tier floor" describe titles.
 - `e2e/chart-text.spec.ts:27`, `e2e/chart-text.spec.ts line 824 at 95c715e19`, `e2e/chart-text.spec.ts line 1289 at 95c715e19`, `e2e/chart-text.spec.ts line 1803 at 95c715e19`: the header's "REAL 1536 @2.5", "from 320 to 1536", the hard-typed "1536 → 320" log string, and the 537.9 px modal-figure note.
 - `e2e/caddie-walk.spec.ts:37`: the "1536px long edge" comment.
 - `e2e/held/council-24px-shots.spec.ts:88`: "this 1536 window renders the STACKED tier".

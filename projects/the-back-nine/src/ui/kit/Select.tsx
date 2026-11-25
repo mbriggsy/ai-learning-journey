@@ -4,12 +4,16 @@
  * card under it. RightCapital's own dropdowns are native selects; B9 uses Base UI's Select drawn the same way. The
  * chosen item carries a check mark and the semibold weight, never colour alone.
  *
+ * A fact not answered yet (Act 6 · RC13a: a Profile drawer's home state, a new record's kind) is `value: null` with the
+ * caller's `placeholder` words shown in the box: never a picked default.
+ *
  * The list portals out of the page, so its portal element carries `.rc-root` (the scoped preflight and the browser
  * surfaces reach it). Its motion is a 150 ms fade and settle from the trigger (`--transform-origin`), fade only under
  * reduced motion.
  */
+import { useId } from 'react'
 import { Select as SelectPrimitive } from '@base-ui/react/select'
-import { Check, ChevronDown } from 'lucide-react'
+import { Check, ChevronDown, CircleAlert } from 'lucide-react'
 import { cn } from './cn'
 
 export interface SelectItem<Value extends string> {
@@ -22,8 +26,13 @@ export interface SelectProps<Value extends string> {
   readonly label: string
   readonly hideLabel?: boolean
   readonly items: readonly SelectItem<Value>[]
-  readonly value: Value
+  /** `null`: nothing chosen yet (the box shows `placeholder`). */
+  readonly value: Value | null
   readonly onValueChange: (value: Value) => void
+  /** The box's words while `value` is null. */
+  readonly placeholder?: string
+  /** The caller's refusal (a fact still needed), shown under the box beside a mark. */
+  readonly error?: string
   readonly disabled?: boolean
   /** The tray's changed value (ref 2.8): blue-ink words on the pale blue box, medium weight, a 2 px left bar. */
   readonly changed?: boolean
@@ -36,10 +45,13 @@ export function Select<Value extends string>({
   items,
   value,
   onValueChange,
+  placeholder,
+  error,
   disabled = false,
   changed = false,
   className,
 }: SelectProps<Value>) {
+  const errorId = `${useId()}-error`
   return (
     <SelectPrimitive.Root
       items={items.map((i) => ({ value: i.value, label: i.label }))}
@@ -55,6 +67,8 @@ export function Select<Value extends string>({
         </SelectPrimitive.Label>
         <SelectPrimitive.Trigger
           data-changed={changed || undefined}
+          aria-invalid={error !== undefined || undefined}
+          {...(error !== undefined ? { 'aria-describedby': errorId } : {})}
           className={cn(
             'flex min-h-10 min-w-40 cursor-pointer items-center justify-between gap-3 rounded-control border border-stone-300 bg-bg px-3 py-1.5',
             'text-left text-body text-stone-900 data-disabled:cursor-not-allowed data-disabled:bg-stone-200',
@@ -62,11 +76,17 @@ export function Select<Value extends string>({
           )}
         >
           {/* Wraps, never truncates: a cut choice hides which one is picked (the content-over-looks law). */}
-          <SelectPrimitive.Value className="min-w-0 break-words" />
+          <SelectPrimitive.Value className="min-w-0 break-words data-placeholder:text-stone-600" {...(placeholder !== undefined ? { placeholder } : {})} />
           <SelectPrimitive.Icon className="flex">
             <ChevronDown size={16} strokeWidth={1.5} aria-hidden="true" />
           </SelectPrimitive.Icon>
         </SelectPrimitive.Trigger>
+        {error !== undefined ? (
+          <p id={errorId} role="alert" className="flex items-start gap-1.5 text-label text-stone-900">
+            <CircleAlert size={16} strokeWidth={1.5} aria-hidden="true" className="mt-0.5 shrink-0" />
+            {error}
+          </p>
+        ) : null}
       </div>
       <SelectPrimitive.Portal className="rc-root">
         <SelectPrimitive.Positioner sideOffset={4} alignItemWithTrigger={false} className="z-50 outline-none">

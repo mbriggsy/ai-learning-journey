@@ -1,0 +1,398 @@
+/**
+ * src/ui/screens/profile/profileView.ts: Profile → Family, Income, Savings and Net Worth, their pure composer (Act 6 ·
+ * RC13a; plan docs/plans/6-rightcapital-ui-plan.md, RC13; ref 2.4, 2.5). The cards per draft, each with the drawer it
+ * opens; Net Worth's master-detail. Decides every word and every card; the pages draw and decide nothing.
+ *
+ * THE CARDS keep B9's input order, so a later card never asks before what its question reads (the walk's own order,
+ * `intakeStepIds`): a person's birth year and work before their pay, pay before Social Security, Social Security before
+ * the other income. Retired vs working: Salary and the investment-income-while-working card show only for a person still
+ * working (`workStatus`, the date route's own predicate per person); a retired person's card shows the age they stopped.
+ * Every figure is one the household entered (a fact, so no "~"). No Notes link anywhere.
+ *
+ * READ-ONLY (plan 4.0): a view-only tab's view carries no Add menu, and its drawers open with no Save or Delete
+ * (`readOnly` on the view, which the drawers read).
+ */
+import type { AccountKind, EnteredAccount, IncomeStream, IncomeType, RetirementState, TickerClassification } from '@shared/model'
+import { ACCOUNT_KINDS, INCOME_TYPES } from '@shared/model'
+import type { ScenarioDraft } from '@store/memoryModel'
+import { formatMoney } from '@intake/moneyFormat'
+import { kindLabel } from '@intake/accountKinds'
+import { blendOf } from '@intake/intakeMap'
+import { incomeTypeLabel } from '@intake/otherIncome'
+import { annualAdditionsCeilingFor, contributionCeilingFor, isEmployerPlanKind } from '@intake/sanity'
+import { findBlendRow } from '@engine/reference/tickerBlend'
+import type { CopyKey } from '../../copy'
+import { copy, slots } from '../../copy'
+import { tablePerson } from '../../workbench/tableRun'
+import { accountName } from '../investment/investmentView'
+import type { AccountFacet } from './drawers/accountFields'
+
+export type ProfileScreenId = 'profile-net-worth' | 'profile-income' | 'profile-savings' | 'profile-family'
+
+/** What a card or an Add menu item opens. */
+export type DrawerTarget =
+  | { readonly kind: 'person'; readonly index: 0 | 1 }
+  | { readonly kind: 'state' }
+  | { readonly kind: 'salary'; readonly index: 0 | 1 }
+  | { readonly kind: 'social-security'; readonly index: 0 | 1 }
+  | { readonly kind: 'work-invest'; readonly index: 0 | 1 }
+  | { readonly kind: 'income'; readonly index: number }
+  | { readonly kind: 'new-income'; readonly type: IncomeType }
+  | { readonly kind: 'account'; readonly index: number; readonly facet: Exclude<AccountFacet, 'all'> }
+  | { readonly kind: 'new-account'; readonly accountKind: AccountKind }
+
+/** Which drawing a card's band carries (the page maps each to its line icon). */
+export type CardIcon = 'person' | 'state' | 'salary' | 'social-security' | 'work-invest' | 'savings' | 'hsa' | IncomeType
+
+export interface CardView {
+  /** Stamped on the card (`data-profile-card`): focus comes back to it when its drawer closes. */
+  readonly id: string
+  readonly kind: string
+  readonly icon: CardIcon | null
+  readonly name: string
+  readonly rows: readonly { readonly label: string; readonly value: string }[]
+  readonly note?: string
+  readonly target: DrawerTarget
+}
+
+export type AddItem =
+  | { readonly id: string; readonly label: string; readonly target: DrawerTarget }
+  | { readonly id: string; readonly label: string; readonly items: readonly { readonly id: string; readonly label: string; readonly target: DrawerTarget }[] }
+
+export interface AddMenuView {
+  readonly label: string
+  readonly items: readonly AddItem[]
+}
+
+export interface CardsPageView {
+  readonly intro: string
+  readonly cards: readonly CardView[]
+  /** Absent on a read-only tab, and on a page with nothing to add. */
+  readonly add: AddMenuView | null
+  /** Lines under the cards (an empty page's words, the page's one stopgap). */
+  readonly lines: readonly string[]
+}
+
+export interface NetWorthRowView {
+  readonly id: string
+  readonly name: string
+  readonly meta: string
+  readonly mix: string
+  readonly balance: string
+  readonly target: DrawerTarget
+}
+
+export interface NetWorthView {
+  readonly intro: string
+  readonly bandLabel: string
+  readonly total: string
+  readonly category: string
+  readonly categoryTotal: string
+  readonly header: string
+  readonly rows: readonly NetWorthRowView[]
+  readonly empty: string | null
+  readonly add: AddMenuView | null
+  /** The balances as entered (in the aged year where one is given), then the two stopgap lines, word for word. */
+  readonly notes: readonly string[]
+}
+
+// ── Shared words ─────────────────────────────────────────────────────────────────────────────────────────────────────
+
+const dollars = (v: number): string => slots.workbenchFactDollars(formatMoney(Math.round(v)))
+const person = (d: ScenarioDraft, i: number) => tablePerson(d, i, 0, 0)
+const upper = (s: string): string => (s === '' ? s : s[0]!.toUpperCase() + s.slice(1))
+const working = (d: ScenarioDraft, i: number): boolean => d.people[i]?.workStatus === 'working'
+const BOTH = [0, 1] as const
+
+const STATE_LABEL: Readonly<Record<RetirementState, CopyKey>> = {
+  NC: 'stateOptionNC',
+  PA: 'stateOptionPA',
+  FL: 'stateOptionFL',
+  // The recognised-but-unpriced roster rides "somewhere else" until built (the picker offers no arm for them).
+  SC: 'stateOptionElsewhere',
+  GA: 'stateOptionElsewhere',
+  DE: 'stateOptionElsewhere',
+  elsewhere: 'stateOptionElsewhere',
+}
+export const stateLabel = (s: RetirementState): string => copy[STATE_LABEL[s]]
+
+/** An account kind's tax treatment, in the Investment pages' words. */
+export function treatmentOf(kind: AccountKind): string {
+  if (kind === 'brokerage') return copy.investBucketTaxable
+  if (kind === 'hsa') return copy.investBucketHsa
+  if (kind === 'roth-401k' || kind === 'roth-ira') return copy.investBucketRoth
+  return copy.investBucketPretax
+}
+
+/** An account's card name: its owner and kind ("Alex’s 401(k)"), the Investment pages' own naming. */
+export const accountCardName = (d: ScenarioDraft, a: EnteredAccount): string => upper(accountName(d, a))
+
+// ── Family ───────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+function workValue(d: ScenarioDraft, i: number): string {
+  const p = d.people[i]!
+  if (p.workStatus === 'working') return copy.workStatusWorking
+  if (p.workStatus === 'retired') return p.retirementAge === undefined ? copy.workStatusRetired : slots.profileStoppedAt(p.retirementAge)
+  return copy.profileNotAnswered
+}
+
+export function familyView(d: ScenarioDraft): CardsPageView {
+  const cards: CardView[] = BOTH.map((i) => {
+    const p = d.people[i]
+    return {
+      id: `person-${i}`,
+      kind: i === 0 ? copy.profileKindClient : copy.profileKindCoClient,
+      icon: 'person',
+      name: person(d, i).label,
+      rows: [
+        { label: copy.profileRowBorn, value: p.birthYear === undefined ? copy.profileNotAnswered : slots.profileBornIn(p.birthYear, p.currentAge) },
+        { label: copy.sexLegend, value: p.sex === undefined ? copy.profileNotAnswered : p.sex === 'male' ? copy.sexMale : copy.sexFemale },
+        { label: copy.profileRowWork, value: workValue(d, i) },
+      ],
+      target: { kind: 'person', index: i },
+    }
+  })
+  const state = d.retirementState
+  cards.push({
+    id: 'state',
+    kind: copy.profileKindHomeState,
+    icon: 'state',
+    name: copy.profileHomeStateName,
+    rows: [],
+    note: state === undefined ? copy.profileStateUnanswered : stateLabel(state),
+    target: { kind: 'state' },
+  })
+  return { intro: copy.profileFamilyIntro, cards, add: null, lines: [] }
+}
+
+// ── Income ───────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+const INCOME_NOUN: Readonly<Record<IncomeType, CopyKey>> = {
+  pension: 'incomeTypePension',
+  rental: 'incomeTypeRental',
+  alimony: 'incomeTypeAlimony',
+  annuity: 'incomeTypeAnnuity',
+  other: 'incomeTypeOther',
+}
+
+/** An income stream's card name ("Sam’s pension"). */
+export const incomeCardName = (d: ScenarioDraft, s: IncomeStream): string =>
+  slots.workbenchFactOwned(person(d, s.ownerIndex).possessive, copy[INCOME_NOUN[s.type]].toLowerCase())
+
+function paysValue(d: ScenarioDraft, s: IncomeStream): string {
+  const age = d.people[s.ownerIndex]?.currentAge
+  return age !== undefined && s.startAge <= age ? copy.profilePaysNow : slots.profilePaysFrom(s.startAge)
+}
+
+export function incomeView(d: ScenarioDraft, readOnly: boolean): CardsPageView {
+  const cards: CardView[] = []
+  for (const i of BOTH) {
+    if (!working(d, i)) continue
+    const pay = d.people[i].earnedIncomeReal
+    cards.push({
+      id: `salary-${i}`,
+      kind: copy.profileKindSalary,
+      icon: 'salary',
+      name: slots.profileSalaryOf(person(d, i).possessive),
+      rows: [{ label: copy.profileRowYearlyPay, value: pay === undefined ? copy.profileNotAnswered : dollars(pay) }],
+      target: { kind: 'salary', index: i },
+    })
+  }
+  for (const i of BOTH) {
+    const p = d.people[i]
+    const claimYear = p.birthYear !== undefined && p.socialSecurityClaimAge !== undefined ? p.birthYear + p.socialSecurityClaimAge : undefined
+    const claimed = p.currentAge !== undefined && p.socialSecurityClaimAge !== undefined && p.currentAge >= p.socialSecurityClaimAge
+    cards.push({
+      id: `ss-${i}`,
+      kind: copy.profileKindSocialSecurity,
+      icon: 'social-security',
+      name: slots.profileSocialSecurityOf(person(d, i).possessive),
+      rows: [
+        { label: copy.profileRowMonthlyAtFra, value: p.pia === undefined ? copy.profileNotAnswered : dollars(p.pia / 12) },
+        { label: copy.profileRowStarts, value: claimYear === undefined || p.socialSecurityClaimAge === undefined ? copy.profileNotAnswered : slots.profileStartsAt(p.socialSecurityClaimAge, claimYear) },
+        { label: copy.profileRowClaiming, value: claimed ? copy.profileYes : copy.profileNo },
+      ],
+      target: { kind: 'social-security', index: i },
+    })
+  }
+  for (const i of BOTH) {
+    if (!working(d, i)) continue
+    const v = d.health.workingYearInvestmentByPerson?.[i]
+    cards.push({
+      id: `invest-${i}`,
+      kind: copy.profileKindWorkInvest,
+      icon: 'work-invest',
+      name: slots.profileWorkInvestOf(person(d, i).possessive),
+      rows: [{ label: copy.profileRowWhileWorking, value: v === undefined ? copy.profileNotAnswered : dollars(v) }],
+      target: { kind: 'work-invest', index: i },
+    })
+  }
+  d.incomeStreams.forEach((s, index) => {
+    cards.push({
+      id: `income-${index}`,
+      kind: incomeTypeLabel(s.type),
+      icon: s.type,
+      name: incomeCardName(d, s),
+      rows: [
+        { label: copy.profileRowEachYear, value: dollars(s.annualRealToday) },
+        { label: copy.profileRowPays, value: paysValue(d, s) },
+      ],
+      target: { kind: 'income', index },
+    })
+  })
+  const add: AddMenuView | null = readOnly
+    ? null
+    : { label: copy.profileAddIncome, items: INCOME_TYPES.map((type) => ({ id: type, label: incomeTypeLabel(type), target: { kind: 'new-income', type } as const })) }
+  const anyWorking = BOTH.some((i) => working(d, i))
+  return {
+    intro: copy.profileIncomeIntro,
+    cards,
+    add,
+    lines: [...(anyWorking ? [copy.profileSalaryStopgap] : []), ...(d.incomeStreams.length === 0 ? [copy.profileIncomeOtherNone] : [])],
+  }
+}
+
+// ── Savings ──────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+/** The account kinds in RightCapital's Add-menu shape over B9's four tax treatments: Pre-tax and Roth open their kinds,
+ *  Taxable and HSA are one kind each. */
+function accountAddItems(): readonly AddItem[] {
+  const leaf = (k: AccountKind) => ({ id: k, label: kindLabel(k), target: { kind: 'new-account', accountKind: k } as const })
+  return [
+    { id: 'pretax', label: copy.investBucketPretax, items: (['401k', '403b', 'traditional-ira'] as const).map(leaf) },
+    { id: 'roth', label: copy.investBucketRoth, items: (['roth-401k', 'roth-ira'] as const).map(leaf) },
+    { id: 'brokerage', label: copy.investBucketTaxable, target: { kind: 'new-account', accountKind: 'brokerage' } },
+    { id: 'hsa', label: copy.investBucketHsa, target: { kind: 'new-account', accountKind: 'hsa' } },
+  ]
+}
+// Every kind is offered once (a test pins it).
+export const ADD_ACCOUNT_KINDS: readonly AccountKind[] = ACCOUNT_KINDS
+
+/** The legal limit on one account's deposits this year (its owner's age; shared across that person's accounts of one
+ *  kind), or null for a kind with none or an owner whose age is unknown. */
+export function depositLimit(d: ScenarioDraft, a: Pick<EnteredAccount, 'kind' | 'ownerIndex'>): number | null {
+  const age = d.people[a.ownerIndex]?.currentAge
+  if (age === undefined || !Number.isInteger(age) || age < 0 || age > 120) return null
+  return contributionCeilingFor(a.kind, age)
+}
+
+/** The lines a deposit drawer prints about the legal limits (computed from the one ceiling table, never typed). */
+export function limitLines(d: ScenarioDraft, a: Pick<EnteredAccount, 'kind' | 'ownerIndex'>): readonly string[] {
+  if (a.kind === 'brokerage') return [slots.profileLimitNone()]
+  const limit = depositLimit(d, a)
+  if (limit === null) return []
+  const family = isEmployerPlanKind(a.kind) ? slots.profileLimitFamilyPlan() : a.kind === 'hsa' ? slots.profileLimitFamilyHsa() : slots.profileLimitFamilyIra()
+  const owner = person(d, a.ownerIndex).label
+  const lines = [slots.profileLimitShared(owner === copy.personYou ? copy.personYouMid : owner, dollars(limit), family)]
+  const age = d.people[a.ownerIndex]?.currentAge
+  if (isEmployerPlanKind(a.kind) && age !== undefined) lines.push(slots.profileLimitAdditions(dollars(annualAdditionsCeilingFor(age))))
+  return lines
+}
+
+export function savingsView(d: ScenarioDraft, readOnly: boolean): CardsPageView {
+  const anyWorking = BOTH.some((i) => working(d, i))
+  const cards: CardView[] = []
+  d.enteredAccounts.forEach((a, index) => {
+    if (!working(d, a.ownerIndex)) return
+    const limit = a.kind === 'brokerage' ? null : depositLimit(d, a)
+    const rows: { label: string; value: string }[] = [{ label: copy.accountContributionLabel, value: a.annualContribution === undefined ? copy.profileNone : dollars(a.annualContribution) }]
+    if (isEmployerPlanKind(a.kind)) rows.push({ label: copy.accountMatchLabel, value: a.employerMatchAnnual === undefined ? copy.profileNone : dollars(a.employerMatchAnnual) })
+    if (a.kind === 'hsa') rows.push({ label: copy.accountHsaEmployerLabel, value: a.hsaEmployerAnnual === undefined ? copy.profileNone : dollars(a.hsaEmployerAnnual) })
+    rows.push({ label: copy.profileRowLimit, value: a.kind === 'brokerage' ? copy.profileNoLimit : limit === null ? copy.profileNotAnswered : dollars(limit) })
+    cards.push({
+      id: `account-${index}`,
+      kind: kindLabel(a.kind),
+      icon: a.kind === 'hsa' ? 'hsa' : 'savings',
+      name: accountCardName(d, a),
+      rows,
+      target: { kind: 'account', index, facet: 'deposits' },
+    })
+  })
+  const lines = !anyWorking ? [copy.profileSavingsNoneWorking] : cards.length === 0 ? [copy.profileSavingsNoAccounts] : [copy.profileSavingsLimitsNote]
+  return {
+    intro: cards.length > 0 ? copy.profileSavingsIntro : copy.profileSavingsIntroNoCards,
+    cards,
+    // Deposits go only into a working person's account: with nobody working there is nothing to add here.
+    add: readOnly || !anyWorking ? null : { label: copy.profileAddSaving, items: accountAddItems() },
+    lines,
+  }
+}
+
+// ── Net Worth ────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+function mixWords(d: ScenarioDraft, a: EnteredAccount): string {
+  const words = (b: TickerClassification): string => {
+    const { stock, bond, cash } = blendOf(b)
+    return slots.profileMixLine(stock, bond, cash)
+  }
+  if (a.ticker !== undefined) {
+    const row = findBlendRow(a.ticker)
+    if (row !== undefined) return slots.profileMixFund(a.ticker, row.name)
+    const theirs = d.tickerClassifications[a.ticker]
+    return theirs === undefined ? copy.profileMixTickerNone : slots.profileMixFundYours(a.ticker)
+  }
+  return a.manualBlend === undefined ? copy.profileMixNone : words(a.manualBlend)
+}
+
+export function netWorthView(d: ScenarioDraft, agedBalancesYear: number | undefined, readOnly: boolean): NetWorthView {
+  const total = d.enteredAccounts.reduce((s, a) => s + (Number.isFinite(a.valueToday) ? a.valueToday : 0), 0)
+  const rows = d.enteredAccounts.map((a, index) => ({
+    id: `account-${index}`,
+    name: accountCardName(d, a),
+    meta: slots.profileAccountMeta(treatmentOf(a.kind), person(d, a.ownerIndex).label),
+    mix: mixWords(d, a),
+    balance: dollars(a.valueToday),
+    target: { kind: 'account', index, facet: 'holdings' } as const,
+  }))
+  return {
+    intro: copy.profileNetWorthIntro,
+    bandLabel: copy.snapshotInvestedTitle,
+    total: dollars(total),
+    category: copy.profileNetWorthInvestment,
+    categoryTotal: dollars(total),
+    header: slots.profileInvestmentTotal(copy.profileNetWorthInvestment, dollars(total)),
+    rows,
+    empty: rows.length === 0 ? copy.profileNetWorthNoAccounts : null,
+    add: readOnly ? null : { label: copy.profileAddAccount, items: accountAddItems() },
+    notes: [
+      agedBalancesYear === undefined ? copy.snapshotInvestedAsEntered : slots.snapshotInvestedAsEnteredIn(agedBalancesYear),
+      copy.snapshotInvestedStopgap,
+      copy.profileInheritedIraStopgap,
+    ],
+  }
+}
+
+/** The page of each Profile screen. */
+export function profilePageTitle(screen: ProfileScreenId): string {
+  return screen === 'profile-family'
+    ? copy.shellPageFamily
+    : screen === 'profile-income'
+      ? copy.shellPageIncome
+      : screen === 'profile-savings'
+        ? copy.shellPageSavings
+        : copy.shellPageNetWorth
+}
+
+/** The card a drawer target belongs to (focus returns there on close). `newIndex`: where a new record landed. */
+export function cardIdOf(target: DrawerTarget, newIndex?: number): string | null {
+  switch (target.kind) {
+    case 'person':
+      return `person-${target.index}`
+    case 'state':
+      return 'state'
+    case 'salary':
+      return `salary-${target.index}`
+    case 'social-security':
+      return `ss-${target.index}`
+    case 'work-invest':
+      return `invest-${target.index}`
+    case 'income':
+      return `income-${target.index}`
+    case 'account':
+      return `account-${target.index}`
+    case 'new-income':
+      return newIndex === undefined ? null : `income-${newIndex}`
+    case 'new-account':
+      return newIndex === undefined ? null : `account-${newIndex}`
+  }
+}

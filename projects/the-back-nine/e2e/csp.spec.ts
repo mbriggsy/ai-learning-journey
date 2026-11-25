@@ -231,7 +231,7 @@ test.describe('CSP — real browser enforcement', () => {
     expect(v.some((x) => /worker-src|script-src/.test(x.violatedDirective))).toBe(false)
   })
 
-  test('the shell loads under the enforced CSP: the home, Probability and its Action Items tray, Confidence, Cash Flows, Stress Test, Social Security, Health Care, Asset Allocation and Tax Allocation, Tax Strategies, every interim tab and both its menus, no violation, and no request outside the build’s own files', async ({ page }) => {
+  test('the shell loads under the enforced CSP: the home, Probability and its Action Items tray, Confidence, Cash Flows, Stress Test, Social Security, Health Care, Asset Allocation and Tax Allocation, Tax Strategies, Net Worth and one Profile drawer, every interim tab and both its menus, no violation, and no request outside the build’s own files', async ({ page }) => {
     // Act 6 · RC2 (plan 6, section 3.1's Verification; the workbench room's arm before it, U6 to U15), re-pointed at RC4:
     // the real intake lands on the home (Dashboard → Snapshot), the shell's lazy chunk and its styles load with it on the
     // served build, Probability draws its rings and its two balance bars (Highcharts again), and every interim tab is
@@ -414,9 +414,27 @@ test.describe('CSP — real browser enforcement', () => {
     await page.keyboard.press('Escape')
     await expect(page.getByRole('menu')).toHaveCount(0)
 
-    // The facts page (Profile), one press away, and one step sheet (a portaled sheet, its motion, and an intake step's
-    // body in the shell's chunk), opened and closed through Done.
+    // Profile (RC13a): the Profile word lands on Net Worth; one Profile drawer (a portaled, animated dialog, the kit's Select
+    // and its popup inside it), opened from an account row, its mix picker opened and shut, then closed by Cancel with
+    // nothing changed; focus back on the row.
     await page.getByRole('navigation', { name: copy.shellModulesLabel }).getByRole('link', { name: copy.shellModuleProfile, exact: true }).click()
+    await expect(page.locator('main.result[data-shell-screen="profile-net-worth"]'), 'Net Worth never showed').toBeAttached()
+    const row = page.locator('[data-profile-card="account-0"]')
+    await row.click()
+    const drawer = page.getByRole('dialog')
+    await expect(drawer, 'the Profile drawer never opened').toBeVisible()
+    await drawer.getByRole('combobox', { name: copy.profileMixHow }).click()
+    await expect(page.getByRole('listbox'), 'the drawer’s picker never opened').toBeVisible()
+    await page.keyboard.press('Escape')
+    await expect(page.getByRole('listbox')).toHaveCount(0)
+    await drawer.getByRole('button', { name: copy.profileDrawerCancel, exact: true }).click()
+    await expect(drawer, 'the Profile drawer never closed').toHaveCount(0)
+    await expect(row, 'focus back on the account row').toBeFocused()
+    expect(await page.evaluate(() => document.querySelectorAll('style').length), 'a Profile page injected a <style> element').toBe(0)
+
+    // The facts page (Profile's interim tab until RC13b), and one step sheet (a portaled sheet, its motion, and an intake
+    // step's body in the shell's chunk), opened and closed through Done.
+    await page.getByRole('navigation', { name: copy.shellPagesLabel }).getByRole('link', { name: copy.workbenchPageFacts, exact: true }).click()
     await expect(page.getByRole('heading', { name: copy.workbenchFactsChoices, exact: true }), 'the facts page never showed').toBeVisible()
     await expect(page.locator('.wb-facts__section').first()).toBeVisible()
     await page.getByRole('button', { name: slots.workbenchFactsEditName(copy.workbenchFactsPeople), exact: true }).click()

@@ -658,6 +658,14 @@ export function validateDraft(
   )
 }
 
+/** Every field a rule can land on in this draft (each rule's own targets). A Profile drawer's Save (Act 6 · RC13a) checks
+ *  the edited draft with all of them touched: a drawer has no later Continue, so a fact this edit makes impossible
+ *  anywhere (a birth year that moves an account's deposits over its limit) must refuse here or reach the answer
+ *  (insight 158). */
+export function allRuleFields(draft: ScenarioDraft): readonly FieldPath[] {
+  return [...new Set(RULES.flatMap((rule) => rule.target(draft)))]
+}
+
 /** Violations for ONE field (the blur-time per-field check). */
 export function validateField(
   draft: ScenarioDraft,

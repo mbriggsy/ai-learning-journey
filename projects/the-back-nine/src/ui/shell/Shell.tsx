@@ -49,6 +49,11 @@
  * and the savings by tax treatment. The folder tab, the picker and the picked bucket are held here, so a page move keeps
  * them. The mix door opens Analysis's tray at the mix row (`tryLever`).
  *
+ * PROFILE → NET WORTH, INCOME, SAVINGS AND FAMILY (RC13a, `ProfilePages.tsx` over `profileView.ts`): the household's
+ * facts as cards, each opening a drawer that edits a buffered copy and writes the store once, on a Save that passes every
+ * check the walk's Continue runs (`drawerSave.ts`). Mounted keyed by the page, so a page change drops its drawer; while a
+ * drawer is open the shell's Back ask is asked inside it (the drawer is modal), never on the page beneath.
+ *
  * THE INTERIM TABS: the room's pages ride in their current look (`InterimPage.tsx`, outside any `.rc-root`):
  * Profile → Your facts (`FactsPage.tsx`); the old What if page left with
  * RC4b, its levers now Probability's Action Items tray (`ActionItemsTray.tsx`). A facts-page "Try a change" and the
@@ -122,6 +127,7 @@ import { AssetAllocation } from '../screens/investment/AssetAllocation'
 import { TaxAllocation } from '../screens/investment/TaxAllocation'
 import { assetAllocationView, taxAllocationView, type AssetTab, type MixScope, type TaxBucketId } from '../screens/investment/investmentView'
 import { Snapshot, type SnapshotDoors } from '../screens/dashboard/Snapshot'
+import { isProfileScreen, ProfilePages } from '../screens/profile/ProfilePages'
 import { snapshotView, type SteadyRows } from '../screens/dashboard/snapshotView'
 import { Analysis } from '../screens/retirement/Analysis'
 import { confidenceView } from '../screens/retirement/confidenceView'
@@ -1152,7 +1158,10 @@ export default function Shell({
     screen === 'stress-test' ||
     screen === 'tax-strategies' ||
     screen === 'health-care'
-  const inFrameCaveat = figured || screen === 'asset-allocation' || screen === 'tax-allocation'
+  // Net Worth prints the invested accounts' total (RC13a), so it carries the caveat in its frame, as the Investment pages do.
+  const inFrameCaveat = figured || screen === 'asset-allocation' || screen === 'tax-allocation' || screen === 'profile-net-worth'
+  // A Profile drawer is open: the shell's Back ask is asked inside it (`ProfileDrawer.tsx`), never on the page beneath.
+  const [profileDrawerOpen, setProfileDrawerOpen] = useState(false)
   // Cash Flows too, aged line and door included: its row-one line (`workbenchAged`) names the build year and claims nothing
   // about the balances, so the two lines say two causes (round 3 of the milestone-1 review).
   const staleLines = useMemo(
@@ -1487,6 +1496,22 @@ export default function Shell({
               onTrayOpen={setHealthTrayOpen}
               onTryLever={tryLever}
               onOpenFact={openDoor}
+            />
+          </>
+        ) : isProfileScreen(screen) ? (
+          <>
+            {profileDrawerOpen ? null : leave}
+            <ProfilePages
+              key={screen}
+              screen={screen}
+              draft={draft}
+              model={model}
+              readOnly={readOnly}
+              headingRef={headingRef}
+              agedBalancesYear={agedBalancesYear}
+              caveat={CASH_FLOWS_CAVEAT}
+              {...(shownAsk !== undefined ? { leaveAsk: shownAsk } : {})}
+              onDrawerOpen={setProfileDrawerOpen}
             />
           </>
         ) : cfView !== null && cfIntro !== null ? (

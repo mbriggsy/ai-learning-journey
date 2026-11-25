@@ -65,7 +65,10 @@ describe('routes — the hash', () => {
     // The interim What if tab left with RC4b (its levers are Probability's Action Items tray): its old address lands on Probability.
     expect(parseHash('#/retirement/analysis/what-if')).toEqual({ module: 'retirement', page: 'analysis', tab: 'probability' })
     expect(parseHash('#/retirement')).toEqual({ module: 'retirement', page: 'analysis', tab: 'probability' })
-    expect(parseHash('#/profile/net-worth')).toEqual({ module: 'profile', page: 'facts' })
+    // RC13a: Net Worth is a page now and Profile's first; a Profile page not built yet (Goals, RC13b) lands on it.
+    expect(parseHash('#/profile/net-worth')).toEqual({ module: 'profile', page: 'net-worth' })
+    expect(parseHash('#/profile/goals')).toEqual({ module: 'profile', page: 'net-worth' })
+    expect(parseHash('#/profile/facts')).toEqual({ module: 'profile', page: 'facts' })
     expect(parseHash('#/retirement/cash-flows/extra/parts')).toEqual({ module: 'retirement', page: 'cash-flows' })
   })
 

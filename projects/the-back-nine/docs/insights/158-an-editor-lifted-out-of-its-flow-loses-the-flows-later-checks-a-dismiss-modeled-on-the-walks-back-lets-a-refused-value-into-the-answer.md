@@ -3,7 +3,7 @@ title: An editor lifted out of its flow loses the flow's later checks — a shee
 date: 2026-11-23
 phase: The RightCapital mandate, gap 1 (the workbench's U8, the facts page)
 modules: [src/ui/workbench/StepSheet.tsx, src/intake/flow.tsx, src/intake/questions.tsx]
-tags: [hosted-editor, walk-step, continue-check, discardOnBack, dismiss, refused-value, validate-before-mutate, sanity-rules, calm-but-wrong, rosy-direction, flow-invariant]
+tags: [hosted-editor, walk-step, continue-check, discardOnBack, dismiss, refused-value, validate-before-mutate, sanity-rules, calm-but-wrong, rosy-direction, flow-invariant, rollback, multi-edit-step, finished-work, leave-ask, ending-changed, reroute, putsBack, promise-sentence, step-sheet]
 ---
 
 ## Problem
@@ -44,3 +44,22 @@ dismiss = Back") that maps each control to its namesake and never asks what came
   safety came from a later check in its original surface needs that check on the rail too.
 - Any second door into a fact the assumptions panel already edits (its `commitRefusing` never lets a refused value land).
 - Re-hosting the money picture, the W step or the budget builder anywhere outside the walk.
+
+## Extended (2026-11-25, Act 6's milestone 1 review round 3, b9-8): the rollback above was right for one field, and rerouting an ending made a true sentence false
+
+The Fix above (a refused dismiss puts the draft back to its copy at open) was built and tested on U8's one-field case.
+Round 2 of milestone 1's review (`e5078802`) then sent the leave ask's Go, from Back or a page change, through the same
+refusal check. On a step with several edits that rollback drops finished work: add an account, then trip a combined-ceiling
+refusal, and Go put the whole draft back, the new account with it. The leave ask had been written for the
+old ending and still said "changes you finished stay in your plan"; Escape dropped the work with no word at all. Two
+of round 3's four lenses found it.
+
+Fixed in `31bf6d9e`: a dismiss over a refused edit stays open and shows why, as Done does, so a refused value still
+reaches no answer and no finished edit is lost; and where a step's Go would put the draft back, the leave ask says so,
+reading the ending's own `putsBack` (`StepSheet.tsx` exposes it to the shell; `workbenchLeaveAskPutsBack`,
+`shellCeremonyPutsBack` in `copy.ts`).
+
+Two lessons. A fix proven on the one-field case is a hypothesis for the many-edit case ([[026]]). And when an ending
+changes, grep every sentence that promises what that ending does, then read each one's words off the ending itself, so
+the next reroute cannot leave a sentence behind ([[100]]: copy that names an outcome is a contract with the code that
+delivers it).

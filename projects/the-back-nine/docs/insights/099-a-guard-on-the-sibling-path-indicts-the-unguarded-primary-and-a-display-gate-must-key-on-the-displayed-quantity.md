@@ -3,7 +3,7 @@ title: A guard shipped on the sibling path indicts the unguarded primary — and
 date: 2026-07-22
 phase: U16 recommendation surface (ultramode fold)
 modules: [src/ui/recommendationView.ts, src/ui/money.ts]
-tags: [held-out-split, seed-B, inversion, guard-asymmetry, sibling-sweep, display-gate, calm-but-wrong, component-family, aria-disabled, aria-describedby, blocked-apply, state-style]
+tags: [held-out-split, seed-B, inversion, guard-asymmetry, sibling-sweep, display-gate, calm-but-wrong, component-family, aria-disabled, aria-describedby, blocked-apply, state-style, said-once, message-key, message-lifetime, two-input-claim, editsKey, applied-message, action-items-tray]
 ---
 
 ## Problem
@@ -63,3 +63,16 @@ sentence beside it, which is worse than a quiet disabled button. The look now ke
 requires `aria-describedby` as well (`.control-sheet__actions .btn-primary[aria-disabled='true'][aria-describedby]` in
 `src/intake/controls.css`, whose comment reads "the look is earned by the words"). Key a family-wide state style on the
 fact the user is being told, never on a state flag members reach for different reasons.
+
+## Extended (2026-11-25, milestone 1 review round 3, b9-8): a said-once message must be keyed on every input its claim reads
+
+The same rule governs how long a message stays up. After Apply, the Action Items tray said "Applied. Your plan now
+holds these changes." and kept the words until their key moved. The key was the shown bundle alone. A new tray edit
+moves only the pending edits, so the words stood beside an edit the plan did not hold, and they hid the true line,
+"Your changes show once you press Refresh." The claim reads two inputs (what is shown, and that nothing waits beyond
+it), and the key read one. Two of round 3's four lenses found it. Fixed in `31bf6d9e`: the key is the tray's `editsKey`,
+the shown bundle plus the pending edits (`src/ui/screens/retirement/ActionItemsTray.tsx`), read on the render after the
+press.
+
+List what a message's sentence asserts, and key its lifetime on every input behind each assertion. A key on one of two
+inputs makes the message true when written and false the moment the other input moves.

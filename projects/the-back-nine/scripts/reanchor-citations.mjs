@@ -5,7 +5,7 @@
 //   (1) PER-TOKEN freeze, not per-line: a token is frozen when it is a recorded number — followed by
 //       "-at-filing" / " (then", or preceded by "(not `", "cites `", "filed as … at `". Other tokens on the
 //       same line are LIVE and move (TODO's frozen lines carried a rotted live anchor for a week).
-//   (2) BARE continuations (`:N`, `:N-M`, `:N–:M`) are attributed to the NEAREST file name before them on
+//   (2) BARE continuations (`:N`, `:N-M`, `:N–:M`) are attributed to the FIRST file name within 60 chars before them on
 //       the same line (a named citation `x.ts:12` or a bare `` `x.ts` ``) and moved with that file's map.
 // LAW unchanged: runs ONCE, LAST, from the BASE commit's numbers; never hand-fix before it. A tree whose
 // NAMED tokens were already moved by the v1 tool for the same base takes --only-missed (bare tokens +
@@ -59,7 +59,8 @@ const EXT = '(?:tsx|ts|css|md|mjs|js)' // tsx BEFORE ts (2026-10-16): LAST_FILE'
 const NAMED = new RegExp(`(^|[^\\w/.-])((?:[\\w-]+/)*)([\\w.-]+\\.${EXT}):(\\d+)(?:-(\\d+))?(?![\\d-])`, 'g')
 // A bare continuation: `:N`, `:N-M`, `:N–:M` (en dash, optional second colon), not preceded by a word/ext char.
 const BARE = /(^|[^\w/.:-])(`?)(:)(\d+)(?:([-–]:?)(\d+))?(`?)(?![\d-])/g
-// The nearest file name before a bare token on the same line (within 60 chars): `x.ts:12`, or `` `x.ts` ``.
+// The FIRST file name within 60 chars before a bare token on the same line (the regex's leftmost match, not the nearest;
+// insight 136): `x.ts:12`, or `` `x.ts` ``.
 const LAST_FILE = new RegExp(`([\\w.-]+\\.${EXT})(?::\\d+(?:-\\d+)?)?\`?[^\\n]{0,60}$`)
 
 // A tracked file the tree has deleted (a unit's deletions, not yet committed) has nothing to rewrite.
@@ -91,7 +92,7 @@ for (const file of scan) {
       if (r1.line === Number(s1) && (r2 === null || r2.line === Number(s2))) continue
       spans.push({ start, end, repl: `${dirs}${base}:${r1.line}${r2 ? '-' + r2.line : ''}` })
     }
-    // (b) bare continuations attributed to the nearest file name before them
+    // (b) bare continuations attributed to the first file name within 60 chars before them (LAST_FILE)
     for (const m of line.matchAll(BARE)) {
       const [whole, pre, q1, colon, s1, sep, s2, q2] = m
       const start = m.index + pre.length, end = m.index + whole.length

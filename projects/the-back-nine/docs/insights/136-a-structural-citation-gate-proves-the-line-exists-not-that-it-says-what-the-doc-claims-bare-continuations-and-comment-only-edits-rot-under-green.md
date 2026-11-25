@@ -3,7 +3,7 @@ title: A structural citation gate proves the cited LINE exists, not that it says
 date: 2026-09-25
 phase: post-Act-4 hardening (the 2026-09-24/25 doc audit)
 modules: [scripts/verify-doc-stats.ts, scripts/reanchor-citations.mjs, docs/**]
-tags: [doc-stats, citations, re-anchor, semantic-vs-structural, gates-that-dont-bite, doc-audit, pure-shift, wrong-before-the-edit, frozen-dated-number, then-marker, history-rewrite, range-diff-at-anchor-commit, bare-token-attribution, quoted-number, tier-reference, register-move, tierrefs]
+tags: [doc-stats, citations, re-anchor, semantic-vs-structural, gates-that-dont-bite, doc-audit, pure-shift, wrong-before-the-edit, frozen-dated-number, then-marker, history-rewrite, range-diff-at-anchor-commit, bare-token-attribution, quoted-number, tier-reference, register-move, tierrefs, first-file-not-nearest, 60-character-reach, extraction, cross-file, edit-after-run, throwaway-base, temporary-index, skipped-reanchor, re-anchor-every-commit]
 ---
 
 ## Problem
@@ -84,3 +84,31 @@ the gate each go wrong, and one kind of reference nothing checks.
   after any register move. That tool never moved into the repo, which insight 156 says it must before a step can rely
   on it. A reference is a claim with two halves wherever it points, a line or a register title, and each half needs its
   own check.
+
+## Extended (2026-11-24, Act 6's RC0 to milestone 1): the tool takes the FIRST file in reach, cannot cross files, and a re-anchor skipped or run early carries its error forward under green
+
+Act 6 moved more cited lines than any act before it, and four new ways the re-anchor went wrong while doc-stats stayed
+green showed up in one day.
+
+- **The tool binds a bare `:N` to the FIRST file named within 60 characters before it, not the nearest** (b9-3, RC0).
+  `LAST_FILE` in `scripts/reanchor-citations.mjs` ends in `[^\n]{0,60}$` and is not anchored at its start, so the
+  regex engine takes the leftmost file name whose end lies within reach; the code comment says "nearest", the regex
+  does not. A token farther than 60 characters from any file name gets no file at all.
+- **The tool cannot follow a citation into another file** (RC0). Its line maps are per file, so after an extraction
+  moves code across files, every citation of the moved code stays on the old file. RC0 rebuilt the review list from
+  each file's HEAD text in a scratch copy of the tool and resolved each citation by hand.
+- **An edit after the one run shifts every citation past it, and doc-stats sees only the few that land on a blank
+  line** (b9-6, RC5 and RC7). RC7's fix round moved 220 citations while doc-stats flagged 3. The exact repair: rebuild
+  each edited file's text as it stood at the run, commit it as a throwaway base through a temporary index (the real
+  index and HEAD never touched), dry-run the tool against that base, then apply (`docs/landmines.md`, *Citations and
+  the doc gates*).
+- **A commit that skips its own re-anchor leaves its shifts wrong, and every later re-anchor from HEAD carries them
+  forward** (b9-7). Part 3 of milestone 1's fix round (`84b2611f`) shifted lines in `copy.ts`, `IntakeApp.tsx` and
+  `Shell.tsx` with no re-anchor. Part 4's pass from HEAD then left 34 citations off by part 3's shift, until the docs
+  were restored to HEAD and re-anchored once from part 3's parent (`7961d013`). The same commit skipped doc-stats and
+  redded CI on a stale test count. Three bare tokens past the tool's 60-character reach (one in `docs/backlog.md`, one
+  in the pay-less spec) were hand-fixed three times before anyone named the file beside them.
+
+The rule these add: re-anchor and run doc-stats on every commit that moves a cited line, never once per batch; run the
+tool last, after the final edit; take a citation of moved code as one to resolve by hand; and put the file's name next
+to any bare token that sits far from it.

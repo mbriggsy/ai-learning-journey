@@ -3,7 +3,7 @@ title: A copy string that promises an affordance is a UI contract — pair every
 date: 2026-07-22
 phase: U16 recommendation surface (ultramode fold)
 modules: [src/ui/Result.tsx, src/ui/RecommendationSurface.tsx, src/ui/copy.ts]
-tags: [copy-contract, affordance, stranded-state, stale, compute-error, blocked, dead-end, calm-but-wrong, hint-rewording, control-routing, door-render-condition, act-name, gate-message, read-only-host, both-or-neither, structural-conjunction]
+tags: [copy-contract, affordance, stranded-state, stale, compute-error, blocked, dead-end, calm-but-wrong, hint-rewording, control-routing, door-render-condition, act-name, gate-message, read-only-host, both-or-neither, structural-conjunction, route-gate, working-route, date-route, spine-unready, buildSolveRequest, both-routes, tax-strategies, plan-attack]
 ---
 
 ## Problem
@@ -80,3 +80,18 @@ the face does not draw. Three cures, all in `src/intake/workingYearQuote.ts` and
 
 Walk 5 still found "the gate names buttons it doesn't draw", so the structure does not retire this insight's test
 sweep. What it changes is the default: a new host starts right by construction instead of by audit.
+
+## Extended (2026-11-24, the Act 6 plan's attack, b9-3): a screen planned from one route's data offers a button the other route's engine path refuses
+
+This insight's first fix route-gated the recommendation surface off the date route. Act 6's plan nearly undid it from
+the other end: Tax → Tax Strategies was specced from RightCapital's screens and the retired route's solve, so it would
+have offered the goal picker and the Find button to a working household too. For that household
+`buildSolveRequest` (`src/intake/solveDispatch.ts`) returns `spine-unready`, because `buildSpineParams` returns null on
+the date route, and the shipped words for that block ("Once that answer is complete again, this can run") are false for
+a household whose answer is complete. The attack on the plan (`wf_39bcaf0e-ff2`) caught it before any code. RC8 now has a
+working-route spec: the Strategies tab alone, one stopgap line, no picker, no Find button, no dead tabs; Snapshot's
+Recommendations card says the same, and Probability's pickers never offer Recommended on that route.
+
+A screen copied from a product or planned from one route's data inherits that route's engine path. Before speccing a
+control, trace the engine call it makes on every route the screen appears on, and read each refusal's words as that
+route's household would.

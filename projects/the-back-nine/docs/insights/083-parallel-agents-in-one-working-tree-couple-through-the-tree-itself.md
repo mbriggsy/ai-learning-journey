@@ -3,7 +3,7 @@ title: Parallel agents in ONE working tree couple through the tree itself — vi
 date: 2026-07-12
 phase: Act 3 follow-up (the ask-for-Medicare-extras unit — the parallel seed-tuner, session 2026-07-11; reconstructed from the tuner transcript at the closeout review)
 modules: [e2e, ui, process]
-tags: [parallel-agents, shared-working-tree, scratch-fixtures, vitest-globs, eol, crlf, coordination, decide-before-dispatch, seed-tuning, hmr-reload, test-results, dev-server]
+tags: [parallel-agents, shared-working-tree, scratch-fixtures, vitest-globs, eol, crlf, coordination, decide-before-dispatch, seed-tuning, hmr-reload, test-results, dev-server, lf-to-crlf, python-text-mode, new-file-eol, git-ls-files-eol, git-bash-grep, line-endings, builder-agent]
 ---
 
 ## Problem
@@ -77,3 +77,17 @@ session triggers a hot reload that falsely fails a waiting arm (final-tier timeo
 side by side delete each other's traces. Both couple sessions that never touch the same file. Run e2e gates on a quiet
 tree (or a no-HMR server with its own scratch `cacheDir`), one harness at a time (`docs/landmines.md`, the fit gate's
 section).
+
+## Extended (2026-11-24, Act 6's RC4a): the EOL channel runs the other way too, and Git Bash's `\r` grep cannot see it
+
+The seed-tuner's Python rewrite turned a CRLF file into LF. RC4a's builder (b9-5) edited through Python scripts in text
+mode, which on Windows writes every `\n` as `\r\n`, so 42 changed files and 7 new ones came back CRLF in a repo where
+most of `src` is LF. The orchestrator normalized the 42, which showed as whole-file diffs, but checked the 7 new files
+with a Git Bash `grep $'\r'` and trusted it; they went into the commit CRLF (`7f56682e`, put back to LF in `10da60f2`).
+A new file has no diff to give it away, and in Git Bash `grep -c $'\r'` counts every line, because the pattern
+collapses to empty.
+
+The check that works: `git ls-files --eol` on changed files (no `i/lf` beside `w/crlf`), and each untracked file read
+as bytes (in node, `readFileSync(p).includes(13)`). Normalize with a script that detects and keeps each file's own
+ending. `docs/landmines.md` (*Windows and the shell*) carries it, and the Act 6 plan's builder brief (section 7.1) now
+names that section.

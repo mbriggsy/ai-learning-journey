@@ -3,7 +3,7 @@ title: "An 'externally derived' fixture is independent only along the axis its S
 date: 2026-09-25
 phase: Act 4 hardening (the frozen-nominal Tier 0 — the senior bonus's per-person phase-out, found by that build's statute check)
 modules: [src/engine/taxCore.ts, src/engine/constants/tax.ts, src/engine/__tests__/taxOverlay.test.ts, src/engine/__tests__/magiLandscape.test.ts, src/engine/constants/__tests__/constants.shape.test.ts, docs/research/engine-validation-and-tax.md]
-tags: [dnd-012, externally-derived, fixtures, oracle-independence, primary-source, irs-forms, senior-bonus, obbba, phase-out, calm-but-wrong, rosy-direction, landmine-comments, no-oracle-claim, poms-underline, self-referential-oracle, ties, publisher, one-witness, library-of-congress, aca, presentment, corroboration]
+tags: [dnd-012, externally-derived, fixtures, oracle-independence, primary-source, irs-forms, senior-bonus, obbba, phase-out, calm-but-wrong, rosy-direction, landmine-comments, no-oracle-claim, poms-underline, self-referential-oracle, ties, publisher, one-witness, library-of-congress, aca, presentment, corroboration, ui-clone, rightcapital, screenshots, shipped-css, stack-choice, tailwind, highcharts-styled-mode, clone-research]
 ---
 
 ## Problem
@@ -88,3 +88,16 @@ Congress data with the same one-day lag, so they were one witness. The gap staye
 publishers closed it: the House Clerk, the Senate vote menu and whitehouse.gov (`wf_d2a279ae-84b`; the record's
 `nothingEnactedChain`). Two URLs from one provider share that provider's errors and its lag, so count sources by who
 publishes the data, not by how many addresses serve it.
+
+## Extended (2026-11-24, the clone research, b9-3): the same rule outside tax — a UI clone's oracle is the target's shipped files and its real screens
+
+When Briggsy ruled the UI a RightCapital clone, the primary source for "what RightCapital does" was RightCapital's own
+product, not articles or reviews about it. Six research lanes (`wf_feb3b7ac-8cb`) pulled real screenshots and looked at
+each one: 334 screens across the lanes, RightCapital's and its rivals' (64, 55, 77, 66 and 72; `docs/research/rightcapital-ui-reference.md`, *Where
+this comes from*). The tooling lane read the shipped CSS and HTML of RightCapital's own app and found its stack:
+Tailwind CSS v4.3.3 and Highcharts in styled mode. That became B9's stack, and with the same two pieces their spacing,
+radii, palette and chart styling became a matter of CSS; the token sheet's exact values come from that shipped CSS.
+
+For a clone, the target's shipped artifacts are the filing form: read them before choosing tools, and look at each
+screen yourself rather than a summary of it. A description of a product is a paraphrase, with the same risk as a
+research summary of a statute.

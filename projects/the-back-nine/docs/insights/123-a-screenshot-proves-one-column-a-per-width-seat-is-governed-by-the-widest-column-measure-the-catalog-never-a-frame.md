@@ -3,7 +3,7 @@ title: A screenshot proves ONE column — a per-width seat is governed by the WI
 date: 2026-09-06
 phase: Post-Act-4 (the gap to a friend betting real money) — the council-held 320 shape, ruled by his eye and built the same day
 modules: [src/viz/chartText.tsx, src/viz/ConfidenceBand.tsx, src/viz/OddsLadder.tsx, e2e/chart-text.spec.ts, docs/caddie/cold-read-log.md]
-tags: [cold-read, screenshot-evidence, per-width-seat, measured-catalog, chart-text, oracle-vs-eye, arithmetic-check, the-room-is-not-the-ink, css-outlives-string, nowrap, inline-block, width-gate, overflow-wrap-anywhere, mid-word-break, caption-clipped, squeezed-table, coupled-axes, whole-combinations, text-swap, unreachable-member, plant-set, worst-product, single-axis-scaling, plant-first, household-acts, disclosure-state, wrong-axis, dpr, centering]
+tags: [cold-read, screenshot-evidence, per-width-seat, measured-catalog, chart-text, oracle-vs-eye, arithmetic-check, the-room-is-not-the-ink, css-outlives-string, nowrap, inline-block, width-gate, overflow-wrap-anywhere, mid-word-break, caption-clipped, squeezed-table, coupled-axes, whole-combinations, text-swap, unreachable-member, plant-set, worst-product, single-axis-scaling, plant-first, household-acts, disclosure-state, wrong-axis, dpr, centering, placement-ruling, fit-budget, tight-seeds, binding-column, height-table, measure-before-ruling, content-outranks-fit]
 ---
 
 ## Problem
@@ -125,3 +125,16 @@ The fit law's catalog kept turning out larger than the plants that were supposed
 
 **What the five add:** the catalog is the product of every axis that changes the frame, including the household's own
 acts and the window's every dimension, and a reading taken by moving one axis speaks for that axis alone.
+
+## Extended (2026-11-24, milestone 1's fix round, b9-7): a placement ruling over a fit budget is a guess until every tight seed's columns are measured
+
+The milestone-1 review restored the survivor income step-down. Placed under Probability's two halves, it overflowed
+`budget`'s landed-what-if arm by 27 px. The pilot ruled it moved to the key-metric column without
+measuring that column: the 27 px stayed, and two more arms broke (`budget` by 1.1 px, `patypical` by 41.7 px). The
+builder's per-line height table for every tight seed showed the binding column in one read. Three rulings ran where one
+measurement would have done. Before ruling where a line goes, measure every tight seed's every column, not only the arm
+that failed: the column that looks roomy on the failing seed can be the one that binds on another.
+
+And content outranks a pilot's fit call: nothing was cut. That one arm now binds to the R13 caveat in frame with the
+tray's handle reachable, a dated amendment to the Act 6 plan's section 4.0 fit decision (`e65d659f`); every other
+one-frame arm keeps the handle in frame.

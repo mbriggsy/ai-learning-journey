@@ -2,8 +2,8 @@
 title: "a hysteresis hold over a monotone-meaning display must be direction-gated and pair-coupled (prove it with a property sweep whose legal set derives from the producer)"
 date: 2026-07-09
 phase: Act 3 (the levers)
-modules: []
-tags: []  # backfilled 2026-09-06 (doc audit) — tag by hand when next touched
+modules: [src/store/memoryModel.ts, src/engine/confidence.ts]
+tags: [hysteresis, sticky-display, hold, flicker, direction-gate, rosy-direction, pair-coupling, property-sweep, resolveStickyDisplay, calm-but-wrong, raw-headline, side-by-side, comparison, what-if, rawDisplayed, two-counts-one-plan]
 ---
 
 # 072 — a hysteresis hold over a monotone-meaning display must be direction-gated and pair-coupled (prove it with a property sweep whose legal set derives from the producer)
@@ -82,3 +82,17 @@ The sweep kills every mutant the named pins kill, plus the classes nobody named
 **Family:** 044 (a can-never-happen comment is a claim about a gate) · 054 (sibling
 surfaces of the same failure class) · 056 (a composite surface re-keyed on one field) ·
 029/032 (pin the full set, not spot cells) · 017 (multi-lens convergence is a beacon).
+
+## Extended (2026-11-24, Act 6's RC4 ruling): a held count beside a raw comparison prints two counts for one plan
+
+The direction gate above makes a hold safe for ONE reading watched over time. Act 6 put readings side by side. The old
+answer page printed the sticky triple (`snapshot.displayed`, which holds the LOWER count on a one-step rise at an
+edge), while RC3's ring read the raw headline. On Probability an empty what-if returns the plan's own bytes, so a
+sticky "Your plan" beside it would print 8 and 9 for the same plan; and with a lever pulled, the lever would read one
+count better than the plan at an edge, the rosy direction for a what-if. The pilot ruled raw everywhere the clone
+prints a count (`745f1492`, b9-5): both rings, the intro sentence, the what-if halves, the difference line, Snapshot,
+the gear drawer's echo. `rawDisplayed` in `src/store/memoryModel.ts` reads the headline through the sticky seam with
+no history, which adopts the raw reading; RC21 deletes the store's sticky seam.
+
+A hold is for one reading over time, never for one side of a comparison: the held side and the raw side are two
+answers to one question, and the gap between them reads as a difference the plans do not have.

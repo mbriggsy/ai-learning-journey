@@ -3,7 +3,7 @@ title: A contract transplanted between types carries its words but not its premi
 date: 2026-07-25
 phase: Act-4 · U17 S3 (the saved-recommendation record + the re-entry trichotomy)
 modules: [src/shared/model.ts, src/shared/scenarioCodec.ts, src/store/savedRecommendation.ts, src/store/staleness.ts]
-tags: [persisted-schema, absent-is-quiet, fail-open, calm-but-wrong, transplanted-contract, tolerance, staleness, sibling-event-gate, gate-direction, turns65, senior-bonus]
+tags: [persisted-schema, absent-is-quiet, fail-open, calm-but-wrong, transplanted-contract, tolerance, staleness, sibling-event-gate, gate-direction, turns65, senior-bonus, plan-law, feature-list, collision, one-field-law, cash-flows, totals, identity-check, one-path-table, measure-before-dropping]
 ---
 
 ## Problem
@@ -90,3 +90,20 @@ coordinator had withheld its own suspicion, [[037]]'s extension). The whole-file
 `turns65` itself still one-sided: a year the larger deduction meets with tax only in the year itself went unnamed —
 fixed to "the year before OR this year owes". **Before reusing a gate, ask which way this step moves the quantity the
 gate reads**; a gate tuned to a fall hides a rise.
+
+## Extended (2026-11-24, Act 6's RC6, b9-6): a law applied where its premise does not hold can cut a true feature, so measure before dropping it
+
+The same premise check runs in the cutting direction. RightCapital's Cash Flows table prints Total inflows and Total
+outflows, and the Act 6 plan listed the screen's features. The plan also had a one-field law: no sums. RC6's builder
+met the collision and dropped the totals. But the law's premise was about figures built from many futures (a sum of
+medians is no future's sum), and Cash Flows runs one path per view, where a row's sum is a real number. The pilot
+ruled a sum over one row allowed, provided it is honest, and measured it: totals ship only where inflows minus outflows
+minus income not kept balances. Over every seed in both views, 2,419 of 2,648 rows balanced within $1; 168
+working-year rows missed by exactly the employer match (the put-ins include it) and 61 short-year rows by the unmet
+need (the run-out has no dollars). So no total shipped yet, but the reason is two named row fields, filed in the
+register (*Cash Flows can't print RightCapital's Total inflows and Total outflows…*, Tier 1), not a law that never
+applied (`c6dc5aea`).
+
+When a plan's law and its own feature list collide, ask the law's premise first. If the premise does not reach this
+surface, the law does not decide it; a measurement does. Measure whether the feature can be honest, and if it cannot
+yet, name the missing pieces and file them, so the feature waits instead of vanishing.

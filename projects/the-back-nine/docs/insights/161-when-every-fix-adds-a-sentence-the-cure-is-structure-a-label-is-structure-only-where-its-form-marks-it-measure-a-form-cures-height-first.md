@@ -3,7 +3,7 @@ title: When every refuter's fix adds a sentence, the paragraph gets longer, not 
 date: 2026-11-23
 phase: Build 2 (the surplus question) — U11's Caddie walks 2 to 6 on W's stale paragraph
 modules: [src/intake/workingYearLeftOver.ts, src/ui/NotePartsBlock.tsx, src/ui/noteParts.ts, src/ui/copy.ts]
-tags: [copy-form, structure, labels, run-in-label, wall-of-text, paragraph-growth, fold-json, caddie, council, measure-first, note-parts, refuter-fixes]
+tags: [copy-form, structure, labels, run-in-label, wall-of-text, paragraph-growth, fold-json, caddie, council, measure-first, note-parts, refuter-fixes, suppression-patch, repeated-patch, claim-less, balance-date, aged-line, stale-banner, cash-flows, re-saver]
 ---
 
 ## Problem
@@ -56,3 +56,17 @@ parts, and the Result's door as the last `dt`/`dd`, with the gate's route moved 
   the two are one budget. Each rosy misread still gets its fix; the form decides where it lives.
 - Insight 097 (a copy swap on a fold-law frame is a layout change): the height measurement here is the same reading.
 - Any Caddie round whose fixes all lengthen one block: the record card, the gate's notes, the facts page's groups.
+
+## Extended (2026-11-25, Act 6's milestone 1 review round 3, b9-8): the same tell in code — when a line survives two rounds of suppression patches, make it claim less
+
+The repeated-fix tell is not only about sentences added. Cash Flows' first row said "its balances are as of" the
+plan's build year, while the StaleBanner above it carried the aged-balances line. Round 1 and round 2 of milestone 1's
+review each patched the clash by hiding the banner's line wherever the two years matched (`CashFlowsView.agedYear`,
+`composeStaleLines`' `withAged`), and a re-saver still read a false date: the build year survives every save (U17
+S0.3), so "as of" the build year was wrong for anyone who had saved since. Round 3 reworded the row's line to claim no
+balance date at all ("the years since are modeled, not records", S0.3's own law). Both lines then stand, the banner
+keeps its aged line and its re-confirm door on Cash Flows too, and the suppression code is gone (`31bf6d9e`).
+
+When two rounds of patches each hide a true line to protect another, the protected line is claiming too much. Shrink
+its claim to what the code can back; the hiding rules, and the honest warnings they silenced ([[103]]: check a rule
+written to quiet a line in the silencing direction), go with it.

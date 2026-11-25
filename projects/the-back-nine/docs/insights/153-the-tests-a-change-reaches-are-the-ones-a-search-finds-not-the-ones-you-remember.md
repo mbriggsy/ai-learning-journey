@@ -3,7 +3,7 @@ title: The tests a change reaches are the ones a search finds, not the ones you 
 date: 2026-11-23
 phase: The RightCapital mandate, gap 1 (the workbench's year-by-year table, U7)
 modules: [src/ui/workbench/, src/ui/devSeeds.ts, src/ui/__tests__/, scripts/__tests__/breakpoint-mirrors.test.ts]
-tags: [test-cadence, reached-tests, partial-run, ci-red, grep-the-tests, sweep-tests, hand-pinned-list, guard-tests, breakpoint-mirrors, dev-seeds, source-bind, readFileSync, moved-code, regex-pin, slot-change, e2e-outside-tsconfig, coordinate-tap-arm, parallel-lanes, grep-by-field]
+tags: [test-cadence, reached-tests, partial-run, ci-red, grep-the-tests, sweep-tests, hand-pinned-list, guard-tests, breakpoint-mirrors, dev-seeds, source-bind, readFileSync, moved-code, regex-pin, slot-change, e2e-outside-tsconfig, coordinate-tap-arm, parallel-lanes, grep-by-field, import-search, path-reading-test, moved-surface, deleted-surface, e2e-selectors, live-copy-key]
 ---
 
 ## Problem
@@ -77,3 +77,19 @@ Three more ways the reached tests were wider than the list that was run.
   `src/engine/__tests__/typedBelowTaxRider.test.ts`, which asserted the near-line household's single 2029–2032 span,
   a span the new pairing split now cuts in two. Brief each lane with every consumer of the shape it changes, found by
   grepping the field (`.spans`), not the file name. Run the whole suite once before calling a composer change green.
+
+## Extended (2026-11-24, Act 6's RC3 and RC4a): an import search misses the tests that read a file by path, and a moved surface is still driven by specs nobody opened
+
+Two more misses, each by a builder whose own list was found by search, just not a wide enough one.
+
+- **A source-bind test reads its file by PATH, so an import search never finds it** (b9-4, RC3, `2266e758`). The
+  builder ran the 31 test files that import what it changed and missed `recSaveNoAutoWrite.test.tsx`, which reads
+  `IntakeApp.tsx` with `readFileSync` and counted exactly one caller of the save gesture; Snapshot's Keep was a second.
+  The orchestrator's run caught it. RC3 had 23 such path-reading tests. Find the reached tests by import AND by a
+  `readFileSync` or path mention of each changed file's name.
+- **A moved surface is still driven by e2e specs nobody opened** (b9-5, RC4a, `7f56682e`). RC4a deleted the old answer
+  page, but `e2e/intake-fold.spec.ts` still pressed its `copy.assumptionDoorCta` door and `e2e/chart-text-rv.spec.ts`
+  still waited for its invite. Both went red on CI (run 45441772275) while every run the builder and the orchestrator
+  chose was green. Typecheck never sees `e2e/`, and the copy key still existed, so even the retired-key grep of
+  [[086]] had nothing to find. When a surface moves or goes, grep `e2e/` for each of its copy keys and selectors, not
+  only for keys being deleted.

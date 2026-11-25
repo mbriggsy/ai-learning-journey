@@ -3,7 +3,7 @@ title: A process rule the pilot writes into a plan is not a ruling, and nothing 
 date: 2026-11-22
 phase: The RightCapital mandate (the test-cadence ruling, 2026-11-22)
 modules: [docs/plans/, CLAUDE.md, .github/workflows/]
-tags: [process, rulings, who-ruled, habit, test-cadence, ci, plan-rules, provenance, briggsy-good, owner-call, design-ceiling, open-question, plain-numbers, ruling-scope, refuter-split, queue-approval, tier-sweep]
+tags: [process, rulings, who-ruled, habit, test-cadence, ci, plan-rules, provenance, briggsy-good, owner-call, design-ceiling, open-question, plain-numbers, ruling-scope, refuter-split, queue-approval, tier-sweep, put-to-briggsy, only-when-asked, you-make-the-call, asking-direction]
 ---
 
 ## Problem
@@ -57,3 +57,13 @@ One read D7 plus his "yep, seems right" on the queue as ruling the entries' depe
 as ruling the ORDER only. Neither side could be proven from the record, because the record never said. Asked in plain
 words, he ruled in one answer and both entries moved. When readers disagree about whether a ruling covers a case, that
 disagreement is the finding: the call is still his, so ask; never pick the side that lets the work go on.
+
+## Extended (2026-11-23, gap 2's re-check, b9-3): "put to Briggsy" written by the pilot is not his ruling either
+
+The same rule runs in the asking direction. A plan carried lines that said a call would be "put to Briggsy", and a
+harness carried "start it again only when asked". Both were written by the pilot, and both pulled the pilot into
+stopping to ask him about calls that were the pilot's own. His answer: "You're smarter than me, you make the call"
+(memory `feedback-act-on-confident-resolutions`; the workbench plan's 2026-11-23 amendment records it). A line telling
+the pilot to ask is a process rule like any other: its author is who wrote it, not the person it names. The calls that
+stay his are his dated rulings and the classes he keeps (money, public, irreversible, policy, low confidence, and a
+real split on whether a ruling covers the case, above); everything else the pilot decides and records.

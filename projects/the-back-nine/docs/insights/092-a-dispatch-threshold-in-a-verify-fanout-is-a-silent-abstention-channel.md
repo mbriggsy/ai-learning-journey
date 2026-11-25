@@ -3,7 +3,7 @@ title: A dispatch threshold in a verify fan-out is a SILENT abstention channel �
 date: 2026-07-18
 phase: Act 4 · the U14 ultramode-review fold
 modules: [process — multi-agent review workflows]
-tags: [workflow, verify, abstain, threshold, insight-019, insight-084, review-fold, ultramode-review, advisory, overflow, residuals, merge, fix-list]
+tags: [workflow, verify, abstain, threshold, insight-019, insight-084, review-fold, ultramode-review, advisory, overflow, residuals, merge, fix-list, findings-cap, lens-cap, every-lens-capped, bounded-review, overflow-titles, verify-first-then-fix]
 ---
 
 ## Problem
@@ -69,3 +69,16 @@ refuters, two were dropped. A bucket name is a severity GUESS made by the review
 **Rule:** merge EVERY bucket a review returns — confirmed, hand-verify, advisory, overflow, residual — then rule each
 item by name; verify overflow the way findings are verified. The entered-minus-exited set-diff above runs at the
 merge too.
+
+## Extended (2026-11-24, Act 6's milestone 1 review, b9-7): when every lens hits its findings cap, the review was bounded, not done
+
+A per-lens findings cap is a fourth silent channel, one stage earlier than the dispatch threshold: a finding past the
+cap never becomes a finding at all, only an overflow title. In milestone 1's whole-file review (`wf_cc34572c-165`) all
+11 round-1 lenses hit their 4-finding cap. The fix builders checked about 40 unverified overflow titles against the
+source and found most of them real, among them "Try it in the plan" putting Recommended on both halves, a drag losing
+its pointer capture, and the lost survivor step-down's sibling paths; each round-1 fix commit (`fd1602be`, `e65d659f`,
+`84b2611f`, `7961d013`) lists its "verified overflow, fixed" items.
+
+A lens that stops at its cap tells you its cap, not how many defects it saw. When every lens hits the cap, read the
+review as cut short: hand the overflow to the fix builders with "verify first, then fix", or size the cap and the
+number of lenses to the scope before the run.

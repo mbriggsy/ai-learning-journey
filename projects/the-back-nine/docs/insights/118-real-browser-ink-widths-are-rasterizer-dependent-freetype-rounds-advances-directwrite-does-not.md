@@ -3,7 +3,7 @@ title: Real-browser ink widths are rasterizer-dependent — FreeType rounds glyp
 date: 2026-09-05
 phase: Act 4 hardening (the chart-text gate)
 modules: [e2e/chart-text.spec.ts, src/viz/bandGeometry.ts, src/ui/__tests__/twoPaneHonestyFloor.test.ts]
-tags: [playwright, ci, fonts, freetype, directwrite, measurement, non-vacuity, cross-platform]
+tags: [playwright, ci, fonts, freetype, directwrite, measurement, non-vacuity, cross-platform, line-wrap, zero-margin, re-hosted-component, box-width, doubled-gutter, phone, recommendation-viz, interim-tab]
 ---
 
 ## Problem
@@ -31,3 +31,18 @@ A rendered-px threshold in an e2e assertion is a claim about a rasterizer, not a
 ## Refinement (2026-09-12, Card 10 — the nice-step lattice)
 
 ⚑ SUPERSEDED AS BUILT: the seven-glyph quarter dollar (`$0.375M` / `$1.125M`) is **unproducible** since `niceLattice` replaced `niceCeil` + quartering — the widest tick the band can draw is the six-glyph `$0.25M` / `$0.75M` / `$1.25M` class (38.5 px on Windows/DirectWrite, re-measured in the gate; 36.0 px MEASURED on Linux by the first Linux `verify:fit` on the change — CI run 34707283988, every arm; this insight's 45.0 / 42.0 datum, ~0.43 px per glyph, had predicted ≈35.9, 0.1 px off — so this insight now carries a second cross-platform datum, 2.5 px over six glyphs ≈ 0.42 px per glyph). The guard now pins `/^\$\d\.\d{2}M$/` and floors the ink at **34** — and the floor's rationale is INVERTED, not merely re-numbered: the old 40 was chosen to sit ABOVE every six-glyph dollar (so only the seven-glyph class could pass); the live 34 exists to PASS one, sitting between the five-glyph Windows ink it must exclude (32.1) and the six-glyph Linux ink it must pass (36.0). The 45.0 / 42.0 pair above stays as written — it is the datum the pre-run estimate was derived from; every live docblock that carries a Linux figure now quotes the measurement, every site that shows the derivation names the run, and the Windows-only sites (`twoPaneHonestyFloor.test.ts`'s header and `WIDEST_TICK_INK_PX` docblock, `chart-text.spec.ts`'s file header) say Windows.
+
+## Extended (2026-11-24, Act 6's RC4b CI red, b9-6): a component tuned to fill its box exactly breaks where it is re-hosted, and only on CI's metrics
+
+The "line-wrap counts" case above, met for real. The recommendation chart (`RecommendationViz.tsx`) tunes its label
+column on a 358 px box. Act 6 re-hosted the old answer frame as the interim Tax Strategies tab, inside the shell's
+interim column, which padded by the gutter while the frame inside padded by it again, so the chart's box was 326 px.
+The 24-character label then needed 104.8 px of a 104.8 px column: two lines on Windows, three on CI's ubuntu, the third
+printed over the delta figure (CI run 45477118575 on RC4b's `10da60f2`, `verify:fit:rv` PHONE red twice). The builder had run its chart gate at REAL only, where the box
+was wide enough. The fix dropped the inner padding inside the interim column, giving 358 px back, a 115 px label column
+and 12 px clear above the delta (`d01dcc7f`).
+
+Two lessons on top of this insight's own. A fit with zero margin is a platform pin even when nobody typed a number: the
+platform whose glyphs run wider wraps first. And re-hosting a component changes its box, so it is a layout change for
+everything tuned inside it: measure a re-hosted component on the real surface at PHONE, the narrowest box, and on the
+CI platform's metrics, before calling the move done (`docs/landmines.md`, *UI and product*).

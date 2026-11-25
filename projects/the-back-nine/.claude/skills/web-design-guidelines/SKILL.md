@@ -5,9 +5,9 @@ description: Review UI code against Vercel's Web Interface Guidelines (accessibi
 
 <!--
   VENDORED from vercel-labs/web-interface-guidelines
-  Source skill body: command.md @ commit d0a657bfe87e86dd3a4753d7ec28c7e7dd7a88fe
-  (repo HEAD at vendor time: 4e799d45c17aec1498c269287a83b9dba22b966b, 2026-04-06)
-  Vendored: 2026-06-11
+  Source skill body: command.md @ commit 4ecfb9f (2026-10-05, "Add desktop overscroll guideline")
+  Vendored: 2026-06-11 (from d0a657b); rules re-synced 2026-11-25 (adds media, sticky-focus, autoplay,
+  overscroll and gesture rules; fixes the curly-quote example, which printed straight quotes)
   License: MIT (Copyright (c) 2025 Vercel Labs) — full text in LICENSE-upstream.txt alongside this file.
 
   LOCAL MODIFICATIONS (vendoring/tooling only — substantive guideline content is upstream-faithful and unchanged):
@@ -44,6 +44,8 @@ Read files, check against rules below. Output concise but comprehensive—sacrif
 - Use semantic HTML (`<button>`, `<a>`, `<label>`, `<table>`) before ARIA
 - Headings hierarchical `<h1>`–`<h6>`; include skip link for main content
 - `scroll-margin-top` on heading anchors
+- Meaningful media needs captions, transcripts, or descriptions as applicable
+- Media controls need keyboard support; decorative media needs assistive-tech hiding
 
 ### Focus States
 
@@ -51,6 +53,7 @@ Read files, check against rules below. Output concise but comprehensive—sacrif
 - Never `outline-none` / `outline: none` without focus replacement
 - Use `:focus-visible` over `:focus` (avoid focus ring on click)
 - Group focus with `:focus-within` for compound controls
+- Sticky headers/footers/overlays must not cover the focused element
 
 ### Forms
 
@@ -74,11 +77,13 @@ Read files, check against rules below. Output concise but comprehensive—sacrif
 - Set correct `transform-origin`
 - SVG: transforms on `<g>` wrapper with `transform-box: fill-box; transform-origin: center`
 - Animations interruptible—respond to user input mid-animation
+- Autoplay motion >5 seconds alongside other content needs pause, stop, or hide controls
+- Muted decorative loops must stop under `prefers-reduced-motion`
 
 ### Typography
 
 - `…` not `...`
-- Curly quotes `"` `"` not straight `"`
+- Curly quotes `“` `”` not straight `"`
 - Non-breaking spaces: `10&nbsp;MB`, `⌘&nbsp;K`, brand names
 - Loading states end with `…`: `"Loading…"`, `"Saving…"`
 - `font-variant-numeric: tabular-nums` for number columns/comparisons
@@ -105,6 +110,8 @@ Read files, check against rules below. Output concise but comprehensive—sacrif
 - Prefer uncontrolled inputs; controlled inputs must be cheap per keystroke
 - Add `<link rel="preconnect">` for CDN/asset domains
 - Critical fonts: `<link rel="preload" as="font">` with `font-display: swap`
+- Prefer `<video autoplay muted loop playsinline>` over animated GIF; provide a still alternative
+- Short non-essential loops: Safari H.264 MP4 `<picture>` source, `prefers-reduced-motion` media condition, and still fallback
 
 ### Navigation & State
 
@@ -118,7 +125,9 @@ Read files, check against rules below. Output concise but comprehensive—sacrif
 - `touch-action: manipulation` (prevents double-tap zoom delay)
 - `-webkit-tap-highlight-color` set intentionally
 - `overscroll-behavior: contain` in modals/drawers/sheets
+- Page rubber-band suppression: `overscroll-behavior: none` on `<html>` inside `@media (pointer: fine)`; keep coarse-pointer page defaults for pull-to-refresh. Test hybrid touch devices: `pointer` describes the primary input, and `none` also disables scroll chaining and native swipe navigation
 - During drag: disable text selection, `inert` on dragged elements
+- Drag/swipe/pinch/path gestures need tap/click and keyboard alternatives unless essential
 - `autoFocus` sparingly—desktop only, single primary input; avoid on mobile
 
 ### Safe Areas & Layout
@@ -175,6 +184,8 @@ Read files, check against rules below. Output concise but comprehensive—sacrif
 - Icon buttons without `aria-label`
 - Hardcoded date/number formats (use `Intl.*`)
 - `autoFocus` without clear justification
+- Animated GIF when compressed video is suitable
+- Gesture-only action without tap/click and keyboard alternative
 
 ## Output Format
 

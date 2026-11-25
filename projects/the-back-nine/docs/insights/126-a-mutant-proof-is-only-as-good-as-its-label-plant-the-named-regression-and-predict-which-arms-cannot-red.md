@@ -3,7 +3,7 @@ title: A mutant proof is only as good as its LABEL — the recorded "tier-keyed 
 date: 2026-09-10
 phase: Post-Act-4 (the gap to a friend betting real money) — the council build's adversarial review
 modules: [e2e/vertical-fit.spec.ts, src/ui/styles/app.css, docs/council-log.md, TODO.md]
-tags: [mutant-proof, mutation-testing, planted-fail, arm-topology, oracle-lens, record-truth, adversarial-review, gate-by-exit-code, equivalent-mutant, aimed-fuzz, kill-line, spy-leak, restoreAllMocks, afterEach, input-device, hit-testing, prediction-correction, shared-constant, derived-constant, kill-set-larger-than-predicted, landed-check, prefix-anchor, crlf-anchor, vitest-json-timeout, STACK_TRACE_ERROR, discriminates-by-claim, predictor-gaps, spelling-variants, range-syntax, borrowed-size-reading]
+tags: [mutant-proof, mutation-testing, planted-fail, arm-topology, oracle-lens, record-truth, adversarial-review, gate-by-exit-code, equivalent-mutant, aimed-fuzz, kill-line, spy-leak, restoreAllMocks, afterEach, input-device, hit-testing, prediction-correction, shared-constant, derived-constant, kill-set-larger-than-predicted, landed-check, prefix-anchor, crlf-anchor, vitest-json-timeout, STACK_TRACE_ERROR, discriminates-by-claim, predictor-gaps, spelling-variants, range-syntax, borrowed-size-reading, witness-placement, delta-band, consistency-check, which-mutants-stay-green]
 ---
 
 ## Problem
@@ -125,3 +125,14 @@ Three cases from build 2's go-live (`a9cacf22`) and the composites work.
   `main.result`'s min-height made the near miss 916.7 px, not 916.5. The kill set still held, but only because the
   margin was big enough. The cause was `.result` centering a short frame, not the pixel ratio. A number borrowed from
   another size is a guess.
+
+## Extended (2026-11-25, RC8's Medicare line column): a consistency check bites only where a run sits inside the mutation's delta
+
+Details' new line column was checked against the engine's own billing (a surcharge two years on exactly when income is
+above the printed line). A filing flip redded, but planting the raw pinned $218,000 line and a one-year frame slip both
+stayed green, because neither seed's run had income between $218,000 and the compared line: the two lines differ only
+in that band, so no witness could tell them apart. A `surplus` run with a $140,000 conversion (2027–2030 in the band)
+made the raw-line plant red; the one-year slip (about $300 a year in real terms) still passes, recorded as low harm.
+
+What it adds: before trusting a consistency check, put one witness inside each band where the alternatives differ, and
+write down which plants stay green and why.

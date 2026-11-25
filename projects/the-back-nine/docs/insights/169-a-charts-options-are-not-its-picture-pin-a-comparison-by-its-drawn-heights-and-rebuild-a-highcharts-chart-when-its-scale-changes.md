@@ -3,7 +3,7 @@ title: A chart's options are not its picture — two balance bars of about $1.1m
 date: 2026-11-25
 phase: Act 6, the RightCapital clone (RC4b, b9-5, 2026-11-24)
 modules: [src/viz/charts/BalanceBar.tsx, src/viz/charts/balanceBarOptions.ts, src/viz/charts/Chart.tsx, e2e/rc-screens.spec.ts]
-tags: [highcharts, chart-update, yaxis, shared-scale, lattice, react-key, rebuild, drawn-heights, options-vs-picture, calm-but-wrong, side-by-side, comparison, pinned-clock, redraw-animation, instrument]
+tags: [highcharts, chart-update, yaxis, shared-scale, lattice, react-key, rebuild, drawn-heights, options-vs-picture, calm-but-wrong, side-by-side, comparison, pinned-clock, redraw-animation, instrument, deferred-label, data-labels, defer, setFixedTime, unpinned-probe]
 ---
 
 ## Problem
@@ -50,3 +50,17 @@ clock, emulated fonts) before blaming the library.
 - [[127]]: an instrument that silently changes the page (a full-page screenshot dropping font emulation) can produce
   a convincing wrong picture.
 - [[130]]: a chart's axis ceiling and ticks must come from one derivation, or the picture lies about the numbers.
+
+## Extended (2026-11-25): the pinned clock also holds a DEFERRED data label at opacity 0 for good
+
+Looking at `?seed=healthgap` with motion on, Health Care's cliff counts ("1 of 10", "2 of 10") were missing from every
+capture: the bracket drew, the words did not. The DOM had them, dark, opacity 1; their parent group,
+`g.highcharts-data-labels`, carried `opacity="0"`. A Highcharts label is deferred by default: its group starts at 0 and
+fades in on the series' `afterAnimate`, and the harnesses' pinned clock (`setFixedTime`, `e2e/reviewSurface.ts`) never
+lets that timer run. A plain `@playwright/test` page with a real clock read the same old code at 0 just after drawing
+and at 1 by 1.5 s: his browser showed the counts after about half a second, never not at all. The near-miss was
+calling it a product blank. The fix kept anyway is the fan chart's own rule for printed values, never deferred
+(`b3123f8a`), set on the SERIES' `dataLabels`: a point-level `defer` is ignored (tried, still red).
+
+What it adds: when a harness shows a chart word missing, run it once on an unpinned page before naming a product bug;
+and with reduced motion on (as most arms run) a deferred label shows at once, so only a motion-on arm can see the fade.

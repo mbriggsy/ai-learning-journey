@@ -877,19 +877,6 @@ line keeps the facts `/distill` needs; its source line is in this file as it sto
 (`git show 89b4fa58:projects/the-back-nine/TODO.md`), where the full original stands. A line marked *Correct* or
 *Extend* amends that insight instead of adding a new one.
 
-- (b9-9, 11-25) **A rail aimed at a line the law sets later is aimed at a forecast.** The IRMAA rails fill a year's income
-  to the projected bill-year line (`irmaaScheduleAsCompared` on the Trustees' CPI path) to the dollar (`surplus`: income =
-  line, 2027–2034), though that line is published only the fall before its bill, after the conversion is done; at 2.5 %
-  inflation the real line is ~$229,000 and every year on the line pays ~$2,297. The frame was right; the exactness was the
-  defect. Any rail, step or cliff the engine projects forward (the ACA cliff's FPL, bracket edges) has the same shape. The
-  register's Tier 0 *The solver fills Roth conversions to the exact forecast Medicare surcharge line…*.
-- (b9-9, 11-25) *Extend 146* **A consistency check bites only where a run sits inside the mutation's delta.** Details'
-  line column was checked against the engine's own billing (a surcharge two years on exactly when income is above the
-  line): a filing flip redded, but the raw pinned line and a one-year frame slip stayed green, because neither seed's run
-  had income between $218,000 and the compared line. A `surplus` run with a $140,000 conversion (2027–2030 in that band)
-  made the raw line red; the one-year slip (~$300 a year in real terms) still passes. Put one witness inside each band
-  where the alternatives differ, and say which mutants stay green.
-
 ## Driving the app
 
 `pnpm dev`, then a `?seed=` or `?vault=` param. DEV-only, DCE'd from prod. Source of truth:

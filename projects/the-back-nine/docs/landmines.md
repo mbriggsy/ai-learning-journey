@@ -1281,6 +1281,16 @@ refusal witness), so `gotoSeedFinal` times out on it — anchor on `main.result`
 - **(2026-09-12)** the band the app DRAWS is the engine fan CUT at the thin-cohort year (`answerView.ts` → `bandGeometry.truncateFanAtThinCohort`, 24–36 y) — a probe that takes the max over the RAW fan (54–61 y) overstates every growing household's ceiling (health: 15M predicted, 6M rendered; the brief, the review and the `c77bcf24` commit message all carry the raw table — the register is corrected); a seed-level prediction must run the SURFACE's pipeline (`lattice-probe-rendered.mts` in this session's scratchpad: buildSpineParams → runEngine with the app's options → the cut → resolveBandData), and a frame is the only proof
 - **(2026-09-08)** a `--` inside an SVG XML comment breaks the
 rasterizer SILENTLY
+- **(b9-6, 2026-11-24, RC4b's CI red) Re-hosting a component changes its width, and a width-tuned chart breaks there.**
+  The recommendation chart's label column is tuned on a 358 px phone box (`RecommendationViz.tsx`); inside the interim
+  Tax Strategies tab the shell's interim column and the old answer frame each added a gutter, the box became 326 px, and
+  the 24-character bar label (104.8 px in a 104.8 px column) broke to three lines over the delta figure on CI's ubuntu
+  metrics only (run 45477118575; Windows fit it on two). Measure a re-hosted component's box at PHONE on the real
+  surface, and run its spec's PHONE arm, not only REAL.
+- **(b9-6, 2026-11-24) Keep `.shell-interim`, `.shell-interim__title` and `.shell-interim .result-page` in
+  `src/ui/workbench/workbench.css` until the last interim tab is rebuilt** (Tax Strategies until RC8, Health Care
+  until RC10, Profile until RC13). The third rule removes the doubled gutter above (`d01dcc7f`). A unit that clears
+  "workbench.css's remaining rules" deletes only the rules nothing reads (grep each selector over `src` and `e2e`).
 
 ## Research and re-verification
 

@@ -534,6 +534,14 @@ test.describe(`RC4 · Probability on the phone (${PHONE.width}×${PHONE.height} 
       await page.locator('main.result [data-caveat]').scrollIntoViewIfNeeded()
       await assertOneVisibleCaveat(page, null)
       await noSidewaysScroll(page, `${seed} PHONE Probability`)
+      // The caveat's last line clears the ACTION ITEMS handle (b9-10: on the phone's 16 px panel padding the handle's
+      // upper half sat on the caveat's descenders).
+      const gap = await page.evaluate(() => {
+        const caveat = document.querySelector('main.result [data-caveat]')!.getBoundingClientRect()
+        const handle = document.querySelector('main.result [aria-controls="b9-action-items"]')!.getBoundingClientRect()
+        return handle.top - caveat.bottom
+      })
+      expect(gap, `${seed} PHONE: the caveat clears the handle by at least 4 px`).toBeGreaterThanOrEqual(4)
     })
   }
 

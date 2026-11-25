@@ -64,8 +64,10 @@ export interface PageFrameProps<Id extends string> {
 }
 
 /** A panel that carries the handle sits a step tighter in compact mode, so the one frame at his window reaches the
- *  handle (the handle's upper half, about 18 px, still clears the panel's 24 px bottom padding). */
-const HANDLED_PANEL = 'compact:pt-6 compact:pb-6'
+ *  handle (the handle's upper half, about 18 px, still clears the panel's 24 px bottom padding). On the phone it takes
+ *  the 32 px bottom seat the wider tiers already have: the phone's 16 px padding left the handle's upper half (about
+ *  21 px there) 4.6 px over the caveat's last line, on its descenders. */
+const HANDLED_PANEL = 'pb-8 compact:pt-6 compact:pb-6'
 
 export function PageFrame<Id extends string>({
   title,

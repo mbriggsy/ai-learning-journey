@@ -18,7 +18,7 @@ describe('routes — no dead tabs', () => {
   it('only modules with a screen show, in RightCapital’s order; RC4 draws Dashboard, Retirement, Tax and Profile', () => {
     expect(navModules().map((m) => m.id)).toEqual(['dashboard', 'retirement', 'tax', 'profile'])
     expect(navModules().find((m) => m.id === 'dashboard')!.pages.map((p) => p.id)).toEqual(['snapshot'])
-    expect(navModules().find((m) => m.id === 'retirement')!.pages.map((p) => p.id)).toEqual(['analysis', 'social-security', 'health-care', 'cash-flows'])
+    expect(navModules().find((m) => m.id === 'retirement')!.pages.map((p) => p.id)).toEqual(['analysis', 'stress-test', 'social-security', 'health-care', 'cash-flows'])
     // Every module with a screen has its word.
     for (const m of navModules()) expect(MODULE_LABELS[m.id]).toBe(m.label)
   })
@@ -53,7 +53,8 @@ describe('routes — the hash', () => {
   })
 
   it('an unknown page or tab lands on its module’s first page; a known page with no tab on its first tab', () => {
-    expect(parseHash('#/retirement/stress-test')).toEqual({ module: 'retirement', page: 'analysis', tab: 'probability' })
+    expect(parseHash('#/retirement/savings')).toEqual({ module: 'retirement', page: 'analysis', tab: 'probability' })
+    expect(parseHash('#/retirement/stress-test')).toEqual({ module: 'retirement', page: 'stress-test' })
     expect(parseHash('#/retirement/analysis')).toEqual({ module: 'retirement', page: 'analysis', tab: 'probability' })
     // Confidence is its own tab since RC7; an unknown tab on the page still lands on Probability.
     expect(parseHash('#/retirement/analysis/confidence')).toEqual({ module: 'retirement', page: 'analysis', tab: 'confidence' })

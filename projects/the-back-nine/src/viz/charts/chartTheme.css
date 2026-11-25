@@ -388,4 +388,31 @@
     font-size: var(--text-axis);
     font-weight: 600;
   }
+
+  /* ── Retirement → Stress Test (RC11, `stressBarsOptions.ts`): RightCapital's hue per bar, but colour carries nothing.
+     Baseline (the plan as it stands) is an OUTLINE in its hue on the chart surface; Combined (every stress at once) is
+     CROSS-HATCHED in purple with a purple edge; each count printed above its bar in dark text, each name under it in body
+     ink. ── */
+  .b9-stress {
+    --b9-ink-cross: var(--highcharts-color-8);
+  }
+  .b9-stress .highcharts-point.b9-stress-baseline {
+    fill: var(--color-bg);
+    stroke: var(--highcharts-color-6);
+    stroke-width: 2.5;
+  }
+  .b9-stress .highcharts-point.b9-stress-combined {
+    fill: url(#b9-cross);
+    stroke: var(--highcharts-color-8);
+    stroke-width: 1.5;
+  }
+  .b9-stress .highcharts-data-label text {
+    fill: var(--color-stone-900);
+    font-size: var(--text-label);
+    font-weight: 600;
+  }
+  .b9-stress .highcharts-xaxis-labels text {
+    fill: var(--color-stone-900);
+    font-size: var(--text-label);
+  }
 }

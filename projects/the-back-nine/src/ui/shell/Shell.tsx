@@ -37,6 +37,11 @@
  * Items tray holds B9's health inputs: the subsidy rules open Analysis's tray at that lever (`tryLever`), each plan fact
  * its own drawer (the facts page's doors). The assumption panel's subsidy-rules row opens this page.
  *
+ * RETIREMENT → STRESS TEST (RC11, `StressTest.tsx` over `stressView.ts`): one bar per stress on the plan's own futures, each
+ * a copy of the committed plan with one input made worse (`src/intake/stress.ts`), run on its own slot (`useStress`, made
+ * once here, so the bars and the tray's edits survive a page move; its runs ask only while the page shows). Baseline is the
+ * plan's own reading, no run.
+ *
  * THE INTERIM TABS: the room's pages ride in their current look (`InterimPage.tsx`, outside any `.rc-root`):
  * Profile → Your facts (`FactsPage.tsx`); the old What if page left with
  * RC4b, its levers now Probability's Action Items tray (`ActionItemsTray.tsx`). A facts-page "Try a change" and the
@@ -103,6 +108,9 @@ import {
 } from '../screens/retirement/socialSecurityView'
 import { HealthCare } from '../screens/retirement/HealthCare'
 import { healthCareView, healthTrayView, type HealthCareView } from '../screens/retirement/healthCareView'
+import { StressTest } from '../screens/retirement/StressTest'
+import { stressTrayView, stressView, type StressPageView } from '../screens/retirement/stressView'
+import { useStress } from '../workbench/useStress'
 import { Snapshot, type SnapshotDoors } from '../screens/dashboard/Snapshot'
 import { snapshotView, type SteadyRows } from '../screens/dashboard/snapshotView'
 import { Analysis } from '../screens/retirement/Analysis'
@@ -1051,9 +1059,34 @@ export default function Shell({
     [onHealth, healthPage?.kind, draft, steps, anchor, readOnly],
   )
 
+  // ── Retirement → Stress Test (RC11): the bars off the COMMITTED final answer, each stress on its own slot; the tray's
+  // open state held here so a page move keeps it.
+  const onStress = screen === 'stress-test'
+  const stress = useStress({ snapshot, active: onStress })
+  const [stressTrayOpen, setStressTrayOpen] = useState(false)
+  const stressAnswer = committedAnswer !== null && committedAnswer.tier === 'final' ? committedAnswer : null
+  const stressPage = ((): StressPageView | null => {
+    if (!onStress) return null
+    if (stressAnswer === null || stress.offers === null) {
+      if (run.kind === 'answer-error') return { kind: 'words', words: copy.workbenchTableAnswerError }
+      if (run.kind === 'withheld') return { kind: 'words', words: WITHHELD_WORDS[run.reason] }
+      return { kind: 'words', words: copy.stressWaiting }
+    }
+    return stressView({
+      startCalendarYear: stressAnswer.draft.startCalendarYear,
+      plan: planReadingFor(stressAnswer),
+      planClockYears: anchor.yearsSincePlanBuilt,
+      offers: stress.offers,
+      committed: stress.committed,
+      bars: stress.bars,
+      stateClause: taxStateClause,
+    })
+  })()
+  const stressTray = onStress && stressPage?.kind === 'bars' && stress.offers !== null ? stressTrayView(stress.pending, stress.committed, stress.offers) : undefined
+
   // ── The StaleBanner (RC4): the old answer page's staleness note, aged-balances line and standing line ──────────────
   const figured = screen === 'snapshot' || screen === 'probability' || screen === 'confidence' || screen === 'cash-flows'
-  const inFrameCaveat = figured || screen === 'tax-strategies' || screen === 'social-security' || screen === 'health-care'
+  const inFrameCaveat = figured || screen === 'tax-strategies' || screen === 'social-security' || screen === 'health-care' || screen === 'stress-test'
   // Cash Flows too, aged line and door included: its row-one line (`workbenchAged`) names the build year and claims nothing
   // about the balances, so the two lines say two causes (round 3 of the milestone-1 review).
   const staleLines = useMemo(
@@ -1336,6 +1369,22 @@ export default function Shell({
               caveat={CASH_FLOWS_CAVEAT}
               trayOpen={claimsTray}
               onTrayOpen={setClaimsTray}
+            />
+          </>
+        ) : stressPage !== null ? (
+          <>
+            {leave}
+            <StressTest
+              headingRef={headingRef}
+              view={stressPage}
+              {...(stressTray !== undefined ? { tray: stressTray } : {})}
+              pending={stress.pending}
+              onPending={stress.setPending}
+              onRefresh={stress.refresh}
+              onReset={stress.reset}
+              caveat={CASH_FLOWS_CAVEAT}
+              trayOpen={stressTrayOpen}
+              onTrayOpen={setStressTrayOpen}
             />
           </>
         ) : healthPage !== null ? (

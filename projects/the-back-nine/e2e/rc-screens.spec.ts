@@ -227,6 +227,36 @@ async function noSidewaysScroll(page: Page, who: string): Promise<void> {
   expect(w.scroll, `${who}: the page scrolls sideways`).toBeLessThanOrEqual(w.client)
 }
 
+/**
+ * The page's one R13 caveat can be REACHED and SEEN (RC11, insight 124): the DOCUMENT alone is scrolled to it (never
+ * `scrollIntoView`, which scrolls every box on the way and so "reaches" a caveat trapped in an `overflow: hidden` box),
+ * then a hit test at two points, the caveat's upper half and 4 px above its bottom edge, must each land on the caveat or
+ * inside it, with both points in the window.
+ */
+async function assertCaveatReachable(page: Page, who: string): Promise<void> {
+  const caveat = page.locator('main.result [data-caveat]')
+  await expect(caveat, `${who}: one in-frame caveat`).toHaveCount(1)
+  await caveat.evaluate((el) => {
+    const r = el.getBoundingClientRect()
+    window.scrollTo(0, Math.max(0, r.top + window.scrollY - window.innerHeight / 2 + r.height / 2))
+  })
+  await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))))
+  const misses = await caveat.evaluate((el) => {
+    const r = el.getBoundingClientRect()
+    const x = r.left + r.width / 2
+    return [
+      ['its upper half', r.top + r.height / 4],
+      ['4 px above its bottom edge', r.bottom - 4],
+    ].flatMap(([where, y]) => {
+      const yy = y as number
+      if (yy < 0 || yy > window.innerHeight) return [`${where} (y ${yy.toFixed(1)}) is outside the window`]
+      const top = document.elementFromPoint(x, yy)
+      return top !== null && (top === el || el.contains(top)) ? [] : [`${where} (y ${yy.toFixed(1)}) lands on ${top === null ? 'nothing' : `${top.tagName.toLowerCase()}.${[...top.classList].slice(0, 3).join('.')}`}`]
+    })
+  })
+  expect(misses, `${who}: the caveat reached and seen`).toEqual([])
+}
+
 test.describe(`RC3 · Snapshot at his window (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr, compact mode)`, () => {
   test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
   for (const seed of RC3_SEEDS) {
@@ -531,7 +561,7 @@ test.describe(`RC4 · Probability on the phone (${PHONE.width}×${PHONE.height} 
       })
       expect(order.intro).toBeLessThan(order.halves)
       expect(order.halves).toBeLessThan(order.caveat)
-      await page.locator('main.result [data-caveat]').scrollIntoViewIfNeeded()
+      await assertCaveatReachable(page, `${seed} PHONE Probability`)
       await assertOneVisibleCaveat(page, null)
       await noSidewaysScroll(page, `${seed} PHONE Probability`)
       // The caveat's last line clears the ACTION ITEMS handle (b9-10: on the phone's 16 px panel padding the handle's
@@ -572,7 +602,7 @@ test.describe(`RC4 · Probability at a 20 px browser default (${REAL.width}×${R
       })
       expect(order.intro).toBeLessThan(order.halves)
       expect(order.halves).toBeLessThan(order.caveat)
-      await page.locator('main.result [data-caveat]').scrollIntoViewIfNeeded()
+      await assertCaveatReachable(page, `${seed} 20px Probability`)
       await assertOneVisibleCaveat(page, null)
       await noSidewaysScroll(page, `${seed} 20px Probability`)
     })
@@ -833,32 +863,38 @@ test.describe(`RC4b · the Action Items tray on the phone (${PHONE.width}×${PHO
       const sheet = page.getByRole('dialog', { name: copy.trayHandle })
       await expect(sheet).toBeVisible()
       await page.waitForTimeout(400)
-      const controls = sheet.locator('[data-tray-row] :is(button, input, [role="combobox"], [role="slider"])')
-      const n = await controls.count()
-      expect(n, '[test setup] the sheet has controls').toBeGreaterThan(3)
-      const covered: string[] = []
-      let probed = 0
-      for (let i = 0; i < n; i++) {
-        const c = controls.nth(i)
-        // A visually hidden form control (Base UI's select and slider inputs) takes no tap.
-        const hidden = await c.evaluate((el) => getComputedStyle(el).clipPath === 'inset(50%)' || el.closest('[aria-hidden="true"]') !== null || (el as HTMLInputElement).type === 'hidden')
-        if (hidden || !(await c.isVisible())) continue
-        await c.scrollIntoViewIfNeeded()
-        probed += 1
-        const hit = await c.evaluate((el) => {
-          const r = el.getBoundingClientRect()
-          const top = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2)
-          if (top === null || el === top || el.contains(top)) return null
-          const row = el.closest('[data-tray-row]')?.getAttribute('data-tray-row')
-          return `${row}: ${el.tagName.toLowerCase()} "${(el.getAttribute('aria-label') ?? el.textContent ?? '').trim().slice(0, 30)}" under ${top.tagName.toLowerCase()} "${(top.textContent ?? '').trim().slice(0, 40)}"`
-        })
-        if (hit !== null) covered.push(hit)
-      }
-      expect(probed, '[test setup] the arm probed the sheet’s controls').toBeGreaterThan(3)
-      expect(covered, `${seed}: a control a tap at its centre never reaches`).toEqual([])
+      await assertSheetTapsReach(sheet, seed, 4)
     })
   }
 })
+
+/** Every visible control in a tray's sheet takes a tap at its centre: no other cell's box sits over it (b9-10). `atLeast`
+ *  is how many controls the sheet must hold, so the arm can never probe nothing and pass. */
+async function assertSheetTapsReach(sheet: ReturnType<Page['getByRole']>, who: string, atLeast: number): Promise<void> {
+  const controls = sheet.locator('[data-tray-row] :is(button, input, [role="combobox"], [role="slider"], [data-thumb])')
+  const n = await controls.count()
+  expect(n, '[test setup] the sheet has controls').toBeGreaterThanOrEqual(atLeast)
+  const covered: string[] = []
+  let probed = 0
+  for (let i = 0; i < n; i++) {
+    const c = controls.nth(i)
+    // A visually hidden form control (Base UI's select and slider inputs) takes no tap.
+    const hidden = await c.evaluate((el) => getComputedStyle(el).clipPath === 'inset(50%)' || el.closest('[aria-hidden="true"]') !== null || (el as HTMLInputElement).type === 'hidden')
+    if (hidden || !(await c.isVisible())) continue
+    await c.scrollIntoViewIfNeeded()
+    probed += 1
+    const hit = await c.evaluate((el) => {
+      const r = el.getBoundingClientRect()
+      const top = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2)
+      if (top === null || el === top || el.contains(top)) return null
+      const row = el.closest('[data-tray-row]')?.getAttribute('data-tray-row')
+      return `${row}: ${el.tagName.toLowerCase()} "${(el.getAttribute('aria-label') ?? el.textContent ?? '').trim().slice(0, 30)}" under ${top.tagName.toLowerCase()} "${(top.textContent ?? '').trim().slice(0, 40)}"`
+    })
+    if (hit !== null) covered.push(hit)
+  }
+  expect(probed, '[test setup] the arm probed the sheet’s controls').toBeGreaterThanOrEqual(atLeast)
+  expect(covered, `${who}: a control a tap at its centre never reaches`).toEqual([])
+}
 
 // ── RC4 ported from e2e/vertical-fit.spec.ts (plan 6, section 5.2: an honesty law is PORTED with its surface) ─────────
 // Each arm keeps the old arm's LAW and reads it on the new screen; the old layout (the two panes, the doors, the seats)
@@ -2931,6 +2967,233 @@ test.describe(`RC10 · Health Care on the phone (${PHONE.width}×${PHONE.height}
       const caveat = page.locator('main.result [data-caveat]')
       await caveat.scrollIntoViewIfNeeded()
       await expect(caveat).toBeInViewport()
+    })
+  }
+})
+
+// ── RC11 · Retirement → Stress Test (plan 6, RC11; its Verification and Test scenarios) ───────────────────────────────
+// - at his window on `retired`, `health` and `dip`: the chart, its words, the stopgap and the R13 caveat in one frame;
+//   every printed count and name passes the text and marks audits; the DRAWN bars stand to their printed counts on the
+//   one fixed 0-to-10 scale (insight 169: options are not the picture); the caveat is reached and seen (insight 124);
+//   the working seed names the stop year every bar reads; Baseline's count is the one Probability prints for your plan;
+// - with motion on, every count is painted at once (a deferred label waits on the morph, insight 169);
+// - Refresh: a slider moves nothing until it is pressed, then the chart fades under "Loading…" with its counts kept and
+//   lands at the new size; the wall time of one Refresh with every stress on is logged (`[rc11-timing]`);
+// - on the phone: no sideways scroll, the audits, the caveat reached, and the tray's sheet takes a tap at every
+//   control's centre.
+
+const STRESS_PAGE = { screen: 'stress-test', module: copy.shellModuleRetirement, page: copy.shellPageStressTest } as const
+const STRESS_CHART = '[data-chart="stress"]'
+const STRESS_TRAY = '#b9-stress-items'
+const STRESS_COUNT = /^\d of 10$|^better than ?9 in 10$/
+const STRESS_RUN_MS = 360_000
+
+/** The bars landed: every run in, the chart drawn and not under its veil. */
+async function stressLanded(page: Page, who: string): Promise<void> {
+  await expect(page.locator(`${STRESS_CHART} .highcharts-series-group`), `${who}: the stress chart never drew`).toBeAttached({ timeout: 60_000 })
+  await expect(page.locator('[data-stress] [aria-busy="true"]'), `${who}: a stress run never landed`).toHaveCount(0, { timeout: STRESS_RUN_MS })
+  await page.waitForTimeout(300)
+  await settleLayout(page)
+}
+
+async function enterStress(page: Page, seed: string, phone = false): Promise<void> {
+  await gotoSeedFinal(page, seed)
+  await expect(page.locator('main.result[data-shell-screen="snapshot"]'), 'the seed never landed on Snapshot').toBeAttached({ timeout: 30_000 })
+  await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
+  if (phone) {
+    await page.getByRole('button', { name: copy.shellMenuOpen, exact: true }).click()
+    await page.getByRole('dialog', { name: copy.shellMenuTitle }).getByRole('link', { name: STRESS_PAGE.page, exact: true }).click()
+    await expect(page.locator(`main.result[data-shell-screen="${STRESS_PAGE.screen}"]`)).toBeAttached()
+  } else await showPage(page, STRESS_PAGE)
+  await stressLanded(page, seed)
+}
+
+/** Each bar's drawn height and its printed count, matched by position (each count sits over its own bar). */
+async function stressBars(page: Page): Promise<{ readonly id: string; readonly h: number; readonly count: string }[]> {
+  return page.evaluate((sel) => {
+    const c = document.querySelector(sel)!
+    const labels = [...c.querySelectorAll('.highcharts-data-label text')].map((t) => {
+      const b = t.getBoundingClientRect()
+      return { text: [...t.querySelectorAll('tspan')].length > 0 ? [...t.childNodes].map((n) => (n.textContent ?? '').trim()).filter((s) => s !== '').join(' ') : (t.textContent ?? '').trim(), x: b.left + b.width / 2 }
+    })
+    return [...c.querySelectorAll('.highcharts-point.b9-stress-bar')].map((el) => {
+      const b = el.getBoundingClientRect()
+      const x = b.left + b.width / 2
+      const id = /b9-stress-bar--([a-z-]+)/.exec(el.getAttribute('class') ?? '')?.[1] ?? '?'
+      const near = labels.filter((l) => Math.abs(l.x - x) < b.width / 2 + 1)
+      return { id, h: b.height, count: near.map((l) => l.text).join(' | ') }
+    })
+  }, STRESS_CHART)
+}
+
+/** The drawn bars stand to their printed counts on the one fixed scale: a bar's height is its count over 10 of the plot's
+ *  height (the ceiling's "better than 9 in 10" stands to 9), within the pixel Highcharts snaps a column to. */
+async function assertStressHeights(page: Page, who: string): Promise<void> {
+  const plot = await page.locator(`${STRESS_CHART} .highcharts-plot-background`).evaluate((el) => el.getBoundingClientRect().height)
+  const bars = await stressBars(page)
+  expect(bars.length, `${who}: bars to measure`).toBeGreaterThanOrEqual(2)
+  for (const b of bars) {
+    const t = b.count.replace(/\s+/g, ' ')
+    expect(t, `${who}: the ${b.id} bar prints one count`).toMatch(STRESS_COUNT)
+    const n = /better than/.test(t) ? 9 : Number(t.split(' ')[0])
+    const want = (plot * n) / 10
+    expect(Math.abs(b.h - want), `${who}: the ${b.id} bar is ${b.h.toFixed(1)}px for "${t}" (${want.toFixed(1)}px on the 0-to-10 scale)`).toBeLessThanOrEqual(1.5)
+  }
+}
+
+/** Every bar's words: the text audit (each name printed), the marks audit, and no word over another. */
+async function auditStressText(page: Page, who: string, names: readonly string[]): Promise<void> {
+  const floor = await hcFloorPx(page)
+  const bars = (await stressBars(page)).length
+  expect(hcTextFailures(await hcAudit(page, STRESS_CHART, '[data-stress]'), floor, { texts: [], counts: { 'data-label': bars, 'axis-label': 6 + bars } }), `${who}: the chart’s text`).toEqual([])
+  // Each bar's whole label, its name and its size, printed in full: Highcharts wraps a label with zero-width spaces and
+  // cuts one that will not fit with "…" (RC11's phone look: "Combined every…", green on the text audit).
+  const flat = (t: string) => t.replace(/[\s\u200b]+/g, '')
+  const labels = (await page.locator(`${STRESS_CHART} .highcharts-xaxis-labels text`).allTextContents()).map(flat)
+  for (const n of names) expect(labels.some((l) => l.startsWith(flat(n))), `${who}: the bar named ${n} (${labels.join(' | ')})`).toBe(true)
+  const cut = (await page.locator(`${STRESS_CHART} svg text`).allTextContents()).filter((t) => t.includes('…'))
+  expect(cut, `${who}: no chart word cut short`).toEqual([])
+  expect(hcMarkFailures(await hcMarks(page, STRESS_CHART, '[data-stress]')), `${who}: the counts over no bar or other count`).toEqual([])
+  await assertChartTextApart(page, STRESS_CHART, who)
+  const all = (await page.locator('[data-stress]').innerText()).replace(/\s+/g, ' ')
+  expect(/\b10 of 10\b|\d+(\.\d+)?% (odds|chance|of success)/.test(all), `${who}: no "10 of 10" and no odds as a percent`).toBe(false)
+}
+
+const STRESS_SEEDS = [
+  { seed: 'retired', names: [copy.stressBaseline, copy.stressSocialSecurity], working: false },
+  { seed: 'health', names: [`${copy.stressBaseline}${copy.stressBaselineSub}`, `${copy.stressSocialSecurity}${slots.stressPctLess(20)}`, `${copy.stressOutOfPocket}${slots.stressPctHigher(50)}`, `${copy.stressCombined}${copy.stressCombinedSub}`], working: false },
+  { seed: 'dip', names: [copy.stressBaseline, copy.stressSocialSecurity], working: true },
+] as const
+
+test.describe(`RC11 · Stress Test at his window (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr, compact mode)`, () => {
+  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR, reducedMotion: 'reduce' })
+  for (const { seed, names, working } of STRESS_SEEDS) {
+    test(`?seed=${seed}: the chart, its words, the stopgap and the caveat in one frame; the audits; the bars stand to their counts; the caveat reached`, async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + STRESS_RUN_MS + 60_000)
+      await enterStress(page, seed)
+      await expect(page.getByRole('heading', { level: 1, name: copy.shellPageStressTest })).toBeVisible()
+      await expect(page.locator('[data-stress] > div > h2')).toHaveText(copy.stressTitle)
+      const frame = await page.evaluate(() => ({
+        scrollY: window.scrollY,
+        chart: document.querySelector('[data-stress-chart]')!.getBoundingClientRect().bottom,
+        notes: document.querySelector('[data-stress-notes]')!.getBoundingClientRect().bottom,
+        caveat: document.querySelector('main.result [data-caveat]')!.getBoundingClientRect().bottom,
+        handle: document.querySelector('main.result [aria-controls="b9-stress-items"]')!.getBoundingClientRect().bottom,
+      }))
+      console.log(`[rc11-frame] ${seed}: chart ${frame.chart.toFixed(1)}, notes ${frame.notes.toFixed(1)}, caveat ${frame.caveat.toFixed(1)}, handle ${frame.handle.toFixed(1)} of ${REAL.height}`)
+      expect(frame.scrollY).toBe(0)
+      // One frame from the top bar down to the ACTION ITEMS handle, the tray shut (plan 4.0, a single-chart page).
+      expect(frame.caveat, `${seed}: the chart, its notes and the caveat inside the first frame`).toBeLessThanOrEqual(REAL.height)
+      expect(frame.handle, `${seed}: the ACTION ITEMS handle inside the first frame`).toBeLessThanOrEqual(REAL.height)
+      await expect(page.locator('[data-stress-note]').first()).toHaveText(copy.stressStopgap)
+      if (seed === 'health') {
+        // Every stress reads Baseline's count there: the note says so, first after the stopgap, inside the one frame.
+        const note = page.locator('[data-stress-note]').nth(1)
+        await expect(note).toHaveText(copy.stressNoneMoves)
+        expect(await note.evaluate((el) => el.getBoundingClientRect().bottom), 'health: the none-moves note inside the first frame').toBeLessThanOrEqual(REAL.height)
+      }
+      await auditStressText(page, `${seed} REAL`, names)
+      await assertStressHeights(page, `${seed} REAL`)
+      if (working) await expect(page.locator('[data-stress-reads-at]').first()).toHaveText(/if you stop in \d{4}/)
+      else await expect(page.locator('[data-stress-reads-at]')).toHaveCount(0)
+      await assertOneVisibleCaveat(page, REAL.height)
+      await assertCaveatReachable(page, `${seed} REAL`)
+      await noSidewaysScroll(page, `${seed} REAL`)
+      // Baseline is the plan's own reading: the count Probability prints for your plan.
+      const baseline = (await stressBars(page)).find((b) => b.id === 'baseline')!
+      await showPage(page, ANALYSIS)
+      await expect(page.locator('[data-half="compared"] [data-ring-centre]')).toHaveText(baseline.count)
+    })
+  }
+})
+
+test.describe(`RC11 · Stress Test's counts paint with motion on (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr)`, () => {
+  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR, reducedMotion: 'no-preference' })
+  test('?seed=health: every count is painted at once, its opacity up the tree at least 0.9', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + STRESS_RUN_MS)
+    await enterStress(page, 'health')
+    const painted = () =>
+      page.locator(`${STRESS_CHART} .highcharts-data-label`).evaluateAll((els) =>
+        els.map((el) => {
+          let op = 1
+          for (let n: Element | null = el; n !== null && n.tagName.toLowerCase() !== 'svg'; n = n.parentElement) op *= parseFloat(getComputedStyle(n).opacity)
+          return Math.round(op * 100) / 100
+        }),
+      )
+    expect(await painted(), 'health: a count per bar').toHaveLength(4)
+    expect((await painted()).every((op) => op >= 0.9), 'health: a count never painted').toBe(true)
+  })
+})
+
+test.describe(`RC11 · Stress Test's tray: nothing runs until Refresh (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr)`, () => {
+  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR, reducedMotion: 'reduce' })
+  for (const seed of ['health', 'datesplit'] as const) {
+    test(`?seed=${seed}: a slider moves no bar; Refresh fades the chart under "Loading…" with its counts kept, then lands at the new size; the wall time is logged`, async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 2 * STRESS_RUN_MS)
+      await enterStress(page, seed)
+      const before = await stressBars(page)
+      await page.getByRole('button', { name: copy.trayHandle, exact: true }).click()
+      const tray = page.locator(STRESS_TRAY)
+      await expect(tray).toBeVisible()
+      await expect(tray.locator('[data-tray-row]')).toHaveCount(2)
+      const slider = tray.locator('[data-tray-row="social-security"] input[type="range"]')
+      await slider.focus()
+      await page.keyboard.press('ArrowRight')
+      await expect(tray.locator('[data-tray-row="social-security"] [data-stress-size]')).toHaveText(slots.stressPctLess(25))
+      await expect(page.locator('[data-tray-words]')).toHaveText(copy.trayPending)
+      expect(await stressBars(page), `${seed}: a slider moved a bar`).toEqual(before)
+      const t0 = Date.now()
+      await page.locator('[data-tray-refresh]').click()
+      await expect(page.locator('[data-stress] [aria-busy="true"]'), `${seed}: Refresh never faded the chart`).toHaveCount(1)
+      await expect(page.locator('[data-stress] [role="status"]')).toHaveText(copy.probabilityLoading)
+      // The counts kept under the veil, never blanked.
+      expect((await stressBars(page)).map((b) => b.count)).toEqual(before.map((b) => b.count))
+      await expect(page.locator('[data-stress] [aria-busy="true"]')).toHaveCount(0, { timeout: STRESS_RUN_MS })
+      console.log(`[rc11-timing] ${seed}: one Refresh with every stress on (${before.length - 1} runs) landed in ${((Date.now() - t0) / 1000).toFixed(1)} s`)
+      const words = (await page.locator(`${STRESS_CHART} .highcharts-xaxis-labels text`).allTextContents()).join(' | ')
+      expect(words, `${seed}: the bar names its new size`).toContain(slots.stressPctLess(25))
+      await expect(page.locator('[data-tray-words]')).toHaveText('')
+      await settleLayout(page)
+      await assertStressHeights(page, `${seed} refreshed`)
+    })
+  }
+})
+
+test.describe(`RC11 · Stress Test on the phone (${PHONE.width}×${PHONE.height} @ ${PHONE_DPR}dpr)`, () => {
+  test.use({ viewport: PHONE, deviceScaleFactor: PHONE_DPR, isMobile: true, hasTouch: true, reducedMotion: 'reduce' })
+  for (const { seed, names } of STRESS_SEEDS) {
+    test(`?seed=${seed}: no sideways scroll; every count and name passes the audits; the bars stand to their counts; the caveat reached; every tray control takes a tap`, async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + STRESS_RUN_MS + 60_000)
+      await enterStress(page, seed, true)
+      await noSidewaysScroll(page, `${seed} PHONE`)
+      await auditStressText(page, `${seed} PHONE`, names)
+      await assertStressHeights(page, `${seed} PHONE`)
+      await assertOneVisibleCaveat(page, null)
+      await assertCaveatReachable(page, `${seed} PHONE`)
+      const gap = await page.evaluate(() => {
+        const caveat = document.querySelector('main.result [data-caveat]')!.getBoundingClientRect()
+        const handle = document.querySelector('main.result [aria-controls="b9-stress-items"]')!.getBoundingClientRect()
+        return handle.top - caveat.bottom
+      })
+      expect(gap, `${seed} PHONE: the caveat clears the handle by at least 4 px`).toBeGreaterThanOrEqual(4)
+      await page.getByRole('button', { name: copy.trayHandle, exact: true }).click()
+      const sheet = page.getByRole('dialog', { name: copy.trayHandle })
+      await expect(sheet).toBeVisible()
+      await page.waitForTimeout(400)
+      // Every slider's track starts and ends at the same x (the size cell is one fixed width, whatever it reads).
+      const tracks = await sheet.locator('[data-tray-row] [data-thumb]').evaluateAll((els) =>
+        els.map((t) => {
+          const r = t.parentElement!.getBoundingClientRect()
+          return { left: r.left, right: r.right }
+        }),
+      )
+      expect(tracks.length, '[test setup] a slider in the sheet').toBeGreaterThanOrEqual(1)
+      for (const t of tracks) {
+        expect(Math.abs(t.left - tracks[0]!.left), `${seed} PHONE: the tracks start at one x`).toBeLessThanOrEqual(1)
+        expect(Math.abs(t.right - tracks[0]!.right), `${seed} PHONE: the tracks end at one x`).toBeLessThanOrEqual(1)
+      }
+      // The Social Security row's slider at least (Reset, Edit and Refresh sit in the footer, outside the rows).
+      await assertSheetTapsReach(sheet, `${seed} PHONE stress tray`, 1)
     })
   }
 })

@@ -29,12 +29,16 @@
  * run, the two named futures, and the plan run that only the working route's subsidy-rules health line asks for,
  * {@link PlanHealth}) are made ONCE, with the slot; they call only `engine.run`, never the date search, the solve or the
  * store's epoch setters, and an `EngineResetError` reaches the lane unwrapped, so the lane re-sends (insight 113).
+ *
+ * THE ONE CORE (Act 6 · RC11): the builder and the slot are `copyRunFor` and `createCopySlot` over any writer of the
+ * committed draft's copy; a what-if is the core over `applyBundle`, a Stress Test bar the core over `src/intake/stress.ts`'s
+ * writers (`stressRun.ts`), so the plan's reading, KTD11's check and the one-key rule are written once.
  */
 import { applyBundle, type WhatIfRefusal } from '@intake/whatIf'
 import { buildTableBase, carriedWorkingYearLeftOver, workingYearLeftOverShownState, type TableBase } from '@intake/intakeMap'
 import { DATE_SEARCH_PATHS, offsetReading } from '@engine/dateSearch'
 import { engineRunLane, type EngineRunRequest, type Lane, type LaneResult } from '@store/runLanes'
-import type { ModelAnswer } from '@store/memoryModel'
+import type { ModelAnswer, ScenarioDraft } from '@store/memoryModel'
 import {
   canonicalIdentityToken,
   type DateOffsetReading,
@@ -59,13 +63,22 @@ export type WhatIfReading =
    *  undated), and every caption of it says so (`ringFace`), on both sides alike. */
   | { readonly kind: 'offset'; readonly reading: DateOffsetReading; readonly track: 'full' | 'floor' }
 
-/** Why a what-if cannot run: the bundle's own refusal, or the runner's. */
-export type WhatIfRunRefusal =
-  | WhatIfRefusal
+/** The runner's own refusals, beside the copy's (whatever wrote the copy: a what-if's bundle, a stress). */
+export type RunnerRefusal =
   /** The live draft carries no seed (never on a committed final answer; a calm refusal, never a guessed seed). */
   | { readonly kind: 'no-seed' }
   /** KTD11: the two runs would not share futures. No version-1 lever can cause it; an inside check. */
   | { readonly kind: 'futures-differ'; readonly field: 'paths' | 'maxHorizonYears' | 'people' | 'seed' }
+
+/** Why a what-if cannot run: the bundle's own refusal, or the runner's. */
+export type WhatIfRunRefusal = WhatIfRefusal | RunnerRefusal
+
+/**
+ * A copy of the committed draft to run, written by its caller (the what-if's bundle through `applyBundle`; Act 6 · RC11's
+ * stresses through `src/intake/stress.ts`), or the writer's own refusal by name. `stopOffsetYears` is the stop-year
+ * lever's offset (absent: the plan's own base offset).
+ */
+export type DraftCopy<R> = { readonly ok: true; readonly draft: ScenarioDraft; readonly stopOffsetYears?: number } | { readonly ok: false; readonly refusal: R }
 
 type TableWithheldReason = Extract<TableRun, { kind: 'withheld' }>['reason']
 
@@ -85,8 +98,8 @@ export type PlanHealth =
 /** Does a bundle try the subsidy rules (the one lever the health line serves)? */
 export const triesSubsidyRules = (bundle: readonly WhatIfLeverV6[]): boolean => bundle.some((l) => l.kind === 'aca-subsidy')
 
-/** One what-if slot's state for a committed answer and a bundle. Every arm carries its key. */
-export type WhatIfRun =
+/** One slot's state for a committed answer and a copy (`R`: the copy writer's refusals). Every arm carries its key. */
+export type CopyRun<R> =
   | {
       readonly kind: 'run'
       readonly key: string
@@ -104,11 +117,14 @@ export type WhatIfRun =
       /** The plan's side of the health line (present only where the bundle tries the subsidy rules, {@link triesSubsidyRules}). */
       readonly health?: PlanHealth
     }
-  | { readonly kind: 'refused'; readonly key: string; readonly bundleKey: string; readonly refusal: WhatIfRunRefusal }
+  | { readonly kind: 'refused'; readonly key: string; readonly bundleKey: string; readonly refusal: R | RunnerRefusal }
   | { readonly kind: 'withheld'; readonly key: string; readonly bundleKey: string; readonly reason: TableWithheldReason }
   /** No final answer yet (pending, provisional, or none). */
   | { readonly kind: 'waiting'; readonly key: string; readonly bundleKey: string }
   | { readonly kind: 'answer-error'; readonly key: string; readonly bundleKey: string }
+
+/** One what-if slot's state for a committed answer and a bundle. */
+export type WhatIfRun = CopyRun<WhatIfRefusal>
 
 /**
  * KTD11: do two many-futures runs share futures? `buildDraws` reads only the seed, the path count, the horizon and the
@@ -212,9 +228,25 @@ export function whatIfReading(
   return { kind: 'offset', reading: offsetReading({ offsetYears, survivalFraction }, DATE_SEARCH_PATHS.final), track }
 }
 
-/** The request builder for one what-if slot. */
+/** The request builder for one what-if slot: its bundle applied to the copy (`applyBundle`), through the one core. */
 export function whatIfRunFor(answer: ModelAnswer, liveSeed: number | undefined, bundle: readonly WhatIfLeverV6[]): WhatIfRun {
-  const bundleKey = canonicalIdentityToken(bundle)
+  return copyRunFor(answer, liveSeed, canonicalIdentityToken(bundle), (draft) => applyBundle(draft, bundle), triesSubsidyRules(bundle))
+}
+
+/**
+ * THE ONE CORE every slot's requests come from (the what-if's bundle, RC11's stresses): the committed FINAL answer's draft
+ * copied by `makeCopy`, compiled by the plan's own table base on the plan's futures, the plan's reading off the committed
+ * answer (no run), KTD11's check, and the key (`bundleKey` names the copy; the answer's key joins it). `health` asks for
+ * the health line's plan side (the what-if's subsidy-rules bundle only).
+ */
+export function copyRunFor<R extends { readonly kind: string }>(
+  answer: ModelAnswer,
+  liveSeed: number | undefined,
+  bundleKey: string,
+  makeCopy: (draft: ScenarioDraft) => DraftCopy<R>,
+  health: boolean,
+): CopyRun<R> {
+  type Run = CopyRun<R>
   if (answer.kind === 'compute-error') return { kind: 'answer-error', key: `answer-error|${bundleKey}`, bundleKey }
   if (answer.kind === 'inputs-incomplete') return { kind: 'withheld', key: `withheld:no-run|${bundleKey}`, bundleKey, reason: 'no-run' }
   if ((answer.kind !== 'headline' && answer.kind !== 'date') || answer.tier !== 'final') {
@@ -222,14 +254,14 @@ export function whatIfRunFor(answer: ModelAnswer, liveSeed: number | undefined, 
   }
   const aKey = answerKey(answer)
   const key = `${aKey}|${bundleKey}`
-  const refused = (refusal: WhatIfRunRefusal): WhatIfRun => ({ kind: 'refused', key: `${key}|${refusal.kind}`, bundleKey, refusal })
+  const refused = (refusal: R | RunnerRefusal): Run => ({ kind: 'refused', key: `${key}|${refusal.kind}`, bundleKey, refusal })
   const outcome = answer.kind === 'date' ? answer.outcome : undefined
   const planBase = buildTableBase(answer.draft, outcome)
   if (planBase.kind === 'withheld') {
     return { kind: 'withheld', key: `${aKey}|withheld:${planBase.reason}|${bundleKey}`, bundleKey, reason: planBase.reason }
   }
   if (liveSeed === undefined) return refused({ kind: 'no-seed' })
-  const applied = applyBundle(answer.draft, bundle)
+  const applied = makeCopy(answer.draft)
   if (!applied.ok) return refused(applied.refusal)
   const base = buildTableBase(applied.draft, outcome, {
     ...(applied.stopOffsetYears !== undefined ? { offsetYears: applied.stopOffsetYears } : {}),
@@ -244,7 +276,7 @@ export function whatIfRunFor(answer: ModelAnswer, liveSeed: number | undefined, 
   if (differ !== null) return refused({ kind: 'futures-differ', field: differ })
   const { meta, views } = tableRequestsOn(applied.draft, base, workingYearLeftOverShownState(answer.draft))
   // The spine's committed run kept its futures (a test's hand-built answer may carry none: no figure, never a guess).
-  const health: PlanHealth | undefined = !triesSubsidyRules(bundle)
+  const planHealth: PlanHealth | undefined = !health
     ? undefined
     : answer.kind === 'headline'
       ? { kind: 'known', plan: lifetimeHealthMedianReal(answer.result.distribution?.taxAware) }
@@ -262,7 +294,7 @@ export function whatIfRunFor(answer: ModelAnswer, liveSeed: number | undefined, 
     ...(base.stopOffsetYears !== undefined ? { offsetYears: base.stopOffsetYears } : {}),
     meta,
     views,
-    ...(health !== undefined ? { health } : {}),
+    ...(planHealth !== undefined ? { health: planHealth } : {}),
   }
 }
 
@@ -296,9 +328,9 @@ export interface WhatIfRows {
 
 type Part<T> = Tagged & ({ readonly kind: 'ok'; readonly value: T } | { readonly kind: 'error' })
 
-export interface WhatIfSlotSnapshot {
+export interface CopySlotSnapshot<R> {
   /** The newest state asked for (its key is the slot's key). */
-  readonly run: WhatIfRun
+  readonly run: CopyRun<R>
   /** The newest delivered result of each part, each with its own key (it may belong to an older ask). */
   readonly many?: Part<ReadingPair>
   readonly steady?: Part<WhatIfRows>
@@ -307,6 +339,8 @@ export interface WhatIfSlotSnapshot {
    *  subsidy rules. */
   readonly planHealth?: Part<number>
 }
+
+export type WhatIfSlotSnapshot = CopySlotSnapshot<WhatIfRefusal>
 
 /** A slot's lanes, made once with the slot. `plan` runs only the working route's plan side of the health line; a caller
  *  that passes no `plan` lane (a test's three) asks for none, and the line stays unprinted. */
@@ -317,27 +351,44 @@ export interface WhatIfSlotLanes {
   readonly plan?: Lane<EngineRunRequest, SimulationResult>
 }
 
-export interface WhatIfSlot {
-  /** Ask for the what-if of `bundle` on the store's committed `answer`, on the live draft's seed. Always sends the
-   *  runnable state's requests; never skips because the bundle looks like what is shown. */
-  ask(answer: ModelAnswer, liveSeed: number | undefined, bundle: readonly WhatIfLeverV6[]): void
-  getSnapshot(): WhatIfSlotSnapshot
+/** A copy slot's lanes: the many-futures run's always; the two named futures' only where the slot's reader shows rows
+ *  (a stress bar reads its count alone, so RC11's slots ask for no rows). */
+export interface CopySlotLanes {
+  readonly many: Lane<EngineRunRequest, SimulationResult>
+  readonly steady?: Lane<EngineRunRequest, SimulationResult>
+  readonly rough?: Lane<EngineRunRequest, SimulationResult>
+  readonly plan?: Lane<EngineRunRequest, SimulationResult>
+}
+
+export interface CopySlot<A, R> {
+  /** Ask for the copy of `a` on the store's committed `answer`, on the live draft's seed. Always sends the runnable
+   *  state's requests; never skips because the copy looks like what is shown. */
+  ask(answer: ModelAnswer, liveSeed: number | undefined, a: A): void
+  getSnapshot(): CopySlotSnapshot<R>
   subscribe(listener: () => void): () => void
 }
+
+export type WhatIfSlot = CopySlot<readonly WhatIfLeverV6[], WhatIfRefusal>
 
 /** One what-if slot: its lanes (made here, once), its newest state and its newest delivered parts. */
 export function createWhatIfSlot(
   lanes: WhatIfSlotLanes = { many: engineRunLane(), steady: engineRunLane(), rough: engineRunLane(), plan: engineRunLane() },
 ): WhatIfSlot {
-  let snapshot: WhatIfSlotSnapshot = { run: { kind: 'waiting', key: 'waiting|', bundleKey: '' } }
+  return createCopySlot(lanes, whatIfRunFor)
+}
+
+/** One slot over the one core: `build` turns the ask into its state ({@link copyRunFor} under it), the lanes are made by
+ *  the caller once, and the one-key rule holds for every reader. */
+export function createCopySlot<A, R>(lanes: CopySlotLanes, build: (answer: ModelAnswer, liveSeed: number | undefined, a: A) => CopyRun<R>): CopySlot<A, R> {
+  let snapshot: CopySlotSnapshot<R> = { run: { kind: 'waiting', key: 'waiting|', bundleKey: '' } }
   const listeners = new Set<() => void>()
-  const set = (next: Partial<WhatIfSlotSnapshot>): void => {
+  const set = (next: Partial<CopySlotSnapshot<R>>): void => {
     snapshot = { ...snapshot, ...next }
     for (const l of listeners) l()
   }
   return {
-    ask(answer, liveSeed, bundle) {
-      const run = whatIfRunFor(answer, liveSeed, bundle)
+    ask(answer, liveSeed, a) {
+      const run = build(answer, liveSeed, a)
       // A retry on the same key (a same-bundle Refresh after a failed run) shows the run working, never the failure it
       // is retrying: a part that failed on this very key is dropped until the retry delivers.
       const keep = <T>(p: Part<T> | undefined): Part<T> | undefined => (p !== undefined && run.kind === 'run' && p.kind === 'error' && p.key === run.key ? undefined : p)
@@ -386,11 +437,13 @@ export function createWhatIfSlot(
       for (const v of ['steady', 'rough'] as const) {
         const deliver = (part: Part<WhatIfRows>) => set(v === 'steady' ? { steady: part } : { rough: part })
         const view = run.views[v]
+        const lane = lanes[v]
+        if (lane === undefined) continue
         if (view.kind === 'refused') {
           deliver({ ...tag, kind: 'error' })
           continue
         }
-        void lanes[v].request(view.request).then((res) => {
+        void lane.request(view.request).then((res) => {
           if (res.kind === 'superseded') return
           const rows = res.kind === 'ok' ? res.value.distribution.ledgerRows : undefined
           deliver(rows !== undefined && rows.length > 0 ? { ...tag, kind: 'ok', value: { rows, meta: run.meta } } : { ...tag, kind: 'error' })
@@ -412,8 +465,8 @@ export type PartView<T> =
   /** `updating`: the same bundle's result on an older answer, shown marked while the newer one is worked out. */
   | { readonly kind: 'ready'; readonly value: T; readonly answerKey: string; readonly updating: boolean }
 
-export type WhatIfSlotView =
-  | { readonly kind: 'refused'; readonly refusal: WhatIfRunRefusal }
+export type CopySlotView<R> =
+  | { readonly kind: 'refused'; readonly refusal: R | RunnerRefusal }
   | { readonly kind: 'withheld'; readonly reason: TableWithheldReason }
   | { readonly kind: 'answer-error' }
   | {
@@ -425,13 +478,15 @@ export type WhatIfSlotView =
       readonly planHealth: PartView<number>
     }
 
+export type WhatIfSlotView = CopySlotView<WhatIfRefusal>
+
 /**
  * THE ONE-KEY RULE, as the slot renders: a part renders as current only on the slot's own key; the same bundle's part on
  * an older answer renders marked as updating (as the table keeps its prior rows), and never under a refusal or a
  * withheld state; a part asked under ANY other bundle never renders (a lever pulled and put back while its run was in
  * flight shows the put-back run, never the pulled one).
  */
-export function whatIfSlotView(s: WhatIfSlotSnapshot): WhatIfSlotView {
+export function whatIfSlotView<R>(s: CopySlotSnapshot<R>): CopySlotView<R> {
   const run = s.run
   if (run.kind === 'refused') return { kind: 'refused', refusal: run.refusal }
   if (run.kind === 'withheld') return { kind: 'withheld', reason: run.reason }

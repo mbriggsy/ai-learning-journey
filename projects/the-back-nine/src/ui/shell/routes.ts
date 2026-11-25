@@ -19,7 +19,7 @@ export type ModuleId = (typeof MODULE_ORDER)[number]
  *  Confidence (Analysis's second folder tab, a route of its own like Probability) and RC6's Cash
  *  Flows (its Summary and Accounts folder tabs are the page's own state, not routes), RC8's Tax Strategies (its four
  *  folder tabs the page's own state too), RC9's Social Security (its Comparison and Summary tabs the same) and RC10's Health
- *  Care are rebuilt; the workbench room's facts page rides as an interim tab in its old look until RC13 rebuilds it. */
+ *  Care are rebuilt, and RC11's Stress Test is new (RightCapital's slot, between Analysis and Social Security); the workbench room's facts page rides as an interim tab in its old look until RC13 rebuilds it. */
 export type ScreenId =
   | 'snapshot'
   | 'probability'
@@ -29,6 +29,7 @@ export type ScreenId =
   | 'interim-facts'
   | 'tax-strategies'
   | 'health-care'
+  | 'stress-test'
 
 export interface RouteRow {
   readonly module: ModuleId
@@ -77,6 +78,7 @@ export const ROUTE_ROWS: readonly RouteRow[] = [
     screen: 'confidence',
     title: copy.analysisTitle,
   },
+  { module: 'retirement', page: 'stress-test', pageLabel: copy.shellPageStressTest, screen: 'stress-test', title: copy.shellPageStressTest },
   { module: 'retirement', page: 'social-security', pageLabel: copy.shellPageSocialSecurity, screen: 'social-security', title: copy.shellPageSocialSecurity },
   { module: 'retirement', page: 'health-care', pageLabel: copy.shellPageHealthCare, screen: 'health-care', title: copy.shellPageHealthCare },
   { module: 'retirement', page: 'cash-flows', pageLabel: copy.shellPageCashFlows, screen: 'cash-flows', title: copy.shellPageCashFlows },

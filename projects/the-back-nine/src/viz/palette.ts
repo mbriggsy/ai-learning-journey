@@ -189,6 +189,27 @@ export const RC_PAIRS: readonly RcPair[] = [
     where: 'the stress test Baseline and Combined bars',
     verdict: { kind: 'cue', cue: 'the stress name under each bar and its count printed on top; Baseline outlined, Combined hatched' },
   },
+  // The stress test's neighbours (RC11): Baseline indigo (outlined), Social Security light green, out-of-pocket salmon,
+  // the marketplace discount sky, Combined purple (cross-hatched). Each bar's name and count print on it, so a `cue` pair
+  // stands on those words.
+  { a: 'indigo', b: 'lightGreen', where: 'the stress test Baseline beside Social Security', verdict: { kind: 'floor' } },
+  { a: 'indigo', b: 'salmon', where: 'the stress test Baseline beside out-of-pocket medical', verdict: { kind: 'floor' } },
+  { a: 'indigo', b: 'sky', where: 'the stress test Baseline beside the marketplace discount', verdict: { kind: 'floor' } },
+  {
+    a: 'lightGreen',
+    b: 'salmon',
+    where: 'the stress test Social Security beside out-of-pocket medical',
+    verdict: { kind: 'cue', cue: 'the stress name under each bar and its count printed on top' },
+  },
+  {
+    a: 'lightGreen',
+    b: 'sky',
+    where: 'the stress test Social Security beside the marketplace discount',
+    verdict: { kind: 'cue', cue: 'the stress name under each bar and its count printed on top' },
+  },
+  { a: 'salmon', b: 'sky', where: 'the stress test out-of-pocket medical beside the marketplace discount', verdict: { kind: 'floor' } },
+  { a: 'salmon', b: 'purple', where: 'the stress test out-of-pocket medical beside Combined', verdict: { kind: 'floor' } },
+  { a: 'sky', b: 'purple', where: 'the stress test marketplace discount beside Combined', verdict: { kind: 'floor' } },
   { a: 'green', b: 'teal', where: 'series slots 1 and 11', verdict: { kind: 'apart' } },
 ]
 

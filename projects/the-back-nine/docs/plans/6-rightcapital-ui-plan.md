@@ -1592,6 +1592,51 @@ copy slots; Baseline equals the plan's own reading.
 **Verification.** CI fit on `retired`, `health`, `dip`: one frame at REAL; every printed count and name passes the
 audit at REAL and PHONE. Local look.
 
+**As built (2026-11-25, b9-11's RC11 builder; the pilot's calls).**
+- *The Social Security trace.* `pia` (each person's statement figure at full retirement age) is the only entered input to a
+  benefit: `socialSecurityBenefit.ts` derives the own benefit, the spousal excess (half the higher `pia` less the lower) and
+  the survivor benefit from it, the earnings test (`earningsTest.ts`) works on those same figures, the higher earner is picked
+  by comparing the two `pia`s (one scale keeps the order), and a person already claiming has no separate "already receives"
+  figure. So the stress scales every `pia` to the cent and nothing else; `stress.test.ts` checks the engine's own, spousal and
+  survivor benefits scale with it (dime rounding aside).
+- *The out-of-pocket stress raises the spending that holds the figure.* The figure sits inside the spending (the spend
+  question's words; `compileBudget` injects it), so costs running higher are paid: under a budget the total re-reconciles to
+  the lines plus the new figure (the plan's own OOP write); with no budget the one spending figure rises by the same dollars
+  (the plan's own budgetless OOP write leaves it, but a stress that raised the figure alone would move only the HSA cap and the
+  survivor lean, a calm "no change"); and a working plan's pay-check figure W, which holds the same medical cost, rises by
+  them too, staying as fresh as it was.
+- *The subsidy-rules stress runs only where the plan counts on the bigger discount.* On a plan already on current law (every
+  shipped seed) the switch could only help: a bar that rose under "stress", or a Combined bar it lifted, would be false
+  comfort. There it is refused by name ("already uses current law's smaller discount, the cautious case"); with no years before
+  65, refused as reaching no one. It is the `aca-subsidy` lever's write through `applyBundle`.
+- *Stresses are copies, never levers or saved state.* `copyRunFor` and `createCopySlot` are `whatIfRunFor`'s and
+  `createWhatIfSlot`'s core, factored out (a copy writer and its refusal type in; `whatIfRunFor` is that core over
+  `applyBundle`); a stress slot asks the many-futures run alone. The settings live in the shell for the session only.
+- *Combined runs only where two or more stresses run* (with one it is that bar). Its ask is every chosen stress at once.
+- *Equal bars say so.* Where every stressed bar with a count reads Baseline's count (`health`: all 9 of 10), one note follows
+  the stopgap: "None of these stresses moves your plan's count by a whole step out of 10." (the orchestrator's look: equal
+  bars read as "did the stress even run?"). The tray's size cell is one fixed width (7rem), so every slider's track starts
+  and ends at the same place.
+- *Sizes.* Social Security 5% to 50% less in steps of 5, starting at 20% (RightCapital's); out-of-pocket 10% to 200% higher in
+  steps of 10, starting at 50% (a $4,000 figure at 20% moves a count nowhere a reader would see). Every stress on at the start.
+- *The runs ask only while the page shows*, and again only when the answer, the seed or the committed settings moved, or on
+  Refresh (always, insight 159); a page left and come back to keeps its bars. A bar in flight keeps its last landed count under
+  "Loading…"; a bar with none draws no column; a failed one says why under the chart.
+- *Colours.* RightCapital's hue per bar (Baseline indigo outlined, Social Security light green, out-of-pocket salmon, the
+  discount sky, Combined purple in the shared cross pattern, the one `patterns.ts` names for it); `RC_PAIRS` gained each
+  neighbouring pair (two are `cue` pairs, carried by the name and count on every bar).
+- *The axis.* Fixed 0 to 10, ticks 0, 2 … 10, titled "Futures out of 10"; each bar stands to the ring's arc (the ceiling's
+  "better than 9 in 10" to 9), its count through the ring's composer.
+- *Layout.* No folder tabs (RightCapital has none); the chart 230 px tall at his window, so the chart, its notes (two columns)
+  and the caveat reach the ACTION ITEMS handle in one frame on `dip`, the longest (the handle at 720 px of 731); 320 px on the
+  phone, where a long count wraps onto two lines in its bar's slot. The kit's panel without tabs now takes the handle's
+  padding too (`PageFrame.tsx`).
+- *Timing* (measured 2026-11-25 on the Lenovo, the arm alone and beside three other fit workers alike): one Refresh with every stress on, 1.4 s on
+  `health` (three spine runs at 2,000 paths), 7.5 s on `datesplit` (three final-tier date runs at 16,000 paths). Usable; no
+  optimisation.
+- *Leftover, filed*: the out-of-pocket refusal names where to add the figure and opens no door to it (the register's *Stress
+  Test's out-of-pocket stress, refused on a plan with no out-of-pocket figure…*).
+
 ### RC12: Investment → Asset Allocation and Tax Allocation
 
 **Clones.** Ref 2.19. Screens: `rc-cashflow-tax/help-investment-asset-allocation-51.png`, `-54-later.png`,

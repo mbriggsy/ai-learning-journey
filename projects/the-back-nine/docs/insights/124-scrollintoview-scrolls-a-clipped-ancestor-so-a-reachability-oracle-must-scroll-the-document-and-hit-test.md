@@ -32,6 +32,11 @@ asserting each resolves to the caveat or a descendant. A clipped ancestor now fa
 "validate with a professional" directive) fails the second point. Mutant re-run: 10 scrolling-tier
 arms red on REACH, the two-pane arms untouched.
 
+> **Out of date (corrected 2026-11-25):** `assertCaveatOrderAndReach` left with the old answer page in Act 6 · RC4a
+> (`7f56682e`), and RC4's port of its "in order and reachable" arms reached the caveat by `scrollIntoViewIfNeeded`, the
+> vacuous form this lesson names, until RC11 (b9-11) re-pointed them. The current reach check is `assertCaveatReachable`
+> in `e2e/rc-screens.spec.ts` (the same document scroll and two-point hit test; planted red on a clipped ancestor).
+
 ## Key Insight
 
 A reachability oracle must use ONLY the gestures a reader has. `scrollIntoView`, `focus()` (which

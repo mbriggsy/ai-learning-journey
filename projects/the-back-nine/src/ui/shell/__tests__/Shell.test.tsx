@@ -476,6 +476,7 @@ describe('Shell — the phone menu (plan 3.1, "The phone shape")', () => {
     expect(links).toEqual([
       copy.shellPageSnapshot,
       copy.shellPageAnalysis,
+      copy.shellPageStressTest,
       copy.shellPageSocialSecurity,
       copy.shellPageHealthCare,
       copy.shellPageCashFlows,

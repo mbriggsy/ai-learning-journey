@@ -39,7 +39,7 @@ export function Slider({ label, value, min, max, step = 1, onValueChange, onValu
       <SliderPrimitive.Label className="sr-only">{label}</SliderPrimitive.Label>
       <SliderPrimitive.Control className="flex h-6 w-full cursor-pointer touch-none items-center select-none data-disabled:cursor-not-allowed">
         <SliderPrimitive.Track className="h-0.5 w-full rounded-full bg-stone-400">
-          <SliderPrimitive.Thumb className="size-4 rounded-full border-2 border-bg bg-blue shadow-tooltip data-disabled:bg-stone-400" />
+          <SliderPrimitive.Thumb data-thumb="" className="size-4 rounded-full border-2 border-bg bg-blue shadow-tooltip data-disabled:bg-stone-400" />
         </SliderPrimitive.Track>
       </SliderPrimitive.Control>
     </SliderPrimitive.Root>

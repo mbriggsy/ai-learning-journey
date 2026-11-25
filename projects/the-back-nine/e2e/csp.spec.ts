@@ -231,7 +231,7 @@ test.describe('CSP — real browser enforcement', () => {
     expect(v.some((x) => /worker-src|script-src/.test(x.violatedDirective))).toBe(false)
   })
 
-  test('the shell loads under the enforced CSP: the home, Probability and its Action Items tray, Confidence, Cash Flows, Social Security, Health Care, Tax Strategies, every interim tab and both its menus, no violation, and no request outside the build’s own files', async ({ page }) => {
+  test('the shell loads under the enforced CSP: the home, Probability and its Action Items tray, Confidence, Cash Flows, Stress Test, Social Security, Health Care, Tax Strategies, every interim tab and both its menus, no violation, and no request outside the build’s own files', async ({ page }) => {
     // Act 6 · RC2 (plan 6, section 3.1's Verification; the workbench room's arm before it, U6 to U15), re-pointed at RC4:
     // the real intake lands on the home (Dashboard → Snapshot), the shell's lazy chunk and its styles load with it on the
     // served build, Probability draws its rings and its two balance bars (Highcharts again), and every interim tab is
@@ -362,6 +362,21 @@ test.describe('CSP — real browser enforcement', () => {
       await page.getByRole('button', { name: copy.trayHandle, exact: true }).click()
     }
     expect(await page.evaluate(() => document.querySelectorAll('style').length), 'Health Care injected a <style> element').toBe(0)
+
+    // Retirement → Stress Test (RC11): its stresses on their own slots, the bars (Baseline outlined, Combined in the shared
+    // cross pattern where two stresses run) on a category axis, and its tray's sliders and Edit drawer.
+    await page.getByRole('navigation', { name: copy.shellPagesLabel }).getByRole('link', { name: copy.shellPageStressTest, exact: true }).click()
+    await expect(page.getByRole('heading', { level: 1, name: copy.shellPageStressTest })).toBeVisible({ timeout: 30_000 })
+    expect(new URL(page.url()).hash).toBe('#/retirement/stress-test')
+    await expect(page.locator('[data-chart="stress"] .highcharts-series-group'), 'the stress bars never drew').toBeAttached({ timeout: 120_000 })
+    await expect(page.locator('[data-stress] [aria-busy="true"]'), 'a stress run never landed').toHaveCount(0, { timeout: 240_000 })
+    await page.getByRole('button', { name: copy.trayHandle, exact: true }).click()
+    await expect(page.locator('#b9-stress-items [data-tray-row]').first(), 'the stress tray never opened').toBeVisible()
+    await page.getByRole('button', { name: copy.trayEdit, exact: true }).click()
+    await expect(page.getByRole('dialog', { name: copy.stressEditTitle }), 'the Edit drawer never opened').toBeVisible()
+    await page.keyboard.press('Escape')
+    await page.getByRole('button', { name: copy.trayHandle, exact: true }).click()
+    expect(await page.evaluate(() => document.querySelectorAll('style').length), 'Stress Test injected a <style> element').toBe(0)
 
     // Tax → Tax Strategies (RC8): its folder tabs (the page's own state), the empty state's goal radios and Find, and
     // Summary's waiting words before a solve; the solve's own workers are the pooled arm's above.

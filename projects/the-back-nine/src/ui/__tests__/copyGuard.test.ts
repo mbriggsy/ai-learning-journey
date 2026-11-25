@@ -1258,6 +1258,12 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     healthCliffLabel: slots.healthCliffLabel(2),
     healthCliffPoint: slots.healthCliffPoint(75, 80, 'Alex’s age', 2),
     healthRanOut: slots.healthRanOut(2052),
+    stressPctLess: slots.stressPctLess(20),
+    stressPctHigher: slots.stressPctHigher(50),
+    stressBarPoint: slots.stressBarPoint('Social Security', '20% less', '7 of 10'),
+    stressReadsAt: slots.stressReadsAt('if you stop in 2031'),
+    stressBarError: slots.stressBarError('Social Security'),
+    stressBarWithheld: slots.stressBarWithheld('Combined'),
     confidenceCutNote: slots.confidenceCutNote(93, 92),
     bandClockCutDesc: slots.bandClockCutDesc(93, 92),
   }

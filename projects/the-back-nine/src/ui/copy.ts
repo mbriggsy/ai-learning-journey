@@ -3104,6 +3104,44 @@ export const copy = {
   healthTrayFacts: 'What your plan uses',
   healthTrayFactsNote: 'These are facts your plan runs on: changing one changes your plan itself, not a what-if.',
   healthTrayReadOnly: 'This tab can’t change your plan, so these facts open nowhere here.',
+  // --- Retirement → Stress Test (Act 6 · RC11; `stressView.ts`): one bar per stress on a fixed scale of 0 to 10, each a
+  // copy of the plan with one input made worse, run on the plan's own futures. Every count rides the X-of-10 slots
+  // (through the ring's one composer, `ringFace`); the stresses that need the engine wait for their build (map gap 8). ---
+  shellPageStressTest: 'Stress Test',
+  stressIntro:
+    'What happens to your odds when things go worse than your plan assumes. Each bar runs your plan again with one thing made worse, on the same futures as your plan, so the bars compare with each other and with your plan as it stands.',
+  stressTitle: 'Stress test: odds of success',
+  stressAxisTitle: 'Futures out of 10',
+  stressDescription:
+    'One bar per stress on a scale from 0 to 10: how many of 10 futures your money lasts in. Your plan as it stands is the outlined bar first, every stress at once the cross-hatched bar last, and each bar prints its count on top.',
+  stressBaseline: 'Baseline',
+  stressBaselineSub: 'your plan',
+  stressCombined: 'Combined',
+  stressCombinedSub: 'every stress at once',
+  stressSocialSecurity: 'Social Security',
+  stressOutOfPocket: 'Out-of-pocket medical',
+  stressSubsidyRules: 'Marketplace discount',
+  stressSubsidySub: 'current law',
+  stressStopgap: 'Market drops, higher inflation, higher taxes, lower returns and longer lives come with B9’s stress-test build.',
+  stressWaiting: 'This page fills in once your plan’s answer is worked out.',
+  stressNoReading: 'Your plan’s answer gives no odds to compare against yet, so there is nothing to stress.',
+  stressRunsWaiting: 'Working out each stress on your plan’s futures…',
+  stressNoneMoves: 'None of these stresses moves your plan’s count by a whole step out of 10.',
+  stressRefusedNoBenefit: 'Social Security: nobody in your plan has a Social Security benefit, so there is nothing to lower.',
+  stressRefusedNoOop:
+    'Out-of-pocket medical: your plan has no out-of-pocket figure, so there is nothing to raise. Adding one under Profile → Your facts runs this stress too.',
+  stressRefusedNoMarketplace: 'Marketplace discount: nobody in your plan buys marketplace cover before 65, so the subsidy rules don’t reach it.',
+  stressRefusedCurrentLaw:
+    'Marketplace discount: your plan already uses current law’s smaller discount, the cautious case, so switching the rules could only help. It isn’t a stress for your plan.',
+  stressTraySs: 'Social Security pays less than your statements say, from the start',
+  stressTrayOop: 'Out-of-pocket medical costs run higher than your figure',
+  stressTrayAca: 'The marketplace discount drops back to current law',
+  stressTrayAcaOn: 'Current law',
+  stressTrayNote: 'Each stress is a copy of your plan with one input made worse, run on the same futures as your plan. Nothing here changes your plan.',
+  stressTrayOff: 'Off',
+  stressEditTitle: 'Choose the stresses',
+  stressEditSection: 'Stresses',
+  stressEditNote: 'A stress turned off draws no bar. Combined runs every stress left on at once, and shows once two or more are on.',
   // THE ENTRY SLICE, composed in LAST: the words the first-load chunk renders live in `entryCopy.ts` (see its
   // header). Spread last, a key typed above that the slice also holds fails to compile (TS2783), so the two
   // halves stay disjoint and `copy` stays ONE whole catalog for `CopyKey`, every copyGuard sweep and every lazy surface.
@@ -4988,7 +5026,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:2240` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:2246` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,
@@ -5746,6 +5784,14 @@ export const slots = {
   healthCliffPoint: (fromAge: number, toAge: number, axis: string, ofTen: number): string =>
     `${axis} ${fromAge === toAge ? fromAge : `${fromAge} to ${toAge}`}: in ${adverseOddsPhrase(ofTen)} of the futures that buy marketplace cover that year, the year’s income passes the line and its discount disappears entirely.`,
   healthRanOut: (year: number): string => `In the steady market the money runs out in ${year}, and its year-by-year rows stop there.`,
+  // --- Retirement → Stress Test (Act 6 · RC11). Each stress's size is a percent of an input (never odds: the counts ride
+  // the X-of-10 slots); the stop year rides the ring's own caption ("if you stop in 2031"). ---
+  stressPctLess: (pct: number): string => `${pct}% less`,
+  stressPctHigher: (pct: number): string => `${pct}% higher`,
+  stressBarPoint: (name: string, detail: string, odds: string): string => `${name}, ${detail}: ${odds}`,
+  stressReadsAt: (caption: string): string => `Every bar reads your odds ${caption}, the stop year your plan’s answer uses.`,
+  stressBarError: (name: string): string => `${name}: this stress couldn’t be worked out just now. Refresh tries it again.`,
+  stressBarWithheld: (name: string): string => `${name}: this stress couldn’t run on the same futures as your plan, so it shows no count.`,
   confidenceShareFewer: (): string => 'fewer than 1 in 100 futures',
   confidenceShareMore: (): string => 'more than 99 in 100 futures',
   confidenceRunOutTitle: (): string => 'Futures that have run out of money by this age, out of every 100',

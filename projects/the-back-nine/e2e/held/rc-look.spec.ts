@@ -9,11 +9,12 @@ import { copy } from '../../src/ui/copy'
  * user lands (since RC4 the seed's settled answer lands on the home), and audits each frame:
  *  - the page never scrolls sideways;
  *  - no text is clipped (an element whose content is wider or taller than a box that hides its overflow; an ellipsis
- *    counts as clipped, since the kit never cuts text to fit);
+ *    counts as clipped, since the kit never cuts text to fit, and so does a chart word Highcharts cut with "…");
  *  - no two visible controls overlap;
  *  - no text under 12 CSS px.
  * The phone's menu is captured open too, and since RC4b Probability's Action Items tray: open with one changed row, after
- * its Refresh (Apply's words on the working seed, a stop year pulled), and its Edit drawer. Screenshots land in the repo's gitignored `temp/rc-shots/<unit>/`, named
+ * its Refresh (Apply's words on the working seed, a stop year pulled), and its Edit drawer; since RC11 Stress Test's tray,
+ * open after a Refresh with the Social Security stress moved one step. Screenshots land in the repo's gitignored `temp/rc-shots/<unit>/`, named
  * `<screen>-<seed>-<size>.png`, for Briggsy to review the output.
  *
  *     RC_UNIT=RC2 pnpm exec playwright test --config e2e/held/shots.config.ts rc-look
@@ -22,7 +23,7 @@ import { copy } from '../../src/ui/copy'
 const UNIT = process.env.RC_UNIT ?? 'RC2'
 const OUT = `temp/rc-shots/${UNIT}` // resolved from the run's working directory, the project root
 const SEEDS = (process.env.RC_SEEDS ?? 'retired,date').split(',')
-const SCREENS = [
+const ALL_SCREENS = [
   { id: 'snapshot', screen: 'snapshot', module: copy.shellModuleDashboard, page: copy.shellPageSnapshot },
   { id: 'probability', screen: 'probability', module: copy.shellModuleRetirement, page: copy.shellPageAnalysis },
   { id: 'health-care', screen: 'health-care', module: copy.shellModuleRetirement, page: copy.shellPageHealthCare },
@@ -30,7 +31,13 @@ const SCREENS = [
   { id: 'tax-strategies', screen: 'tax-strategies', module: copy.shellModuleTax, page: copy.shellPageTaxStrategies },
   { id: 'facts', screen: 'interim-facts', module: copy.shellModuleProfile, page: copy.workbenchPageFacts },
   { id: 'social-security', screen: 'social-security', module: copy.shellModuleRetirement, page: copy.shellPageSocialSecurity },
+  { id: 'stress-test', screen: 'stress-test', module: copy.shellModuleRetirement, page: copy.shellPageStressTest },
 ] as const
+/** `RC_ONLY=stress-test` captures only the named screens (comma-separated ids), and Probability's tray and odds
+ *  captures only where Probability is among them. */
+const ONLY = process.env.RC_ONLY?.split(',')
+const SCREENS = ALL_SCREENS.filter((s) => ONLY === undefined || ONLY.includes(s.id))
+const PROBABILITY = ALL_SCREENS[1]
 
 interface Audit {
   readonly sideways: number
@@ -63,6 +70,8 @@ async function audit(page: Page): Promise<Audit> {
         return (hidesX && el.scrollWidth > el.clientWidth + 1) || (hidesY && hasText(el) && el.scrollHeight > el.clientHeight + 1)
       })
       .map(name)
+    // A chart word Highcharts cut to fit ends in "…" with no CSS to show it (RC11's phone look: "Combined every…").
+    for (const t of document.querySelectorAll('svg text')) if (shown(t) && (t.textContent ?? '').includes('…')) clipped.push(name(t))
     const controls = all.filter((el) => el.matches('a[href], button, input, select, textarea, summary, label.segment, [role="menuitem"]'))
     const overlaps: string[] = []
     for (let i = 0; i < controls.length; i++) {
@@ -118,7 +127,15 @@ async function showScreen(page: Page, target: (typeof SCREENS)[number], phone: b
   if (target.screen === 'cash-flows') await expect(page.locator('[data-table-frame], [data-cash-flows-state][role="alert"]').first()).toBeVisible({ timeout: 60_000 })
   if (target.screen === 'social-security') await settleClaims(page, 'claims-annual')
   if (target.screen === 'health-care') await settleHealth(page)
+  if (target.screen === 'stress-test') await settleStress(page)
   await settleLayout(page)
+}
+
+/** Stress Test's bars landed (a working plan's final-tier runs take a while), or the page's own words. */
+async function settleStress(page: Page): Promise<void> {
+  await expect(page.locator('[data-chart="stress"] .highcharts-series-group, [data-stress-page]').first()).toBeAttached({ timeout: 240_000 })
+  await expect(page.locator('[data-stress] [aria-busy="true"]')).toHaveCount(0, { timeout: 360_000 })
+  await page.waitForTimeout(600)
 }
 
 /** Social Security's shown view settled: the named chart drawn (the date route's runs can take a minute), or the page's
@@ -156,8 +173,8 @@ for (const size of SIZES) {
         }
         // The Action Items tray (RC4b): open, one row changed (the working seed's stop year two years on; a retired seed's
         // spending $10,000 lower), then refreshed, then its Edit drawer.
-        await showScreen(page, SCREENS[1], size.phone)
-        if ((await page.locator('[data-probability]').count()) > 0 && (await page.locator('[data-probability="pending"], [data-probability="fallback"], [data-probability="error"]').count()) === 0) {
+        if (SCREENS.includes(PROBABILITY)) await showScreen(page, PROBABILITY, size.phone)
+        if (SCREENS.includes(PROBABILITY) && (await page.locator('[data-probability]').count()) > 0 && (await page.locator('[data-probability="pending"], [data-probability="fallback"], [data-probability="error"]').count()) === 0) {
           await page.getByRole('button', { name: copy.trayHandle, exact: true }).click()
           const tray = page.locator('#b9-action-items')
           await expect(tray).toBeVisible()
@@ -203,9 +220,33 @@ for (const size of SIZES) {
             await expect(tray).toHaveCount(0)
           }
         }
+        // Stress Test's tray (RC11): open, the Social Security stress one step on, refreshed and landed.
+        const stressScreen = SCREENS.find((s) => s.id === 'stress-test')
+        if (stressScreen !== undefined) {
+          await showScreen(page, stressScreen, size.phone)
+          if ((await page.locator('[data-chart="stress"]').count()) > 0) {
+            await page.getByRole('button', { name: copy.trayHandle, exact: true }).click()
+            const tray = page.locator('#b9-stress-items')
+            await expect(tray).toBeVisible()
+            await page.waitForTimeout(400)
+            await tray.locator('[data-tray-row="social-security"] input[type="range"]').focus()
+            await page.keyboard.press('ArrowRight')
+            await page.locator('[data-tray-refresh]').click()
+            await expect(page.locator('[data-stress] [aria-busy="true"]')).toHaveCount(0, { timeout: 360_000 })
+            await page.waitForTimeout(800)
+            await settleLayout(page)
+            findings['stress-tray'] = await audit(page)
+            await page.screenshot({ path: `${OUT}/stress-test-tray-${seed}-${size.tag}.png` })
+            await page.screenshot({ path: `${OUT}/stress-test-tray-${seed}-${size.tag}-full.png`, fullPage: true })
+            if (size.phone) {
+              await page.keyboard.press('Escape')
+              await expect(tray).toHaveCount(0)
+            }
+          }
+        }
         // Probability's second chart, Odds by stop year (the working route only): the chart title's menu.
-        await showScreen(page, SCREENS[1], size.phone)
-        if ((await page.locator('[data-probability="date"]').count()) > 0) {
+        if (SCREENS.includes(PROBABILITY)) await showScreen(page, PROBABILITY, size.phone)
+        if (SCREENS.includes(PROBABILITY) && (await page.locator('[data-probability="date"]').count()) > 0) {
           await page.getByRole('button', { name: copy.probabilityChartRings }).click()
           await page.getByRole('menuitemradio', { name: copy.probabilityChartOdds }).click()
           await expect(page.locator('[data-chart="odds"] .highcharts-series-group')).toBeAttached({ timeout: 30_000 })

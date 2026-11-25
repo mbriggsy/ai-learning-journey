@@ -135,7 +135,7 @@ Result: the all-in vector equals the tax vector element by element, and its mean
 
 The viz suppression off leave-more stays correct, because all-in is still lower-is-better.
 
-**Copy (HIS, §6):** `recDeltaPayLessTax` (`copy.ts:4891-4892`, read), `goalPayLessTaxGloss` (`:2263`), `recDiscNiit` (`:2434-2435`), `recDiscStateTax` (`:2060-2061`), the optional new `recDisc*`, and `recDeltaTypical*` (`:3196-3215`) only under a "$X less" hero.
+**Copy (HIS, §6):** `recDeltaPayLessTax` (`copy.ts:4891-4892`, read), `goalPayLessTaxGloss` (`:2263`), `recDiscNiit` (`:2434-2435`), `recDiscStateTax` (`:2060-2061`), the optional new `recDisc*`, and `recDeltaTypical*` (`src/ui/copy.ts:3196-3215`) only under a "$X less" hero.
 
 **Calibration:**
 - Add "an objective-statistic change" to the RE-MEASURE triggers at `fallback.ts:44, :58, :72` (map).

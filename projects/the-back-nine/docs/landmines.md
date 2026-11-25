@@ -61,6 +61,9 @@ working tree untouched; `fsck` proves nothing else was hit.
 
 ## Windows and the shell
 
+- **(b9-7, 11-24) `src/ui/shell/__tests__/Shell.test.tsx` is MIXED line endings in HEAD** (CRLF, then a 59-line LF tail):
+  the Edit tool rewrote the whole file to CRLF on one edit (round 1's part 4). Restore the mix by script and check that
+  `git diff --stat` shows only the lines you added. `copyGuard.test.ts` is CRLF throughout; keep its added lines CRLF.
 - **(b9-5, 11-24) A builder's scripted rewrite turns LF files into CRLF:** RC4a's builder edited through Python scripts
   (text mode on Windows writes `\n` as `\r\n`), and 42 changed files plus 7 new ones came back CRLF, so each diffed
   whole; the 7 new ones were committed that way (`7f56682e`, put back to LF in `10da60f2`). Before every commit:
@@ -680,6 +683,11 @@ said squeaky clears `temp/` UNCONDITIONALLY; its step 4 now deletes only the clo
 
 ## Citations and the doc gates
 
+- **(b9-7, 11-24) Re-anchor and run `verify:doc-stats` on EVERY commit that moves cited lines, never once per batch.** Milestone 1's
+  fix part 3 (`84b2611f`) skipped both: CI redded on its stale test count, and its shifted `copy.ts` / `IntakeApp.tsx` /
+  `Shell.tsx` citations stayed wrong while doc-stats passed (a cited line only has to exist). The next re-anchor from HEAD
+  carried them forward. The repair: restore the docs the HEAD pass touched to HEAD, then re-anchor once from the skipped
+  commit's parent (34 citations came right that way).
 - **(b9-2, 11-23) After `pnpm doc:reanchor <base> --apply`, never run it against the same base again**: it reads the
   already-moved numbers as the base's and shifts each a second time (U8: 514 bogus moves and 38 bogus review items in the dry
   run that followed). For the real review list after an apply, run the tool's logic over the base's own text of each citing
@@ -966,6 +974,10 @@ chair; chair from a digest script, never the raw result, and expect the window t
 
 ## Claude Code, workflows and sessions
 
+- **(b9-7, 11-24) Workflow's `scriptPath` must be a path the tool returned or a file in a folder the session can Read:** a
+  copy placed beside a returned script under `~/.claude/projects/<folder>/<session>/workflows/scripts/` was refused, and so
+  was the returned path itself after an overwrite; the same file in the session scratchpad ran. Iterate a review script
+  from the scratchpad.
 - **(moved from TODO's distill list, b9-2, 11-23) What a session's activities cost of the 1M window:** a plan cycle
   (/brief, a research fan-out, the plan, a 9-agent deepen, a 5-agent doc review) ~55% with no code; plan, deepen, a
   4-persona review and a 21-agent council ~50%; one walked copy build (pre-trace, build, whole-file review, two Caddie

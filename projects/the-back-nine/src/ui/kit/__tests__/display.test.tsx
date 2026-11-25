@@ -81,6 +81,42 @@ describe('DataTable', () => {
     await user.click(button)
     expect(drill).toHaveBeenCalledTimes(1)
   })
+
+  it('row groups: every row carries its group’s fill, so the sticky year (bg-inherit) is never see-through over scrolled cells', () => {
+    interface Run {
+      readonly year: number
+      readonly run: string
+      readonly v: number
+    }
+    const runs: readonly Run[] = [
+      { year: 2031, run: 'Your plan', v: 1 },
+      { year: 2031, run: 'Work to 63', v: 2 },
+      { year: 2032, run: 'Your plan', v: 3 },
+      { year: 2032, run: 'Work to 63', v: 4 },
+    ]
+    const cols: readonly DataTableColumn<Run>[] = [
+      { id: 'year', header: 'Year', value: (r) => String(r.year), lead: true, spanGroup: true },
+      { id: 'run', header: 'Plan', value: (r) => r.run, rowHeader: true },
+      { id: 'v', header: 'Income tax', value: (r) => r.v, numeric: true },
+    ]
+    const { container } = render(
+      <>
+        <h2 id="p">Paired</h2>
+        <DataTable labelledBy="p" columns={cols} rows={runs} rowKey={(r) => `${r.year}-${r.run}`} rowGroup={(r) => String(r.year)} />
+      </>,
+    )
+    const fills = [...container.querySelectorAll('tbody tr')].map((tr) => tr.className)
+    expect(fills).toEqual(['bg-bg', 'bg-bg', 'bg-stone-50', 'bg-stone-50'])
+    const year = container.querySelector('tbody th[scope="rowgroup"]')!
+    expect(year).toHaveClass('sticky', 'bg-inherit')
+  })
+
+  it('the band gutters are drawn inside the header cells, never as side borders that cut the plum top rule', () => {
+    const { container } = renderTable()
+    const group = container.querySelector('th[data-group="in"]')!
+    expect(group.className).not.toMatch(/border-x/)
+    expect(group.className).toMatch(/shadow-\[inset_2px_0_0_var\(--color-bg\),inset_-2px_0_0_var\(--color-bg\)\]/)
+  })
 })
 
 describe('Ring', () => {

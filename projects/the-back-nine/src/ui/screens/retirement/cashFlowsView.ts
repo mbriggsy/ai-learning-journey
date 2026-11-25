@@ -24,8 +24,8 @@ import { totalAcrossBuckets } from '@engine/sequencing'
 import type { LedgerYearRow } from '@shared/model'
 import { copy, slots } from '../../copy'
 import type { TableMeta, TableView } from '../../workbench/tableRun'
-import { composeYearTable, lifespansLine, tableFigure, yieldLine, type SourceKeyEntry, type TableLine } from '../../workbench/yearTableChrome'
-import { composePaired, type PairedColumnId, type PairedFigure } from '../../workbench/railChrome'
+import { composeYearTable, lifespansLine, payCheckNotes, tableFigure, yieldLine, type SourceKeyEntry, type TableLine } from '../../workbench/yearTableChrome'
+import { composePaired, PAIRED_COLUMNS, type PairedColumnId, type PairedFigure } from '../../workbench/railChrome'
 
 export type CashFlowsTab = 'summary' | 'accounts'
 /** The Summary's drills: RightCapital's underlined headers B9 can break down. Income tax is never one (gap 10). */
@@ -121,8 +121,11 @@ export interface CashFlowsView {
   readonly yearNotes: readonly string[]
   readonly footnotes: readonly string[]
   readonly sourceKey: readonly SourceKeyEntry[]
-  /** The CSV of exactly the cells shown, or null with no table. */
+  /** The CSV of exactly the cells shown, or null with no table, or while the rows shown are from before the latest
+   *  change (a file carries no "Updating" line, so it never saves them). */
   readonly csv: string | null
+  /** The file's name: the table, the run it shows (the plan select's own label) and the future. */
+  readonly csvName: string
 }
 
 export interface CashFlowsInput {
@@ -510,18 +513,57 @@ const stateBody = (rows: Exclude<RunRows, { kind: 'ready' }>): CfBody =>
       ? { kind: 'state', tone: 'alert', words: copy.workbenchTableError }
       : { kind: 'state', tone: 'status', words: rows.words }
 
-/** Which future, whose lifespans, when work stops, whose age is which: the words over one run's table. */
-function aboutLines(meta: TableMeta, future: TableView, input: CashFlowsInput, withAges = true): string[] {
+/** Where work stops in one run's rows, said by where the year came from (`TableMeta.stopFrom`): the answer's date, the
+ *  window's last year, or a what-if's stop-year lever (named for its run, never credited to the answer's date). `named`:
+ *  each run says its own (the paired view, where the two years differ). Read off the run's own meta, never the plan's,
+ *  which can still be loading while a picked what-if is ready. */
+function stopLine(meta: TableMeta, run: string, named: boolean): string {
+  if (meta.stopYear === undefined || meta.route === 'spine') return ''
+  if (meta.stopFrom === 'lever') return slots.cashFlowsRunStopsLever(run, meta.stopYear)
+  if (meta.route === 'dated') return named ? slots.cashFlowsRunStopsDated(run, meta.stopYear) : slots.workbenchStopsIn(meta.stopYear)
+  return named ? slots.cashFlowsRunStopsNoDate(run, meta.stopYear) : slots.workbenchNoDate(meta.stopYear)
+}
+
+/** Which future, whose lifespans, when work stops (`stops`), whose age is which: the words over a table. Over a run that
+ *  is not your plan, the steady sentence says the pinned answer reads your plan, not this table's run. */
+function aboutLines(meta: TableMeta, future: TableView, input: CashFlowsInput, stops: readonly string[], plansOwn: boolean, withAges = true): string[] {
   const { start, end, years } = input.roughYears
   return [
-    future === 'steady' ? copy.workbenchSteadyWhat : slots.workbenchRoughWhat(start, end, years),
+    future === 'steady' ? (plansOwn ? copy.workbenchSteadyWhat : copy.cashFlowsSteadyWhatOther) : slots.workbenchRoughWhat(start, end, years),
     lifespansLine(meta.people),
-    meta.route === 'dated' && meta.stopYear !== undefined ? slots.workbenchStopsIn(meta.stopYear) : '',
-    meta.route === 'no-date' && meta.stopYear !== undefined ? slots.workbenchNoDate(meta.stopYear) : '',
+    ...stops,
     meta.track === 'floor' ? slots.workbenchFloorTrack() : '',
     input.wallCalendarYear > meta.startCalendarYear ? slots.workbenchAged(meta.startCalendarYear) : '',
     meta.people.length > 1 && withAges ? slots.cashFlowsAgesKey(meta.people.map((p) => p.label)) : '',
   ].filter((s) => s !== '')
+}
+
+/** The notes under one run's table, each only where the column it explains is shown (the Accounts tables and the drills
+ *  show other columns than the year table `composeYearTable` notes for). */
+function singleFootnotes(columns: readonly CfNode[], meta: TableMeta, rows: readonly LedgerYearRow[], deposits: boolean, showsTotal: boolean): string[] {
+  const shown = new Set(leavesOf(columns).map((l) => l.id))
+  const putIn = deposits || [...shown].some((id) => id.startsWith('put-in-'))
+  return [
+    copy.workbenchApproxNote,
+    ...(putIn ? [copy.workbenchMatchNote] : []),
+    ...(shown.has('tax-on-pay') ? payCheckNotes(meta.stateTaxReading) : []),
+    ...(shown.has('rmd') ? [copy.workbenchRequiredNote] : []),
+    ...(shown.has('spending') && rows.some((r) => r.spending === undefined) ? [copy.workbenchNoSpendingNote] : []),
+    ...(showsTotal ? [copy.cashFlowsEndTotalNote] : []),
+  ]
+}
+
+/** A name a file can hold: the label's letters and digits, joined by hyphens (accents dropped), at most 48 characters. */
+function fileSlug(label: string, fallback: string): string {
+  const slug = label
+    .normalize('NFKD')
+    .replace(/\p{M}/gu, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 48)
+    .replace(/-+$/, '')
+  return slug === '' ? fallback : slug
 }
 
 function stopgapLines(yieldLines: readonly string[], input: CashFlowsInput): string[] {
@@ -554,8 +596,18 @@ export function cashFlowsView(input: CashFlowsInput): CashFlowsView {
     },
     planSelect: plan,
   }
+  // The file's name: the table shown, then its run (a one-run CSV has no run column): the plan select's own label, or, in
+  // the paired form, the what-if it sets beside your plan.
+  const runSlug = paired
+    ? `your-plan-and-${fileSlug(input.otherName ?? copy.workbenchRailWhatIfLabel, 'what-if')}`
+    : fileSlug(plan.items.find((i) => i.value === pick)?.label ?? '', pick === 'plan' ? 'plan' : 'what-if')
+  const nameFor = (validDrill: boolean): string =>
+    `cash-flows-${paired ? 'paired' : tab === 'accounts' ? input.accounts : validDrill && drill !== null ? drill : tab}-${runSlug}-${future}.csv`
   const crumbs = (valid: boolean): CashFlowsView['breadcrumb'] =>
-    tab !== 'summary'
+    // The paired form is one table on either tab (it has no Accounts tables and no drills): its title names it.
+    paired
+      ? [{ label: copy.cashFlowsPickPaired, drill: null }]
+      : tab !== 'summary'
       ? null
       : drill !== null && valid
         ? [
@@ -574,6 +626,7 @@ export function cashFlowsView(input: CashFlowsInput): CashFlowsView {
     footnotes: [],
     sourceKey: [],
     csv: null,
+    csvName: nameFor(false),
   })
 
   // ── Your plan beside the what-if (U15's paired form) ──
@@ -584,8 +637,12 @@ export function cashFlowsView(input: CashFlowsInput): CashFlowsView {
     // Rows pair only on one answer (U14's report, section 5): until both runs are on it, the newer one is worked out.
     if (input.plan.answerKey !== other.answerKey) return empty({ kind: 'state', tone: 'status', words: copy.workbenchTableLoading })
     const whatIfName = input.otherName ?? copy.workbenchRailWhatIfLabel
+    // Where either run has a working year, the pay check's two taxes ride the pair (Income tax leaves out a working
+    // year's tax on pay, so a working row read beside a retired one would look tax-free): plan 4.0's tax-label law.
+    const working = input.plan.rows.some((r) => r.workingYear !== undefined) || other.rows.some((r) => r.workingYear !== undefined)
+    const want = new Set<PairedColumnId>([...(input.pairedColumns ?? ['income-tax', 'end-total']), ...(working ? (['tax-on-pay', 'payroll'] as const) : [])])
     const table = composePaired({
-      columns: input.pairedColumns ?? ['income-tax', 'end-total'],
+      columns: PAIRED_COLUMNS.filter((c) => want.has(c)),
       plan: { rows: input.plan.rows, meta: input.plan.meta },
       whatIf: { rows: other.rows, meta: other.meta },
       names: { plan: copy.workbenchRailPlanLabel, whatIf: whatIfName },
@@ -608,17 +665,27 @@ export function cashFlowsView(input: CashFlowsInput): CashFlowsView {
       }),
     )
     const busy = input.plan.updating || other.updating
+    // One stop line over both runs where they stop in the same year; each run's, named, where they differ.
+    const planMeta = input.plan.meta
+    const stops =
+      planMeta.stopYear === other.meta.stopYear
+        ? [stopLine(planMeta, copy.workbenchRailPlanLabel, false)]
+        : [stopLine(planMeta, copy.workbenchRailPlanLabel, true), stopLine(other.meta, whatIfName, true)]
+    const payCheck = table.columns.some((c) => c.id === 'tax-on-pay')
+      ? [...new Set([...payCheckNotes(planMeta.stateTaxReading), ...payCheckNotes(other.meta.stateTaxReading)])]
+      : []
     return {
       ...base,
       breadcrumb: crumbs(false),
       body: { kind: 'table', columns, rows, busy, paired: true },
       updating: busy ? copy.workbenchTableUpdating : null,
-      lines: aboutLines(input.plan.meta, future, input, false),
+      lines: aboutLines(planMeta, future, input, stops, false, false),
       stopgaps: stopgapLines(table.yieldLines, input),
       yearNotes: table.rows.flatMap((r) => r.notes.map((n) => slots.cashFlowsYearNote(r.year, n))),
-      footnotes: [copy.workbenchApproxNote, copy.cashFlowsPairedNote],
+      footnotes: [copy.workbenchApproxNote, ...payCheck, copy.cashFlowsPairedNote],
       sourceKey: [],
-      csv: cashFlowsCsv(columns, rows),
+      csv: busy ? null : cashFlowsCsv(columns, rows),
+      csvName: nameFor(false),
     }
   }
 
@@ -655,11 +722,12 @@ export function cashFlowsView(input: CashFlowsInput): CashFlowsView {
     breadcrumb: crumbs(validDrill),
     body: { kind: 'table', columns, rows: tableRows, busy: run.updating, paired: false },
     updating: run.updating ? copy.workbenchTableUpdating : null,
-    lines: aboutLines(meta, future, input),
+    lines: aboutLines(meta, future, input, [stopLine(meta, runName, false)], pick === 'plan'),
     stopgaps: stopgapLines(yieldWords === null ? [] : [slots.workbenchPairYield(runName, yieldWords)], input),
     yearNotes,
-    footnotes: [...composed.notes, ...(showsTotal ? [copy.cashFlowsEndTotalNote] : [])],
+    footnotes: singleFootnotes(columns, meta, rows, tab === 'accounts' && input.accounts === 'deposits', showsTotal),
     sourceKey: composed.sourceKey,
-    csv: cashFlowsCsv(columns, tableRows),
+    csv: run.updating ? null : cashFlowsCsv(columns, tableRows),
+    csvName: nameFor(validDrill),
   }
 }

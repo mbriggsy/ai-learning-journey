@@ -195,7 +195,9 @@ export function formatAxisDollar(dollars: number): string {
   }
   if (v >= 1_000) {
     if (v % 100 === 0) return `$${v / 1_000}k`
-    return `$${Math.round(v / 1_000)}k`
+    const k = Math.round(v / 1_000)
+    // 999,500 to 999,999 round up to a thousand thousands: a million, in the million's own unit (never "$1000k").
+    return k >= 1_000 ? '$1M' : `$${k}k`
   }
   return `$${Math.round(v)}`
 }

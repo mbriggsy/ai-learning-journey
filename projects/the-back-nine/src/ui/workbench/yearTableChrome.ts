@@ -384,6 +384,12 @@ const PAY_CHECK_NOTES: Readonly<Record<WorkingYearStateTaxReading, readonly Copy
   unpriced: ['workbenchPayCheckNoteFederal', 'workbenchPayCheckStateInW'],
 }
 
+/** The pay check's notes for a run's state reading: every table that shows the pay check's income tax carries them
+ *  (the year table's, and Cash Flows' one-run and paired forms). */
+export function payCheckNotes(reading: WorkingYearStateTaxReading): string[] {
+  return PAY_CHECK_NOTES[reading].map((k) => copy[k])
+}
+
 /** The table for one future's rows. */
 export function composeYearTable(input: {
   readonly rows: readonly LedgerYearRow[]
@@ -422,7 +428,7 @@ export function composeYearTable(input: {
   const footNotes = [
     copy.workbenchApproxNote,
     ...(anyPutIn ? [copy.workbenchMatchNote] : []),
-    ...(has('pay-check') ? PAY_CHECK_NOTES[meta.stateTaxReading].map((k) => copy[k]) : []),
+    ...(has('pay-check') ? payCheckNotes(meta.stateTaxReading) : []),
     ...(requiredShows ? [copy.workbenchRequiredNote] : []),
     ...(rows.some((r) => r.spending === undefined) ? [copy.workbenchNoSpendingNote] : []),
   ]

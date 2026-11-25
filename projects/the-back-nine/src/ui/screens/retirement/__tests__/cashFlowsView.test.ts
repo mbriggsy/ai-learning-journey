@@ -358,7 +358,8 @@ describe('cashFlowsView — the plan select and the paired form', () => {
     const v = cashFlowsView(input({ offers, pick: 'paired', other: ready(whatIfRows), otherName: 'Work to 63', pairedColumns: ['spending', 'income-tax', 'end-total'] }))
     const t = tableOf(v)
     expect(t.paired).toBe(true)
-    expect(leafIds(t.columns)).toEqual(['year', 'run', 'spending', 'income-tax', 'end-total'])
+    // Both runs have working years, so the pay check's two taxes ride the pair (the milestone-1 review's c8).
+    expect(leafIds(t.columns)).toEqual(['year', 'run', 'spending', 'income-tax', 'tax-on-pay', 'payroll', 'end-total'])
     expect(leavesOf(t.columns)[0]!.spanGroup).toBe(true)
     expect(leavesOf(t.columns)[1]!.rowHeader).toBe(true)
     expect(t.rows.map((r) => [r.group, r.cells['run']!.text, r.cells['income-tax']!.value])).toEqual([
@@ -457,9 +458,110 @@ describe('cashFlowsView — the sentences around the table', () => {
     expect(held.csv).toBeNull()
   })
 
-  it('rows from before the latest change stay, marked busy and in words', () => {
-    const v = cashFlowsView(input({ plan: { ...(ready(ROWS) as Extract<RunRows, { kind: 'ready' }>), updating: true } }))
+  it('rows from before the latest change stay, marked busy and in words, and no CSV saves them (the file carries no "Updating" line)', () => {
+    const busy = (rows: readonly LedgerYearRow[]) => ({ ...(ready(rows) as Extract<RunRows, { kind: 'ready' }>), updating: true })
+    const v = cashFlowsView(input({ plan: busy(ROWS) }))
     expect(tableOf(v).busy).toBe(true)
     expect(v.updating).toBe(copy.workbenchTableUpdating)
+    expect(v.csv).toBeNull()
+    // The paired table busy on either run: no CSV either; settled, the CSV is back.
+    const offers = { working: null, kept: [], recommended: false, paired: 'Work to 63' }
+    const pairedBusy = cashFlowsView(input({ offers, pick: 'paired', other: busy(ROWS), otherName: 'Work to 63' }))
+    expect(tableOf(pairedBusy).busy).toBe(true)
+    expect(pairedBusy.csv).toBeNull()
+    expect(cashFlowsView(input({ offers, pick: 'paired', other: ready(ROWS), otherName: 'Work to 63' })).csv).not.toBeNull()
+  })
+
+  it('the steady sentence over a what-if’s table says the pinned answer reads your plan, not this run', () => {
+    const offers = { working: null, kept: [{ id: 'k1', name: 'Work to 63' }], recommended: false, paired: null }
+    expect(cashFlowsView(input({ offers, pick: 'kept:k1', other: ready(ROWS), otherName: 'Work to 63' })).lines[0]).toBe(copy.cashFlowsSteadyWhatOther)
+    expect(cashFlowsView(input()).lines[0]).toBe(copy.workbenchSteadyWhat)
+  })
+})
+
+describe('cashFlowsView — whose stop year the rows run at (the milestone-1 review, c7)', () => {
+  const dated: TableMeta = { ...META, route: 'dated', stopYear: 2031, stopFrom: 'answer' }
+  const lever = (year: number, route: TableMeta['route'] = 'dated'): TableMeta => ({ ...META, route, stopYear: year, stopFrom: 'lever' })
+  const offers = { working: null, kept: [{ id: 'k1', name: 'Work to 63' }], recommended: false, paired: 'Work to 63' }
+
+  it('your plan’s table names the answer’s date (or the window’s last year); a what-if’s stop-year lever names its own year, never the answer’s date', () => {
+    expect(cashFlowsView(input({ plan: ready(ROWS, dated) })).lines).toContain(slots.workbenchStopsIn(2031))
+    expect(cashFlowsView(input({ plan: ready(ROWS, { ...META, route: 'no-date', stopYear: 2041, stopFrom: 'answer' }) })).lines).toContain(slots.workbenchNoDate(2041))
+    for (const route of ['dated', 'no-date'] as const) {
+      // The plan's rows still loading: the what-if's line reads its own meta, never the plan's.
+      const v = cashFlowsView(input({ offers, pick: 'kept:k1', plan: { kind: 'loading' }, other: ready(ROWS, lever(2033, route)), otherName: 'Work to 63' }))
+      expect(v.lines, route).toContain(slots.cashFlowsRunStopsLever('Work to 63', 2033))
+      expect(v.lines).not.toContain(slots.workbenchStopsIn(2033))
+      expect(v.lines).not.toContain(slots.workbenchNoDate(2033))
+    }
+  })
+
+  it('the paired view: one line where both runs stop in the same year; each run’s, named, where they differ', () => {
+    const same = cashFlowsView(input({ offers, pick: 'paired', plan: ready(ROWS, dated), other: ready(ROWS, dated), otherName: 'Work to 63' }))
+    expect(same.lines).toContain(slots.workbenchStopsIn(2031))
+    const differ = cashFlowsView(input({ offers, pick: 'paired', plan: ready(ROWS, dated), other: ready(ROWS, lever(2033)), otherName: 'Work to 63' }))
+    expect(differ.lines).toEqual(
+      expect.arrayContaining([slots.cashFlowsRunStopsDated(copy.workbenchRailPlanLabel, 2031), slots.cashFlowsRunStopsLever('Work to 63', 2033)]),
+    )
+    expect(differ.lines).not.toContain(slots.workbenchStopsIn(2031))
+  })
+})
+
+describe('cashFlowsView — the paired view keeps the pay check’s taxes (the milestone-1 review, c8)', () => {
+  const offers = { working: null, kept: [], recommended: false, paired: 'Work to 63' }
+  const retired = (rows: readonly LedgerYearRow[]) => rows.map(({ workingYear: _gone, ...r }) => r as LedgerYearRow)
+
+  it('where either run has a working year, the pay check’s income tax and payroll tax are their own columns, each its field, with the pay check’s notes', () => {
+    // Your plan retired, the what-if still working: the working run's taxes show.
+    const v = cashFlowsView(input({ offers, pick: 'paired', plan: ready(retired(ROWS)), other: ready(ROWS), otherName: 'Work to 63', pairedColumns: ['pay-0', 'income-tax', 'end-total'] }))
+    const t = tableOf(v)
+    expect(leafIds(t.columns)).toEqual(['year', 'run', 'pay-0', 'income-tax', 'tax-on-pay', 'payroll', 'end-total'])
+    const whatIf = t.rows.filter((r) => r.cells['run']!.text === 'Work to 63')
+    whatIf.forEach((r, k) => {
+      expect(r.cells['tax-on-pay']!.value).toBe(ROWS[k]!.workingYear!.taxOnOutsideIncome)
+      expect(r.cells['payroll']!.value).toBe(ROWS[k]!.workingYear!.payrollTax)
+    })
+    expect(leavesOf(t.columns).find((l) => l.id === 'tax-on-pay')!.header).toBe(copy.cashFlowsColPayIncomeTax)
+    expect(v.footnotes).toEqual(expect.arrayContaining([copy.workbenchPayCheckNoteFederalState]))
+  })
+
+  it('two retired runs: no pay check columns and no pay check notes', () => {
+    const v = cashFlowsView(input({ offers, pick: 'paired', plan: ready(retired(ROWS)), other: ready(retired(ROWS)), otherName: 'Work to 63' }))
+    expect(leafIds(tableOf(v).columns)).toEqual(['year', 'run', 'income-tax', 'end-total'])
+    expect(v.footnotes).toEqual([copy.workbenchApproxNote, copy.cashFlowsPairedNote])
+  })
+})
+
+describe('cashFlowsView — the file’s name, the paired title and the notes beside the shown columns', () => {
+  const offers = { working: copy.probabilityPickNew, kept: [{ id: 'k1', name: 'Work to 63 (Sam’s idea)' }], recommended: true, paired: 'Work to 63 (Sam’s idea)' }
+
+  it('the CSV’s name carries the table, the run (the plan select’s own label) and the future', () => {
+    expect(cashFlowsView(input()).csvName).toBe('cash-flows-summary-your-plan-steady.csv')
+    expect(cashFlowsView(input({ offers, pick: 'kept:k1', other: ready(ROWS), otherName: 'Work to 63 (Sam’s idea)' })).csvName).toBe('cash-flows-summary-work-to-63-sam-s-idea-steady.csv')
+    expect(cashFlowsView(input({ offers, pick: 'recommended', other: ready(ROWS), future: 'rough', tab: 'accounts', accounts: 'withdrawals' })).csvName).toBe(
+      'cash-flows-withdrawals-recommended-rough.csv',
+    )
+    expect(cashFlowsView(input({ offers, pick: 'new', other: ready(ROWS), drill: 'expenses' })).csvName).toBe('cash-flows-expenses-new-what-if-steady.csv')
+    expect(cashFlowsView(input({ offers, pick: 'paired', other: ready(ROWS), otherName: 'Work to 63 (Sam’s idea)' })).csvName).toBe(
+      'cash-flows-paired-your-plan-and-work-to-63-sam-s-idea-steady.csv',
+    )
+  })
+
+  it('the paired view’s title names it on either tab (it has no Accounts tables), never an empty heading', () => {
+    for (const tab of ['summary', 'accounts'] as const) {
+      const v = cashFlowsView(input({ offers, tab, pick: 'paired', other: ready(ROWS), otherName: 'x' }))
+      expect(v.breadcrumb, tab).toEqual([{ label: copy.cashFlowsPickPaired, drill: null }])
+      expect(v.accountsSelect).toBeNull()
+    }
+  })
+
+  it('each note rides only beside the column it explains: the pay check’s with its column, Required with its own, the match with a put-in', () => {
+    const top = cashFlowsView(input())
+    expect(top.footnotes).toEqual(expect.arrayContaining([copy.workbenchPayCheckNoteFederalState, copy.workbenchMatchNote]))
+    expect(top.footnotes, 'Required is a drill column at the top').not.toContain(copy.workbenchRequiredNote)
+    expect(cashFlowsView(input({ drill: 'distribution' })).footnotes).toContain(copy.workbenchRequiredNote)
+    const conversions = cashFlowsView(input({ tab: 'accounts', accounts: 'conversions' }))
+    expect(conversions.footnotes).toEqual([copy.workbenchApproxNote])
+    expect(cashFlowsView(input({ tab: 'accounts', accounts: 'deposits' })).footnotes).toContain(copy.workbenchMatchNote)
   })
 })

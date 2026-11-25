@@ -9,6 +9,8 @@ import { floorLineText, heroLead } from '../dateHero'
 import { verdictReadingText } from '../verdictSentence'
 import { planClockAnchor } from '../bandAnnotations'
 import { copy, slots } from '../copy'
+import { blockedLeadFor, missingFactLines } from '@intake/missingFacts'
+import { missingRequiredFacts } from '@intake/intakeMap'
 import type { MemoryModelSnapshot } from '@store/memoryModel'
 import type { OutcomeState } from '@shared/model'
 
@@ -48,12 +50,19 @@ export function pinnedLines(snapshot: MemoryModelSnapshot, wallCalendarYear: num
     const second = split.kind === 'split' ? floorLineText(split, windowTopYears, anchor, snapshot.refiguring) : undefined
     return { lead: `${lead}${odds}`, ...(second !== undefined ? { second } : {}), ...(status !== undefined ? { status } : {}) }
   }
-  if (answer.kind === 'headline' && answer.result.headline.outcomeState !== 'indeterminate') {
+  if (answer.kind === 'headline') {
     const state = answer.result.headline.outcomeState
-    const lead = `${OUTCOME_WORDS[state]}: ${verdictReadingText(state, answer.result.headline.xOfTen.value)}`
+    // Indeterminate is an answer with no reading yet, said in the ring's own words (never "isn't ready" over rows).
+    const lead = state === 'indeterminate' ? copy.snapshotRingNoReading : `${OUTCOME_WORDS[state]}: ${verdictReadingText(state, answer.result.headline.xOfTen.value)}`
     return { lead, ...(status !== undefined ? { status } : {}) }
   }
-  return { lead: copy.workbenchPinnedNone }
+  if (answer.kind === 'compute-error') return { lead: copy.answerError }
+  // The fallback (`selectElevatedAnswer`'s: idle, missing facts, a date search that named what it lacks): the facts the
+  // answer waits for, by name (plan 4.0: a fact cleared leaves each screen naming what it waits for, not blank).
+  const facts = missingRequiredFacts(snapshot.draft)
+  const lines = missingFactLines(facts)
+  const second = [lines.stillNeeded, lines.cannotPrice].filter((l): l is string => l !== null).join(' ')
+  return { lead: blockedLeadFor(facts), ...(second !== '' ? { second } : {}) }
 }
 
 /** The forms the box can take before its next answer lands, beside the current one (the hidden copy holds the tallest).

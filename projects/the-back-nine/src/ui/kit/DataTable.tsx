@@ -79,6 +79,10 @@ const LEAD_OFFSET = ['left-0', 'left-20'] as const
 
 const DRILL_CLASSES = 'cursor-pointer underline underline-offset-4 hover:text-stone-900'
 
+/** The white gutters between header groups, drawn inside each cell (inset shadows), never as side borders: a collapsed
+ *  table's side border runs up through the 2 px plum top rule and cut a white gap in it where each band began. */
+const BAND_GUTTERS = 'shadow-[inset_2px_0_0_var(--color-bg),inset_-2px_0_0_var(--color-bg)]'
+
 export function DataTable<Row extends RowData>({
   labelledBy,
   columns,
@@ -212,7 +216,7 @@ export function DataTable<Row extends RowData>({
                         key={header.id}
                         colSpan={header.colSpan}
                         aria-hidden="true"
-                        className={cn(inBand ? 'border-x-2 border-bg bg-stone-250' : 'bg-bg', leadClasses(id))}
+                        className={cn(inBand ? cn(BAND_GUTTERS, 'bg-stone-250') : 'bg-bg', leadClasses(id))}
                       />
                     )
                   }
@@ -224,7 +228,7 @@ export function DataTable<Row extends RowData>({
                         colSpan={header.colSpan}
                         scope="colgroup"
                         data-group={id}
-                        className="border-x-2 border-bg bg-stone-250 px-3 py-2 text-center font-regular text-stone-900"
+                        className={cn(BAND_GUTTERS, 'bg-stone-250 px-3 py-2 text-center font-regular text-stone-900')}
                       >
                         {g?.onDrill !== undefined ? (
                           <button type="button" onClick={g.onDrill} className={DRILL_CLASSES}>
@@ -267,8 +271,10 @@ export function DataTable<Row extends RowData>({
           ) : (
             bodies.map((b, i) => (
               <Fragment key={b.key}>
-                <tbody data-row-group={b.key} className={cn('border-t border-stone-300', i % 2 === 0 ? 'bg-bg' : 'bg-stone-50', busy && 'opacity-60')}>
-                  {b.rows.map((row, k) => bodyRow(row, k === 0, b.rows.length, ''))}
+                <tbody data-row-group={b.key} className={cn('border-t border-stone-300', busy && 'opacity-60')}>
+                  {/* The group's fill sits on each row, never the tbody alone: a sticky lead cell's bg-inherit copies its
+                      row's, and a row with no fill of its own let the scrolled figures show through the held year. */}
+                  {b.rows.map((row, k) => bodyRow(row, k === 0, b.rows.length, i % 2 === 0 ? 'bg-bg' : 'bg-stone-50'))}
                 </tbody>
               </Fragment>
             ))

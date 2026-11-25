@@ -89,3 +89,21 @@ describe('the pinned box’s reserve for the next answer', () => {
     for (const text of reserve.leads.filter((l) => !l.startsWith(`${copy.outcomeOnTrack}:`))) expect(real.textContent).not.toContain(text)
   })
 })
+
+describe('the pinned box’s words where there is no reading (plan 4.0: the fallback names what it waits for)', () => {
+  it('a plan missing a fact names it, never "isn’t ready"; a failed answer says so; an indeterminate one says there is not enough to read', () => {
+    const { annualSpendingReal: _gone, ...noSpending } = DEV_SEEDS.retired
+    const missing = pinnedLines({ ...snapshotOf({ kind: 'inputs-incomplete' } as ModelAnswer), draft: noSpending }, draft.startCalendarYear)
+    expect(missing.lead).toBe(copy.answerIncomplete)
+    expect(missing.second?.startsWith(copy.answerStillNeeded)).toBe(true)
+    expect(pinnedLines(snapshotOf({ kind: 'compute-error' } as unknown as ModelAnswer), draft.startCalendarYear).lead).toBe(copy.answerError)
+    const indeterminate = {
+      kind: 'headline',
+      tier: 'final',
+      draft,
+      inputKey: 'k1',
+      result: { headline: { outcomeState: 'indeterminate', xOfTen: { value: 0, marginToEdge: 0 }, stateMarginToEdge: 0 } },
+    } as unknown as ModelAnswer
+    expect(pinnedLines(snapshotOf(indeterminate), draft.startCalendarYear).lead).toBe(copy.snapshotRingNoReading)
+  })
+})

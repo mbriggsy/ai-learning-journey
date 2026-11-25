@@ -100,6 +100,8 @@ const FIELD: Readonly<Record<PairedColumnId, (r: LedgerYearRow) => number | unde
   'taken-pretax': (r) => r.draw.pretax,
   'taken-roth': (r) => r.draw.roth,
   'income-tax': (r) => r.taxPaid,
+  'tax-on-pay': (r) => r.workingYear?.taxOnOutsideIncome,
+  payroll: (r) => r.workingYear?.payrollTax,
   'end-total': (r) => r.end.taxable + r.end.pretax + r.end.roth + r.end.hsa,
 }
 

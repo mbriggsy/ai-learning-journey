@@ -11,6 +11,7 @@ import type { ResultSaveProp } from '../../../saveAnnouncer'
 import type { TableLanes } from '../../../shell/Shell'
 import { PAGES, RoutedShell } from '../../../shell/__tests__/routedShell'
 import type { WhatIfSlotLanes } from '../../../workbench/whatIfRun'
+import { holdUnsavedBuffer } from '@intake/unsavedBuffer'
 import { appModel } from '../../../appModel'
 import { DEV_SEEDS } from '../../../devSeeds'
 import { copy, slots } from '../../../copy'
@@ -302,6 +303,41 @@ describe('Keep, a changed kept what-if, and the ask before another drops it', ()
     expect(kept[0]!.levers).toEqual([{ kind: 'spending', op: 'total', annualSpendingReal: 30_000 }])
     await waitFor(() => expect(leftTitle()).toBe('Lean years'))
     expect(held).toHaveBeenLastCalledWith(false)
+  })
+
+  it('with no saved plan yet, a Keep over an entry not yet added asks before the save steps drop it: Stay writes nothing, Go on keeps', async () => {
+    const write = vi.fn(async (): Promise<KeptWriteOutcome> => ({ kind: 'ceremony' }))
+    const { left } = mount({ kept: [], save: { kind: 'first', onKeep: () => {} }, onWriteKept: write })
+    fireEvent.click(screen.getByRole('button', { name: copy.trayHandle }))
+    const tray = document.getElementById('b9-action-items') as HTMLElement
+    const field = within(tray)
+      .getAllByLabelText(copy.workbenchRailSpendTotalLabel)
+      .find((el) => el instanceof HTMLInputElement && el.type === 'text')!
+    act(() => field.focus())
+    fireEvent.change(field, { target: { value: '30,000' } })
+    act(() => field.blur())
+    fireEvent.click(within(tray).getByRole('button', { name: copy.trayRefresh }))
+    await left.settle()
+    // An entry open somewhere and not yet added (a sheet's typed form, a budget's staged rows): the guard's hold.
+    const release = holdUnsavedBuffer()
+    try {
+      const drawer = await openList()
+      fireEvent.click(within(drawer).getByRole('button', { name: copy.planListKeep }))
+      fireEvent.change(within(drawer).getByLabelText(copy.planListNameLabel), { target: { value: 'Lean years' } })
+      fireEvent.click(within(drawer).getByRole('button', { name: copy.planListNameConfirm }))
+      const ask = await screen.findByRole('alertdialog')
+      expect(ask).toHaveTextContent(copy.shellCeremonyOpenEntry)
+      expect(ask, 'the what-if is being kept: never the "isn’t kept" words').not.toHaveTextContent(copy.shellCeremonyWhatIf)
+      expect(write).not.toHaveBeenCalled()
+      fireEvent.click(within(ask).getByRole('button', { name: copy.workbenchLeaveStay }))
+      expect(screen.queryByRole('alertdialog')).toBeNull()
+      expect(write).not.toHaveBeenCalled()
+      fireEvent.click(within(drawer).getByRole('button', { name: copy.planListNameConfirm }))
+      fireEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: copy.shellCeremonyGo }))
+      await waitFor(() => expect(write).toHaveBeenCalledTimes(1))
+    } finally {
+      release()
+    }
   })
 
   it('a Keep box left open over a changed kept what-if never keeps another one over it: opening another drops the box, and the next Keep is a new one', async () => {

@@ -2624,7 +2624,6 @@ export const copy = {
   probabilityBarDescription:
     'Each side’s savings when the second of you dies, or at the plan’s last year if that comes first, in the middle future, in today’s dollars.',
   probabilityTodaysDollars: 'Today’s dollars',
-  probabilityRecWorkingRoute: 'A recommended strategy isn’t worked out yet for a plan with working years still ahead.',
   probabilityOpenStrategies: 'Open the Tax Strategies page',
   // --- Act 6 · RC4b, the Action Items tray (`trayView.ts`, `ActionItemsTray.tsx`) ---
   trayHandle: 'Action items',
@@ -2708,6 +2707,10 @@ export const copy = {
   shellCeremonyOpenEntry:
     'You have something open here. Going on closes it: changes you finished stay in your plan, and an entry not yet added is dropped.',
   shellCeremonyGo: 'Go on',
+  /** A Keep with no saved plan yet opens the save steps (the shell unmounts for them) while a deposit change in Action
+   *  items still waits for the employer's figure: that change was never in the what-if being kept. */
+  shellKeepDropsWaiting:
+    'A deposit change in Action items still waits for the employer’s figure, so it isn’t in the what-if you’re keeping. Keeping now opens the save steps, which drops that change.',
   oddsChartDescription:
     'The odds of staying work-optional for each year you could stop working, each read against the on-track line.',
   oddsAxisYear: 'Year you stop working',
@@ -2736,7 +2739,6 @@ export const copy = {
   workbenchPinnedLabel: 'Your answer, read across many futures',
   workbenchPinnedWorking: 'Working out your answer…',
   workbenchPinnedRefiguring: 'Being worked out again for your latest change.',
-  workbenchPinnedNone: 'Your answer isn’t ready, so this table waits for it.',
   workbenchViewLegend: 'This future’s market',
   workbenchViewSteady: 'Steady market',
   workbenchViewRough: 'Rough market',
@@ -2806,6 +2808,8 @@ export const copy = {
   workbenchTableLoading: 'Working out your plan year by year…',
   workbenchTableUpdating: 'Updating: these rows are from before your latest change.',
   workbenchTableError: 'The year-by-year table couldn’t be worked out. Your plan and your answer are untouched.',
+  /** The answer itself hit a snag (`compute-error`): the table has nothing to be built on, and the retry is Analysis's. */
+  workbenchTableAnswerError: 'Your answer couldn’t be worked out, so there’s no table to show. The Analysis page has Try again.',
   workbenchWithheldNoRun: 'The table needs the same facts your answer does. Your answer names any that are missing.',
   workbenchWithheldNoDate: 'The table waits for your answer’s dates.',
   workbenchWithheldBand: 'Your answer has a date but not the run behind it, so this table can’t be shown for it.',
@@ -2833,7 +2837,10 @@ export const copy = {
   cashFlowsColAge: 'Age',
   cashFlowsColRun: 'Plan',
   cashFlowsColHsaSpent: 'HSA, spent on care',
-  cashFlowsColPayIncomeTax: 'Pay check’s income tax',
+  // Held in two lines, "Pay check’s" over "income tax" (two no-break spaces, \u00a0): left free, the narrow figures under it
+  // broke the header into three or four lines at his 1440 window (milestone 1's review, known input (c)). Every word
+  // stays: the plan's settled heading, never a second "Income tax" (RC6).
+  cashFlowsColPayIncomeTax: 'Pay\u00a0check’s income\u00a0tax',
   cashFlowsColRmdMoved: 'Required, moved to taxable',
   cashFlowsColIrmaa: 'Income surcharge, part of Medicare',
   cashFlowsColNotKept: 'Income not kept',
@@ -2849,6 +2856,10 @@ export const copy = {
   cashFlowsYearNotesHeading: 'Notes by year',
   cashFlowsEndTotalNote: 'Total is the tool’s own sum of the year-end balances shown beside it.',
   cashFlowsPairedNote: 'Each year shows your plan’s row over the what-if’s, each named. The what-if is the one open on Analysis.',
+  /** The steady sentence over a table that isn't your plan alone (a what-if's, or the paired form): the answer pinned
+   *  above is your plan's, never this table's run. */
+  cashFlowsSteadyWhatOther:
+    'One future, in a steady market: stocks and bonds each earn the same return every year. It is one future among many, never a forecast; the answer pinned here reads your plan across all of them.',
   // --- The facts page (Act 5, U8): everything the household told the tool, by the walk's own steps, each group
   // with one door into that step's own body. Facts read exactly (R11): no "~" and no "about" on a figure the
   // household gave. The pilot's drafts, shipped flagged for Briggsy's cold read. ---
@@ -4894,7 +4905,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:2186` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:2189` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,
@@ -5394,6 +5405,12 @@ export const slots = {
   cashFlowsOtherTaxed: (label: string): string => `Other income counted for tax, ${label}`,
   cashFlowsAgesKey: (labels: readonly string[]): string => `Age shows ${labels.join(' / ')}.`,
   cashFlowsYearNote: (year: number, note: string): string => `${year}: ${note}`,
+  /** Whose stop year a table's rows run at, by run, where it isn't the one line over the whole table: a what-if's
+   *  stop-year lever (its own year, never the answer's date), and, in the paired view, each run's when they differ. */
+  cashFlowsRunStopsDated: (run: string, year: number): string => `${run}: work stops in ${year}, the year your answer’s date gives.`,
+  cashFlowsRunStopsNoDate: (run: string, year: number): string =>
+    `${run}: your answer found no date in its window, so work stops in ${year}, the window’s last year.`,
+  cashFlowsRunStopsLever: (run: string, year: number): string => `${run}: work stops in ${year}, the year this what-if sets.`,
   // --- The facts page (Act 5, U8): a fact reads exactly, as given (R11): every figure here is the household's own,
   // pre-formatted whole dollars, never "~" or "about". The pilot's drafts, shipped flagged. ---
   /** A group's one door, named for the group it opens (its visible text is "Edit"): "Edit spending", "Edit Social

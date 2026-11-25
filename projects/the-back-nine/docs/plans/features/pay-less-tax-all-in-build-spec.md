@@ -130,12 +130,12 @@ Result: the all-in vector equals the tax vector element by element, and its mean
 - `solve.ts:214-224, :385-390` (deltaSkew wording).
 - `stateTaxDisclosure.ts:151-155`: the priced-state layer reaches the hero through the tax addend; the logic is unchanged.
 - `recommendationView.ts:99` and `:719`.
-- `copy.ts:2254` comment and `:4963`.
+- `copy.ts:2254` comment and `:4977`.
 - the `recommendationView.test.ts:596` comment.
 
 The viz suppression off leave-more stays correct, because all-in is still lower-is-better.
 
-**Copy (HIS, §6):** `recDeltaPayLessTax` (`copy.ts:4872-4873`, read), `goalPayLessTaxGloss` (`:2261`), `recDiscNiit` (`:2432-2433`), `recDiscStateTax` (`:2060-2061`), the optional new `recDisc*`, and `recDeltaTypical*` (`:3177-3196`) only under a "$X less" hero.
+**Copy (HIS, §6):** `recDeltaPayLessTax` (`copy.ts:4886-4887`, read), `goalPayLessTaxGloss` (`:2261`), `recDiscNiit` (`:2432-2433`), `recDiscStateTax` (`:2060-2061`), the optional new `recDisc*`, and `recDeltaTypical*` (`:3191-3210`) only under a "$X less" hero.
 
 **Calibration:**
 - Add "an objective-statistic change" to the RE-MEASURE triggers at `fallback.ts:44, :58, :72` (map).
@@ -330,7 +330,7 @@ Today's objective crowns $100k. All-in crowns $84k, by about $28k.
 
 *The packet as sent (the options he chose among):*
 
-**Constraints the drafts meet.** This was a hand-lint against `copyGuard.ts:148-312` + `HEDGE_TOKENS` (`copy.ts:2728-2931`); the suite runs on whatever he picks.
+**Constraints the drafts meet.** This was a hand-lint against `copyGuard.ts:148-312` + `HEDGE_TOKENS` (`copy.ts:2734-2945`); the suite runs on whatever he picks.
 - A hedge ("about" / "could"); `recDelta*` and `recDisc*` are require-hedge swept (`copyGuard.ts:124-128`).
 - No superlative, no clause-leading directive verb (`:262`), no "pays off" or "better off" (`:251-252`), no em-dash apposition on the figure.
 - The hero stays one line (`recommendationView.ts:171-173`) and keeps "than today’s plan" (the userBaseline seam, `copy.ts:2296-2303`).

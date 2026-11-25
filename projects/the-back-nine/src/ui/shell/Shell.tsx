@@ -41,6 +41,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { intakeSteps } from '@intake/questions'
 import { healthcarePriced, missingRequiredFacts } from '@intake/intakeMap'
+import { unsavedBuffersHeld } from '@intake/unsavedBuffer'
 import { engineRunLane, type EngineRunRequest, type Lane } from '@store/runLanes'
 import { roughWindow, ROUGH_WINDOW_YEARS } from '@engine/reference/roughSequence'
 import type { MemoryModel, MemoryModelSnapshot } from '@store/memoryModel'
@@ -175,7 +176,8 @@ const WITHHELD_WORDS: Readonly<Record<Extract<TableRun, { kind: 'withheld' }>['r
 /** Your plan's rows in one future, from the store's answer and that future's newest result. Until the newest answer's
  *  rows land, the rows on screen stay, marked as updating (KTD9, KTD13). */
 function planRows(run: TableRun, result: ViewResult | undefined, refiguring: boolean): RunRows {
-  if (run.kind === 'answer-error') return { kind: 'error' }
+  // The answer itself failed: never "your answer is untouched" (the table's own error words), and never rows from before.
+  if (run.kind === 'answer-error') return { kind: 'withheld', words: copy.workbenchTableAnswerError }
   if (run.kind === 'withheld') return { kind: 'withheld', words: WITHHELD_WORDS[run.reason] }
   const current = run.kind === 'run' ? run.key : null
   if (result === undefined) return { kind: 'loading' }
@@ -188,7 +190,7 @@ function slotRows(v: WhatIfSlotView | null, future: TableView, startCalendarYear
   if (v === null) return { kind: 'loading' }
   if (v.kind === 'refused') return { kind: 'withheld', words: refusalWords(v.refusal, startCalendarYear) }
   if (v.kind === 'withheld') return { kind: 'withheld', words: WITHHELD_WORDS[v.reason] }
-  if (v.kind === 'answer-error') return { kind: 'error' }
+  if (v.kind === 'answer-error') return { kind: 'withheld', words: copy.workbenchTableAnswerError }
   const part = v[future]
   if (part.kind === 'loading') return { kind: 'loading' }
   if (part.kind === 'error') return { kind: 'error' }
@@ -789,7 +791,11 @@ export default function Shell({
 
   // ── The StaleBanner (RC4): the old answer page's staleness note, aged-balances line and standing line ──────────────
   const figured = screen === 'snapshot' || screen === 'probability' || screen === 'confidence' || screen === 'cash-flows'
-  const staleLines = useMemo(() => (figured ? composeStaleLines(notes, !readOnly && onReview !== undefined) : []), [figured, notes, readOnly, onReview])
+  // On Cash Flows without its aged line: the table's own row-one line (`workbenchAged`) says that cause there.
+  const staleLines = useMemo(
+    () => (figured ? composeStaleLines(notes, !readOnly && onReview !== undefined, screen !== 'cash-flows') : []),
+    [figured, notes, readOnly, onReview, screen],
+  )
 
   const snapshotDoors: SnapshotDoors = { analysis: doorTo('probability'), cashFlows: doorTo('cash-flows'), facts: doorTo('interim-facts') }
   const strategiesDoor = doorTo('interim-strategies')
@@ -839,7 +845,9 @@ export default function Shell({
           },
         }
       : (pageAsk ?? undefined)
-  const leave = shownAsk !== undefined ? <LeaveAsk key={shownAsk.lines.join(' ')} ask={shownAsk} overSheet={anySheetOpen} fallback={() => headingRef.current} /> : null
+  // The plan list drawer is modal too: Keep's ask from inside it rides the layer above it.
+  const leave =
+    shownAsk !== undefined ? <LeaveAsk key={shownAsk.lines.join(' ')} ask={shownAsk} overSheet={anySheetOpen || planListOpen} fallback={() => headingRef.current} /> : null
 
   // ── The plan list drawer's view and its writes (RC5) ──
   const writes = listWrites(save.kind, readOnly)
@@ -880,16 +888,35 @@ export default function Shell({
     const levers = whatIf.own
     const id = box.replaces ?? freshStableId(idsInUse(snapshot.draft))
     const name = box.text.trim()
-    void writeKept(keepEdit(id, name, levers, box.replaces !== undefined), id).then((o) => {
-      if (o === null || o.kind === 'refused' || o.kind === 'ceremony') return
-      whatIf.markKept(id)
-      setNameBox(null)
-      if (o.kind !== 'failed') {
-        const words = slots.planListKept(name)
-        setPlanListSaid(words)
-        announcer.announce(words)
-      }
-    })
+    const keepNow = () =>
+      void writeKept(keepEdit(id, name, levers, box.replaces !== undefined), id).then((o) => {
+        if (o === null || o.kind === 'refused' || o.kind === 'ceremony') return
+        whatIf.markKept(id)
+        setNameBox(null)
+        if (o.kind !== 'failed') {
+          const words = slots.planListKept(name)
+          setPlanListSaid(words)
+          announcer.announce(words)
+        }
+      })
+    // With no saved plan yet, Keep opens the save steps and the shell unmounts for them: over an entry not yet added or a
+    // deposit change still waiting for the employer's figure (neither is in the what-if being kept), ask first, as the
+    // lock menu's own save does (insight 112: every way out holds). Never the "isn't kept" words: this what-if is kept.
+    const buffers = unsavedBuffersHeld() > 0
+    const awaiting = trayAwaiting.size > 0
+    if (writes.kind === 'open' && writes.ceremony && (buffers || awaiting)) {
+      setPageAsk({
+        lines: [...(buffers ? [copy.shellCeremonyOpenEntry] : []), ...(awaiting ? [copy.shellKeepDropsWaiting] : [])],
+        goLabel: copy.shellCeremonyGo,
+        onGo: () => {
+          setPageAsk(null)
+          keepNow()
+        },
+        onStay: () => setPageAsk(null),
+      })
+      return
+    }
+    keepNow()
   }
   const planListDrawer =
     planList !== null ? (
@@ -1002,6 +1029,7 @@ export default function Shell({
         ) : cfView !== null && cfIntro !== null ? (
           <>
             {leave}
+            {staleBanner}
             <CashFlows
               view={cfView}
               headingRef={headingRef}

@@ -111,12 +111,6 @@ function kitColumns(nodes: readonly CfNode[], onDrill: (drill: SummaryDrill) => 
   })
 }
 
-const csvName = (view: CashFlowsView): string => {
-  const plan = view.planSelect.value === 'paired' ? 'paired' : view.planSelect.value === 'plan' ? 'plan' : 'what-if'
-  const where = view.accountsSelect !== null ? view.accountsSelect.value : (view.breadcrumb?.at(-1)?.drill ?? view.tabs.value)
-  return `cash-flows-${where}-${plan}-${view.futureSelect.value}.csv`
-}
-
 const BOM = String.fromCharCode(0xfeff)
 
 function downloadCsv(csv: string, name: string): void {
@@ -129,7 +123,9 @@ function downloadCsv(csv: string, name: string): void {
   document.body.append(a)
   a.click()
   a.remove()
-  setTimeout(() => URL.revokeObjectURL(url), 0)
+  // Revoked a while after the click, never at once: a browser that starts the save after the click returns (WebKit,
+  // the phone's) finds the file gone if the link is revoked in the same turn.
+  setTimeout(() => URL.revokeObjectURL(url), 30_000)
 }
 
 export function CashFlows({ view, headingRef, intro, caveat, onTab, onDrill, onAccounts, onFuture, onPick }: CashFlowsProps) {
@@ -219,9 +215,10 @@ export function CashFlows({ view, headingRef, intro, caveat, onTab, onDrill, onA
                 variant="secondary"
                 icon={<Download size={18} strokeWidth={1.5} aria-hidden="true" />}
                 aria-label={copy.cashFlowsDownloadLabel}
+                // Off with no table, and while the rows are from before the latest change (the Updating line says so).
                 disabled={view.csv === null}
                 onClick={() => {
-                  if (view.csv !== null) downloadCsv(view.csv, csvName(view))
+                  if (view.csv !== null) downloadCsv(view.csv, view.csvName)
                 }}
               >
                 {copy.cashFlowsDownload}

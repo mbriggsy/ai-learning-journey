@@ -58,6 +58,9 @@ export interface TableMeta {
   readonly people: readonly TablePerson[]
   /** The date route: the calendar year work stops in this table's run. */
   readonly stopYear?: number
+  /** Beside `stopYear`: the answer's own stop (the band's, or the window top) or a what-if's stop-year lever
+   *  (`buildTableBase`'s `stopFrom`), so the heading names a lever's year as the what-if's, never the answer's date. */
+  readonly stopFrom?: 'answer' | 'lever'
   /** Each person's working-year investment income as THIS run carries it (the run's own params: the date route only,
    *  working members only, `buildDateInput`), else empty. The engine prices a person's figure only in a year they work,
    *  so KTD32's yield line covers every other year. Never the draft's raw field: a member switched to retired keeps a
@@ -164,7 +167,7 @@ export function tableRequestsOn(
       route: base.route,
       startCalendarYear: draft.startCalendarYear,
       people: params.people.map((p, i) => tablePerson(draft, i, p.currentAge, ages[i] ?? p.currentAge)),
-      ...(base.stopOffsetYears !== undefined ? { stopYear: draft.startCalendarYear + base.stopOffsetYears } : {}),
+      ...(base.stopOffsetYears !== undefined ? { stopYear: draft.startCalendarYear + base.stopOffsetYears, stopFrom: base.stopFrom ?? 'answer' } : {}),
       investmentByPerson: accumulation?.workingYearInvestmentByPerson ?? [],
       stateTaxReading: workingYearStateTaxReading(draft),
       statePriced: state !== undefined && isPricedState(state),

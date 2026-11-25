@@ -57,6 +57,12 @@ describe('formatAxisDollar — exact-when-round gridline labels', () => {
     expect(formatAxisDollar(1_234_567)).toBe('$1.2M')
     // 123,456 is not a round hundred → integer-k rounding, unchanged
     expect(formatAxisDollar(123_456)).toBe('$123k')
+    // Just under a million rounds to a million in its own unit, never "$1000k" (milestone 1's review); a round hundred
+    // just under it stays exact in k.
+    expect(formatAxisDollar(999_650)).toBe('$1M')
+    expect(formatAxisDollar(999_999)).toBe('$1M')
+    expect(formatAxisDollar(999_499)).toBe('$999k')
+    expect(formatAxisDollar(999_600)).toBe('$999.6k')
     // sub-$1k stays whole dollars
     expect(formatAxisDollar(999)).toBe('$999')
     expect(formatAxisDollar(412.4)).toBe('$412')

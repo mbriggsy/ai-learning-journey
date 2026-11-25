@@ -172,6 +172,16 @@ describe('Shell — the answer the table waits on', () => {
     expect(screen.getByText(copy.workbenchWithheldNoRun)).toBeInTheDocument()
   })
 
+  it('a failed answer: the intro says the math hit a snag and the table never claims the answer is untouched; the retry is named where it lives', () => {
+    const { lanes, lane } = heldLanes()
+    renderRoom(snapshotWith({ kind: 'compute-error' } as unknown as ModelAnswer), lanes)
+    expect(lane.request).not.toHaveBeenCalled()
+    // The intro's lead (its hidden reserve copy draws it again, so the shown one is read off the intro's first cell).
+    expect(document.querySelector('[data-cash-flows-intro] > div:first-child')).toHaveTextContent(copy.answerError)
+    expect(screen.getByText(copy.workbenchTableAnswerError)).toBeInTheDocument()
+    expect(screen.queryByText(copy.workbenchTableError)).toBeNull()
+  })
+
   it('a plan opened a year after it was built names row one’s year (R10, AE2)', async () => {
     const { lanes, settleAll } = heldLanes()
     renderRoom(snapshotWith(finalAnswer()), lanes, BUILD_YEAR + 1)
@@ -393,6 +403,18 @@ describe('Shell — RC6: Retirement → Cash Flows', () => {
     fireEvent.click(screen.getByRole('button', { name: copy.cashFlowsTabSummary }))
     expect(title().textContent).toBe(copy.cashFlowsTabSummary)
     expect(screen.getAllByRole('columnheader').map((h) => h.textContent)).toEqual(before)
+  })
+
+  it('the StaleBanner rides Cash Flows too (the staleness note over rows built on those rules), without its aged line: the table’s own row-one line says that cause', async () => {
+    const { lanes, settleAll } = heldLanes()
+    render(
+      <RoutedShell save={{ kind: 'none' }} snapshot={snapshotWith(finalAnswer())} lanes={lanes} wallCalendarYear={BUILD_YEAR + 1} stalenessNote agedBalancesYear={BUILD_YEAR} />,
+    )
+    await settleAll('run')
+    expect(document.querySelector('main.result')).toHaveAttribute('data-shell-screen', 'cash-flows')
+    expect(screen.getByText(copy.stalenessHeroNote)).toBeInTheDocument()
+    expect(screen.getByText(slots.workbenchAged(BUILD_YEAR))).toBeInTheDocument()
+    expect(screen.queryByText(slots.staleAgedBalances(BUILD_YEAR)), 'one cause, one line').toBeNull()
   })
 
   it('the download hands the browser a CSV of the shown cells, built in the page (no request)', async () => {

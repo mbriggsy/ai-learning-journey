@@ -1353,6 +1353,9 @@ export type TableBase =
       /** The date route only: the offset the candidate was built at (the band's, or the window top), so the
        *  table's heading names the stop year from this builder's own number, never a second derivation. */
       readonly stopOffsetYears?: number
+      /** Beside `stopOffsetYears`: where that offset came from, the committed answer's own (the band's, or the window
+       *  top) or a what-if's stop-year lever, so a heading never credits a lever's year to the answer's date. */
+      readonly stopFrom?: 'answer' | 'lever'
     }
   | {
       readonly kind: 'withheld'
@@ -1378,7 +1381,7 @@ export function buildTableBase(d: ScenarioDraft, outcome: DateSearchOutcome | un
           track,
           route,
           sources: accountSources(d),
-          ...(stopOffsetYears !== undefined ? { stopOffsetYears } : {}),
+          ...(stopOffsetYears !== undefined ? { stopOffsetYears, stopFrom: whatIf?.offsetYears !== undefined ? ('lever' as const) : ('answer' as const) } : {}),
         }
       : { kind: 'withheld', reason: 'no-ledger' }
   if (!isDateRoute(d)) {

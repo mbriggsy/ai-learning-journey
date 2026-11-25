@@ -377,6 +377,8 @@ export const PAIRED_COLUMNS = [
   'taken-pretax',
   'taken-roth',
   'income-tax',
+  'tax-on-pay',
+  'payroll',
   'end-total',
 ] as const
 export type PairedColumnId = (typeof PAIRED_COLUMNS)[number]
@@ -475,6 +477,10 @@ const COLUMN_READS: Readonly<Record<PairedColumnId, ColumnRead>> = {
   'taken-pretax': { header: () => slots.workbenchPairTakenFrom(copy.workbenchSourcePretax), read: (r) => r.draw.pretax },
   'taken-roth': { header: () => slots.workbenchPairTakenFrom(copy.workbenchSourceRoth), read: (r) => r.draw.roth },
   'income-tax': { header: () => copy.workbenchColIncomeTax, read: (r) => r.taxPaid },
+  // A working year's pay check taxes, each its own column (Income tax holds none of either: plan 4.0). No lever adds
+  // these; Cash Flows sets them beside the pair wherever either run has a working year.
+  'tax-on-pay': { header: () => copy.cashFlowsColPayIncomeTax, read: (r) => r.workingYear?.taxOnOutsideIncome },
+  payroll: { header: () => copy.workbenchLinePayroll, read: (r) => r.workingYear?.payrollTax },
   // The one figure that is not a single field: the engine's own year-end total (`totalAcrossBuckets`, the sum the
   // engine reads for the portfolio), over the row's own year-end balances.
   'end-total': { header: () => copy.workbenchPairEndTotal, read: (r) => totalAcrossBuckets(r.end), balance: true },

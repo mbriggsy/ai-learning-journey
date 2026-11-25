@@ -104,7 +104,7 @@ export function ComparisonPanel({
           <div className="flex flex-col gap-6">
             <div className="flex flex-col gap-8 laptop:grid laptop:grid-cols-2 laptop:gap-10">
               {view.stacks.map((s, i) => (
-                <div key={s.title} role="group" aria-label={`${view.title}: ${s.title}`} className="flex min-w-0 flex-col gap-2" data-comparison-stack={i === 0 ? 'recommended' : 'plan'}>
+                <div key={s.title} role="group" aria-label={`${view.title}: ${s.title}`} aria-describedby={verdictDescribedBy()} className="flex min-w-0 flex-col gap-2" data-comparison-stack={i === 0 ? 'recommended' : 'plan'}>
                   <h3 className="text-center text-body font-semibold text-stone-900">{s.title}</h3>
                   <ChartBoundary fallback={<p className="py-8 text-body text-stone-600">{copy.chartLoadFailed}</p>}>
                     <Suspense fallback={<div aria-hidden="true" className="h-70" />}>

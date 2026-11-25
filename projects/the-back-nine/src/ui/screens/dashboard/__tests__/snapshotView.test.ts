@@ -12,6 +12,7 @@ import { tableRunFor, type TableMeta } from '../../../workbench/tableRun'
 import { planReadingFor, whatIfRunFor } from '../../../workbench/whatIfRun'
 import type { RecommendationView } from '../../../recommendationView'
 import { retiredRows, snapshotView, steadyStats, type SnapshotInput, type SteadyRows } from '../snapshotView'
+import { taxAllocationView } from '../../investment/investmentView'
 
 /**
  * Snapshot's composer (Act 6 · RC3, the plan's RC3 test scenarios): the honesty laws of the home, each decided here and
@@ -100,6 +101,24 @@ describe('Snapshot: Invested accounts, never net worth', () => {
     ])
     expect(view.invested.stopgap).toBe(copy.snapshotInvestedStopgap)
     expect(view.invested.asEntered).toBe(copy.snapshotInvestedAsEntered)
+  })
+
+  it('balances with cents: each account rounds first, so the rows add to the total and the total is Tax Allocation’s', () => {
+    // Three $10.40 accounts: summed unrounded the total printed $31 under rows of $10, $10 and $10 (and Tax Allocation's $30).
+    const cents: ScenarioDraft = {
+      ...RETIRED,
+      enteredAccounts: [
+        { id: 'c-brokerage', ownerIndex: 0, kind: 'brokerage', ticker: 'VTI', valueToday: 10.4 },
+        { id: 'c-roth', ownerIndex: 0, kind: 'roth-ira', ticker: 'VTI', valueToday: 10.4 },
+        { id: 'c-hsa', ownerIndex: 0, kind: 'hsa', ticker: 'VTI', valueToday: 10.4 },
+      ],
+    } as ScenarioDraft
+    const view = snapshotView(input(snap(cents, headlineAnswer(cents))))
+    expect(view.invested.rows.map((r) => r.value)).toEqual(['$10', '$0', '$10', '$10'])
+    expect(view.invested.total.value).toBe('$30')
+    const tax = taxAllocationView(cents, null, undefined)
+    if (tax.kind !== 'buckets') throw new Error('no buckets')
+    expect(tax.total).toBe(slots.workbenchFactDollars('30'))
   })
 
   it('a plan saved in an earlier year says which year its balances were entered in', () => {

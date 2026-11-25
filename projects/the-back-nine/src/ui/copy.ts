@@ -1204,8 +1204,9 @@ export const copy = {
   // --- P3·U11 — the health picture (the Healthcare sheet's words; since Act 6 · RC10 Retirement → Health Care's). Chrome
   // rides lever* (hedge-exempt, the prefix law above); plan-moving READOUTS ride the U11 control prefixes (shadowRate* /
   // irmaaStep* / acaCost*) or control* — each swept by require-hedge. ---
-  leverHealthDoorCta: 'See your health-cost picture',
-  leverHealthDoorEditCta: 'Revisit your health-cost picture',
+  // The assumption panel's subsidy-rules door opens Retirement -> Health Care (RC10 deleted the health-cost sheet).
+  leverHealthDoorCta: 'See the Health Care page',
+  leverHealthDoorEditCta: 'Revisit the Health Care page',
   // The fact-readout eyebrows (cold-read 2026-07-03: "why isn't the content a first class
   // citizen?" — each empirical fact renders as eyebrow + tabular-nums dollar anchor + the
   // honed sentence, the stepped readout the U11 ratification named). Sentence-case calm labels
@@ -1312,7 +1313,7 @@ export const copy = {
   //
   // STRUCK, NOT REPLACED WITH AN AFFIRMATION, and that is deliberate. The O16 house pattern is
   // affirm-with-residual, but these two strings are gated on `statePriced` ALONE
-  // (`stateTaxDisclosure.ts:144`) — they carry no ACA-priced axis, so the identical sentence also
+  // (`stateTaxDisclosure.ts:145`) — they carry no ACA-priced axis, so the identical sentence also
   // ships to a Medicare-only household (`intakeMap.ts:800-803`) that has no benchmark at all.
   // "The benchmark is already in these numbers" would be a NEW false claim for that population.
   // Affirming here needs the three-state gate the Roth strings have; until then, silence is true.
@@ -1434,17 +1435,17 @@ export const copy = {
   verdictStateUnpricedNote: 'State income tax isn’t priced yet. In a taxing state, that’s a real yearly bill.',
   // The PRICED pre-65 arm's narrowing tail — the composer's law: an affirmation NEVER renders alone
   // (affirm-alone would read as "everything is priced"). The all-65+ residual narrows with the
-  // Medicare-extras Tail; this household reads it on the Healthcare sheet (`medicareExtrasSheetHeldFlat`
-  // + its unpriced list `controlHealthOmissionsNoteStatePriced` — one honest home per fact), so this
-  // tail POINTS there, by the sheet's rendered name (`leverHealthTitle`). Period-grafted like
+  // Medicare-extras Tail; this household reads it on Retirement -> Health Care (the residual's held-flat sentence
+  // + its unpriced list `controlHealthOmissionsNoteStatePriced` — one honest home per fact; the Healthcare sheet
+  // until RC10), so this tail POINTS there, by the page's name (`shellPageHealthCare`). Period-grafted like
   // `verdictResidualTail` (every affirmation ends mid-clause). RULED 2026-09-12 (Card 4's one
   // sentence): the pilot's 2026-09-11 draft — ". What still isn’t counted is listed in your
   // health-cost picture." — was read cold by Briggsy as "I still need to enter healthcare costs",
   // the reader owning an omission that is the TOOL's. The shipped words put it on the tool ("this
   // tool leaves out") and say where the list is; his ruling on the pilot's re-word. Swap the string,
   // keep the composition (the healthnc fit arm and stateTaxDisclosure.test pin the CONSTANT, never
-  // the lexeme).
-  verdictStatePricedDoorTail: '. The few costs this tool leaves out are listed in your health-cost picture.',
+  // the lexeme). Since RC10 the list lives on the Health Care page, named so.
+  verdictStatePricedDoorTail: '. The few costs this tool leaves out are listed on the Health Care page.',
   rothMedicareResidualNote:
     // Swapped 2026-07-19, twice (the trend unit, then its Part D sourcing pass): the original
     // blamed "premiums held flat" for a crossing looking "a shade easier" — true pre-flip,
@@ -2350,7 +2351,7 @@ export const copy = {
   // The runner-up, one tap down as TEXT (R23 — retained + reachable; stripping it fails the suite).
   // recRunnerUp* ⇒ swept ("often" carries it).
   recRunnerUpWhy:
-    'The runner-up ran close; this one came out a little ahead more often across the futures we tested.',
+    'The runner-up ran close; on the set of futures the strategies are ranked on, this one came out ahead or the two came out about even.',
 
   // The WITHHELD reasons — one humane string per WithheldReason arm (Q5: the TRUE reason, the DIRECTION
   // honestly, framed as REFUSING TO GUESS; an unclassified reason fails CLOSED with the generic). The
@@ -2972,6 +2973,9 @@ export const copy = {
   taxStratRowBaseline: 'Your plan today',
   taxStratRowBaselineRunnerUp: 'Your plan today, the runner-up',
   taxStratRowNearTie: 'Too close to call apart',
+  // The near-tie on the SURVIVAL grade axis (a plan that is not over-funded, `gradeAxisFor`): the call is on the odds the
+  // money lasts, not on the dollar figures printed beside it, which can sit well apart.
+  taxStratRowNearTieOdds: 'Too close to call apart on the odds the money lasts',
   taxStratListStrategy: 'Strategy',
   taxStratMetricLeaveMore: 'Left to your heirs, after taxes',
   taxStratMetricPayLessTax: 'Lifetime tax and health premiums',
@@ -3018,9 +3022,11 @@ export const copy = {
   // income never sets the same row's bill.
   taxStratColIrmaaIncome: 'This year’s income, which sets the Medicare bill two years later',
   taxStratColIrmaaLine: 'That bill’s surcharge starts above',
-  taxStratColMedicareBase: 'Medicare premium before the surcharge',
-  taxStratColSurcharge: 'Income surcharge',
-  taxStratColMedicareTotal: 'Medicare premium in all',
+  // The bill columns are the row's own year's bill (set by the income two rows up), never "that bill" two years on.
+  taxStratColMedicareBase: 'This year’s Medicare premium before the surcharge',
+  // Never "This year's income surcharge": beside the first column it reads as the surcharge this year's income sets.
+  taxStratColSurcharge: 'This year’s surcharge, set by income two years earlier',
+  taxStratColMedicareTotal: 'This year’s Medicare premium in all',
   taxStratMedicareNone: 'No Medicare years in this run.',
   // --- Retirement → Social Security (Act 6 · RC9; `socialSecurityView.ts`): a few fixed claiming ages compared, each a
   // claim-age what-if on the plan. Every yearly figure is the steady market's, so each chart and sentence names it; the
@@ -3056,6 +3062,10 @@ export const copy = {
   claimsNoChoiceLeft: 'Social Security has already started for everyone in this plan, so there is no claiming age left to choose.',
   claimsNoTotal: 'No lifetime total',
   claimsAboutSame: 'About the same',
+  /** The steady rows on a floor-keyed band (the lifestyle track undated) are the essentials-only pass once work stops:
+   *  the ran-out lines and "No lifetime total" come from it (Health Care's and Cash Flows' words, with no table). */
+  claimsFloorTrack:
+    'Once work stops, these year-by-year figures use essentials-only spending, not your full budget: your answer’s date is figured on that level. Each year’s Social Security doesn’t depend on spending, but on your full budget the money could run out sooner.',
   claimsNoBreakEven: 'No break-even',
   claimsAnnualDescription:
     'Paired bars, one pair per year: the first strategy solid, the one it is compared with hatched, each the Social Security paid that year in the steady market.',
@@ -3064,6 +3074,12 @@ export const copy = {
   claimsBarsDescription:
     'One bar per strategy, with its lifetime Social Security in the steady market printed beside it and your plan’s odds with those ages under it. Your plan’s own ages are hatched.',
   claimsStepsNote: 'B9 files nothing for you. These are the ages this strategy uses; filing is done with Social Security itself.',
+  // --- The words a figured page with no table prints while it has no answer to read (Social Security, Health Care,
+  // Stress Test). Cash Flows keeps its own table words (`workbenchWithheld*`). ---
+  pageWordsAnswerError: 'Your answer couldn’t be worked out, so this page has nothing to show. The Analysis page has Try again.',
+  pageWordsWithheldBand: 'Your answer has a date but not the run behind it, so this page can’t be shown for it.',
+  pageWordsWithheldNoLedger:
+    'Your plan has no savings, no pension or other income, and no health premium entered, so there are no year-by-year figures to show here.',
   // --- Retirement → Health Care (Act 6 · RC10; `healthCareView.ts`): the premiums the tool adds on top of the spending,
   // one small chart per part on one dollar scale. No part is ever stacked on another: a sum of middle costs is not the
   // middle total, and the surcharge's middle cost reads $0 in any year fewer than half the futures pay it. The readout is
@@ -3087,9 +3103,24 @@ export const copy = {
   healthRowsWaiting: 'Working out the steady market year by year…',
   healthRowsError: 'The steady market’s year-by-year run couldn’t be worked out just now.',
   healthNone: 'Your plan prices no health premiums of its own, so there is nothing to chart here.',
+  /** The readout prices a year only for the futures that can still pay for it: where most futures' money runs out before
+   *  the first year the page can chart, it charts nothing rather than a flat $0 (its medians over no future). */
+  healthRunsOutWords: 'In most futures your plan’s money runs out before this page has a year it can chart, so there are no health premiums to show here.',
   healthHeroLine: 'in health premiums over your lifetimes in the middle future, on top of your spending',
   healthHeroLineSteady: 'in health premiums over your lifetimes in the steady market, on top of your spending',
+  /** A floor-keyed band (the lifestyle track undated): the steady rows are the essentials-only pass once work stops. */
+  healthHeroLineSteadyEssentials: 'in health premiums over your lifetimes in the steady market, on top of essentials-only spending once work stops',
+  healthFloorTrack:
+    'Once work stops, these figures use essentials-only spending, not your full budget: your answer’s date is figured on that level. Less spending can mean less income, and so lower premiums than your full budget would bring.',
   healthLifetimeEachOwn: 'Each figure is the middle of its own spread of futures, so the parts need not add up to the total.',
+  /** Each future's lifetime sums accrue only the years it could pay for (the rosy direction where money runs out). */
+  healthLifetimeStopsAtRunOut: 'In a future where the money runs out, these lifetime figures stop the year it runs out: no premiums after that are counted, so they can read low.',
+  /** The survivor and omissions notes for a household with no marketplace years (everyone 65 or older): the Medicare
+   *  items alone (the marketplace ones speak of a discount and cost-sharing it never buys). */
+  healthSurvivorNoteMedicare:
+    'If one of you is on your own later, the same income can trip the Medicare surcharge sooner; it shows up about two years later, since Medicare looks back two years at income.',
+  healthOmissionsNoteMedicare:
+    'Not counted here: the net-investment-income tax and a surviving spouse’s chance to have the Medicare surcharge rechecked sooner — each could move this picture.',
   healthCliffKey:
     'The count over a bracket: about how many of 10 of the futures that buy marketplace cover that year have income past the line, so that year’s discount disappears entirely.',
   /** The count's key inside the marketplace chart's own box, whenever a bracket draws (the full key above stays in the
@@ -3176,9 +3207,11 @@ export const copy = {
   assetWhatIfDescription: 'A ring split into stocks, bonds and cash: the what-if’s mix. The table beside it prints each share.',
   assetShiftTitle: 'How the what-if moves each part',
   assetShiftDescription:
-    'One bar per part: how many percentage points more (to the right) or fewer (to the left) of your savings the what-if mix holds than the current mix. Each bar prints its figure.',
+    'One bar per part: how many percentage points more (to the right) or fewer (to the left) of the accounts shown the what-if mix holds than the current mix. Each bar prints its figure.',
   assetNoAccounts: 'No accounts are entered yet, so there is no mix to draw.',
   assetZero: 'Your accounts hold $0, so there is no mix to draw.',
+  taxAllocNoAccounts: 'No accounts are entered yet, so there are no savings to split by how they’re taxed.',
+  taxAllocZero: 'Your accounts hold $0, so there are no savings to split by how they’re taxed.',
   taxAllocIntro: 'Your savings by how they’re taxed. Pick a part, on the ring or by its figure, to list its accounts.',
   taxAllocTitle: 'Your savings by tax treatment',
   taxAllocCentre: 'Your savings',
@@ -3963,9 +3996,6 @@ export const slots = {
     yearsSooner === 1
       ? `Or about a year sooner, the odds are nearer ${oddsText}.`
       : `Or about ${yearsSooner} years sooner, the odds are nearer ${oddsText}.`,
-  /** A D2c ladder x-axis tick — the household clock (0 = today). Compact so ≤ 11 ticks don't crowd;
-   *  the "in N years" framing lives in the headline + the crown tell, not every tick. */
-  ladderOffsetTick: (offsetYears: number): string => (offsetYears === 0 ? 'today' : `${offsetYears}`),
   /** A ladder mark's a11y sentence — the reader is color-blind, so every dot reaches the tree as
    *  TEXT (the height/shape signal alone isn't enough). The odds ride the CLAMPED oddsText (never
    *  "10 of 10"); `state` names the non-color reading. `atCeiling` (the mark's own state-derived
@@ -4924,34 +4954,6 @@ export const slots = {
   // count — the engine clamps each arm's emitted count to ≤ 9, so the ceiling proportion never
   // renders in a delta line (an over-funded arm reads "9 of 10"; the STATE rider carries the
   // move — council 2026-07-18 Q4b ratified the count). FIRST-DRAFT — the cold-read's call. ---
-  /** The primary delta line, SURVIVOR basis (the plan's emotional headline number). Reads honestly
-   *  in BOTH directions — a loss renders as "…in 5 of 10 futures instead of 7", never suppressed. */
-  rothDeltaSurvivor: (withOdds: string, withoutOdds: string): string =>
-    `For whichever of you outlives the other, the money could last in about ${withOdds} futures instead of ${withoutOdds}.`,
-  /** The JOINT-basis fallback (no survivor phase observed in the runs — rare; same grammar). */
-  rothDeltaJoint: (withOdds: string, withoutOdds: string): string =>
-    `Together, the plan could hold in about ${withOdds} futures instead of ${withoutOdds}.`,
-  /** The EVEN case — the quantized readings agree AND the verdict states agree; the difference
-   *  is inside the noise the quantize deliberately absorbs. Calm, in-frame, never a suppressed
-   *  delta. Fires ONLY on same-state arms: equal clamped counts across a state move (over-funded
-   *  vs on-track both read "9 of 10") were rendering this line's "doesn’t look to change much"
-   *  over a real improvement — the recommend-second suppression (council 2026-07-18 Q4d). */
-  rothDeltaEven: (odds: string): string =>
-    `In these runs it doesn’t look to change much — about ${odds} either way.`,
-  /** The equal-counts-DIFFERENT-states arm (the ≤9 clamp compresses the top, so a real move can
-   *  hold the count still): states only the count fact, claims nothing about magnitude — the
-   *  state rider directly below carries the move (council 2026-07-18 Q4d). */
-  rothDeltaCountEven: (odds: string): string =>
-    `The odds read about ${odds} either way in these runs.`,
-  /** The verdict-state transition rider — fires when the arms' verdict WORDS differ (which is
-   *  how an over-funded arm surfaces past the ≤9 count clamp: the count holds "9 of 10", the
-   *  STATE move is the headline shift). */
-  rothStateShift: (fromWord: string, toWord: string): string =>
-    `That would read as moving from “${fromWord}” to “${toWord}.”`,
-  /** The hedged "~N years" SECONDARY, tied to its stated percentile (never the headline). Present
-   *  only when BOTH arms have a real median depletion year — never fabricated. */
-  rothYearsSecondary: (n: number, direction: 'more' | 'fewer'): string =>
-    `Around the middle of the road, that’s roughly ${n} ${direction} year${n === 1 ? '' : 's'} of runway.`,
   /** The sequencing delta line — same grammar, the order as the subject. */
   sequencingDelta: (withOdds: string, withoutOdds: string): string =>
     `With this order, the money could last in about ${withOdds} futures instead of ${withoutOdds}.`,
@@ -5073,7 +5075,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:2257` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:2265` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,
@@ -5684,14 +5686,19 @@ export const slots = {
     `${comparedName} reads ${compared}; ${alternativeName} reads ${alternative}.`,
   /** The subsidy-rules what-if's health line, under the difference line (council 2026-07-03: the rules move health costs
    *  far more than the odds; ported from the health sheet's preview, which RC10 deleted). Each side's own median, never a
-   *  difference of two medians. */
+   *  difference of two medians. "Premiums", never "costs" (RC10's As-built): the figure holds the net marketplace premium
+   *  and Medicare's cost, never the out-of-pocket spending, which sits inside the budget. */
   subsidyRegimeCostDelta: (withFormatted: string, withoutFormatted: string): string =>
-    `Lifetime health costs could run around ~$${withFormatted} this way, versus ~$${withoutFormatted} as figured now.`,
+    `Lifetime health premiums could run around ~$${withFormatted} this way, versus ~$${withoutFormatted} as figured now.`,
+  /** The same line where the what-if that tries the rules sits on the RIGHT (a kept what-if) and your plan on the left:
+   *  "this way" would point at no half, so the what-if is named. */
+  subsidyRegimeCostDeltaWith: (name: string, withFormatted: string, withoutFormatted: string): string =>
+    `Lifetime health premiums could run around ~$${withFormatted} with ${name}, versus ~$${withoutFormatted} as figured now.`,
   /** The even arm (Caddie 2026-07-10): both medians can ROUND to one figure, and "~$99,800 … versus ~$99,800" reads as a
    *  twin-number glitch — say "about the same" and quote the shared figure once. The compose gates on the FORMATTED
    *  strings being equal. */
   subsidyRegimeCostEven: (costFormatted: string): string =>
-    `Lifetime health costs could run about the same either way — around ~$${costFormatted}.`,
+    `Lifetime health premiums could run about the same either way — around ~$${costFormatted}.`,
   /** A reopened kept what-if after an edit: its name, marked as not kept (the half's title and the picker's choice). */
   probabilityKeptChanged: (name: string): string => `${name} (changed, not kept)`,
   /** The plan list (RC5): a copy's name, numbered past the first copy. */
@@ -5752,25 +5759,65 @@ export const slots = {
     n === 1
       ? '1 other strategy was compared and ranked below these; its figure isn’t shown.'
       : `${n} other strategies were compared and ranked below these; their figures aren’t shown.`,
+  /** The closing line when some unshown candidates rank ABOVE your plan today (`rankedIds` is best-first; the runner-up
+   *  is always second, so they sit between it and your plan): both counts, never "all ranked below these". */
+  taxStratOthersAbove: (above: number, below: number): string => {
+    const head = above === 1 ? '1 other strategy that ranked' : `${above} other strategies that ranked`
+    const tail = below === 0 ? '' : `, and ${below} that ranked below your plan today`
+    return `Also compared: ${head} between the runner-up and your plan today${tail}. ${above + below === 1 ? 'Its figure isn’t' : 'Their figures aren’t'} shown.`
+  },
+  /** Under the runner-up's row when its figure beats the recommended one's in the goal's direction. The reason holds on
+   *  every crown (`select.ts`): the ranking reads its own set of futures (seed A; the printed figures are seed B's), odds
+   *  first, then the goal's figure with a lead inside the noise counted as none, a near-tie going to the usual order. So
+   *  the recommended one either came out ahead there or the two were too close to split; never "ahead more often", a
+   *  frequency nothing counts and the tie-break crown contradicts. "About" carries the require-hedge sweep. */
+  recRunnerUpAheadHere: (higher: boolean): string =>
+    `Its average prints ${higher ? 'higher' : 'lower'} here, yet the recommended strategy ranks first: the strategies are ranked on a separate set of futures, where the recommended one came out ahead or the two came out about even.`,
   taxStratValue: (fig: string): string => `~$${fig}`,
   taxStratRothRow: (amount: string, years: number): string =>
     `Roth: ~$${amount} a year for ${years === 1 ? '1 year' : `${years} years`}`,
+  /** Your plan today's own conversion: its amount alone, as the Winner card quotes it (`rothPlanReplaces`). Its window
+   *  is never quoted: the household's own years ride unscreened, with no upper bound, so a length could name years
+   *  nothing was priced over (`recommendationView.ts`'s provenance rule (2)). */
+  taxStratRothRowOwn: (amount: string): string => `Roth: ~$${amount} a year`,
   /** A one-future chart or table, named for its market (plan 4.0: a one-path picture is never read as the odds). */
   taxStratInMarket: (title: string, steady: boolean): string => `${title}, in the ${steady ? 'steady' : 'rough'} market`,
   taxStratCompareAssets: (fig: string, dir: 'more' | 'less' | 'same', year: number, steady: boolean): string =>
     dir === 'same'
       ? `At the end of ${year}, both strategies hold about the same in savings, in the ${steady ? 'steady' : 'rough'} market.`
       : `At the end of ${year}, the recommended strategy holds ~$${fig} ${dir} in savings than your plan today, in the ${steady ? 'steady' : 'rough'} market.`,
-  taxStratCompareTax: (fig: string, dir: 'more' | 'less' | 'same', steady: boolean): string =>
+  // `through`: a run ran out early, so the totals stop at the last year both runs reach (said beside it by taxStratRanOut).
+  taxStratCompareTax: (fig: string, dir: 'more' | 'less' | 'same', steady: boolean, through?: number): string =>
     dir === 'same'
-      ? `Over the years shown, both strategies pay about the same income tax, in the ${steady ? 'steady' : 'rough'} market.`
-      : `Over the years shown, the recommended strategy pays ~$${fig} ${dir} income tax than your plan today, in the ${steady ? 'steady' : 'rough'} market.`,
-  taxStratCompareRmd: (fig: string, dir: 'more' | 'less' | 'same', steady: boolean): string =>
+      ? `${through === undefined ? 'Over the years shown' : `Through ${through}`}, both strategies pay about the same income tax, in the ${steady ? 'steady' : 'rough'} market.`
+      : `${through === undefined ? 'Over the years shown' : `Through ${through}`}, the recommended strategy pays ~$${fig} ${dir} income tax than your plan today, in the ${steady ? 'steady' : 'rough'} market.`,
+  taxStratCompareRmd: (fig: string, dir: 'more' | 'less' | 'same', steady: boolean, through?: number): string =>
     dir === 'same'
-      ? `Over the years shown, both strategies take about the same in required withdrawals, in the ${steady ? 'steady' : 'rough'} market.`
-      : `Over the years shown, the recommended strategy takes ~$${fig} ${dir} in required withdrawals than your plan today, in the ${steady ? 'steady' : 'rough'} market.`,
-  taxStratCompareConversions: (ours: string, theirs: string, steady: boolean): string =>
-    `Over the years shown, the recommended strategy moves ~$${ours} to Roth and your plan today moves ~$${theirs}, in the ${steady ? 'steady' : 'rough'} market.`,
+      ? `${through === undefined ? 'Over the years shown' : `Through ${through}`}, both strategies take about the same in required withdrawals, in the ${steady ? 'steady' : 'rough'} market.`
+      : `${through === undefined ? 'Over the years shown' : `Through ${through}`}, the recommended strategy takes ~$${fig} ${dir} in required withdrawals than your plan today, in the ${steady ? 'steady' : 'rough'} market.`,
+  taxStratCompareConversions: (ours: string, theirs: string, steady: boolean, through?: number): string =>
+    `${through === undefined ? 'Over the years shown' : `Through ${through}`}, the recommended strategy moves ~$${ours} to Roth and your plan today moves ~$${theirs}, in the ${steady ? 'steady' : 'rough'} market.`,
+  /** A run whose money ran out (its rows stop at the ran-out year, `ranOut`): each run that ran out is named with its
+   *  own year, the earlier first, so a later run-out is never left unsaid. `counted`: the chart prints a figure cut at
+   *  the last year both reach (tax, required withdrawals, conversions, the closing balance), so the line says so; the
+   *  withdrawal stacks draw every year of each run and count nothing, so there it is left off. */
+  taxStratRanOut: (recommended: number | null, plan: number | null, steady: boolean, counted: boolean): string => {
+    const market = `In the ${steady ? 'steady' : 'rough'} market`
+    if (recommended !== null && plan !== null && recommended === plan)
+      return `${market} the money runs out in ${recommended} on both strategies, and their year-by-year figures stop there.`
+    const runs = [
+      ...(recommended !== null ? [{ year: recommended, name: 'the recommended strategy' }] : []),
+      ...(plan !== null ? [{ year: plan, name: 'your plan today' }] : []),
+    ].sort((a, b) => a.year - b.year)
+    const through = runs[0]!.year
+    const head =
+      runs.length === 2
+        ? `${market} the money runs out in ${runs[0]!.year} on ${runs[0]!.name} and in ${runs[1]!.year} on ${runs[1]!.name}, and each one’s year-by-year figures stop there`
+        : `${market} the money runs out in ${through} on ${runs[0]!.name}, and its year-by-year figures stop there`
+    return counted ? `${head}, so the comparison here counts only the years through ${through}, which both strategies reach.` : `${head}.`
+  },
+  taxStratDetailsRanOut: (year: number, steady: boolean): string =>
+    `In the ${steady ? 'steady' : 'rough'} market the money runs out in ${year} on this strategy, and its rows stop there.`,
   taxStratBarPoint: (name: string, fig: string): string => `${name}: ~$${fig}`,
   taxStratChartPoint: (year: number, name: string, fig: string): string => `${year}, ${name}: ~$${fig}`,
   taxStratDetailsOf: (who: string, steady: boolean): string => `${who}, in the ${steady ? 'steady' : 'rough'} market`,
@@ -5788,6 +5835,9 @@ export const slots = {
   claimsPersonAt: (mid: string, age: number): string => `${mid} at ${age}`,
   claimsFixed: (mid: string, you: boolean, possessive: string, fig: string): string =>
     `${mid} already ${you ? 'receive' : 'receives'} Social Security, about ~$${fig} a year, so ${possessive} age stays as it is in every strategy.`,
+  // An already-filed person whose own benefit is $0 and whose spouse has not filed: nothing is paid yet, so no figure.
+  claimsFixedSpousalPending: (mid: string, you: boolean, possessive: string, otherMid: string, otherYou: boolean): string =>
+    `${mid} ${you ? 'have' : 'has'} already filed for Social Security, and ${possessive} spousal benefit starts once ${otherMid} ${otherYou ? 'file' : 'files'}, so ${possessive} age stays as it is in every strategy.`,
   claimsNoBenefit: (mid: string, you: boolean): string => `${mid} ${you ? 'have' : 'has'} no Social Security benefit in this plan.`,
   claimsReceives: (mid: string, you: boolean, fig: string): string => `${mid} already ${you ? 'receive' : 'receives'} about ~$${fig} a year.`,
   claimsLifetimeTotal: (fig: string): string => `Over your lifetimes that comes to ~$${fig} in all, in the steady market.`,
@@ -5805,25 +5855,39 @@ export const slots = {
     `${possessive} age in ${year}: from then on, the total paid from ${leader} stays ahead of the total from ${other}, in the steady market`,
   claimsNoBreakEvenLine: (year: number, possessive: string, age: number, leader: string, other: string): string =>
     `Through ${year}, ${possessive} age ${age} and the steady market’s last year, the total paid from ${leader} stays ahead of the total from ${other}`,
+  /** No break-even, and the two running totals print the same in the last year read: no side leads there (a tie at the
+   *  printed grain is no lead), as the yearly view's "About the same" says of the same two totals. */
+  claimsLevelByLine: (year: number, possessive: string, age: number, a: string, b: string): string =>
+    `By ${year}, ${possessive} age ${age} and the steady market’s last year, the totals paid from ${a} and from ${b} come out about the same`,
   claimsRanOut: (label: string, year: number): string =>
     `With ${label.toLowerCase()}, the money runs out in ${year} in the steady market and its year-by-year rows stop there, so its lifetime Social Security isn’t totalled here.`,
   claimsFigure: (fig: string): string => `~$${fig}`,
   claimsBarPoint: (name: string, figure: string, odds: string): string => `${name}: ${figure} of lifetime Social Security; your plan’s odds with those ages, ${odds}`,
   claimsYearPoint: (axis: string, age: number, name: string, fig: string): string => `${axis} ${age}, ${name}: ~$${fig}`,
-  claimsSummaryLine: (phrases: string, n: number): string =>
-    `of lifetime Social Security from ${phrases}, ${n === 1 ? 'the most of these strategies' : 'tied for the most of these strategies'}, in the steady market`,
+  /** `partial`: a strategy's money ran out first and it has no lifetime total, so the claim narrows to the strategies
+   *  with one (its total, had its rows reached the second death, could be the largest). */
+  claimsSummaryLine: (phrases: string, n: number, partial = false): string => {
+    const of = partial ? 'the strategies with a lifetime total here' : 'these strategies'
+    return `of lifetime Social Security from ${phrases}, ${n === 1 ? `the most of ${of}` : `tied for the most of ${of}`}, in the steady market`
+  },
   claimsSummaryOdds: (topOdds: string, planOdds: string): string => `Your plan’s odds with those ages: ${topOdds}. With its own ages: ${planOdds}.`,
   claimsSummaryOddsPlan: (planOdds: string): string => `Your plan’s odds with its own ages: ${planOdds}.`,
   claimsStepsHeading: (label: string): string => `Filing steps: ${label}`,
   claimsStepFiles: (mid: string, you: boolean, age: number, year: number): string =>
     `${mid} ${you ? 'file' : 'files'} for Social Security at ${age}, in ${year}.`,
   claimsStepClaimed: (mid: string, you: boolean): string => `${mid} already ${you ? 'receive' : 'receives'} Social Security; nothing changes.`,
+  // Filed, but paid nothing yet: no benefit of their own, the spousal part waiting on the other's filing (`claimsFixedSpousalPending`).
+  claimsStepSpousalPending: (mid: string, you: boolean, possessive: string, otherMid: string, otherYou: boolean): string =>
+    `${mid} ${you ? 'have' : 'has'} already filed for Social Security; ${possessive} spousal benefit starts when ${otherMid} ${otherYou ? 'file' : 'files'}.`,
+  claimsAsOfBuild: (year: number): string => `The ages and filing years on this page are as of ${year}, the year this plan was built.`,
   // --- Retirement → Health Care (Act 6 · RC10). Figures arrive in the delta dialect; the cliff count rides the sheet's
   // own adverse phrase (`acaCostCliff`'s: "about 2 of 10", the "more than 9 in 10" ceiling, never "10 of 10"). ---
   healthInSteady: (title: string): string => `${title}, in the steady market`,
   healthAxisNote: (axis: string): string => `${axis} along the bottom of each chart`,
   healthFigure: (fig: string): string => `~$${fig}`,
-  healthYearPoint: (axis: string, age: number, year: number, part: string, fig: string): string => `${axis} ${age}, in ${year}. ${part}: ~$${fig}`,
+  /** One bar's hover and spoken sentence, read without its legend: so it carries the legend's qualifier itself. */
+  healthYearPoint: (axis: string, age: number, year: number, part: string, fig: string, steady: boolean): string =>
+    `${axis} ${age}, in ${year}. ${part}: ${steady ? `~$${fig} in the steady market` : `a middle cost of ~$${fig}`}`,
   healthLifetimeAca: (fig: string): string => `Marketplace cover: ~$${fig}`,
   healthLifetimeMedicare: (fig: string): string => `Medicare, its surcharge and the coverage beyond it: ~$${fig}`,
   /** The count over a cliff bracket: the bare count (the key line carries the "about"), the adverse ceiling at 10. */
@@ -5831,14 +5895,25 @@ export const slots = {
   healthCliffPoint: (fromAge: number, toAge: number, axis: string, ofTen: number): string =>
     `${axis} ${fromAge === toAge ? fromAge : `${fromAge} to ${toAge}`}: in ${adverseOddsPhrase(ofTen)} of the futures that buy marketplace cover that year, the year’s income passes the line and its discount disappears entirely.`,
   healthRanOut: (year: number): string => `In the steady market the money runs out in ${year}, and its year-by-year rows stop there.`,
+  /** The retired route's funded cut (`chartableYears`): from the first year fewer than half the futures still have money,
+   *  the charts draw nothing, so the shorter axis is never read as premiums stopping or the plan ending there. */
+  healthChartsStop: (axis: string, age: number): string => `From ${axis} ${age}, most futures have run out of money, so the charts stop there.`,
+  /** When work stops in the steady rows the page charts (Cash Flows' `workbenchStopsIn` / `workbenchNoDate`, worded for a
+   *  page of charts). */
+  healthStopsIn: (year: number): string => `On this page, work stops in ${year}, the year your answer’s date gives.`,
+  healthNoDate: (year: number): string => `Your answer found no date in its window, so this page has work stopping in ${year}, the window’s last year.`,
   // --- Retirement → Stress Test (Act 6 · RC11). Each stress's size is a percent of an input (never odds: the counts ride
   // the X-of-10 slots); the stop year rides the ring's own caption ("if you stop in 2031"). ---
   stressPctLess: (pct: number): string => `${pct}% less`,
   stressPctHigher: (pct: number): string => `${pct}% higher`,
   stressBarPoint: (name: string, detail: string, odds: string): string => `${name}, ${detail}: ${odds}`,
   stressReadsAt: (caption: string): string => `Every bar reads your odds ${caption}, the stop year your plan’s answer uses.`,
+  stressReadsAtNoDate: (caption: string): string => `Your answer found no date in its window, so every bar reads your odds ${caption}, the window’s last year.`,
   stressBarError: (name: string): string => `${name}: this stress couldn’t be worked out just now. Refresh tries it again.`,
   stressBarWithheld: (name: string): string => `${name}: this stress couldn’t run on the same futures as your plan, so it shows no count.`,
+  /** A stress whose reading has no number (indeterminate): Highcharts draws no label on a null column, so its slot's
+   *  words live here, in the ring's own "not enough to read yet". */
+  stressBarNoCount: (name: string): string => `${name}: not enough to read yet, so this stress shows no count.`,
   // --- Investment (Act 6 · RC12). A percent here is a share of the savings, printed by `investmentView.ts`'s one rounding
   // rule; the dollar figures are entered balances (facts, so no "~"). ---
   assetPct: (pct: number): string => `${pct}%`,
@@ -5852,6 +5927,10 @@ export const slots = {
   assetWhatIfFrom: (name: string): string => `The what-if open on Analysis: ${name}`,
   assetUnresolved: (accounts: readonly string[], many: boolean): string =>
     `Your plan needs a mix for every account before it can run, and ${accounts.join(', ')} ${many ? 'have' : 'has'} none yet, so there is no mix to draw.`,
+  /** Under a picker narrower than all accounts: the run grows every account at the household's one blend (one shared
+   *  market draw; asset location is foreclosed), so the narrower mix is never what those accounts grow at. */
+  assetOneMixLine: (stockPct: number): string =>
+    `Your plan grows all your savings at one mix, about ${stockPct}% stocks, whichever account holds the money.`,
   taxAllocPoint: (bucket: string, figure: string): string => `${bucket}: ${figure}`,
   taxAllocListTitle: (bucket: string, n: number): string => `${bucket}: ${n === 1 ? 'one account' : `${n} accounts`}`,
   confidenceShareFewer: (): string => 'fewer than 1 in 100 futures',

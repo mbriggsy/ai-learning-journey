@@ -2,7 +2,8 @@
  * src/ui/screens/tax/Summary.tsx: Tax → Tax Strategies → Summary, the panel (plan RC8;
  * `rc-cashflow-tax/help-tax-tax-strategies-roth-conversion-strategy-51.png`). Draws `summaryView.ts`'s view: the
  * centred chart title, the grouped bars on the left (about 70%) and the key-metric column on the right with the hero's
- * own words, stacked below the 68rem seam. One frame at his window. The bars ride Highcharts' lazy chunk.
+ * own words and the lines that qualify them, stacked below the 68rem seam; the disclosures and the state clause under
+ * both. The bars ride Highcharts' lazy chunk.
  */
 import { lazy, Suspense, type ReactNode } from 'react'
 import { Button, useWide } from '../../kit'
@@ -14,10 +15,11 @@ import type { SummaryView } from './summaryView'
 
 const GroupedBars = lazy(() => import('@viz/charts/GroupedBars').then((m) => ({ default: m.GroupedBars })))
 
-/** The bars' height in CSS px (the one frame at his window, measured on `surplus`). */
-export const SUMMARY_BARS_HEIGHT = 300
+/** The bars' height in CSS px (the one frame at his window, measured on `surplus`: 300 put the caveat at 736 of 731 once
+ *  the key-metric column carried the hero's qualifying lines, milestone 2's review; 280 fits with every line kept). */
+export const SUMMARY_BARS_HEIGHT = 280
 
-export function SummaryPanel({ view, caveat, footnotes, onStrategies }: { readonly view: SummaryView; readonly caveat: ReactNode; readonly footnotes: readonly string[]; readonly onStrategies: () => void }) {
+export function SummaryPanel({ view, caveat, onStrategies }: { readonly view: SummaryView; readonly caveat: ReactNode; readonly onStrategies: () => void }) {
   // Below the phone tier the two bars are too narrow for the full figures side by side: the same figures, three digits.
   const wide = useWide()
   if (view.kind !== 'bars') {
@@ -41,7 +43,7 @@ export function SummaryPanel({ view, caveat, footnotes, onStrategies }: { readon
       <div className="flex flex-col gap-6 laptop:grid laptop:grid-cols-[7fr_3fr] laptop:items-center laptop:gap-10">
         <div role="group" aria-label={view.title} aria-describedby={verdictDescribedBy()} className="min-w-0" data-summary-chart="">
           <ChartBoundary fallback={<p className="py-8 text-body text-stone-600">{copy.chartLoadFailed}</p>}>
-            <Suspense fallback={<div aria-hidden="true" className="h-75" />}>
+            <Suspense fallback={<div aria-hidden="true" className="h-70" />}>
               <GroupedBars
                 chartId="tax-summary"
                 groups={[view.category]}
@@ -63,9 +65,24 @@ export function SummaryPanel({ view, caveat, footnotes, onStrategies }: { readon
           </p>
           {view.average !== undefined ? <p className="text-label text-stone-600">{view.average}</p> : null}
           <p className="text-label text-stone-600">{view.nameplate}</p>
+          {view.skew !== undefined ? (
+            <p className="text-label text-stone-900" data-summary-skew="">
+              {view.skew}
+            </p>
+          ) : null}
+          {view.qualifier !== undefined ? (
+            <p className="text-label text-stone-900" data-summary-qualifier="">
+              {view.qualifier}
+            </p>
+          ) : null}
+          {view.shapeNote !== undefined ? (
+            <p className="text-label text-stone-600" data-summary-shape="">
+              {view.shapeNote}
+            </p>
+          ) : null}
         </div>
       </div>
-      {footnotes.map((n) => (
+      {view.footnotes.map((n) => (
         <p key={n} className="text-label text-stone-600" data-footnote="">
           {n}
         </p>

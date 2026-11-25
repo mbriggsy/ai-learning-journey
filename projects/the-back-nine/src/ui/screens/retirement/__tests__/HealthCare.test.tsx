@@ -29,6 +29,7 @@ const view: HealthChartsView = {
   notes: [],
   footnotes: [copy.verdictMedicarePriced],
   updating: false,
+  updatingLabel: copy.answerRefiguringCaption,
 }
 
 const tray = (readOnly: boolean): HealthTrayView => ({
@@ -80,9 +81,20 @@ describe('HealthCare — the Action Items tray', () => {
     expect(screen.queryByRole('button', { name: copy.trayHandle })).toBeNull()
   })
 
-  it('one folder tab, Cost Analysis, and the R13 caveat inside the panel', () => {
+  it('one folder tab, Cost Analysis, and the R13 caveat inside the panel, mounted under the charts and before the notes', () => {
     renderPage(tray(false))
     expect(screen.getAllByRole('tab').map((t) => t.textContent)).toEqual([copy.healthTabCost])
+    expect(document.querySelectorAll('[data-caveat]')).toHaveLength(1)
+    // Mount order only (jsdom draws nothing): charts, column, caveat, then the notes and footnotes.
+    const at = (s: string) => document.querySelector(s)!
+    const before = (a: string, b: string) => Boolean(at(a).compareDocumentPosition(at(b)) & Node.DOCUMENT_POSITION_FOLLOWING)
+    expect(before('[data-metrics]', '[data-caveat]')).toBe(true)
+    expect(before('[data-caveat]', '[data-health-notes]')).toBe(true)
+    expect(before('[data-caveat]', '[data-health-footnotes]')).toBe(true)
+  })
+
+  it('the words view keeps one caveat, the frame’s own', () => {
+    renderPage(undefined, { kind: 'words', words: copy.healthRunsOutWords })
     expect(document.querySelectorAll('[data-caveat]')).toHaveLength(1)
   })
 })

@@ -86,6 +86,14 @@ describe('Asset Allocation — the current mix is the run’s', () => {
     expect(v.current.slices.map((s) => s.id)).toEqual(['stock'])
     expect(v.rows.map((r) => r.current)).toEqual(['100%', '0%', '0%'])
   })
+
+  it('a part that PRINTS 0% draws no slice either (a sliver under half a point, never a slice labelled "0%")', () => {
+    const sliver: ScenarioDraft = { ...base, enteredAccounts: [acct({ kind: 'roth-ira', valueToday: 10_000, manualBlend: exact(99.4, 0.3, 0.3) })] }
+    const v = mixView(sliver)
+    expect(v.current.pcts).toEqual({ stock: 100, bond: 0, cash: 0 })
+    expect(v.current.slices.map((s) => s.id)).toEqual(['stock'])
+    expect(v.current.slices.every((s) => s.pct > 0)).toBe(true)
+  })
 })
 
 describe('Asset Allocation — the pickers', () => {
@@ -111,6 +119,17 @@ describe('Asset Allocation — the pickers', () => {
   it('a bucket’s picker reads only that bucket’s accounts, each through KIND_TO_BUCKET', () => {
     expect(scopeAccounts(mixed, 'bucket:pretax').every((a) => KIND_TO_BUCKET[a.kind] === 'pretax')).toBe(true)
     expect(mixView(mixed, 'bucket:taxable').current.pcts).toEqual({ stock: 0, bond: 100, cash: 0 })
+  })
+
+  it('a scope narrower than all accounts says the plan grows every account at the one household mix (the all-accounts stock share)', () => {
+    const allStock = mixView(mixed).current.pcts.stock
+    for (const scope of ['owner:1', 'bucket:taxable'] as const) {
+      const v = mixView(mixed, scope)
+      expect(v.scope).toBe(scope)
+      expect(v.notes[0]).toBe(slots.assetOneMixLine(allStock))
+      expect(v.notes).toContain(copy.assetCashLine)
+    }
+    expect(mixView(mixed).notes).toEqual([copy.assetOneSplitNote, copy.assetCashLine])
   })
 })
 
@@ -172,7 +191,7 @@ describe('Asset Allocation — honesty', () => {
 
 describe('Tax Allocation', () => {
   it('each bucket that holds an account, in RightCapital’s order, its balances summed; the buckets sum to the whole', () => {
-    const v = taxAllocationView(mixed, null)
+    const v = taxAllocationView(mixed, null, undefined)
     if (v.kind !== 'buckets') throw new Error('expected buckets')
     expect(v.buckets.map((b) => [b.id, b.total])).toEqual([
       ['taxable', 250_000],
@@ -186,15 +205,47 @@ describe('Tax Allocation', () => {
   })
 
   it('picking a bucket lists its accounts by owner and kind; a bucket the plan no longer holds lists nothing', () => {
-    const v = taxAllocationView(DEV_SEEDS.buckets, 'roth')
+    const v = taxAllocationView(DEV_SEEDS.buckets, 'roth', undefined)
     if (v.kind !== 'buckets') throw new Error('expected buckets')
     expect(v.list).toEqual({ title: slots.taxAllocListTitle(copy.investBucketRoth, 1), rows: [{ name: 'Alex’s Roth IRA', figure: '$200,000' }] })
-    const gone = taxAllocationView(DEV_SEEDS.buckets, 'hsa')
+    const gone = taxAllocationView(DEV_SEEDS.buckets, 'hsa', undefined)
     expect(gone.kind === 'buckets' && gone.picked).toBeNull()
   })
 
+  it('the entered balances carry Snapshot’s two lines beside the same sums: as entered (in the aged year where one is given) and what B9 does not ask about', () => {
+    const fresh = taxAllocationView(mixed, null, undefined)
+    const aged = taxAllocationView(mixed, null, 2025)
+    if (fresh.kind !== 'buckets' || aged.kind !== 'buckets') throw new Error('expected buckets')
+    expect(fresh.notes).toEqual([copy.snapshotInvestedAsEntered, copy.snapshotInvestedStopgap])
+    expect(aged.notes).toEqual([slots.snapshotInvestedAsEnteredIn(2025), copy.snapshotInvestedStopgap])
+  })
+
+  it('cents: each account rounds first, so the listed accounts sum to their part and the parts to the hole’s total', () => {
+    const cents: ScenarioDraft = {
+      ...base,
+      enteredAccounts: [
+        acct({ kind: 'brokerage', valueToday: 1_000.6, basis: 500 }),
+        acct({ kind: 'traditional-ira', valueToday: 2_000.3 }),
+        acct({ kind: 'traditional-ira', valueToday: 3_000.3 }),
+      ],
+    }
+    const v = taxAllocationView(cents, 'pretax', undefined)
+    if (v.kind !== 'buckets') throw new Error('expected buckets')
+    expect(v.buckets.map((b) => b.figure)).toEqual(['$1,001', '$5,000'])
+    expect(v.list?.rows.map((r) => r.figure)).toEqual(['$2,000', '$3,000'])
+    expect(v.total).toBe('$6,001')
+  })
+
+  it('no accounts, or accounts holding $0: Tax Allocation’s own words (it draws no mix)', () => {
+    expect(taxAllocationView({ ...base, enteredAccounts: [] }, null, undefined)).toEqual({ kind: 'words', words: [copy.taxAllocNoAccounts] })
+    const zero = { ...base, enteredAccounts: [acct({ kind: 'roth-ira', valueToday: 0, manualBlend: exact(60, 40, 0) })] }
+    expect(taxAllocationView(zero, null, undefined)).toEqual({ kind: 'words', words: [copy.taxAllocZero] })
+    expect(copy.taxAllocNoAccounts).not.toMatch(/mix/)
+    expect(copy.taxAllocZero).not.toMatch(/mix/)
+  })
+
   it('patterns and colours: the withdrawal stacks’ own, never colour alone', () => {
-    const v = taxAllocationView(mixed, null)
+    const v = taxAllocationView(mixed, null, undefined)
     if (v.kind !== 'buckets') throw new Error('expected buckets')
     expect(v.buckets.map((b) => `${b.colorIndex}:${b.pattern}`)).toEqual(['0:solid', '2:hatch', '1:dots', '4:lines'])
   })

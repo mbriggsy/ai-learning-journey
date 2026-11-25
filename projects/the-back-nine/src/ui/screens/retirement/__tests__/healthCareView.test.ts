@@ -60,12 +60,13 @@ const taxAware = {
   lifetimeMedicareCostReal: [300_000, 200_000, 100_000],
 } as unknown as TaxAwareDistribution
 
-const retired = (over: { readout?: HealthReadout; taxAware?: TaxAwareDistribution } = {}) =>
+const retired = (over: { readout?: HealthReadout; taxAware?: TaxAwareDistribution; depletionYears?: readonly number[]; refiguring?: boolean; draft?: typeof draft } = {}) =>
   healthCareView({
-    answer: { kind: 'headline', draft, readout: 'readout' in over ? over.readout : readout, taxAware: over.taxAware ?? taxAware },
+    answer: { kind: 'headline', draft: over.draft ?? draft, readout: 'readout' in over ? over.readout : readout, taxAware: over.taxAware ?? taxAware, depletionYears: over.depletionYears ?? [-1, -1, -1] },
     steady: { kind: 'loading' },
     todayEpochDay: FRESH,
     sincePlanBuilt: 0,
+    refiguring: over.refiguring ?? false,
   })
 
 const charts = (v: ReturnType<typeof healthCareView>): HealthChartsView => {
@@ -98,7 +99,13 @@ describe('the four parts: never stacked, one scale, one age range', () => {
   it('row k sits at calendar start + k − 1 and age + k − 1 (insight 134: a premium is a flow paid during sim-year k − 1)', () => {
     const b = charts(retired()).parts[0]!.bars[0]!
     expect([b.age, b.year]).toEqual([61, draft.startCalendarYear])
-    expect(b.point).toBe(slots.healthYearPoint('Alex’s age', 61, draft.startCalendarYear, copy.healthPartAca, '8,900'))
+    expect(b.point).toBe(slots.healthYearPoint('Alex’s age', 61, draft.startCalendarYear, copy.healthPartAca, '8,900', false))
+  })
+
+  it('a bar read alone keeps the legend’s qualifier: the middle cost (retired), the steady market (working)', () => {
+    // The hover and the screen reader read one bar's sentence without its legend, so the sentence carries the qualifier.
+    expect(charts(retired()).parts[0]!.bars[0]!.point).toContain('a middle cost of ~$8,900')
+    expect(charts(working()).parts[1]!.bars[0]!.point).toMatch(/~\$2,600 in the steady market$/)
   })
 
   it('the four share one lattice, topped over the largest bar of any part', () => {
@@ -190,12 +197,54 @@ describe('the words come from the sheet’s composers', () => {
   it('the HSA line rides only where the plan holds an HSA (the old sheet’s own rule)', () => {
     expect(charts(retired()).footnotes).not.toContain(copy.controlHealthHsaNote)
     const withHsa = { ...draft, enteredAccounts: [...draft.enteredAccounts, { id: 'acct-0-hsa', ownerIndex: 0 as const, kind: 'hsa' as const, valueToday: 20_000 }] }
-    const v = healthCareView({ answer: { kind: 'headline', draft: withHsa, readout, taxAware }, steady: { kind: 'loading' }, todayEpochDay: FRESH, sincePlanBuilt: 0 })
+    const v = healthCareView({ answer: { kind: 'headline', draft: withHsa, readout, taxAware, depletionYears: [-1] }, steady: { kind: 'loading' }, todayEpochDay: FRESH, sincePlanBuilt: 0, refiguring: false })
     expect(charts(v).footnotes).toContain(copy.controlHealthHsaNote)
   })
 
   it('a run with no readout charts nothing and says why', () => {
     expect(retired({ readout: undefined })).toEqual({ kind: 'words', words: copy.healthNone })
+  })
+
+  it('a household with no marketplace years (everyone 65 or older) gets no marketplace notes, only the Medicare ones', () => {
+    const f = charts(retired({ draft: DEV_SEEDS.date65 })).footnotes
+    expect(f).not.toContain(copy.controlHealthSurvivorNote)
+    expect(f).not.toContain(copy.controlHealthOmissionsNoteStatePriced)
+    expect(f).toContain(copy.healthSurvivorNoteMedicare)
+    expect(f).toContain(copy.healthOmissionsNoteMedicare)
+    for (const l of f) expect(l).not.toMatch(/discount|cost-sharing|subsidy top-ups/)
+  })
+})
+
+describe('futures whose money runs out (the readout prices only years a future could still pay for)', () => {
+  it('with most futures out of money before the first year, it charts nothing and says why (never a flat $0)', () => {
+    expect(retired({ depletionYears: [0, 0, 0, 0, 0, 0, 0, -1, -1, -1] })).toEqual({ kind: 'words', words: copy.healthRunsOutWords })
+  })
+
+  it('a year where fewer than half the futures still have money draws nothing; the year a future runs out is not funded', () => {
+    // Four futures never run out; six run out in sim-year 3, which the readout does not price for them (row 4). Rows 1-3
+    // are priced for all ten; row 4 for four of ten, below the bar.
+    const v = charts(retired({ depletionYears: [-1, -1, -1, -1, 3, 3, 3, 3, 3, 3] }))
+    for (const p of v.parts) expect(p.bars.length).toBe(3)
+    expect(v.ages).toEqual({ first: 61, last: 63 })
+    // The cliff brackets stop with the bars.
+    expect(v.parts[0]!.cliff.every((r) => r.toAge <= 63)).toBe(true)
+    // The shorter axis is said in words: from the first undrawn year, most futures have run out of money.
+    expect(v.metricLines).toContain(slots.healthChartsStop(v.axisTitle, 64))
+    // Every quotable year drawn: no such line.
+    expect(charts(retired()).metricLines.some((l) => l.includes('the charts stop there'))).toBe(false)
+  })
+
+  it('where any future runs out, the lifetime figures say each future’s total stops there', () => {
+    expect(charts(retired({ depletionYears: [-1, -1, -1, -1, 9, 9, 9, 9, 9, 9] })).metricLines).toContain(copy.healthLifetimeStopsAtRunOut)
+    expect(charts(retired()).metricLines).not.toContain(copy.healthLifetimeStopsAtRunOut)
+  })
+})
+
+describe('the store figuring again', () => {
+  it('veils the retired route’s old charts while the answer is figured again, and says so', () => {
+    expect(charts(retired({ refiguring: true })).updating).toBe(true)
+    expect(charts(retired({ refiguring: true })).updatingLabel).toBe(copy.answerRefiguringCaption)
+    expect(charts(retired()).updating).toBe(false)
   })
 })
 
@@ -230,7 +279,7 @@ const meta = {
   ],
 } as unknown as TableMeta
 
-function working() {
+function working(over: Partial<TableMeta> = {}) {
   const rows = [
     row(0, { acaNet: 0, medicare: 3_000, irmaaSurcharge: 400, medicareExtras: 2_900 }),
     row(1, { acaNet: 0, medicare: 3_100, irmaaSurcharge: 0, medicareExtras: 2_900 }),
@@ -240,9 +289,10 @@ function working() {
   ]
   return healthCareView({
     answer: { kind: 'date', draft: DEV_SEEDS.date65 },
-    steady: { kind: 'ready', rows, meta, updating: false, answerKey: 'k' } as never,
+    steady: { kind: 'ready', rows, meta: { ...meta, ...over }, updating: false, answerKey: 'k' } as never,
     todayEpochDay: FRESH,
     sincePlanBuilt: 0,
+    refiguring: false,
   })
 }
 
@@ -270,8 +320,23 @@ describe('the working route: the steady market’s own rows', () => {
     expect(v.hero).toBe(slots.healthFigure(Intl.NumberFormat('en-US').format(Math.round(total / 1_000) * 1_000)))
   })
 
+  it('says when work stops in words for a page of charts (no "table")', () => {
+    expect(charts(working()).footnotes).toContain(slots.healthStopsIn(2030))
+    expect(charts(working({ route: 'no-date' })).footnotes).toContain(slots.healthNoDate(2030))
+    for (const l of [...charts(working()).footnotes, ...charts(working({ route: 'no-date' })).footnotes]) expect(l).not.toMatch(/\btable\b/)
+  })
+
+  it('on a floor-keyed band the rows are the essentials-only pass: the hero and a note say so (lower spending, lower premiums)', () => {
+    const floor = charts(working({ track: 'floor' }))
+    expect(floor.heroLine).toBe(copy.healthHeroLineSteadyEssentials)
+    expect(floor.footnotes).toContain(copy.healthFloorTrack)
+    const full = charts(working({ track: 'full' }))
+    expect(full.heroLine).toBe(copy.healthHeroLineSteady)
+    expect(full.footnotes).not.toContain(copy.healthFloorTrack)
+  })
+
   it('waits for the steady rows, and says so when they fail', () => {
-    const at = (steady: never) => healthCareView({ answer: { kind: 'date', draft: DEV_SEEDS.date65 }, steady, todayEpochDay: FRESH, sincePlanBuilt: 0 })
+    const at = (steady: never) => healthCareView({ answer: { kind: 'date', draft: DEV_SEEDS.date65 }, steady, todayEpochDay: FRESH, sincePlanBuilt: 0, refiguring: false })
     expect(at({ kind: 'loading' } as never)).toEqual({ kind: 'words', words: copy.healthRowsWaiting })
     expect(at({ kind: 'error' } as never)).toEqual({ kind: 'words', words: copy.healthRowsError })
   })

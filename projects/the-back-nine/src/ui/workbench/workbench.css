@@ -4,8 +4,8 @@
  * Imported by the shell's interim container (`src/ui/shell/InterimPage.tsx`) alone, outside any `.rc-root` subtree, so
  * the scoped preflight never reaches these rules. The room's own frame (its bar, head, pinned seat and page switch)
  * went with the room at RC2; the What if page's rules left with RC4b's tray and the year table's with RC6's Cash Flows,
- * so what is left is the interim column, its intro line and the facts page's, until RC13 (and RC10 for the interim
- * Health Care tab, which rides in the same column; RC8 rebuilt Tax Strategies).
+ * so what is left is the interim column, its intro line and the facts page's, until RC13 (the last interim tab, Profile;
+ * RC8 rebuilt Tax Strategies and RC10 Health Care, which no longer ride this column).
  * Tokens only (CSP `style-src 'self'`: no inline styles). Calm, no theatrics.
  */
 

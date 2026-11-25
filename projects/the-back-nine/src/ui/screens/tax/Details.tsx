@@ -8,6 +8,7 @@
 import { useId, type ReactNode } from 'react'
 import { DataTable, LoadingVeil, Select, type DataTableColumn } from '../../kit'
 import { copy } from '../../copy'
+import { verdictDescribedBy } from '../../disclaimerId'
 import { FutureSelect } from './Comparison'
 import { DETAILS_PICKS, DETAILS_TABLES, type DetailsPick, type DetailsRow, type DetailsTable, type DetailsView, type TaxFuture } from './taxRunsView'
 
@@ -64,7 +65,10 @@ export function DetailsPanel({
         </p>
       ) : (
         <LoadingVeil loading={view.updating} label={copy.taxStratRunsWaiting}>
-          <DataTable labelledBy={headingId} columns={columns} rows={view.rows} rowKey={(r) => r.key} busy={view.updating} />
+          {/* The kit's table takes no description, so a group around it carries the R13 caveat's (the figured page's tie). */}
+          <div role="group" aria-labelledby={headingId} aria-describedby={verdictDescribedBy()} data-details-group="">
+            <DataTable labelledBy={headingId} columns={columns} rows={view.rows} rowKey={(r) => r.key} busy={view.updating} />
+          </div>
         </LoadingVeil>
       )}
       {view.kind === 'table'

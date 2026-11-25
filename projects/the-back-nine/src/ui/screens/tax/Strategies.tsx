@@ -18,6 +18,7 @@ import { CircleCheck, CircleAlert, LoaderCircle, Star } from 'lucide-react'
 import type { RecommendationGoal } from '@shared/model'
 import { Button, Select, cn } from '../../kit'
 import { GRADE_GLYPH } from '../../glyphs'
+import { verdictDescribedBy } from '../../disclaimerId'
 import type { GradeSignalState } from '../../recommendationView'
 import type { RecordFace, StrategiesAsk, StrategiesList, StrategiesNotice, StrategiesView, StrategyRow, WinnerView } from './strategiesView'
 
@@ -97,8 +98,11 @@ function Notice({ notice }: { readonly notice: StrategiesNotice }) {
 
 function Ask({ ask, onPickGoal, onBracket, onFind, announce }: { readonly ask: StrategiesAsk } & Pick<StrategiesPanelProps, 'onPickGoal' | 'onBracket' | 'onFind' | 'announce'>) {
   const heldId = useId()
+  const steerId = useId()
   const legendId = useId()
   const held = ask.find.held
+  // A no-pretax hold's reason IS the steer note above Find: Find names that note, never a second copy of it.
+  const heldInSteer = held?.kind === 'no-pretax' && ask.steer !== undefined
   return (
     <section className="flex flex-col items-center gap-6 px-0 py-6 text-center wide:py-10" data-ask="">
       <p className="max-w-3xl text-chart-title font-semibold text-stone-900" data-ask-sentence="">
@@ -157,7 +161,7 @@ function Ask({ ask, onPickGoal, onBracket, onFind, announce }: { readonly ask: S
         ) : null}
       </div>
       {ask.steer !== undefined ? (
-        <p role="status" className="max-w-3xl border-l-4 border-plum bg-stone-100 px-4 py-3 text-left text-body text-stone-900" data-steer={ask.steer.kind}>
+        <p id={steerId} role="status" className="max-w-3xl border-l-4 border-plum bg-stone-100 px-4 py-3 text-left text-body text-stone-900" data-steer={ask.steer.kind}>
           {ask.steer.words}
         </p>
       ) : null}
@@ -166,7 +170,7 @@ function Ask({ ask, onPickGoal, onBracket, onFind, announce }: { readonly ask: S
           type="button"
           data-find=""
           aria-disabled={held !== undefined ? true : undefined}
-          aria-describedby={held !== undefined ? heldId : undefined}
+          aria-describedby={held === undefined ? undefined : heldInSteer ? steerId : heldId}
           onClick={() => {
             if (held !== undefined) {
               announce(held.words)
@@ -183,7 +187,7 @@ function Ask({ ask, onPickGoal, onBracket, onFind, announce }: { readonly ask: S
         >
           {ask.find.label}
         </button>
-        {held !== undefined ? (
+        {held !== undefined && !heldInSteer ? (
           <span id={heldId} className="text-label text-stone-900" data-find-held={held.kind}>
             {held.words}
           </span>
@@ -218,6 +222,11 @@ function Row({ row }: { readonly row: StrategyRow }) {
           {row.nearTie !== undefined ? (
             <span className="text-label text-stone-900" data-row-near-tie="">
               {row.nearTie}
+            </span>
+          ) : null}
+          {row.note !== undefined ? (
+            <span className="text-label text-stone-900" data-row-note="">
+              {row.note}
             </span>
           ) : null}
         </span>
@@ -259,7 +268,7 @@ function List({ list }: { readonly list: StrategiesList }) {
 function Winner({ w, onKeep, onTry }: { readonly w: WinnerView } & Pick<StrategiesPanelProps, 'onKeep' | 'onTry'>) {
   const keepHintId = useId()
   return (
-    <section className="relative mt-4 border-2 border-blue-ink bg-bg px-4 pt-8 pb-5 wide:px-8" data-winner={w.mode} aria-labelledby="tax-winner-badge">
+    <section className="relative mt-4 border-2 border-blue-ink bg-bg px-4 pt-8 pb-5 wide:px-8" data-winner={w.mode} aria-labelledby="tax-winner-badge" aria-describedby={verdictDescribedBy()}>
       <p
         id="tax-winner-badge"
         className="absolute top-0 left-1/2 inline-flex -translate-x-1/2 -translate-y-1/2 items-center gap-1.5 rounded-full bg-blue-ink px-4 py-1 text-label font-semibold text-bg"

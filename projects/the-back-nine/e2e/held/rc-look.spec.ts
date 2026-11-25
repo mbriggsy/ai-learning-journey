@@ -40,7 +40,10 @@ const ALL_SCREENS = [
  *  captures only where Probability is among them. */
 const ONLY = process.env.RC_ONLY?.split(',')
 const SCREENS = ALL_SCREENS.filter((s) => ONLY === undefined || ONLY.includes(s.id))
-const PROBABILITY = ALL_SCREENS[1]
+/** A screen by its id, from the whole list: `SCREENS` is filtered by `RC_ONLY`, so an index into it names a different
+ *  screen under a filter (a Health Care capture once shot Social Security). */
+const screenById = (id: (typeof ALL_SCREENS)[number]['id']) => ALL_SCREENS.find((s) => s.id === id)!
+const PROBABILITY = screenById('probability')
 
 interface Audit {
   readonly sideways: number
@@ -374,7 +377,7 @@ for (const size of SIZES) {
       await page.locator('[data-card="recommendations"]').scrollIntoViewIfNeeded()
       await settleLayout(page)
       await page.screenshot({ path: `${OUT}/snapshot-rec-${size.tag}-full.png`, fullPage: true })
-      await showScreen(page, SCREENS[4], size.phone)
+      await showScreen(page, screenById('tax-strategies'), size.phone)
       const a = await audit(page)
       await page.screenshot({ path: `${OUT}/tax-strategies-rec-${size.tag}.png` })
       await page.screenshot({ path: `${OUT}/tax-strategies-rec-${size.tag}-full.png`, fullPage: true })
@@ -421,7 +424,7 @@ for (const size of SIZES) {
         test.setTimeout(FINAL_TIER_MS + 60_000)
         const findings: Record<string, Audit> = {}
         await enterShell(page, k.empty)
-        await showScreen(page, SCREENS[1], size.phone)
+        await showScreen(page, PROBABILITY, size.phone)
         await openList(page)
         await shot(page, findings, 'plan-list-empty', k.empty, size.tag)
         const a = findings['plan-list-empty']!
@@ -436,7 +439,7 @@ for (const size of SIZES) {
         // One page load per test: a second load in one test loses the phone's touch emulation (`(hover: hover)` then
         // reads true and the row actions read as a laptop's, faded until hovered). The empty list has its own test above.
         await enterShell(page, k.seed)
-        await showScreen(page, SCREENS[1], size.phone)
+        await showScreen(page, PROBABILITY, size.phone)
         for (const [id, name] of [['pickers-left', copy.probabilityPickerLabel], ['pickers-right', copy.probabilityComparedLabel]] as const) {
           const picker = page.getByRole('combobox', { name })
           await picker.scrollIntoViewIfNeeded()
@@ -523,7 +526,7 @@ for (const size of SIZES) {
 // RC6: Retirement → Cash Flows, on a retired and a working household holding kept what-ifs (`retiredkept`, `dipkept`),
 // and the table's widest household (`tablewidest`): the Summary, a drill open with its breadcrumb, the Accounts tab with
 // its table switcher open, the Rough future, a kept what-if picked, and your plan beside the what-if open on Analysis.
-const CASH_FLOWS = SCREENS[3]
+const CASH_FLOWS = screenById('cash-flows')
 
 async function pickOn(page: Page, label: string, option: string): Promise<void> {
   await page.getByRole('combobox', { name: label }).click()
@@ -578,7 +581,7 @@ for (const size of SIZES) {
           await tableLanded(page)
           await shot(page, findings, 'cash-flows-kept', k.seed, size.tag)
           // Your plan beside the what-if open on Analysis: open a kept what-if on the left there, then pick the pair.
-          await showScreen(page, SCREENS[1], size.phone)
+          await showScreen(page, PROBABILITY, size.phone)
           await pickOn(page, copy.probabilityPickerLabel, k.left)
           await showScreen(page, CASH_FLOWS, size.phone)
           await pickOn(page, copy.cashFlowsPlanLabel, copy.cashFlowsPickPaired)
@@ -603,7 +606,7 @@ for (const size of SIZES) {
 // phone). Reduced motion, because the harness fixes the page clock and Highcharts times its morph on it: a toggle's
 // redraw would be caught in its first frame (the RC7 fit arm's note); reduced motion draws each one in its final place.
 async function toConfidenceTab(page: Page, phone: boolean): Promise<void> {
-  await showScreen(page, SCREENS[1], phone)
+  await showScreen(page, PROBABILITY, phone)
   await page.getByRole('tab', { name: copy.confidenceTab }).click()
   await expect(page.locator('[data-confidence] [data-chart="fan"] .highcharts-series-group')).toBeAttached({ timeout: 30_000 })
   if ((await page.locator('[data-confidence="headline"]').count()) > 0) {
@@ -657,7 +660,7 @@ for (const size of SIZES) {
 // Calculating frame, the Winner card with the ranked list, Summary, Comparison's invested assets and withdrawals, and
 // Details' two tables) and on a working household (`dip`: the one stopgap line). Reduced motion (the harness's pinned
 // clock would catch a chart's morph in its first frame).
-const TAX = SCREENS[4]
+const TAX = screenById('tax-strategies')
 const SOLVE_MS = 360_000
 
 for (const size of SIZES) {
@@ -728,7 +731,7 @@ for (const size of SIZES) {
 // RC9: Retirement → Social Security, on each seed (`retired` and `date` by default; `healthss` is the no-choice-left
 // household): Comparison's yearly pairs and running totals, Summary's bars with the odds under them, and the filing
 // steps in the Action Items tray. Reduced motion (the harness's pinned clock would catch a chart's morph in its first frame).
-const CLAIMS = SCREENS[6]
+const CLAIMS = screenById('social-security')
 
 for (const size of SIZES) {
   test.describe(`${UNIT} look, Social Security at ${size.tag}`, () => {
@@ -772,7 +775,7 @@ for (const size of SIZES) {
 // RC10: Retirement → Health Care, on each seed (`health`, `healthnc` and `date65` for the unit): the first frame (the four
 // small charts and the key-metric column), the whole page (the sheet's words under the charts, the caveat), and the
 // Action Items tray with B9's health inputs. Reduced motion, as RC9's.
-const HEALTH = SCREENS[2]
+const HEALTH = screenById('health-care')
 
 for (const size of SIZES) {
   test.describe(`${UNIT} look, Health Care at ${size.tag}`, () => {

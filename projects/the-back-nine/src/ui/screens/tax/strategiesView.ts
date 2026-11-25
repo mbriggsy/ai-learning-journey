@@ -11,18 +11,21 @@
  * - THE EMPTY STATE (before a solve, or beside a stale, held or failed one): the bold sentence, the goal picker (its lead
  *   verdict-gated on the RAW triple, a positive list, the old GoalPicker's §S2 law), the heirs' bracket beside it for
  *   leave-more, and Find. Find is held (pressable, `aria-disabled`, its reason in words at rest) while no goal is
- *   picked or the plan's answer is not ready; a refused solve's reason (no pre-tax money, an incomplete answer) shows
- *   above it and Find stays live, because a later plan edit can clear it.
+ *   picked or the plan's answer is not ready (in flight: "being worked out"; the fallback: the facts it waits for, by
+ *   name); a refused solve's reason (no pre-tax money, an incomplete answer) shows above it. No pre-tax money also holds
+ *   Find on those words (a press would only refuse again; a plan edit re-derives the refusal and clears the hold).
  * - THE WINNER CARD: the hero in the goal's words, its skew and median lines, "N strategies compared", the winner's
  *   levers as chips and its sentence, the grade words with what a close call hinges on, the withheld conversions' hold,
  *   Keep (the save gesture; never on a read-only tab) and, once the record on disk is this one and current, Try it in
  *   the plan. An unsaved solve offers Keep alone (RC3's rule: the rail runs only a saved record).
  * - THE RANKED LIST (active mode only): exactly three rows, the winner, the runner-up and the no-change baseline, each
  *   with its levers and its seed-B figure (the hero's statistic, in the hero's dialect), then one line counting every
- *   other ranked candidate. A pruned candidate is never a row (its record carries an id, a rank and a never-rendered
- *   score; its id names no start year, length or custom order), so nothing here reads one. No rank column. Shades
- *   follow the DISPLAYED value (ties share one), best for the goal darkest; a near-tie (a coin-flip grade whose named
- *   driver is the sampling-noise sentinel) is said in words on both rows.
+ *   other ranked candidate (both counts where some rank above your plan today). A pruned candidate is never a row (its
+ *   record carries an id, a rank and a never-rendered score; its id names no start year, length or custom order), so
+ *   nothing here reads one. No rank column. Shades follow the DISPLAYED value (ties share one), best for the goal
+ *   darkest; a runner-up printing a better figure than the winner says why it ranks second; a near-tie (a coin-flip
+ *   grade whose named driver is the sampling-noise sentinel) is said in words on both rows, on the odds where the
+ *   grade read the odds.
  * - THE RECORD CARD: a remembered recommendation's face (holds, or superseded with every cause in the producer's order
  *   and the mint year) wherever a record exists: above the empty state, and under the ranked list beside a Winner card
  *   (a household that kept one strategy and found another must still read whether the kept one holds; the old card's
@@ -51,6 +54,7 @@ import {
 import { savedRecordCardView, type RecommendationSaveRefusal, type RecommendationSaveView } from '../../recommendationSaveView'
 import { SAVED_RECORD_COPY } from '../../savedRecordCopy'
 import { composeVerdictStateNote } from '../../stateTaxDisclosure'
+import { pinnedLines } from '../../workbench/pinnedLines'
 import { recommendationBundle } from '../../workbench/railChrome'
 
 // ── The view ────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -87,12 +91,13 @@ export interface StrategiesAsk {
   readonly goal: RecommendationGoal | undefined
   /** The heirs' bracket, beside the picker for leave-more only (pay-less-tax never reads it: no hollow control). */
   readonly bracket?: { readonly label: string; readonly help: string; readonly items: readonly { readonly value: string; readonly label: string }[]; readonly value: string }
-  /** A refused solve's reason, above Find (no pre-tax money; an incomplete answer). Find stays live. */
+  /** A refused solve's reason, above Find (no pre-tax money; an incomplete answer). */
   readonly steer?: { readonly kind: 'no-pretax' | 'unready'; readonly words: string }
   readonly find: {
     readonly label: string
-    /** Held: Find is pressable (it answers with this reason) but starts nothing. */
-    readonly held?: { readonly kind: 'goal' | 'answer'; readonly words: string }
+    /** Held: Find is pressable (it answers with this reason) but starts nothing. `no-pretax`: the steer's own words (a
+     *  press would only refuse again; a plan edit re-derives the refusal and clears it, `memoryModel`'s self-healing). */
+    readonly held?: { readonly kind: 'goal' | 'answer' | 'no-pretax'; readonly words: string }
     readonly cost: string
   }
 }
@@ -106,6 +111,8 @@ export interface StrategyRow {
   /** 0 is the best displayed value for the goal (`--blue-ink`, white text), 1 and 2 lighter (stone-900 text). */
   readonly shade: 0 | 1 | 2
   readonly nearTie?: string
+  /** The runner-up's figure beats the recommended one's in the goal's direction: why it still ranks second. */
+  readonly note?: string
 }
 
 export interface StrategiesList {
@@ -230,22 +237,50 @@ export function metricWords(goal: RecommendationGoal, healthcarePriced: boolean)
  *  bar and the hero's delta never speak two dialects. */
 export const armFigure = (statistic: number): string => slots.taxStratValue(formatDeltaDollar(statistic))
 
-/** An arm's levers in words: its withdrawal order's shipped label, then its conversion (the household's own amount
- *  exactly; a grid amount rounded down, `formatActionableDollar`'s rail law). */
+/** An arm's levers in words: its withdrawal order's shipped label, then its conversion. Your plan today's own conversion
+ *  is its amount alone, exactly as entered (`taxStratRothRowOwn`): its window is never quoted, since the household's own
+ *  years ride unscreened and could name years nothing was priced over. A compared strategy's grid amount is rounded down
+ *  (`formatActionableDollar`'s rail law) with its years (every grid schedule starts at offset 0). */
 export function armLevers(arm: SolveArm, isBaseline: boolean): readonly string[] {
   const order = copy[WINNER_STRATEGY_KEY[arm.policy]]
   const c = arm.conversion
   if (c === null) return [order, copy.taxStratNoConversion]
-  const amount = isBaseline ? formatEnteredDollar(c.annualAmountReal) : formatActionableDollar(c.annualAmountReal)
-  return [order, slots.taxStratRothRow(amount, c.years)]
+  if (isBaseline) return [order, slots.taxStratRothRowOwn(formatEnteredDollar(c.annualAmountReal))]
+  return [order, slots.taxStratRothRow(formatActionableDollar(c.annualAmountReal), c.years)]
 }
 
 /** The three rows (winner, runner-up, baseline; a runner-up that IS the baseline is one row), their shades by the
- *  displayed value, and the line counting the rest. Active mode only (the caller's gate). */
-export function rankedList(payload: SolveRecommendation, nearTie: boolean, healthcarePriced: boolean): StrategiesList {
+ *  displayed value, and the line counting the rest. Active mode only (the caller's gate).
+ *
+ *  The figures are seed-B means; the ranking is survival first, then seed-A means (`select.ts`), so the runner-up can
+ *  PRINT a better figure than the recommended strategy. That row then says why it still ranks second, in a reason true
+ *  on every crown (`recRunnerUpAheadHere`: ranked on a separate set of futures, ahead there or too close to split), so a
+ *  darker runner-up never reads as a contradiction (the old chart's honesty gate, `runnerUpVizFor`, did the same by
+ *  drawing nothing). The baseline cannot invert here: a baseline ahead of the winner is the no-dollar register, which
+ *  shows no list.
+ *
+ *  THE BASELINE'S TWIN. For a household with no conversion on a searched order, the roster holds its plan twice: the
+ *  injected baseline (`baseline:<policy>:0`) and the grid's (or conventional) conversion-0 point for the same order
+ *  (`sameDecumulationPlan`'s note in `candidates.ts`). They score identically and the stable sort puts the twin just
+ *  before the baseline, so a twin is never counted as "another strategy ranked above your plan today", and a twin
+ *  runner-up is the one "Your plan today, the runner-up" row. The id (`solverCandidateId`: `<arm>:<policy>:<amount>`)
+ *  carries all a twin needs: the same policy and amount 0 on a baseline with no conversion. */
+export function rankedList(payload: SolveRecommendation, healthcarePriced: boolean): StrategiesList {
   const baseline = payload.noActionBaseline
-  const runnerUp = payload.runnerUp !== undefined && payload.runnerUp.id !== baseline.id && payload.runnerUp.id !== payload.winner.id ? payload.runnerUp : undefined
-  const runnerUpIsBaseline = payload.runnerUp !== undefined && payload.runnerUp.id === baseline.id
+  // A near-tie: a coin-flip grade whose named driver is the sampling-noise sentinel. On the survival grade axis (a plan
+  // that is not over-funded) the call is on the odds, not on the dollar figures beside it, so it says so.
+  const nearTie = payload.grade?.grade === 'coin-flip' && payload.namedDriver === 'sampling-noise-near-tie'
+  const nearTieWords = payload.gradeStatistic === 'survival' ? copy.taxStratRowNearTieOdds : copy.taxStratRowNearTie
+  // The baseline's twin (the docstring above): only a baseline with no conversion on a searched order has one.
+  const twinPossible = baseline.conversion === null && baseline.policy !== 'custom'
+  const isBaselinePlan = (id: string): boolean => {
+    if (id === baseline.id) return true
+    if (!twinPossible) return false
+    const [arm, policy, amount, ...rest] = id.split(':')
+    return rest.length === 0 && arm !== 'baseline' && policy === baseline.policy && amount !== undefined && amount !== '' && Number(amount) === 0
+  }
+  const runnerUpIsBaseline = payload.runnerUp !== undefined && isBaselinePlan(payload.runnerUp.id)
+  const runnerUp = payload.runnerUp !== undefined && !runnerUpIsBaseline && payload.runnerUp.id !== payload.winner.id ? payload.runnerUp : undefined
   const arms: { readonly role: StrategyRow['role']; readonly arm: SolveArm; readonly name: string }[] = [
     { role: 'winner', arm: payload.winner, name: copy.taxStratRowWinner },
     ...(runnerUp !== undefined ? [{ role: 'runner-up' as const, arm: runnerUp, name: copy.taxStratRowRunnerUp }] : []),
@@ -260,23 +295,32 @@ export function rankedList(payload: SolveRecommendation, nearTie: boolean, healt
     if (i <= 0) return 0
     return i === distinct.length - 1 ? 2 : 1
   }
+  const winnerValue = shown[0]!.value
+  const beatsWinner = (a: (typeof shown)[number]): boolean =>
+    a.value !== winnerValue && (higherIsBetter ? a.arm.headlineStatisticB > payload.winner.headlineStatisticB : a.arm.headlineStatisticB < payload.winner.headlineStatisticB)
   const rows: StrategyRow[] = shown.map((a) => ({
     role: a.role,
     name: a.name,
     levers: armLevers(a.arm, a.arm.id === baseline.id),
     value: a.value,
     shade: shadeOf(a.value),
-    ...(nearTie && (a.role === 'winner' || a.role === 'runner-up' || (runnerUpIsBaseline && a.role === 'baseline')) ? { nearTie: copy.taxStratRowNearTie } : {}),
+    ...(nearTie && (a.role === 'winner' || a.role === 'runner-up' || (runnerUpIsBaseline && a.role === 'baseline')) ? { nearTie: nearTieWords } : {}),
+    ...(a.role === 'runner-up' && beatsWinner(a) ? { note: slots.recRunnerUpAheadHere(higherIsBetter) } : {}),
   }))
-  const ranked = new Set(payload.rankedIds)
-  const shownIds = new Set(arms.map((a) => a.arm.id).filter((id) => ranked.has(id)))
-  const otherCount = payload.rankedIds.length - shownIds.size
+  // The rest, counted: `rankedIds` is best-first and the runner-up is always second, so an unshown candidate ranked
+  // before your plan today sits between the runner-up and it. Where any does, the line says both counts. The baseline's
+  // twin is the same plan as your plan today, so it is never counted as another strategy.
+  const shownIds = new Set(arms.map((a) => a.arm.id))
+  const baselineAt = payload.rankedIds.indexOf(baseline.id)
+  const unshown = payload.rankedIds.flatMap((id, i) => (shownIds.has(id) || isBaselinePlan(id) ? [] : [i]))
+  const above = baselineAt < 0 ? 0 : unshown.filter((i) => i < baselineAt).length
+  const others = unshown.length === 0 ? undefined : above > 0 ? slots.taxStratOthersAbove(above, unshown.length - above) : slots.taxStratOthers(unshown.length)
   return {
     caption: copy.taxStratListCaption,
     strategyHeading: copy.taxStratListStrategy,
     valueHeading: metricWords(payload.goal, healthcarePriced),
     rows,
-    ...(otherCount > 0 ? { others: slots.taxStratOthers(otherCount) } : {}),
+    ...(others !== undefined ? { others } : {}),
   }
 }
 
@@ -299,14 +343,22 @@ function askFor(input: StrategiesInput): StrategiesAsk {
   const elevated = selectElevatedAnswer(snapshot, () => undefined, anchor)
   const answerReady = elevated.kind === 'spine' && elevated.view.kind === 'reading'
   const answer = snapshot.answer
-  const answerWorking = answer.kind === 'idle' || answer.kind === 'pending' || (elevated.kind === 'spine' && elevated.view.kind === 'pending')
+  // Only a run in flight is "being worked out"; idle and missing facts are the fallback, which names what it waits for
+  // (the pinned box's own words, plan 4.0's fallback state), never a promise that something is under way.
+  const answerWorking = answer.kind === 'pending' || (elevated.kind === 'spine' && elevated.view.kind === 'pending')
+  const fallbackWords = (): string => {
+    const lines = pinnedLines(snapshot, input.wallCalendarYear)
+    return lines.second !== undefined ? `${lines.lead} ${lines.second}` : lines.lead
+  }
   const solve = snapshot.solve
   const held: StrategiesAsk['find']['held'] =
     picked.goal === undefined
       ? { kind: 'goal', words: copy.goalPickerConfirmBlocked }
       : !answerReady
-        ? { kind: 'answer', words: answerWorking ? copy.taxStratAnswerWaiting : copy.recommendSpineUnreadyNote }
-        : undefined
+        ? { kind: 'answer', words: answerWorking ? copy.taxStratAnswerWaiting : elevated.kind === 'fallback' ? fallbackWords() : copy.recommendSpineUnreadyNote }
+        : solve.kind === 'blocked' && solve.gap === 'no-pretax'
+          ? { kind: 'no-pretax', words: copy.recommendNoPretaxNote }
+          : undefined
   const steer: StrategiesAsk['steer'] =
     solve.kind === 'blocked' && solve.gap === 'no-pretax'
       ? { kind: 'no-pretax', words: copy.recommendNoPretaxNote }
@@ -332,7 +384,6 @@ function winnerFor(input: StrategiesInput, view: RecommendedView, payload: Solve
   const { hero, average } = heroWords(view, healthcarePriced)
   const action = view.winnerAction
   const g = view.grade
-  const nearTie = payload.grade?.grade === 'coin-flip' && payload.namedDriver === 'sampling-noise-near-tie'
   const keep: WinnerKeep | undefined =
     !readOnly && save.kind === 'offer'
       ? { label: copy.snapshotRecKeep, noDollarRegister: view.mode === 'no-change', hint: save.route === 'ceremony' ? copy.recommendSaveHintCeremony : copy.recommendSaveHintUpdate }
@@ -365,7 +416,7 @@ function winnerFor(input: StrategiesInput, view: RecommendedView, payload: Solve
     ...(status !== undefined ? { status } : {}),
     ...(save.kind === 'refused' ? { refused: REFUSAL_WORDS[save.reason] } : {}),
     ...(tryIt !== undefined ? { tryIt } : {}),
-    ...(view.mode === 'active' ? { list: rankedList(payload, nearTie, healthcarePriced) } : {}),
+    ...(view.mode === 'active' ? { list: rankedList(payload, healthcarePriced) } : {}),
   }
 }
 
@@ -378,7 +429,8 @@ export function strategiesView(input: StrategiesInput): StrategiesView {
   const pricedState = pricedStateForRun(draft)
   const healthcarePriced = spineMedicarePriced(draft)
   const solve = snapshot.solve
-  const view = recommendationView(solve, { pricedState, healthcarePriced, planClock: planClockAnchor(draft.startCalendarYear, input.wallCalendarYear) })
+  const planClock = planClockAnchor(draft.startCalendarYear, input.wallCalendarYear)
+  const view = recommendationView(solve, { pricedState, healthcarePriced, planClock })
   const stateClause = composeVerdictStateNote(pricedState, false)
   const record = recordFace(input)
 

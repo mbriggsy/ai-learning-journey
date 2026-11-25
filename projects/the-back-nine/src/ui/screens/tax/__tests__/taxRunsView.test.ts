@@ -9,8 +9,10 @@ import { formatDeltaDollar } from '../../../money'
 import { tableRunFor, type TableMeta } from '../../../workbench/tableRun'
 import { whatIfRunFor } from '../../../workbench/whatIfRun'
 import type { RunRows } from '../../retirement/cashFlowsView'
-import { armBundle, COMPARISON_CHARTS, comparisonView, detailsView, taxBundles } from '../taxRunsView'
-import { headlineAnswer, leaveMoreRec } from './fixtures'
+import type { SolveRecommendation } from '@engine/solver/solve'
+import { armBundle, COMPARISON_CHARTS, comparisonView, detailsView, taxBundles, taxRunsGate } from '../taxRunsView'
+import { DEFAULT_HEIR_BRACKET, strategiesView } from '../strategiesView'
+import { armFor, committed, grade, headlineAnswer, leaveMoreRec, snap } from './fixtures'
 
 /**
  * Tax → Tax Strategies → Comparison and Details (Act 6 · RC8): the two runs' bundles, U14's shared-futures check on
@@ -67,6 +69,49 @@ describe('the two runs’ bundles', () => {
   })
 })
 
+describe('Comparison and Details run only beside an active Winner card', () => {
+  const gateFor = (payload: SolveRecommendation) =>
+    taxRunsGate(
+      strategiesView({
+        snapshot: snap(RETIRED, answer, committed(payload)),
+        picked: { goal: payload.goal, heirBracket: DEFAULT_HEIR_BRACKET },
+        save: { kind: 'none' },
+        readOnly: false,
+        todayEpochDay: 20_400,
+        wallCalendarYear: RETIRED.startCalendarYear,
+        repick: false,
+      }),
+      payload,
+    )
+  const bequest = (taxable: [number, number]) => ({ terminalTaxableReal: taxable, terminalPretaxReal: [100_000, 100_000], terminalRothReal: [0, 0], terminalHsaReal: [0, 0] })
+
+  it('an active recommendation runs both strategies', () => {
+    expect(gateFor(leaveMoreRec())).toEqual({ kind: 'run' })
+  })
+
+  it('the recommendation IS your plan: the same-as-plan words, which are true there', () => {
+    expect(gateFor(leaveMoreRec({ noChange: true }))).toEqual({ kind: 'words', words: copy.taxStratSameAsPlan, toStrategies: false })
+  })
+
+  it('the no-dollar register on a DIFFERENT strategy (sub-tenth, a seed-B inversion): the Strategies tab’s own words, never "your plan as it stands"', () => {
+    const subTenth = gateFor(leaveMoreRec({ grade: grade('just-do-it', true) }))
+    expect(subTenth).toEqual({ kind: 'words', words: copy.recComposeAlready, toStrategies: false })
+    const inverted = gateFor(leaveMoreRec({ noActionBaseline: armFor('leave-more', 'proportional|user|0', 'proportional', bequest([450_000, 650_000])) }))
+    expect(inverted).toEqual({ kind: 'words', words: copy.recComposeAlready, toStrategies: false })
+  })
+
+  it('a payload the render guard refused: the Strategies tab’s unavailable words, never a chart of it', () => {
+    const p = leaveMoreRec()
+    const lying = leaveMoreRec({ winner: { ...p.winner, headlineStatisticB: p.winner.headlineStatisticB + 100_000 } })
+    expect(gateFor(lying)).toEqual({ kind: 'words', words: copy.recommendUnavailable, toStrategies: true })
+  })
+
+  it('before a solve: the waiting words and the door to Strategies', () => {
+    const v = strategiesView({ snapshot: snap(RETIRED, answer), picked: { goal: 'leave-more', heirBracket: DEFAULT_HEIR_BRACKET }, save: { kind: 'none' }, readOnly: false, todayEpochDay: 20_400, wallCalendarYear: RETIRED.startCalendarYear, repick: false })
+    expect(taxRunsGate(v, null)).toEqual({ kind: 'words', words: copy.taxStratWaiting, toStrategies: true })
+  })
+})
+
 describe('Comparison', () => {
   it('every chart is named for its market, steady or rough', () => {
     for (const { id, label } of COMPARISON_CHARTS) {
@@ -108,6 +153,53 @@ describe('Comparison', () => {
     expect(v.notes).toEqual([copy.taxStratStackOrder])
   })
 
+  it('a run that ran out early: every total counts only the years both runs reach, and a note names which ran out and when', () => {
+    const k = 10
+    expect(steady.rows.length, 'the run is long enough to cut').toBeGreaterThan(k + 2)
+    expect(steady.rows.some((r) => r.ranOut), 'the steady run never runs out').toBe(false)
+    // The recommendation's run stops at row k, its last row the ran-out year; your plan today runs the whole horizon.
+    const short = lowerTax.slice(0, k + 1).map((r, i) => (i === k ? { ...r, ranOut: true } : r))
+    const through = steady.meta.startCalendarYear + steady.rows[k]!.t
+    const sumTo = (rows: readonly LedgerYearRow[]) => rows.slice(0, k + 1).reduce((a, r) => a + Math.max(0, r.taxPaid), 0)
+    const v = comparisonView({ chart: 'tax', future: 'rough', winner: ready(short), baseline: ready(), stateClause: null })
+    if (v.kind !== 'pair') throw new Error(v.kind)
+    expect(v.metric).toBe(slots.taxStratCompareTax(formatDeltaDollar(sumTo(lowerTax) - sumTo(steady.rows)), 'less', false, through))
+    expect(v.notes).toEqual([slots.taxStratRanOut(through, null, false, true)])
+    // Required withdrawals and conversions read the same window; your plan's run running out names it instead.
+    const rmd = comparisonView({ chart: 'rmd', future: 'steady', winner: ready(), baseline: ready(short), stateClause: null })
+    if (rmd.kind !== 'pair') throw new Error(rmd.kind)
+    expect(rmd.metric).toBe(slots.taxStratCompareRmd('0', 'same', true, through))
+    expect(rmd.notes).toEqual([slots.taxStratRanOut(null, through, true, true)])
+    // The assets metric reads the same last shared year.
+    const assets = comparisonView({ chart: 'assets', future: 'steady', winner: ready(short), baseline: ready(), stateClause: null })
+    expect(assets.kind === 'pair' && assets.metric).toContain(String(through))
+    expect(assets.kind === 'pair' && assets.notes).toEqual([slots.taxStratRanOut(through, null, true, true), copy.taxStratAssetsNote])
+    // The withdrawal stacks draw every year of each run and count nothing: the note names the run-out, never a count.
+    const stacks = comparisonView({ chart: 'withdrawals', future: 'steady', winner: ready(short), baseline: ready(), stateClause: null })
+    if (stacks.kind !== 'stacks') throw new Error(stacks.kind)
+    expect(stacks.notes).toEqual([copy.taxStratStackOrder, slots.taxStratRanOut(through, null, true, false)])
+    expect(stacks.notes.join(' ')).not.toMatch(/counts only/)
+    // Details names it under the run that ran out.
+    const d = detailsView({ table: 'withdrawals', pick: 'recommended', future: 'rough', rows: ready(short) })
+    expect(d.kind === 'table' && d.notes).toEqual([slots.taxStratDetailsRanOut(through, false)])
+  })
+
+  it('both runs run out, in different years: the note names each with its own year, and the totals count to the earlier', () => {
+    const k = 8
+    const j = 11
+    const cut = (rows: readonly LedgerYearRow[], n: number) => rows.slice(0, n + 1).map((r, i) => (i === n ? { ...r, ranOut: true } : r))
+    const early = steady.meta.startCalendarYear + steady.rows[k]!.t
+    const late = steady.meta.startCalendarYear + steady.rows[j]!.t
+    // Your plan today runs out first; the recommended strategy later (never left looking as if it lasts).
+    const v = comparisonView({ chart: 'tax', future: 'rough', winner: ready(cut(lowerTax, j)), baseline: ready(cut(steady.rows, k)), stateClause: null })
+    if (v.kind !== 'pair') throw new Error(v.kind)
+    expect(v.notes).toEqual([slots.taxStratRanOut(late, early, false, true)])
+    expect(v.notes[0]).toBe(
+      `In the rough market the money runs out in ${early} on your plan today and in ${late} on the recommended strategy, and each one’s year-by-year figures stop there, so the comparison here counts only the years through ${early}, which both strategies reach.`,
+    )
+    expect(v.metric).toContain(`Through ${early}`)
+  })
+
   it('a run still working, refused or failed shows words, never a half picture', () => {
     expect(comparisonView({ chart: 'tax', future: 'steady', winner: { kind: 'loading' }, baseline: ready(), stateClause: null })).toEqual({ kind: 'waiting', words: copy.taxStratRunsWaiting })
     expect(comparisonView({ chart: 'tax', future: 'steady', winner: ready(), baseline: { kind: 'withheld', words: 'w' }, stateClause: null })).toEqual({ kind: 'withheld', words: 'w' })
@@ -139,9 +231,18 @@ describe('Details', () => {
     const v = detailsView({ table: 'medicare', pick: 'plan', future: 'rough', rows: ready() })
     if (v.kind !== 'table') throw new Error(v.kind)
     expect(v.heading).toBe(slots.taxStratDetailsOf(copy.recVizWithoutLabel, false))
-    expect(v.rows.length, 'the retired household has Medicare years (else the sum check proves nothing)').toBeGreaterThan(0)
-    expect(v.rows.some((r) => Number(r.cells.surcharge) >= 0)).toBe(true)
-    for (const r of v.rows) expect(Number(r.cells.base) + Number(r.cells.surcharge)).toBeCloseTo(Number(r.cells.total), 6)
+    expect(v.rows.length, 'the retired household has Medicare years').toBeGreaterThan(0)
+    // Each row is that year's own bill, read from the ledger's own fields.
+    const billed = new Map(steady.rows.map((r) => [String(steady.meta.startCalendarYear + r.t), r]))
+    for (const r of v.rows) {
+      const row = billed.get(String(r.cells.year))!
+      expect(r.cells.total).toBe(row.premiums.medicare)
+      expect(r.cells.surcharge).toBe(row.premiums.irmaaSurcharge)
+    }
+    expect(v.columns.slice(-3).map((c) => c.header), 'the bill columns say they are this year’s bill').toEqual([copy.taxStratColMedicareBase, copy.taxStratColSurcharge, copy.taxStratColMedicareTotal])
+    for (const h of [copy.taxStratColMedicareBase, copy.taxStratColSurcharge, copy.taxStratColMedicareTotal]) expect(h).toMatch(/^This year’s /)
+    // The surcharge's header names the income that set it, never "this year's income surcharge" beside the income column.
+    expect(copy.taxStratColSurcharge).toMatch(/two years earlier/)
     const none = detailsView({ table: 'medicare', pick: 'plan', future: 'rough', rows: ready(steady.rows.map((r) => ({ ...r, premiums: { ...r.premiums, medicare: 0, irmaaSurcharge: 0 } }))) })
     expect(none.kind === 'table' && none.empty).toBe(copy.taxStratMedicareNone)
     expect(none.kind === 'table' && none.notes).toEqual([])

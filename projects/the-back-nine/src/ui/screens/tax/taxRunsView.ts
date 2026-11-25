@@ -24,6 +24,7 @@ import type { TableMeta } from '../../workbench/tableRun'
 import { copy, slots } from '../../copy'
 import { formatDeltaDollar, formatEnteredDollar, mmAxisFormatterFor } from '../../money'
 import type { RunRows } from '../retirement/cashFlowsView'
+import type { StrategiesView } from './strategiesView'
 
 // ── The bundles ─────────────────────────────────────────────────────────────────────────────────────────────────
 
@@ -61,6 +62,24 @@ export function taxBundles(payload: SolveRecommendation, draft: ScenarioDraft): 
     (b.policy !== 'custom' || sameOrder(b.drawdownOrder, draft.drawdownOrder)) &&
     sameConversion(b.conversion, draft.rothConversion)
   return { winner: armBundle(payload.winner), baseline: isPlan ? 'plan' : armBundle(b) }
+}
+
+// ── The gate ────────────────────────────────────────────────────────────────────────────────────────────────────
+
+export type TaxRunsGate = { readonly kind: 'run' } | { readonly kind: 'words'; readonly words: string; readonly toStrategies: boolean }
+
+/** Whether Comparison and Details run the two strategies year by year: only beside an ACTIVE Winner card. Anywhere
+ *  else they say the Strategies tab's own words for that state, never a chart of "the recommended strategy" the
+ *  Strategies tab does not stand behind: before a solve, the waiting words; the no-dollar register, the same-as-plan
+ *  words where the winner IS the plan (`noChange`) and the card's own hero line where it is not (a sub-tenth collapse,
+ *  a seed-B inversion, a delta that rounds to $0: the crowned plan differs, so "your plan as it stands" would be
+ *  false); a payload the render guard refused (Q6), the Strategies tab's unavailable words. */
+export function taxRunsGate(strat: StrategiesView, payload: SolveRecommendation | null): TaxRunsGate {
+  if (payload === null || strat.kind !== 'solve') return { kind: 'words', words: copy.taxStratWaiting, toStrategies: true }
+  const w = strat.winner
+  if (w?.mode === 'active') return { kind: 'run' }
+  if (w !== undefined) return { kind: 'words', words: payload.noChange ? copy.taxStratSameAsPlan : w.hero, toStrategies: false }
+  return { kind: 'words', words: strat.notice?.lines.join(' ') ?? copy.recommendUnavailable, toStrategies: true }
 }
 
 // ── Comparison ──────────────────────────────────────────────────────────────────────────────────────────────────
@@ -135,6 +154,27 @@ function direction(ours: number, theirs: number): { readonly fig: string; readon
 
 const sum = (xs: readonly number[]): number => xs.reduce((a, b) => a + b, 0)
 
+/** A run's last calendar year, and whether its money ran out there (its rows stop at the ran-out year, `ranOut`). */
+const endOf = (run: { readonly meta: TableMeta; readonly rows: readonly LedgerYearRow[] }): { readonly year: number; readonly ranOut: boolean } => {
+  const last = run.rows.at(-1)
+  return { year: run.meta.startCalendarYear + (last?.t ?? 0), ranOut: last?.ranOut === true }
+}
+
+/** When either run ran out early: the last year both reach (every total stops there) and the note naming every run that
+ *  ran out, each with its own year (a later run-out is never left unsaid). `counted` (a chart whose figure is cut at
+ *  `through`) adds the clause saying so; the withdrawal stacks count nothing and leave it off. */
+function ranOutWindow(
+  winner: { readonly meta: TableMeta; readonly rows: readonly LedgerYearRow[] },
+  baseline: { readonly meta: TableMeta; readonly rows: readonly LedgerYearRow[] },
+  steady: boolean,
+): { readonly through: number; readonly note: (counted: boolean) => string } | undefined {
+  const w = endOf(winner)
+  const b = endOf(baseline)
+  if (!w.ranOut && !b.ranOut) return undefined
+  const through = Math.min(w.year, b.year)
+  return { through, note: (counted) => slots.taxStratRanOut(w.ranOut ? w.year : null, b.ranOut ? b.year : null, steady, counted) }
+}
+
 /** A value as the charts print it. */
 export const chartFigure = (dollars: number): string => slots.taxStratValue(formatDeltaDollar(dollars))
 
@@ -146,6 +186,8 @@ export function comparisonView(input: ComparisonInput): ComparisonView {
   if (winner.kind !== 'ready' || baseline.kind !== 'ready') return { kind: 'waiting', words: copy.taxStratRunsWaiting }
   const updating = winner.updating || baseline.updating
   const title = slots.taxStratInMarket(COMPARISON_CHARTS.find((c) => c.id === chart)!.label, steady)
+
+  const out = ranOutWindow(winner, baseline, steady)
 
   if (chart === 'withdrawals') {
     const stack = (name: string, run: typeof winner): StackPicture => ({
@@ -165,7 +207,7 @@ export function comparisonView(input: ComparisonInput): ComparisonView {
       stacks: [stack(copy.recVizWithLabel, winner), stack(copy.recVizWithoutLabel, baseline)],
       lattice,
       axisDollar: mmAxisFormatterFor(lattice.ceiling),
-      notes: [copy.taxStratStackOrder],
+      notes: [copy.taxStratStackOrder, ...(out !== undefined ? [out.note(false)] : [])],
       updating,
     }
   }
@@ -174,19 +216,23 @@ export function comparisonView(input: ComparisonInput): ComparisonView {
   const ours = yearPoints(winner.meta, winner.rows, read)
   const theirs = yearPoints(baseline.meta, baseline.rows, read)
   const lattice = niceLattice(Math.max(1, ...ours.map((p) => p.value), ...theirs.map((p) => p.value)))
+  // A run that ran out early has fewer years, so a total over each run's own rows could differ by the years alone:
+  // every total counts only the years both runs reach (`out.through`), and the note says which ran out and when.
+  const total = (pts: readonly YearPoint[]): number => sum(pts.filter((p) => out === undefined || p.year <= out.through).map((p) => p.value))
   let metric: string
   if (chart === 'assets') {
-    // The last year both runs reach (a run that ran out ends early, its closing balance 0).
+    // The last year both runs reach (a run that ran out ends early, its closing balance 0): the same window.
     const year = Math.min(ours.at(-1)?.year ?? 0, theirs.at(-1)?.year ?? 0)
     const at = (pts: readonly YearPoint[]) => pts.find((p) => p.year === year)?.value ?? 0
     const d = direction(at(ours), at(theirs))
     metric = slots.taxStratCompareAssets(d.fig, d.dir, year, steady)
   } else if (chart === 'conversions') {
-    metric = slots.taxStratCompareConversions(formatDeltaDollar(sum(ours.map((p) => p.value))), formatDeltaDollar(sum(theirs.map((p) => p.value))), steady)
+    metric = slots.taxStratCompareConversions(formatDeltaDollar(total(ours)), formatDeltaDollar(total(theirs)), steady, out?.through)
   } else {
-    const d = direction(sum(ours.map((p) => p.value)), sum(theirs.map((p) => p.value)))
-    metric = chart === 'tax' ? slots.taxStratCompareTax(d.fig, d.dir, steady) : slots.taxStratCompareRmd(d.fig, d.dir, steady)
+    const d = direction(total(ours), total(theirs))
+    metric = chart === 'tax' ? slots.taxStratCompareTax(d.fig, d.dir, steady, out?.through) : slots.taxStratCompareRmd(d.fig, d.dir, steady, out?.through)
   }
+  const chartNotes = chart === 'tax' && input.stateClause !== null ? [input.stateClause] : chart === 'assets' ? [copy.taxStratAssetsNote] : []
   return {
     kind: 'pair',
     title,
@@ -197,7 +243,7 @@ export function comparisonView(input: ComparisonInput): ComparisonView {
     lattice,
     axisDollar: mmAxisFormatterFor(lattice.ceiling),
     metric,
-    notes: chart === 'tax' && input.stateClause !== null ? [input.stateClause] : chart === 'assets' ? [copy.taxStratAssetsNote] : [],
+    notes: [...(out !== undefined ? [out.note(true)] : []), ...chartNotes],
     updating,
   }
 }
@@ -267,6 +313,8 @@ export function detailsView(input: DetailsInput): DetailsView {
   const who = pick === 'recommended' ? copy.recVizWithLabel : copy.recVizWithoutLabel
   const heading = slots.taxStratDetailsOf(who, future === 'steady')
   const lead = (r: LedgerYearRow) => ({ year: String(run.meta.startCalendarYear + r.t), age: ageText(run.meta, r) })
+  const end = endOf(run)
+  const ranOut = end.ranOut ? [slots.taxStratDetailsRanOut(end.year, future === 'steady')] : []
   if (table === 'withdrawals') {
     return {
       kind: 'table',
@@ -294,7 +342,7 @@ export function detailsView(input: DetailsInput): DetailsView {
           'roth-end': r.end.roth,
         },
       })),
-      notes: [],
+      notes: ranOut,
       updating: run.updating,
     }
   }
@@ -333,8 +381,9 @@ export function detailsView(input: DetailsInput): DetailsView {
       },
     })),
     ...(medicareRows.length === 0 ? { empty: copy.taxStratMedicareNone } : {}),
-    notes:
-      medicareRows.length === 0
+    notes: [
+      ...ranOut,
+      ...(medicareRows.length === 0
         ? []
         : [
             slots.taxStratIrmaaLineNote(
@@ -342,7 +391,8 @@ export function detailsView(input: DetailsInput): DetailsView {
               formatEnteredDollar(pinned.tiers[0]!.mfjMagiThreshold),
               formatEnteredDollar(pinned.tiers[0]!.singleMagiThreshold),
             ),
-          ],
+          ]),
+    ],
     updating: run.updating,
   }
 }

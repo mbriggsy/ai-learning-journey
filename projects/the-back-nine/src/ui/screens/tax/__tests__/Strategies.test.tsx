@@ -86,6 +86,18 @@ describe('the empty state', () => {
     expect(idle.h.announce).toHaveBeenCalledWith(copy.recommendNoPretaxNote)
   })
 
+  it('no pre-tax money holds Find on the steer note itself: described by it, a press speaks it and starts nothing, never a second copy', () => {
+    const { h } = mount(strategiesView(input({ snapshot: snap(RETIRED, headlineAnswer(RETIRED), { kind: 'blocked', gap: 'no-pretax', label: 'no-pretax' }) })))
+    const find = screen.getByRole('button', { name: copy.taxStratFind })
+    expect(find).toHaveAttribute('aria-disabled', 'true')
+    const note = screen.getByText(copy.recommendNoPretaxNote)
+    expect(find).toHaveAttribute('aria-describedby', note.id)
+    expect(document.querySelector('[data-find-held]')).toBeNull()
+    fireEvent.click(find)
+    expect(h.onFind).not.toHaveBeenCalled()
+    expect(h.announce).toHaveBeenCalledWith(copy.recommendNoPretaxNote)
+  })
+
   it('the solve starting is spoken once, on the change', () => {
     const first = mount(strategiesView(input()))
     expect(first.h.announce).not.toHaveBeenCalled()

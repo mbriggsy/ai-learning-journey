@@ -226,6 +226,11 @@ function Steps({ steps }: { readonly steps: ClaimsSteps }) {
         ))}
       </ol>
       <p className="text-label text-stone-600">{steps.note}</p>
+      {steps.asOf !== undefined ? (
+        <p className="text-label text-stone-600" data-claims-as-of="">
+          {steps.asOf}
+        </p>
+      ) : null}
     </div>
   )
 }
@@ -239,7 +244,7 @@ export function SocialSecurity({ headingRef, page, tab, onTab, chart, onChart, o
         {page.words}
       </p>
     ) : page.kind === 'settled' ? (
-      <div className="flex flex-col gap-2 py-8 text-center" data-claims-page="settled">
+      <div className="flex flex-col gap-2 py-8 text-center" aria-describedby={verdictDescribedBy()} data-claims-page="settled">
         {page.view.lines.map((l, i) => (
           <p key={l} className={i === 0 ? 'text-body font-semibold text-stone-900' : 'text-body text-stone-900'} data-claims-settled="">
             {l}

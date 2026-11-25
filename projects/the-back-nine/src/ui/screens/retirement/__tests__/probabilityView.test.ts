@@ -7,7 +7,7 @@ import { applyBundle } from '@intake/whatIf'
 import { createLaneGroup, type EngineRunRequest } from '@store/runLanes'
 import type { MemoryModelSnapshot, ModelAnswer, ScenarioDraft, StickyDisplay } from '@store/memoryModel'
 import type { SavedRecommendationStatus } from '@store/savedRecommendation'
-import type { DateOffsetReading, DateSearchOutcome, DateTrackOutcome, Headline, SavedRecommendationV3, SimulationResult } from '@shared/model'
+import { isDepleted, type DateOffsetReading, type DateSearchOutcome, type DateTrackOutcome, type Headline, type SavedRecommendationV3, type SimulationResult } from '@shared/model'
 import { BAR_RUNG } from '@viz/curveMarks'
 import { composeAnswerNotes } from '../../../answerNotes'
 import { copy, slots } from '../../../copy'
@@ -732,6 +732,8 @@ describe('The subsidy-rules health line (the register’s Tier 0 line RC10 lost)
   const s = snap(HEALTH, answer)
   const flip = (enhanced: boolean) => [{ kind: 'aca-subsidy', enhanced }] as unknown as ProbabilityInput['whatIf']['bundle']
   const FLIP = flip(HEALTH.enhancedSubsidies !== true)
+  // `health`'s committed futures include some that run out: every line here carries Health Care's run-out clause.
+  const ro = (line: string): string => `${line} ${copy.healthLifetimeStopsAtRunOut}`
 
   /** Lanes over the real engine (the worker's own entry), settled as each request arrives. */
   const engineLanes = (): WhatIfSlotLanes => {
@@ -769,7 +771,8 @@ describe('The subsidy-rules health line (the register’s Tier 0 line RC10 lost)
     const a = formatDeltaDollar(ownMedian(flipped.result))
     const b = formatDeltaDollar(ownMedian(PLAN_RUN))
     expect(a, '[non-vacuity] the two rules print different lifetime costs on `health`').not.toBe(b)
-    expect(w.metrics.health?.line).toBe(slots.subsidyRegimeCostDelta(a, b))
+    expect(PLAN_RUN.distribution.depletionYears.some(isDepleted), '[non-vacuity] some of the plan’s futures run out').toBe(true)
+    expect(w.metrics.health?.line).toBe(ro(slots.subsidyRegimeCostDelta(a, b)))
     expect(w.metrics.health!.reserve.length, 'the reserve holds the widest form').toBeGreaterThanOrEqual(w.metrics.health!.line!.length)
   })
 
@@ -779,7 +782,7 @@ describe('The subsidy-rules health line (the register’s Tier 0 line RC10 lost)
     if (view.kind !== 'shown' || view.many.kind !== 'ready' || view.planHealth.kind !== 'ready') throw new Error('[test] not landed')
     expect(view.many.value.whatIfHealthReal).toBe(view.planHealth.value)
     const w = reads(probabilityView(input(s, { whatIf: { pick: 'new', bundle: same, view } })))
-    expect(w.metrics.health?.line).toBe(slots.subsidyRegimeCostEven(formatDeltaDollar(ownMedian(PLAN_RUN))))
+    expect(w.metrics.health?.line).toBe(ro(slots.subsidyRegimeCostEven(formatDeltaDollar(ownMedian(PLAN_RUN)))))
   })
 
   const landed = (whatIf: number | undefined, plan: Extract<WhatIfSlotView, { kind: 'shown' }>['planHealth'], updating = false): WhatIfSlotView => ({
@@ -800,8 +803,22 @@ describe('The subsidy-rules health line (the register’s Tier 0 line RC10 lost)
     for (const view of [null, landed(300_000, { kind: 'loading' }), landed(undefined, ready(330_000)), landed(300_000, ready(330_000), true), landed(300_000, { kind: 'error' })]) {
       const w = reads(probabilityView(input(s, { whatIf: { pick: 'new', bundle: FLIP, view } })))
       expect(w.metrics.health?.line).toBeNull()
-      expect(w.metrics.health?.reserve).toBe(slots.subsidyRegimeCostDelta('9,999,000', '9,999,000'))
+      expect(w.metrics.health?.reserve).toBe(ro(slots.subsidyRegimeCostDelta('9,999,000', '9,999,000')))
     }
+  })
+
+  it('where neither side’s futures run out, no run-out clause; a what-if run that runs out adds it (each lifetime sum stops at its run-out)', () => {
+    const lasting = { ...PLAN_RUN, distribution: { ...PLAN_RUN.distribution, depletionYears: PLAN_RUN.distribution.depletionYears.map(() => -1) } } as SimulationResult
+    const ls = snap(HEALTH, headlineAnswer(HEALTH, lasting))
+    const plain = reads(probabilityView(input(ls, { whatIf: { pick: 'new', bundle: FLIP, view: landed(300_000, ready(330_000)) } })))
+    expect(plain.metrics.health?.line).toBe(slots.subsidyRegimeCostDelta('300,000', '330,000'))
+    // The reserve holds the clause whatever lands (the what-if side's run-out is known only once it lands).
+    expect(plain.metrics.health?.reserve).toBe(ro(slots.subsidyRegimeCostDelta('9,999,000', '9,999,000')))
+    const view = landed(300_000, ready(330_000))
+    if (view.kind !== 'shown' || view.many.kind !== 'ready') throw new Error('[test] not landed')
+    const ranOut: WhatIfSlotView = { ...view, many: { ...view.many, value: { ...view.many.value, whatIfHealthRanOut: true } } }
+    const flagged = reads(probabilityView(input(ls, { whatIf: { pick: 'new', bundle: FLIP, view: ranOut } })))
+    expect(flagged.metrics.health?.line).toBe(ro(slots.subsidyRegimeCostDelta('300,000', '330,000')))
   })
 
   it('only where the left side tries the subsidy rules beside your plan', () => {
@@ -813,6 +830,20 @@ describe('The subsidy-rules health line (the register’s Tier 0 line RC10 lost)
     const beside = reads(probabilityView(input(snap(keptDraft, headlineAnswer(keptDraft, PLAN_RUN)), { whatIf: { pick: 'new', bundle: FLIP, view }, compared: { pick: 'kept:k', bundle: SPEND_LEVER, view: null } })))
     expect(beside.metrics.health, 'its words name your plan, so beside a kept what-if it is not printed').toBeUndefined()
     const both = reads(probabilityView(input(s, { whatIf: { pick: 'new', bundle: [...SPEND_LEVER, ...FLIP], view } })))
-    expect(both.metrics.health?.line).toBe(slots.subsidyRegimeCostDelta('300,000', '330,000'))
+    expect(both.metrics.health?.line).toBe(ro(slots.subsidyRegimeCostDelta('300,000', '330,000')))
+  })
+
+  it('the other orientation: a kept what-if that tries the rules on the right, your plan on the left, from the right slot’s view, named', () => {
+    const kept = [{ id: 'k', name: 'Old rules', levers: FLIP }] as unknown as NonNullable<ScenarioDraft['keptWhatIfs']>
+    const keptDraft: ScenarioDraft = { ...HEALTH, keptWhatIfs: kept }
+    const ks = snap(keptDraft, headlineAnswer(keptDraft, PLAN_RUN))
+    const w = reads(probabilityView(input(ks, { whatIf: { pick: 'new', bundle: [], view: null }, compared: { pick: 'kept:k', bundle: FLIP, view: landed(300_000, ready(330_000)) } })))
+    expect(w.metrics.health?.line).toBe(ro(slots.subsidyRegimeCostDeltaWith('Old rules', '300,000', '330,000')))
+    // Premiums, never costs (RC10's As-built): the figure holds no out-of-pocket spending.
+    for (const l of [w.metrics.health!.line!, slots.subsidyRegimeCostDelta('1', '2'), slots.subsidyRegimeCostEven('1')]) expect(l).toMatch(/^Lifetime health premiums /)
+    expect(w.metrics.health!.reserve.length).toBeGreaterThanOrEqual(w.metrics.health!.line!.length)
+    // A left side with changes of its own is not your plan: no line.
+    const busy = reads(probabilityView(input(ks, { whatIf: { pick: 'new', bundle: SPEND_LEVER, view: null }, compared: { pick: 'kept:k', bundle: FLIP, view: landed(300_000, ready(330_000)) } })))
+    expect(busy.metrics.health).toBeUndefined()
   })
 })

@@ -7,9 +7,11 @@
  * facing each other, "Current mix" (its picker: all accounts, a person's, a tax bucket's) and "What-if mix" (the mix of the
  * what-if open on Analysis, or the words saying there is none, with a door to try one), each centre printing stocks
  * against bonds and cash; between them the table of each part's current and what-if share. No annual return or standard
- * deviation lines (no engine output stands behind them). Detail: a table of each part (what the run grows it as, what it
- * is held as, current, what-if) beside diverging bars centred on 0. Under either: the one-split note and the cash line,
- * then the R13 caveat closing the panel. The charts ride Highcharts' lazy chunk.
+ * deviation lines (no engine output stands behind them). Detail: the same scope picker (its Current column reads the
+ * accounts shown), then a table of each part (what the run grows it as, what it is held as, current, what-if) beside
+ * diverging bars centred on 0. Under either: the one-mix line (under a scope narrower than all accounts: the run grows
+ * every account at the household's one blend), the one-split note and the cash line, then the R13 caveat closing the panel. The charts ride Highcharts'
+ * lazy chunk.
  */
 import { lazy, Suspense, type Ref } from 'react'
 import { Button, Caveat, PageFrame, Select, useWide } from '../../kit'
@@ -180,13 +182,16 @@ function Summary({ view, onScope, onTryMix }: { readonly view: AssetMixView; rea
   )
 }
 
-function Detail({ view, onTryMix }: { readonly view: AssetMixView; readonly onTryMix: () => void }) {
+function Detail({ view, onScope, onTryMix }: { readonly view: AssetMixView; readonly onScope: (scope: MixScope) => void; readonly onTryMix: () => void }) {
   const wide = useWide()
   const besideTable = wide
   const withWhatIf = view.detail.axisMax !== null
   const cell = 'h-12 py-0 align-middle'
   return (
     <div className="flex flex-col gap-6 compact:gap-3" data-asset="detail">
+      {/* The Current column reads the accounts shown, so the picker that sets them stands over the table (its label shown:
+          no "Current mix" title names it here). */}
+      <Select label={copy.assetScopeLabel} items={view.scopes} value={view.scope} onValueChange={onScope} className="w-64 max-w-full" />
       <div className="flex flex-col gap-6 wide:grid wide:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] wide:items-start wide:gap-8">
         <table aria-label={copy.assetTableTitle} className="w-full border-collapse tabular-nums" data-asset-detail-table="">
           <thead>
@@ -280,7 +285,7 @@ export function AssetAllocation({ headingRef, view, tab, onTab, onScope, onTryMi
         ) : tab === 'summary' ? (
           <Summary view={view} onScope={onScope} onTryMix={onTryMix} />
         ) : (
-          <Detail view={view} onTryMix={onTryMix} />
+          <Detail view={view} onScope={onScope} onTryMix={onTryMix} />
         )}
       </PageFrame>
     </div>

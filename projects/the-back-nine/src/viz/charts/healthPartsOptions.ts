@@ -14,7 +14,7 @@
  */
 import type { Options, PointOptionsObject, SeriesColumnOptions, SeriesLineOptions } from 'highcharts/highcharts.src'
 import { buildYTicks, type DollarLattice } from '../bandData'
-import { chartWordsOptions, type ChartWords } from './chartA11y'
+import { chartWordsOptions, hcPlain, type ChartWords } from './chartA11y'
 
 export interface HealthPartBar {
   readonly age: number
@@ -112,8 +112,10 @@ export function healthPartOptions(input: HealthPartInput): Options {
     // holds the last age's words.
     credits: { enabled: true, position: { align: 'right', verticalAlign: 'top', x: -4, y: 12 } },
     tooltip: {
+      // A bar’s sentence names the first person’s age by their typed name: escaped where it is drawn (`hcPlain`); the
+      // spoken copy above stays raw.
       formatter: function () {
-        return String(((this as unknown as { point: { options: { custom?: { point?: string } } } }).point.options.custom?.point) ?? '')
+        return hcPlain(String(((this as unknown as { point: { options: { custom?: { point?: string } } } }).point.options.custom?.point) ?? ''))
       },
     },
     xAxis: { type: 'linear', min: ages.first - 0.5, max: ages.last + 0.5, allowDecimals: false, tickInterval: 5, lineWidth: 1, title: { text: undefined } },

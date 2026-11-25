@@ -7,10 +7,11 @@
  * donut of the savings by tax treatment (taxable, pre-tax, Roth, HSA, each its own pattern) on the left, "Your savings"
  * and the total in its hole, beside each part's big figure with its key mark and its word. Picking a part, on the ring or
  * by its figure, lists that part's accounts under them (the figure's button is the keyboard's and the screen reader's
- * way in; the slice is the pointer's). The R13 caveat closes the panel. The chart rides Highcharts' lazy chunk.
+ * way in; the slice is the pointer's). Under them: the balances as entered and what B9 does not ask about (Snapshot's two
+ * lines beside the same sums). The R13 caveat closes the panel. The chart rides Highcharts' lazy chunk.
  */
 import { lazy, Suspense, type Ref } from 'react'
-import { Caveat, cn, PageFrame, useWide } from '../../kit'
+import { Caveat, cn, PageFrame } from '../../kit'
 import { copy } from '../../copy'
 import { verdictDescribedBy } from '../../disclaimerId'
 import { ChartBoundary } from '../ChartBoundary'
@@ -20,9 +21,8 @@ import type { TaxAllocationView, TaxBucketId } from './investmentView'
 
 const Donut = lazy(() => import('@viz/charts/InvestmentCharts').then((m) => ({ default: m.Donut })))
 
-/** The donut's side in CSS px at a laptop width and on the phone. */
+/** The donut's side in CSS px, at a laptop width and on the phone alike. */
 export const TAX_DONUT_SIZE = 240
-export const TAX_PHONE_SIZE = 240
 
 const LIST_ID = 'b9-taxalloc-list'
 
@@ -35,7 +35,6 @@ export interface TaxAllocationProps {
 }
 
 function Parts({ view, onPick }: { readonly view: Extract<TaxAllocationView, { kind: 'buckets' }>; readonly onPick: (bucket: TaxBucketId | null) => void }) {
-  const wide = useWide()
   const pick = (id: TaxBucketId) => onPick(view.picked === id ? null : id)
   return (
     <div className="flex flex-col gap-6 compact:gap-3" data-taxalloc="">
@@ -43,13 +42,13 @@ function Parts({ view, onPick }: { readonly view: Extract<TaxAllocationView, { k
       <div className="flex flex-col items-center gap-8 laptop:grid laptop:grid-cols-[auto_minmax(0,1fr)] laptop:gap-16">
         <div role="group" aria-label={copy.taxAllocTitle} aria-describedby={verdictDescribedBy()} data-taxalloc-donut="">
           <ChartBoundary fallback={<p className="py-8 text-body text-stone-600">{copy.chartLoadFailed}</p>}>
-            <Suspense fallback={<div aria-hidden="true" className={wide ? 'h-64 w-60' : 'h-64 w-60'} />}>
+            <Suspense fallback={<div aria-hidden="true" className="h-64 w-60" />}>
               <Donut
                 chartId="tax-allocation"
                 className="b9-taxalloc"
                 parts={view.buckets.filter((b) => b.share > 0).map((b) => ({ id: b.id, share: b.share, colorIndex: b.colorIndex, pattern: b.pattern, point: b.point }))}
                 words={{ ...chartWords(copy.taxAllocTitle), description: copy.taxAllocDescription }}
-                size={wide ? TAX_DONUT_SIZE : TAX_PHONE_SIZE}
+                size={TAX_DONUT_SIZE}
                 picked={view.picked}
                 pickable
                 onPick={(id) => pick(id as TaxBucketId)}
@@ -109,6 +108,13 @@ function Parts({ view, onPick }: { readonly view: Extract<TaxAllocationView, { k
             </ul>
           </>
         )}
+      </div>
+      <div className="laptop:columns-2 laptop:gap-x-10" data-taxalloc-notes="">
+        {view.notes.map((l) => (
+          <p key={l} className="mb-1 break-inside-avoid text-label text-stone-600" data-taxalloc-note="">
+            {l}
+          </p>
+        ))}
       </div>
     </div>
   )

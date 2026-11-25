@@ -121,3 +121,15 @@ export function chartWordsOptions(words: ChartWords): Pick<Options, 'lang' | 'ac
     },
   }
 }
+
+/**
+ * A household-typed string (a person's name, or words built from one) made safe for a Highcharts text that the chart
+ * DRAWS: an axis title, a tooltip, a label. Highcharts 13 parses any drawn text holding `<` as markup even with `useHTML`
+ * off and keeps an `<a href>`, so a name typed as a link drew a working off-site link in an axis title; and a bare `&`
+ * starts an entity. Escaped, the text prints exactly as typed (Highcharts reads the entities back as their characters).
+ * Applied in the options builders where the household's words enter a drawn text, never to the spoken (accessibility)
+ * strings, which the module strips of tags and writes as attributes, so an entity there would be read aloud.
+ */
+export function hcPlain(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}

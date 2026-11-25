@@ -13,14 +13,18 @@
  * (income tax, net marketplace premium, Medicare) are NOT drawn as their own groups: each part's mean is printed in the
  * humane dialect, and three rounded parts need not add up to the rounded all-in bar beside them, which would print a
  * sum that doesn't sum. The hero bars alone (the plan's own fallback; the pilot's call, RC8 build).
+ *
+ * Beside the bars, the Winner card's own qualifying lines (the skew quote, the typical-future qualifier, the shape note)
+ * and under them its disclosures, from the same view, so the hero is never reprinted bare (insight 160).
  */
 import type { DollarLattice } from '@viz/bandData'
 import { niceLattice } from '@viz/bandData'
-import { spineMedicarePriced } from '@intake/intakeMap'
+import { pricedStateForRun, spineMedicarePriced } from '@intake/intakeMap'
 import type { MemoryModelSnapshot } from '@store/memoryModel'
 import { copy, slots } from '../../copy'
 import { formatDeltaDollar, mmAxisFormatterFor } from '../../money'
 import { recommendationView } from '../../recommendationView'
+import { composeVerdictStateNote } from '../../stateTaxDisclosure'
 import { armFigure, heroWords, metricWords } from './strategiesView'
 
 export interface SummaryBar {
@@ -49,7 +53,15 @@ export type SummaryView =
       readonly hero: string
       readonly average?: string
       readonly nameplate: string
+      /** The lines that qualify the hero on the Winner card, beside it here too (insight 160: a figure's meaning is set by
+       *  what renders beside it): the leave-more skew quote, the typical-future qualifier, the still-directional note. */
+      readonly skew?: string
+      readonly qualifier?: string
+      readonly shapeNote?: string
       readonly description: string
+      /** The footnote row: the Winner card's adjacent disclosures, then the state clause where no state-tax disclosure
+       *  already speaks (the Strategies tab's own rule). */
+      readonly footnotes: readonly string[]
     }
 
 /** Three significant figures in the `mm` / `k` dialect, bare of the `$` (the slot adds `~$`). */
@@ -64,10 +76,13 @@ export function summaryView(snapshot: MemoryModelSnapshot): SummaryView {
   const solve = snapshot.solve
   if (solve.kind !== 'committed' || solve.payload.kind !== 'recommended') return { kind: 'waiting', words: copy.taxStratWaiting, action: copy.taxStratToStrategies }
   const healthcarePriced = spineMedicarePriced(snapshot.draft)
-  const view = recommendationView(solve, { healthcarePriced })
+  const pricedState = pricedStateForRun(snapshot.draft)
+  const view = recommendationView(solve, { pricedState, healthcarePriced })
   if (view.kind !== 'recommended') return { kind: 'waiting', words: copy.taxStratWaiting, action: copy.taxStratToStrategies }
   if (view.bars === undefined) return { kind: 'words', words: view.grade.heroLine }
   const { hero, average } = heroWords(view, healthcarePriced)
+  const speaksState = view.disclosures.some((d) => d.id === 'state-tax')
+  const stateClause = composeVerdictStateNote(pricedState, false)
   const top = Math.max(view.bars.winner, view.bars.baseline, 0)
   const lattice = niceLattice(top)
   const bar = (name: string, statistic: number): SummaryBar => ({
@@ -88,6 +103,10 @@ export function summaryView(snapshot: MemoryModelSnapshot): SummaryView {
     hero,
     ...(average !== undefined ? { average } : {}),
     nameplate: view.baselineNameplate,
+    ...(view.skew !== undefined ? { skew: view.skew.medianQuote } : {}),
+    ...(view.grade.deltaQualifier !== undefined ? { qualifier: view.grade.deltaQualifier } : {}),
+    ...(view.grade.shapeNote !== undefined ? { shapeNote: view.grade.shapeNote } : {}),
     description: copy.taxStratSummaryDescription,
+    footnotes: [...view.disclosures.map((d) => d.text), ...(!speaksState && stateClause !== null ? [stateClause] : [])],
   }
 }

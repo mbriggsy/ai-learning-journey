@@ -104,7 +104,7 @@ export interface XAnnotation {
 /** An in-place text callout naming a band region directly on the chart — the seam back-nine-design
  *  §2 prefers over a legend. Positions are CALLER-chosen in band-data terms, and that is the seam's
  *  recorded hazard: a caller-anchored label can name the WRONG region (dollarMax and horizon differ
- *  per household), it bypasses isThinCohort, and no oracle checks it against the marks or the
+ *  per household), it bypasses the thin-cohort cut (`truncateFanAtThinCohort`, `cohort.ts`), and no oracle checks it against the marks or the
  *  readout — so the council (2026-09-08) ACCEPTED the legend as the tier channel and filed the
  *  preconditions any future build must meet (the register's chart-text residual (e), its ⚑ block).
  *  No production caller supplies these today; the type is an array, never a count. */
@@ -606,7 +606,8 @@ export interface ReadoutLine {
  * extracted as a PURE seam (mirroring nearestLatticeIndex / cohortFadeOpacity) so a regression that
  * re-shows crisp dollars on a dead cohort fails LOUD in a unit test instead of shipping green.
  *
- * - `thin` (the caller passes {@link isThinCohort}(sample.cohortFraction)) WITHDRAWS the crisp dollar
+ * - `thin` (the caller says the column's surviving cohort is below `COHORT_FADE.full`, `cohort.ts`; no screen calls
+ *   this since the hand-drawn band's readout left at RC10, only its test) WITHDRAWS the crisp dollar
  *   lines and shows the calm note instead — the dead-cohort dollar suppression. When NOT thin, the
  *   spread leads (range first, the median LAST and subordinate, labelled "most likely" — never a
  *   prediction). Every figure arrives PRE-FORMATTED on the row (string-free viz); this only arranges

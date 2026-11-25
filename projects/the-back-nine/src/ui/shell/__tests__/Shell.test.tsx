@@ -598,3 +598,73 @@ describe('Shell — RC4: the home’s new pages and the gear', () => {
     expect(await screen.findByRole('heading', { name: copy.assumptionTitle })).toBeInTheDocument()
   })
 })
+
+describe('Shell — the pages with no table speak their own words (milestone 2’s fix round)', () => {
+  const SS = { module: 'retirement', page: 'social-security' } as const
+  const STRESS = { module: 'retirement', page: 'stress-test' } as const
+  const pageWords = (screenId: string) => document.querySelector(screenId === 'social-security' ? '[data-claims-page="words"]' : '[data-stress-page="words"]')
+
+  it('a plan missing a fact: Social Security and Stress Test name what is missing (the pinned answer words), never the table’s words', () => {
+    const draft = { ...DRAFT, people: [{ ...DRAFT.people[0]!, currentAge: undefined }, DRAFT.people[1]!] } as unknown as ScenarioDraft
+    const snap: MemoryModelSnapshot = { ...snapshotWith({ kind: 'inputs-incomplete' }), draft }
+    const pinned = pinnedLines(snap, BUILD_YEAR)
+    expect(pinned.second, 'the fixture names a missing fact').toBeDefined()
+    for (const [route, id] of [
+      [SS, 'social-security'],
+      [STRESS, 'stress-test'],
+    ] as const) {
+      const { lanes } = heldLanes()
+      render(<RoutedShell save={{ kind: 'none' }} snapshot={snap} lanes={lanes} wallCalendarYear={BUILD_YEAR} initialRoute={route} />)
+      expect(pageWords(id)).toHaveTextContent(`${pinned.lead} ${pinned.second!}`)
+      expect(pageWords(id)?.textContent ?? '').not.toMatch(/table/i)
+      cleanup()
+    }
+  })
+
+  it('a failed answer: the page points to Analysis’s Try again with no table named; nothing being worked out never says the page fills in', () => {
+    const { lanes } = heldLanes()
+    render(<RoutedShell save={{ kind: 'none' }} snapshot={snapshotWith({ kind: 'compute-error' } as unknown as ModelAnswer)} lanes={lanes} wallCalendarYear={BUILD_YEAR} initialRoute={STRESS} />)
+    expect(pageWords('stress-test')).toHaveTextContent(copy.pageWordsAnswerError)
+    expect(copy.pageWordsAnswerError).not.toMatch(/table/i)
+    cleanup()
+    render(<RoutedShell save={{ kind: 'none' }} snapshot={snapshotWith({ kind: 'idle' })} lanes={heldLanes().lanes} wallCalendarYear={BUILD_YEAR} initialRoute={SS} />)
+    expect(pageWords('social-security')?.textContent).not.toBe(copy.claimsWaiting)
+  })
+
+  it('Health Care on a committed date answer whose run is withheld (an input failure): the pinned words, never Cash Flows’ table words', () => {
+    const answer = { ...(dateAnswer(WORKING, undefined) as object), outcome: { kind: 'input-failure' } } as unknown as ModelAnswer
+    const snap = dateSnapshot(WORKING, answer)
+    expect(tableRunFor(answer), '[test setup] the run is withheld').toMatchObject({ kind: 'withheld' })
+    const pinned = pinnedLines(snap, BUILD_YEAR)
+    render(<RoutedShell save={{ kind: 'none' }} snapshot={snap} lanes={heldLanes().lanes} wallCalendarYear={BUILD_YEAR} initialRoute={{ module: 'retirement', page: 'health-care' }} />)
+    const words = document.querySelector('[data-health-page="words"]')
+    expect(words).toHaveTextContent(pinned.second !== undefined ? `${pinned.lead} ${pinned.second}` : pinned.lead)
+    expect(words?.textContent ?? '').not.toMatch(/table/i)
+  })
+
+  it('Health Care on an indeterminate answer: the ring’s "not enough to read yet", never "your plan prices no health premiums"', () => {
+    const answer = { ...(finalAnswer() as object), result: { headline: { outcomeState: 'indeterminate', xOfTen: { value: 0, marginToEdge: 0 }, stateMarginToEdge: 0 }, distribution: {} } } as unknown as ModelAnswer
+    render(<RoutedShell save={{ kind: 'none' }} snapshot={snapshotWith(answer)} lanes={heldLanes().lanes} wallCalendarYear={BUILD_YEAR} initialRoute={{ module: 'retirement', page: 'health-care' }} />)
+    expect(document.querySelector('[data-health-page="words"]')).toHaveTextContent(copy.snapshotRingNoReading)
+    expect(screen.queryByText(copy.healthNone)).toBeNull()
+  })
+
+  it('Stress Test on a retired plan with no yearly ledger (Social Security alone): the page says why, never a stress that "couldn’t run on the same futures"', () => {
+    const ssOnly: ScenarioDraft = { ...DRAFT, enteredAccounts: [], incomeStreams: [] }
+    const answer = { ...(finalAnswer() as object), draft: ssOnly } as unknown as ModelAnswer
+    expect(tableRunFor(answer), '[test setup] no ledger').toEqual({ kind: 'withheld', reason: 'no-ledger' })
+    render(<RoutedShell save={{ kind: 'none' }} snapshot={{ ...snapshotWith(answer), draft: ssOnly }} lanes={heldLanes().lanes} wallCalendarYear={BUILD_YEAR} initialRoute={STRESS} />)
+    expect(pageWords('stress-test')).toHaveTextContent(copy.pageWordsWithheldNoLedger)
+  })
+
+  it('the StaleBanner rides Social Security and Stress Test, which print the plan’s odds; one in-frame R13 caveat still', () => {
+    for (const route of [SS, STRESS]) {
+      const { lanes } = heldLanes()
+      render(<RoutedShell save={{ kind: 'none' }} snapshot={snapshotWith(finalAnswer())} lanes={lanes} wallCalendarYear={BUILD_YEAR + 2} stalenessNote agedBalancesYear={BUILD_YEAR} initialRoute={route} />)
+      expect(screen.getByText(copy.stalenessHeroNote)).toBeInTheDocument()
+      expect(screen.getByText(slots.staleAgedBalances(BUILD_YEAR))).toBeInTheDocument()
+      expect(document.querySelector('main.result')!.querySelectorAll('[data-caveat]')).toHaveLength(1)
+      cleanup()
+    }
+  })
+})

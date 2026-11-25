@@ -148,6 +148,12 @@ describe('fanOptions', () => {
     expect(access.screenReaderSection.beforeChartFormat).not.toContain('typeDescription')
     expect(access.point).toBeDefined()
   })
+
+  it('the age axis’s title prints a typed name as typed: a link and an ampersand are escaped (Highcharts parses `<` as markup)', () => {
+    const titleOf = (xAxisTitle: string) => (fanOptions({ fan: FAN, moments: [], labels: { ...labels, xAxisTitle }, height: 300 }).xAxis as { title: { text: string } }).title.text
+    expect(titleOf('<a href="https://x">P</a>’s age')).toBe('&lt;a href="https://x"&gt;P&lt;/a&gt;’s age')
+    expect(titleOf('A & B’s age')).toBe('A &amp; B’s age')
+  })
 })
 
 describe('fanOptions: the legend toggle (Act 6 · RC7, ref 2.9’s median-only frame)', () => {

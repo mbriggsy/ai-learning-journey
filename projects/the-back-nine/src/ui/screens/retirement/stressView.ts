@@ -7,12 +7,16 @@
  * 10" at it, never a percent and never "10 of 10"; the bar stands to the ring's arc (0 to 9, the ceiling's full less one).
  * BASELINE IS THE PLAN'S OWN READING (`planReadingFor`, no run), so its count is exactly the one Probability prints for
  * your plan. On the working route every bar reads the same stop year, the plan's base offset (the runner's core), and the
- * page says which year in the ring's own caption words.
+ * page says which year in the ring's own caption words (the window's last year, said as that, where the answer found no
+ * date). While the answer is worked out again the bars stay, under the re-figuring line.
  *
  * WHAT A BAR SHOWS: its count where its run landed (held under "Loading…" while a newer run is in flight); no column while
- * it has none yet; and a stress that failed or could not run on the plan's futures prints no count and says why in the
- * notes, never a count from another bar. A stress with nothing to act on in this plan draws no bar and says so by name.
- * Where every stressed bar with a count reads Baseline's count, one note says no stress moved it a whole step.
+ * it has none yet, or where its reading has no number (indeterminate: the ring's own words, never a 0-height bar); and a
+ * stress that failed or could not run on the plan's futures prints no count and says why in the notes, never a count from
+ * another bar. A stress with nothing to act on in this plan draws no bar and says so by name. A plan reading with no number
+ * draws no chart at all (there is nothing to stress against). A stress reading with no number names itself in the notes
+ * (its empty slot carries no label). Where every stressed bar has a number and reads Baseline's count, one note says no
+ * stress moved it a whole step.
  */
 import { STRESS_IDS, STRESS_RANGES, type StressId, type StressRefusal } from '@intake/stress'
 import type { StressChartBar, StressBarRole } from '@viz/charts/stressBarsOptions'
@@ -57,10 +61,10 @@ export function offerWords(refusal: StressRefusal): string {
   return refusal.kind === 'size-outside-range' ? slots.stressBarWithheld(NAME[refusal.id]) : REFUSAL_WORDS[refusal.kind]
 }
 
-/** A reading as a bar: its count words and the height it stands to. */
-function barOf(reading: WhatIfReading, startCalendarYear: number): { readonly count: string; readonly height: number } {
+/** A reading as a bar: its count words and the height it stands to (null where the reading has no number: no column). */
+function barOf(reading: WhatIfReading, startCalendarYear: number): { readonly count: string; readonly height: number | null } {
   const face = ringFace(reading, startCalendarYear)
-  return { count: face.centre ?? face.caption, height: face.arc ?? 0 }
+  return { count: face.centre ?? face.caption, height: face.arc ?? null }
 }
 
 export interface StressViewInput {
@@ -75,6 +79,10 @@ export interface StressViewInput {
   readonly bars: ReadonlyMap<StressBarId, StressBarRun>
   /** The page's one state clause (`composeVerdictStateNote`), or null. */
   readonly stateClause: string | null
+  /** The answer is being worked out again (`snapshot.refiguring`): the bars shown are from before the latest change. */
+  readonly refiguring: boolean
+  /** The answer found no date in its window: the reading is the window's last year (`buildTableBase`'s `no-date` route). */
+  readonly noDate: boolean
 }
 
 export type StressPageView =
@@ -82,6 +90,8 @@ export type StressPageView =
   | {
       readonly kind: 'bars'
       readonly title: string
+      /** The re-figuring line while the answer is worked out again (the bars kept are from before the latest change). */
+      readonly tag?: string
       /** The stop year every bar reads (the working route), and the essentials-only line where the reading is that pass. */
       readonly readsAt: readonly string[]
       readonly bars: readonly StressChartBar[]
@@ -97,6 +107,8 @@ export function stressView(input: StressViewInput): StressPageView {
   const { plan, startCalendarYear, committed } = input
   if (plan === null) return { kind: 'words', words: copy.stressNoReading }
   const baseline = barOf(plan, startCalendarYear)
+  // An indeterminate plan reading has no number to stress against.
+  if (baseline.height === null) return { kind: 'words', words: copy.stressNoReading }
   const bars: StressChartBar[] = [
     {
       id: 'baseline',
@@ -129,6 +141,8 @@ export function stressView(input: StressViewInput): StressPageView {
       if (run.held !== undefined) shown = barOf(run.held, startCalendarYear)
     } else if (run.kind === 'error' || run.kind === 'answer-error') why.push(slots.stressBarError(name))
     else why.push(slots.stressBarWithheld(name))
+    // A reading with no number draws an empty slot (no label on a null column): its words go in the notes.
+    if ((run.kind === 'ready' || (run.kind === 'loading' && run.held !== undefined)) && shown.height === null) why.push(slots.stressBarNoCount(name))
     bars.push({
       id,
       name,
@@ -139,17 +153,20 @@ export function stressView(input: StressViewInput): StressPageView {
       point: slots.stressBarPoint(name, detail, shown.count === '' ? copy.stressRunsWaiting : shown.count),
     })
   }
-  // Every stressed bar that has a count reads Baseline's: say so, or the equal bars read as "did the stress even run?".
-  const stressed = bars.slice(1).filter((b) => b.height !== null)
-  const noneMoves = !loading && stressed.length > 0 && stressed.every((b) => b.count === baseline.count)
+  // Every stressed bar has a count and reads Baseline's: say so, or the equal bars read as "did the stress even run?".
+  // A bar with no number (no count, withheld, failed) is never counted as one that did not move.
+  const stressed = bars.slice(1)
+  const noneMoves = !loading && stressed.length > 0 && stressed.every((b) => b.height !== null && b.count === baseline.count)
   const readsAt: string[] = []
   if (plan.kind === 'offset') {
-    readsAt.push(slots.stressReadsAt(ringFace(plan, startCalendarYear, input.planClockYears).caption))
+    const caption = ringFace(plan, startCalendarYear, input.planClockYears).caption
+    readsAt.push(input.noDate ? slots.stressReadsAtNoDate(caption) : slots.stressReadsAt(caption))
     if (plan.track === 'floor') readsAt.push(copy.snapshotRingEssentialsNote)
   }
   return {
     kind: 'bars',
     title: copy.stressTitle,
+    ...(input.refiguring ? { tag: copy.answerRefiguringCaption } : {}),
     readsAt,
     bars,
     axisTitle: copy.stressAxisTitle,

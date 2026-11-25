@@ -34,6 +34,7 @@ import {
   type WinnerActionView,
 } from '../recommendationView'
 import { copy, slots } from '../copy'
+import { rankedList } from '../screens/tax/strategiesView'
 import {
   formatAbsoluteDollar,
   formatActionableDollar,
@@ -550,10 +551,21 @@ describe('recommendationView — the Summary bars (RC8: the hero’s statistic, 
     expect(v.runnerUp!.why).toBe(copy.recRunnerUpWhy)
   })
 
-  it('the runner-up carries its hedged TEXT only: its figure rides the ranked list, so no picture field survives', () => {
+  it('the runner-up carries its hedged TEXT only: its figure rides the ranked list, which says why a runner-up that prints higher still ranks second', () => {
     const higherRunnerUp = armFor('leave-more', HB, 'bracket-fill', 'bracket-fill', { terminalTaxableReal: [700_000, 900_000], terminalPretaxReal: [100_000, 100_000], terminalRothReal: [0, 0], terminalHsaReal: [0, 0] })
-    const v = asRec(recommendationView(committed(leaveMoreRec({ runnerUp: higherRunnerUp })), { spineConfidence: spine }))
+    const p = leaveMoreRec({ runnerUp: higherRunnerUp })
+    const v = asRec(recommendationView(committed(p), { spineConfidence: spine }))
     expect(v.runnerUp).toEqual({ why: copy.recRunnerUpWhy })
+    // The list (the old chart's honesty gate, `runnerUpVizFor`, drew nothing contradicting the ranking): the runner-up's
+    // row prints its higher figure, shaded best, and names why it still ranks second, inside the same hedge.
+    const rows = rankedList(p, false).rows
+    const runner = rows.find((r) => r.role === 'runner-up')!
+    expect(runner.value).toBe(slots.taxStratValue(formatDeltaDollar(higherRunnerUp.headlineStatisticB)))
+    expect(runner.shade).toBe(0)
+    expect(runner.note).toBe(slots.recRunnerUpAheadHere(true))
+    // A reason true on every crown (a tie-break crown included): never a frequency nothing counts.
+    expect(runner.note).toContain('ranked on a separate set of futures, where the recommended one came out ahead or the two came out about even')
+    expect(runner.note).not.toMatch(/more often/)
   })
 })
 

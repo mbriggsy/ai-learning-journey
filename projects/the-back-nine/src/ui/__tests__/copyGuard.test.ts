@@ -765,7 +765,6 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     withOdds: slots.withOdds('7 of 10'),
     withOddsAtCeiling: slots.withOddsAtCeiling(),
     dateTradeoff: slots.dateTradeoff(2, slots.xOfTen(8)),
-    ladderOffsetTick: slots.ladderOffsetTick(6),
     ladderMarkAria: slots.ladderMarkAria(6, slots.xOfTen(9), 'crown', false),
     ladderCaveatAgedBalances: slots.ladderCaveatAgedBalances(2024),
     noDateHowClose: slots.noDateHowClose(slots.xOfTen(7)),
@@ -806,12 +805,6 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     medicareExtrasFactTypical: slots.medicareExtrasFactTypical('Craig', '203'),
     // P3·U10 — the two-futures delta readouts (frequency-first, hedge-bearing by construction;
     // the samples double as the require-hedge control corpus below).
-    rothDeltaSurvivor: slots.rothDeltaSurvivor(slots.xOfTen(8), slots.xOfTen(6)),
-    rothDeltaJoint: slots.rothDeltaJoint(slots.xOfTen(8), slots.xOfTen(7)),
-    rothDeltaEven: slots.rothDeltaEven(slots.xOfTen(7)),
-    rothDeltaCountEven: slots.rothDeltaCountEven(slots.xOfTen(9)),
-    rothStateShift: slots.rothStateShift('Off track', 'On track'),
-    rothYearsSecondary: slots.rothYearsSecondary(3, 'more'),
     sequencingDelta: slots.sequencingDelta(slots.xOfTen(8), slots.xOfTen(7)),
     // U17 §S1 — the start names the CALENDAR year (wall-time-stable), tense picked by `passed`.
     rothPlanEcho: slots.rothPlanEcho('40,000', 2028, false, 5),
@@ -1177,6 +1170,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     probabilityDifferenceBetween: slots.probabilityDifferenceBetween('Move to Florida', '7 of 10', 'new what-if', '8 of 10'),
     subsidyRegimeCostDelta: slots.subsidyRegimeCostDelta('320,000', '330,000'),
     subsidyRegimeCostEven: slots.subsidyRegimeCostEven('270,000'),
+    subsidyRegimeCostDeltaWith: slots.subsidyRegimeCostDeltaWith('Old rules', '320,000', '330,000'),
     probabilityKeptChanged: slots.probabilityKeptChanged('Move to Florida'),
     planListCopyName: slots.planListCopyName('Move to Florida', 2),
     planListNameLong: slots.planListNameLong(60),
@@ -1209,13 +1203,18 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     taxStratHeroPayLessTaxUnpriced: slots.taxStratHeroPayLessTaxUnpriced('48,000'),
     taxStratCompared: slots.taxStratCompared(62),
     taxStratOthers: slots.taxStratOthers(59),
+    taxStratOthersAbove: [slots.taxStratOthersAbove(1, 0), slots.taxStratOthersAbove(3, 56)].join(' '),
+    recRunnerUpAheadHere: [slots.recRunnerUpAheadHere(true), slots.recRunnerUpAheadHere(false)].join(' '),
+    taxStratRothRowOwn: slots.taxStratRothRowOwn('12,000'),
+    taxStratRanOut: [slots.taxStratRanOut(2051, null, false, true), slots.taxStratRanOut(null, 2049, true, false), slots.taxStratRanOut(2050, 2050, false, true), slots.taxStratRanOut(2046, 2041, false, true)].join(' '),
+    taxStratDetailsRanOut: slots.taxStratDetailsRanOut(2051, false),
     taxStratValue: slots.taxStratValue('4,240,000'),
     taxStratRothRow: slots.taxStratRothRow('21,000', 5),
     taxStratInMarket: slots.taxStratInMarket('Income tax', true),
     taxStratCompareAssets: slots.taxStratCompareAssets('120,000', 'more', 2061, true),
     taxStratCompareTax: slots.taxStratCompareTax('48,000', 'less', false),
     taxStratCompareRmd: slots.taxStratCompareRmd('210,000', 'less', true),
-    taxStratCompareConversions: slots.taxStratCompareConversions('105,000', '0', true),
+    taxStratCompareConversions: [slots.taxStratCompareConversions('105,000', '0', true), slots.taxStratCompareConversions('105,000', '0', false, 2051)].join(' '),
     taxStratBarPoint: slots.taxStratBarPoint('The recommended strategy', '4,240,000'),
     taxStratChartPoint: slots.taxStratChartPoint(2034, 'Your plan today', '12,000'),
     taxStratDetailsOf: slots.taxStratDetailsOf('The recommended strategy', true),
@@ -1225,6 +1224,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     claimsCoincideMany: slots.claimsCoincideMany('Your plan’s own ages and claiming at full retirement age', 'Alex at 67 and Sam at 67'),
     claimsPersonAt: slots.claimsPersonAt('Sam', 67),
     claimsFixed: slots.claimsFixed('Sam', false, 'Sam’s', '17,500'),
+    claimsFixedSpousalPending: slots.claimsFixedSpousalPending('Sam', false, 'Sam’s', 'you', true),
     claimsNoBenefit: slots.claimsNoBenefit('You', true),
     claimsReceives: slots.claimsReceives('Alex', false, '17,500'),
     claimsLifetimeTotal: slots.claimsLifetimeTotal('1,050,000'),
@@ -1239,31 +1239,39 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     claimsBreakEvenAge: slots.claimsBreakEvenAge(81),
     claimsBreakEvenLine: slots.claimsBreakEvenLine('Alex’s', 2041, 'claiming at 70', 'your plan’s own ages'),
     claimsNoBreakEvenLine: slots.claimsNoBreakEvenLine(2059, 'Alex’s', 95, 'claiming as early as possible', 'claiming at 70'),
+    claimsLevelByLine: slots.claimsLevelByLine(2059, 'Alex’s', 95, 'claiming at 70', 'your plan’s own ages'),
     claimsRanOut: slots.claimsRanOut('Age 70', 2049),
     claimsFigure: slots.claimsFigure('1,230,000'),
     claimsBarPoint: slots.claimsBarPoint('Age 70', '~$1,230,000', '7 of 10'),
     claimsYearPoint: slots.claimsYearPoint('Alex’s age', 72, 'Age 70', '45,000'),
-    claimsSummaryLine: slots.claimsSummaryLine('claiming at 70', 1),
+    claimsSummaryLine: [slots.claimsSummaryLine('claiming at 70', 1), slots.claimsSummaryLine('claiming at 70', 1, true), slots.claimsSummaryLine('claiming at 70 and claiming at full retirement age', 2, true)].join(' '),
     claimsSummaryOdds: slots.claimsSummaryOdds('7 of 10', '8 of 10'),
     claimsSummaryOddsPlan: slots.claimsSummaryOddsPlan('8 of 10'),
     claimsStepsHeading: slots.claimsStepsHeading('Age 70'),
     claimsStepFiles: slots.claimsStepFiles('Alex', false, 70, 2030),
     claimsStepClaimed: slots.claimsStepClaimed('You', true),
+    claimsStepSpousalPending: slots.claimsStepSpousalPending('Sam', false, 'Sam’s', 'you', true),
+    claimsAsOfBuild: slots.claimsAsOfBuild(2025),
     healthInSteady: slots.healthInSteady('Health premiums each year, for the two of you together'),
     healthAxisNote: slots.healthAxisNote('Alex’s age'),
     healthFigure: slots.healthFigure('330,000'),
-    healthYearPoint: slots.healthYearPoint('Alex’s age', 72, 2037, 'Medicare Part B, before any surcharge', '6,500'),
+    healthYearPoint: slots.healthYearPoint('Alex’s age', 72, 2037, 'Medicare Part B, before any surcharge', '6,500', false),
     healthLifetimeAca: slots.healthLifetimeAca('41,000'),
     healthLifetimeMedicare: slots.healthLifetimeMedicare('290,000'),
     healthCliffLabel: slots.healthCliffLabel(2),
     healthCliffPoint: slots.healthCliffPoint(75, 80, 'Alex’s age', 2),
     healthRanOut: slots.healthRanOut(2052),
+    healthChartsStop: slots.healthChartsStop('Alex’s age', 85),
+    healthStopsIn: slots.healthStopsIn(2030),
+    healthNoDate: slots.healthNoDate(2040),
     stressPctLess: slots.stressPctLess(20),
     stressPctHigher: slots.stressPctHigher(50),
     stressBarPoint: slots.stressBarPoint('Social Security', '20% less', '7 of 10'),
     stressReadsAt: slots.stressReadsAt('if you stop in 2031'),
+    stressReadsAtNoDate: slots.stressReadsAtNoDate('if you stop in 2036'),
     stressBarError: slots.stressBarError('Social Security'),
     stressBarWithheld: slots.stressBarWithheld('Combined'),
+    stressBarNoCount: slots.stressBarNoCount('Social Security'),
     assetPct: slots.assetPct(62),
     assetCentre: slots.assetCentre(62, 38),
     assetSlicePoint: slots.assetSlicePoint('Stocks', 62),
@@ -1273,6 +1281,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     assetScopeBucket: slots.assetScopeBucket('Pre-tax'),
     assetWhatIfFrom: slots.assetWhatIfFrom('New what-if'),
     assetUnresolved: slots.assetUnresolved(['your Roth IRA', 'Sam’s 401(k)'], true),
+    assetOneMixLine: slots.assetOneMixLine(62),
     taxAllocPoint: slots.taxAllocPoint('Pre-tax', '$700,000'),
     taxAllocListTitle: slots.taxAllocListTitle('Roth', 2),
     confidenceCutNote: slots.confidenceCutNote(93, 92),
@@ -1295,8 +1304,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
 
   it('every U10 delta-readout slot WEARS a hedge (the control readouts are slot-composed, so the require-hedge sweep must reach the rendered samples here)', () => {
     const deltaSlots = [
-      'rothDeltaSurvivor', 'rothDeltaJoint', 'rothDeltaEven', 'rothDeltaCountEven', 'rothStateShift',
-      'rothYearsSecondary', 'sequencingDelta',
+      'sequencingDelta',
     ] as const
     for (const name of deltaSlots) {
       expect(lintCopy(SLOT_RENDER[name], ['require-hedge']), `${name}: "${SLOT_RENDER[name]}"`).toEqual([])
@@ -1494,8 +1502,8 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     }
     const MUST_PASS = [
       copy.assumptionOutliveValue, // "…from the same survival tables…" — a model fact, not a plan claim
-      slots.rothDeltaEven('about 7 of 10'),
-      slots.rothDeltaCountEven('9 of 10'),
+      slots.workbenchRailEven('about 7 of 10'), // the live displayed-count readout (the U10 delta lines left with RC10)
+      slots.subsidyRegimeCostEven('270,000'), // 'about the same either way', of premiums, not survival
       'The tool treats this as a safe guess, so it asks.',
     ]
     for (const s of MUST_PASS) {

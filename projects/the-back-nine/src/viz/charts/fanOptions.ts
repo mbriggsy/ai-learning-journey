@@ -28,7 +28,7 @@ import type { BandFan, BandFanYear } from '@shared/model'
 import { buildYTicks, niceLattice, type DollarLattice, type XAnnotation } from '../bandData'
 import { BAND_FILL_INNER_P, BAND_FILL_OUTER_P } from '../palette'
 import { rcBandStopCss } from '../scale'
-import { chartWordsOptions, type ChartWords } from './chartA11y'
+import { chartWordsOptions, hcPlain, type ChartWords } from './chartA11y'
 
 /** Every word, figure and age the fan prints, built by the screen's composer through `copy.ts`. */
 export interface FanLabels {
@@ -357,7 +357,8 @@ export function fanOptions({ fan, moments, labels, height, onPlotBox }: FanInput
       min: 0,
       max: last.yearsFromNow,
       tickPositions: [...ageTickYears(last.yearsFromNow, labels.ageAt)],
-      title: { text: labels.xAxisTitle },
+      // The first person’s typed name rides this title: escaped, so it prints as typed (`hcPlain`).
+      title: { text: hcPlain(labels.xAxisTitle) },
       labels: { formatter: (ctx) => String(labels.ageAt(Number(ctx.value))) },
       plotLines: plotLines(moments, years, lattice.ceiling),
       crosshair: true,

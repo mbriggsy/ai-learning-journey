@@ -1,17 +1,18 @@
 /*
  * src/ui/shell/Shell.tsx: the workspace's shell (Act 6 · RC2; plan docs/plans/6-rightcapital-ui-plan.md, section 3.1).
  *
- * The LAZY half: `ShellSlot.tsx` loads this module on demand behind its own error boundary, so the answer page's first
- * paint never pays for it. The shell is a phase of the intake app (IntakeApp owns the phase, the route, the history
+ * The LAZY half: `ShellSlot.tsx` loads this module on demand behind its own error boundary, so the intake's first paint
+ * never pays for it. The shell is a phase of the intake app (IntakeApp owns the phase, the route, the history
  * entries and the save machine); this component draws what it is handed: the top bar (`TopBar.tsx`), the module's
  * pages (the kit's `SubNav`), and the page the route names.
  *
  * THE SETTLE HOOK: the shell renders ONE `<main class="result">` on every page, carrying the committed answer's tier and
- * the store's refiguring flag exactly as `Result.tsx` mirrors them (`data-answer-tier`, `data-answer-refiguring`), so
- * every harness's `SETTLED_RESULT` (`e2e/reviewSurface.ts`) settles wherever a seed lands. `main.result` is the shell's
- * alone; the legacy layer lays out `.result-page`, never `.result`, so the old answer page's rules never reach it. It is
- * a sibling before `App.tsx`'s trailing disclaimer, as `Result.tsx`'s is (app.css's R13 swap reads that order); no
- * interim page stamps `data-inframe-disclaimer`, so the trailing mount stays the one disclaimer here.
+ * the store's refiguring flag (`data-answer-tier`, `data-answer-refiguring`), so every harness's `SETTLED_RESULT`
+ * (`e2e/reviewSurface.ts`) settles wherever a seed lands. `main.result` is the shell's alone; the legacy layer lays out
+ * `.result-page`, never `.result`, so no old rule reaches it. It is a sibling before `App.tsx`'s trailing disclaimer
+ * (app.css's R13 swap reads that order): a figured page carries its own R13 caveat in its frame and stamps
+ * `data-inframe-disclaimer`, which hides the trailing mount; the interim page stamps none, so the trailing mount stays
+ * its one disclaimer.
  *
  * WHAT IT MAKES ONCE (moved from the workbench room, so runs survive a page switch): Cash Flows' steady
  * and rough lanes and their runs on each FINAL committed answer (KTD9, KTD13: built from the answer's own draft,
@@ -99,7 +100,7 @@ import { summaryView } from '../screens/tax/summaryView'
 import { SummaryPanel } from '../screens/tax/Summary'
 import { ComparisonPanel } from '../screens/tax/Comparison'
 import { DetailsPanel } from '../screens/tax/Details'
-import { comparisonView, detailsView, taxBundles, type ComparisonChart, type DetailsPick, type DetailsTable, type TaxFuture } from '../screens/tax/taxRunsView'
+import { comparisonView, detailsView, taxBundles, taxRunsGate, type ComparisonChart, type DetailsPick, type DetailsTable, type TaxFuture } from '../screens/tax/taxRunsView'
 import { SocialSecurity, type ClaimsTab, type SocialSecurityPage } from '../screens/retirement/SocialSecurity'
 import {
   claimsComparisonView,
@@ -914,7 +915,10 @@ export default function Shell({
     void model.dispatchSolve()
   }, [model, pickedGoal, pickedBracket])
   const taxPayload = snapshot.solve.kind === 'committed' && snapshot.solve.payload.kind === 'recommended' ? snapshot.solve.payload : null
-  const taxRuns = onTaxScreen && (taxTab === 'comparison' || taxTab === 'details') && committedAnswer !== null && taxPayload !== null && !taxPayload.noChange
+  // Comparison and Details run only beside an ACTIVE Winner card (`taxRunsGate`): never in the no-dollar register, never
+  // on a payload the render guard refused.
+  const taxGate = strat !== null && strat.kind === 'solve' ? taxRunsGate(strat, taxPayload) : null
+  const taxRuns = onTaxScreen && (taxTab === 'comparison' || taxTab === 'details') && committedAnswer !== null && taxGate?.kind === 'run'
   const bundles = useMemo(() => (taxPayload !== null && committedAnswer !== null ? taxBundles(taxPayload, committedAnswer.draft) : null), [taxPayload, committedAnswer])
   const taxWinnerRun = useSlotRun({ snapshot, shown: taxRuns && bundles !== null ? bundles.winner : NO_LEVERS, tag: 'tax-winner' })
   const taxBaselineRun = useSlotRun({ snapshot, shown: taxRuns && bundles !== null && bundles.baseline !== 'plan' ? bundles.baseline : NO_LEVERS, tag: 'tax-baseline' })
@@ -925,17 +929,16 @@ export default function Shell({
     const toStrategies = () => setTaxTab('strategies')
     const summary =
       taxTab === 'summary' ? (
-        <SummaryPanel view={summaryView(snapshot)} caveat={taxCaveat} footnotes={taxStateClause !== null ? [taxStateClause] : []} onStrategies={toStrategies} />
+        <SummaryPanel view={summaryView(snapshot)} caveat={taxCaveat} onStrategies={toStrategies} />
       ) : null
     if (taxTab !== 'comparison' && taxTab !== 'details') return { summary, comparison: null, details: null }
-    // Before a solve, or where the recommendation IS the plan as it stands, there is nothing to run year by year.
-    const words = taxPayload === null ? copy.taxStratWaiting : taxPayload.noChange ? copy.taxStratSameAsPlan : null
-    if (words !== null) {
+    // Nothing to run year by year unless the Strategies tab shows an active Winner card: its own words instead.
+    if (taxGate !== null && taxGate.kind === 'words') {
       const waiting = (
         <div className="flex flex-col gap-6" data-tax-runs="words">
           <div className="flex flex-col items-center gap-4 px-4 py-12 text-center">
-            <p className="max-w-2xl text-body text-stone-900">{words}</p>
-            {taxPayload === null ? (
+            <p className="max-w-2xl text-body text-stone-900">{taxGate.words}</p>
+            {taxGate.toStrategies ? (
               <Button variant="secondary" size="sm" onClick={toStrategies}>
                 {copy.taxStratToStrategies}
               </Button>
@@ -999,21 +1002,43 @@ export default function Shell({
   const claimRun0 = useSlotRun({ snapshot, shown: claimOthers[0]?.bundle ?? NO_LEVERS, tag: 'claims-0' })
   const claimRun1 = useSlotRun({ snapshot, shown: claimOthers[1]?.bundle ?? NO_LEVERS, tag: 'claims-1' })
   const claimRun2 = useSlotRun({ snapshot, shown: claimOthers[2]?.bundle ?? NO_LEVERS, tag: 'claims-2' })
+  // THE PAGE WORDS of a figured page with no table (Social Security, Health Care, Stress Test) where it has no answer to
+  // read, never Cash Flows' table words: a failed answer points to Analysis's Try again; a plan missing facts (or with
+  // nothing figured yet) prints the pinned answer words, which name what is missing; a run the plan withholds says why in
+  // this page's words; an indeterminate answer (worked out, with no reading) prints the pinned words too (the ring's "Not
+  // enough to read yet"), never "fills in once … worked out"; else the page's own waiting words (an answer is being
+  // worked out).
+  const noAnswerWords = useCallback(
+    (waiting: string): string => {
+      if (run.kind === 'answer-error') return copy.pageWordsAnswerError
+      if (run.kind === 'withheld' && run.reason === 'band-missing') return copy.pageWordsWithheldBand
+      if (run.kind === 'withheld' && run.reason === 'no-ledger') return copy.pageWordsWithheldNoLedger
+      const indeterminate = snapshot.answer.kind === 'headline' && snapshot.answer.result.headline.outcomeState === 'indeterminate'
+      if (run.kind === 'withheld' || indeterminate || snapshot.answer.kind === 'idle' || snapshot.answer.kind === 'inputs-incomplete') {
+        const pinned = pinnedLines(snapshot, wallCalendarYear)
+        return pinned.second !== undefined ? `${pinned.lead} ${pinned.second}` : pinned.lead
+      }
+      return waiting
+    },
+    [run, snapshot, wallCalendarYear],
+  )
   const claimsPage = useMemo((): SocialSecurityPage | null => {
     if (!onClaims) return null
-    if (claimsAnswer === null || claimChoices === null) {
-      if (run.kind === 'answer-error') return { kind: 'words', words: copy.workbenchTableAnswerError }
-      if (run.kind === 'withheld') return { kind: 'words', words: WITHHELD_WORDS[run.reason] }
-      return { kind: 'words', words: copy.claimsWaiting }
-    }
+    if (claimsAnswer === null || claimChoices === null) return { kind: 'words', words: noAnswerWords(copy.claimsWaiting) }
     const start = claimsAnswer.draft.startCalendarYear
-    const planSteady = planRows(run, results.steady, snapshot.refiguring)
     if (claimChoices.kind === 'none') return { kind: 'words', words: copy.claimsNone }
-    if (claimChoices.kind === 'all-claimed') return { kind: 'settled', view: claimsSettledView(claimChoices.people, planSteady, taxStateClause) }
+    // A committed answer whose plan run is withheld (no dates, no run behind the date, no yearly ledger): page words.
+    if (run.kind === 'withheld') return { kind: 'words', words: noAnswerWords(copy.claimsWaiting) }
+    const planSteady = planRows(run, results.steady, snapshot.refiguring)
+    const clock = anchor.yearsSincePlanBuilt
+    if (claimChoices.kind === 'all-claimed') return { kind: 'settled', view: claimsSettledView(claimChoices.people, planSteady, taxStateClause, clock) }
     const views = [claimRun0.view, claimRun1.view, claimRun2.view]
     const rows: Partial<Record<StrategyId, ReturnType<typeof planRows>>> = { plan: planSteady }
     const plan = planReadingFor(snapshot.answer)
-    const readings: Partial<Record<StrategyId, ReadingState>> = { plan: plan === null ? { kind: 'withheld', words: copy.claimsRunsError } : { kind: 'ready', reading: plan } }
+    // A reading from before the latest change (an older answer's run, or the answer being worked out again) is marked.
+    const readings: Partial<Record<StrategyId, ReadingState>> = {
+      plan: plan === null ? { kind: 'withheld', words: copy.claimsRunsError } : { kind: 'ready', reading: plan, updating: snapshot.refiguring },
+    }
     claimOthers.forEach((st, i) => {
       const v = views[i] ?? null
       rows[st.id] = slotRows(v, 'steady', start, snapshot.refiguring)
@@ -1021,20 +1046,20 @@ export default function Shell({
       else if (v.kind === 'refused') readings[st.id] = { kind: 'withheld', words: refusalWords(v.refusal, start) }
       else if (v.kind === 'withheld') readings[st.id] = { kind: 'withheld', words: WITHHELD_WORDS[v.reason] }
       else if (v.kind === 'answer-error') readings[st.id] = { kind: 'withheld', words: copy.workbenchTableAnswerError }
-      else if (v.many.kind === 'ready') readings[st.id] = { kind: 'ready', reading: v.many.value.whatIf }
+      else if (v.many.kind === 'ready') readings[st.id] = { kind: 'ready', reading: v.many.value.whatIf, updating: v.many.updating || snapshot.refiguring }
       else readings[st.id] = v.many.kind === 'error' ? { kind: 'withheld', words: copy.claimsRunsError } : { kind: 'loading' }
     })
-    const notes = { choices: claimChoices, stateClause: taxStateClause }
+    const notes = { choices: claimChoices, stateClause: taxStateClause, planClockYears: clock }
     const picked = claimPicks(claimChoices.strategies, claimsA, claimsB)
     const a = claimChoices.strategies.find((st) => st.id === picked.a)!
     return {
       kind: 'choices',
       comparison: claimsComparisonView({ chart: claimsChart, a: claimsA, b: claimsB, notes, rows }),
       summary: claimsSummaryView({ notes, rows, readings }),
-      steps: claimsSteps(a, claimChoices.people, start),
+      steps: claimsSteps(a, claimChoices.people, start, clock),
     }
     // `claimOthers` is derived from `claimChoices`; the slot views are the runs' own.
-  }, [onClaims, claimsAnswer, claimChoices, run, results.steady, snapshot.refiguring, snapshot.answer, taxStateClause, claimRun0.view, claimRun1.view, claimRun2.view, claimsChart, claimsA, claimsB])
+  }, [onClaims, claimsAnswer, claimChoices, run, results.steady, snapshot.refiguring, snapshot.answer, taxStateClause, claimRun0.view, claimRun1.view, claimRun2.view, claimsChart, claimsA, claimsB, anchor.yearsSincePlanBuilt, noAnswerWords])
 
   // ── Retirement → Health Care (RC10): the committed answer's readout (retired) or the steady market's rows (working); the
   // tray's open state held here so a page move keeps it.
@@ -1042,22 +1067,25 @@ export default function Shell({
   const [healthTrayOpen, setHealthTrayOpen] = useState(false)
   const healthPage = useMemo((): HealthCareView | null => {
     if (!onHealth) return null
-    if (committedAnswer === null) {
-      if (run.kind === 'answer-error') return { kind: 'words', words: copy.workbenchTableAnswerError }
-      if (run.kind === 'withheld') return { kind: 'words', words: WITHHELD_WORDS[run.reason] }
-      return { kind: 'words', words: copy.healthWaiting }
-    }
+    if (committedAnswer === null) return { kind: 'words', words: noAnswerWords(copy.healthWaiting) }
+    // An indeterminate spine answer has no health readout (its distribution is the placeholder), so the page would say
+    // the plan prices no premiums: the pinned words instead. A committed date answer whose run is withheld (no dates, no
+    // run behind the date, no yearly ledger) has no rows to read: this page's words, never Cash Flows' table words (as
+    // Social Security does).
+    if (committedAnswer.kind === 'headline' && committedAnswer.result.headline.outcomeState === 'indeterminate') return { kind: 'words', words: noAnswerWords(copy.healthWaiting) }
+    if (committedAnswer.kind === 'date' && run.kind === 'withheld') return { kind: 'words', words: noAnswerWords(copy.healthWaiting) }
     const dist = committedAnswer.kind === 'headline' ? committedAnswer.result.distribution : null
     return healthCareView({
       answer:
         dist !== null
-          ? { kind: 'headline', draft: committedAnswer.draft, readout: dist.healthReadout, taxAware: dist.taxAware }
+          ? { kind: 'headline', draft: committedAnswer.draft, readout: dist.healthReadout, taxAware: dist.taxAware, depletionYears: dist.depletionYears }
           : { kind: 'date', draft: committedAnswer.draft },
       steady: planRows(run, results.steady, snapshot.refiguring),
       todayEpochDay,
       sincePlanBuilt: anchor.yearsSincePlanBuilt,
+      refiguring: snapshot.refiguring,
     })
-  }, [onHealth, committedAnswer, run, results.steady, snapshot.refiguring, todayEpochDay, anchor.yearsSincePlanBuilt])
+  }, [onHealth, committedAnswer, run, results.steady, snapshot.refiguring, todayEpochDay, anchor.yearsSincePlanBuilt, noAnswerWords])
   // The tray's facts are the plan as it stands (the live draft, as the facts page reads it): a door opens what an edit
   // would change now.
   const healthTray = useMemo(
@@ -1076,11 +1104,11 @@ export default function Shell({
   const stressAnswer = committedAnswer !== null && committedAnswer.tier === 'final' ? committedAnswer : null
   const stressPage = ((): StressPageView | null => {
     if (!onStress) return null
-    if (stressAnswer === null || stress.offers === null) {
-      if (run.kind === 'answer-error') return { kind: 'words', words: copy.workbenchTableAnswerError }
-      if (run.kind === 'withheld') return { kind: 'words', words: WITHHELD_WORDS[run.reason] }
-      return { kind: 'words', words: copy.stressWaiting }
-    }
+    if (stressAnswer === null || stress.offers === null) return { kind: 'words', words: noAnswerWords(copy.stressWaiting) }
+    // A committed answer whose plan run is withheld (no yearly ledger, no run behind the date): every stress slot would
+    // be withheld too and word it as "couldn't run on the same futures": this page's words say the real reason (as Social
+    // Security does).
+    if (run.kind === 'withheld') return { kind: 'words', words: noAnswerWords(copy.stressWaiting) }
     return stressView({
       startCalendarYear: stressAnswer.draft.startCalendarYear,
       plan: planReadingFor(stressAnswer),
@@ -1089,6 +1117,9 @@ export default function Shell({
       committed: stress.committed,
       bars: stress.bars,
       stateClause: taxStateClause,
+      refiguring: snapshot.refiguring,
+      // The answer found no date: the plan's reading is the window's last year (`buildTableBase`'s `no-date` route).
+      noDate: run.kind === 'run' && run.meta.route === 'no-date',
     })
   })()
   const stressTray = onStress && stressPage?.kind === 'bars' && stress.offers !== null ? stressTrayView(stress.pending, stress.committed, stress.offers) : undefined
@@ -1102,11 +1133,17 @@ export default function Shell({
     () => (screen === 'asset-allocation' ? assetAllocationView({ draft, scope: assetScope, whatIf: { name: leftName, levers: whatIf.shown } }) : null),
     [screen, draft, assetScope, leftName, whatIf.shown],
   )
-  const taxAllocPage = useMemo(() => (screen === 'tax-allocation' ? taxAllocationView(draft, taxPick) : null), [screen, draft, taxPick])
+  const taxAllocPage = useMemo(
+    () => (screen === 'tax-allocation' ? taxAllocationView(draft, taxPick, agedBalancesYear) : null),
+    [screen, draft, taxPick, agedBalancesYear],
+  )
 
   // ── The StaleBanner (RC4): the old answer page's staleness note, aged-balances line and standing line ──────────────
-  const figured = screen === 'snapshot' || screen === 'probability' || screen === 'confidence' || screen === 'cash-flows'
-  const inFrameCaveat = figured || screen === 'tax-strategies' || screen === 'social-security' || screen === 'health-care' || screen === 'stress-test' || screen === 'asset-allocation' || screen === 'tax-allocation'
+  // Social Security and Stress Test print the plan's odds, so the lines that say those odds may read better than they
+  // are (the stale pay check, the aged balances, the staleness note) ride above them too.
+  const figured =
+    screen === 'snapshot' || screen === 'probability' || screen === 'confidence' || screen === 'cash-flows' || screen === 'social-security' || screen === 'stress-test'
+  const inFrameCaveat = figured || screen === 'tax-strategies' || screen === 'health-care' || screen === 'asset-allocation' || screen === 'tax-allocation'
   // Cash Flows too, aged line and door included: its row-one line (`workbenchAged`) names the build year and claims nothing
   // about the balances, so the two lines say two causes (round 3 of the milestone-1 review).
   const staleLines = useMemo(
@@ -1144,7 +1181,7 @@ export default function Shell({
   }, [landed, onAnnounced, announcer])
 
   const anySheetOpen = editors.sheetOpen || openStep !== null
-  // The committed answer's tier and the store's refiguring flag, mirrored as Result mirrors them: the harnesses'
+  // The committed answer's tier and the store's refiguring flag, stamped on the shell's `main.result` below: the harnesses'
   // signal that an edit's answer has landed (`SETTLED_RESULT`).
   const answerTier = snapshot.answer.kind === 'headline' || snapshot.answer.kind === 'date' ? snapshot.answer.tier : undefined
   const names = draft.people.map((p) => (p.name ?? '').trim()).filter((n) => n !== '')
@@ -1377,6 +1414,7 @@ export default function Shell({
         ) : claimsPage !== null ? (
           <>
             {leave}
+            {staleBanner}
             <SocialSecurity
               headingRef={headingRef}
               page={claimsPage}
@@ -1394,6 +1432,7 @@ export default function Shell({
         ) : stressPage !== null ? (
           <>
             {leave}
+            {staleBanner}
             <StressTest
               headingRef={headingRef}
               view={stressPage}

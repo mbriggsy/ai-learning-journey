@@ -74,8 +74,11 @@ export type StressBarRun =
   | { readonly kind: 'withheld' }
   | { readonly kind: 'answer-error' }
 
-/** A bar's run from its slot's view on its own ask (null: the slot holds another ask, or none yet). */
-export function barRun(view: CopySlotView<StressRefusal> | null, held: WhatIfReading | undefined): StressBarRun {
+/** A bar's run from its slot's view on its own ask (null: the slot holds another ask, or none yet). `answerKey` is the
+ *  committed answer's (`answerKey`): a reading landed on another answer is updating, never current. The slot learns of a
+ *  new answer only at its next ask (an effect, after paint), so on a return to the page after the answer moved its view
+ *  still reads current on the first frame; the key catches it. */
+export function barRun(view: CopySlotView<StressRefusal> | null, held: WhatIfReading | undefined, answerKey: string): StressBarRun {
   const loading: StressBarRun = held !== undefined ? { kind: 'loading', held } : { kind: 'loading' }
   if (view === null) return loading
   if (view.kind === 'refused') return { kind: 'refused', refusal: view.refusal }
@@ -84,7 +87,7 @@ export function barRun(view: CopySlotView<StressRefusal> | null, held: WhatIfRea
   const m = view.many
   if (m.kind === 'loading') return loading
   if (m.kind === 'error') return { kind: 'error' }
-  return { kind: 'ready', reading: m.value.whatIf, updating: m.updating }
+  return { kind: 'ready', reading: m.value.whatIf, updating: m.updating || m.answerKey !== answerKey }
 }
 
 export interface Stress {
@@ -150,7 +153,7 @@ export function useStress({ snapshot, active, lanes }: { readonly snapshot: Memo
   for (const [id, ask] of asks) {
     const snap = snaps[id]
     const view = snap.run.bundleKey === stressKey(ask) ? whatIfSlotView(snap) : null
-    const run = barRun(view, landed.get(id)?.reading)
+    const run = barRun(view, landed.get(id)?.reading, aKey)
     bars.set(id, run)
     const many = snap.many
     if (run.kind === 'ready' && !run.updating && many?.kind === 'ok' && landed.get(id)?.key !== many.key) {

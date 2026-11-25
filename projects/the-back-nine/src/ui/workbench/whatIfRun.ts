@@ -41,6 +41,7 @@ import { engineRunLane, type EngineRunRequest, type Lane, type LaneResult } from
 import type { ModelAnswer, ScenarioDraft } from '@store/memoryModel'
 import {
   canonicalIdentityToken,
+  isDepleted,
   type DateOffsetReading,
   type DateSearchOutcome,
   type Headline,
@@ -318,6 +319,9 @@ export interface ReadingPair {
   /** The what-if run's lifetime health cost ({@link lifetimeHealthMedianReal}), on both routes; read only where the bundle
    *  tries the subsidy rules, and absent where the run carried no tax surfaces. */
   readonly whatIfHealthReal?: number
+  /** Some future of the what-if run ran out of money: its lifetime health sums stop that year, so they can read low
+   *  (`taxOverlay.ts` accrues only funded years). Present beside {@link whatIfHealthReal}. */
+  readonly whatIfHealthRanOut?: boolean
 }
 
 /** The what-if's rows for one view, with the meta of the compile that produced them. */
@@ -411,6 +415,7 @@ export function createCopySlot<A, R>(lanes: CopySlotLanes, build: (answer: Model
         const whatIf = res.kind === 'ok' ? whatIfReading(res.value, run.track, run.offsetYears) : null
         const extras = res.kind === 'ok' && run.offsetYears === undefined ? headlineExtras(res.value) : undefined
         const health = res.kind === 'ok' && run.health !== undefined ? lifetimeHealthMedianReal(res.value.distribution.taxAware) : undefined
+        const healthRanOut = res.kind === 'ok' && health !== undefined && res.value.distribution.depletionYears.some(isDepleted)
         set({
           many:
             whatIf === null
@@ -418,7 +423,7 @@ export function createCopySlot<A, R>(lanes: CopySlotLanes, build: (answer: Model
               : {
                   ...tag,
                   kind: 'ok',
-                  value: { plan: run.plan, whatIf, ...(extras !== undefined ? { extras } : {}), ...(health !== undefined ? { whatIfHealthReal: health } : {}) },
+                  value: { plan: run.plan, whatIf, ...(extras !== undefined ? { extras } : {}), ...(health !== undefined ? { whatIfHealthReal: health, whatIfHealthRanOut: healthRanOut } : {}) },
                 },
         })
       })

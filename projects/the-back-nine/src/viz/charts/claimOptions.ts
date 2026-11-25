@@ -11,7 +11,8 @@
  * - `claimCumulativeOptions`: two lines of the running totals, each ending in its printed figure (the higher line's above
  *   its last point, the lower's below), and the crossing marked with a ring and its age (RightCapital leaves it unmarked).
  * - `claimSummaryOptions`: one bar per strategy, its lifetime figure printed above it in dark text, the bar's name and
- *   your plan's odds with those ages under it (the category label's two lines; on the phone the figure joins them there). Your plan's own ages are the compared
+ *   your plan's odds with those ages under it (the category label's two lines; on the phone the figure joins them there, as does "No lifetime total" at any width for a
+ *   strategy that draws no bar). Your plan's own ages are the compared
  *   side: blue and hatched, the others green and solid (two series, ungrouped, so each bar sits centred on its name).
  *
  * The y axis is linear from $0 on the composer's humane lattice, its ticks in the `mm` dialect; the comparison charts'
@@ -19,7 +20,7 @@
  */
 import type { Options, PointOptionsObject, SeriesColumnOptions, SeriesLineOptions, SeriesScatterOptions } from 'highcharts/highcharts.src'
 import { buildYTicks, type DollarLattice } from '../bandData'
-import { chartWordsOptions, type ChartWords } from './chartA11y'
+import { chartWordsOptions, hcPlain, type ChartWords } from './chartA11y'
 import { GROUPED_BAR_CLASSES } from './groupedBarsOptions'
 
 export interface ClaimChartPoint {
@@ -90,10 +91,11 @@ function pairFrame(input: ClaimPairInput, type: 'column' | 'line'): Options {
       formatter: function () {
         const ctx = this as unknown as { x: number; points?: { series: { name: string; options: { id?: string } }; y: number }[] }
         const pts = (ctx.points ?? []).filter((p) => p.series.options.id !== CLAIM_LINE_CLASSES.crossing)
-        return [`${input.axisTitle} ${ctx.x}`, ...pts.map((p) => `${p.series.name}: ${input.figure(p.y)}`)].join('<br/>')
+        // The axis title carries the first person's typed name: escaped wherever it is drawn (`hcPlain`).
+        return [`${hcPlain(input.axisTitle)} ${ctx.x}`, ...pts.map((p) => `${p.series.name}: ${input.figure(p.y)}`)].join('<br/>')
       },
     },
-    xAxis: { type: 'linear', min: first - 0.5, max: last + 0.5, allowDecimals: false, tickInterval: 5, lineWidth: 1, title: { text: input.axisTitle } },
+    xAxis: { type: 'linear', min: first - 0.5, max: last + 0.5, allowDecimals: false, tickInterval: 5, lineWidth: 1, title: { text: hcPlain(input.axisTitle) } },
     yAxis: yAxis(input, type === 'line'),
   }
 }
@@ -228,7 +230,9 @@ export interface ClaimSummaryInput extends Shared {
 export function claimSummaryOptions(input: ClaimSummaryInput): Options {
   const { bars } = input
   const spoken = chartWordsOptions(input.words)
-  const labelOf = new Map(bars.map((b, i) => [i, input.narrow ? `${b.name}<br>${b.figure}<br>${b.odds}` : `${b.name}<br>${b.odds}`]))
+  // Wide, the figure prints above its bar; a strategy with no total draws no bar, so its slot says why in the label
+  // (never an empty slot on a $0 axis, which reads as "nothing paid").
+  const labelOf = new Map(bars.map((b, i) => [i, input.narrow || b.total === null ? `${b.name}<br>${b.figure}<br>${b.odds}` : `${b.name}<br>${b.odds}`]))
   const sideSeries = (role: 'alternative' | 'compared', id: string): SeriesColumnOptions => ({
     type: 'column',
     id,

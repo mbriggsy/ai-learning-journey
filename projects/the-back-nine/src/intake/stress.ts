@@ -18,12 +18,14 @@
  *    `AssumptionPanel.tsx`'s), with no budget the one spending figure rises by the same dollars, and a working year's
  *    pay-check figure (W, which holds the same medical cost) rises by them too. Nothing else moves.
  *  - THE ACA SUBSIDY RULES switch: the `aca-subsidy` lever through `applyBundle` (the plan's own lever write), to current
- *    law's smaller discount. Offered only where someone has marketplace years before 65 AND the plan counts on the bigger
- *    discount coming back: on a plan already on current law the switch is the hopeful case, never a stress, and a bar
- *    that rose under "stress" (or a Combined bar it lifted) would read as false comfort.
+ *    law's smaller discount. Offered only where the engine prices marketplace cover (`healthcarePriced`: a marketplace
+ *    quote entered and someone under 65 today) AND the plan counts on the bigger discount coming back: on a plan already
+ *    on current law the switch is the hopeful case, never a stress, and a bar that rose under "stress" (or a Combined bar
+ *    it lifted) would read as false comfort. The gate reads today's ages, not the years a plan actually buys cover in: a
+ *    plan whose years before 65 all sit on an employer plan still draws this bar, where it moves nothing.
  *
- * A stress with nothing to act on is REFUSED BY NAME, never run as a no-op bar: no benefit to scale, no out-of-pocket
- * figure to raise, no marketplace years, or a plan already on current law.
+ * A stress with nothing to act on is REFUSED BY NAME: no benefit to scale, no out-of-pocket figure to raise, no one under
+ * 65 with a marketplace quote, or a plan already on current law.
  */
 import { budgetGoverns } from '@budget/budgetModel'
 import { budgetYearZeroFullTotal } from '@budget/budgetToSpending'

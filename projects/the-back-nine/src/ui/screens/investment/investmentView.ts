@@ -158,7 +158,8 @@ export interface DonutSlice {
 }
 
 export interface MixDonut {
-  /** Only the parts above 0% (a 0% part draws no slice; the table still prints it). */
+  /** Only the parts that PRINT above 0% (a part printed 0%, a sliver under half a point included, draws no slice; the
+   *  table still prints it). */
   readonly slices: readonly DonutSlice[]
   readonly pcts: Readonly<Record<MixPart, number>>
   /** "62% / 38%": stocks, then bonds and cash together (the run's two parts). */
@@ -198,7 +199,9 @@ export interface AssetMixView {
     /** The diverging scale's half-width in points (a multiple of 10, at least 10), or null with no what-if mix. */
     readonly axisMax: number | null
   }
-  /** Under the donuts: the one-split note, then the cash line. */
+  /** Under the donuts: under a scope narrower than all accounts, first the one-mix line (the run grows every account at
+   *  the household's one blend, so a narrower mix is never what those accounts grow at); then the one-split note and the
+   *  cash line. */
   readonly notes: readonly string[]
 }
 
@@ -213,7 +216,7 @@ export interface AssetAllocationInput {
 
 function donutOf(mix: Mix): MixDonut {
   const pcts = mixPercents(mix)
-  const slices = MIX_PARTS.filter((p) => mix[p] > 0).map(
+  const slices = MIX_PARTS.filter((p) => pcts[p] > 0).map(
     (p): DonutSlice => ({ id: p, name: PART_NAME[p], share: mix[p], pct: pcts[p], ...PART_LOOK[p], point: slots.assetSlicePoint(PART_NAME[p], pcts[p]) }),
   )
   return { slices, pcts, centre: slots.assetCentre(pcts.stock, 100 - pcts.stock) }
@@ -281,6 +284,10 @@ export function assetAllocationView(input: AssetAllocationInput): AssetAllocatio
     }
   })
   const biggest = Math.max(0, ...shifts.map((s) => Math.abs(s ?? 0)))
+  // The run grows every account at ONE blend (`decumulation.ts` `stepYear`'s one stock weight; one shared market draw,
+  // `taxOverlay.ts`), so a person's or a bucket's mix is never what those accounts grow at: say the household's.
+  const household = scope === 'all' ? null : blendedMix(d.enteredAccounts, d.tickerClassifications)
+  const oneMix = household === null ? [] : [slots.assetOneMixLine(mixPercents(household.mix).stock)]
   return {
     kind: 'mix',
     scopes,
@@ -292,7 +299,7 @@ export function assetAllocationView(input: AssetAllocationInput): AssetAllocatio
         : { kind: 'none', words: input.whatIf.levers.length === 0 ? copy.assetNoWhatIfOpen : copy.assetNoWhatIfMix },
     rows,
     detail: { rows: detailRows, axisMax: w === null ? null : Math.max(10, Math.ceil(biggest / 10) * 10) },
-    notes: [copy.assetOneSplitNote, copy.assetCashLine],
+    notes: [...oneMix, copy.assetOneSplitNote, copy.assetCashLine],
   }
 }
 
@@ -321,16 +328,21 @@ export type TaxAllocationView =
       readonly picked: TaxBucketId | null
       readonly list: { readonly title: string; readonly rows: readonly { readonly name: string; readonly figure: string }[] } | null
       readonly total: string
+      /** Under the parts: the balances as entered (in the aged year where one is given) and what B9 does not ask about,
+       *  Snapshot's two lines beside the same sums (`snapshotView.ts` `investedView`). */
+      readonly notes: readonly string[]
     }
 
 /** Each bucket that holds an account, in RightCapital's order (taxable, then the tax-deferred, then the tax-free), its
  *  entered balances summed through `KIND_TO_BUCKET` (the engine's one grouping; an inherited IRA is entered as a
- *  traditional IRA, so it is pre-tax, which it is). */
-export function taxAllocationView(d: ScenarioDraft, picked: TaxBucketId | null): TaxAllocationView {
-  if (d.enteredAccounts.length === 0) return { kind: 'words', words: [copy.assetNoAccounts] }
-  const value = (a: EnteredAccount) => (Number.isFinite(a.valueToday) ? a.valueToday : 0)
+ *  traditional IRA, so it is pre-tax, which it is). Each account rounds to the dollar FIRST and every sum adds the
+ *  rounded figures, so the listed accounts sum to their part and the parts to the hole's total, cents or not.
+ *  `agedBalancesYear`: the aged-balances clause's year (IntakeApp's `agedBalancesYearFor`), as Snapshot reads it. */
+export function taxAllocationView(d: ScenarioDraft, picked: TaxBucketId | null, agedBalancesYear: number | undefined): TaxAllocationView {
+  if (d.enteredAccounts.length === 0) return { kind: 'words', words: [copy.taxAllocNoAccounts] }
+  const value = (a: EnteredAccount) => (Number.isFinite(a.valueToday) ? Math.round(a.valueToday) : 0)
   const all = d.enteredAccounts.reduce((s, a) => s + value(a), 0)
-  if (!(all > 0)) return { kind: 'words', words: [copy.assetZero] }
+  if (!(all > 0)) return { kind: 'words', words: [copy.taxAllocZero] }
   const buckets = TAX_BUCKETS.flatMap((id): TaxBucketView[] => {
     const accounts = bucketAccounts(d, id)
     if (accounts.length === 0) return []
@@ -356,5 +368,6 @@ export function taxAllocationView(d: ScenarioDraft, picked: TaxBucketId | null):
     picked: shown?.id ?? null,
     list: shown === null ? null : { title: slots.taxAllocListTitle(shown.name, shown.accounts.length), rows: shown.accounts },
     total: money(all),
+    notes: [agedBalancesYear === undefined ? copy.snapshotInvestedAsEntered : slots.snapshotInvestedAsEnteredIn(agedBalancesYear), copy.snapshotInvestedStopgap],
   }
 }

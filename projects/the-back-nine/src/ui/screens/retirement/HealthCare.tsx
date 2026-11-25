@@ -5,12 +5,14 @@
  * LAYOUT, as RightCapital draws its summary: the title and intro; one folder tab, Cost Analysis (Medicare Options and
  * Preferences are left out: their tick-and-cross matrix needs answers B9 does not ask); inside the panel the chart's
  * title, then the four small charts in a two-by-two grid on the left (each part's name and its legend's one item over
- * it) with the key-metric column on the right. The first frame at his window holds those. Under them the sheet's own
- * words for each part, the page's notes, and the R13 caveat closing the panel; the ACTION ITEMS handle opens B9's health
- * inputs under it. The charts ride Highcharts' lazy chunk.
+ * it) with the key-metric column on the right, then the R13 caveat. The first frame at his window holds those (plan 4.0:
+ * the caveat inside the REAL frame on every figured page). Under them the sheet's own words for each part and the page's
+ * notes, ported whole (insight 170), which run past the frame; the ACTION ITEMS handle closes the panel and opens B9's
+ * health inputs under it. On the phone the same order: charts, column, caveat, notes, handle. The charts ride Highcharts'
+ * lazy chunk.
  */
 import { lazy, Suspense, type Ref } from 'react'
-import { Button, Caveat, LoadingVeil, PageFrame, Tray, useWide } from '../../kit'
+import { Button, Caveat, cn, LoadingVeil, PageFrame, Tray, useWide } from '../../kit'
 import { copy, slots } from '../../copy'
 import { verdictDescribedBy } from '../../disclaimerId'
 import type { HealthFact } from '../../healthSheetChrome'
@@ -22,9 +24,11 @@ import type { HealthChartsView, HealthCareView, HealthTrayView } from './healthC
 
 const HealthPartChart = lazy(() => import('@viz/charts/HealthCharts').then((m) => ({ default: m.HealthPartChart })))
 
-/** Each small chart's height in CSS px at his window (the four and the column hold the first frame), and on the phone
- *  (a scrolling page: the charts stand taller so their ages and dollars stay apart). */
-export const HEALTH_PART_HEIGHT = 146
+/** Each small chart's height in CSS px at his window (the four, the column and the R13 caveat under them hold the first
+ *  frame: 146 left the caveat's bottom 9 to 42 px past 731 on the four fit seeds, healthgap's cliff key the tallest, so
+ *  each of the two rows gives up 26 px), and on the phone (a scrolling page: the charts stand taller so their ages and
+ *  dollars stay apart). */
+export const HEALTH_PART_HEIGHT = 120
 export const HEALTH_PHONE_HEIGHT = 180
 
 const TABS = [{ id: 'cost', label: copy.healthTabCost }] as const
@@ -64,7 +68,7 @@ function Fact({ fact }: { readonly fact: HealthFact }) {
   )
 }
 
-function Charts({ view }: { readonly view: HealthChartsView }) {
+function Charts({ view, caveat }: { readonly view: HealthChartsView; readonly caveat: readonly string[] }) {
   const wide = useWide()
   return (
     <div className="flex flex-col gap-3 compact:gap-2" data-health-route={view.route}>
@@ -75,7 +79,7 @@ function Charts({ view }: { readonly view: HealthChartsView }) {
           {slots.healthAxisNote(view.axisTitle)}
         </p>
       </div>
-      <LoadingVeil loading={view.updating} label={copy.healthRowsWaiting}>
+      <LoadingVeil loading={view.updating} label={view.updatingLabel}>
         <div className="flex flex-col gap-6 laptop:grid laptop:grid-cols-[7fr_3fr] laptop:items-center laptop:gap-10">
           <div role="group" aria-label={view.title} aria-describedby={verdictDescribedBy()} className="grid min-w-0 grid-cols-1 gap-x-6 gap-y-2 laptop:grid-cols-2" data-health-charts="">
             {view.parts.map((part) => (
@@ -89,7 +93,7 @@ function Charts({ view }: { readonly view: HealthChartsView }) {
                   </span>
                 </div>
                 <ChartBoundary fallback={<p className="py-8 text-body text-stone-600">{copy.chartLoadFailed}</p>}>
-                  <Suspense fallback={<div aria-hidden="true" className={wide ? 'h-35' : 'h-45'} />}>
+                  <Suspense fallback={<div aria-hidden="true" className={wide ? 'h-30' : 'h-45'} />}>
                     <HealthPartChart
                       chartId={`health-${part.id}`}
                       id={part.id}
@@ -128,6 +132,13 @@ function Charts({ view }: { readonly view: HealthChartsView }) {
             ))}
           </div>
         </div>
+      </LoadingVeil>
+      {/* The R13 caveat directly under the charts and the column, inside the first frame at his window (plan 4.0: the
+          caveat in the REAL frame on every figured page); the sheet's words and the page's notes follow it. */}
+      <Caveat lines={caveat} className="mt-3 compact:mt-1" />
+      {/* Under the veil's fade too while the answer is figured again (their figures are the old answer's); the veil's one
+          spoken status line rides the charts above. */}
+      <div aria-busy={view.updating || undefined} className={cn('transition-opacity duration-200 ease-settle', view.updating && 'opacity-40')}>
         {/* The groups flow in two columns at his window (a group never splits), so a long group leaves no hole beside it. */}
         <div className="mt-6 laptop:columns-2 laptop:gap-x-10" data-health-notes="">
           {view.notes.map((g) => (
@@ -151,7 +162,7 @@ function Charts({ view }: { readonly view: HealthChartsView }) {
             </p>
           ))}
         </div>
-      </LoadingVeil>
+      </div>
     </div>
   )
 }
@@ -212,7 +223,8 @@ export function HealthCare({ headingRef, view, tray, caveat, trayOpen, onTrayOpe
         intro={copy.healthIntro}
         valuesNote={copy.probabilityTodaysDollars}
         tabs={{ label: copy.healthTabsLabel, items: TABS, value: 'cost', onValueChange: () => {} }}
-        caveat={<Caveat lines={caveat} />}
+        // The words view keeps the frame's own caveat (the panel's last line); the charts mount theirs under the charts.
+        {...(charts ? {} : { caveat: <Caveat lines={caveat} /> })}
         {...(charts && tray !== undefined
           ? {
               handle: { label: copy.trayHandle, open: trayOpen, onOpenChange: onTrayOpen, controls: TRAY_ID },
@@ -229,7 +241,7 @@ export function HealthCare({ headingRef, view, tray, caveat, trayOpen, onTrayOpe
             {view.words}
           </p>
         ) : (
-          <Charts view={view} />
+          <Charts view={view} caveat={caveat} />
         )}
       </PageFrame>
     </div>

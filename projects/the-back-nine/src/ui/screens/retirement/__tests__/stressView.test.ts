@@ -4,7 +4,7 @@ import type { Headline } from '@shared/model'
 import { copy, slots } from '../../../copy'
 import { DEV_SEEDS } from '../../../devSeeds'
 import { ringFace } from '../../../ringReading'
-import { START_SETTINGS, stressOffers, type StressBarId, type StressBarRun } from '../../../workbench/useStress'
+import { barRun, START_SETTINGS, stressOffers, type StressBarId, type StressBarRun } from '../../../workbench/useStress'
 import type { WhatIfReading } from '../../../workbench/whatIfRun'
 import { STRESS_COLOR, stressTrayView, stressView, type StressPageView } from '../stressView'
 
@@ -23,8 +23,8 @@ function barsOf(v: StressPageView) {
   if (v.kind !== 'bars') throw new Error(`[test] ${v.kind}`)
   return v
 }
-const view = (plan: WhatIfReading | null, bars: [StressBarId, StressBarRun][], offers = stressOffers(DEV_SEEDS.health), stateClause: string | null = null) =>
-  stressView({ startCalendarYear: START, plan, planClockYears: 0, offers, committed: START_SETTINGS, bars: new Map(bars), stateClause })
+const view = (plan: WhatIfReading | null, bars: [StressBarId, StressBarRun][], offers = stressOffers(DEV_SEEDS.health), stateClause: string | null = null, more: { refiguring?: boolean; noDate?: boolean } = {}) =>
+  stressView({ startCalendarYear: START, plan, planClockYears: 0, offers, committed: START_SETTINGS, bars: new Map(bars), stateClause, refiguring: more.refiguring ?? false, noDate: more.noDate ?? false })
 
 describe('stressView — the bars', () => {
   it('Baseline is the plan’s own reading, worded exactly as the ring composer words it (Probability’s count)', () => {
@@ -84,16 +84,24 @@ describe('stressView — the bars', () => {
     expect(copy.stressStopgap).toBe('Market drops, higher inflation, higher taxes, lower returns and longer lives come with B9’s stress-test build.')
   })
 
-  it('every stressed bar with a count at Baseline’s count: one note, first after the stopgap; one bar off it: no note', () => {
+  it('every stressed bar with a count at Baseline’s count: one note, first after the stopgap; one bar off it, or one with no count: no note', () => {
     const same = barsOf(
+      view(headline(9), [
+        ['social-security', { kind: 'ready', reading: headline(9), updating: false }],
+        ['out-of-pocket', { kind: 'ready', reading: headline(9), updating: false }],
+      ]),
+    )
+    expect(same.notes.slice(0, 2)).toEqual([copy.stressStopgap, copy.stressNoneMoves])
+    expect(copy.stressNoneMoves).not.toMatch(/%/)
+    // A stress that failed shows no count: "none of these stresses moves" would claim it did not move.
+    const failed = barsOf(
       view(headline(9), [
         ['social-security', { kind: 'ready', reading: headline(9), updating: false }],
         ['out-of-pocket', { kind: 'ready', reading: headline(9), updating: false }],
         ['combined', { kind: 'error' }],
       ]),
     )
-    expect(same.notes.slice(0, 2)).toEqual([copy.stressStopgap, copy.stressNoneMoves])
-    expect(copy.stressNoneMoves).not.toMatch(/%/)
+    expect(failed.notes).not.toContain(copy.stressNoneMoves)
     const differs = barsOf(
       view(headline(9), [
         ['social-security', { kind: 'ready', reading: headline(9), updating: false }],
@@ -114,6 +122,44 @@ describe('stressView — the bars', () => {
 
   it('no plan reading: words, never a bar', () => {
     expect(view(null, [])).toEqual({ kind: 'words', words: copy.stressNoReading })
+  })
+
+  it('an indeterminate plan reading is no reading (words, never a 0-height Baseline); an indeterminate stress draws no column, names itself in the notes, and blocks "none moves"', () => {
+    expect(view(headline(0, 'indeterminate'), [])).toEqual({ kind: 'words', words: copy.stressNoReading })
+    const v = barsOf(
+      view(headline(8), [
+        ['social-security', { kind: 'ready', reading: headline(0, 'indeterminate'), updating: false }],
+        ['out-of-pocket', { kind: 'ready', reading: headline(8), updating: false }],
+      ]),
+    )
+    expect(v.bars[1]).toMatchObject({ id: 'social-security', height: null })
+    // Its empty slot has no label (Highcharts draws none on a null column): the note says which stress and why.
+    expect(v.notes).toContain(slots.stressBarNoCount(copy.stressSocialSecurity))
+    // A stress with no number is never one that "did not move": the line would print over its empty slot.
+    expect(v.notes).not.toContain(copy.stressNoneMoves)
+    const onlyIndeterminate = barsOf(view(headline(8), [['social-security', { kind: 'ready', reading: headline(0, 'indeterminate'), updating: false }]]))
+    expect(onlyIndeterminate.notes).not.toContain(copy.stressNoneMoves)
+  })
+
+  it('while the answer is worked out again the old bars stay under the re-figuring line', () => {
+    const v = barsOf(view(headline(8), [['social-security', { kind: 'ready', reading: headline(6), updating: false }]], undefined, null, { refiguring: true }))
+    expect(v.tag).toBe(copy.answerRefiguringCaption)
+    expect(v.bars.map((b) => b.count)).toEqual([slots.xOfTen(8), slots.xOfTen(6)])
+    expect(barsOf(view(headline(8), [])).tag).toBeUndefined()
+  })
+
+  it('a plan whose answer found no date reads every bar at the window’s last year, and says so (never "the stop year your plan’s answer uses")', () => {
+    const v = barsOf(view(offset(0.4, 15), [], undefined, null, { noDate: true }))
+    expect(v.readsAt).toEqual([slots.stressReadsAtNoDate(slots.snapshotRingStopIn(START + 15))])
+  })
+})
+
+describe('barRun — a bar from its slot', () => {
+  it('a reading landed on an older answer is updating on its first frame back, never current', () => {
+    const ready = (answerKey: string, updating = false) =>
+      ({ kind: 'shown', many: { kind: 'ready', value: { whatIf: headline(6) }, answerKey, updating }, steady: { kind: 'loading' }, rough: { kind: 'loading' }, planHealth: { kind: 'loading' } }) as unknown as Parameters<typeof barRun>[0]
+    expect(barRun(ready('headline:final:k1'), undefined, 'headline:final:k1')).toEqual({ kind: 'ready', reading: headline(6), updating: false })
+    expect(barRun(ready('headline:final:k1'), undefined, 'headline:final:k2')).toEqual({ kind: 'ready', reading: headline(6), updating: true })
   })
 })
 

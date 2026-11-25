@@ -3,7 +3,7 @@
  *
  * PURE chrome (insight 048): the honesty decision — which state clause a household reads — lives
  * HERE and is tested HERE, never in a render path. Every consumer (the verdict hero, the Roth
- * lever, the Healthcare door sheet, the recommendation's R7 disclosure rail) reads a
+ * lever, the Health Care page, the recommendation's R7 disclosure rail) reads a
  * boolean/`PricedState` off the ONE producer's-output predicate (`pricedStateForRun`, intakeMap)
  * and calls a compose function below — so the disclosure homes swap their state clause by the SAME
  * rule (insight 078 — a defect-class sweep by meaning, not by string), each gated independently at
@@ -78,7 +78,8 @@ export function composeVerdictMedicareResidual(pricedState: PricedState | undefi
  *      test pins it as a substring of the residual, so the two homes cannot drift apart).
  *    - priced ⇒ the SAME affirmation home #1 uses + a narrowing tail (the composer's law: never
  *      affirm-alone). The all-65+ Tail narrows Medicare extras; this household reads that on the
- *      Healthcare sheet (its held-flat line + its unpriced list) — so the tail points there.
+ *      Health Care page (the residual's held-flat sentence + its unpriced list; the Healthcare sheet
+ *      until RC10) — so the tail points there, by the page's name.
  *
  *  THE LAW this encodes (the route × cohort × pricing matrix, pinned in ConfidenceStatement.test +
  *  FuckOffDate.test): exactly ONE state clause on every verdict, never zero, never two. EXHAUSTIVE by
@@ -138,7 +139,7 @@ export function composeRothOmissionsNote(
   return statePriced ? copy.rothOmissionsNoteStatePriced : copy.rothOmissionsNote
 }
 
-/** The Healthcare door sheet's omissions note (home #3): the state-tax item drops when priced,
+/** The Health Care page's omissions note (home #3; the Healthcare door sheet's until RC10): the state-tax item drops when priced,
  *  gated INDEPENDENTLY of the verdict + Roth homes (insight 078 — different population, own
  *  chrome). */
 export function composeControlHealthOmissionsNote(statePriced: boolean): string {

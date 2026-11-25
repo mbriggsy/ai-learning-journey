@@ -77,6 +77,15 @@ describe('healthPartOptions', () => {
     expect(healthPartOptions(input({ cliff: [] })).chart!.spacingTop).toBe(HEALTH_SPACING_TOP)
   })
 
+  it('a bar’s tooltip prints a typed name as typed: a link and an ampersand are escaped (Highcharts parses `<` as markup)', () => {
+    const tipOf = (point: string) => {
+      const o = healthPartOptions(input({ bars: [{ age: 61, value: 8_900, point }] }))
+      return (o.tooltip as { formatter: (this: unknown) => string }).formatter.call({ point: { options: { custom: { point } } } })
+    }
+    expect(tipOf('<a href="https://x">P</a>’s age 61')).toBe('&lt;a href="https://x"&gt;P&lt;/a&gt;’s age 61')
+    expect(tipOf('A & B’s age 61')).toBe('A &amp; B’s age 61')
+  })
+
   it('the credit stays on (the Personal Use licence)', () => {
     expect(healthPartOptions(input()).credits).toMatchObject({ enabled: true })
   })

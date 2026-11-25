@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { OUTCOME_STATES } from '@shared/model'
-import { formatActionableDollar, formatDeltaDollar } from '../../../money'
+import { spineMedicarePriced } from '@intake/intakeMap'
+import { formatActionableDollar, formatDeltaDollar, formatEnteredDollar } from '../../../money'
 import { DEV_SEEDS } from '../../../devSeeds'
 import { copy, slots } from '../../../copy'
+import { composeVerdictStateNote } from '../../../stateTaxDisclosure'
 import { recommendationView, type RecommendedView } from '../../../recommendationView'
 import { armFigure, goalLeadPremiseHolds, heroWords, rankedList, strategiesView, DEFAULT_HEIR_BRACKET, type StrategiesInput, type StrategiesView, type WinnerView } from '../strategiesView'
 import { compactDollars, summaryView } from '../summaryView'
@@ -16,6 +18,7 @@ import { armFor, committed, grade, headlineAnswer, leaveMoreRec, payLessRec, rec
  */
 
 const RETIRED = DEV_SEEDS.retired
+const bequestOf = (taxable: [number, number]) => ({ terminalTaxableReal: taxable, terminalPretaxReal: [100_000, 100_000], terminalRothReal: [0, 0], terminalHsaReal: [0, 0] })
 const base = (o: Partial<StrategiesInput> = {}): StrategiesInput => ({
   snapshot: snap(RETIRED, headlineAnswer(RETIRED)),
   picked: { goal: 'leave-more', heirBracket: DEFAULT_HEIR_BRACKET },
@@ -45,8 +48,15 @@ describe('Strategies: the ranked list (three rows, the rest counted, never drawn
     expect(list.rows.map((r) => r.value)).toEqual([p.winner, p.runnerUp!, p.noActionBaseline].map((a) => slots.taxStratValue(formatDeltaDollar(a.headlineStatisticB))))
     expect(list.rows[0]!.levers).toEqual([copy.leverPolicyTaxableFirst, slots.taxStratRothRow(formatActionableDollar(21_900), 5)])
     expect(list.rows[2]!.levers).toEqual([copy.leverPolicyProportional, copy.taxStratNoConversion])
-    // Five ranked, three shown: two others, counted in words.
-    expect(list.others).toBe(slots.taxStratOthers(2))
+    // Five ranked, three shown: 'pruned-a' ranks above your plan today and 'pruned-b' below it, so the line says both
+    // (never "all ranked below these", which is false about 'pruned-a').
+    expect(list.others).toBe(slots.taxStratOthersAbove(1, 1))
+    // None of the unshown above your plan today: the plain count.
+    const allBelow = leaveMoreRec({ rankedIds: [p.winner.id, p.runnerUp!.id, p.noActionBaseline.id, 'pruned-a', 'pruned-b'] })
+    expect(rankedList(allBelow, false).others).toBe(slots.taxStratOthers(2))
+    // Two above, none below.
+    const allAbove = leaveMoreRec({ rankedIds: [p.winner.id, p.runnerUp!.id, 'pruned-a', 'pruned-b', p.noActionBaseline.id] })
+    expect(rankedList(allAbove, false).others).toBe(slots.taxStratOthersAbove(2, 0))
   })
 
   it('carries no pruned candidate’s id, levers or score anywhere in the view (a planted pruned row fails), and no rank number', () => {
@@ -60,22 +70,19 @@ describe('Strategies: the ranked list (three rows, the rest counted, never drawn
       expect(Object.keys(row)).not.toContain('rank')
       expect(row.name, 'a row names its strategy, never a position').not.toMatch(/^\s*#?\d/)
     }
-    // The plant: a pruned candidate smuggled in as a row would carry its id into the view, and the sweep above catches
-    // exactly that string.
-    const planted = { ...view, winner: { ...winnerOf(view), list: { ...list, rows: [...list.rows, { ...list.rows[0]!, name: 'pruned-a' }] } } }
-    expect(JSON.stringify(planted)).toContain('pruned-a')
   })
 
   it('shades follow the displayed value, best for the goal darkest; tied printed figures share a shade', () => {
     const p = leaveMoreRec()
-    expect(rankedList(p, false, false).rows.map((r) => r.shade)).toEqual([0, 1, 2])
-    // A runner-up that prints the winner's figure shares its shade.
+    expect(rankedList(p, false).rows.map((r) => r.shade)).toEqual([0, 1, 2])
+    // A runner-up that prints the winner's figure shares its shade (and, printing the same, carries no "prints higher" note).
     const tied = leaveMoreRec({ runnerUp: armFor('leave-more', 'bracket-fill|grid|0', 'bracket-fill', { terminalTaxableReal: [399_000, 599_000], terminalPretaxReal: [100_000, 100_000], terminalRothReal: [0, 0], terminalHsaReal: [0, 0] }) })
-    const rows = rankedList(tied, false, false).rows
+    const rows = rankedList(tied, false).rows
     expect(rows[0]!.value).toBe(rows[1]!.value)
     expect(rows.map((r) => r.shade)).toEqual([0, 0, 2])
+    expect(rows[1]!.note).toBeUndefined()
     // Pay less tax: the LOWEST figure is the best, darkest.
-    expect(rankedList(payLessRec(), false, true).rows.map((r) => r.shade)).toEqual([0, 1, 2])
+    expect(rankedList(payLessRec(), true).rows.map((r) => r.shade)).toEqual([0, 1, 2])
   })
 
   it('a near-tie (a close-call grade on the sampling-noise driver) is said in words on both top rows; a confident lean says nothing', () => {
@@ -85,10 +92,78 @@ describe('Strategies: the ranked list (three rows, the rest counted, never drawn
     expect(sure.rows.every((r) => r.nearTie === undefined)).toBe(true)
   })
 
+  it('on the survival axis (the plan is not over-funded) a near-tie says it is the ODDS that are too close to call, never the dollar figures beside it', () => {
+    const near = winnerOf(strategiesView(solved(leaveMoreRec({ grade: grade('coin-flip'), gradeStatistic: 'survival' })))).list!
+    expect(near.rows.map((r) => r.nearTie)).toEqual([copy.taxStratRowNearTieOdds, copy.taxStratRowNearTieOdds, undefined])
+  })
+
+  it('a runner-up whose figure beats the recommended one’s in the goal’s direction says why it still ranks second', () => {
+    // Leave more: the runner-up prints a HIGHER bequest than the recommended strategy, and is shaded darkest.
+    const higher = leaveMoreRec({ runnerUp: armFor('leave-more', 'bracket-fill|grid|0', 'bracket-fill', bequestOf([700_000, 900_000])) })
+    const rows = rankedList(higher, false).rows
+    expect(rows[1]!.shade, 'the runner-up prints the best figure').toBe(0)
+    expect(rows.map((r) => r.note)).toEqual([undefined, slots.recRunnerUpAheadHere(true), undefined])
+    // Pay less tax: the runner-up prints a LOWER cost.
+    const lower = payLessRec({ runnerUp: armFor('pay-less-tax', 'taxable-first|grid|0', 'taxable-first', { lifetimeTaxPaidReal: [30_000, 30_000] }) })
+    expect(rankedList(lower, true).rows.map((r) => r.note)).toEqual([undefined, slots.recRunnerUpAheadHere(false), undefined])
+    // The usual order: no note on any row.
+    expect(rankedList(leaveMoreRec(), false).rows.every((r) => r.note === undefined)).toBe(true)
+    expect(rankedList(payLessRec(), true).rows.every((r) => r.note === undefined)).toBe(true)
+  })
+
+  it('your plan today’s Roth conversion is quoted by its amount alone, never its unscreened window', () => {
+    // 40 years typed on a shorter horizon: a quoted length would name years nothing was priced over.
+    const own = leaveMoreRec({ noActionBaseline: armFor('leave-more', 'proportional|user|0', 'proportional', bequestOf([300_000, 400_000]), { annualAmountReal: 12_345, startYearOffset: 3, years: 40 }) })
+    const rows = rankedList(own, false).rows
+    expect(rows[2]!.levers).toEqual([copy.leverPolicyProportional, slots.taxStratRothRowOwn(formatEnteredDollar(12_345))])
+    expect(rows[2]!.levers.join(' ')).not.toMatch(/\d+ years?\b|\b20\d\d\b/)
+    // The compared strategies' rows keep their own words.
+    expect(rows[0]!.levers).toEqual([copy.leverPolicyTaxableFirst, slots.taxStratRothRow(formatActionableDollar(21_900), 5)])
+  })
+
   it('a runner-up that IS the baseline is one row, named as both', () => {
     const p = leaveMoreRec()
-    const list = rankedList(leaveMoreRec({ runnerUp: p.noActionBaseline }), false, false)
+    const list = rankedList(leaveMoreRec({ runnerUp: p.noActionBaseline }), false)
     expect(list.rows.map((r) => r.name)).toEqual([copy.taxStratRowWinner, copy.taxStratRowBaselineRunnerUp])
+  })
+
+  // The live roster holds a no-conversion household's plan twice: the injected baseline and the grid's conversion-0 point
+  // for the same order (`solverCandidateId`'s real `<arm>:<policy>:<amount>` ids). The twin scores the same and the
+  // stable sort puts it just before the baseline.
+  const realIds = (o: Partial<Parameters<typeof leaveMoreRec>[0]> = {}) => {
+    const p = leaveMoreRec()
+    return {
+      winner: { ...p.winner, id: 'grid:taxable-first:21900' },
+      runnerUp: { ...p.runnerUp!, id: 'grid:bracket-fill:0' },
+      noActionBaseline: { ...p.noActionBaseline, id: 'baseline:proportional:0' },
+      ...o,
+    }
+  }
+
+  it('the baseline’s twin ranked above your plan today is never counted as another strategy that beat it', () => {
+    const ids = realIds()
+    const twinAbove = leaveMoreRec({ ...ids, rankedIds: [ids.winner.id, ids.runnerUp.id, 'grid:proportional:0', ids.noActionBaseline.id, 'grid:proportional:21900'] })
+    // Only the one real strategy below is counted (the twin, ranked between, is your plan today).
+    expect(rankedList(twinAbove, false).others).toBe(slots.taxStratOthers(1))
+    // A real strategy above still counts as above; the twin beside it does not.
+    const realAbove = leaveMoreRec({ ...ids, rankedIds: [ids.winner.id, ids.runnerUp.id, 'grid:bracket-fill:21900', 'grid:proportional:0', ids.noActionBaseline.id] })
+    expect(rankedList(realAbove, false).others).toBe(slots.taxStratOthersAbove(1, 0))
+    // A converting baseline has no twin: the grid's conversion-0 point for its order is a different plan.
+    const converting = leaveMoreRec({
+      ...ids,
+      noActionBaseline: { ...ids.noActionBaseline, id: 'baseline:proportional:12345', conversion: { annualAmountReal: 12_345, startYearOffset: 0, years: 5 } },
+      rankedIds: [ids.winner.id, ids.runnerUp.id, 'grid:proportional:0', 'baseline:proportional:12345'],
+    })
+    expect(rankedList(converting, false).others).toBe(slots.taxStratOthersAbove(1, 0))
+  })
+
+  it('a runner-up that is the baseline’s twin is the one "Your plan today, the runner-up" row, never your plan printed twice', () => {
+    const ids = realIds()
+    const twin = { ...ids.noActionBaseline, id: 'grid:proportional:0' }
+    const p = leaveMoreRec({ ...ids, runnerUp: twin, rankedIds: [ids.winner.id, twin.id, ids.noActionBaseline.id, 'grid:bracket-fill:0'] })
+    const list = rankedList(p, false)
+    expect(list.rows.map((r) => r.name)).toEqual([copy.taxStratRowWinner, copy.taxStratRowBaselineRunnerUp])
+    expect(list.others).toBe(slots.taxStratOthers(1))
   })
 })
 
@@ -168,10 +243,31 @@ describe('Strategies: every state renders its copy, and no bars or list where th
     expect(v.footnotes).toContain(copy.recGradeNoteShape)
   })
 
-  it('the adjacent disclosures ride under the card (complete over their ids), and the state clause stays out when the state-tax note speaks', () => {
+  it('the adjacent disclosures ride under the card, and the state clause stays out when the state-tax note speaks', () => {
+    // An unpriced state (the retired seed names none): the state-tax disclosure speaks, so the footnotes carry no clause.
     const v = solveView(strategiesView(solved()))
-    expect(v.disclosures.map((d) => d.id)).toContain('ss-claim-fixed')
-    expect(v.disclosures.map((d) => d.id)).toContain('heir-bracket')
+    expect(v.disclosures.map((d) => d.id)).toEqual(['ss-claim-fixed', 'niit', 'state-tax', 'heir-bracket'])
+    expect(v.footnotes).toEqual([])
+    // A priced state (NC): no state-tax disclosure, so the footnote row carries the state's own clause.
+    const nc = DEV_SEEDS.nc
+    const priced = solveView(strategiesView(base({ snapshot: snap(nc, headlineAnswer(nc), committed(leaveMoreRec())) })))
+    expect(priced.disclosures.map((d) => d.id)).not.toContain('state-tax')
+    expect(priced.footnotes).toEqual([composeVerdictStateNote('NC', false)])
+    // The empty state: no disclosures, the clause alone.
+    const empty = solveView(strategiesView(base()))
+    expect(empty.disclosures).toEqual([])
+    expect(empty.footnotes).toEqual([copy.verdictStateUnpricedNote])
+  })
+
+  it('pay less tax on a run that priced health premiums: the hero counts both, and the scope disclosure says what is and isn’t counted', () => {
+    expect(spineMedicarePriced(RETIRED), 'the retired seed prices Medicare (else this arm proves nothing)').toBe(true)
+    const v = solveView(strategiesView(solved(payLessRec(), { picked: { goal: 'pay-less-tax', heirBracket: DEFAULT_HEIR_BRACKET } })))
+    expect(v.winner!.hero).toBe(slots.taxStratHeroPayLessTax(formatDeltaDollar(15_000)))
+    expect(v.disclosures.map((d) => d.id)).toContain('all-in-scope')
+    const s = summaryView(snap(RETIRED, headlineAnswer(RETIRED), committed(payLessRec())))
+    if (s.kind !== 'bars') throw new Error(s.kind)
+    expect(s.category).toBe(copy.taxStratMetricPayLessTax)
+    expect(s.hero).toBe(v.winner!.hero)
   })
 
   it('Calculating: the bold sentence and the label, nothing else to press', () => {
@@ -206,17 +302,27 @@ describe('Strategies: the empty state', () => {
     expect(solveView(strategiesView(base({ picked: { goal: 'leave-more', heirBracket: 0.32 } }))).ask!.bracket?.value).toBe('0.32')
   })
 
-  it('a household with no pre-tax money: the refused solve shows the steer note above Find, which stays live', () => {
+  it('a household with no pre-tax money: the refused solve shows the steer note above Find, and Find is held on those words (a press would only refuse again; a plan edit clears it)', () => {
     const ask = solveView(strategiesView(base({ snapshot: snap(RETIRED, headlineAnswer(RETIRED), { kind: 'blocked', gap: 'no-pretax', label: 'no-pretax' }) }))).ask!
     expect(ask.steer).toEqual({ kind: 'no-pretax', words: copy.recommendNoPretaxNote })
-    expect(ask.find.held).toBeUndefined()
+    expect(ask.find.held).toEqual({ kind: 'no-pretax', words: copy.recommendNoPretaxNote })
   })
 
-  it('the plan’s answer not ready holds Find, in words: still being worked out, or incomplete', () => {
+  it('the plan’s answer not ready holds Find, in words: still being worked out, or the facts it waits for by name', () => {
     const pending = solveView(strategiesView(base({ snapshot: snap(RETIRED, { kind: 'pending' } as never) }))).ask!
     expect(pending.find.held).toEqual({ kind: 'answer', words: copy.taxStratAnswerWaiting })
-    const incomplete = solveView(strategiesView(base({ snapshot: snap(RETIRED, { kind: 'inputs-incomplete' } as never) }))).ask!
-    expect(incomplete.find.held).toEqual({ kind: 'answer', words: copy.recommendSpineUnreadyNote })
+    // Idle and missing facts are the fallback, not "being worked out": the held reason is the answer's own lead.
+    for (const kind of ['idle', 'inputs-incomplete'] as const) {
+      const held = solveView(strategiesView(base({ snapshot: snap(RETIRED, { kind } as never) }))).ask!.find.held
+      expect(held, kind).toEqual({ kind: 'answer', words: copy.answerIncomplete })
+    }
+    // A missing fact is named.
+    const [first, second] = RETIRED.people
+    const { sex: _sex, ...noSex } = first!
+    const gap = { ...RETIRED, people: [noSex, second!] } as never
+    const named = solveView(strategiesView(base({ snapshot: snap(gap, { kind: 'idle' } as never) }))).ask!.find.held
+    expect(named?.kind).toBe('answer')
+    expect(named?.words).toContain(copy.answerStillNeeded)
   })
 
   it('the picker’s lead is verdict-gated on the RAW outcome: a positive list, so off-track and already-failing omit it and a new state falls silent', () => {
@@ -312,7 +418,32 @@ describe('Summary reads the hero’s own statistic (insight 099)', () => {
     const s = summaryView(snap(RETIRED, headlineAnswer(RETIRED), committed(payLessRec())))
     if (s.kind !== 'bars') throw new Error(s.kind)
     expect(s.winner.statistic).toBeLessThan(s.baseline.statistic)
-    expect([copy.taxStratMetricPayLessTax, copy.taxStratMetricPayLessTaxUnpriced]).toContain(s.category)
+    expect(s.category).toBe(copy.taxStratMetricPayLessTax)
+  })
+
+  it('the key-metric column carries the lines that qualify the hero on the Winner card, and the footnote row its disclosures (insight 160)', () => {
+    const p = leaveMoreRec()
+    const q = leaveMoreRec({
+      deltaSkew: { meanReal: 150_000, medianReal: 40_000, p10Real: 0, p90Real: 0, skewDirection: 'upside', meanMinusMedianReal: 110_000 },
+      skewDisclosure: { meanReal: p.winner.headlineStatisticB, medianReal: 2_100_000, p10Real: 0, p90Real: 0, skewDirection: 'upside', meanMinusMedianReal: 1 },
+      disclosedDirectional: ['methodology.productionMarket'] as never,
+    })
+    const v = solveView(strategiesView(solved(q)))
+    const w = v.winner!
+    expect(w.qualifier, 'the fixture must light the qualifier').toBeDefined()
+    expect(w.skew, 'the fixture must light the skew line').toBeDefined()
+    const s = summaryView(snap(RETIRED, headlineAnswer(RETIRED), committed(q)))
+    if (s.kind !== 'bars') throw new Error(s.kind)
+    expect(s.qualifier).toBe(w.qualifier)
+    expect(s.skew).toBe(w.skew)
+    expect(s.shapeNote).toBe(copy.recGradeNoteShape)
+    expect(s.footnotes).toEqual(v.disclosures.map((d) => d.text))
+    // A priced state: no state-tax disclosure, so the state's own clause rides the footnote row.
+    const nc = DEV_SEEDS.nc
+    const priced = summaryView(snap(nc, headlineAnswer(nc), committed(p)))
+    if (priced.kind !== 'bars') throw new Error(priced.kind)
+    expect(priced.footnotes).not.toContain(copy.recDiscStateTax)
+    expect(priced.footnotes.at(-1)).toBe(composeVerdictStateNote('NC', false))
   })
 
   it('the phone’s compact figures are the same figures in the axis’s dialect, three digits', () => {

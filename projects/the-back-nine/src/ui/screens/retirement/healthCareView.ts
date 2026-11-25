@@ -11,7 +11,9 @@
  * before the median), never a sum of yearly medians.
  *
  * THE SHIPPED SHEET'S TWO QUOTING GATES HOLD. Only `quotableYears` draw (the living cohort at or above
- * `COHORT_FADE.full`; a median over few living futures is noise), so a later year draws nothing. The marketplace cliff
+ * `COHORT_FADE.full`; a median over few living futures is noise), so a later year draws nothing. And only while the
+ * futures whose money still pays for the year are at the same bar (`chartableYears`): the readout's medians are over
+ * those futures alone, and a median over none is $0, so a plan running out of money would chart a calm $0. The marketplace cliff
  * share is a share of the futures that BUY marketplace cover that year (`HealthReadoutYear.overCliffFraction`): it
  * prints only over a year where at least half the futures buy it (`acaPricedFraction >= 0.5`, the sheet's own gate),
  * through the sheet's count rule (`Math.round(·10)`, nothing under 1, the "more than 9 in 10" ceiling; insight 089: an
@@ -31,16 +33,17 @@
  * `premiums`, every title naming that one future, and one stopgap line (plan section 6: the working household's
  * readings at its date). No cliff share prints there: one path has no share.
  */
-import type { HealthReadout, LedgerYearRow, TaxAwareDistribution } from '@shared/model'
+import { isDepleted, type DepletionYear, type HealthReadout, type HealthReadoutYear, type LedgerYearRow, type TaxAwareDistribution } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
 import { niceLattice, type DollarLattice } from '@viz/bandData'
+import { COHORT_FADE } from '@viz/cohort'
 import { healthcarePriced, medicareExtrasDisclosureView, pricedStateForRun } from '@intake/intakeMap'
 import type { WhatIfLeverKind } from '@shared/model'
 import { copy, slots } from '../../copy'
 import { composeHealthSheet, composeMedicareExtrasLines, composeMedicareExtrasTypicalNote, quotableYears, type HealthFact } from '../../healthSheetChrome'
 import { composeControlHealthOmissionsNote, composeVerdictMedicareResidual } from '../../stateTaxDisclosure'
 import { formatDeltaDollar, mmAxisFormatterFor } from '../../money'
-import { medianOf } from '../../workbench/whatIfRun'
+import { lifetimeHealthMedianReal, medianOf } from '../../workbench/whatIfRun'
 import { tablePerson, type TableMeta } from '../../workbench/tableRun'
 import type { FactSection } from '../../workbench/factsChrome'
 import type { FactDoorId } from '../../workbench/factRegistry'
@@ -125,6 +128,8 @@ export interface HealthChartsView {
    *  lifespans. */
   readonly footnotes: readonly string[]
   readonly updating: boolean
+  /** The veil's words while {@link updating}: the answer figured again (retired), the steady rows worked out (working). */
+  readonly updatingLabel: string
 }
 
 export type HealthCareView = HealthChartsView | { readonly kind: 'words'; readonly words: string }
@@ -140,9 +145,26 @@ interface PartYear {
   readonly extras: number
 }
 
-/** The readout's quotable years as part-years: row k is sim-year k − 1 (insight 134). */
-export function readoutYears(readout: HealthReadout): readonly PartYear[] {
-  return quotableYears(readout).map((y) => ({
+/**
+ * The share of futures whose money still pays for sim-year t. The overlay stops a future at the year its money runs out
+ * (`taxOverlay.ts` breaks on depletion before its readout sink records that year), so a future's premiums are in the
+ * readout's sim-year t iff its depletion year is never or later than t. The readout's medians are over those futures
+ * only, and a median over none is $0 (`buildHealthReadout`), so a year few futures can pay for would chart a calm $0.
+ */
+export function fundedShare(depletionYears: readonly DepletionYear[], t: number): number {
+  if (depletionYears.length === 0) return 0
+  return depletionYears.filter((d) => !isDepleted(d) || d > t).length / depletionYears.length
+}
+
+/** The years the page charts: the quotable years (the living futures at `COHORT_FADE.full`) where the futures still paying
+ *  are at the same bar. Both shares only fall, so this is a clean prefix of the readout. Row k is sim-year k − 1. */
+export function chartableYears(readout: HealthReadout, depletionYears: readonly DepletionYear[]): readonly HealthReadoutYear[] {
+  return quotableYears(readout).filter((y) => fundedShare(depletionYears, y.yearsFromNow - 1) >= COHORT_FADE.full)
+}
+
+/** The readout's charted years as part-years: row k is sim-year k − 1 (insight 134). */
+export function readoutYears(years: readonly HealthReadoutYear[]): readonly PartYear[] {
+  return years.map((y) => ({
     t: y.yearsFromNow - 1,
     aca: Math.max(0, y.acaNetPremiumP50),
     medicare: Math.max(0, y.medicareBaseP50),
@@ -166,9 +188,10 @@ export function ledgerYears(rows: readonly LedgerYearRow[], last: number): reado
 /**
  * The marketplace cliff's stretches: over the quotable years where at least half the futures buy marketplace cover,
  * the count of 10 (`Math.round(overCliffFraction × 10)`, the sheet's own rule), nothing under 1; consecutive years with
- * the same count join one stretch. A year where fewer than half buy cover breaks a stretch and prints nothing.
+ * the same count join one stretch. A year where fewer than half buy cover breaks a stretch and prints nothing. `years`
+ * is the charted years (the page passes {@link chartableYears}), so a bracket never stands over an undrawn year.
  */
-export function cliffRuns(readout: HealthReadout, firstAge: number, axisTitle: string): readonly CliffRun[] {
+export function cliffRuns(readout: HealthReadout, firstAge: number, axisTitle: string, years: readonly HealthReadoutYear[] = quotableYears(readout)): readonly CliffRun[] {
   const out: CliffRun[] = []
   let open: { from: number; to: number; ofTen: number; k: number } | null = null
   const close = () => {
@@ -176,7 +199,7 @@ export function cliffRuns(readout: HealthReadout, firstAge: number, axisTitle: s
     out.push({ fromAge: open.from, toAge: open.to, label: slots.healthCliffLabel(open.ofTen), point: slots.healthCliffPoint(open.from, open.to, axisTitle, open.ofTen) })
     open = null
   }
-  for (const y of quotableYears(readout)) {
+  for (const y of years) {
     const age = firstAge + y.yearsFromNow - 1
     const ofTen = y.acaPricedFraction >= 0.5 ? Math.round(y.overCliffFraction * 10) : 0
     if (ofTen < 1) {
@@ -196,10 +219,11 @@ export function cliffRuns(readout: HealthReadout, firstAge: number, axisTitle: s
 }
 
 /** The median of each future's own lifetime health premiums (net marketplace + Medicare, summed per future first), and
- *  each part's own median. Undefined where the run carried no tax-aware surfaces. */
+ *  each part's own median. Undefined where the run carried no tax-aware surfaces. The total is Analysis' own statistic
+ *  (`lifetimeHealthMedianReal`, the subsidy-rules line's plan side), so the two pages cannot split. */
 export function lifetimeMedians(ta: TaxAwareDistribution | undefined): { readonly total: number; readonly aca: number; readonly medicare: number } | undefined {
   if (ta === undefined || ta.lifetimeNetPremiumReal.length === 0) return undefined
-  const total = medianOf(ta.lifetimeNetPremiumReal.map((p, i) => p + (ta.lifetimeMedicareCostReal[i] ?? 0)))
+  const total = lifetimeHealthMedianReal(ta)
   const aca = medianOf(ta.lifetimeNetPremiumReal)
   const medicare = medianOf(ta.lifetimeMedicareCostReal)
   return total === undefined || aca === undefined || medicare === undefined ? undefined : { total, aca, medicare }
@@ -207,15 +231,16 @@ export function lifetimeMedians(ta: TaxAwareDistribution | undefined): { readonl
 
 const capitalize = (s: string): string => (s === '' ? s : s[0]!.toUpperCase() + s.slice(1))
 
-function partCharts(years: readonly PartYear[], first: { readonly age: number; readonly start: number }, axisTitle: string, legend: string, cliff: readonly CliffRun[]): HealthPartChart[] {
+function partCharts(years: readonly PartYear[], first: { readonly age: number; readonly start: number }, axisTitle: string, steady: boolean, cliff: readonly CliffRun[]): HealthPartChart[] {
   return HEALTH_PARTS.map((id) => ({
     id,
     title: PART_TITLE[id],
-    legend,
+    legend: steady ? copy.healthLegendSteady : copy.healthLegendMiddle,
     bars: years.map((y) => {
       const age = first.age + y.t
       const year = first.start + y.t
-      return { age, year, value: y[id], point: slots.healthYearPoint(axisTitle, age, year, PART_TITLE[id], formatDeltaDollar(y[id])) }
+      // The sentence a bar's hover and screen reader read alone, so it carries the legend's qualifier itself.
+      return { age, year, value: y[id], point: slots.healthYearPoint(axisTitle, age, year, PART_TITLE[id], formatDeltaDollar(y[id]), steady) }
     }),
     cliff: id === 'aca' ? cliff : [],
     ...(id === 'aca' && cliff.length > 0 ? { cliffKey: copy.healthCliffCaption } : {}),
@@ -226,7 +251,14 @@ function partCharts(years: readonly PartYear[], first: { readonly age: number; r
 
 /** A committed answer, as the page needs it (the store's `ModelAnswer` figured arms). */
 export type HealthAnswer =
-  | { readonly kind: 'headline'; readonly draft: ScenarioDraft; readonly readout: HealthReadout | undefined; readonly taxAware: TaxAwareDistribution | undefined }
+  | {
+      readonly kind: 'headline'
+      readonly draft: ScenarioDraft
+      readonly readout: HealthReadout | undefined
+      readonly taxAware: TaxAwareDistribution | undefined
+      /** Each future's depletion year (`Distribution.depletionYears`): which futures' premiums each readout year holds. */
+      readonly depletionYears: readonly DepletionYear[]
+    }
   | { readonly kind: 'date'; readonly draft: ScenarioDraft }
 
 export interface HealthCareInput {
@@ -237,22 +269,27 @@ export interface HealthCareInput {
   readonly todayEpochDay: number
   /** Calendar years since the plan was built (the Medicare card's distances count from today). */
   readonly sincePlanBuilt: number
+  /** The store is figuring the answer again (`snapshot.refiguring`): the committed answer's charts stay, veiled. */
+  readonly refiguring: boolean
 }
 
 /** The lines every figured route carries after the part groups. */
 function pageFootnotes(draft: ScenarioDraft): string[] {
   const priced = pricedStateForRun(draft)
   const typical = composeMedicareExtrasTypicalNote(medicareExtrasDisclosureView(draft))
+  // A household with no marketplace years (everyone 65 or older) gets the Medicare items alone: the marketplace ones speak
+  // of a discount, cost-sharing and subsidy top-ups it never buys (the old sheet mounted only where they were priced).
+  const marketplace = healthcarePriced(draft)
   return [
     // The affirmation and its residual ship together (the affirmation alone would claim all of Medicare is priced). The
     // residual carries the page's one state clause and the extras' held-flat sentence.
     copy.verdictMedicarePriced,
     composeVerdictMedicareResidual(priced),
     ...(typical !== undefined ? [typical] : []),
-    copy.controlHealthSurvivorNote,
+    marketplace ? copy.controlHealthSurvivorNote : copy.healthSurvivorNoteMedicare,
     // The residual above names state income tax already (priced or not), so the omissions list drops its state item
     // here: one state clause per page.
-    composeControlHealthOmissionsNote(true),
+    marketplace ? composeControlHealthOmissionsNote(true) : copy.healthOmissionsNoteMedicare,
     ...(draft.enteredAccounts.some((a) => a.kind === 'hsa') ? [copy.controlHealthHsaNote] : []),
   ]
 }
@@ -271,16 +308,26 @@ export function healthCareView(input: HealthCareInput): HealthCareView {
 
   if (answer.kind === 'headline') {
     const readout = answer.readout
-    if (readout === undefined) return { kind: 'words', words: copy.healthNone }
-    const years = readoutYears(readout)
-    if (years.length === 0) return { kind: 'words', words: copy.healthNone }
+    if (readout === undefined || quotableYears(readout).length === 0) return { kind: 'words', words: copy.healthNone }
+    // Only the years most futures can still pay for: past them the readout's medians run over few futures, then none ($0).
+    const charted = chartableYears(readout, answer.depletionYears)
+    if (charted.length === 0) return { kind: 'words', words: copy.healthRunsOutWords }
+    const years = readoutYears(charted)
     const firstPerson = tablePerson(draft, 0, draft.people[0]?.currentAge ?? 0, draft.people[0]?.currentAge ?? 0)
     const firstAge = firstPerson.currentAge
     const axisTitle = slots.claimsAgeAxis(capitalize(firstPerson.possessive))
-    const cliff = cliffRuns(readout, firstAge, axisTitle)
-    const parts = partCharts(years, { age: firstAge, start: draft.startCalendarYear }, axisTitle, copy.healthLegendMiddle, cliff)
+    const cliff = cliffRuns(readout, firstAge, axisTitle, charted)
+    const parts = partCharts(years, { age: firstAge, start: draft.startCalendarYear }, axisTitle, false, cliff)
     const lattice = niceLattice(Math.max(1, ...parts.flatMap((p) => p.bars.map((b) => b.value))))
     const life = lifetimeMedians(answer.taxAware)
+    // Each future's lifetime sums accrue only the years it could pay for (`taxOverlay.ts`), so where any future runs out
+    // they stop there: said under the figures (the rosy direction, the steady market's `healthRanOut` twin).
+    const ranOut = answer.depletionYears.some(isDepleted) ? [copy.healthLifetimeStopsAtRunOut] : []
+    // The funded cut dropped years the living-only gate would chart: say where and why the charts stop (a shorter axis
+    // alone reads as premiums stopping, or the plan ending, there).
+    const quotable = quotableYears(readout)
+    const firstCut = charted.length < quotable.length ? quotable[charted.length] : undefined
+    const chartsStop = firstCut !== undefined ? [slots.healthChartsStop(axisTitle, firstAge + firstCut.yearsFromNow - 1)] : []
     const facts = status.facts
     const factsOf = (...ids: HealthFact['id'][]) => facts.filter((f) => ids.includes(f.id))
     const groups: readonly HealthNoteGroup[] = [
@@ -303,10 +350,15 @@ export function healthCareView(input: HealthCareInput): HealthCareView {
       axisDollar: mmAxisFormatterFor(lattice.ceiling),
       hero: life === undefined ? '' : slots.healthFigure(formatDeltaDollar(life.total)),
       heroLine: life === undefined ? '' : copy.healthHeroLine,
-      metricLines: life === undefined ? [] : [slots.healthLifetimeAca(formatDeltaDollar(life.aca)), slots.healthLifetimeMedicare(formatDeltaDollar(life.medicare)), copy.healthLifetimeEachOwn],
+      metricLines:
+        life === undefined
+          ? chartsStop
+          : [slots.healthLifetimeAca(formatDeltaDollar(life.aca)), slots.healthLifetimeMedicare(formatDeltaDollar(life.medicare)), copy.healthLifetimeEachOwn, ...ranOut, ...chartsStop],
       notes,
       footnotes: pageFootnotes(draft),
-      updating: false,
+      // While the store figures the answer again the committed charts stay, veiled and saying so.
+      updating: input.refiguring,
+      updatingLabel: copy.answerRefiguringCaption,
     }
   }
 
@@ -324,7 +376,7 @@ function workingView(rows: readonly LedgerYearRow[], meta: TableMeta, updating: 
   if (years.length === 0) return { kind: 'words', words: copy.healthNone }
   const first = meta.people[0]!
   const axisTitle = slots.claimsAgeAxis(capitalize(first.possessive))
-  const parts = partCharts(years, { age: first.currentAge, start: meta.startCalendarYear }, axisTitle, copy.healthLegendSteady, [])
+  const parts = partCharts(years, { age: first.currentAge, start: meta.startCalendarYear }, axisTitle, true, [])
   const lattice = niceLattice(Math.max(1, ...parts.flatMap((p) => p.bars.map((b) => b.value))))
   // One path: its parts add up to its total exactly.
   const sum = (f: (y: PartYear) => number) => years.reduce((a, y) => a + f(y), 0)
@@ -333,7 +385,11 @@ function workingView(rows: readonly LedgerYearRow[], meta: TableMeta, updating: 
   const end = rows[rows.length - 1]
   // The year the money runs out is the run's last row: the premiums after it are not in these rows.
   const ranOut = end !== undefined && end.ranOut ? [slots.healthRanOut(meta.startCalendarYear + end.t)] : []
-  const stop = meta.stopYear === undefined ? [] : [meta.route === 'no-date' ? slots.workbenchNoDate(meta.stopYear) : slots.workbenchStopsIn(meta.stopYear)]
+  const stop = meta.stopYear === undefined ? [] : [meta.route === 'no-date' ? slots.healthNoDate(meta.stopYear) : slots.healthStopsIn(meta.stopYear)]
+  // A floor-keyed band (`tableRun.ts` runs the steady rows on the essentials-only pass): less spending after the stop,
+  // less income, a bigger discount and a smaller surcharge, so these premiums read lower than the full budget's. Said
+  // in the hero and in a note (Snapshot's `snapshotStatFloorTrack`, Cash Flows' `workbenchFloorTrack`, for these rows).
+  const floor = meta.track === 'floor'
   const notes: HealthNoteGroup[] = [
     { id: 'aca' as const, title: PART_TITLE.aca, facts: [], lines: [...acaLines] },
     { id: 'medicare' as const, title: PART_TITLE.medicare, facts: [], lines: extrasBlock(draft) },
@@ -349,11 +405,12 @@ function workingView(rows: readonly LedgerYearRow[], meta: TableMeta, updating: 
     lattice,
     axisDollar: mmAxisFormatterFor(lattice.ceiling),
     hero: slots.healthFigure(formatDeltaDollar(aca + medicare)),
-    heroLine: copy.healthHeroLineSteady,
+    heroLine: floor ? copy.healthHeroLineSteadyEssentials : copy.healthHeroLineSteady,
     metricLines: [slots.healthLifetimeAca(formatDeltaDollar(aca)), slots.healthLifetimeMedicare(formatDeltaDollar(medicare))],
     notes,
-    footnotes: [copy.healthWorkingStopgap, ...ranOut, lifespansLine(meta.people), ...stop, ...pageFootnotes(draft)],
+    footnotes: [copy.healthWorkingStopgap, ...ranOut, lifespansLine(meta.people), ...stop, ...(floor ? [copy.healthFloorTrack] : []), ...pageFootnotes(draft)],
     updating,
+    updatingLabel: copy.healthRowsWaiting,
   }
 }
 

@@ -30,7 +30,7 @@ import type { SavedRecommendationStatus } from '@store/savedRecommendation'
 import type { BandFan, LedgerYearRow, SavedRecommendationV3 } from '@shared/model'
 import type { XAnnotation } from '@viz/bandData'
 import type { FanLabels } from '@viz/charts/fanOptions'
-import { isDateRoute, missingRequiredFacts, pricedStateForRun, spineMedicarePriced, accountSources, sourceBalance } from '@intake/intakeMap'
+import { isDateRoute, missingRequiredFacts, pricedStateForRun, spineMedicarePriced, accountSources, type SourceAccount } from '@intake/intakeMap'
 import { blockedLeadFor, missingFactLines } from '@intake/missingFacts'
 import { selectElevatedAnswer } from '../../answerView'
 import { planClockAnchor, type BandPlanClockAnchor } from '../../bandAnnotations'
@@ -223,13 +223,18 @@ function statsView(steady: SteadyRows, working: boolean): StatsView {
 
 const dollars = (v: number): string => `$${formatEnteredDollar(v)}`
 
+/** Each account rounded to the dollar FIRST, then summed (Tax Allocation's rule, `investmentView.ts`
+ *  `taxAllocationView`): the printed rows add to the printed total, and the total matches Tax Allocation's, cents or not. */
+const roundedBalance = (accounts: readonly SourceAccount[]): number =>
+  accounts.reduce((s, a) => s + (Number.isFinite(a.valueToday) ? Math.round(a.valueToday) : 0), 0)
+
 function investedView(draft: MemoryModelSnapshot['draft'], agedBalancesYear: number | undefined): InvestedView {
   const src = accountSources(draft)
   const kinds = [
-    { label: copy.snapshotInvestedTaxable, value: sourceBalance(src.taxable) },
-    { label: copy.snapshotInvestedPretax, value: sourceBalance(src.pretax) },
-    { label: copy.snapshotInvestedRoth, value: sourceBalance(src.roth) },
-    { label: copy.snapshotInvestedHsa, value: sourceBalance(src.hsa) },
+    { label: copy.snapshotInvestedTaxable, value: roundedBalance(src.taxable) },
+    { label: copy.snapshotInvestedPretax, value: roundedBalance(src.pretax) },
+    { label: copy.snapshotInvestedRoth, value: roundedBalance(src.roth) },
+    { label: copy.snapshotInvestedHsa, value: roundedBalance(src.hsa) },
   ]
   const total = kinds.reduce((s, k) => s + k.value, 0)
   return {

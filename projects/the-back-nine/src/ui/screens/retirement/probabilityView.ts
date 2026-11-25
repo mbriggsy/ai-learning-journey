@@ -42,7 +42,7 @@
 import type { MemoryModelSnapshot } from '@store/memoryModel'
 import { rawDisplayed } from '@store/memoryModel'
 import type { SavedRecommendationStatus } from '@store/savedRecommendation'
-import type { DateTrackOutcome, Headline, SavedRecommendationV3, WhatIfLeverV6 } from '@shared/model'
+import { isDepleted, type DateTrackOutcome, type Headline, type SavedRecommendationV3, type WhatIfLeverV6 } from '@shared/model'
 import { isDateRoute, missingRequiredFacts } from '@intake/intakeMap'
 import { blockedLeadFor, missingFactLines } from '@intake/missingFacts'
 import { BAR_RUNG, agedLadderMarks, curveMarks, offsetHasPassed, type CurveMark } from '@viz/curveMarks'
@@ -371,14 +371,21 @@ const HEALTH_RESERVE_FIGURE = '9,999,000'
 /**
  * THE HEALTH LINE (the register's Tier 0 *The subsidy-rules comparison lost its lifetime health-cost line with RC10…*;
  * council 2026-07-03: the rules' effect sits in the years before Medicare and can barely move the odds, so the odds alone
- * read calmer than the cost). Printed only where the left side tries the subsidy rules and the right side is your plan
- * (its words, "as figured now", name your plan). Each side's figure is its own run's median of each future's lifetime
+ * read calmer than the cost). Printed only where your plan is one side and the other tries the subsidy rules (its words,
+ * "as figured now", name your plan): the left what-if beside your plan, or a kept what-if on the right beside the left's
+ * empty bundle (then from the right slot's view, the what-if named). Each side's figure is its own run's median of each future's lifetime
  * health cost (`lifetimeHealthMedianReal`), never a difference of two medians; both on the same futures (KTD11). Printed
  * in Health Care's dialect (`formatDeltaDollar`, the hero that prints the plan's same figure), and only once both sides
  * landed on the slot's current key: a half-landed pair prints nothing, never one side beside a stale other. Two figures
  * that print alike read "about the same", quoted once.
+ *
+ * WHERE MONEY RUNS OUT. Each future's lifetime sum accrues only the years it could pay for (`taxOverlay.ts`), so where
+ * any future of either side runs out the figures can read low, and the line carries Health Care's own clause
+ * (`healthLifetimeStopsAtRunOut`, the same statistic's caveat there). `planRanOut` is the plan side's: known on the spine
+ * (the committed answer's `depletionYears`); the working route's plan run carries no such flag yet, so there only the
+ * what-if side's (`whatIfHealthRanOut`, its own run's) can add it.
  */
-export function healthLine(view: WhatIfSlotView | null): string | null {
+export function healthLine(view: WhatIfSlotView | null, name?: string, planRanOut = false): string | null {
   if (view === null || view.kind !== 'shown') return null
   const { many, planHealth } = view
   if (many.kind !== 'ready' || many.updating || planHealth.kind !== 'ready' || planHealth.updating) return null
@@ -386,7 +393,9 @@ export function healthLine(view: WhatIfSlotView | null): string | null {
   if (whatIf === undefined) return null
   const a = formatDeltaDollar(whatIf)
   const b = formatDeltaDollar(planHealth.value)
-  return a === b ? slots.subsidyRegimeCostEven(a) : slots.subsidyRegimeCostDelta(a, b)
+  // `name`: the what-if sits on the right (your plan the left's empty bundle), so it is named, never "this way".
+  const line = a === b ? slots.subsidyRegimeCostEven(a) : name !== undefined ? slots.subsidyRegimeCostDeltaWith(name, a, b) : slots.subsidyRegimeCostDelta(a, b)
+  return planRanOut || many.value.whatIfHealthRanOut === true ? `${line} ${copy.healthLifetimeStopsAtRunOut}` : line
 }
 
 // ── The page ────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -556,10 +565,22 @@ export function probabilityView(input: ProbabilityInput): ProbabilityView {
   const differenceReserve = floorNote && copy.workbenchRailFloorUnread.length > widest.length ? copy.workbenchRailFloorUnread : widest
   // The health line: its cell exists from the first frame of a subsidy-rules what-if (its bundle is known before its runs
   // land), so the landing moves nothing below it.
+  // The other orientation: your plan on the left (its empty bundle) and a kept what-if that tries the rules on the right,
+  // read from the right slot's own view (its run carries the same plan side); "this way" would point at no half, so the
+  // what-if is named.
+  const rightTriesRules = alt.kind === 'empty' && rightPick !== 'plan' && right !== undefined && triesSubsidyRules(right.bundle)
+  const rightInSentence = inSentence(rightName, rightKeptName === undefined)
+  // The plan side's run-out (the spine's committed futures; a hand-built test answer may carry no distribution). The
+  // what-if side's is known only once its run lands, so the reserve always holds the run-out clause: the landing moves
+  // nothing whichever side runs out (almost every plan has some future that does).
+  const planRanOut = answer.kind === 'headline' && (answer.result.distribution?.depletionYears?.some(isDepleted) ?? false)
+  const withRanOut = (reserve: string): string => `${reserve} ${copy.healthLifetimeStopsAtRunOut}`
   const health =
     rightPick === 'plan' && triesSubsidyRules(whatIf.bundle)
-      ? { line: healthLine(whatIf.view), reserve: slots.subsidyRegimeCostDelta(HEALTH_RESERVE_FIGURE, HEALTH_RESERVE_FIGURE) }
-      : undefined
+      ? { line: healthLine(whatIf.view, undefined, planRanOut), reserve: withRanOut(slots.subsidyRegimeCostDelta(HEALTH_RESERVE_FIGURE, HEALTH_RESERVE_FIGURE)) }
+      : rightTriesRules
+        ? { line: healthLine(right.view, rightInSentence, planRanOut), reserve: withRanOut(slots.subsidyRegimeCostDeltaWith(rightInSentence, HEALTH_RESERVE_FIGURE, HEALTH_RESERVE_FIGURE)) }
+        : undefined
 
   // ── The bars: the retired route only, one shared scale ──
   const bars = ((): BarsView | undefined => {

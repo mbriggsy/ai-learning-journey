@@ -86,7 +86,9 @@ export interface ClaimPerson {
   readonly claimed: boolean
   /** A claim age to choose: not yet claimed, and a benefit to claim (their own, or a spouse's through theirs). */
   readonly chooser: boolean
-  /** The yearly benefit in today's dollars (own plus any spousal part), the engine's own amounts (`householdBenefits`). */
+  /** The yearly benefit in today's dollars this year, the engine's own amounts (`householdBenefits`): the own benefit,
+   *  plus the spousal part only once the other person has filed (the engine pays it from the later of the two claims,
+   *  `benefitYear.ts`'s `spousalStart`). */
   readonly benefit: number
 }
 
@@ -130,6 +132,9 @@ export function claimPeople(draft: ScenarioDraft): readonly ClaimPerson[] {
     const other = facts[1 - i] ?? null
     const hasBenefit = f !== null && (f.pia > 0 || (people.length === 2 && other !== null && other.pia > 0))
     const b = benefits[i]
+    // The spousal part starts at the later of the two claims (`bothAliveYearBenefit`'s `spousalStart`): only the part the
+    // engine already pays this year is "already received".
+    const otherFiled = other !== null && other.age >= other.claim
     return {
       index: i,
       words: tablePerson(draft, i, age, age),
@@ -138,7 +143,7 @@ export function claimPeople(draft: ScenarioDraft): readonly ClaimPerson[] {
       birthYear: f?.birthYear ?? 0,
       claimed,
       chooser: known && !claimed && hasBenefit,
-      benefit: b === undefined ? 0 : b.ownAnnual + b.spousalExcessAnnual,
+      benefit: b === undefined ? 0 : b.ownAnnual + (otherFiled ? b.spousalExcessAnnual : 0),
     }
   })
 }
@@ -187,9 +192,15 @@ export function claimStrategies(draft: ScenarioDraft): ClaimChoices {
       const who = choosers.map((p) => ({ mid: p.words.mid, age: g[0]!.ages[p.index]! }))
       return who.length === 1 ? slots.claimsCoincideOne(who[0]!.mid, phrases, who[0]!.age, g.length) : slots.claimsCoincideMany(capitalize(phrases), listWords(who.map((w) => slots.claimsPersonAt(w.mid, w.age))))
     })
-  const fixed = people
-    .filter((p) => !p.chooser)
-    .map((p) => (p.claimed ? slots.claimsFixed(capitalize(p.words.mid), p.words.you, p.words.possessive, formatDeltaDollar(p.benefit)) : slots.claimsNoBenefit(capitalize(p.words.mid), p.words.you)))
+  // An already-filed person paid $0 so far (no benefit of their own, the spousal part waiting on the other's filing,
+  // `claimPeople`) gets words with no figure: "already receives about ~$0 a year" read as a benefit that is nothing.
+  const fixedLine = (p: ClaimPerson): string => {
+    const other = people[1 - p.index]
+    if (!p.claimed) return slots.claimsNoBenefit(capitalize(p.words.mid), p.words.you)
+    if (p.benefit === 0 && other !== undefined && !other.claimed) return slots.claimsFixedSpousalPending(capitalize(p.words.mid), p.words.you, p.words.possessive, other.words.mid, other.words.you)
+    return slots.claimsFixed(capitalize(p.words.mid), p.words.you, p.words.possessive, formatDeltaDollar(p.benefit))
+  }
+  const fixed = people.filter((p) => !p.chooser).map(fixedLine)
   return { kind: 'choices', people, strategies: kept, coincide, fixed }
 }
 
@@ -263,7 +274,12 @@ export function oddsWords(reading: WhatIfReading, startCalendarYear: number): st
 // ── The page's inputs ───────────────────────────────────────────────────────────────────────────────────────────
 
 /** A strategy's many-futures reading, as the page may show it. */
-export type ReadingState = { readonly kind: 'ready'; readonly reading: WhatIfReading } | { readonly kind: 'loading' } | { readonly kind: 'withheld'; readonly words: string }
+export type ReadingState =
+  /** `updating`: the reading is from before the latest change (an older answer's run, or the answer being worked out
+   *  again), shown marked, never as current. */
+  | { readonly kind: 'ready'; readonly reading: WhatIfReading; readonly updating: boolean }
+  | { readonly kind: 'loading' }
+  | { readonly kind: 'withheld'; readonly words: string }
 
 export type ClaimsChart = 'annual' | 'cumulative'
 
@@ -273,15 +289,25 @@ export const CLAIMS_CHARTS: readonly { readonly id: ClaimsChart; readonly label:
 ]
 
 /** The notes every figured view carries: who is fixed, which strategies coincide, the lifespans the steady market uses,
- *  the working route's stop year, the page's one state clause. */
+ *  the working route's stop year, the plan's build year where it is not this year, the page's one state clause. */
 export interface ClaimsNotesInput {
   readonly choices: Extract<ClaimChoices, { kind: 'choices' }>
   readonly stateClause: string | null
+  /** The plan's age in years (`yearsSincePlanBuilt`): every age and year here is the build year's. */
+  readonly planClockYears: number
 }
 
-function runNotes(meta: TableMeta): string[] {
+/** On a plan built in an earlier year, the one line that its ages and years are as of that year (the page speaks the
+ *  build year's ages: "files at 63, in 2025" read in 2026 would be a present instruction already past). */
+const asOfLine = (startCalendarYear: number, planClockYears: number): string[] => (planClockYears > 0 ? [slots.claimsAsOfBuild(startCalendarYear)] : [])
+
+function runNotes(meta: TableMeta, planClockYears: number): string[] {
   const out = [lifespansLine(meta.people)]
   if (meta.route !== 'spine' && meta.stopYear !== undefined) out.push(meta.route === 'no-date' ? slots.claimsWorkStopsNoDate(meta.stopYear) : slots.claimsWorkStops(meta.stopYear))
+  // A floor-keyed band: the steady rows (and every ran-out line and "No lifetime total" read from them) are the
+  // essentials-only pass once work stops, said as Health Care and Cash Flows say it.
+  if (meta.track === 'floor') out.push(copy.claimsFloorTrack)
+  out.push(...asOfLine(meta.startCalendarYear, planClockYears))
   return out
 }
 
@@ -383,7 +409,7 @@ export function claimsComparisonView(input: ClaimsComparisonInput): ClaimsCompar
   const va = cumulativeChart ? cumulative(ya) : ya
   const vb = cumulativeChart ? cumulative(yb) : yb
   const lattice = niceLattice(Math.max(1, ...va, ...vb))
-  const notes = [...runNotes(meta), ...(input.notes.stateClause !== null ? [input.notes.stateClause] : [])]
+  const notes = [...runNotes(meta, input.notes.planClockYears), ...(input.notes.stateClause !== null ? [input.notes.stateClause] : [])]
   const series: [ClaimSeries, ClaimSeries] = [
     { id: 'claims-a', name: sa.label, role: 'alternative', points: va.map((value, t) => ({ age: ageAt(t), value })) },
     { id: 'claims-b', name: sb.label, role: 'compared', points: vb.map((value, t) => ({ age: ageAt(t), value })) },
@@ -421,9 +447,16 @@ export function claimsComparisonView(input: ClaimsComparisonInput): ClaimsCompar
   const t = breakEvenIndex(va, vb)
   const year = (i: number) => meta.startCalendarYear + i
   if (t === null) {
-    const d = snapToGrain(va[last] ?? 0) - snapToGrain(vb[last] ?? 0)
-    if (d === 0 && va.every((v, i) => snapToGrain(v) === snapToGrain(vb[i] ?? 0))) return { ...base, hero: copy.claimsAboutSame, heroLine: slots.claimsSamePaid(sa.phrase, sb.phrase) }
-    const [leader, other] = d >= 0 ? [sa, sb] : [sb, sa]
+    // The lead that holds is the last one at the printed grain (`breakEvenIndex`'s own rule): a tie in the last year is
+    // no lead, so it never hands the lead to the side that trailed throughout.
+    let lead = 0
+    for (let i = Math.min(va.length, vb.length) - 1; i >= 0 && lead === 0; i--) lead = Math.sign(snapToGrain(va[i]!) - snapToGrain(vb[i]!))
+    if (lead === 0) return { ...base, hero: copy.claimsAboutSame, heroLine: slots.claimsSamePaid(sa.phrase, sb.phrase) }
+    // The totals print the same in the last year read: no side leads there, so never "stays ahead through" it (the
+    // yearly view says "About the same" of the same two totals).
+    if (snapToGrain(va[last]!) === snapToGrain(vb[last]!))
+      return { ...base, hero: copy.claimsAboutSame, heroLine: slots.claimsLevelByLine(year(last), first.possessive, ageAt(last), sa.phrase, sb.phrase) }
+    const [leader, other] = lead > 0 ? [sa, sb] : [sb, sa]
     return { ...base, hero: copy.claimsNoBreakEven, heroLine: slots.claimsNoBreakEvenLine(year(last), first.possessive, ageAt(last), leader.phrase, other.phrase) }
   }
   const leaderIsA = snapToGrain(va[t]!) > snapToGrain(vb[t]!)
@@ -488,13 +521,14 @@ export function claimsSummaryView(input: ClaimsSummaryInput): ClaimsSummaryView 
   }
   const ready = got.ready
   const meta = ready.find((_, i) => strategies[i]!.id === 'plan')?.meta ?? ready[0]!.meta
-  const last = Math.min(...ready.map((r) => lastIndexOf(r.meta, r.rows)))
   const ranOut: string[] = []
   const bars = strategies.map((s, i): ClaimBar => {
     const r = ready[i]!
     const out = ranOutBefore(r.meta, r.rows)
     if (out !== null) ranOut.push(slots.claimsRanOut(s.label, r.meta.startCalendarYear + out))
-    const total = out === null ? snapToGrain(lifetimeTotal(yearly(r.rows, last))) : null
+    // Each bar totals its OWN years through the steady market's second death: a strategy whose money ran out sets no
+    // window for the rest (the runs that last share the same lifespans, so their windows agree).
+    const total = out === null ? snapToGrain(lifetimeTotal(yearly(r.rows, lastIndexOf(r.meta, r.rows)))) : null
     const reading = input.readings[s.id] as Extract<ReadingState, { kind: 'ready' }>
     const odds = oddsWords(reading.reading, r.meta.startCalendarYear)
     const figure = total === null ? copy.claimsNoTotal : slots.claimsFigure(formatDeltaDollar(total))
@@ -503,7 +537,10 @@ export function claimsSummaryView(input: ClaimsSummaryInput): ClaimsSummaryView 
   })
   const totals = bars.flatMap((b) => (b.total === null ? [] : [b.total]))
   const lattice = niceLattice(Math.max(1, ...totals))
-  const notes = [...ranOut, ...runNotes(meta), ...(input.notes.stateClause !== null ? [input.notes.stateClause] : [])]
+  const notes = [...ranOut, ...runNotes(meta, input.notes.planClockYears), ...(input.notes.stateClause !== null ? [input.notes.stateClause] : [])]
+  const shownReadings = strategies.map((s) => input.readings[s.id] as Extract<ReadingState, { kind: 'ready' }>)
+  // On the essentials-only pass the odds under the bars are that pass's, said beside them as the ring says it.
+  const floorPass = shownReadings.some((r) => r.reading.kind === 'offset' && r.reading.track === 'floor')
   const top = totals.length === 0 ? null : Math.max(...totals)
   const leaders = top === null ? [] : bars.filter((b) => b.total === top)
   const planBar = bars.find((b) => b.id === 'plan')
@@ -515,7 +552,8 @@ export function claimsSummaryView(input: ClaimsSummaryInput): ClaimsSummaryView 
     lattice,
     axisDollar: mmAxisFormatterFor(lattice.ceiling),
     hero: top === null ? copy.claimsNoTotal : slots.claimsFigure(formatDeltaDollar(top)),
-    heroLine: top === null ? '' : slots.claimsSummaryLine(leadPhrase, leaders.length),
+    // A bar with no lifetime total (its money ran out first) narrows the claim to the strategies with one.
+    heroLine: top === null ? '' : slots.claimsSummaryLine(leadPhrase, leaders.length, totals.length < bars.length),
     oddsLine:
       leaders.length === 1 && leaders[0]!.id !== 'plan' && planBar !== undefined
         ? slots.claimsSummaryOdds(leaders[0]!.odds, planBar.odds)
@@ -523,9 +561,9 @@ export function claimsSummaryView(input: ClaimsSummaryInput): ClaimsSummaryView 
           ? slots.claimsSummaryOddsPlan(planBar.odds)
           : '',
     description: copy.claimsBarsDescription,
-    side: [copy.claimsOddsNote, ...fixedNotes],
+    side: [copy.claimsOddsNote, ...(floorPass ? [copy.snapshotRingEssentialsNote] : []), ...fixedNotes],
     notes,
-    updating: ready.some((r) => r.updating),
+    updating: ready.some((r) => r.updating) || shownReadings.some((r) => r.updating),
   }
 }
 
@@ -536,8 +574,9 @@ export interface ClaimsSettledView {
   readonly notes: readonly string[]
 }
 
-/** Everyone already claims: each one's benefit and the lifetime total, and that no claim choice is left (plan RC9). */
-export function claimsSettledView(people: readonly ClaimPerson[], plan: RunRows, stateClause: string | null): ClaimsSettledView {
+/** Everyone already claims: each one's benefit and the lifetime total, and that no claim choice is left (plan RC9). While
+ *  the plan's rows are from before the latest change (`updating`), the re-figuring line says so beside the old figures. */
+export function claimsSettledView(people: readonly ClaimPerson[], plan: RunRows, stateClause: string | null, planClockYears: number): ClaimsSettledView {
   const each = people.map((p) =>
     p.benefit > 0 ? slots.claimsReceives(capitalize(p.words.mid), p.words.you, formatDeltaDollar(p.benefit)) : slots.claimsNoBenefit(capitalize(p.words.mid), p.words.you),
   )
@@ -547,8 +586,8 @@ export function claimsSettledView(people: readonly ClaimPerson[], plan: RunRows,
   const out = ranOutBefore(plan.meta, plan.rows)
   const total = slots.claimsLifetimeTotal(formatDeltaDollar(snapToGrain(lifetimeTotal(yearly(plan.rows, last)))))
   return {
-    lines: [...lines, out === null ? total : slots.claimsRanOut(copy.claimsStrategyPlan, plan.meta.startCalendarYear + out)],
-    notes: [...runNotes(plan.meta), ...(stateClause !== null ? [stateClause] : [])],
+    lines: [...lines, out === null ? total : slots.claimsRanOut(copy.claimsStrategyPlan, plan.meta.startCalendarYear + out), ...(plan.updating ? [copy.answerRefiguringCaption] : [])],
+    notes: [...runNotes(plan.meta, planClockYears), ...(stateClause !== null ? [stateClause] : [])],
   }
 }
 
@@ -559,15 +598,23 @@ export interface ClaimsSteps {
   /** Numbered in order; each person named once. */
   readonly steps: readonly string[]
   readonly note: string
+  /** On a plan built in an earlier year: its ages and filing years are as of that year. */
+  readonly asOf?: string
 }
 
-/** The numbered filing instructions composed from strategy A (RightCapital's Action Items here are instructions). */
-export function claimsSteps(strategy: ClaimStrategy, people: readonly ClaimPerson[], startCalendarYear: number): ClaimsSteps {
+/** The numbered filing instructions composed from strategy A (RightCapital's Action Items here are instructions).
+ *  `planClockYears` is the plan's age in years: the ages and years are the build year's, said once where that is past. */
+export function claimsSteps(strategy: ClaimStrategy, people: readonly ClaimPerson[], startCalendarYear: number, planClockYears: number): ClaimsSteps {
   const steps = people.map((p) => {
     const who = capitalize(p.words.mid)
     const age = strategy.ages[p.index]
     if (p.chooser && age !== null && age !== undefined) return slots.claimsStepFiles(who, p.words.you, age, startCalendarYear + (age - p.currentAge))
+    // Filed but paid nothing yet (`fixedLine`'s test): the spousal part waits on the other's filing, so never "already
+    // receives Social Security".
+    const other = people[1 - p.index]
+    if (p.claimed && p.benefit === 0 && other !== undefined && !other.claimed) return slots.claimsStepSpousalPending(who, p.words.you, p.words.possessive, other.words.mid, other.words.you)
     return p.claimed ? slots.claimsStepClaimed(who, p.words.you) : slots.claimsNoBenefit(who, p.words.you)
   })
-  return { heading: slots.claimsStepsHeading(strategy.label), steps, note: copy.claimsStepsNote }
+  const asOf = asOfLine(startCalendarYear, planClockYears)[0]
+  return { heading: slots.claimsStepsHeading(strategy.label), steps, note: copy.claimsStepsNote, ...(asOf !== undefined ? { asOf } : {}) }
 }

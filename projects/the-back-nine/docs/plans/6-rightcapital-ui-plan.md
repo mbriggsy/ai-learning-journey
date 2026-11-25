@@ -1523,11 +1523,14 @@ the steady future and carry the stopgap line; the fact rows open their drawers a
 label passes the audit. Local look.
 
 **As built (2026-11-25, b9-9's RC10 builder; the pilot's calls).**
-- *The first frame holds the four charts and the key-metric column; the old sheet's words, the page's notes and the R13
-  caveat follow, reached by scrolling.* Insight 170: every line the deleted health sheet carried is ported (its five facts,
-  the dated rules line, the extras block directly under the Medicare card, the survivor, omissions and HSA notes), and with
-  the Medicare affirmation and its residual they run far past one frame. Content over layout (b9-7's amendment); the
-  arms assert the charts and the column in frame and the caveat last and reachable.
+- *The first frame holds the four charts, the key-metric column and the R13 caveat; the old sheet's words and the page's
+  notes follow it, reached by scrolling.* Insight 170: every line the deleted health sheet carried is ported (its five
+  facts, the dated rules line, the extras block directly under the Medicare card, the survivor, omissions and HSA notes),
+  and with the Medicare affirmation and its residual they run far past one frame. *(Corrected by milestone 2's review,
+  2026-11-25, b9-12: the build first put the caveat after the notes, below the frame, citing b9-7's amendment, which lets
+  only the ACTION ITEMS handle drop below the caveat. The caveat now mounts under the charts and the column, and the
+  laptop tier's charts are 120 px tall (from 146) so it fits: caveat bottoms `health` 688, `healthnc` 688, `date65` 708,
+  `healthgap` 720.5 of 731. The arms assert it in frame at REAL and in order at PHONE.)*
 - *The Medicare affirmation, its residual and the typical-extras appendix sit in the notes under the charts*, not in the
   key-metric column the disclosure map names: about ninety words in a column a third of the panel wide pushed the charts
   out of the frame. They ship together, as the map requires.

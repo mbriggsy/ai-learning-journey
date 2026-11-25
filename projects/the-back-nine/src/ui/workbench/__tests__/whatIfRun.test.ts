@@ -413,7 +413,7 @@ function resultFor(req: EngineRunRequest): SimulationResult {
   return {
     headline: HEADLINE,
     seed: req.seed,
-    distribution: { survivalFraction: req.params.stockWeight, ledgerRows: [{ t: 0 }] },
+    distribution: { survivalFraction: req.params.stockWeight, ledgerRows: [{ t: 0 }], depletionYears: [] },
   } as unknown as SimulationResult
 }
 

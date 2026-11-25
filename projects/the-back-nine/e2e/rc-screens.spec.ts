@@ -5,6 +5,7 @@ import { copy, slots } from '../src/ui/copy'
 import { navModules } from '../src/ui/shell/routes'
 import { ENGINE_PRICING_LEDGER } from '../src/engine/pricingVersion'
 import { DEV_VAULT_PASSPHRASE as DEV_PASSPHRASE } from '../src/ui/devSeeds'
+import { IN_FRAME_DISCLAIMER_ID } from '../src/ui/disclaimerId'
 import { FAN, assertHcText, enterSnapshot, hcAudit, hcFloorPx, hcMarkFailures, hcMarks, hcTextFailures, hoverMedian } from './hcTextAudit'
 
 /**
@@ -202,10 +203,22 @@ const FAN_REQUIRED = {
   counts: { 'data-label': 2, 'legend-item': 3, 'axis-label': 4, 'plot-line-label': 2 },
 } as const
 
-async function assertOneVisibleCaveat(page: Page, inFrameHeight: number | null): Promise<void> {
+/** `tie`: the page's figures name the caveat in `aria-describedby` (`verdictDescribedBy`), so a screen reader hears it as
+ *  their own description. Off only where the page shows no tied figure in the state read: Tax Strategies before a Winner
+ *  card (the ask, the steer note, the working route's stopgap); and Cash Flows' table, a figured page that carries no tie
+ *  today (filed by milestone 2's fix round; Social Security's all-claimed lines now carry the tie). */
+async function assertOneVisibleCaveat(page: Page, inFrameHeight: number | null, tie = true): Promise<void> {
   const caveat = page.locator('main.result[data-inframe-disclaimer] [data-caveat]')
   await expect(caveat, 'Snapshot’s in-frame caveat').toHaveCount(1)
   await expect(caveat).toBeVisible()
+  if (tie) {
+    await expect(caveat, 'the caveat carries the one in-frame id').toHaveAttribute('id', IN_FRAME_DISCLAIMER_ID)
+    const tied = await page.evaluate(
+      (id) => [...document.querySelectorAll('main.result [aria-describedby]')].filter((el) => (el.getAttribute('aria-describedby') ?? '').split(/\s+/).includes(id)).length,
+      IN_FRAME_DISCLAIMER_ID,
+    )
+    expect(tied, 'the R13 tie: a figure on the page names the caveat in aria-describedby').toBeGreaterThan(0)
+  }
   await expect(page.locator('footer.disclaimer'), 'App.tsx’s trailing mount is hidden behind data-inframe-disclaimer').toBeHidden()
   const visible = await page.evaluate(
     () => [...document.querySelectorAll('footer.disclaimer, [data-caveat]')].filter((el) => getComputedStyle(el).display !== 'none' && (el as HTMLElement).getClientRects().length > 0).length,
@@ -800,7 +813,7 @@ test.describe(`RC4b · the Action Items tray at his window (${REAL.width}×${REA
       await expect(cell, 'the health cell stands from the first frame of the what-if').toHaveCount(1)
       const before = await cell.evaluate((el) => el.getBoundingClientRect().height)
       const line = cell.locator('span').first()
-      await expect(line, 'the health line never landed').toHaveText(/^Lifetime health costs could run/, { timeout: 150_000 })
+      await expect(line, 'the health line never landed').toHaveText(/^Lifetime health premiums could run/, { timeout: 150_000 })
       const text = (await line.textContent()) ?? ''
       const figures = [...text.matchAll(/~\$([\d,]+)/g)].map((m) => m[1])
       expect(figures.length, `two figures, each side's own: "${text}"`).toBe(2)
@@ -1474,7 +1487,7 @@ test.describe(`RC8 · Tax Strategies at his window (${REAL.width}×${REAL.height
     await expect(page.locator('[data-find-held="goal"]')).toHaveText(copy.goalPickerConfirmBlocked)
     await find.click({ force: true })
     await expect(page.locator('[data-calculating]'), 'a held Find starts nothing').toHaveCount(0)
-    await assertOneVisibleCaveat(page, null)
+    await assertOneVisibleCaveat(page, null, false) // no Winner card yet: the ask
     await noSidewaysScroll(page, 'retired REAL Tax Strategies')
   })
 
@@ -1491,7 +1504,7 @@ test.describe(`RC8 · Tax Strategies at his window (${REAL.width}×${REAL.height
     expect(noteBox.y + noteBox.height, 'the steer note sits inside the first frame').toBeLessThanOrEqual(REAL.height)
     const caveat = page.locator('main.result [data-caveat]')
     expect((await caveat.boundingBox())!.y, 'the R13 caveat sits below the note').toBeGreaterThan(noteBox.y + noteBox.height - 1)
-    await assertOneVisibleCaveat(page, null)
+    await assertOneVisibleCaveat(page, null, false) // no Winner card: the steer note
   })
 
   for (const seed of ['surplus', 'nc'] as const) {
@@ -1561,7 +1574,7 @@ test.describe(`RC8 · Tax Strategies at his window (${REAL.width}×${REAL.height
     await expect(page.locator('[data-heir-bracket]')).toHaveCount(0)
     await expect(page.getByRole('button', { name: copy.taxStratFind })).toHaveCount(0)
     await expect(page.getByRole('tab')).toHaveText([copy.taxStratTabStrategies])
-    await assertOneVisibleCaveat(page, REAL.height)
+    await assertOneVisibleCaveat(page, REAL.height, false) // no Winner card: the working route
   })
 
   test('?vault=surplus: a full-precision solve; the Winner card in the first frame; three rows and no rank; Summary’s bars on one scale in one frame; Keep writes the record, its badge and Try; after a reload the record holds', async ({ page }) => {
@@ -1588,7 +1601,11 @@ test.describe(`RC8 · Tax Strategies at his window (${REAL.width}×${REAL.height
     await expect(rows).toHaveCount(3)
     await expect(page.locator('[data-ranked-list] [data-row-name]')).toHaveText([copy.taxStratRowWinner, copy.taxStratRowRunnerUp, copy.taxStratRowBaseline])
     await expect(page.locator('[data-ranked-list] th[scope="col"]')).toHaveCount(2)
-    await expect(page.locator('[data-ranked-others]')).toContainText('other strategies were compared and ranked below these')
+    // The closing line is whichever the composer prints: all unshown below (`taxStratOthers`) or some above your plan today
+    // (`taxStratOthersAbove`); both shapes count the rest in words and say their figures aren’t shown.
+    await expect(page.locator('[data-ranked-others]')).toHaveText(
+      /^(\d+ other strateg(y was|ies were) compared and ranked below these; (its figure isn’t|their figures aren’t) shown\.|Also compared: \d+ other strateg(y|ies) that ranked between the runner-up and your plan today(, and \d+ that ranked below your plan today)?\. (Its figure isn’t|Their figures aren’t) shown\.)$/,
+    )
     const values = await page.locator('[data-row-value]').allTextContents()
     // SUMMARY: the bars print the list's own figures, drawn on one scale in their ratio (insight 169), in one frame.
     await page.getByRole('tab', { name: copy.taxStratTabSummary }).click()
@@ -1651,7 +1668,7 @@ test.describe(`RC8 · Tax Strategies on the phone (${PHONE.width}×${PHONE.heigh
         await expect(find, 'Find is reachable').toBeInViewport()
       }
       await page.locator('main.result [data-caveat]').scrollIntoViewIfNeeded()
-      await assertOneVisibleCaveat(page, null)
+      await assertOneVisibleCaveat(page, null, false) // no Winner card: the ask or the working route
       await noSidewaysScroll(page, `${seed} PHONE Tax Strategies`)
     })
   }
@@ -2023,7 +2040,7 @@ for (const size of [
         expect(f.overflowX, 'the table scrolls inside its own frame').toBe('auto')
         if (seed === 'tablewidest' && size.phone) expect(f.scroll, 'the widest household’s table outgrows the phone’s frame, so the law reads something').toBeGreaterThan(f.client)
         if (f.scrolled > 0) expect(f.atEnd, 'Year and Age stay at the frame’s left edge scrolled to its end').toEqual(f.atStart)
-        await assertOneVisibleCaveat(page, null)
+        await assertOneVisibleCaveat(page, null, false) // Cash Flows: its table carries no tie today
         if (!size.phone) {
           // The first frame holds the title, the selects and the table's header rows.
           const head = await page.evaluate(() => ({
@@ -2642,7 +2659,10 @@ async function auditClaimsSummary(page: Page, who: string): Promise<void> {
   await assertChartTextApart(page, chart, `${who} Summary`)
   const words = await assertAxisWordsClear(page, chart, '[data-claims-bars]', who)
   expect(words.length, `${who}: a name and odds under every bar`).toBe(bars.length)
-  expect(words.every((w) => / of 10$|better than 9 in 10$/.test(w)), `${who}: the odds under every bar (${words.join(' | ')})`).toBe(true)
+  // A count of 0 to 9 or the ring's ceiling words (`slots.xOfTen` / `xOfTenAtCeiling`), never "10 of 10". Highcharts
+  // joins a label's lines (a `<br>` or a wrap) with a zero-width space and drops the wrapped space (read in Chromium,
+  // 2026-11-25: "Your plan’s ages\u200b9 of 10"), so the gaps admit either.
+  expect(words.every((w) => /(^|[\s\u200b])[0-9][\s\u200b]+of[\s\u200b]+10$|better[\s\u200b]+than[\s\u200b]+9[\s\u200b]+in[\s\u200b]+10$/.test(w)), `${who}: the odds under every bar (${words.join(' | ')})`).toBe(true)
 }
 
 /** The running totals: the crossing's ring and its age (the hero's own words), each line's end figure, the text and marks
@@ -2763,8 +2783,9 @@ test.describe(`RC9 · Social Security on the phone (${PHONE.width}×${PHONE.heig
 // ── RC10 · Retirement → Health Care (plan 6, RC10's Verification) ──────────────────────────────────────────────────────
 // On `health` and `healthnc` (retired, pre-65: the readout, the marketplace years then Medicare), `healthgap` (the wide-gap
 // household whose marketplace years carry a cliff share) and `date65` (working, all-65+: the steady market's rows): the
-// four small charts and the key-metric column hold the first frame at his window (the pilot's call: the old sheet's words
-// ported under them, then the R13 caveat, so the caveat is reached by scrolling); every printed label passes the text and
+// four small charts, the key-metric column and the R13 caveat under them hold the first frame at his window (plan 4.0: the
+// caveat in the REAL frame on every figured page; the old sheet's words follow it, reached by scrolling, then the ACTION
+// ITEMS handle, the one thing b9-7's amendment lets drop below the caveat); every printed label passes the text and
 // marks audits and sits apart from every other; the four draw on ONE scale, pinned on the drawn picture (insight 169:
 // each bar's height per dollar, read from its spoken figure, is the same in every chart); each legend says the middle
 // cost (the steady market's cost on the working route); the cliff's count words, where printed, are the sheet's and
@@ -2865,21 +2886,23 @@ const HEALTH_SEEDS = [
 test.describe(`RC10 · Health Care at his window (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr, compact mode)`, () => {
   test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR, reducedMotion: 'reduce' })
   for (const { seed, route } of HEALTH_SEEDS) {
-    test(`?seed=${seed}: the four charts and the column in the first frame; one scale; each legend; the text and marks audits; the notes, then the caveat; the tray`, async ({ page }) => {
+    test(`?seed=${seed}: the four charts, the column and the caveat in the first frame; one scale; each legend; the text and marks audits; the notes after the caveat; the tray`, async ({ page }) => {
       test.setTimeout(FINAL_TIER_MS + 360_000)
       await enterHealth(page, seed)
       await expect(page.getByRole('heading', { level: 1, name: copy.shellPageHealthCare })).toBeVisible()
       await expect(page.locator('[data-health-route]')).toHaveAttribute('data-health-route', route)
-      // The frame: the charts and the key-metric column inside his window, the page unscrolled.
+      // The frame: the charts, the key-metric column and the R13 caveat under them inside his window, the page unscrolled.
       const frame = await page.evaluate(() => ({
         scrollY: window.scrollY,
         charts: document.querySelector('[data-health-charts]')!.getBoundingClientRect().bottom,
         metrics: document.querySelector('main.result [data-metrics]')!.getBoundingClientRect().bottom,
+        caveat: document.querySelector('main.result [data-caveat]')!.getBoundingClientRect().bottom,
       }))
-      console.log(`[rc10-frame] ${seed}: the charts' bottom at ${frame.charts.toFixed(1)}, the column's at ${frame.metrics.toFixed(1)} of ${REAL.height}`)
+      console.log(`[rc10-frame] ${seed}: the charts' bottom at ${frame.charts.toFixed(1)}, the column's at ${frame.metrics.toFixed(1)}, the caveat's at ${frame.caveat.toFixed(1)} of ${REAL.height}`)
       expect(frame.scrollY).toBe(0)
       expect(frame.charts, `${seed}: the four charts inside the first frame`).toBeLessThanOrEqual(REAL.height)
       expect(frame.metrics, `${seed}: the key-metric column inside the first frame`).toBeLessThanOrEqual(REAL.height)
+      expect(frame.caveat, `${seed}: the R13 caveat inside the first frame`).toBeLessThanOrEqual(REAL.height)
       await expect(page.locator('[data-health-hero]')).toHaveText(/^~\$[\d,]+$/)
       // Each legend: the middle cost (retired), the steady market's cost (working).
       const legend = route === 'retired' ? copy.healthLegendMiddle : copy.healthLegendSteady
@@ -2907,14 +2930,14 @@ test.describe(`RC10 · Health Care at his window (${REAL.width}×${REAL.height} 
       // The stopgaps: the surcharge's (retired), the steady market's (working).
       const stopgap = route === 'retired' ? copy.healthIrmaaStopgap : copy.healthWorkingStopgap
       await expect(page.locator('[data-health-note], [data-health-footnote]').filter({ hasText: stopgap })).toHaveCount(1)
-      // The notes, then the footnotes (the Medicare affirmation among them), then the caveat last, reachable.
+      // The charts, the caveat, then the notes and the footnotes (the Medicare affirmation among them).
       const order = await page.evaluate(() => {
         const top = (s: string) => document.querySelector(s)!.getBoundingClientRect().top
         return { charts: top('[data-health-charts]'), notes: top('[data-health-notes]'), footnotes: top('[data-health-footnotes]'), caveat: top('main.result [data-caveat]') }
       })
-      expect(order.charts).toBeLessThan(order.notes)
+      expect(order.charts).toBeLessThan(order.caveat)
+      expect(order.caveat).toBeLessThan(order.notes)
       expect(order.notes).toBeLessThanOrEqual(order.footnotes)
-      expect(order.footnotes).toBeLessThan(order.caveat)
       await expect(page.locator('[data-health-footnote]').filter({ hasText: copy.verdictMedicarePriced })).toHaveCount(1)
       await assertOneVisibleCaveat(page, null)
       await noSidewaysScroll(page, `${seed} REAL`)
@@ -2954,7 +2977,7 @@ test.describe(`RC10 · Health Care's cliff counts paint with motion on (${REAL.w
 test.describe(`RC10 · Health Care on the phone (${PHONE.width}×${PHONE.height} @ ${PHONE_DPR}dpr)`, () => {
   test.use({ viewport: PHONE, deviceScaleFactor: PHONE_DPR, isMobile: true, hasTouch: true, reducedMotion: 'reduce' })
   for (const seed of ['health', 'date65'] as const) {
-    test(`?seed=${seed}: no sideways scroll; every chart's words pass the audits; one scale; the caveat reachable`, async ({ page }) => {
+    test(`?seed=${seed}: no sideways scroll; every chart's words pass the audits; one scale; charts, column, caveat, notes in order; the caveat reachable`, async ({ page }) => {
       test.setTimeout(FINAL_TIER_MS + 360_000)
       await enterHealth(page, seed, true)
       await noSidewaysScroll(page, `${seed} PHONE`)
@@ -2962,6 +2985,14 @@ test.describe(`RC10 · Health Care on the phone (${PHONE.width}×${PHONE.height}
       await auditHealthText(page, `${seed} PHONE`)
       await assertOneHealthScale(page, `${seed} PHONE`)
       await assertOneVisibleCaveat(page, null)
+      // The phone's order: the charts, the key-metric column, the caveat, then the notes (the handle closes the panel).
+      const order = await page.evaluate(() => {
+        const top = (s: string) => document.querySelector(s)!.getBoundingClientRect().top
+        return { charts: top('[data-health-charts]'), metrics: top('main.result [data-metrics]'), caveat: top('main.result [data-caveat]'), notes: top('[data-health-notes]') }
+      })
+      expect(order.charts).toBeLessThan(order.metrics)
+      expect(order.metrics).toBeLessThan(order.caveat)
+      expect(order.caveat).toBeLessThan(order.notes)
       const caveat = page.locator('main.result [data-caveat]')
       await caveat.scrollIntoViewIfNeeded()
       await expect(caveat).toBeInViewport()
@@ -3490,7 +3521,7 @@ for (const size of RC12_SIZES) {
         if (!size.phone) await assertOneFrame(page, `${seed} Detail`)
         await assertCaveatReachable(page, `${seed} Detail`)
         await noSidewaysScroll(page, `${seed} Detail`)
-        if (size.phone) await assertPageTapsReach(page, 'main.result [role="tab"], [data-asset-try]', `${seed} Detail`, 3)
+        if (size.phone) await assertPageTapsReach(page, 'main.result [role="tab"], main.result [role="combobox"], [data-asset-try]', `${seed} Detail`, 4)
       })
     }
 

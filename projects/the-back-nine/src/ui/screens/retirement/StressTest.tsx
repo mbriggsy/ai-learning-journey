@@ -5,7 +5,7 @@
  * Draws `stressView.ts`'s views and decides nothing.
  *
  * LAYOUT, as RightCapital draws it: the title and intro; one panel with no folder tabs; the chart's title centred, the
- * stop year line under it on a working plan, then the bars across the panel, the stopgap and the notes under them, and
+ * re-figuring line under it while the answer is worked out again and the stop year line on a working plan, then the bars across the panel, the stopgap and the notes under them, and
  * the R13 caveat closing the panel. The ACTION ITEMS handle opens the tray: a sentence, a slider and its size per stress
  * (RightCapital's two columns), Edit (which stresses run) and Refresh. Nothing runs until Refresh; a run fades the chart
  * under "Loading…" with its counts kept. The chart rides Highcharts' lazy chunk.
@@ -50,6 +50,11 @@ function Bars({ view }: { readonly view: Extract<StressPageView, { kind: 'bars' 
     <div className="flex flex-col gap-3 compact:gap-2" data-stress="">
       <div className="flex flex-col items-center gap-0.5">
         <h2 className="text-center text-chart-title font-regular text-plum">{view.title}</h2>
+        {view.tag !== undefined ? (
+          <p className="text-center text-label font-semibold text-stone-900" data-stress-tag="">
+            {view.tag}
+          </p>
+        ) : null}
         {view.readsAt.map((l) => (
           <p key={l} className="text-center text-label text-stone-600" data-stress-reads-at="">
             {l}

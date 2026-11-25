@@ -30,6 +30,11 @@ sheet kept the step and its Back, and dropped the later Continue that made Back 
 draft returns to the copy taken when the sheet opened (never a plain cancel, which would also drop valid,
 already-committed edits on a mis-tapped backdrop). Done keeps the Continue check. Every ending then recomputes.
 
+> **Out of date (corrected 2026-11-25):** RC13b (`87e3c807`) deleted `StepSheet.tsx` with the facts page. Its successor,
+> RC13's Profile drawers, edits a buffered copy and writes the store only on Save, so a dismiss has nothing to put
+> back. The current re-check (every rule's field touched, since a drawer has no later Continue) lives in
+> `src/ui/screens/profile/drawers/drawerSave.ts` (`checkEdit`, `saveEdit`).
+
 ## Key Insight
 
 **A behavior that is safe inside a flow is often safe because of a later step in that flow.** When an editor, a form
@@ -58,6 +63,10 @@ Fixed in `31bf6d9e`: a dismiss over a refused edit stays open and shows why, as 
 reaches no answer and no finished edit is lost; and where a step's Go would put the draft back, the leave ask says so,
 reading the ending's own `putsBack` (`StepSheet.tsx` exposes it to the shell; `workbenchLeaveAskPutsBack`,
 `shellCeremonyPutsBack` in `copy.ts`).
+
+> **Out of date (corrected 2026-11-25):** `StepSheet.tsx`, its `putsBack` and both copy keys went with the facts page
+> at RC13b (`87e3c807`). The drawers that replaced it buffer edits until Save, and a dismiss over unsaved work asks;
+> that ending lives in `src/ui/screens/profile/drawers/drawerSave.ts` and the drawer frame that calls it.
 
 Two lessons. A fix proven on the one-field case is a hypothesis for the many-edit case ([[026]]). And when an ending
 changes, grep every sentence that promises what that ending does, then read each one's words off the ending itself, so

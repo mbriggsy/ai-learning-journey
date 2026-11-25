@@ -1218,6 +1218,10 @@ refusal witness), so `gotoSeedFinal` times out on it — anchor on `main.result`
   then passing one shared lattice still failed, because Highcharts ignored the new `yAxis` max and ticks applied as an update.
   `BalanceBar` keys its chart on the lattice so a new scale builds a fresh chart; `balanceBarOptions.test.ts` and the
   drawn-height ratio check in `e2e/rc-screens.spec.ts` pin it. Any later side-by-side charts (RC6 onward) take the same seam.
+  ⚑ The CAUSE is unconfirmed (b9-8's distill, insight 169): the only evidence was a look instrument's frame, and RC7's
+  later landmine (the pinned page clock freezes Highcharts' redraw at its first frame, *The fit gate and e2e*) draws the
+  same picture. The rebuild-on-new-scale seam holds either way; settle the cause in a live browser (no pinned clock, an
+  update with a new max) before writing it into another chart's design.
 - **(b9-5, 11-24) A door inside a closing `ControlSheet` that focuses something outside every sheet loses the focus**: the
   sheet's exit hands focus back to its own opener once the exit ends (`controlSheet.tsx`'s restore spares only a
   `.control-sheet` or `.budget-sheet`), so the assumption panel's withdrawal-order row focused the tray's row and the

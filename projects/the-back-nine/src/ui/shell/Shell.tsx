@@ -401,6 +401,25 @@ export default function Shell({
   if (openStepId !== null && openStep === null) setOpenStepId(null)
   const openStepTitle = useMemo(() => (openStepId === null ? '' : stepSectionTitle(openStepId, draft)), [openStepId, draft])
 
+  // ── The one what-if (U14, U15; the tray's since RC4b), kept across page switches ─────────────────────────────────
+  const kept: readonly KeptWhatIfV6[] = snapshot.draft.keptWhatIfs ?? []
+  // The kept what-if Keep just kept through the save ceremony, reopened on the left as the shell mounts again.
+  const [initialKept] = useState(() => (resumeKept === undefined ? undefined : kept.find((k) => k.id === resumeKept)))
+  useEffect(() => {
+    if (resumeKept !== undefined) onResumed?.()
+    // Mount only: the shell reads it once.
+  }, [])
+  const whatIf = useWhatIf({
+    snapshot,
+    model,
+    ...(whatIfLanes !== undefined ? { lanes: whatIfLanes } : {}),
+    ...(recommendation !== undefined ? { recommendation } : {}),
+    ...(initialKept !== undefined ? { initialKept } : {}),
+  })
+  // Probability's first showing in a session (the landing pick, below): a door that arrives with its own pick sets it, so
+  // the landing never overrides the side the door asked for.
+  const landedOnProbability = useRef(false)
+
   // ── The Action Items tray's state (RC4b): open or shut, the rows the Edit drawer hid, the lowered deposits waiting for
   // the employer's figure, and the row a door asked for. Held here, so a page move keeps every one of them.
   const [trayOpen, setTrayOpen] = useState(false)
@@ -408,16 +427,20 @@ export default function Shell({
   const [trayAwaiting, setTrayAwaiting] = useState<ReadonlyMap<string, number>>(() => new Map())
   const [trayFocus, setTrayFocus] = useState<TrayFocus | undefined>(undefined)
   /** A door into a lever (a facts-page "Try a change", the panel's withdrawal-order and Roth rows): Probability with the
-   *  tray open at that lever's row, the row shown again if the Edit drawer hid it. */
+   *  tray open at that lever's row, the row shown again if the Edit drawer hid it. The left side is the household's own
+   *  what-if (the recommendation's mode shows no lever rows), and the page's first-showing landing pick never overrides it. */
+  const setWhatIfMode = whatIf.setMode
   const tryLever = useCallback(
     (kind: WhatIfLeverKind) => {
+      landedOnProbability.current = true
+      setWhatIfMode('own')
       onNavigate(routeOfScreen('probability'))
       setTrayOpen(true)
       const mine = (id: string) => id === kind || id.startsWith(`${kind}:`)
       setTrayHidden((h) => ([...h].some(mine) ? new Set([...h].filter((id) => !mine(id))) : h))
       setTrayFocus((f) => ({ lever: kind, n: (f?.n ?? 0) + 1 }))
     },
-    [onNavigate],
+    [onNavigate, setWhatIfMode],
   )
 
   const editors = useEditorSheets({
@@ -446,21 +469,6 @@ export default function Shell({
     else setOpenStepId(door as StepSectionId)
   }
 
-  // ── The one what-if (U14, U15; the tray's since RC4b), kept across page switches ─────────────────────────────────
-  const kept: readonly KeptWhatIfV6[] = snapshot.draft.keptWhatIfs ?? []
-  // The kept what-if Keep just kept through the save ceremony, reopened on the left as the shell mounts again.
-  const [initialKept] = useState(() => (resumeKept === undefined ? undefined : kept.find((k) => k.id === resumeKept)))
-  useEffect(() => {
-    if (resumeKept !== undefined) onResumed?.()
-    // Mount only: the shell reads it once.
-  }, [])
-  const whatIf = useWhatIf({
-    snapshot,
-    model,
-    ...(whatIfLanes !== undefined ? { lanes: whatIfLanes } : {}),
-    ...(recommendation !== undefined ? { recommendation } : {}),
-    ...(initialKept !== undefined ? { initialKept } : {}),
-  })
   // ── The right side (RC5's two-up): your plan by default, or a kept what-if or the recommendation on its own slot ──
   const [rightPickState, setRightPick] = useState<RightPick>('plan')
   const rightKept = (() => {
@@ -539,7 +547,6 @@ export default function Shell({
   // session the pick lands on Recommended where a current record can run (plan RC4, "Default on landing"); after that
   // the household's own choice stands, on this page and the What if page alike (one what-if).
   const [chart, setChart] = useState<ProbabilityChart>('rings')
-  const landedOnProbability = useRef(false)
   useEffect(() => {
     if (screen !== 'probability' || landedOnProbability.current) return
     landedOnProbability.current = true
@@ -773,6 +780,8 @@ export default function Shell({
   // Try it in the plan: the Analysis page with the recommendation on the left side (the tray's Apply, RC4b, writes it).
   const onTry = () => {
     whatIf.setMode('recommendation')
+    // One thing per side: the right leaves the recommendation the left now shows (the left picker's own rule, `onPick`).
+    if (rightPick === 'recommended') setRightPick('plan')
     landedOnProbability.current = true
     snapshotDoors.analysis!.onOpen()
   }

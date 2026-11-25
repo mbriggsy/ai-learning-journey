@@ -541,6 +541,14 @@ export function withoutHidden(bundle: readonly WhatIfLeverV6[], hidden: Readonly
   })
 }
 
+/** The lowered deposits still waiting for the employer's figure once the Edit drawer hides rows: a hidden deposit row's
+ *  wait goes with its pending edit (`withoutHidden`), or it would hold the what-if as unkept work (the leave ask) with
+ *  nothing on screen. The same map back when nothing it holds was hidden. */
+export function awaitingWithoutHidden(awaiting: ReadonlyMap<string, number>, hidden: ReadonlySet<string>): ReadonlyMap<string, number> {
+  const kept = [...awaiting].filter(([accountId]) => !hidden.has(`deposits:${accountId}`))
+  return kept.length === awaiting.size ? awaiting : new Map(kept)
+}
+
 // ── Apply ──────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 export type TrayApply =

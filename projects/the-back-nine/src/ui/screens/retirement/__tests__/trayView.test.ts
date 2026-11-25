@@ -24,6 +24,7 @@ import {
   trayApply,
   trayView,
   withoutHidden,
+  awaitingWithoutHidden,
   type TrayInput,
   type TrayRowView,
 } from '../trayView'
@@ -136,6 +137,16 @@ describe('pending until Refresh: the changed marks and the pending compare', () 
     expect(row(trayView(input(dip, { hidden: new Set(['mix']) })), 'mix')).toBeUndefined()
     // The checklist still names it, so it can be shown again.
     expect(trayView(input(dip, { hidden: new Set(['mix']) })).editSections.flatMap((s) => s.items.map((i) => i.id))).toContain('mix')
+  })
+
+  it('hiding a lowered deposit’s row drops its wait for the employer’s figure (it would hold the what-if with nothing on screen); other waits stay', () => {
+    const awaiting = new Map([
+      ['acct-a', 6_000],
+      ['acct-b', 4_000],
+    ])
+    expect([...awaitingWithoutHidden(awaiting, new Set(['deposits:acct-a', 'mix']))]).toEqual([['acct-b', 4_000]])
+    // Nothing it holds was hidden: the same map back (no needless write).
+    expect(awaitingWithoutHidden(awaiting, new Set(['mix']))).toBe(awaiting)
   })
 })
 

@@ -540,6 +540,19 @@ describe('createWhatIfSlot — the one-key rule (insights 094 and 159)', () => {
     slot.ask(answer, SEED, [mix(40)])
     expect(calls.length).toBe(3)
   })
+
+  it('a same-bundle retry of a failed run shows the run working, never the failure it retries, until it lands', async () => {
+    const { lanes, calls, settleAll } = controlledLanes()
+    const slot = createWhatIfSlot(lanes)
+    slot.ask(answer, SEED, [mix(40)])
+    for (const c of calls.splice(0)) c.d.resolve({ ok: false, reason: 'stub' })
+    await flush()
+    expect(manyOf(whatIfSlotView(slot.getSnapshot()))).toEqual({ kind: 'error' })
+    slot.ask(answer, SEED, [mix(40)]) // the same key again: Refresh over the error
+    expect(manyOf(whatIfSlotView(slot.getSnapshot()))).toEqual({ kind: 'loading' })
+    await settleAll()
+    expect(manyOf(whatIfSlotView(slot.getSnapshot()))).toMatchObject({ kind: 'ready', updating: false })
+  })
 })
 
 describe('createWhatIfSlot — its lanes call only engine.run, and a reset reaches the lane unwrapped', () => {

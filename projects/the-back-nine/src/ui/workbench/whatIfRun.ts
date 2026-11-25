@@ -294,7 +294,14 @@ export function createWhatIfSlot(lanes: WhatIfSlotLanes = { many: engineRunLane(
   return {
     ask(answer, liveSeed, bundle) {
       const run = whatIfRunFor(answer, liveSeed, bundle)
-      set({ run })
+      // A retry on the same key (a same-bundle Refresh after a failed run) shows the run working, never the failure it
+      // is retrying: a part that failed on this very key is dropped until the retry delivers.
+      const keep = <T>(p: Part<T> | undefined): Part<T> | undefined => (p !== undefined && run.kind === 'run' && p.kind === 'error' && p.key === run.key ? undefined : p)
+      const many = keep(snapshot.many)
+      const steady = keep(snapshot.steady)
+      const rough = keep(snapshot.rough)
+      snapshot = { run, ...(many !== undefined ? { many } : {}), ...(steady !== undefined ? { steady } : {}), ...(rough !== undefined ? { rough } : {}) }
+      for (const l of listeners) l()
       if (run.kind !== 'run') return
       const tag: Tagged = { key: run.key, answerKey: run.answerKey, bundleKey: run.bundleKey }
       void lanes.many.request(run.many).then((res: LaneResult<SimulationResult>) => {

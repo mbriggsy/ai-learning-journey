@@ -299,7 +299,9 @@ export function ProbabilityPanel({ view, onPick, onPickCompared, onOpenPlanList,
           {view.odds.tag !== undefined ? <p className="text-label font-semibold text-stone-900">{view.odds.tag}</p> : null}
           {/* Years down the side, so every stop year and every label reads whole at the phone's width too: no sideways
               scroll inside the chart (`oddsByStopYearOptions.ts` has the layout's reasons). */}
-          <div data-odds-frame="">
+          {/* The chart is this view's answer, so it names the R13 caveat as its description (the plan's 4.0 R13 rule), as
+              the rings view's plan ring does. */}
+          <div role="group" aria-label={view.odds.labels.words.title} aria-describedby={verdictDescribedBy()} data-odds-frame="">
             <ChartBoundary fallback={<p className="text-body text-stone-600">{copy.chartLoadFailed}</p>}>
               <Suspense fallback={<div aria-hidden="true" className="h-85" />}>
                 <OddsByStopYear series={view.odds.series} barRung={view.odds.barRung} labels={view.odds.labels} />
@@ -340,8 +342,10 @@ export function ProbabilityPanel({ view, onPick, onPickCompared, onOpenPlanList,
           <OpenLink door={strategies} words={copy.probabilityOpenStrategies} />
         </p>
       ) : null}
+      {/* Odds by stop year has no key-metric column: the answer's notes (the Medicare-priced affirmation, the state clause)
+          open its footnote row, the affirmation just above the residual it qualifies. */}
       {view.chart === 'odds'
-        ? view.footnotes.map((n) => (
+        ? [...view.noteLines, ...view.footnotes].map((n) => (
             <p key={n} className="text-label text-stone-600" data-footnote="">
               {n}
             </p>

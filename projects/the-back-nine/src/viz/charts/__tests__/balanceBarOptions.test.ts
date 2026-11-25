@@ -32,3 +32,17 @@ describe('the two balance bars share one y scale', () => {
     expect(c.max).not.toBe(niceLattice(plan).ceiling)
   })
 })
+
+describe('the compared bar carries its second cue (back-nine-design: colour is never the only signal)', () => {
+  const seriesOf = (o: ReturnType<typeof balanceBarOptions>) => (o.series as readonly { readonly className?: string }[])[0]!
+  it('the compared side is hatched and the alternative solid, each printing its own figure above it', () => {
+    const lattice = niceLattice(1_000_000)
+    const c = bar('compared', 600_000, lattice)
+    const a = bar('alternative', 900_000, lattice)
+    expect(seriesOf(c).className?.split(' ')).toContain('b9-hatch')
+    expect(seriesOf(a).className?.split(' ') ?? []).not.toContain('b9-hatch')
+    const label = (o: ReturnType<typeof balanceBarOptions>) => (o.plotOptions as { column: { dataLabels: { formatter: () => string } } }).column.dataLabels.formatter()
+    expect(label(c)).toBe('~600000')
+    expect(label(a)).toBe('~900000')
+  })
+})

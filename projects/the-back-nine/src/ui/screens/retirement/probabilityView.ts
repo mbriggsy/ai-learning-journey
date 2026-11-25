@@ -56,7 +56,7 @@ import { floorLineText, heroLead } from '../../dateHero'
 import { composeDateSplit } from '../../dateSplit'
 import { dateTradeoffPoint } from '../../dateTradeoff'
 import { staticDisclosures } from '../../entryCopy'
-import { formatMmDollar, mmAxisFormatterFor } from '../../money'
+import { formatMmDollar, formatPerMonth, mmAxisFormatterFor } from '../../money'
 import { OUTCOME_PRESENTATION } from '../../outcomeStates'
 import { ringFace, type RingFace } from '../../ringReading'
 import { spendingBasisLine } from '../../survivorLines'
@@ -123,7 +123,7 @@ export interface ProbabilityInput {
 
 export interface ReadingRow {
   readonly text: string
-  /** The row's second line (the survivor's spending basis and income step-down; the essentials' trim note). */
+  /** The row's second lines (the survivor's spending basis and income step-down; the essentials' trim note). */
   readonly notes: readonly string[]
 }
 
@@ -229,6 +229,11 @@ export type ProbabilityView =
        *  in the bars' place, never a silently missing picture. */
       readonly barsNone?: string
       readonly metrics: MetricsView
+      /** The answer's own notes: the Medicare-priced affirmation, then the state clause (each only where it applies).
+       *  The rings view prints them last in the key-metric column (`metrics.lines` ends with them); Odds by stop year has
+       *  no key-metric column, so it prints them first in its footnote row, the affirmation just above the residual it
+       *  qualifies (the plan's 4.0 disclosure map: every figured surface carries one state clause). */
+      readonly noteLines: readonly string[]
       readonly footnotes: readonly string[]
       readonly charts: readonly { readonly id: ProbabilityChart; readonly label: string }[]
       readonly chart: ProbabilityChart
@@ -297,15 +302,20 @@ export function shareRowNotes(alternative: HalfView, compared: HalfView): { halv
 
 // ── The halves ──────────────────────────────────────────────────────────────────────────────────────────────────
 
-/** A spine reading's rows: the survivor row with its basis, and the essentials row where the relief gate earns it. */
+/** A spine reading's rows: the survivor row with its basis and its income step-down, and the essentials row where the
+ *  relief gate earns it. */
 function headlineRows(headline: Headline, extras: HeadlineExtras, planClockYears: number): ReadingRow[] {
   const rows: ReadingRow[] = []
   const s = extras.survivorReading
   if (s !== undefined && OUTCOME_PRESENTATION[s.outcomeState].verdictWordKey !== null) {
     const basis = spendingBasisLine(s.spendingBasis)
+    // The old survivor card's context, in its order (`SurvivorReadout.tsx`, deleted at RC4): what the survivor spends,
+    // then what the survivor's income does. The step-down shows only for a real drop: a figure that rounds to "$0" (the
+    // survivor dying before the steady-state anchor) prints no line, read through the same formatter the slot prints.
+    const stepDown = formatPerMonth(s.incomeStepDownMonthlyReal)
     rows.push({
       text: slots.probabilitySurvivorRow(verdictReadingText(s.outcomeState, s.xOfTen.value)),
-      notes: basis === null ? [] : [basis],
+      notes: [...(basis === null ? [] : [basis]), ...(stepDown === '0' ? [] : [slots.verdictSurvivorStepDown(stepDown)])],
     })
   }
   const relief = floorRelief(headline, extras.floorReading, planClockYears)
@@ -396,8 +406,18 @@ export function probabilityView(input: ProbabilityInput): ProbabilityView {
   const alt = sideState(whatIf, snapshot)
   const right = input.compared
   const rightKeptName = right === undefined ? undefined : keptName(right.pick)
+  // One thing per side: the recommendation on the left (a door's "Try it in the plan" put it there) leaves the right
+  // reading your plan, never Recommended beside itself.
   const rightPick: RightPick =
-    right === undefined ? 'plan' : right.pick === 'recommended' ? (offer.kind === 'runnable' ? 'recommended' : 'plan') : rightKeptName !== undefined ? right.pick : 'plan'
+    right === undefined
+      ? 'plan'
+      : right.pick === 'recommended'
+        ? offer.kind === 'runnable' && pick !== 'recommended'
+          ? 'recommended'
+          : 'plan'
+        : rightKeptName !== undefined
+          ? right.pick
+          : 'plan'
   const rightName = rightPick === 'recommended' ? copy.probabilityPickRecommended : (rightKeptName ?? copy.probabilityPlanTitle)
 
   // ── Your plan's own reading (the right half's by default; the left half's while its bundle is empty) ──
@@ -621,6 +641,7 @@ export function probabilityView(input: ProbabilityInput): ProbabilityView {
     ...(bars !== undefined ? { bars } : {}),
     ...(answer.kind === 'headline' && bars === undefined && compared.barMedian !== undefined ? { barsNone: copy.probabilityBarNone } : {}),
     metrics: { lines: metricLines, ...(clauseReserve !== undefined ? { clauseReserve } : {}), ...(spendState !== undefined ? { spend: spendState } : {}), difference, differenceReserve },
+    noteLines,
     footnotes,
     charts,
     chart,
@@ -642,6 +663,10 @@ export function oddsColumns(track: DateTrackOutcome, seriesName: string, startCa
     const year = startCalendarYear + m.planOffsetYears
     // The ceiling's words print over two lines so they sit over their own column (one line ran past the chart's edge).
     const crowned = m.isCrown && crownWord !== null
+    // The tooltip's and screen reader's state is the DRAWN one: a crown the column does not draw (the essentials track
+    // beside a split household's hero, a crown that has passed) is never told as "your date" (U9b). A crowned mark clears
+    // and is never a dip, so its undrawn state is "clears".
+    const state = crowned ? 'crown' : markState({ ...m, isCrown: false })
     // Narrow: the ceiling's words broken before the count, a dipped year's word on a line of its own.
     const lines = [...(crowned ? [crownWord] : []), ...(m.atCeiling ? slots.oddsCeilingLines() : [count]), ...(m.isDip ? [copy.oddsDipWord] : [])]
     // Wide: the same words on one line.
@@ -651,8 +676,8 @@ export function oddsColumns(track: DateTrackOutcome, seriesName: string, startCa
       rung: m.rung,
       lines,
       inline,
-      describe: slots.oddsPoint(year, seriesName, count, markState(m), m.atCeiling),
-      isCrown: m.isCrown && crownWord !== null,
+      describe: slots.oddsPoint(year, seriesName, count, state, m.atCeiling),
+      isCrown: crowned,
       isDip: m.isDip,
       clears: m.clears,
     }

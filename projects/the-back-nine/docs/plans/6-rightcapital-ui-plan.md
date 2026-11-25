@@ -672,14 +672,15 @@ its key-metric sentence or legend ("in the steady future"), so a one-path pictur
 
 | Disclosure | Producer | Copy keys | Screen and slot |
 |---|---|---|---|
-| The state clause (priced state, or the unpriced monolith) | `composeVerdictStateNote` in `stateTaxDisclosure.ts` | `verdictStateUnpricedNote` and the state slots | Probability's key-metric column, under the answer sentence; every figured page's footnote row ("every figured surface carries one state clause") |
+| The state clause (priced state, or the unpriced monolith) | `composeVerdictStateNote` in `stateTaxDisclosure.ts` | `verdictStateUnpricedNote` and the state slots | Probability's key-metric column, under the answer sentence; under Odds by stop year (no key-metric column there), first in the footnote row (`probabilityView.ts`'s `noteLines`; fix round 1 of the milestone-1 review); every figured page's footnote row ("every figured surface carries one state clause") |
 | The Medicare residual | `composeVerdictMedicareResidual` | `verdictMedicareResidual` | Probability's footnote row; Health Care's key-metric column |
-| The Medicare-priced affirmation | `showMedicarePricedNote` in `healthSheetChrome.ts` (over `spineMedicarePriced`, `isDateRoute`, `healthcarePriced`), through `composeAnswerNotes` | `verdictMedicarePriced` | Probability's key-metric column, just above the Medicare residual it qualifies |
+| The Medicare-priced affirmation | `showMedicarePricedNote` in `healthSheetChrome.ts` (over `spineMedicarePriced`, `isDateRoute`, `healthcarePriced`), through `composeAnswerNotes` | `verdictMedicarePriced` | Probability's key-metric column, just above the Medicare residual it qualifies; under Odds by stop year, the footnote row's first line, above that residual (`noteLines`, fix round 1) |
 | The Medicare-extras appendix (F5) | `composeMedicareExtrasTypicalNote` over `medicareExtrasDisclosureView`, through `composeAnswerNotes` | `medicareExtrasTypicalBoth`, `medicareExtrasTypicalOne` and their fact slots | Probability's footnote row, after the Medicare residual; Health Care's key-metric column |
 | The provisional tag and the re-figuring line | `answerView.ts` | `answerProvisionalTag`, `answerRefiguringCaption`, `answerRefiguringDate`, `answerRefiguringVerdict` | the page intro on Probability and Snapshot's ring card; the chart title on Odds by stop year |
 | The thin-cohort cut | `truncateFanAtThinCohort` (moved to `src/viz/cohort.ts` by RC0) | none (the fan is cut where the cohort thins) | the fan everywhere. **The shipped cut stays**; the reference's "fade and say so" is not built (the 2026-07-03 cold-read ruling stands) *(the pilot's call, 2026-11-24, b9-3 (Briggsy pre-approved all changes))* |
 | The non-monotone dip and the window-edge tell | `curveMarks.ts` (the `isDip` field of each `CurveMark`), `dateSplit.ts` | `dateNonMonotoneNote`, `dateWindowEdge`, `dateWindowEdgeNote` | Odds by stop year (on the column and under the chart); the Probability intro |
 | The survivor spending basis | `verdictSentence.ts` | `verdictSurvivorSpendBasis` | under the "As the survivor" row on Probability |
+| The survivor income step-down (one Social Security benefit ends, single filer's brackets: why the survivor's odds read lower) | `headlineRows` in `probabilityView.ts`, over `SurvivorReading.incomeStepDownMonthlyReal` (shown only for a drop that does not round to $0, as the old survivor card drew it) | `verdictSurvivorStepDown` | under the "As the survivor" row on Probability, after the spending basis: said once under both halves when both match (`shareRowNotes`), in each half when a lever moves it (a claim age) *(fix round 1 of the milestone-1 review: it died with `SurvivorReadout.tsx` in RC4, left off this map by oversight)* |
 | The leave-more skew and the delta skew | `recommendationView.ts` (`skew`, `deltaSkew`) | `recSkewMedian` and the delta-skew line | the Winner card, beside its hero figure |
 | The withheld conversion levers | `recommendationView.ts` (`withheldConversion`) | `recommendWithheldConversionsHeading` and its reasons | the Winner card, under the winner's sentence |
 | The shape disclosure | `SolveRecommendation.disclosedDirectional` | `recHoldPrimaryDirectional` | the Winner card's footnote row |
@@ -703,7 +704,9 @@ its key-metric sentence or legend ("in the steady future"), so a one-path pictur
 frame at 1440×731 @2x in compact mode, from the top bar down to the ACTION ITEMS handle with the tray closed, the R13
 disclaimer inside that frame; a page of cards, a table or a form is a scrolling page whose first frame holds its
 title, intro and first content row, with order and reachability asserted at the phone. *(the pilot's call,
-2026-11-24, b9-3 (Briggsy pre-approved all changes))*
+2026-11-24, b9-3 (Briggsy pre-approved all changes))* On a landed what-if the frame binds to the R13 caveat, and the
+ACTION ITEMS handle may sit just below it (budget's landed state, where the survivor step-down line under the survivor
+row puts it 27 px down), never at the cost of a line. *(pilot amendment, 2026-11-24, b9-7: content over layout)*
 
 **The R13 disclaimer** (the shipped law: "the disclaimer above all must fit", exactly one mount visible, order graphs
 then caveat then doors; `docs/architecture.md` §12). Every figured page carries one mount, the kit's caveat line

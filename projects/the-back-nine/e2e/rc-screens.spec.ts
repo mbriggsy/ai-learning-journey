@@ -425,6 +425,12 @@ test.describe(`RC4 · the home and Probability at his window (${REAL.width}×${R
         for (const side of ['alternative', 'compared'] as const) {
           await expect(page.locator(`[data-half="${side}"] [data-reading-row]`).first(), `${seed}: the ${side} half’s survivor row`).toContainText(slots.probabilitySurvivorRow(''))
         }
+        // The survivor's spending basis (the disclosure map's row), said once under both halves while no lever moves it.
+        // `retired`'s basis is steady, so the line is drawn (`probabilityView.test.ts` pins the same on its real run).
+        if (seed === 'retired') {
+          await expect(page.locator('[data-shared-notes]'), `${seed}: the survivor’s spending basis`).toContainText('This assumes about $')
+          await expect(page.locator('[data-shared-notes]'), `${seed}: the survivor’s income step-down, said once under both halves`).toContainText('the household’s monthly income steps down about $')
+        }
         const floor = await hcFloorPx(page)
         assertHcText(await hcAudit(page, '[data-bar="compared"] [data-chart="bar-compared"]', '[data-half="compared"]'), floor, { texts: [], counts: { 'data-label': 1, 'axis-label': 2 } }, `${seed} REAL bar`)
       }
@@ -444,6 +450,10 @@ test.describe(`RC4 · the home and Probability at his window (${REAL.width}×${R
     assertHcText(await hcAudit(page, '[data-chart="odds"]', '[data-odds-chart]'), floor, { texts: [copy.ladderBarLabel], counts: { 'data-label': 3, 'axis-label': 4, 'legend-item': 2 } }, 'dip REAL odds')
     await assertOddsMarks(page, 'dip REAL odds')
     await assertOneVisibleCaveat(page, null)
+    // The chart has no key-metric column: its footnote row carries the state clause, exactly once.
+    const clause = page.locator('main.result').getByText(copy.verdictStateUnpricedNote, { exact: true })
+    await expect(clause, 'dip odds: the unpriced state clause, exactly once').toHaveCount(1)
+    await expect(clause).toBeVisible()
   })
 
   // The marks oracles are a new kind of check, so each one is planted once and must go red with its own message: a
@@ -662,8 +672,9 @@ test.describe(`RC4b · the Action Items tray at his window (${REAL.width}×${REA
 
   // The landed what-if's fit (plan RC4's fit decision holds in every state the page reaches, not only the empty
   // what-if): on `budget`, the tightest seed, a what-if that moves the survivor's spending line keeps a line in each half,
-  // and the page must still hold one frame down to the handle with the tray shut again.
-  test('?seed=budget: a landed what-if that changes the survivor line still holds one frame to the ACTION ITEMS handle, the tray shut', async ({ page }) => {
+  // and the page must still hold the R13 caveat in one frame with the tray shut again, the handle reachable below it.
+  // Content over layout (b9-7, 2026-11-24): the survivor step-down line under the survivor row puts the handle 27 px below the frame here.
+  test('?seed=budget: a landed what-if that changes the survivor line still holds the R13 caveat in one frame, the ACTION ITEMS handle reachable, the tray shut', async ({ page }) => {
     test.setTimeout(FINAL_TIER_MS + 150_000)
     await openTrayOn(page, 'budget')
     const line = tray(page).locator('[data-tray-group="spending"] input[inputmode="decimal"]').first()
@@ -680,12 +691,17 @@ test.describe(`RC4b · the Action Items tray at his window (${REAL.width}×${REA
     expect(await page.locator('[data-half] [data-reading-row] p.text-label').count(), 'the landed what-if keeps no line of its own: the arm measures nothing new').toBeGreaterThan(0)
     const frame = await page.evaluate(() => ({
       scrollY: window.scrollY,
-      handle: document.querySelector('[aria-controls="b9-action-items"]')!.getBoundingClientRect().bottom,
+      caveat: document.querySelector('main.result [data-caveat]')!.getBoundingClientRect().bottom,
     }))
     expect(frame.scrollY).toBe(0)
-    expect(frame.handle, 'budget landed: the ACTION ITEMS handle in the first frame').toBeLessThanOrEqual(REAL.height)
+    expect(frame.caveat, 'budget landed: the R13 caveat in the first frame').toBeLessThanOrEqual(REAL.height)
     await assertOneVisibleCaveat(page, REAL.height)
     await assertBarsOnOneScale(page, 'budget, the what-if landed')
+    // The handle may sit just below the frame here, never out of reach.
+    const handle = trayHandle(page)
+    await handle.scrollIntoViewIfNeeded()
+    await expect(handle, 'budget landed: the ACTION ITEMS handle reachable').toBeVisible()
+    await expect(handle).toBeEnabled()
   })
 
   test('?seed=dip: a stop year pulled and refreshed withholds Apply with its reason; a press writes nothing', async ({ page }) => {

@@ -45,6 +45,7 @@ import {
   trayApply,
   trayView,
   withoutHidden,
+  awaitingWithoutHidden,
   type RothFields,
   type TrayRowView,
 } from './trayView'
@@ -114,6 +115,9 @@ export function ActionItemsTray(props: ActionItemsTrayProps) {
   const apply = trayApply({ draft, committed: recommendation !== undefined ? whatIf.shown : whatIf.own, pendingDiffers: recommendation === undefined && view.pendingDiffers, current, readOnly })
   // What Apply last said, held for the bundle it was said under (after a write, the empty bundle).
   const [said, setSaid] = useState<{ readonly words: string; readonly key: string } | null>(null)
+  // Said once: the words go when the bundle moves on, so a later return to the same bundle (a Reset back to the empty
+  // one after a write) never brings back "Applied" for a write that press did not make.
+  if (said !== null && said.key !== whatIf.shownKey) setSaid(null)
   const saidNow = said !== null && said.key === whatIf.shownKey ? said.words : null
   const [editOpen, setEditOpen] = useState(false)
   const [line, setLine] = useState<{ readonly open: boolean; readonly editing?: WhatIfBudgetLineV6 }>({ open: false })
@@ -252,6 +256,8 @@ export function ActionItemsTray(props: ActionItemsTrayProps) {
         onSave={(next) => {
           onHidden(next)
           whatIf.setPending(withoutHidden(whatIf.pending, next))
+          const stillAwaiting = awaitingWithoutHidden(awaiting, next)
+          if (stillAwaiting !== awaiting) onAwaiting(stillAwaiting)
         }}
       />
       <LineDrawer

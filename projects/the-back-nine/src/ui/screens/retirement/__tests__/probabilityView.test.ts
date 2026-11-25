@@ -11,8 +11,10 @@ import { composeAnswerNotes } from '../../../answerNotes'
 import { copy, slots } from '../../../copy'
 import { dateOddsText } from '../../../dateOdds'
 import { DEV_SEEDS } from '../../../devSeeds'
+import { spendingBasisLine } from '../../../survivorLines'
+import { formatPerMonth } from '../../../money'
 import { recommendationBundle } from '../../../workbench/railChrome'
-import type { WhatIfReading, WhatIfSlotView } from '../../../workbench/whatIfRun'
+import { headlineExtras, type WhatIfReading, type WhatIfSlotView } from '../../../workbench/whatIfRun'
 import { snapshotView } from '../../dashboard/snapshotView'
 import { landingPick, probabilityView, recommendedOffer, shareRowNotes, type HalfView, type ProbabilityInput, type ProbabilityView } from '../probabilityView'
 
@@ -162,6 +164,50 @@ describe('Probability, the retired route (`retired`, a real engine run)', () => 
     expect(bare.halves.compared.rows.some((r) => r.text.startsWith('As the survivor'))).toBe(false)
   })
 
+  it('the survivor row prints the survivor reading’s own count, never the headline’s, and its spending basis is said once under both halves', () => {
+    const sr = RETIRED_RUN.survivorReading
+    if (sr === undefined) throw new Error('[test] the retired seed is a couple: its run carries a survivor reading')
+    const basis = spendingBasisLine(sr.spendingBasis)
+    // The retired seed's basis is steady, so the line is drawn (the e2e retired frame arm reads it on the page too).
+    expect(basis?.startsWith('This assumes about $')).toBe(true)
+    const planted = { ...RETIRED_RUN, headline: headline(5, 'borderline'), survivorReading: { ...sr, outcomeState: 'on-track' as const, xOfTen: { ...sr.xOfTen, value: 8 } } }
+    const w = reads(probabilityView(input(snap(RETIRED, headlineAnswer(RETIRED, planted)))))
+    for (const side of ['alternative', 'compared'] as const) {
+      const row = w.halves[side].rows.find((r) => r.text.startsWith('As the survivor'))
+      expect(row?.text, `${side}: the survivor’s own count`).toBe(`As the survivor: ${slots.xOfTen(8)}`)
+      expect(row?.notes, `${side}: the basis is shared, not repeated in the half`).toEqual([])
+    }
+    expect(w.sharedNotes).toContain(basis)
+  })
+
+  const stepDownLine = (drop: string) =>
+    `If one of you is on your own later, the household’s monthly income steps down about $${drop} — as one Social Security benefit ends. Taxes also move to a single filer’s brackets.`
+
+  it('the survivor row carries the income step-down after its basis (the old survivor card’s context), said once under both halves when both match', () => {
+    const sr = RETIRED_RUN.survivorReading
+    if (sr === undefined) throw new Error('[test] the retired seed is a couple: its run carries a survivor reading')
+    const drop = formatPerMonth(sr.incomeStepDownMonthlyReal)
+    expect(drop, '[test setup] the retired couple’s income steps down').not.toBe('0')
+    expect(v.sharedNotes).toEqual([spendingBasisLine(sr.spendingBasis), stepDownLine(drop)])
+    // A drop that rounds to $0 prints no step-down line, never "about $0".
+    const flat = reads(probabilityView(input(snap(RETIRED, headlineAnswer(RETIRED, { ...RETIRED_RUN, survivorReading: { ...sr, incomeStepDownMonthlyReal: 0.2 } })))))
+    expect(flat.sharedNotes).toEqual([spendingBasisLine(sr.spendingBasis)])
+    expect(JSON.stringify(flat)).not.toContain('steps down')
+  })
+
+  it('a what-if that moves the step-down (a claim age): each half keeps its own, the basis they share said once', () => {
+    const sr = RETIRED_RUN.survivorReading
+    if (sr === undefined) throw new Error('[test] the retired seed is a couple: its run carries a survivor reading')
+    const planExtras = headlineExtras(RETIRED_RUN)
+    const whatIfExtras = { ...planExtras, survivorReading: { ...sr, incomeStepDownMonthlyReal: sr.incomeStepDownMonthlyReal + 500 } }
+    const plan: WhatIfReading = { kind: 'headline', headline: RETIRED_RUN.headline }
+    const w = reads(probabilityView(input(s, { whatIf: { pick: 'new', bundle: SPEND_LEVER, view: readyView(plan, plan, whatIfExtras) } })))
+    const survivorNotes = (side: 'alternative' | 'compared') => w.halves[side].rows.find((r) => r.text.startsWith('As the survivor'))?.notes
+    expect(survivorNotes('compared')).toEqual([stepDownLine(formatPerMonth(sr.incomeStepDownMonthlyReal))])
+    expect(survivorNotes('alternative')).toEqual([stepDownLine(formatPerMonth(sr.incomeStepDownMonthlyReal + 500))])
+    expect(w.sharedNotes).toEqual([spendingBasisLine(sr.spendingBasis)])
+  })
+
   it('the essentials row appears only when the floor reading differs from the headline (the relief gate)', () => {
     const same = reads(probabilityView(input(snap(RETIRED, headlineAnswer(RETIRED, { ...RETIRED_RUN, floorReading: RETIRED_RUN.headline })))))
     expect(same.halves.compared.rows.some((r) => r.text.startsWith('Essentials only'))).toBe(false)
@@ -181,6 +227,9 @@ describe('Probability, the retired route (`retired`, a real engine run)', () => 
     // The empty what-if is the plan itself: its bar reads the plan's median, on one shared scale.
     expect(v.halves.alternative.barMedian).toBe(median)
     expect(v.bars!.lattice.ceiling).toBeGreaterThanOrEqual(median)
+    // Each printed figure is a projected dollar figure: it wears "~".
+    expect(v.bars!.figures.compared?.startsWith('~')).toBe(true)
+    expect(v.bars!.figures.alternative?.startsWith('~')).toBe(true)
   })
 
   it('every median at $0 (half or more of the futures use their savings up first): words in the bars’ place, never a silent gap', () => {
@@ -264,6 +313,11 @@ describe('Probability, the working route (hand-built curves on `dip`)', () => {
     const ring = w.halves.alternative.ring
     expect(ring.kind === 'face' && ring.face.caption).toBe(slots.snapshotRingStopIn(DIP.startCalendarYear + 8))
     expect(ringCentre(w.halves.alternative)).toBe(slots.xOfTenAtCeiling())
+    // The difference line on offset readings: the plan's 9 against the what-if's ceiling are two counts, never "Both read".
+    expect(w.metrics.difference).toBe(slots.probabilityDifference(dateOddsText(DIP_CURVE[5]!.quantizedLowerBound), dateOddsText(DIP_CURVE[8]!.quantizedLowerBound), copy.probabilityPickNew.toLowerCase()))
+    // Two offsets that both print 9 read even.
+    const nine = reads(probabilityView(input(s, { whatIf: { pick: 'new', bundle: SPEND_LEVER, view: readyView({ kind: 'offset', reading: DIP_CURVE[6]!, track: 'full' }, plan) } })))
+    expect(nine.metrics.difference).toBe(slots.workbenchRailEven(dateOddsText(DIP_CURVE[5]!.quantizedLowerBound)))
   })
 
   it('the intro is the hero date sentence; the dip note rides it; Recommended is never offered here', () => {
@@ -429,10 +483,51 @@ describe('Odds by stop year: the four honesty rules, and the lines under the cha
     expect(o.series[1]!.columns.some((c) => c.isCrown)).toBe(false)
   })
 
+  it('a split household’s essentials columns never say “your date” in their tooltip or screen-reader words (no crown is drawn there)', () => {
+    // The essentials track is dated at offset 0 (`curveMarks` crowns it), but the chart draws the crown on the hero only.
+    const floorCurve = curveOf([0.86, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9])
+    const o = reads(probabilityView(input(snap(DIP, dateAnswer(DIP, confirmed(floorCurve, 0), LIFESTYLE, { offsetYears: 5, track: 'lifestyle' })), { chart: 'odds' }))).odds!
+    const yourDate = '— your date'
+    const floorCols = o.series[1]!.columns
+    expect(floorCols.some((c) => c.describe.includes(yourDate))).toBe(false)
+    // The undrawn crown reads as the year it is: clearing the line.
+    expect(floorCols[0]!.describe).toBe(slots.oddsPoint(DIP.startCalendarYear, copy.oddsSeriesFloor, slots.xOfTen(floorCols[0]!.rung), 'clears', false))
+    // The hero's drawn crown keeps its words.
+    expect(o.series[0]!.columns.filter((c) => c.describe.includes(yourDate)).map((c) => c.year)).toEqual([DIP.startCalendarYear + 5])
+  })
+
   it('the retired route offers no Odds by stop year', () => {
     const r = reads(probabilityView(input(snap(RETIRED, headlineAnswer(RETIRED, RETIRED_RUN)), { chart: 'odds' })))
     expect(r.chart).toBe('rings')
     expect(r.odds).toBeUndefined()
+  })
+})
+
+describe('Odds by stop year carries the answer’s notes (it has no key-metric column)', () => {
+  it('dip (a working household, its state unpriced): exactly one state clause on the odds view, in its footnote row', () => {
+    const s = snap(DIP, dateAnswer(DIP, LIFESTYLE, LIFESTYLE, { offsetYears: 5, track: 'lifestyle' }))
+    const inp = input(s, { chart: 'odds' })
+    expect(inp.notes.stateNote, '[test] dip carries a state clause').not.toBeNull()
+    const v = reads(probabilityView(inp))
+    expect(v.chart).toBe('odds')
+    expect(v.noteLines).toEqual([inp.notes.stateNote])
+    // Everything the odds view prints under its chart and in its footnote row (the rings view's key-metric column is not drawn).
+    const printed = [...v.odds!.notes, ...v.noteLines, ...v.footnotes]
+    expect(printed.filter((l) => l === inp.notes.stateNote)).toHaveLength(1)
+    // The rings view keeps it last in the key-metric column, once.
+    expect(v.metrics.lines.filter((l) => l === inp.notes.stateNote)).toHaveLength(1)
+  })
+
+  it('date65 (Medicare priced): the affirmation rides with the residual it qualifies, just above it', () => {
+    const d = DEV_SEEDS.date65
+    const s = snap(d, dateAnswer(d, LIFESTYLE, LIFESTYLE, { offsetYears: 5, track: 'lifestyle' }))
+    const inp = input(s, { chart: 'odds' })
+    const priced = inp.notes.medicarePriced
+    if (priced === null) throw new Error('[test] date65 is Medicare-priced')
+    const v = reads(probabilityView(inp))
+    const row = [...v.noteLines, ...v.footnotes]
+    expect(row.indexOf(priced.affirmation)).toBeGreaterThanOrEqual(0)
+    expect(row.indexOf(priced.affirmation) + 1).toBe(row.indexOf(priced.residual))
   })
 })
 
@@ -488,6 +583,15 @@ describe('The Recommended pick: the record’s own action, only while current', 
     // A pick of Recommended with no runnable record falls back to the new what-if (never a runtime null).
     const fallback = reads(probabilityView(input(s, { record: { record: v6, status: stale }, whatIf: { pick: 'recommended', bundle: [], view: null } })))
     expect(fallback.picker.value).toBe('new')
+  })
+
+  it('both sides asked for Recommended (Snapshot’s "Try it in the plan" over a right side showing it): the left shows it, the right reads your plan', () => {
+    const s = snap(RETIRED, headlineAnswer(RETIRED, RETIRED_RUN))
+    const bundle = recommendationBundle(v6)!
+    const v = reads(probabilityView(input(s, { record: { record: v6, status: current }, whatIf: { pick: 'recommended', bundle, view: null }, compared: { pick: 'recommended', bundle, view: null } })))
+    expect(v.halves.alternative.title).toBe(copy.probabilityPickRecommended)
+    expect(v.comparedPicker.value).toBe('plan')
+    expect(v.halves.compared.title).toBe(copy.probabilityPlanTitle)
   })
 
   it('on the working route neither picker offers Recommended, whatever the disk holds', () => {

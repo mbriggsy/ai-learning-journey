@@ -197,9 +197,11 @@ export function useWhatIf({
     ownRef.current = next
     setOwnState(next)
     // A new bundle is asked by the effect above (its key moved); the same bundle is asked here, so every Refresh in the
-    // household's own mode sends exactly one ask.
-    if (same && next.length > 0 && modeRef.current === 'own') slot.ask(answerRef.current, model.getSnapshot().draft.seed, next)
-  }, [model, slot])
+    // household's own mode sends exactly one ask. The mode is the one SHOWN: a recommendation pick whose record can no
+    // longer run (gone stale) shows the household's own, and its Refresh asks like any other.
+    const inRec = modeRef.current === 'recommendation' && recBundle !== null
+    if (same && next.length > 0 && !inRec) slot.ask(answerRef.current, model.getSnapshot().draft.seed, next)
+  }, [model, slot, recBundle])
   const reset = useCallback(() => {
     ownRef.current = []
     pendingRef.current = []

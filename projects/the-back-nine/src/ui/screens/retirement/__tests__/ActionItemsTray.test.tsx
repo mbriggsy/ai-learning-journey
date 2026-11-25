@@ -120,11 +120,11 @@ function dated(draft: ScenarioDraft, offset: number, inputKey = 'k1'): ModelAnsw
   return { kind: 'date', tier: 'final', draft, outcome, inputKey } as ModelAnswer
 }
 
-function Room(props: { readonly answer: ModelAnswer; readonly tableLanes: TableLanes; readonly whatIfLanes: WhatIfSlotLanes; readonly recommendation?: RailRecommendation; readonly readOnly?: boolean }) {
+function Room(props: { readonly answer: ModelAnswer; readonly tableLanes: TableLanes; readonly whatIfLanes: WhatIfSlotLanes; readonly recommendation?: RailRecommendation; readonly readOnly?: boolean; readonly initialRoute?: (typeof PAGES)[keyof typeof PAGES] }) {
   const snap = useSyncExternalStore(appModel.subscribe, appModel.getSnapshot)
   return (
     <RoutedShell
-      initialRoute={PAGES.probability}
+      initialRoute={props.initialRoute ?? PAGES.probability}
       save={{ kind: 'none' }}
       snapshot={{ ...snap, answer: props.answer }}
       model={appModel}
@@ -138,7 +138,7 @@ function Room(props: { readonly answer: ModelAnswer; readonly tableLanes: TableL
 }
 
 /** Probability over a planted committed answer, the tray opened by its handle. */
-function openTray(draft: ScenarioDraft, opts: { readonly answer?: ModelAnswer; readonly recommendation?: RailRecommendation; readonly readOnly?: boolean; readonly open?: boolean } = {}) {
+function openTray(draft: ScenarioDraft, opts: { readonly answer?: ModelAnswer; readonly recommendation?: RailRecommendation; readonly readOnly?: boolean; readonly open?: boolean; readonly initialRoute?: (typeof PAGES)[keyof typeof PAGES] } = {}) {
   act(() => appModel.update(() => ({ ...draft, seed: SEED })))
   const l = lanesFor()
   const answer = opts.answer ?? spine({ ...draft, seed: SEED })
@@ -149,6 +149,7 @@ function openTray(draft: ScenarioDraft, opts: { readonly answer?: ModelAnswer; r
       whatIfLanes={l.whatIfLanes}
       {...(opts.recommendation !== undefined ? { recommendation: opts.recommendation } : {})}
       {...(opts.readOnly !== undefined ? { readOnly: opts.readOnly } : {})}
+      {...(opts.initialRoute !== undefined ? { initialRoute: opts.initialRoute } : {})}
     />,
   )
   if (opts.open !== false) fireEvent.click(handle())
@@ -282,6 +283,19 @@ describe('Apply — the one write (R16, R22; insight 158)', () => {
     expect(recompute.mock.calls).toEqual([['final']])
     expect(dispatchSolve).not.toHaveBeenCalled()
     expect(within(tray()).getByText(copy.workbenchRailApplyDone)).toBeInTheDocument()
+  })
+
+  it('"Applied" is said once: a later what-if Reset back to the plan never brings it back', async () => {
+    const l = openTray(DEV_SEEDS.retired)
+    typeIn(copy.workbenchRailSpendTotalLabel, '60,000')
+    fireEvent.click(refresh())
+    await l.settleWhatIf()
+    fireEvent.click(applyButton())
+    expect(within(tray()).getByText(copy.workbenchRailApplyDone)).toBeInTheDocument()
+    typeIn(copy.workbenchRailSpendTotalLabel, '50,000')
+    fireEvent.click(refresh())
+    fireEvent.click(within(tray()).getByRole('button', { name: copy.trayReset }))
+    expect(within(tray()).queryByText(copy.workbenchRailApplyDone)).toBeNull()
   })
 
   it('a figure typed and Apply pressed in one task reads the edit the blur committed: not yet run, so it writes nothing', async () => {
@@ -430,6 +444,18 @@ describe('the Recommended side (R22)', () => {
     expect(within(tray()).getByLabelText(copy.workbenchRailSpendTotalLabel)).toBeInTheDocument()
   })
 
+  it('a record that goes stale while it is shown: the household’s own what-if returns, and its same-bundle Refresh still asks (insight 159)', async () => {
+    const rec = record({ kind: 'plan', plan })
+    const l = openTray(DEV_SEEDS.retired, { recommendation: { record: rec, current: true } })
+    await waitFor(() => expect(l.many.request, '[test setup] the record ran on landing').toHaveBeenCalledTimes(1))
+    l.view.rerender(<Room answer={l.answer} tableLanes={l.tableLanes} whatIfLanes={l.whatIfLanes} recommendation={{ record: rec, current: false }} />)
+    typeIn(copy.workbenchRailSpendTotalLabel, '60,000')
+    fireEvent.click(refresh())
+    expect(l.many.request).toHaveBeenCalledTimes(2)
+    fireEvent.click(refresh())
+    expect(l.many.request, 'the same bundle again: one more ask').toHaveBeenCalledTimes(3)
+  })
+
   it('a record the store no longer reads as current, or one saved before version 6, runs nothing', async () => {
     for (const rec of [
       { record: record({ kind: 'plan', plan }), current: false },
@@ -519,6 +545,18 @@ describe('doors into a lever open the tray at its row, and no sheet', () => {
       await waitFor(() => expect(tray().querySelector(`[data-tray-group="${lever}"]`)!.contains(document.activeElement)).toBe(true), { timeout: 5_000 })
     })
   }
+
+  it('with a current saved recommendation, a door’s first trip to Probability shows the household’s own what-if at the row it asked for, never Recommended', async () => {
+    const record = { action: { candidateId: 'opaque', policy: 'custom', drawdownOrder: ['roth', 'taxable', 'pretax'], rothConversion: { kind: 'none' } } } as unknown as SavedRecommendationV3
+    // The facts page first: Probability has not shown yet this session, so its landing pick (Recommended) is still owed.
+    openTray(DEV_SEEDS.retired, { open: false, initialRoute: PAGES.facts, recommendation: { record, current: true } })
+    fireEvent.click(screen.getByRole('button', { name: slots.workbenchFactsTryName(copy.assumptionDrawdownName) }))
+    expect(shownScreen()).toBe('probability')
+    expect(handle()).toHaveAttribute('aria-expanded', 'true')
+    await waitFor(() => expect(tray().querySelector('[data-tray-group="withdrawal-order"]')!.contains(document.activeElement)).toBe(true), { timeout: 5_000 })
+    expect(within(tray()).queryByText(copy.workbenchRailRecShowing), 'the record’s words are not what the tray shows').toBeNull()
+    expect(document.querySelector('[data-half="alternative"]')!.getAttribute('aria-label')).toBe(copy.probabilityPickNew)
+  })
 
   it('the assumption panel’s withdrawal-order row opens the tray at its row (the sheet it opened is gone)', async () => {
     openTray(DEV_SEEDS.retired, { open: false })

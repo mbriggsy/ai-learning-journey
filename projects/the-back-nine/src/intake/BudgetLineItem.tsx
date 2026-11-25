@@ -27,16 +27,8 @@ import type { BudgetCategory, BudgetLineItem as BudgetLine } from '@shared/model
 import { CATEGORY_LABEL_KEYS, lineDisplayName } from './budgetLines'
 import { BUDGET_CATEGORIES } from '@shared/model'
 import type { BudgetItemError } from '@budget/budgetModel'
+import { BUDGET_ERROR_COPY, isAmountError } from './budgetForm'
 import { CurrencyField, IntegerField, SegmentedControl } from './fields'
-import type { CopyKey } from '@ui/copy'
-
-const ERROR_COPY: Record<BudgetItemError['kind'], CopyKey> = {
-  'non-finite-amount': 'errBudgetAmountNonFinite',
-  'negative-amount': 'errBudgetAmountNegative',
-  'non-integer-window': 'errBudgetWindowNonInteger',
-  'negative-start': 'errBudgetWindowNegativeStart',
-  'reversed-window': 'errBudgetWindowReversed',
-}
 
 export interface BudgetLineItemProps {
   readonly item: BudgetLine
@@ -65,7 +57,7 @@ export function BudgetLineItem({
 }: BudgetLineItemProps) {
   const selectId = useId()
   const labelId = useId()
-  const amountInvalid = errors.some((e) => e.kind === 'non-finite-amount' || e.kind === 'negative-amount')
+  const amountInvalid = errors.some(isAmountError)
   const windowInvalid = errors.some(
     (e) => e.kind === 'non-integer-window' || e.kind === 'negative-start' || e.kind === 'reversed-window',
   )
@@ -177,7 +169,7 @@ export function BudgetLineItem({
 
       {errors.map((e) => (
         <p key={e.kind} className="field-error" role="alert">
-          {copy[ERROR_COPY[e.kind]]}
+          {copy[BUDGET_ERROR_COPY[e.kind]]}
         </p>
       ))}
     </li>

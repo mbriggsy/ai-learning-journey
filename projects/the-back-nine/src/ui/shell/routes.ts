@@ -20,23 +20,24 @@ export type ModuleId = (typeof MODULE_ORDER)[number]
  *  Flows (its Summary and Accounts folder tabs are the page's own state, not routes), RC8's Tax Strategies (its four
  *  folder tabs the page's own state too), RC9's Social Security (its Comparison and Summary tabs the same) and RC10's Health
  *  Care are rebuilt, RC11's Stress Test is new (RightCapital's slot, between Analysis and Social Security), and RC12 adds Investment's Asset Allocation and Tax Allocation; RC13a adds Profile's Net Worth, Income, Savings and
- *  Family (RightCapital's order, ref 1.2); the workbench room's facts page rides after them as an interim tab in its old
- *  look until RC13b moves its last facts (Expenses, Goals) into drawers. */
+ *  Family, and RC13b its Goals and Expenses (RightCapital's order, ref 1.2), every saved fact in a drawer of theirs: the
+ *  workbench room's facts page, the last interim tab, is gone. */
 export type ScreenId =
   | 'snapshot'
   | 'probability'
   | 'confidence'
   | 'cash-flows'
   | 'social-security'
-  | 'interim-facts'
   | 'tax-strategies'
   | 'health-care'
   | 'stress-test'
   | 'asset-allocation'
   | 'tax-allocation'
   | 'profile-net-worth'
+  | 'profile-goals'
   | 'profile-income'
   | 'profile-savings'
+  | 'profile-expenses'
   | 'profile-family'
 
 export interface RouteRow {
@@ -95,13 +96,13 @@ export const ROUTE_ROWS: readonly RouteRow[] = [
   { module: 'retirement', page: 'health-care', pageLabel: copy.shellPageHealthCare, screen: 'health-care', title: copy.shellPageHealthCare },
   { module: 'retirement', page: 'cash-flows', pageLabel: copy.shellPageCashFlows, screen: 'cash-flows', title: copy.shellPageCashFlows },
   { module: 'tax', page: 'strategies', pageLabel: copy.shellPageTaxStrategies, screen: 'tax-strategies', title: copy.shellPageTaxStrategies },
-  // RC13a: Profile's pages in RightCapital's order (Net Worth · Goals · Income · Savings · Expenses · Family; Goals and
-  // Expenses arrive with RC13b), then the interim facts page until RC13b retires it.
+  // RC13a and RC13b: Profile's pages in RightCapital's order (Net Worth · Goals · Income · Savings · Expenses · Family).
   { module: 'profile', page: 'net-worth', pageLabel: copy.shellPageNetWorth, screen: 'profile-net-worth', title: copy.shellPageNetWorth },
+  { module: 'profile', page: 'goals', pageLabel: copy.shellPageGoals, screen: 'profile-goals', title: copy.shellPageGoals },
   { module: 'profile', page: 'income', pageLabel: copy.shellPageIncome, screen: 'profile-income', title: copy.shellPageIncome },
   { module: 'profile', page: 'savings', pageLabel: copy.shellPageSavings, screen: 'profile-savings', title: copy.shellPageSavings },
+  { module: 'profile', page: 'expenses', pageLabel: copy.shellPageExpenses, screen: 'profile-expenses', title: copy.shellPageExpenses },
   { module: 'profile', page: 'family', pageLabel: copy.shellPageFamily, screen: 'profile-family', title: copy.shellPageFamily },
-  { module: 'profile', page: 'facts', pageLabel: copy.workbenchPageFacts, screen: 'interim-facts', title: copy.workbenchPageFacts },
 ]
 
 /** The home: setup's end, a reopened vault and every dev seed land on Dashboard → Snapshot (RC4; RC3's door landed here). */

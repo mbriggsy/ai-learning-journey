@@ -16,7 +16,7 @@ import { Button, Caveat, cn, LoadingVeil, PageFrame, Tray, useWide } from '../..
 import { copy, slots } from '../../copy'
 import { verdictDescribedBy } from '../../disclaimerId'
 import type { HealthFact } from '../../healthSheetChrome'
-import type { FactDoorId } from '../../workbench/factRegistry'
+import type { DrawerTarget } from '../profile/profileView'
 import type { WhatIfLeverKind } from '@shared/model'
 import { ChartBoundary } from '../ChartBoundary'
 import { chartWords } from '../dashboard/snapshotView'
@@ -45,7 +45,7 @@ export interface HealthCareProps {
   /** The subsidy rules row: open Analysis with the tray at that lever's row (the what-if is tried there). */
   readonly onTryLever: (lever: WhatIfLeverKind) => void
   /** A fact row's door: its Profile drawer. */
-  readonly onOpenFact: (door: FactDoorId) => void
+  readonly onOpenFact: (door: DrawerTarget) => void
 }
 
 function Fact({ fact }: { readonly fact: HealthFact }) {
@@ -167,7 +167,7 @@ function Charts({ view, caveat }: { readonly view: HealthChartsView; readonly ca
   )
 }
 
-function TrayBody({ tray, onTryLever, onOpenFact }: { readonly tray: HealthTrayView; readonly onTryLever: (lever: WhatIfLeverKind) => void; readonly onOpenFact: (door: FactDoorId) => void }) {
+function TrayBody({ tray, onTryLever, onOpenFact }: { readonly tray: HealthTrayView; readonly onTryLever: (lever: WhatIfLeverKind) => void; readonly onOpenFact: (door: DrawerTarget) => void }) {
   return (
     <div className="flex flex-col gap-6 laptop:col-span-2" data-health-tray="">
       {tray.aca !== undefined ? (
@@ -201,7 +201,7 @@ function TrayBody({ tray, onTryLever, onOpenFact }: { readonly tray: HealthTrayV
                 ))}
               </div>
               {f.door !== null ? (
-                <Button variant="secondary" size="sm" aria-label={slots.workbenchFactsEditName(f.title)} data-fact-open={f.door} onClick={() => onOpenFact(f.door!)}>
+                <Button variant="secondary" size="sm" aria-label={slots.workbenchFactsEditName(f.title)} data-fact-open={f.id} onClick={() => onOpenFact(f.door!)}>
                   {copy.workbenchFactsEdit}
                 </Button>
               ) : null}

@@ -39,10 +39,12 @@ import { composeMedicareExtrasTypicalNote, showMedicarePricedNote } from './heal
 import { plainNote, withoutDoor, type NoteParts } from './noteParts'
 import { composeVerdictMedicareResidual, composeVerdictStateNote } from './stateTaxDisclosure'
 
-/** The standing answer line's causes (`payCheckNote`): W stale, split by the act its door names; a fresh TYPED W below
- *  today's quote (U11 walk 6's R1, `workingYearCostTypedBelowLine`: it can never share the slot with W stale, which needs
- *  a stale W, and it carries a moved left over's figures as its clause); and the moved left over. */
-export type StandingNoteCause = 'w-stale-update' | 'w-stale-confirm-or-change' | 'w-typed-below' | 'left-over-moved'
+/** The standing answer line's causes (`payCheckNote`): W never given on the date route (Act 6 · RC13b: a person moved to
+ *  "still working" after the walk, which asks W last; it can share the slot with nothing below, each of which needs a
+ *  W); W stale, split by the act its door names; a fresh TYPED W below today's quote (U11 walk 6's R1,
+ *  `workingYearCostTypedBelowLine`: it can never share the slot with W stale, which needs a stale W, and it carries a
+ *  moved left over's figures as its clause); and the moved left over. */
+export type StandingNoteCause = 'w-unanswered' | 'w-stale-update' | 'w-stale-confirm-or-change' | 'w-typed-below' | 'left-over-moved'
 
 /** W stale's cause for each act (`workingYearQuote.workingYearCostAct`, council `wf_7fa86902-35c`), exhaustive: the
  *  Result picks the cause with the helper, never a free door label. */
@@ -177,8 +179,15 @@ export function composeAnswerNotes(snapshot: MemoryModelSnapshot, session: Answe
   // door, so a read-only tab is never told buttons to press (`withoutDoor`).
   const standingNote = (cause: StandingNoteCause, parts: NoteParts, seat: AssumptionLandingSeat): StandingNote =>
     readOnly ? { cause, parts: withoutDoor(parts) } : { cause, parts, seat }
-  const standing =
-    payCheckStaleText !== null && payCheckStaleDoor !== null
+  // THE W GAP (RC13b): an answer on the date route with no W at all takes nothing from savings in a working year, as if pay
+  // covered every cost (`simulate.ts`: a W-absent run is the pre-check run, its working years clamped to no withdrawal),
+  // so it can read better than it is. W is never a missing fact (KTD3: that would hold every working household's
+  // provisional answer through the walk), so after the walk this line says so on every figured page, its door the W
+  // drawer, whose Save asks for the figure (the W step's gate). Off the answered draft, as every standing cause.
+  const wUnanswered = answeredDraft !== null && isDateRoute(answeredDraft) && answeredDraft.workingYearCost === undefined
+  const standing = wUnanswered
+    ? standingNote('w-unanswered', plainNote(copy.stalenessWUnansweredNote), 'working-year-cost')
+    : payCheckStaleText !== null && payCheckStaleDoor !== null
       ? standingNote(W_STALE_CAUSE[payCheckStaleDoor.act], { ...payCheckStaleText, door: payCheckStaleDoor.result }, 'working-year-cost')
       : typedBelowLine !== null
         ? standingNote('w-typed-below', typedBelowLine, 'working-year-cost')

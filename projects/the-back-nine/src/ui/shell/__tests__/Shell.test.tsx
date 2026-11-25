@@ -291,28 +291,6 @@ describe('Shell — the date route', () => {
   })
 })
 
-describe('Shell — the facts page’s stop year through a provisional answer (U8 review: C1, A6, F7)', () => {
-  it('holds the last delivered stop year while a newer answer is worked out, marked in words in its reserved note cell', async () => {
-    const { lanes, settleAll } = heldLanes()
-    const year = WORKING.startCalendarYear + 4
-    const view = renderRoom(dateSnapshot(WORKING, dateAnswer(WORKING, { offsetYears: 4, track: 'lifestyle' })), lanes)
-    await settleAll('run')
-    showPage('facts')
-    const stopLine = () => screen.getByText(copy.workbenchFactStop).closest('.wb-facts__line')!
-    const shownNote = () => stopLine().querySelector('.wb-facts__note:not(.wb-facts__note--reserve)')?.textContent
-    expect(stopLine()).toHaveTextContent(slots.workbenchFactStopYear(year))
-    expect(shownNote()).toBe(copy.workbenchFactStopNote)
-    // An edit's provisional answer: no table run is asked for it, and the line keeps its year, marked.
-    view.rerender(
-      shellOver(dateSnapshot(WORKING, dateAnswer(WORKING, { offsetYears: 5, track: 'lifestyle' }, 'provisional', 'k2')), lanes),
-    )
-    expect(stopLine()).toHaveTextContent(slots.workbenchFactStopYear(year))
-    expect(shownNote()).toBe(copy.workbenchPinnedRefiguring)
-    // Both notes are drawn in the cell (one hidden), so the mark changes no height.
-    expect(stopLine().querySelectorAll('.wb-facts__note--reserve')).toHaveLength(2)
-  })
-})
-
 describe('Shell — the shell’s one live region speaks the new answer (U8 review: C12)', () => {
   it('when the pinned answer’s words change and nothing is being worked out again, the region says them', () => {
     const { lanes } = heldLanes()
@@ -347,26 +325,15 @@ describe('Shell — the settle hook every harness waits on (plan 3.1)', () => {
     view.rerender(shellOver(snapshotWith(finalAnswer(), true), lanes))
     expect(mains()[0]).toHaveAttribute('data-answer-tier', 'final')
     expect(mains()[0]).toHaveAttribute('data-answer-refiguring')
-    for (const page of ['probability', 'table', 'facts'] as const) {
+    for (const page of ['probability', 'table', 'expenses'] as const) {
       showPage(page)
       expect(mains(), `${page}: exactly one main.result`).toHaveLength(1)
       expect(mains()[0]).toHaveAttribute('data-answer-refiguring')
     }
-    // No interim page carries the in-frame caveat, so App's trailing disclaimer stays the one mount (app.css's swap).
+    // A Profile page prints no figure, so it carries no in-frame caveat: App's trailing disclaimer stays its one mount.
     expect(mains()[0]).not.toHaveAttribute('data-inframe-disclaimer')
     // The legacy answer frame's layout class is the old page's alone.
     expect(mains()[0]).not.toHaveClass('result-page')
-  })
-
-  it('every interim page wears the banner, outside any `.rc-root`, and its page sits outside one too', () => {
-    const { lanes } = heldLanes()
-    renderRoom(snapshotWith(finalAnswer()), lanes)
-    for (const page of ['facts'] as const) {
-      showPage(page)
-      expect(screen.getAllByText(copy.shellInterimBanner)).toHaveLength(1)
-      const interim = document.querySelector('.shell-interim')!
-      expect(interim.closest('.rc-root'), `${page}: the interim container sits outside the scoped preflight`).toBeNull()
-    }
   })
 })
 
@@ -379,7 +346,6 @@ describe('Shell — RC6: Retirement → Cash Flows', () => {
     expect(main).toHaveAttribute('data-shell-screen', 'cash-flows')
     expect(main).toHaveAttribute('data-inframe-disclaimer')
     expect(main.querySelectorAll('[data-caveat]')).toHaveLength(1)
-    expect(screen.queryByText(copy.shellInterimBanner)).toBeNull()
     expect(screen.getByRole('heading', { level: 1, name: copy.shellPageCashFlows })).toBeInTheDocument()
     expect(screen.getByRole('tab', { name: copy.cashFlowsTabSummary })).toHaveAttribute('aria-selected', 'true')
     expect(screen.getByRole('tab', { name: copy.cashFlowsTabAccounts })).toBeInTheDocument()
@@ -484,18 +450,19 @@ describe('Shell — the phone menu (plan 3.1, "The phone shape")', () => {
       copy.shellPageCashFlows,
       copy.shellPageTaxStrategies,
       copy.shellPageNetWorth,
+      copy.shellPageGoals,
       copy.shellPageIncome,
       copy.shellPageSavings,
+      copy.shellPageExpenses,
       copy.shellPageFamily,
-      copy.workbenchPageFacts,
     ])
     expect(within(sheet).getByRole('heading', { name: copy.shellModuleDashboard })).toBeInTheDocument()
     expect(within(sheet).getByRole('heading', { name: copy.shellModuleRetirement })).toBeInTheDocument()
     expect(within(sheet).getByRole('heading', { name: copy.shellModuleProfile })).toBeInTheDocument()
     expect(within(sheet).getByRole('link', { name: copy.shellPageCashFlows })).toHaveAttribute('aria-current', 'page')
-    fireEvent.click(within(sheet).getByRole('link', { name: copy.workbenchPageFacts }))
+    fireEvent.click(within(sheet).getByRole('link', { name: copy.shellPageExpenses }))
     await waitFor(() => expect(screen.queryByRole('dialog', { name: copy.shellMenuTitle })).toBeNull())
-    expect(document.querySelector('main.result')).toHaveAttribute('data-shell-screen', 'interim-facts')
+    expect(document.querySelector('main.result')).toHaveAttribute('data-shell-screen', 'profile-expenses')
     // Focus back on the button is read in a real browser (`e2e/rc-screens.spec.ts`'s phone arm): Base UI hands it back
     // after the sheet's exit, whose timing jsdom (no layout, no animations) does not keep, so a read here flakes
     // (insight 071: a real browser's teardown order is the authority).
@@ -546,7 +513,6 @@ describe('Shell — RC4: the home’s new pages and the gear', () => {
     expect(main).toHaveAttribute('data-shell-screen', 'health-care')
     expect(main).toHaveAttribute('data-inframe-disclaimer')
     expect(document.querySelectorAll('main')).toHaveLength(1)
-    expect(screen.queryByText(copy.shellInterimBanner)).toBeNull()
     expect(main.querySelectorAll('[data-caveat]')).toHaveLength(1)
     expect(screen.getByRole('heading', { level: 1, name: copy.shellPageHealthCare })).toBeInTheDocument()
     expect(screen.getAllByRole('tab').map((t) => t.textContent)).toEqual([copy.healthTabCost])
@@ -588,7 +554,6 @@ describe('Shell — RC4: the home’s new pages and the gear', () => {
     expect(main).toHaveAttribute('data-shell-screen', 'tax-strategies')
     expect(main).toHaveAttribute('data-inframe-disclaimer')
     expect(document.querySelectorAll('main')).toHaveLength(1)
-    expect(screen.queryByText(copy.shellInterimBanner)).toBeNull()
     expect(main.querySelectorAll('[data-caveat]')).toHaveLength(1)
     expect(screen.getAllByRole('tab').map((t) => t.textContent)).toEqual([copy.taxStratTabStrategies, copy.taxStratTabSummary, copy.taxStratTabComparison, copy.taxStratTabDetails])
     expect(screen.getByRole('button', { name: copy.taxStratFind })).toBeInTheDocument()

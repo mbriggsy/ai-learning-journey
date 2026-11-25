@@ -9,13 +9,11 @@ import { describe, expect, it } from 'vitest'
 import type { HealthReadout, HealthReadoutYear, LedgerYearRow, TaxAwareDistribution } from '@shared/model'
 import { acaEnhancedSubsidyStatus } from '@engine/constants/health'
 import { epochDayFromIsoDate } from '@engine/validation/oracleToken'
-import { intakeSteps } from '@intake/questions'
 import { pricedStateForRun } from '@intake/intakeMap'
 import { DEV_SEEDS } from '@ui/devSeeds'
 import { copy, slots } from '../../../copy'
 import { composeHealthSheet } from '../../../healthSheetChrome'
-import { planClockAnchor } from '../../../bandAnnotations'
-import { composeFacts } from '../../../workbench/factsChrome'
+import { expensesView, goalsView } from '../../profile/profileView'
 import type { TableMeta } from '../../../workbench/tableRun'
 import { cliffRuns, healthCareView, healthTrayView, HEALTH_PARTS, lifetimeMedians, type HealthChartsView } from '../healthCareView'
 
@@ -345,7 +343,8 @@ describe('the working route: the steady market’s own rows', () => {
 // ── The tray ────────────────────────────────────────────────────────────────────────────────────────────────────
 
 describe('the Action Items tray: B9’s health inputs', () => {
-  const sections = composeFacts({ draft, stepIds: intakeSteps(draft).map((s) => s.id), anchor: planClockAnchor(draft.startCalendarYear, draft.startCalendarYear) })
+  // The Profile cards the tray reads (RC13b: Goals' and Expenses' own composers).
+  const sections = [...goalsView(draft).cards, ...expensesView(draft).cards]
 
   it('the subsidy rules are a what-if (the aca-subsidy lever), shown with the plan’s rules', () => {
     const t = healthTrayView(sections, { planEnhanced: false }, false)
@@ -355,10 +354,12 @@ describe('the Action Items tray: B9’s health inputs', () => {
 
   it('each plan fact shows its values and opens its own drawer, saying a change there changes the plan', () => {
     const t = healthTrayView(sections, { planEnhanced: false }, false)
-    const oop = t.facts.find((f) => f.id === 'oop-medical')!
-    expect(oop.door).toBe('oop-medical')
-    expect(oop.rows).toEqual([{ label: copy.oopLabel, value: slots.workbenchFactPerYear('4,000') }])
-    expect(t.facts.find((f) => f.id === 'medicare-extras')!.door).toBe('extras-panel')
+    expect(t.facts.map((f) => f.id), 'the health facts in the walk’s order').toEqual(['health', 'medical', 'medicare'])
+    const oop = t.facts.find((f) => f.id === 'medical')!
+    expect(oop.door).toEqual({ kind: 'medical' })
+    expect(oop.rows).toEqual([{ label: copy.profileRowEachYear, value: slots.workbenchFactDollars('4,000') }])
+    expect(t.facts.find((f) => f.id === 'medicare')!.door).toEqual({ kind: 'medicare' })
+    expect(t.facts.find((f) => f.id === 'health')!.door).toEqual({ kind: 'health' })
     expect(t.factsNote).toBe(copy.healthTrayFactsNote)
   })
 

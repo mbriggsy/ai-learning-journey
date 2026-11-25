@@ -12,6 +12,7 @@ import { DEV_SEEDS } from '../../devSeeds'
 import { DATE_FIXTURES, DATE_WINDOW_TOP } from '../../preview/dateFixtures'
 import { composeStaleLines } from '../staleLines'
 import { STANDING_DOOR_CLASSES, StaleBannerStack } from '../StaleBannerStack'
+import { useDrawerHost } from '../../screens/profile/drawerHost'
 
 /** The door's class attribute as `outerHTML` writes it. */
 const DOOR_ATTR = STANDING_DOOR_CLASSES.replace(/&/g, '&amp;')
@@ -114,14 +115,32 @@ function StaleHarness({ readOnly = false, stalenessNote = false, leftOverClauseH
   const snapshot = useSyncExternalStore(appModel.subscribe, appModel.getSnapshot)
   const wallCalendarYear = epochDayToCalendarYear(currentEpochDay())
   const notes = composeAnswerNotes(snapshot, { readOnly, stalenessNote, leftOverClauseHost, wallCalendarYear })
-  const editors = useEditorSheets({ model: appModel, snapshot, missing: missingRequiredFacts(snapshot.draft), savedAnchor: notes.planClock, restoreFallback: () => null, onOpenSequencing: () => {}, onOpenRoth: () => {}, onOpenHealth: () => {} })
+  // The shell's outside doors (RC13b): the pay check's two seats open the Pre-retirement living expenses drawer over the
+  // page; any other seat, the panel's.
+  const drawers = useDrawerHost(() => null)
+  const editors = useEditorSheets({
+    model: appModel,
+    snapshot,
+    missing: missingRequiredFacts(snapshot.draft),
+    savedAnchor: notes.planClock,
+    restoreFallback: () => null,
+    onOpenSequencing: () => {},
+    onOpenRoth: () => {},
+    onOpenHealth: () => {},
+    onOpenBudget: () => drawers.open({ kind: 'living' }, null),
+  })
   return (
     <>
       <button type="button" onClick={() => editors.openAssumptions()}>
         {copy.shellGearLabel}
       </button>
+      {/* The panel opened at the W row's seat (the gear's drawer still lands on a seat until RC18 replaces it). */}
+      <button type="button" data-open-w-seat="" onClick={() => editors.openAssumptions('working-year-cost')} />
       <div data-hero-text="">
-        <StaleBannerStack lines={composeStaleLines(notes, !readOnly)} onOpenSeat={(seat) => editors.openAssumptions(seat)} />
+        <StaleBannerStack
+          lines={composeStaleLines(notes, !readOnly)}
+          onOpenSeat={(seat) => (seat === 'working-year-cost' || seat === 'working-year-left-over' ? drawers.open({ kind: 'working-cost' }, null) : editors.openAssumptions(seat))}
+        />
         {/* The note lines Probability prints from the same notes (its key-metric column and footnote row). */}
         {[notes.stateNote, notes.medicarePriced?.affirmation, notes.medicarePriced?.residual, notes.medicarePricedNote ? notes.medicareExtrasTypicalNote : undefined]
           .filter((l): l is string => typeof l === 'string')
@@ -130,27 +149,31 @@ function StaleHarness({ readOnly = false, stalenessNote = false, leftOverClauseH
           ))}
       </div>
       {editors.node}
+      {drawers.render({ model: appModel, readOnly })}
     </>
   )
 }
 
 const line = () => document.querySelector('.cs-paycheck-note')
+/** The door's landing since RC13b: the Pre-retirement living expenses drawer, its title holding focus (it names the
+ *  drawer and pops no phone keyboard), its W question inside. */
+const wDrawerOpened = (): boolean =>
+  document.activeElement?.textContent === copy.profileWorkingCostName && document.querySelector('[data-working-cost-face]') !== null
 const lineDoor = () => screen.queryByRole('button', { name: copy.stalenessPayCheckCta })
 const wRowName = () =>
   document.querySelector('[data-assumption-seat="working-year-cost"] .ap-row__name') as HTMLElement | null
 
 describe('the pay check’s standing line through Result (KTD21)', () => {
-  it('a STALE W puts the line on the date hero; its door opens the panel and lands on the W row', () => {
+  it('a STALE W puts the line on the date hero; its door opens the Pre-retirement living expenses drawer (RC13b)', async () => {
     plantDateHero()
     appModel.update(() => DEV_SEEDS.datecoststale)
     render(<StaleHarness />)
     expect(line()?.textContent).toContain(copy.stalenessPayCheckNote)
     fireEvent.click(lineDoor()!)
-    expect(screen.getByRole('heading', { name: copy.assumptionTitle })).toBeInTheDocument()
-    expect(document.activeElement).toBe(wRowName())
+    await waitFor(() => expect(wDrawerOpened()).toBe(true))
   })
 
-  it('W9-R7 (KTD5): a W fixed in the panel but not yet re-figured KEEPS the line — the shown date still runs on the old figure — and its door still lands on the W row; once the answer is figured at the fix, the line goes', () => {
+  it('W9-R7 (KTD5): a W fixed but not yet re-figured KEEPS the line — the shown date still runs on the old figure — and its door still opens the W drawer; once the answer is figured at the fix, the line goes', async () => {
     appModel.update(() => DEV_SEEDS.datecoststale)
     plantDateHero(realGetSnapshot().draft) // the shown answer, committed at the stale yes
     // The household types the quote in: a fresh entered figure (a typed figure is never staled on a quote, KTD10).
@@ -163,7 +186,7 @@ describe('the pay check’s standing line through Result (KTD21)', () => {
     const view = render(<StaleHarness />)
     expect(line()?.textContent).toContain(copy.stalenessPayCheckNote)
     fireEvent.click(lineDoor()!)
-    expect(document.activeElement).toBe(wRowName())
+    await waitFor(() => expect(wDrawerOpened()).toBe(true))
     view.unmount()
     plantDateHero() // the re-figured answer lands, at the draft on screen
     render(<StaleHarness />)
@@ -191,7 +214,7 @@ describe('the pay check’s standing line through Result (KTD21)', () => {
     plantDateHero()
     appModel.update(() => DEV_SEEDS.datecoststale)
     render(<StaleHarness />)
-    fireEvent.click(lineDoor()!)
+    fireEvent.click(document.querySelector<HTMLElement>('[data-open-w-seat]')!)
     expect(document.activeElement).toBe(wRowName())
     // Close through the panel's own quiet Close (the sheet animates out, so wait for it to go).
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: copy.leverCancel }))
@@ -206,12 +229,10 @@ describe('the pay check’s standing line through Result (KTD21)', () => {
 // and door (opening the left-over seat), unless a rules line hosted it at unlock (`leftOverClauseHost`), when
 // the two figures ride the hero's rules note instead; a "saved" answer waiting on W adds its clause to W's line.
 const leftOverDoor = () => screen.queryByRole('button', { name: copy.stalenessLeftOverCta })
-const leftOverSeatName = () =>
-  document.querySelector('[data-assumption-seat="working-year-left-over"] .ap-row__name') as HTMLElement | null
 const MOVED = slots.stalenessLeftOverMoved('16,985', '27,537', '16,985')
 
 describe('build 2’s left-over lines through Result (U14, R12)', () => {
-  it('`datesavedmoved`: the slot names both figures under its OWN lead — never W’s — and its door lands on the left-over seat', () => {
+  it('`datesavedmoved`: the slot names both figures under its OWN lead — never W’s — and its door opens the W drawer, the left-over seat inside', async () => {
     plantDateHero()
     appModel.update(() => DEV_SEEDS.datesavedmoved)
     render(<StaleHarness />)
@@ -219,8 +240,8 @@ describe('build 2’s left-over lines through Result (U14, R12)', () => {
     expect(line()?.textContent).not.toContain(copy.stalenessPayCheckNote)
     expect(lineDoor(), 'no W door').toBeNull()
     fireEvent.click(leftOverDoor()!)
-    expect(screen.getByRole('heading', { name: copy.assumptionTitle })).toBeInTheDocument()
-    expect(document.activeElement).toBe(leftOverSeatName())
+    await waitFor(() => expect(wDrawerOpened()).toBe(true))
+    expect(document.querySelector('[data-left-over-seat]'), 'the left-over question sits in the drawer').not.toBeNull()
   })
 
   it('a READ-ONLY tab states the moved left over with no door', () => {
@@ -349,7 +370,7 @@ describe('build 2’s left-over lines through Result (U14, R12)', () => {
   // THE DOOR (council `wf_7fa86902-35c`; its form, council `wf_22858e04-f7a` (4)): the last dt/dd — the act's heading,
   // the condition, the W help's own cost items as a list, the "Yes" sentence, then the button as a block — only where
   // the tab can save (a read-only tab, above, is told no buttons to press).
-  it('a writable tab: the risen door — its heading, "To update it, press … below." and the condition, the list, "Yes", then "Update your figure for a working year" as a block, which lands on the W row; the fallen door names its Keep with the room it leaves and keeps "Confirm or change your figure"', () => {
+  it('a writable tab: the risen door — its heading, "To update it, press … below." and the condition, the list, "Yes", then "Update your figure for a working year" as a block, which opens the W drawer; the fallen door names its Keep with the room it leaves and keeps "Confirm or change your figure"', async () => {
     const updateDoor = () => screen.queryByRole('button', { name: copy.stalenessPayCheckCtaUpdate })
     const doorParts = () => {
       const d = block().door!
@@ -377,7 +398,7 @@ describe('build 2’s left-over lines through Result (U14, R12)', () => {
     })
     expect(lineDoor(), 'no "confirm or change" below the quote: the W row offers no Keep door').toBeNull()
     fireEvent.click(updateDoor()!)
-    expect(document.activeElement).toBe(wRowName())
+    await waitFor(() => expect(wDrawerOpened()).toBe(true))
     cleanup()
     plantDateHero()
     appModel.update(() => DEV_SEEDS.datesavedstale)
@@ -506,7 +527,7 @@ describe('U11 walk 6’s R1 — the typed-below line through Result', () => {
     'At your spending, that’s at most $4,500 a year less in your savings, except for any difference between the two answers in income tax and Medicare’s income surcharge.'
   const updateDoor = () => screen.queryByRole('button', { name: 'Update your figure for a working year' })
 
-  it('`datesavedtyped` (one run): the line in the slot’s plain <p>, byte for byte — no lead before it, its own first sentence names the answer and both figures, the survivor part’s sentences last inside it — and the update door inline, which lands on the W row', () => {
+  it('`datesavedtyped` (one run): the line in the slot’s plain <p>, byte for byte — no lead before it, its own first sentence names the answer and both figures, the survivor part’s sentences last inside it — and the update door inline, which opens the W drawer', async () => {
     plantDateHero()
     appModel.update(() => DEV_SEEDS.datesavedtyped)
     render(<StaleHarness />)
@@ -515,8 +536,7 @@ describe('U11 walk 6’s R1 — the typed-below line through Result', () => {
     )
     expect(document.body.textContent, 'no W lead: W is fresh').not.toContain(copy.stalenessPayCheckNote)
     fireEvent.click(updateDoor()!)
-    expect(screen.getByRole('heading', { name: copy.assumptionTitle })).toBeInTheDocument()
-    expect(document.activeElement).toBe(wRowName())
+    await waitFor(() => expect(wDrawerOpened()).toBe(true))
   })
 
   it('a READ-ONLY tab states the line with no door', () => {
@@ -578,7 +598,7 @@ describe('U11 walk 6’s R1 — the typed-below line through Result', () => {
     (button ? `<button type="button" class="${DOOR_ATTR} note-parts__cta">Update your figure for a working year</button>` : '') +
     '</div>'
 
-  it('TM (three runs, the left over ALSO moved): the typed-below line holds the one slot as a BLOCK — the counts sentence, the moved clause, the lean, the cap sentence and the scoped lead, then the ordered list of three runs, then the survivor part’s paragraph — its update button drawn last; no moved line of its own; where a rules line hosts the clause at unlock, the block opens on the counts sentence, the lean, the cap sentence and the lead alone and the clause rides the rules note', () => {
+  it('TM (three runs, the left over ALSO moved): the typed-below line holds the one slot as a BLOCK — the counts sentence, the moved clause, the lean, the cap sentence and the scoped lead, then the ordered list of three runs, then the survivor part’s paragraph — its update button drawn last; no moved line of its own; where a rules line hosts the clause at unlock, the block opens on the counts sentence, the lean, the cap sentence and the lead alone and the clause rides the rules note', async () => {
     expect(DEV_SEEDS.datesavedtypedmoved.workingYearCost).toMatchObject({ kind: 'entered', amountReal: 84_000 })
     plantDateHero()
     appModel.update(() => DEV_SEEDS.datesavedtypedmoved)
@@ -588,7 +608,7 @@ describe('U11 walk 6’s R1 — the typed-below line through Result', () => {
     expect(document.body.textContent, 'no moved line of its own').not.toContain(copy.stalenessLeftOverNote)
     expect(line()!.lastElementChild, 'the button is the block’s last child').toBe(updateDoor())
     fireEvent.click(updateDoor()!)
-    expect(document.activeElement, 'the button lands on the W row').toBe(wRowName())
+    await waitFor(() => expect(wDrawerOpened(), 'the button opens the W drawer').toBe(true))
     cleanup()
     plantDateHero()
     appModel.update(() => DEV_SEEDS.datesavedtypedmoved)
@@ -662,6 +682,36 @@ describe('U11 walk 6’s R1 — the typed-below line through Result', () => {
 // the live draft already moved to B, must equal the hero settled at A — and settled at B it must differ (the
 // control: the edit really moves what the hero says, so the equality is not vacuous). One arm guards every hero
 // describer at once: the standing slot, the moved left over, the typed-below line, the state, Medicare and extras notes.
+// THE W GAP (Act 6 · RC13b): a person moved to "still working" after the walk puts the household on the date route with no
+// W, and a W-absent run takes nothing from savings in a working year (pay covering every cost). No figured page may read
+// as settled then: the standing slot says so, its door the W drawer, whose Save is the W step's gate.
+describe('the W gap: a date answer with no figure for a working year (RC13b)', () => {
+  const { workingYearCost: _w, workingYearLeftOver: _l, ...noW } = DEV_SEEDS.date
+  const gap: ScenarioDraft = noW
+
+  it('the slot says the working years are figured as if pay covers every cost, its door opens the W drawer', async () => {
+    expect(isDateRoute(gap) && gap.workingYearCost === undefined, '[test setup] a working household with no W').toBe(true)
+    plantDateHero()
+    appModel.update(() => gap)
+    render(<StaleHarness />)
+    expect(line()?.textContent).toBe(`${copy.stalenessWUnansweredNote} ${copy.stalenessWUnansweredCta}`)
+    fireEvent.click(screen.getByRole('button', { name: copy.stalenessWUnansweredCta }))
+    await waitFor(() => expect(wDrawerOpened()).toBe(true))
+  })
+
+  it('a READ-ONLY tab states it with no door; a W given leaves no such line', () => {
+    plantDateHero()
+    appModel.update(() => gap)
+    render(<StaleHarness readOnly />)
+    expect(line()?.textContent).toBe(copy.stalenessWUnansweredNote)
+    expect(screen.queryByRole('button', { name: copy.stalenessWUnansweredCta })).toBeNull()
+    cleanup()
+    appModel.update(() => DEV_SEEDS.date)
+    render(<StaleHarness />)
+    expect(document.body.textContent).not.toContain(copy.stalenessWUnansweredNote)
+  })
+})
+
 describe('W9-R7 (KTD5): the hero reads the ANSWERED draft whole', () => {
   // The hero's DESCRIBING text: the actions row can seat inside the hero's lead, and its doors are controls, which
   // rightly follow the live draft (a spouse turned 60 brings the Healthcare door at once), so it is left out.

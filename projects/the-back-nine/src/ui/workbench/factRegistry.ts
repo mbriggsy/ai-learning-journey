@@ -1,10 +1,13 @@
 /*
- * src/ui/workbench/factRegistry.ts — the facts page's COMPILE-ENFORCED field list (Act 5, U8; R14, R15).
+ * src/ui/workbench/factRegistry.ts — every saved fact's ONE editing home, COMPILE-ENFORCED (Act 5, U8; R14, R15;
+ * re-pointed to the Profile drawers by Act 6 · RC13b, when the facts page and its step sheets were deleted).
  *
- * R14: one page lists everything the household told the tool. R15: each value has one door. This registry
+ * R14: everything the household told the tool can be found and changed. R15: each value has one door. This registry
  * makes both a build-time decision instead of author discipline (the R7 registry's precedent,
- * `src/ui/assumptionRegistry.ts`): every field of the saved plan is either SHOWN (the page stamps its line with
- * `data-fact="<key>"` inside a section whose door is one this entry names) or NOT-A-FACT, with the one-line why.
+ * `src/ui/assumptionRegistry.ts`): every field of the saved plan is either SHOWN (a Profile drawer stamps the field that
+ * edits it with `data-fact="<key>"`, `drawers/Fact.tsx`, inside a drawer this entry names), HOMED ELSEWHERE (a lever the
+ * Action Items tray tries and applies, or a choice Tax Strategies makes: never a drawer field, so it has no second door),
+ * or NOT-A-FACT, with the one-line why.
  *
  * THE GATE REACHES EVERY LEVEL (the R7 registry's GATE-SCOPE warning, answered): `keyof ScenarioDraft` sees only
  * the draft's own keys, so the four containers each get a sibling FLAT record of their own — a new field on a
@@ -15,62 +18,39 @@
  * fails to compile here too, which an arm list typed by hand would not. `tickerClassifications` is a
  * `Record<string, …>` (its `keyof` is `string`) and is argued below.
  *
- * The runtime half is the field walk (`__tests__/factRegistry.test.tsx`): it renders the page over made-up drafts
- * that hold every field between them and fails on a SHOWN field whose stamp is missing, or that sits behind a door
- * this record does not name.
+ * The runtime half is the field walk (`__tests__/factRegistry.test.tsx`): it opens every Profile drawer the pages and
+ * Add menus offer over made-up drafts that hold every field between them, and fails on a SHOWN field no drawer stamps,
+ * or one stamped in a drawer this record does not name.
  */
 import type { EnteredAccount } from '@shared/model'
 import type { IncomeStream } from '@shared/model'
 import type { HealthDraft, PersonDraft, ScenarioDraft } from '@store/memoryModel'
+import type { DrawerTarget } from '../screens/profile/profileView'
 
-/** The facts page's sections that are steps of the guided walk, by the walk's own step ids
- *  (`intakeSteps`, `src/intake/questions.tsx`): each opens that step's own body. */
-export type StepSectionId =
-  | 'names'
-  | 'work'
-  | 'income'
-  | 'social-security'
-  | 'retirement-state'
-  | 'spend'
-  | 'health-quote'
-  | 'employer-coverage'
-  | 'oop-medical'
-  | 'working-income'
-  | 'irmaa-seed'
-  | 'medicare-extras'
-  | 'accounts'
-  | 'other-income'
-  | 'working-cost'
-  | 'working-ledger'
+/** A Profile drawer, by its target's kind (`profileView.ts`'s `DrawerTarget`). */
+export type FactDrawerId = DrawerTarget['kind']
 
-/** Every door a fact can sit behind: a step's own body, a lever's own sheet (`editorSheets.tsx`), the
- *  AssumptionPanel at a knob's seat, or none (a value the answer or another page sets). The withdrawal order and the
- *  Roth plan have no sheet of their own since Act 6 · RC4b: they are tried in Probability's Action Items tray. */
-export type FactDoorId =
-  | StepSectionId
-  | 'budget'
-  | 'subsidy-regime'
-  | 'survivor-ratio'
-  | 'heir-bracket'
-  /** The AssumptionPanel at its Medicare-extras seat: that answer's door where the walk has no extras step. */
-  | 'extras-panel'
-  | 'none'
+/** Where a fact that has no drawer is changed: the Action Items tray (a lever tried beside the plan and applied, U15's
+ *  rule, RC4b), or Tax Strategies (the recommendation's goal and the heirs' bracket it ranks with, RC8). */
+export type FactElsewhereId = 'tray' | 'tax-strategies'
 
-/** How one field reaches the facts page. */
+/** How one field reaches its editing home. */
 export type FactDisposition =
-  /** Shown, stamped `data-fact`, behind one of these doors (more than one only where the door is chosen by the
-   *  draft, never two doors at once: the spending total's is the spend step, or the budget while one governs; an
-   *  order's is the withdrawal-order sheet, or none over no entered account). */
-  | { readonly kind: 'shown'; readonly doors: readonly FactDoorId[] }
+  /** Edited in a drawer, stamped `data-fact`, in one of these (more than one only where the record is opened two ways,
+   *  never two drawers for one record: an account from its card or from Add, an income stream likewise). */
+  | { readonly kind: 'shown'; readonly drawers: readonly FactDrawerId[] }
+  /** Changed outside Profile, never in a drawer. */
+  | { readonly kind: 'elsewhere'; readonly home: FactElsewhereId; readonly why: string }
   /** A container: its fields are walked by the named sibling record. */
   | { readonly kind: 'nested'; readonly record: 'person' | 'health' | 'account' | 'income' }
   /** Not something the household told the tool: the why. */
   | { readonly kind: 'not-a-fact'; readonly why: string }
 
-const shown = (...doors: FactDoorId[]): FactDisposition => ({ kind: 'shown', doors })
+const shown = (...drawers: FactDrawerId[]): FactDisposition => ({ kind: 'shown', drawers })
+const elsewhere = (home: FactElsewhereId, why: string): FactDisposition => ({ kind: 'elsewhere', home, why })
 const notAFact = (why: string): FactDisposition => ({ kind: 'not-a-fact', why })
 
-/** The stamp a field's line carries: a top-level key bare, a container's field prefixed by its record. */
+/** The stamp a field carries: a top-level key bare, a container's field prefixed by its record. */
 export type FactStamp =
   | keyof ScenarioDraft
   | `person.${keyof PersonDraft}`
@@ -78,32 +58,33 @@ export type FactStamp =
   | `account.${keyof EnteredAccount}`
   | `income.${IncomeFactKey}`
 
+const ACCOUNT_DRAWERS: readonly FactDrawerId[] = ['account', 'new-account']
+const INCOME_DRAWERS: readonly FactDrawerId[] = ['income', 'new-income']
+
 export const DRAFT_FACTS: Record<keyof ScenarioDraft, FactDisposition> = {
   people: { kind: 'nested', record: 'person' },
   health: { kind: 'nested', record: 'health' },
   enteredAccounts: { kind: 'nested', record: 'account' },
   incomeStreams: { kind: 'nested', record: 'income' },
   // A hand-answered mix for a ticker the fund table lacks: the run reads it for the account that names the ticker, so
-  // that account's mix line prints it (`blendSourceOf`'s classified arm).
-  tickerClassifications: shown('accounts'),
-  annualSpendingReal: shown('spend', 'budget'),
-  spendEntryPeriod: shown('spend'),
-  survivorSpendingRatio: shown('survivor-ratio'),
-  heirBracket: shown('heir-bracket'),
-  // Since U15 the withdrawal order, the Roth plan and the subsidy regime open no editor on the facts page: each line
-  // links to the lever's row in Probability's Action Items tray (RC4b), where it is tried and applied.
-  drawdownPolicy: shown('none'),
-  drawdownOrder: shown('none'),
-  // A budget line's own `id` (schema version 6) is not a fact either: the tool mints it so a kept what-if can
-  // name the line. The page prints each line's category, amount, tier and window, never its id.
-  budget: shown('budget'),
-  rothConversion: shown('none'),
-  enhancedSubsidies: shown('none'),
-  medicareExtrasByPerson: shown('medicare-extras', 'extras-panel'),
-  retirementState: shown('retirement-state'),
+  // that account's drawer asks it (By the fund it holds, a fund B9 doesn't know).
+  tickerClassifications: shown(...ACCOUNT_DRAWERS),
+  // The spending figure and its unit, or the budget that sets it, and the survivor's share: Expenses → Living expenses.
+  annualSpendingReal: shown('living'),
+  spendEntryPeriod: shown('living'),
+  survivorSpendingRatio: shown('living'),
+  // A budget line's own `id` (schema version 6) is not a fact: the tool mints it so a kept what-if can name the line.
+  budget: shown('living'),
+  heirBracket: elsewhere('tax-strategies', 'The heirs’ bracket ranks the leave-more goal’s strategies, so it is set on Tax Strategies beside the goal.'),
+  chosenGoal: elsewhere('tax-strategies', 'The goal is the recommendation’s question, asked and changed on Tax Strategies.'),
+  drawdownPolicy: elsewhere('tray', 'The withdrawal order is a lever: tried beside the plan in the Action Items tray and applied there.'),
+  drawdownOrder: elsewhere('tray', 'A custom order is the withdrawal-order lever’s own detail, tried and applied in the Action Items tray.'),
+  rothConversion: elsewhere('tray', 'The Roth plan is a lever: tried beside the plan in the Action Items tray and applied there.'),
+  enhancedSubsidies: elsewhere('tray', 'The marketplace subsidy rules are a lever: tried in the Action Items tray (from Health Care) and applied there.'),
+  medicareExtrasByPerson: shown('medicare'),
+  retirementState: shown('state'),
   workingYearCost: shown('working-cost'),
-  workingYearLeftOver: shown('working-ledger'),
-  chosenGoal: shown('none'),
+  workingYearLeftOver: shown('working-cost'),
   filing: notAFact('Married filing jointly is the product’s precondition, never an answer the household gives.'),
   startCalendarYear: notAFact('The year the plan was built: a stamp of when, not something the household told the tool.'),
   taxVintage: notAFact('The legacy tax-vintage stamp, carried for the saved plan’s add-only law.'),
@@ -123,39 +104,38 @@ export const DRAFT_FACTS: Record<keyof ScenarioDraft, FactDisposition> = {
 }
 
 export const PERSON_FACTS: Record<keyof PersonDraft, FactDisposition> = {
-  name: shown('names'),
-  sex: shown('names'),
-  birthYear: shown('names'),
+  name: shown('person'),
+  sex: shown('person'),
+  birthYear: shown('person'),
   currentAge: notAFact('Worked out from the birth year and the plan’s year; the birth year is the fact.'),
-  workStatus: shown('work'),
-  retirementAge: shown('work'),
-  earnedIncomeReal: shown('income'),
+  workStatus: shown('person'),
+  retirementAge: shown('person'),
+  earnedIncomeReal: shown('salary'),
   pia: shown('social-security'),
-  // A claim age not yet reached is a lever (KTD15): its door stays the Social Security step's (the step holds the benefit
-  // too), and since U15 the line also links to the lever's row in the Action Items tray.
+  // A claim age not yet reached is a lever too (KTD15): tried in the Action Items tray; its one fact home is this drawer.
   socialSecurityClaimAge: shown('social-security'),
 }
 
 export const HEALTH_FACTS: Record<keyof HealthDraft, FactDisposition> = {
-  enrolledPremiumMonthlyToday: shown('health-quote'),
-  slcspMonthlyToday: shown('health-quote'),
-  employerPlanCoversRetiredMember: shown('employer-coverage'),
-  oopMedicalAnnual: shown('oop-medical'),
-  workingYearInvestmentByPerson: shown('working-income'),
-  irmaaMagiSeed: shown('irmaa-seed'),
+  enrolledPremiumMonthlyToday: shown('health'),
+  slcspMonthlyToday: shown('health'),
+  employerPlanCoversRetiredMember: shown('health'),
+  oopMedicalAnnual: shown('medical'),
+  workingYearInvestmentByPerson: shown('work-invest'),
+  irmaaMagiSeed: shown('medicare'),
 }
 
 export const ACCOUNT_FACTS: Record<keyof EnteredAccount, FactDisposition> = {
   id: notAFact('A stable id the tool mints so a kept what-if can name the account; never something the household told it.'),
-  ownerIndex: shown('accounts'),
-  kind: shown('accounts'),
-  valueToday: shown('accounts'),
-  manualBlend: shown('accounts'),
-  basis: shown('accounts'),
-  annualContribution: shown('accounts'),
-  employerMatchAnnual: shown('accounts'),
-  hsaEmployerAnnual: shown('accounts'),
-  ticker: shown('accounts'),
+  ownerIndex: shown(...ACCOUNT_DRAWERS),
+  kind: shown(...ACCOUNT_DRAWERS),
+  valueToday: shown(...ACCOUNT_DRAWERS),
+  manualBlend: shown(...ACCOUNT_DRAWERS),
+  basis: shown(...ACCOUNT_DRAWERS),
+  annualContribution: shown(...ACCOUNT_DRAWERS),
+  employerMatchAnnual: shown(...ACCOUNT_DRAWERS),
+  hsaEmployerAnnual: shown(...ACCOUNT_DRAWERS),
+  ticker: shown(...ACCOUNT_DRAWERS),
 }
 
 /** Every key of every arm of a union (a DISTRIBUTIVE keyof): `keyof (A | B)` keeps only the keys both share. */
@@ -163,33 +143,47 @@ export type KeysOfEachArm<T> = T extends unknown ? keyof T : never
 export type IncomeFactKey = KeysOfEachArm<IncomeStream>
 
 export const INCOME_FACTS: Record<IncomeFactKey, FactDisposition> = {
-  ownerIndex: shown('other-income'),
-  type: shown('other-income'),
-  annualRealToday: shown('other-income'),
-  startAge: shown('other-income'),
-  endAge: shown('other-income'),
-  colaMode: shown('other-income'),
-  colaPct: shown('other-income'),
-  survivorPct: shown('other-income'),
-  taxableFraction: shown('other-income'),
-  executedAfter2018: shown('other-income'),
-  modifiedAdoptsPost2018Rules: shown('other-income'),
-  qualified: shown('other-income'),
-  exclusionFraction: shown('other-income'),
+  ownerIndex: shown(...INCOME_DRAWERS),
+  type: shown(...INCOME_DRAWERS),
+  annualRealToday: shown(...INCOME_DRAWERS),
+  startAge: shown(...INCOME_DRAWERS),
+  endAge: shown(...INCOME_DRAWERS),
+  colaMode: shown(...INCOME_DRAWERS),
+  colaPct: shown(...INCOME_DRAWERS),
+  survivorPct: shown(...INCOME_DRAWERS),
+  taxableFraction: shown(...INCOME_DRAWERS),
+  executedAfter2018: shown(...INCOME_DRAWERS),
+  modifiedAdoptsPost2018Rules: shown(...INCOME_DRAWERS),
+  qualified: shown(...INCOME_DRAWERS),
+  exclusionFraction: shown(...INCOME_DRAWERS),
 }
 
-/** Every SHOWN field, by its stamp, with the doors it may sit behind: the list the field walk reads. */
-export function shownFacts(): ReadonlyMap<FactStamp, readonly FactDoorId[]> {
-  const out = new Map<FactStamp, readonly FactDoorId[]>()
-  const add = (prefix: string, record: Readonly<Record<string, FactDisposition>>) => {
-    for (const [key, d] of Object.entries(record)) {
-      if (d.kind === 'shown') out.set(`${prefix}${key}` as FactStamp, d.doors)
+const RECORDS = [
+  ['', DRAFT_FACTS],
+  ['person.', PERSON_FACTS],
+  ['health.', HEALTH_FACTS],
+  ['account.', ACCOUNT_FACTS],
+  ['income.', INCOME_FACTS],
+] as const
+
+/** Every SHOWN field, by its stamp, with the drawers it may sit in: the list the field walk reads. */
+export function shownFacts(): ReadonlyMap<FactStamp, readonly FactDrawerId[]> {
+  const out = new Map<FactStamp, readonly FactDrawerId[]>()
+  for (const [prefix, record] of RECORDS) {
+    for (const [key, d] of Object.entries(record as Readonly<Record<string, FactDisposition>>)) {
+      if (d.kind === 'shown') out.set(`${prefix}${key}` as FactStamp, d.drawers)
     }
   }
-  add('', DRAFT_FACTS)
-  add('person.', PERSON_FACTS)
-  add('health.', HEALTH_FACTS)
-  add('account.', ACCOUNT_FACTS)
-  add('income.', INCOME_FACTS)
+  return out
+}
+
+/** Every field homed outside Profile, by its stamp, with its home. */
+export function elsewhereFacts(): ReadonlyMap<FactStamp, FactElsewhereId> {
+  const out = new Map<FactStamp, FactElsewhereId>()
+  for (const [prefix, record] of RECORDS) {
+    for (const [key, d] of Object.entries(record as Readonly<Record<string, FactDisposition>>)) {
+      if (d.kind === 'elsewhere') out.set(`${prefix}${key}` as FactStamp, d.home)
+    }
+  }
   return out
 }

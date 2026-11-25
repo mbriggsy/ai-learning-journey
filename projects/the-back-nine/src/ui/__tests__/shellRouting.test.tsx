@@ -41,7 +41,7 @@ import IntakeApp from '../IntakeApp'
 import { appModel } from '../appModel'
 import { scenarioFromDraft } from '../scenarioFromDraft'
 import { DEV_SEEDS } from '../devSeeds'
-import { copy, slots } from '../copy'
+import { copy } from '../copy'
 import { holdUnsavedBuffer, unsavedBuffersHeld } from '@intake/unsavedBuffer'
 import type { MemoryModelSnapshot, ModelAnswer } from '@store/memoryModel'
 
@@ -95,12 +95,13 @@ async function pressForward() {
 }
 
 const modulesNav = () => screen.getAllByRole('navigation', { name: copy.shellModulesLabel })[0]!
-/** Profile → Your facts in ONE move (one history entry), by the phone menu: since RC13a the Profile word lands on Net
- *  Worth, its first page. */
+/** Profile → Expenses in ONE move (one history entry), by the phone menu: the Profile word lands on Net Worth, its first
+ *  page. (RC13b: the facts page these walks used is gone; Expenses is a Profile page with drawers.) */
 const goToFacts = () => {
   fireEvent.click(screen.getByRole('button', { name: copy.shellMenuOpen }))
-  fireEvent.click(within(screen.getByRole('dialog', { name: copy.shellMenuTitle })).getByRole('link', { name: copy.workbenchPageFacts }))
+  fireEvent.click(within(screen.getByRole('dialog', { name: copy.shellMenuTitle })).getByRole('link', { name: copy.shellPageExpenses }))
 }
+const card = (id: string) => document.querySelector<HTMLElement>(`[data-profile-card="${id}"]`)!
 /** Retirement → Analysis (the module's first page: Probability). */
 const goToAnalysis = () => fireEvent.click(within(modulesNav()).getByRole('link', { name: copy.shellModuleRetirement }))
 /** Probability's Action Items tray (RC4b): Retirement → Analysis, then the handle. */
@@ -152,8 +153,8 @@ describe('the shell’s history', () => {
   it('each page is an entry: Back moves to the previous page, Forward to the next; the hash names the page and nothing more', async () => {
     await landHydrated()
     goToFacts()
-    expect(screenShown()).toBe('interim-facts')
-    expect(window.location.hash).toBe('#/profile/facts')
+    expect(screenShown()).toBe('profile-expenses')
+    expect(window.location.hash).toBe('#/profile/expenses')
     expect(window.history.state).toEqual({ b9: 'workspace', n: 2 })
     // Nothing about the plan in the address or the entry: no figure, no name.
     const names = appModel.getSnapshot().draft.people.map((p) => p.name ?? '').filter((n) => n !== '')
@@ -166,7 +167,7 @@ describe('the shell’s history', () => {
     expect(screenShown()).toBe('snapshot')
     expect(window.location.hash).toBe('#/dashboard/snapshot')
     await pressForward()
-    expect(screenShown()).toBe('interim-facts')
+    expect(screenShown()).toBe('profile-expenses')
   })
 
   it('the wordmark goes straight home to Snapshot from any page, as one history move', async () => {
@@ -185,13 +186,13 @@ describe('the shell’s history', () => {
     const release = holdUnsavedBuffer()
     try {
       await pressBack()
-      expect(screenShown()).toBe('interim-facts')
+      expect(screenShown()).toBe('profile-expenses')
       expect(window.history.state).toEqual({ b9: 'workspace', n: 2 })
-      expect(window.location.hash).toBe('#/profile/facts')
+      expect(window.location.hash).toBe('#/profile/expenses')
       expect(screen.getByText(copy.workbenchLeaveAsk)).toBeInTheDocument()
       fireEvent.click(screen.getByRole('button', { name: copy.workbenchLeaveStay }))
       expect(screen.queryByText(copy.workbenchLeaveAsk)).toBeNull()
-      expect(screenShown()).toBe('interim-facts')
+      expect(screenShown()).toBe('profile-expenses')
 
       await pressBack()
       await backAndSettle(() => fireEvent.click(screen.getByRole('button', { name: copy.workbenchLeaveGo })))
@@ -221,10 +222,10 @@ describe('the shell’s history', () => {
     await pressBack()
     expect(screen.getByText('save stub')).toBeInTheDocument()
     expect(window.history.state).toEqual({ b9: 'workspace', n: 2 })
-    expect(window.location.hash).toBe('#/profile/facts')
+    expect(window.location.hash).toBe('#/profile/expenses')
 
     fireEvent.click(screen.getByRole('button', { name: 'save-done-stub' }))
-    await waitFor(() => expect(screenShown()).toBe('interim-facts'))
+    await waitFor(() => expect(screenShown()).toBe('profile-expenses'))
     expect(saveState()).toBe('clean')
   })
 
@@ -255,10 +256,14 @@ describe('the shell’s history', () => {
     expect(await screen.findByText(copy.saveErrorReadOnly)).toBeInTheDocument()
     expect(screen.queryAllByRole('menuitem')).toEqual([])
     fireEvent.keyDown(document.activeElement ?? document.body, { key: 'Escape' })
-    // The facts page: every fact, and no door into any of them.
+    // A Profile page: every fact on its card, and a drawer that opens with no control that writes (plan 4.0).
     goToFacts()
-    expect(screen.getByRole('heading', { name: copy.workbenchFactsSocialSecurity })).toBeInTheDocument()
-    expect(screen.queryAllByRole('button', { name: new RegExp(`^${copy.workbenchFactsEdit}`) })).toEqual([])
+    expect(screen.getByRole('heading', { name: copy.shellPageExpenses })).toBeInTheDocument()
+    fireEvent.click(card('medical'))
+    const drawer = await screen.findByRole('dialog', { name: copy.profileKindMedical })
+    expect(within(drawer).queryByRole('button', { name: copy.profileDrawerSave })).toBeNull()
+    fireEvent.click(within(drawer).getByRole('button', { name: copy.profileDrawerCancel }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
     // No sheet mounts on a read-only tab, so no door that would open one: no gear, no health-cost door.
     expect(screen.queryByRole('button', { name: copy.shellGearLabel })).toBeNull()
     // A household with a marketplace quote and someone under 65 (the page's door would show on a writable tab).
@@ -280,147 +285,74 @@ describe('the shell’s history', () => {
   })
 })
 
-describe('the facts page through the real phase machine (U8)', () => {
-  /** Open a facts-page group's sheet and type a new first name for the first person: the draft moves. */
-  function editAName(name: string) {
+describe('a Profile drawer through the real phase machine (RC13b, in place of the facts page’s sheets, U8)', () => {
+  /** Open Expenses' Out-of-pocket medical drawer and type a yearly figure (blurred unless `keepFocus`). */
+  async function typeMedical(text: string, keepFocus = false) {
     goToFacts()
-    fireEvent.click(screen.getByRole('button', { name: 'Edit the two of you' }))
-    const sheet = screen.getByRole('dialog', { name: copy.workbenchFactsPeople })
-    const field = within(sheet).getAllByLabelText(copy.nameLabel)[0]!
-    fireEvent.change(field, { target: { value: name } })
-    fireEvent.blur(field)
-    return sheet
+    fireEvent.click(card('medical'))
+    const drawer = await screen.findByRole('dialog', { name: copy.profileKindMedical })
+    const field = within(drawer).getByLabelText(copy.oopLabel)
+    act(() => field.focus())
+    fireEvent.change(field, { target: { value: text } })
+    if (!keepFocus) act(() => field.blur())
+    return drawer
   }
 
-  it('an edit marks the saved plan unsaved, and the lock menu offers its save', async () => {
+  it('a Save marks the saved plan unsaved, and the lock menu offers its save', async () => {
     await landHydrated()
     expect(saveState()).toBe('clean')
-    const sheet = editAName('Robin')
-    fireEvent.click(within(sheet).getByRole('button', { name: copy.workbenchFactsDone }))
+    const drawer = await typeMedical('4,500')
+    fireEvent.click(within(drawer).getByRole('button', { name: copy.profileDrawerSave }))
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
     expect(saveState()).toBe('dirty')
     fireEvent.click(screen.getByRole('button', { name: new RegExp(`^${copy.lockMenuLabel}`) }))
     expect(await screen.findByRole('menuitem', { name: copy.resaveCta })).toBeInTheDocument()
-    expect(appModel.getSnapshot().draft.people[0].name).toBe('Robin')
+    expect(appModel.getSnapshot().draft.health.oopMedicalAnnual).toBe(4_500)
   })
 
-  it('a real Back press with an open step sheet that moved the draft asks first, over the sheet; Stay keeps it open; Go back leaves, keeping the finished edit', async () => {
+  it('a real Back press over a drawer holding a change asks inside it, in its own words; Stay keeps it; Go back leaves and drops the change', async () => {
     await landHydrated()
-    editAName('Jordan')
+    const before = appModel.getSnapshot().draft.health.oopMedicalAnnual
+    await typeMedical('4,500')
     await pressBack()
-    expect(screenShown()).toBe('interim-facts')
+    expect(screenShown()).toBe('profile-expenses')
     expect(window.history.state).toEqual({ b9: 'workspace', n: 2 })
-    const ask = screen.getByRole('alertdialog', { name: copy.workbenchLeaveAsk })
-    expect(within(ask).getByRole('button', { name: copy.workbenchLeaveStay })).toHaveFocus()
-    expect(screen.getByRole('dialog', { name: copy.workbenchFactsPeople })).toBeInTheDocument()
-
-    fireEvent.click(within(ask).getByRole('button', { name: copy.workbenchLeaveStay }))
-    expect(screen.queryByRole('alertdialog')).toBeNull()
-    expect(screen.getByRole('dialog', { name: copy.workbenchFactsPeople })).toBeInTheDocument()
-
-    // The ask holds the keyboard over the sheet (the U8 review's C3): Tab moves between its two choices only, and
-    // Escape is Stay; a scrim takes the presses meant for the sheet or the page.
-    await pressBack()
-    const held = screen.getByRole('alertdialog', { name: copy.workbenchLeaveAsk })
-    const stay = within(held).getByRole('button', { name: copy.workbenchLeaveStay })
-    const go = within(held).getByRole('button', { name: copy.workbenchLeaveGo })
-    expect(held.closest('.workbench__ask-layer'), 'the ask rides its scrim').not.toBeNull()
-    fireEvent.keyDown(stay, { key: 'Tab' })
-    expect(go).toHaveFocus()
-    fireEvent.keyDown(go, { key: 'Tab', shiftKey: true })
-    expect(stay).toHaveFocus()
-    fireEvent.keyDown(stay, { key: 'Escape' })
-    expect(screen.queryByRole('alertdialog')).toBeNull()
-    expect(screen.getByRole('dialog', { name: copy.workbenchFactsPeople })).toBeInTheDocument()
+    const drawer = screen.getByRole('dialog', { name: copy.profileKindMedical })
+    expect(within(drawer).getByText(copy.profileLeaveAskUnsaved)).toBeInTheDocument()
+    expect(screen.queryByText(copy.workbenchLeaveAsk), 'never asked on the page beneath the drawer').toBeNull()
+    fireEvent.click(within(drawer).getByRole('button', { name: copy.workbenchLeaveStay }))
+    expect(within(drawer).queryByText(copy.profileLeaveAskUnsaved)).toBeNull()
+    expect(screen.getByRole('dialog', { name: copy.profileKindMedical })).toBeInTheDocument()
 
     await pressBack()
-    const again = screen.getByRole('alertdialog', { name: copy.workbenchLeaveAsk })
+    const again = screen.getByRole('dialog', { name: copy.profileKindMedical })
     await backAndSettle(() => fireEvent.click(within(again).getByRole('button', { name: copy.workbenchLeaveGo })))
     expect(screenShown()).toBe('snapshot')
-    expect(appModel.getSnapshot().draft.people[0].name).toBe('Jordan')
-    // "Going back closes it": no sheet stays open over the new page, and focus lands on its heading.
-    await waitFor(() => expect(screen.queryByRole('dialog'), 'the sheet closed with the leave').toBeNull())
-    expect(screen.getByRole('heading', { level: 1, name: copy.shellPageSnapshot })).toHaveFocus()
+    expect(appModel.getSnapshot().draft.health.oopMedicalAnnual, 'the change was in the drawer, never in the plan').toBe(before)
+    await waitFor(() => expect(screen.queryByRole('dialog'), 'the drawer closed with the leave').toBeNull())
     expect(unsavedBuffersHeld(), 'nothing held once the leave went').toBe(0)
   })
 
-  it('a plain Back with a sheet open and nothing typed moves the page and closes the sheet; Forward lands focus on the page’s heading', async () => {
+  it('a figure typed and never blurred is unsaved work too: a Back asks first, never dropping it silently', async () => {
+    await landHydrated()
+    await typeMedical('4,500', true)
+    await pressBack()
+    expect(screenShown()).toBe('profile-expenses')
+    expect(within(screen.getByRole('dialog', { name: copy.profileKindMedical })).getByText(copy.profileLeaveAskUnsaved)).toBeInTheDocument()
+  })
+
+  it('a plain Back with a drawer open and nothing changed moves the page and closes it; Forward lands focus on the page’s heading', async () => {
     await landHydrated()
     goToFacts()
-    fireEvent.click(screen.getByRole('button', { name: copy.shellGearLabel }))
-    await screen.findByRole('dialog')
+    fireEvent.click(card('medical'))
+    await screen.findByRole('dialog', { name: copy.profileKindMedical })
     await pressBack()
-    expect(screen.queryByText(copy.workbenchLeaveAsk), 'nothing typed: no ask').toBeNull()
+    expect(screen.queryByText(copy.profileLeaveAskUnsaved), 'nothing changed: no ask').toBeNull()
     expect(screenShown()).toBe('snapshot')
-    await waitFor(() => expect(screen.queryByRole('dialog'), 'the panel closed with the page').toBeNull())
+    await waitFor(() => expect(screen.queryByRole('dialog'), 'the drawer closed with the page').toBeNull())
     await pressForward()
-    expect(screenShown()).toBe('interim-facts')
-    expect(screen.getByRole('heading', { level: 2, name: copy.workbenchPageFacts })).toHaveFocus()
-  })
-
-  it('Go back over a budget closed with rows not yet applied drops those rows, as the ask says', async () => {
-    await landHydrated()
-    act(() =>
-      appModel.update((d) => ({ ...d, budget: [{ id: 'line-food', category: 'food', label: 'Groceries', annualAmountReal: 9_600, tier: 'essentials', startYear: 0 }] })),
-    )
-    goToFacts()
-    fireEvent.click(document.querySelector('[data-fact-open="budget"]')!)
-    const sheet = await screen.findByRole('dialog')
-    fireEvent.click(within(sheet).getByRole('button', { name: copy.budgetAddLine }))
-    fireEvent.click(within(sheet).getByRole('button', { name: copy.budgetCancel }))
-    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
-    expect(unsavedBuffersHeld(), 'the staged row holds').toBe(1)
-    await pressBack()
-    expect(screen.getByText(copy.workbenchLeaveAsk)).toBeInTheDocument()
-    await backAndSettle(() => fireEvent.click(screen.getByRole('button', { name: copy.workbenchLeaveGo })))
-    expect(screenShown()).toBe('snapshot')
-    expect(unsavedBuffersHeld(), 'the row not yet added was dropped').toBe(0)
-  })
-
-  /** Open the Social Security step's sheet and type a monthly benefit for the first person, focused (never blurred). */
-  function typeABenefit(monthly: string) {
-    goToFacts()
-    fireEvent.click(screen.getAllByRole('button', { name: slots.workbenchFactsEditName(copy.workbenchFactsSocialSecurity) })[0]!)
-    const sheet = screen.getByRole('dialog', { name: copy.workbenchFactsSocialSecurity })
-    const field = within(sheet).getAllByLabelText(copy.ssAmountLabel)[0]!
-    act(() => field.focus())
-    fireEvent.change(field, { target: { value: monthly } })
-    return field
-  }
-
-  it('Go back over a figure the step refuses puts the draft back to what it held at open, and the ask says so first: a refused value never reaches the answer', async () => {
-    await landHydrated()
-    const before = appModel.getSnapshot().draft.people[0].pia
-    // A yearly figure in the monthly box: 360,000 a year, over the benefit ceiling (the step's Continue refuses it).
-    const field = typeABenefit('30,000')
-    act(() => field.blur())
-    expect(appModel.getSnapshot().draft.people[0].pia, 'the blur wrote it, as the walk does').toBe(360_000)
-    await pressBack()
-    // Never "changes you finished stay in your plan": Go puts the whole step back (round 3 of the milestone-1 review).
-    expect(screen.queryByText(copy.workbenchLeaveAsk)).toBeNull()
-    const ask = screen.getByRole('alertdialog', { name: copy.workbenchLeaveAskPutsBack })
-    await backAndSettle(() => fireEvent.click(within(ask).getByRole('button', { name: copy.workbenchLeaveGo })))
-    expect(screenShown()).toBe('snapshot')
-    expect(appModel.getSnapshot().draft.people[0].pia, 'the refused figure went with the sheet').toBe(before)
-    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
-    expect(unsavedBuffersHeld()).toBe(0)
-  })
-
-  it('a plain Back over a figure typed and never blurred ends the edit through the sheet: a figure the step takes is kept, a refused one is not', async () => {
-    await landHydrated()
-    const before = appModel.getSnapshot().draft.people[0].pia
-    typeABenefit('2,100')
-    await pressBack()
-    expect(screen.queryByText(copy.workbenchLeaveAsk), 'nothing committed yet: no ask').toBeNull()
-    expect(screenShown()).toBe('snapshot')
-    expect(appModel.getSnapshot().draft.people[0].pia, 'the typed figure committed as the sheet closed').toBe(25_200)
-    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
-
-    typeABenefit('30,000')
-    await pressBack()
-    expect(screenShown()).toBe('snapshot')
-    expect(appModel.getSnapshot().draft.people[0].pia, 'a refused figure never leaves').toBe(25_200)
-    expect(before).not.toBe(25_200)
+    expect(screenShown()).toBe('profile-expenses')
+    expect(screen.getByRole('heading', { name: copy.shellPageExpenses })).toHaveFocus()
   })
 })
 

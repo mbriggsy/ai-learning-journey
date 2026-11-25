@@ -3,7 +3,7 @@
  * docs/plans/6-rightcapital-ui-plan.md, RC4 "Interim homes"; section 4.0's disclosure map). Draws `staleLines.ts`'s
  * lines and decides nothing: the staleness note (with its moved-left-over clause where a rules line hosts it), the
  * aged-balances line (its door the guided re-walk, where the tab can write), and the ONE standing line, its door opening
- * the assumptions panel at that cause's seat (the gear's drawer until RC13). The standing line keeps the old hero's
+ * the cause's seat (the shell opens the Pre-retirement living expenses drawer for the pay check's seats, RC13b). The standing line keeps the old hero's
  * element shapes (a paragraph with the door inline after its sentence; a block of labelled parts with the door last),
  * so its laws and its tests carried over unchanged; its door wears the kit's secondary button.
  */
@@ -15,7 +15,7 @@ import type { StaleLine } from './staleLines'
 
 export interface StaleBannerStackProps {
   readonly lines: readonly StaleLine[]
-  /** Open the assumptions panel at a seat (the standing line's door). */
+  /** Open the standing line's seat (the shell picks its home: the W drawer for the pay check's two seats). */
   readonly onOpenSeat: (seat: AssumptionLandingSeat) => void
   /** The guided re-walk (the aged line's door); absent: no door. */
   readonly onReconfirm?: () => void

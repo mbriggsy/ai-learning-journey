@@ -18,9 +18,8 @@
  * and rough lanes and their runs on each FINAL committed answer (KTD9, KTD13: built from the answer's own draft,
  * `tableRunFor`; until the newest answer's rows land, the rows on screen stay, marked as updating), the one what-if
  * (`useWhatIf`: its slot, its committed and pending bundles, and the Action Items tray's open state and hidden rows,
- * so a page move drops none of them), the facts page's doors (a step's group opens that step's body in a sheet,
- * `StepSheet`; the budget and the panel's seats open their own sheets from `editorSheets.tsx`), the leave ask, and
- * the one live region (the save's transitions, the answer being worked out again, the table updating, the new answer's
+ * so a page move drops none of them), the Profile drawer opened from outside Profile (the drawer host below), the leave
+ * ask, and the one live region (the save's transitions, the answer being worked out again, the table updating, the new answer's
  * words; spoken on transitions only).
  *
  * RETIREMENT → CASH FLOWS (RC6, `CashFlows.tsx` over `cashFlowsView.ts`): your plan's rows from the runs above; a
@@ -36,7 +35,7 @@
  * RETIREMENT → HEALTH CARE (RC10, `HealthCare.tsx` over `healthCareView.ts`): the plan's own health premiums, one small
  * chart per part, from the committed answer's readout (retired) or the steady market's rows above (working). Its Action
  * Items tray holds B9's health inputs: the subsidy rules open Analysis's tray at that lever (`tryLever`), each plan fact
- * its own drawer (the facts page's doors). The assumption panel's subsidy-rules row opens this page.
+ * its own Profile drawer, over this page. The assumption panel's subsidy-rules row opens this page.
  *
  * RETIREMENT → STRESS TEST (RC11, `StressTest.tsx` over `stressView.ts`): one bar per stress on the plan's own futures, each
  * a copy of the committed plan with one input made worse (`src/intake/stress.ts`), run on its own slot (`useStress`, made
@@ -44,20 +43,21 @@
  * plan's own reading, no run.
  *
  * INVESTMENT → ASSET ALLOCATION AND TAX ALLOCATION (RC12, `AssetAllocation.tsx` and `TaxAllocation.tsx` over
- * `investmentView.ts`): the plan's facts as they stand (the live draft, as the facts page reads them): each account's mix
+ * `investmentView.ts`): the plan's facts as they stand (the live draft, as the Profile pages read them): each account's mix
  * as the run reads it, against the mix lever of the what-if open on Analysis (the left side's shown bundle, by its name),
  * and the savings by tax treatment. The folder tab, the picker and the picked bucket are held here, so a page move keeps
  * them. The mix door opens Analysis's tray at the mix row (`tryLever`).
  *
- * PROFILE → NET WORTH, INCOME, SAVINGS AND FAMILY (RC13a, `ProfilePages.tsx` over `profileView.ts`): the household's
- * facts as cards, each opening a drawer that edits a buffered copy and writes the store once, on a Save that passes every
- * check the walk's Continue runs (`drawerSave.ts`). Mounted keyed by the page, so a page change drops its drawer; while a
- * drawer is open the shell's Back ask is asked inside it (the drawer is modal), never on the page beneath.
+ * PROFILE → NET WORTH, GOALS, INCOME, SAVINGS, EXPENSES AND FAMILY (RC13a, RC13b; `ProfilePages.tsx` over
+ * `profileView.ts`): the household's facts as cards, each opening a drawer that edits a buffered copy and writes the store
+ * once, on a Save that passes every check the walk's Continue runs (`drawerSave.ts`). Every saved fact has its one drawer
+ * home there (`factRegistry.ts`). Mounted keyed by the page, so a page change drops its drawer; while a drawer is open the
+ * shell's Back ask is asked inside it (the drawer is modal), never on the page beneath.
  *
- * THE INTERIM TABS: the room's pages ride in their current look (`InterimPage.tsx`, outside any `.rc-root`):
- * Profile → Your facts (`FactsPage.tsx`); the old What if page left with
- * RC4b, its levers now Probability's Action Items tray (`ActionItemsTray.tsx`). A facts-page "Try a change" and the
- * assumption panel's withdrawal-order and Roth rows open the tray at the lever's row.
+ * THE OUTSIDE DOORS (RC13b): the StaleBanner's standing line (the pay check's W and the left-over answer), Health Care's
+ * tray facts and the assumption panel's budget row open their Profile drawer HERE, over the page that shows
+ * (`useDrawerHost`, the same host the Profile pages use), so a Save lands and the page's figures redraw where the
+ * household is reading. The assumption panel's withdrawal-order and Roth rows open the tray at the lever's row.
  *
  * THE TWO-UP AND THE PLAN LIST (RC5): Probability's right side runs on its own slot (`useSlotRun`, made once here), so any
  * two of your plan, the kept what-ifs, Recommended and the new what-if sit side by side. The pencil beside the right
@@ -66,7 +66,6 @@
  * what-if (a leave past the shell asks first). Opening another what-if on the left over an unkept one asks first.
  */
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { intakeSteps } from '@intake/questions'
 import { missingRequiredFacts, pricedStateForRun } from '@intake/intakeMap'
 import { unsavedBuffersHeld } from '@intake/unsavedBuffer'
 import { engineRunLane, type EngineRunRequest, type Lane } from '@store/runLanes'
@@ -82,10 +81,8 @@ import { planClockAnchor } from '../bandAnnotations'
 import { useEditorSheets } from '../editorSheets'
 import { useSaveAnnouncer, type ResultSaveProp } from '../saveAnnouncer'
 import { pinnedLines, reserveForms } from '../workbench/pinnedLines'
-import { FactsPage } from '../workbench/FactsPage'
-import { StepSheet, type StepEnding } from '../workbench/StepSheet'
-import { composeFacts, stepSectionTitle, type FactStop } from '../workbench/factsChrome'
-import type { FactDoorId, StepSectionId } from '../workbench/factRegistry'
+// The leave ask's own look (`.workbench__ask*`), the last of the room's sheet that the shell still draws.
+import '../workbench/workbench.css'
 import { tableRunFor, type TableMeta, type TableRun, type TableView } from '../workbench/tableRun'
 import { sourceKept, useSlotRun, useWhatIf, type RailRecommendation } from '../workbench/useWhatIf'
 import { planReadingFor, whatIfRunFor, type WhatIfSlotLanes, type WhatIfSlotView } from '../workbench/whatIfRun'
@@ -128,6 +125,8 @@ import { TaxAllocation } from '../screens/investment/TaxAllocation'
 import { assetAllocationView, taxAllocationView, type AssetTab, type MixScope, type TaxBucketId } from '../screens/investment/investmentView'
 import { Snapshot, type SnapshotDoors } from '../screens/dashboard/Snapshot'
 import { isProfileScreen, ProfilePages } from '../screens/profile/ProfilePages'
+import { useDrawerHost } from '../screens/profile/drawerHost'
+import { expensesView, goalsView } from '../screens/profile/profileView'
 import { snapshotView, type SteadyRows } from '../screens/dashboard/snapshotView'
 import { Analysis } from '../screens/retirement/Analysis'
 import { confidenceView } from '../screens/retirement/confidenceView'
@@ -135,7 +134,6 @@ import { ActionItemsTray, type TrayFocus } from '../screens/retirement/ActionIte
 import { keptIdOf, landingPick, probabilityView, type LeftPick, type ProbabilityChart, type RightPick } from '../screens/retirement/probabilityView'
 import { PlanListDrawer, type NameBox } from '../screens/retirement/PlanListDrawer'
 import { copyEdit, deleteEdit, keepEdit, listWrites, nameError, orderEdit, outcomeWords, planListView, renameEdit, type KeptEdit, type KeptWriteOutcome } from '../screens/retirement/planListView'
-import { InterimPage } from './InterimPage'
 import { composeLockMenu, type LockMenuAction } from './lockMenu'
 import { composeStaleLines } from './staleLines'
 import { StaleBannerStack } from './StaleBannerStack'
@@ -257,19 +255,10 @@ const CASH_FLOWS_CAVEAT = [staticDisclosures.honestLimitsScope, staticDisclosure
 /** No levers: a slot shown nothing asks nothing (one array, so the slot's key never moves on a re-render). */
 const NO_LEVERS: readonly WhatIfLeverV6[] = []
 
-/** The lever doors and the panel seats a facts-page door opens (every non-step door, exhaustive). */
-type SheetDoor = Exclude<FactDoorId, StepSectionId>
-
 /** The ask a leave raises over work it would drop. Over an open sheet it rides its own layer above the sheet's backdrop
  *  (the sheet is modal, and an ask beneath it could be neither seen nor pressed): a scrim takes every press meant for
  *  the sheet or the page, Tab and Shift+Tab move between its two choices only, and Escape is Stay (the U8 review's C3,
  *  C7). Focus moves to its safe choice, and goes back where it was on Stay, or to the page's heading when that is gone. */
-/** A leave ask's open-entry line, said over a step whose Go puts it back (its Continue refuses what was changed). */
-const PUTS_BACK_LINES: ReadonlyMap<string, string> = new Map([
-  [copy.workbenchLeaveAsk, copy.workbenchLeaveAskPutsBack],
-  [copy.shellCeremonyOpenEntry, copy.shellCeremonyPutsBack],
-])
-
 function LeaveAsk({ ask, overSheet, fallback }:{ readonly ask: ShellLeaveAsk; readonly overSheet: boolean; readonly fallback: () => HTMLElement | null }) {
   const stayRef = useRef<HTMLButtonElement>(null)
   const goRef = useRef<HTMLButtonElement>(null)
@@ -435,48 +424,15 @@ export default function Shell({
     announcer.announce(lead)
   }, [lead, snapshot.refiguring, announcer])
 
-  // ── The facts page's doors (U8) ──────────────────────────────────────────────────────────────────────────────────
+  // ── The plan's facts as they stand (the live draft) ────────────────────────────────────────────────────────────
   const { draft } = snapshot
-  const steps = useMemo(() => intakeSteps(draft), [draft])
   const missing = useMemo(() => missingRequiredFacts(draft), [draft])
   const anchor = useMemo(() => planClockAnchor(draft.startCalendarYear, wallCalendarYear), [draft.startCalendarYear, wallCalendarYear])
-  // The stop year the table's LAST DELIVERED run carries, never re-derived (insight 132), held (and marked in words)
-  // while a newer answer is worked out: the provisional tier asks no table run (the U8 review's C1).
-  const delivered = results.steady?.kind === 'rows' ? results.steady : results.rough?.kind === 'rows' ? results.rough : undefined
-  const stopMarked = snapshot.refiguring || delivered === undefined || run.kind !== 'run' || delivered.key !== run.key
-  const stop = useMemo((): FactStop | undefined => {
-    if (delivered === undefined || run.kind === 'withheld' || run.kind === 'answer-error') return undefined
-    const meta = delivered.meta
-    if (meta.stopYear === undefined || meta.route === 'spine') return undefined
-    return { route: meta.route, year: meta.stopYear, track: meta.track, marked: stopMarked }
-  }, [delivered, run.kind, stopMarked])
-  const sections = useMemo(
-    () => (screen === 'interim-facts' ? composeFacts({ draft, stepIds: steps.map((s) => s.id), anchor, ...(stop !== undefined ? { stop } : {}) }) : []),
-    [screen, draft, steps, anchor, stop],
-  )
-
-  // Where a door's sheet hands focus back when the door itself is gone: the door again, re-queried at close, else the
-  // page's own heading.
-  const lastDoor = useRef<FactDoorId | null>(null)
-  const restoreFallback = useCallback((): HTMLElement | null => {
-    const door = lastDoor.current
-    const again = door === null ? null : document.querySelector<HTMLElement>(`[data-fact-open="${door}"]`)
-    return again ?? headingRef.current
-  }, [])
-
-  const [openStepId, setOpenStepId] = useState<StepSectionId | null>(null)
-  // The open step, from the draft's CURRENT walk. A step that left the walk under an edit closes, and its ending runs.
-  const openStep = openStepId === null ? null : (steps.find((s) => s.id === openStepId) ?? null)
-  if (openStepId !== null && openStep === null) setOpenStepId(null)
-  const openStepTitle = useMemo(() => (openStepId === null ? '' : stepSectionTitle(openStepId, draft)), [openStepId, draft])
-  // A page change ends the open step's edit through the sheet's own ending (the focused field commits, a draft its
-  // Continue would refuse goes back), never by dropping the open step under it (`StepSheet`'s `endRef`).
-  const stepEndRef = useRef<StepEnding | null>(null)
-  const endStep = useCallback(() => {
-    const ending = stepEndRef.current
-    if (ending !== null) ending.end()
-    else setOpenStepId(null)
-  }, [])
+  // Where a sheet's focus lands on close when its opening control has unmounted: the page's own heading.
+  const restoreFallback = useCallback((): HTMLElement | null => headingRef.current, [])
+  // THE OUTSIDE DOORS' DRAWER (RC13b; the header): one Profile drawer opened over the page that shows.
+  const drawers = useDrawerHost(restoreFallback)
+  const openDrawer = drawers.open
 
   // ── The one what-if (U14, U15; the tray's since RC4b), kept across page switches ─────────────────────────────────
   const kept: readonly KeptWhatIfV6[] = snapshot.draft.keptWhatIfs ?? []
@@ -529,36 +485,27 @@ export default function Shell({
     onOpenSequencing: () => tryLever('withdrawal-order'),
     onOpenRoth: () => tryLever('roth'),
     onOpenHealth: () => onNavigate(routeOfScreen('health-care')),
+    // The panel's governed-spend row: the Living expenses drawer, over the page that shows (RC13b).
+    onOpenBudget: () => openDrawer({ kind: 'living' }, null),
     // The panel's guided re-walk (the old answer page's Review, RC4): the shell is the home now, so the walk-through is
-    // left for from here. No separate collections door: the facts page has its own Accounts and Other income doors.
+    // left for from here. No separate collections door: Profile's pages hold the accounts and the other income.
     ...(onReview !== undefined ? { onReview } : {}),
   })
   // A sheet belongs to the page it was opened on: a page change (a leave ask's Go, a plain Back or Forward) closes every
   // one, so none stays open over the new page (the room's Back unmounted them; the shell's sheets outlive a page). The
-  // plan list drawer too: it draws only on Probability, and a state left open would reopen it there unasked.
+  // plan list drawer too: it draws only on Probability, and a state left open would reopen it there unasked. And an outside
+  // door's Profile drawer: a leave's Go over it drops its changes, as its words say.
   const [planListOpen, setPlanListOpen] = useState(false)
   const closeSheets = editors.closeAll
+  const closeDrawer = drawers.close
   const sheetsRoute = useRef(routeKey)
   useLayoutEffect(() => {
     if (sheetsRoute.current === routeKey) return
     sheetsRoute.current = routeKey
-    endStep()
     closeSheets()
+    closeDrawer()
     setPlanListOpen(false)
-  }, [routeKey, closeSheets, endStep])
-  const sheetDoors: Readonly<Record<SheetDoor, () => void>> = {
-    budget: editors.openBudget,
-    'subsidy-regime': () => onNavigate(routeOfScreen('health-care')),
-    'survivor-ratio': () => editors.openAssumptions('survivor-ratio'),
-    'heir-bracket': () => editors.openAssumptions('heir-bracket'),
-    'extras-panel': () => editors.openAssumptions('medicare-extras'),
-    none: () => {},
-  }
-  const openDoor = (door: FactDoorId) => {
-    lastDoor.current = door
-    if (Object.hasOwn(sheetDoors, door)) sheetDoors[door as SheetDoor]()
-    else setOpenStepId(door as StepSectionId)
-  }
+  }, [routeKey, closeSheets, closeDrawer])
 
   // ── The right side (RC5's two-up): your plan by default, or a kept what-if or the recommendation on its own slot ──
   const [rightPickState, setRightPick] = useState<RightPick>('plan')
@@ -1092,14 +1039,14 @@ export default function Shell({
       refiguring: snapshot.refiguring,
     })
   }, [onHealth, committedAnswer, run, results.steady, snapshot.refiguring, todayEpochDay, anchor.yearsSincePlanBuilt, noAnswerWords])
-  // The tray's facts are the plan as it stands (the live draft, as the facts page reads it): a door opens what an edit
-  // would change now.
+  // The tray's facts are the plan as it stands (the live draft, as the Profile cards print it): a door opens the fact's
+  // Profile drawer over this page, so an edit's figures redraw here.
   const healthTray = useMemo(
     () =>
       onHealth && healthPage?.kind === 'charts'
-        ? healthTrayView(composeFacts({ draft, stepIds: steps.map((s) => s.id), anchor }), railOffers(draft, undefined).aca, readOnly)
+        ? healthTrayView([...goalsView(draft).cards, ...expensesView(draft).cards], railOffers(draft, undefined).aca, readOnly)
         : undefined,
-    [onHealth, healthPage?.kind, draft, steps, anchor, readOnly],
+    [onHealth, healthPage?.kind, draft, readOnly],
   )
 
   // ── Retirement → Stress Test (RC11): the bars off the COMMITTED final answer, each stress on its own slot; the tray's
@@ -1169,7 +1116,8 @@ export default function Shell({
     [figured, notes, readOnly, onReview],
   )
 
-  const snapshotDoors: SnapshotDoors = { analysis: doorTo('probability'), cashFlows: doorTo('cash-flows'), facts: doorTo('interim-facts') }
+  // The Invested accounts card's door: Profile → Net Worth, where the accounts are (RC13b; the facts page is gone).
+  const snapshotDoors: SnapshotDoors = { analysis: doorTo('probability'), cashFlows: doorTo('cash-flows'), facts: doorTo('profile-net-worth') }
   const strategiesDoor = doorTo('tax-strategies')
   const recView = snap?.rec.view
   const solve = snapshot.solve
@@ -1198,32 +1146,31 @@ export default function Shell({
     onAnnounced?.()
   }, [landed, onAnnounced, announcer])
 
-  const anySheetOpen = editors.sheetOpen || openStep !== null
+  const anySheetOpen = editors.sheetOpen
   // The committed answer's tier and the store's refiguring flag, stamped on the shell's `main.result` below: the harnesses'
   // signal that an edit's answer has landed (`SETTLED_RESULT`).
   const answerTier = snapshot.answer.kind === 'headline' || snapshot.answer.kind === 'date' ? snapshot.answer.tier : undefined
   const names = draft.people.map((p) => (p.name ?? '').trim()).filter((n) => n !== '')
 
-  // A leave's Go makes its words true before the leave moves: every sheet closes, and an entry not yet added (the
-  // budget's staged rows) is dropped (`workbenchLeaveAsk`, `shellCeremonyOpenEntry`). Over a step whose Continue would
-  // refuse what was changed, Go puts that step back (`StepEnding.putsBack`), so the ask says that in place of "changes
-  // you finished stay in your plan".
-  const stepPutsBack = leaveAsk !== undefined && stepEndRef.current?.putsBack() === true
+  // A leave's Go makes its words true before the leave moves: every sheet closes (`workbenchLeaveAsk`,
+  // `shellCeremonyOpenEntry`); a Profile drawer's unsaved changes go with it (its own words, asked inside it).
   const shownAsk: ShellLeaveAsk | undefined =
     leaveAsk !== undefined
       ? {
           ...leaveAsk,
-          lines: stepPutsBack ? leaveAsk.lines.map((l) => PUTS_BACK_LINES.get(l) ?? l) : leaveAsk.lines,
           onGo: () => {
-            endStep()
-            editors.closeAll(true)
+            editors.closeAll()
             leaveAsk.onGo()
           },
         }
       : (pageAsk ?? undefined)
+  // A Profile drawer is modal: while one is open (the page's or an outside door's) the ask is asked inside it, never here.
+  const drawerShows = profileDrawerOpen || drawers.isOpen
   // The plan list drawer is modal too: Keep's ask from inside it rides the layer above it.
   const leave =
-    shownAsk !== undefined ? <LeaveAsk key={shownAsk.lines.join(' ')} ask={shownAsk} overSheet={anySheetOpen || planListOpen} fallback={() => headingRef.current} /> : null
+    shownAsk !== undefined && !drawerShows ? (
+      <LeaveAsk key={shownAsk.lines.join(' ')} ask={shownAsk} overSheet={anySheetOpen || planListOpen} fallback={() => headingRef.current} />
+    ) : null
 
   // ── The plan list drawer's view and its writes (RC5) ──
   const writes = listWrites(save.kind, readOnly)
@@ -1326,7 +1273,14 @@ export default function Shell({
       />
     ) : null
   const staleBanner = (
-    <StaleBannerStack lines={staleLines} onOpenSeat={(seat) => editors.openAssumptions(seat)} {...(onReview !== undefined && !readOnly ? { onReconfirm: onReview } : {})} />
+    <StaleBannerStack
+      lines={staleLines}
+      // The pay check's standing line (W stale, typed below, the left over moved, W unanswered) opens the Pre-retirement
+      // living expenses drawer over this page (plan 4.0's disclosure map): the W question and the left-over question live
+      // there; any other seat, the panel's.
+      onOpenSeat={(seat) => (seat === 'working-year-cost' || seat === 'working-year-left-over' ? openDrawer({ kind: 'working-cost' }, null) : editors.openAssumptions(seat))}
+      {...(onReview !== undefined && !readOnly ? { onReconfirm: onReview } : {})}
+    />
   )
 
   return (
@@ -1495,12 +1449,12 @@ export default function Shell({
               trayOpen={healthTrayOpen}
               onTrayOpen={setHealthTrayOpen}
               onTryLever={tryLever}
-              onOpenFact={openDoor}
+              onOpenFact={(target) => openDrawer(target, null)}
             />
           </>
         ) : isProfileScreen(screen) ? (
           <>
-            {profileDrawerOpen ? null : leave}
+            {leave}
             <ProfilePages
               key={screen}
               screen={screen}
@@ -1533,27 +1487,9 @@ export default function Shell({
               onPick={setCfPick}
             />
           </>
-        ) : (
-          <InterimPage
-            title={row.title}
-            headingRef={headingRef}
-            snapshot={snapshot}
-            wallCalendarYear={wallCalendarYear}
-            above={leave}
-          >
-            {screen === 'interim-facts' && (
-              <div className="wb-panel">
-                <FactsPage sections={sections} onTry={tryLever} {...(readOnly ? {} : { onOpen: openDoor })} />
-              </div>
-            )}
-          </InterimPage>
-        )}
-        {!readOnly && (
-          <>
-            <StepSheet model={model} step={openStep} title={openStepTitle} onClose={() => setOpenStepId(null)} restoreFallback={restoreFallback} endRef={stepEndRef} />
-            {editors.node}
-          </>
-        )}
+        ) : null}
+        {!readOnly && editors.node}
+        {drawers.render({ model, readOnly, ...(shownAsk !== undefined ? { leaveAsk: shownAsk } : {}) })}
       </main>
     </>
   )

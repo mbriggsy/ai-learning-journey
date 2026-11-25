@@ -29,6 +29,7 @@ import {
 } from './incomeFields'
 import { saveEdit } from './drawerSave'
 import type { DrawerBodyProps } from './drawerProps'
+import { Fact } from './Fact'
 import { ProfileDrawer } from './ProfileDrawer'
 import { useDrawerEdit } from './useDrawerBuffer'
 
@@ -56,6 +57,7 @@ export function SalaryDrawer({ index, model, open, readOnly, leaveAsk, onClose, 
       errors={edit.check.elsewhere}
     >
       <DrawerFields>
+        <Fact stamp="person.earnedIncomeReal">
         <MoneyInput
           label={copy.salaryLabel}
           description={copy.salaryHelp}
@@ -64,6 +66,7 @@ export function SalaryDrawer({ index, model, open, readOnly, leaveAsk, onClose, 
           readOnly={readOnly}
           onCommit={(pay) => edit.set('pay', { pay })}
         />
+        </Fact>
       </DrawerFields>
       <p className="text-label text-stone-600" data-profile-stopgap="">
         {copy.profileSalaryStopgap}
@@ -101,6 +104,7 @@ export function SocialSecurityDrawer({ index, model, open, readOnly, leaveAsk, o
       errors={check.elsewhere}
     >
       <DrawerFields>
+        <Fact stamp="person.pia">
         <MoneyInput
           label={copy.ssAmountLabel}
           description={fraMonths === undefined ? copy.ssAmountHelp : `${copy.ssAmountHelp} ${slots.fraEcho(fraMonths)}`}
@@ -110,6 +114,8 @@ export function SocialSecurityDrawer({ index, model, open, readOnly, leaveAsk, o
           {...(check.fields.monthly !== undefined ? { error: check.fields.monthly } : {})}
           onCommit={(monthly) => edit.set('monthly', { monthly })}
         />
+        </Fact>
+        <Fact stamp="person.socialSecurityClaimAge">
         <WholeInput
           label={copy.ssClaimLabel}
           {...(birthYear !== undefined
@@ -121,6 +127,7 @@ export function SocialSecurityDrawer({ index, model, open, readOnly, leaveAsk, o
           {...(check.fields.claimYear !== undefined ? { error: check.fields.claimYear } : {})}
           onCommit={(claimYear) => edit.set('claimYear', { claimYear })}
         />
+        </Fact>
       </DrawerFields>
       <p className="text-label text-stone-600">{copy.ssSpousalNote}</p>
     </ProfileDrawer>
@@ -150,6 +157,7 @@ export function WorkInvestDrawer({ index, model, open, readOnly, leaveAsk, onClo
     >
       <p className="text-body text-stone-900">{copy.workIncomeIntro}</p>
       <DrawerFields>
+        <Fact stamp="health.workingYearInvestmentByPerson">
         <MoneyInput
           label={copy.workInvestmentLabel}
           description={copy.workInvestmentHelp}
@@ -158,6 +166,7 @@ export function WorkInvestDrawer({ index, model, open, readOnly, leaveAsk, onClo
           readOnly={readOnly}
           onCommit={(amount) => edit.set('amount', { amount })}
         />
+        </Fact>
       </DrawerFields>
       <p className="text-label text-stone-600">{copy.workIncomeDisclosure}</p>
     </ProfileDrawer>

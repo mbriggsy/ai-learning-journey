@@ -35,8 +35,8 @@ const view: HealthChartsView = {
 const tray = (readOnly: boolean): HealthTrayView => ({
   aca: { label: copy.workbenchRailAcaTitle, value: copy.leverHealthRegimeReverted, help: copy.leverHealthRegimeRevertedHelp, lever: 'aca-subsidy' },
   facts: [
-    { id: 'oop-medical', title: 'Out-of-pocket medical', rows: [{ label: copy.oopLabel, value: '$4,000 a year' }], door: readOnly ? null : 'oop-medical' },
-    { id: 'medicare-extras', title: 'Medicare extras', rows: [{ heading: 'Alex', label: 'Extras', value: '$240 a month' }], door: readOnly ? null : 'extras-panel' },
+    { id: 'medical', title: 'Out-of-pocket medical', rows: [{ label: copy.oopLabel, value: '$4,000 a year' }], door: readOnly ? null : { kind: 'medical' } },
+    { id: 'medicare', title: 'Medicare extras', rows: [{ heading: 'Alex', label: 'Extras', value: '$240 a month' }], door: readOnly ? null : { kind: 'medicare' } },
   ],
   factsNote: readOnly ? copy.healthTrayReadOnly : copy.healthTrayFactsNote,
 })
@@ -63,9 +63,9 @@ describe('HealthCare — the Action Items tray', () => {
     const { onOpenFact } = renderPage(tray(false))
     expect(screen.getByText(copy.healthTrayFactsNote)).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: slots.workbenchFactsEditName('Out-of-pocket medical') }))
-    expect(onOpenFact).toHaveBeenLastCalledWith('oop-medical')
+    expect(onOpenFact).toHaveBeenLastCalledWith({ kind: 'medical' })
     fireEvent.click(screen.getByRole('button', { name: slots.workbenchFactsEditName('Medicare extras') }))
-    expect(onOpenFact).toHaveBeenLastCalledWith('extras-panel')
+    expect(onOpenFact).toHaveBeenLastCalledWith({ kind: 'medicare' })
   })
 
   it('a read-only tab draws no drawer door (the facts still shown, in words)', () => {

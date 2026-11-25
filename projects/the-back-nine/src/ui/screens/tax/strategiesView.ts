@@ -372,7 +372,19 @@ function askFor(input: StrategiesInput): StrategiesAsk {
     goals: RECOMMENDATION_GOALS.map((g) => ({ id: g, label: copy[GOAL_LABEL[g]], gloss: copy[GOAL_GLOSS[g]] })),
     goal: picked.goal,
     ...(picked.goal === 'leave-more'
-      ? { bracket: { label: copy.assumptionHeirBracketLabel, help: copy.assumptionHeirBracketHelp, items: HEIR_BRACKET_ITEMS, value: String(picked.heirBracket) } }
+      ? {
+          bracket: {
+            label: copy.assumptionHeirBracketLabel,
+            // Never chosen yet: the shown rate is the tool's own starting figure, and says so (the line the facts page
+            // carried until RC13b; the heirs' bracket's one home is this picker).
+            help:
+              snapshot.draft.heirBracket === undefined && picked.heirBracket === DEFAULT_HEIR_BRACKET
+                ? `${copy.assumptionHeirBracketHelp} ${slots.taxStratHeirDefault(formatBracketPercent(DEFAULT_HEIR_BRACKET))}`
+                : copy.assumptionHeirBracketHelp,
+            items: HEIR_BRACKET_ITEMS,
+            value: String(picked.heirBracket),
+          },
+        }
       : {}),
     ...(steer !== undefined ? { steer } : {}),
     find: { label: copy.taxStratFind, ...(held !== undefined ? { held } : {}), cost: copy.recommendRecordReopenCost },

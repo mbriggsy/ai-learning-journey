@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { OUTCOME_STATES } from '@shared/model'
 import { spineMedicarePriced } from '@intake/intakeMap'
-import { formatActionableDollar, formatDeltaDollar, formatEnteredDollar } from '../../../money'
+import { formatActionableDollar, formatBracketPercent, formatDeltaDollar, formatEnteredDollar } from '../../../money'
 import { DEV_SEEDS } from '../../../devSeeds'
 import { copy, slots } from '../../../copy'
 import { composeVerdictStateNote } from '../../../stateTaxDisclosure'
@@ -300,6 +300,13 @@ describe('Strategies: the empty state', () => {
   it('the heirs’ bracket sits beside the picker for leave-more only', () => {
     expect(solveView(strategiesView(base({ picked: { goal: 'pay-less-tax', heirBracket: 0.24 } }))).ask!.bracket).toBeUndefined()
     expect(solveView(strategiesView(base({ picked: { goal: 'leave-more', heirBracket: 0.32 } }))).ask!.bracket?.value).toBe('0.32')
+  })
+
+  it('a bracket never chosen says the shown rate is the tool’s own starting figure (RC13b: the facts page said it; one is chosen, no such words)', () => {
+    const unchosen = solveView(strategiesView(base({ picked: { goal: 'leave-more', heirBracket: DEFAULT_HEIR_BRACKET } }))).ask!.bracket!
+    expect(unchosen.help).toContain(slots.taxStratHeirDefault(formatBracketPercent(DEFAULT_HEIR_BRACKET)))
+    const chosen = solveView(strategiesView(base({ picked: { goal: 'leave-more', heirBracket: 0.32 } }))).ask!.bracket!
+    expect(chosen.help).toBe(copy.assumptionHeirBracketHelp)
   })
 
   it('a household with no pre-tax money: the refused solve shows the steer note above Find, and Find is held on those words (a press would only refuse again; a plan edit clears it)', () => {

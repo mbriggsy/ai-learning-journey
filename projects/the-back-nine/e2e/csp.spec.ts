@@ -231,15 +231,15 @@ test.describe('CSP — real browser enforcement', () => {
     expect(v.some((x) => /worker-src|script-src/.test(x.violatedDirective))).toBe(false)
   })
 
-  test('the shell loads under the enforced CSP: the home, Probability and its Action Items tray, Confidence, Cash Flows, Stress Test, Social Security, Health Care, Asset Allocation and Tax Allocation, Tax Strategies, Net Worth and one Profile drawer, every interim tab and both its menus, no violation, and no request outside the build’s own files', async ({ page }) => {
+  test('the shell loads under the enforced CSP: the home, Probability and its Action Items tray, Confidence, Cash Flows, Stress Test, Social Security, Health Care, Asset Allocation and Tax Allocation, Tax Strategies, Net Worth and one Profile drawer, Expenses and its Living expenses drawer, and both its menus, no violation, and no request outside the build’s own files', async ({ page }) => {
     // Act 6 · RC2 (plan 6, section 3.1's Verification; the workbench room's arm before it, U6 to U15), re-pointed at RC4:
     // the real intake lands on the home (Dashboard → Snapshot), the shell's lazy chunk and its styles load with it on the
-    // served build, Probability draws its rings and its two balance bars (Highcharts again), and every interim tab is
-    // visited. ANY violation reds (not a directive subset), and so does any request that leaves the build's own origin:
+    // served build, Probability draws its rings and its two balance bars (Highcharts again), and every page is
+    // visited (the last interim tab, the facts page, left with RC13b). ANY violation reds (not a directive subset), and so does any request that leaves the build's own origin:
     // the act adds no network call. The table runs both views on the build's own engine worker, each one short run: the
     // steady view lands first, then the future select shows the rough one, each read by its own words over its own rows; a
-    // drill opens and goes back, the CSV downloads (a blob built in the page), and the Accounts tab opens. The facts
-    // page opens and closes one step sheet; Probability's Action Items tray (RC4b: a Base UI collapsible, its Edit drawer a
+    // drill opens and goes back, the CSV downloads (a blob built in the page), and the Accounts tab opens. Expenses
+    // opens and closes its Living expenses drawer (RC13b, in place of the facts page's step sheet); Probability's Action Items tray (RC4b: a Base UI collapsible, its Edit drawer a
     // portaled dialog) runs one what-if through its Refresh; the lock menu (a portaled Base UI menu)
     // opens and closes; at a phone width the menu (a portaled Base UI dialog that animates) moves the page. The way home
     // is the wordmark.
@@ -432,16 +432,20 @@ test.describe('CSP — real browser enforcement', () => {
     await expect(row, 'focus back on the account row').toBeFocused()
     expect(await page.evaluate(() => document.querySelectorAll('style').length), 'a Profile page injected a <style> element').toBe(0)
 
-    // The facts page (Profile's interim tab until RC13b), and one step sheet (a portaled sheet, its motion, and an intake
-    // step's body in the shell's chunk), opened and closed through Done.
-    await page.getByRole('navigation', { name: copy.shellPagesLabel }).getByRole('link', { name: copy.workbenchPageFacts, exact: true }).click()
-    await expect(page.getByRole('heading', { name: copy.workbenchFactsChoices, exact: true }), 'the facts page never showed').toBeVisible()
-    await expect(page.locator('.wb-facts__section').first()).toBeVisible()
-    await page.getByRole('button', { name: slots.workbenchFactsEditName(copy.workbenchFactsPeople), exact: true }).click()
-    const sheet = page.getByRole('dialog', { name: copy.workbenchFactsPeople, exact: true })
-    await expect(sheet, 'the step sheet never opened').toBeVisible()
-    await sheet.getByRole('button', { name: copy.workbenchFactsDone, exact: true }).click()
-    await expect(sheet, 'the step sheet never closed').toHaveCount(0)
+    // Profile → Expenses (RC13b, in place of the facts page and its step sheets): the Living expenses drawer, its
+    // "How you give your spending" choice (the kit's native ChoiceGroup) moved to the budget, so the worksheet draws,
+    // then closed with its changes dropped through the drawer's own ask.
+    await page.getByRole('navigation', { name: copy.shellPagesLabel }).getByRole('link', { name: copy.shellPageExpenses, exact: true }).click()
+    await expect(page.locator('main.result[data-shell-screen="profile-expenses"]'), 'Expenses never showed').toBeAttached()
+    await page.locator('[data-profile-card="living"]').click()
+    const living = page.getByRole('dialog', { name: copy.profileKindLiving })
+    await expect(living, 'the Living expenses drawer never opened').toBeVisible()
+    await living.locator('[data-choice-group="living-approach"] label[data-choice="budget"]').click()
+    await expect(living.locator('[data-budget-worksheet]'), 'the worksheet never drew').toBeVisible()
+    await living.getByRole('button', { name: copy.profileDrawerCancel, exact: true }).click()
+    await living.getByRole('button', { name: copy.profileUnsavedDrop, exact: true }).click()
+    await expect(living, 'the Living expenses drawer never closed').toHaveCount(0)
+    expect(await page.evaluate(() => document.querySelectorAll('style').length), 'an Expenses drawer injected a <style> element').toBe(0)
 
     // Probability's Action Items tray (Retirement → Analysis, RC4b): one what-if, run on the build's own engine worker (its
     // many-futures run and both named futures) by the tray's Refresh. Spending is offered to every household: its first

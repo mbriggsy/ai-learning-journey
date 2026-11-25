@@ -45,8 +45,7 @@ import { composeControlHealthOmissionsNote, composeVerdictMedicareResidual } fro
 import { formatDeltaDollar, mmAxisFormatterFor } from '../../money'
 import { lifetimeHealthMedianReal, medianOf } from '../../workbench/whatIfRun'
 import { tablePerson, type TableMeta } from '../../workbench/tableRun'
-import type { FactSection } from '../../workbench/factsChrome'
-import type { FactDoorId } from '../../workbench/factRegistry'
+import type { CardView, DrawerTarget } from '../profile/profileView'
 import { lifespansLine } from '../../workbench/yearTableChrome'
 import type { RunRows } from './cashFlowsView'
 import { lastIndexOf } from './socialSecurityView'
@@ -421,8 +420,8 @@ export interface HealthTrayFact {
   readonly title: string
   /** The rows' words: who (where a person's), what, and the value, as the Profile page prints them. */
   readonly rows: readonly { readonly heading?: string; readonly label: string; readonly value: string }[]
-  /** The fact's one door (its Profile drawer), or null on a read-only tab (no door opens there). */
-  readonly door: FactDoorId | null
+  /** The fact's one door (its Profile drawer, opened over this page), or null on a read-only tab (no door opens there). */
+  readonly door: DrawerTarget | null
 }
 
 export interface HealthTrayView {
@@ -432,8 +431,9 @@ export interface HealthTrayView {
   readonly factsNote: string
 }
 
-/** The health facts the tray shows, in the walk's order, each from the Profile page's own composer. */
-const TRAY_FACTS = ['employer-coverage', 'oop-medical', 'medicare-extras'] as const
+/** The health facts the tray shows, by their Profile cards (Act 6 · RC13b: Goals' Health care before Medicare, Expenses'
+ *  Out-of-pocket medical, Goals' Medicare), in the walk's order, each as its card prints it. */
+const TRAY_FACTS = ['health', 'medical', 'medicare'] as const
 
 /**
  * The Action Items tray, mapped to B9's health inputs (plan RC10): the marketplace subsidy rules are a what-if (the
@@ -441,12 +441,11 @@ const TRAY_FACTS = ['employer-coverage', 'oop-medical', 'medicare-extras'] as co
  * values exactly as the Profile page prints them (`composeFacts`), each opening its own drawer and saying in words that a
  * change there changes the plan. A read-only tab opens no drawer.
  */
-export function healthTrayView(sections: readonly FactSection[], aca: { readonly planEnhanced: boolean } | undefined, readOnly: boolean): HealthTrayView {
+export function healthTrayView(cards: readonly CardView[], aca: { readonly planEnhanced: boolean } | undefined, readOnly: boolean): HealthTrayView {
   const facts = TRAY_FACTS.flatMap((id): HealthTrayFact[] => {
-    const s = sections.find((x) => x.id === id)
-    if (s === undefined) return []
-    const rows = s.groups.flatMap((g) => g.lines.map((l, i) => ({ ...(i === 0 && g.heading !== undefined ? { heading: g.heading } : {}), label: l.label, value: l.value })))
-    return [{ id, title: s.title, rows, door: readOnly || s.door === null || s.door === 'none' ? null : s.door }]
+    const c = cards.find((x) => x.id === id)
+    if (c === undefined) return []
+    return [{ id, title: c.name, rows: c.rows, door: readOnly ? null : c.target }]
   })
   return {
     // The plan's rules, and what they mean (the old sheet's help line for the rules in force).

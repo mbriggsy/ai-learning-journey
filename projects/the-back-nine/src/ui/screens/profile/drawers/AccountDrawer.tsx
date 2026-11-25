@@ -21,6 +21,7 @@ import { accountCardName, limitLines } from '../profileView'
 import { accountFormFromDraft, buildAccountEdit, deleteAccount, FACET_FIELDS, knownFund, ownAccountField, type AccountDrawerForm, type AccountFacet, type AccountField } from './accountFields'
 import { commitEdit, saveEdit } from './drawerSave'
 import type { DrawerBodyProps } from './drawerProps'
+import { Fact } from './Fact'
 import { ProfileDrawer } from './ProfileDrawer'
 import { useDrawerEdit } from './useDrawerBuffer'
 
@@ -137,6 +138,7 @@ export function AccountDrawer({
         <section className="flex flex-col gap-4" data-profile-section="holdings">
           {facet === 'all' ? <h3 className="text-body font-semibold text-stone-900">{copy.profileHoldingsHeading}</h3> : null}
           <DrawerFields>
+            <Fact stamp="account.ownerIndex">
             <Select<'0' | '1'>
               label={copy.profileOwnerLabel}
               items={people}
@@ -144,6 +146,8 @@ export function AccountDrawer({
               disabled={readOnly}
               onValueChange={(v) => set('owner', { ownerIndex: Number(v) as 0 | 1 })}
             />
+            </Fact>
+            <Fact stamp="account.kind">
             <Select<AccountKind>
               label={copy.profileKindLabel}
               items={KIND_ITEMS}
@@ -153,6 +157,8 @@ export function AccountDrawer({
               {...err('kind')}
               onValueChange={(k) => set('kind', { kind: k })}
             />
+            </Fact>
+            <Fact stamp="account.valueToday">
             <MoneyInput
               label={copy.accountValueLabel}
               value={form.valueToday}
@@ -161,7 +167,9 @@ export function AccountDrawer({
               {...err('value')}
               onCommit={(valueToday) => set('value', { valueToday })}
             />
+            </Fact>
             {kind === 'brokerage' ? (
+              <Fact stamp="account.basis">
               <MoneyInput
                 label={copy.accountBasisLabel}
                 description={copy.accountBasisHelp}
@@ -170,6 +178,7 @@ export function AccountDrawer({
                 readOnly={readOnly}
                 onCommit={(basis) => set('basis', { basis })}
               />
+              </Fact>
             ) : null}
             <Select<'hand' | 'fund'>
               label={copy.profileMixHow}
@@ -179,6 +188,7 @@ export function AccountDrawer({
               onValueChange={(mixHow) => set('mixHow', { mixHow })}
             />
             {form.mixHow === 'fund' ? (
+              <Fact stamp="account.ticker">
               <TextInput
                 label={copy.profileTickerLabel}
                 description={fund === undefined ? copy.profileTickerHelp : slots.profileFundKnown(fund.name, fund.stock, fund.bond, fund.cash)}
@@ -187,10 +197,14 @@ export function AccountDrawer({
                 {...err('ticker')}
                 onCommit={(t) => set('ticker', { ticker: (t ?? '').toUpperCase() })}
               />
+              </Fact>
             ) : null}
             {form.mixHow === 'hand' ? (
+              <Fact stamp="account.manualBlend">
               <LegsFields legs={form.legs} onLegs={(legs) => set('mix', { legs })} readOnly={readOnly} legend={copy.classifierLegend} {...err('mix')} />
+              </Fact>
             ) : form.ticker.trim() !== '' && fund === undefined ? (
+              <Fact stamp="tickerClassifications">
               <LegsFields
                 legs={form.tickerLegs}
                 onLegs={(tickerLegs) => set('tickerMix', { tickerLegs })}
@@ -199,6 +213,7 @@ export function AccountDrawer({
                 help={copy.profileTickerUnknownHelp}
                 {...err('tickerMix')}
               />
+              </Fact>
             ) : null}
           </DrawerFields>
         </section>
@@ -211,6 +226,7 @@ export function AccountDrawer({
           ) : (
             <>
               <DrawerFields>
+                <Fact stamp="account.annualContribution">
                 <MoneyInput
                   label={copy.accountContributionLabel}
                   value={form.annualContribution}
@@ -219,7 +235,9 @@ export function AccountDrawer({
                   {...err('deposit')}
                   onCommit={(annualContribution) => set('deposit', { annualContribution })}
                 />
+                </Fact>
                 {kind !== undefined && isEmployerPlanKind(kind) ? (
+                  <Fact stamp="account.employerMatchAnnual">
                   <MoneyInput
                     label={copy.accountMatchLabel}
                     value={form.employerMatchAnnual}
@@ -228,8 +246,10 @@ export function AccountDrawer({
                     {...err('match')}
                     onCommit={(employerMatchAnnual) => set('match', { employerMatchAnnual })}
                   />
+                  </Fact>
                 ) : null}
                 {kind === 'hsa' ? (
+                  <Fact stamp="account.hsaEmployerAnnual">
                   <MoneyInput
                     label={copy.accountHsaEmployerLabel}
                     value={form.hsaEmployerAnnual}
@@ -238,6 +258,7 @@ export function AccountDrawer({
                     {...err('hsaEmployer')}
                     onCommit={(hsaEmployerAnnual) => set('hsaEmployer', { hsaEmployerAnnual })}
                   />
+                  </Fact>
                 ) : null}
               </DrawerFields>
               {kind !== undefined

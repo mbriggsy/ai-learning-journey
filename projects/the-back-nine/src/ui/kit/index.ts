@@ -12,6 +12,7 @@ export { Button, buttonClasses, BUTTON_VARIANTS, type ButtonProps, type ButtonVa
 export { Card, type CardProps } from './Card'
 export { Caveat, type CaveatProps } from './Caveat'
 export { Checkbox, type CheckboxProps } from './Checkbox'
+export { ChoiceGroup, type ChoiceGroupProps, type ChoiceItem } from './ChoiceGroup'
 export { cn } from './cn'
 export { DataTable, type DataColumn, type DataColumnGroup, type DataTableColumn, type DataTableProps } from './DataTable'
 export { Drawer, DrawerFields, type DrawerProps, type DrawerStep } from './Drawer'

@@ -102,7 +102,8 @@ describe('dismiss', () => {
     const dialog = openSs(model)
     const field = within(dialog).getByLabelText(copy.ssAmountLabel)
     type(field, '2,600', true)
-    expect(unsavedBuffersHeld(), 'typed text is not a held edit until it commits').toBe(0)
+    // Typed text not yet committed holds the leave guard (RC13b): a browser Back blurs nothing, so it must ask first.
+    expect(unsavedBuffersHeld(), 'typed text holds the leave guard while it is being typed').toBe(1)
     fireEvent.keyDown(field, { key: 'Escape' })
     // The focused field committed first, so the figure being typed counts as an unsaved change.
     const ask = await screen.findByText(copy.profileUnsavedAsk)

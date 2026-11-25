@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from 'vitest'
 import '@testing-library/jest-dom/vitest'
-import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { useState } from 'react'
 import { intakeSteps } from '@intake/questions'
 import type { StepApi } from '@intake/stepChecks'
@@ -15,6 +15,12 @@ import { accountFormFromDraft, buildAccountEdit } from '../accountFields'
 import { buildPerson, buildState, personFormFrom, stateFormFrom } from '../familyFields'
 import { buildSalary, buildSocialSecurity, buildWorkInvest, salaryFormFrom, socialSecurityFormFrom, workInvestFormFrom } from '../incomeFields'
 import { buildOtherIncome, otherIncomeFormFrom } from '../otherIncomeFields'
+import { buildLiving, buildMedical, livingFormFrom, medicalFormFrom } from '../expensesFields'
+import { buildHealth, healthFormFrom } from '../goalsFields'
+import { DrawerFor } from '../../drawerHost'
+import type { DrawerTarget } from '../../profileView'
+import { profileStore } from '../../__tests__/profileStore'
+import { budgetYearZeroFullTotal } from '@budget/budgetToSpending'
 
 /**
  * EVERY DRAWER FIELD WRITES THE SAME DRAFT FIELD THE WALK WROTE (plan RC13's first test scenario), compared field by field
@@ -188,5 +194,175 @@ describe('Savings and Net Worth', () => {
     expect(drawerRest).toEqual(walkedRest)
     expect(drawerId, 'a new account is minted an id no account holds').toMatch(/./)
     expect(retired.enteredAccounts.some((a) => a.id === drawerId)).toBe(false)
+  })
+})
+
+// ── Act 6 · RC13b: Expenses and Goals ──────────────────────────────────────────────────────────────────────────────
+
+const near = DEV_SEEDS.date65 // Alex 66 working, Sam 65 retired: the walk asks the look-back income and the extras
+const quote = DEV_SEEDS.health // Alex 61 and Sam 59, retired: the walk asks the marketplace quote
+
+/** Render a Profile drawer over the real store, run each of `steps` (each its own act), press Save; the store's draft. */
+async function drawer(target: DrawerTarget, start: ScenarioDraft, ...steps: readonly (() => void)[]): Promise<ScenarioDraft> {
+  const { model } = profileStore(start)
+  render(<DrawerFor target={target} model={model} open readOnly={false} onClose={() => {}} onClosed={() => {}} finalFocus={() => null} />)
+  for (const step of steps) act(step)
+  act(() => fireEvent.click(screen.getByRole('button', { name: copy.profileDrawerSave })))
+  await waitFor(() => expect(screen.queryByRole('alert'), 'the drawer refused the Save').toBeNull())
+  return model.getSnapshot().draft
+}
+
+/** The draft fields an Expenses or Goals drawer writes (the stamps it does not write, the seed's own, are equal anyway). */
+const factsOf = (d: ScenarioDraft) => ({
+  annualSpendingReal: d.annualSpendingReal,
+  spendEntryPeriod: d.spendEntryPeriod,
+  budget: d.budget,
+  survivorSpendingRatio: d.survivorSpendingRatio,
+  health: d.health,
+  medicareExtrasByPerson: d.medicareExtrasByPerson,
+  workingYearCost: d.workingYearCost,
+  workingYearLeftOver: d.workingYearLeftOver,
+})
+
+describe('Expenses', () => {
+  it('the spending figure and its unit: the spend step’s two writes (the digits typed, then the unit tapped)', () => {
+    const walked = walk('spend', retired, () => {
+      typeInto(screen.getByLabelText(copy.spendLabel), '7,500')
+      fireEvent.click(screen.getByRole('radio', { name: copy.periodYear }))
+    })
+    const seed = livingFormFrom(retired)
+    const built = buildLiving(retired, seed, { ...seed, entered: 7_500, period: 'year' })
+    expect(built.ok && factsOf(built.draft)).toEqual(factsOf(walked))
+  })
+
+  it('the same through the drawer itself: typed, the unit tapped, Saved', async () => {
+    const walked = walk('spend', retired, () => {
+      typeInto(screen.getByLabelText(copy.spendLabel), '7,500')
+      fireEvent.click(screen.getByRole('radio', { name: copy.periodYear }))
+    })
+    cleanup()
+    const saved = await drawer({ kind: 'living' }, retired, () => {
+      typeInto(screen.getByLabelText(copy.spendLabel), '7,500')
+      fireEvent.click(screen.getByRole('radio', { name: copy.periodYear }))
+    })
+    expect(factsOf(saved)).toEqual(factsOf(walked))
+  })
+
+  it('a budget line by line: the builder’s Apply (the atomic reconciliation patch), its fresh line’s id aside', async () => {
+    const walked = walk(
+      'spend',
+      retired,
+      () => fireEvent.click(screen.getByRole('button', { name: copy.budgetCta })),
+      () => fireEvent.click(screen.getByRole('button', { name: copy.budgetAddLine })),
+      () => typeInto(screen.getByLabelText(copy.budgetAmountLabel), '24,000'),
+      () => fireEvent.click(screen.getByRole('button', { name: copy.budgetApply })),
+    )
+    cleanup()
+    const saved = await drawer(
+      { kind: 'living' },
+      retired,
+      () => fireEvent.click(screen.getByRole('radio', { name: copy.profileLivingApproachBudget })),
+      () => fireEvent.click(screen.getByRole('button', { name: copy.budgetAddLine })),
+      () => typeInto(screen.getByLabelText(copy.budgetAmountLabel), '24,000'),
+    )
+    const noIds = (d: ScenarioDraft) => ({ ...factsOf(d), budget: d.budget?.map(({ id: _id, ...rest }) => rest) })
+    expect(walked.budget?.length, '[test setup] the walk applied one line').toBe(1)
+    expect(noIds(saved)).toEqual(noIds(walked))
+    expect(saved.budget?.[0]?.id, 'the drawer’s line is minted its own id').toMatch(/./)
+  })
+
+  it('out-of-pocket medical under a governing budget: the step’s own re-reconciling write', () => {
+    const governed = DEV_SEEDS.budget
+    // Each event its own act (a box that starts blank reads its typed text only after the render the change makes).
+    const box = () => screen.getByLabelText(copy.oopLabel)
+    const walked = walk(
+      'oop-medical',
+      governed,
+      () => fireEvent.focus(box()),
+      () => fireEvent.change(box(), { target: { value: '6,000' } }),
+      () => fireEvent.blur(box()),
+    )
+    const seed = medicalFormFrom(governed)
+    const built = buildMedical(governed, seed, { oop: 6_000 })
+    expect(built.ok && factsOf(built.draft)).toEqual(factsOf(walked))
+    expect(walked.health.oopMedicalAnnual, '[test setup] the walk wrote the figure').toBe(6_000)
+    expect(walked.annualSpendingReal, 'the total re-reconciled in the same write').toBe(budgetYearZeroFullTotal(governed.budget!, 6_000))
+  })
+})
+
+describe('Goals', () => {
+  it('the marketplace quote pair: the quote step’s writes', () => {
+    const walked = walk('health-quote', quote, () => {
+      typeInto(screen.getByLabelText(copy.enrolledPremiumLabel), '1,250')
+      typeInto(screen.getByLabelText(copy.slcspLabel), '1,050')
+    })
+    const seed = healthFormFrom(quote)
+    const built = buildHealth(quote, seed, { ...seed, enrolled: 1_250, slcsp: 1_050 })
+    expect(built.ok && factsOf(built.draft)).toEqual(factsOf(walked))
+  })
+
+  it('coverage while the other works: the employer-coverage step’s write', () => {
+    const walked = walk('employer-coverage', working, () => fireEvent.click(screen.getByRole('radio', { name: copy.employerCoverageOwn })))
+    const seed = healthFormFrom(working)
+    const built = buildHealth(working, seed, { ...seed, covered: false })
+    expect(built.ok && factsOf(built.draft)).toEqual(factsOf(walked))
+  })
+
+  it('a person’s own extras figure and the look-back income: the extras fork’s and the look-back step’s writes', async () => {
+    const extras = walk(
+      'medicare-extras',
+      near,
+      () => fireEvent.click(within(person('Alex')).getByRole('radio', { name: copy.medicareExtrasForkEntered })),
+      () => typeInto(within(person('Alex')).getByLabelText(copy.medicareExtrasAmountLabel), '250'),
+    )
+    cleanup()
+    const walked = walk('irmaa-seed', extras, () => {
+      typeInto(screen.getByLabelText(copy.irmaaSeedTwoBackLabel), '180,000')
+      typeInto(screen.getByLabelText(copy.irmaaSeedOneBackLabel), '175,000')
+    })
+    cleanup()
+    const saved = await drawer(
+      { kind: 'medicare' },
+      near,
+      () => fireEvent.click(within(screen.getByText(copy.medicareExtrasIntro).parentElement!.querySelector<HTMLElement>('[data-extras-person="0"]')!).getByRole('radio', { name: copy.medicareExtrasForkEntered })),
+      () => typeInto(screen.getByLabelText(copy.medicareExtrasAmountLabel), '250'),
+      () => {
+        typeInto(screen.getByLabelText(copy.irmaaSeedTwoBackLabel), '180,000')
+        typeInto(screen.getByLabelText(copy.irmaaSeedOneBackLabel), '175,000')
+      },
+    )
+    expect(factsOf(saved)).toEqual(factsOf(walked))
+  })
+})
+
+describe('Pre-retirement living expenses (the W step and the money picture, after the walk)', () => {
+  it('a stale "yes" answered again: the W step’s write, through the drawer’s own face', async () => {
+    const stale = DEV_SEEDS.datecoststale
+    const walked = walk('working-cost', stale, () => fireEvent.click(screen.getByRole('radio', { name: copy.workingCostYes })))
+    cleanup()
+    const saved = await drawer({ kind: 'working-cost' }, stale, () => fireEvent.click(screen.getByRole('radio', { name: copy.workingCostYes })))
+    expect(factsOf(saved)).toEqual(factsOf(walked))
+  })
+
+  it('a figure of its own, by the year: "a different figure", the figure typed, the unit tapped', async () => {
+    const steps = [
+      () => fireEvent.click(screen.getByRole('radio', { name: copy.workingCostDifferent })),
+      () => typeInto(screen.getByRole('textbox', { name: copy.workingCostAmountLabel }), '90,000'),
+      () => fireEvent.click(screen.getByRole('radio', { name: copy.periodYear })),
+    ]
+    const walked = walk('working-cost', working, ...steps)
+    cleanup()
+    const saved = await drawer({ kind: 'working-cost' }, working, ...steps)
+    expect(saved.workingYearCost).toMatchObject({ kind: 'entered', amountReal: 90_000, entryPeriod: 'year' })
+    expect(factsOf(saved)).toEqual(factsOf(walked))
+  })
+
+  it('the left-over question’s "All of it": the money-picture step’s write, the figure on screen stored', async () => {
+    const pick = () => fireEvent.click(screen.getByRole('radio', { name: copy.workingLedgerLeftOverSaved }))
+    const walked = walk('working-ledger', working, pick)
+    cleanup()
+    const saved = await drawer({ kind: 'working-cost' }, working, pick)
+    expect(saved.workingYearLeftOver?.kind, '[test setup] the walk stored a reply').toBe('saved')
+    expect(factsOf(saved)).toEqual(factsOf(walked))
   })
 })

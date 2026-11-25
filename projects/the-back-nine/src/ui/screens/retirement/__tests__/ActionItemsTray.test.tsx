@@ -586,26 +586,14 @@ describe('the Roth row carries the Roth sheet’s honesty lines while it holds a
 })
 
 describe('doors into a lever open the tray at its row, and no sheet', () => {
-  for (const [label, lever] of [
-    [copy.assumptionDrawdownName, 'withdrawal-order'],
-    [copy.assumptionRothName, 'roth'],
-  ] as const) {
-    it(`the facts page’s "${label}" opens Probability with the tray at its row`, async () => {
-      openTray(DEV_SEEDS.retired, { open: false })
-      showPage('facts')
-      fireEvent.click(screen.getByRole('button', { name: slots.workbenchFactsTryName(label) }))
-      expect(shownScreen()).toBe('probability')
-      expect(screen.queryByRole('dialog')).toBeNull()
-      expect(handle()).toHaveAttribute('aria-expanded', 'true')
-      await waitFor(() => expect(tray().querySelector(`[data-tray-group="${lever}"]`)!.contains(document.activeElement)).toBe(true), { timeout: 5_000 })
-    })
-  }
-
   it('with a current saved recommendation, a door’s first trip to Probability shows the household’s own what-if at the row it asked for, never Recommended', async () => {
     const record = { action: { candidateId: 'opaque', policy: 'custom', drawdownOrder: ['roth', 'taxable', 'pretax'], rothConversion: { kind: 'none' } } } as unknown as SavedRecommendationV3
-    // The facts page first: Probability has not shown yet this session, so its landing pick (Recommended) is still owed.
-    openTray(DEV_SEEDS.retired, { open: false, initialRoute: PAGES.facts, recommendation: { record, current: true } })
-    fireEvent.click(screen.getByRole('button', { name: slots.workbenchFactsTryName(copy.assumptionDrawdownName) }))
+    // A Profile page first: Probability has not shown yet this session, so its landing pick (Recommended) is still owed.
+    // The door is the assumption panel's withdrawal-order row (RC13b: the facts page's "Try a change" links left with it).
+    openTray(DEV_SEEDS.retired, { open: false, initialRoute: PAGES.expenses, recommendation: { record, current: true } })
+    fireEvent.click(screen.getByRole('button', { name: copy.shellGearLabel }))
+    const panel = await screen.findByRole('dialog')
+    fireEvent.click(within(panel).getByRole('button', { name: new RegExp(`^(${copy.leverSequencingCta}|${copy.leverSequencingEditCta})$`) }))
     expect(shownScreen()).toBe('probability')
     expect(handle()).toHaveAttribute('aria-expanded', 'true')
     await waitFor(() => expect(tray().querySelector('[data-tray-group="withdrawal-order"]')!.contains(document.activeElement)).toBe(true), { timeout: 5_000 })

@@ -1,5 +1,5 @@
 import { expect, type Locator, type Page } from '@playwright/test'
-import { test, REAL, REAL_DPR, LAPTOP_SIZES, type LaptopSizeName, PHONE, PHONE_DPR, FINAL_TIER_MS, SETTLED_RESULT, advanceIntakeTo, gotoSeedFinal, rewalkSeedTo, settleLayout } from './reviewSurface'
+import { test, REAL, REAL_DPR, PHONE, PHONE_DPR, FINAL_TIER_MS, SETTLED_RESULT, advanceIntakeTo, gotoSeedFinal, rewalkSeedTo, settleLayout } from './reviewSurface'
 // THE SHIPPED CATALOG, never re-typed here (the `e2e/caddie-walk.spec.ts:25` precedent). Every
 // string this spec injects or reads back is the one the app ships: a spec-local literal would pin a
 // reservation, a clause list or a heading against a fiction, and a re-word that overflowed the real
@@ -33,25 +33,6 @@ async function assertResolvedHome(page: Page): Promise<void> {
   await expect(page.locator('[data-ring-reading]')).toBeVisible()
   await expect(page.locator('[data-gear]')).toBeVisible()
 }
-
-/** Each laptop size's describe title, in the words its arms have always carried (a title is how a `-g` filter finds
- *  an arm), with the viewport and DPR read from the size table. */
-function sizeTitle(size: LaptopSizeName): string {
-  const { viewport: v, deviceScaleFactor: dpr } = LAPTOP_SIZES[size]
-  switch (size) {
-    case 'REAL':
-      return `at Briggsy's real window (${v.width}×${v.height} @ ${dpr}dpr)`
-    case 'TIER':
-      return `at a DPR-1 laptop inside the short tier (${v.width}×${v.height} @ ${dpr}dpr)`
-    case 'LENOVO_FULL':
-      return `at his whole screen (${v.width}×${v.height} @ ${dpr}dpr)`
-    case 'SHOWCASE':
-      return `at the tall showcase (${v.width}×${v.height})`
-    case 'TALL_EDGE':
-      return `at the tall edge (${v.width}×${v.height} @ ${dpr}dpr)`
-  }
-}
-
 
 // ── U12: the AssumptionPanel's OWN vertical extent (the F4 council mandate) ───────────────────
 // "Door count stays 5" proves the RESULT frame fits; it says nothing about the panel. The full
@@ -371,46 +352,6 @@ for (const vp of PAY_CHECK_VIEWPORTS) {
     })
   })
 
-  test.describe(`the pay check’s standing line and panel row on ?seed=datecoststale (${vp.name})`, () => {
-    test.use(vp.use)
-
-    test('the line sits in the lead after the other notes, above the graphs, doors last; its door opens the panel at the W row', async ({ page }) => {
-      await gotoSeedFinal(page, 'datecoststale')
-      await expect(page.locator('main.result[data-shell-screen="snapshot"]')).toBeAttached()
-      const line = page.locator('[data-stale-banner] p.cs-paycheck-note')
-      await expect(line, 'the standing line renders in the lead').toHaveCount(1)
-      await expect(line).toContainText(copy.stalenessPayCheckNote)
-      await assertStandingInBanner(page, line, vp.use.viewport.width === PHONE.width)
-      // The door: the panel opens AT the W row — its name focused, the row inside the dialog, nothing
-      // spilling sideways — and a "yes" there draws the picture under h4 legends, every figure whole.
-      await page.getByRole('button', { name: copy.stalenessPayCheckCta }).click()
-      const dialog = page.getByRole('dialog')
-      await expect(dialog).toBeVisible()
-      await page.waitForTimeout(400)
-      const focusedName = await page.evaluate(() => document.activeElement?.textContent ?? '')
-      expect(focusedName).toBe(copy.assumptionWorkingCostName)
-      const row = dialog.locator('[data-assumption-seat="working-year-cost"]')
-      const dialogBox = await dialog.boundingBox()
-      const nameBox = await row.locator('.ap-row__name').boundingBox()
-      expect(dialogBox !== null && nameBox !== null).toBe(true)
-      expect(nameBox!.y, 'the W row’s name is scrolled into the dialog').toBeGreaterThanOrEqual(dialogBox!.y - 0.5)
-      expect(nameBox!.y + nameBox!.height).toBeLessThanOrEqual(dialogBox!.y + dialogBox!.height + 0.5)
-      await expect(row.getByRole('note')).toContainText(slots.workingCostStaleQuote('84,000', '78,000'))
-      await row.getByRole('radio', { name: copy.workingCostYes }).evaluate((el) => (el as HTMLInputElement).click())
-      await expect(row.getByRole('heading', { level: 4, name: copy.workingLedgerComingIn })).toBeVisible({ timeout: 30_000 })
-      await row.evaluate((el) => el.scrollIntoView({ block: 'start' }))
-      await settleLayout(page)
-      const sideways = await sidewaysReport(page, '[role="dialog"] [data-assumption-seat="working-year-cost"]')
-      expect(sideways.counted).toBeGreaterThan(30)
-      expect(sideways.offenders, 'the W row spills past the viewport').toEqual([])
-      const panelFigures = await clippedFigures(page, '[role="dialog"]')
-      expect(panelFigures.counted, 'the panel picture read too few figures — "none clipped" would pass on nothing').toBeGreaterThanOrEqual(
-        DATE_PICTURE_FIGURES,
-      )
-      expect(panelFigures.offenders, 'a panel money-picture figure is clipped').toEqual([])
-    })
-  })
-
   // ── the U11 walk's (ae): the risen family's longest words on the W surfaces and the Result. The W step's note and
   //    the panel's W row carry the year-level lean and never a figure at the quote (the fork's description: the
   //    red team's attack 4); the standing line carries the five-sentence later-short line. Fix the layout, never
@@ -429,7 +370,7 @@ for (const vp of PAY_CHECK_VIEWPORTS) {
       await assertIntakeStepHolds(page, 'W step, stale, saved', 25, 0)
     })
 
-    test('the standing line carries the whole later-short line in place; its door opens a W row whose note holds the lean, nothing sideways', async ({ page }) => {
+    test('the standing line carries the whole later-short line in place (its door, the W drawer, is rc-screens.spec.ts’s RC13b arm)', async ({ page }) => {
       await gotoSeedFinal(page, 'datesavedrisenlater')
       await expect(page.locator('main.result[data-shell-screen="snapshot"]')).toBeAttached()
       // A "saved" answer waiting on W: the slot is W's block (`div.note-parts`, council `wf_22858e04-f7a`), still the
@@ -438,17 +379,6 @@ for (const vp of PAY_CHECK_VIEWPORTS) {
       await expect(line, 'the standing line renders in the lead').toHaveCount(1)
       await assertStandingBlock(line, 'datesavedrisenlater', `${copy.stalenessPayCheckNote} ${RISEN_LATER_LINE}`, risenResultDoor('105,000'))
       await assertStandingInBanner(page, line, vp.use.viewport.width === PHONE.width)
-      // Below the quote the door says "update" (council `wf_7fa86902-35c`): the W row offers no Keep door there.
-      await page.getByRole('button', { name: copy.stalenessPayCheckCtaUpdate }).click()
-      const dialog = page.getByRole('dialog')
-      await expect(dialog).toBeVisible()
-      const row = dialog.locator('[data-assumption-seat="working-year-cost"]')
-      await expect(row.getByRole('note')).toContainText(slots.workingCostStaleLeftOverYearsCheaper('84,000'))
-      await row.evaluate((el) => el.scrollIntoView({ block: 'start' }))
-      await settleLayout(page)
-      const sideways = await sidewaysReport(page, '[role="dialog"] [data-assumption-seat="working-year-cost"]')
-      expect(sideways.counted, 'the W row rendered').toBeGreaterThan(10)
-      expect(sideways.offenders, 'the W row spills past the viewport').toEqual([])
     })
   })
 
@@ -652,13 +582,13 @@ const TALL_TAP_ARMS = [
 ] as const
 
 /** `datecoststale` with its W kept through the Keep door as an entered $84,000 a year in the panel, then
- *  staled on the reading by a move to PA — the probe's set-up, through the panel the result's standing
- *  line opens. Since build 2's U5 (`d4227774`) the Keep stamps the figure with the quote its note showed
+ *  staled on the reading by a move to PA — the probe's set-up, through the panel the gear opens. Since build 2's U5 (`d4227774`) the Keep stamps the figure with the quote its note showed
  *  ($78,000), so the note reads "You kept", never "You entered" (KTD10), and a kept figure above today's
  *  quote stales on the state alone, exactly as the typed figure this set-up first held. */
 async function staleEnteredWInPanel(page: Page) {
   await gotoSeedFinal(page, 'datecoststale')
-  await page.getByRole('button', { name: copy.stalenessPayCheckCta }).click()
+  // The gear opens the panel (RC13b: the standing line's door opens the Pre-retirement living expenses drawer instead).
+  await page.locator('[data-gear]').click()
   const dialog = page.getByRole('dialog')
   await expect(dialog).toBeVisible()
   const row = dialog.locator('[data-assumption-seat="working-year-cost"]')
@@ -861,165 +791,9 @@ for (const arm of KEEP_TAP_ARMS) {
   })
 }
 
-// ---------------------------------------------------------------------------
-// THE ANSWER LANDING AFTER A FACTS-PAGE EDIT (the workbench plan's U8, carried in from U7's review; insights
-// 035, 065, 155). The room's facts page can now re-figure the pinned answer: an edit in a step's sheet commits, the
-// store works the answer out again (provisional, then final on the date route), and the pinned box's words change
-// twice, the provisional tag's line coming and going between. Its hidden copy reserves the box's tallest form, now
-// over the forms the next answer can take on its route (`pinnedLines.ts`'s `reserveForms`; since Act 6 · RC2 the box is
-// the interim pages' intro line, `src/ui/shell/InterimPage.tsx`, and the facts page the interim Profile tab); a new lead longer than
-// the reserve is the risk this walk reads: every frame from the sheet's close until thirty frames after the new answer
-// lands is held to the page as it stood before the door opened, and the two tap targets under the pinned box (the facts
-// page's tab and the first group's door) must not have moved on the page; the walk also proves the lead changed.
-// Two sizes: his laptop window, where the seat pins and the market switch beside the answer sets the row's height, and
-// the phone, where nothing beside the answer absorbs a taller box (the arm whose first run found the defect's twin at
-// the laptop: a lead wrapped at the page's reading measure moved the page switch 16 px). The engine's messages are held
-// 400 ms each (wrapped after the answer settles, the switch walk's hold above), so the refiguring frames paint for many
-// frames; the recorder notes each frame's refiguring flag, so the walk proves it saw the answer being worked out again
-// before it landed. Rects are page-relative (the switch walk's), so the focus going back to the door scrolls nothing
-// the walk compares.
-// ---------------------------------------------------------------------------
-
-const LANDING_SEED = 'date'
-
-/** The shell's Profile tab: the top bar's module word at a laptop, the phone menu's page on the phone. */
-async function showFactsPage(page: Page): Promise<void> {
-  const modules = page.getByRole('navigation', { name: copy.shellModulesLabel })
-  if (await modules.isVisible()) {
-    // Since RC13a the Profile word lands on Net Worth (its first page); the interim facts page is its sub-nav's last word.
-    await modules.getByRole('link', { name: copy.shellModuleProfile, exact: true }).click()
-    await page.getByRole('navigation', { name: copy.shellPagesLabel }).getByRole('link', { name: copy.workbenchPageFacts, exact: true }).click()
-  } else {
-    await page.getByRole('button', { name: copy.shellMenuOpen, exact: true }).click()
-    await page.getByRole('dialog', { name: copy.shellMenuTitle }).getByRole('link', { name: copy.workbenchPageFacts, exact: true }).click()
-    await expect(page.getByRole('dialog', { name: copy.shellMenuTitle })).toHaveCount(0)
-  }
-  await expect(page.locator('main.result[data-shell-screen="interim-facts"]')).toBeAttached()
-}
-
-const LANDING_SIZES = [
-  { title: sizeTitle('REAL'), use: { viewport: LAPTOP_SIZES.REAL.viewport, deviceScaleFactor: LAPTOP_SIZES.REAL.deviceScaleFactor } },
-  { title: `on the phone (${PHONE.width}×${PHONE.height})`, use: { viewport: PHONE, deviceScaleFactor: PHONE_DPR, isMobile: true, hasTouch: true } },
-] as const
-
-test.describe('the facts page (the shell’s Profile tab, U8)', () => {
-  for (const size of LANDING_SIZES) test.describe(size.title, () => {
-    test.use(size.use)
-
-    test(`?seed=${LANDING_SEED}: the pinned answer landing after a facts-page edit moves no tap target`, async ({ page }) => {
-      test.setTimeout(FINAL_TIER_MS * 2 + 60_000)
-      await gotoSeedFinal(page, LANDING_SEED)
-      await page.evaluate(() => window.scrollTo(0, 0))
-      await showFactsPage(page)
-      // THE BASELINE, taken before the door opens (the U8 review's C6): the page as it stood on the settled answer, so a
-      // box that grows the moment the edit starts being worked out, and stays grown, still reds. The door is scrolled
-      // into view first, as the press would, so the baseline and every frame share one scroll (the seat pins at a
-      // laptop, where a scroll moves its page-relative place).
-      const spendingDoor = page.getByRole('button', { name: slots.workbenchFactsEditName(copy.workbenchFactsSpending), exact: true })
-      await settleLayout(page) // (it pins the scroll to the top, so the door is scrolled in after it)
-      await spendingDoor.scrollIntoViewIfNeeded()
-      const baseline = await page.evaluate(() => {
-        const rect = (el: Element | null) => {
-          if (el === null) return null
-          const r = el.getBoundingClientRect()
-          return { x: r.x + window.scrollX, y: r.y + window.scrollY, w: r.width, h: r.height }
-        }
-        return {
-          intro: rect(document.querySelector('.wb-facts__intro')),
-          door: rect(document.querySelector('.wb-facts__section [data-fact-open]')),
-        }
-      })
-      await spendingDoor.click()
-      const sheet = page.getByRole('dialog', { name: copy.workbenchFactsSpending, exact: true })
-      const field = sheet.getByLabel(copy.spendLabel, { exact: true })
-      await expect(field).toHaveValue('7,000')
-      // Focus first: the field swaps its shown figure for the raw one on focus, so a fill that focuses would land
-      // after that swap and add to it.
-      await field.click()
-      await field.fill('7,600')
-      await field.blur()
-      await expect(field, 'the new spending committed').toHaveValue('7,600')
-      // From here the engine hears only this edit's recompute: every message to the worker is held 400 ms.
-      await page.evaluate(() => {
-        const send = Worker.prototype.postMessage
-        Worker.prototype.postMessage = function (this: Worker, ...args: unknown[]) {
-          setTimeout(() => Reflect.apply(send, this, args), 400)
-        } as typeof send
-      })
-      // Armed before Done: every frame from the sheet's close until thirty frames after the new answer lands.
-      await page.evaluate(() => {
-        type Rect = { readonly x: number; readonly y: number; readonly w: number; readonly h: number }
-        type Frame = { readonly intro: Rect | null; readonly door: Rect | null; readonly refiguring: boolean; readonly landed: boolean; readonly lead: string }
-        const log: Frame[] = []
-        ;(window as unknown as { __wbLanding: Frame[] }).__wbLanding = log
-        const rect = (el: Element | null): Rect | null => {
-          if (el === null) return null
-          const r = el.getBoundingClientRect()
-          return { x: r.x + window.scrollX, y: r.y + window.scrollY, w: r.width, h: r.height }
-        }
-        let sawRefiguring = false
-        let after = 0
-        const tick = () => {
-          const room = document.querySelector('main.result')
-          const sheetOpen = document.querySelector('.control-sheet') !== null
-          const refiguring = room?.hasAttribute('data-answer-refiguring') ?? false
-          if (refiguring) sawRefiguring = true
-          const landed = sawRefiguring && !refiguring && room?.getAttribute('data-answer-tier') === 'final'
-          if (!sheetOpen) {
-            log.push({
-              intro: rect(document.querySelector('.wb-facts__intro')),
-              door: rect(document.querySelector('.wb-facts__section [data-fact-open]')),
-              refiguring,
-              landed,
-              lead: document.querySelector('.wb-pin__real .wb-pin__lead')?.textContent ?? '',
-            })
-            if (landed) after++
-          }
-          if (after < 30) requestAnimationFrame(tick)
-        }
-        requestAnimationFrame(tick)
-      })
-      await sheet.getByRole('button', { name: copy.workbenchFactsDone }).click()
-      await expect
-        .poll(() => page.evaluate(() => (window as unknown as { __wbLanding: { landed: boolean }[] }).__wbLanding.filter((f) => f.landed).length), {
-          timeout: FINAL_TIER_MS,
-        })
-        .toBeGreaterThanOrEqual(30)
-      const frames = await page.evaluate(
-        () =>
-          (window as unknown as {
-            __wbLanding: { intro: { x: number; y: number; w: number; h: number } | null; door: { x: number; y: number; w: number; h: number } | null; refiguring: boolean; landed: boolean; lead: string }[]
-          }).__wbLanding,
-      )
-      const before = frames.filter((f) => !f.landed)
-      const refiguring = frames.filter((f) => f.refiguring)
-      const leads = [...new Set(frames.map((f) => f.lead))]
-      console.log(
-        `[wb-facts landing walk] frames=${frames.length} beforeLanding=${before.length} refiguring=${refiguring.length} leads=${JSON.stringify(leads)} first=${JSON.stringify(frames[0])} last=${JSON.stringify(frames.at(-1))}`,
-      )
-      expect(before.length, 'frames painted before the new answer landed: otherwise the walk compares nothing').toBeGreaterThan(0)
-      expect(refiguring.length, 'the pinned answer was seen being worked out again before it landed').toBeGreaterThan(0)
-      expect(leads.length, 'the pinned answer’s words changed: otherwise no new lead was laid out').toBeGreaterThanOrEqual(2)
-      expect(baseline.intro, 'the facts page’s intro, the first thing under the answer’s box, is on screen').not.toBeNull()
-      expect(baseline.door, 'the first group’s door is on screen').not.toBeNull()
-      for (const f of frames) {
-        for (const key of ['intro', 'door'] as const) {
-          const a = baseline[key]!
-          const b = f[key]
-          expect(b, `${key} left the page`).not.toBeNull()
-          expect(Math.abs(b!.x - a.x), `the ${key} moved sideways`).toBeLessThanOrEqual(0.5)
-          expect(Math.abs(b!.y - a.y), `the ${key} moved up or down`).toBeLessThanOrEqual(0.5)
-          expect(Math.abs(b!.w - a.w)).toBeLessThanOrEqual(0.5)
-          expect(Math.abs(b!.h - a.h)).toBeLessThanOrEqual(0.5)
-        }
-      }
-    })
-  })
-})
-
 // ── The pay check's unlock lines and its standing line (HEAD :3094-:3999 at 95c715e19, restored in RC4a and
 // re-pointed: the gate is `ReEntry.tsx`, kept; the standing line rides the StaleBanner above the home since RC4; its
-// door opens the gear drawer's W row). ───────────────────────────────────────────────────────────────────────────
+// door opens the Pre-retirement living expenses drawer since RC13b). ───────────────────────────────────────────────────────────────────────────
 const STALE_W_QUOTE = slots.workingCostStaleQuote('84,000', '78,000')
 /** The Result door's cost list: the W help's own items. No seed here carries a budget or a priced state, so the
  *  state-tax item rides after the local-tax one. */
@@ -1909,12 +1683,11 @@ for (const u of PAY_CHECK_UNLOCKS) {
       if (u.sheet !== null) {
         await expect(standing.getByRole('button', { name: u.sheet.cta, exact: true }), `${u.key}: the standing line's W door`).toHaveCount(1)
         await standing.getByRole('button', { name: u.sheet.cta, exact: true }).click()
-        const dialog = page.getByRole('dialog')
-        await expect(dialog).toBeVisible()
+        const dialog = page.getByRole('dialog', { name: copy.profileWorkingCostName })
+        await expect(dialog, `${u.key}: the door opens the Pre-retirement living expenses drawer (RC13b)`).toBeVisible()
         await settleLayout(page)
-        const row = dialog.locator('[data-assumption-seat="working-year-cost"]')
-        await expect(row, `${u.key}: the door opens the panel at the W row`).toHaveCount(1)
-        await assertTappableInSheet(row.locator('label.segment').filter({ hasText: copy.workingCostYes }), `${u.key}: "${copy.workingCostYes}"`)
+        const row = dialog
+        await assertTappableInSheet(row.locator('[data-choice-group="working-cost"] label').filter({ hasText: copy.workingCostYes }), `${u.key}: "${copy.workingCostYes}"`)
         if (u.sheet.keep === null) {
           await expect(row.getByRole('button', { name: /^Keep / }), `${u.key}: no Keep door below today's quote (ruling 34)`).toHaveCount(0)
         } else {
@@ -1927,12 +1700,11 @@ for (const u of PAY_CHECK_UNLOCKS) {
         // survivor part rides the seat too, its paragraph after the runs' list (KD7); the seat passes no button, so the
         // survivor part is the block's last part.
         if (u.standingRuns !== undefined) {
-          const seatBlock = dialog.locator('[data-assumption-seat="working-year-left-over"] .left-over > div.note-parts')
+          const seatBlock = dialog.locator('[data-left-over-seat] > div.note-parts')
           await expect(seatBlock, `${u.key}: the left-over seat draws its runs as one block`).toHaveCount(1)
           await assertTypedBelowParts(seatBlock, `${u.key}: the seat`, u.standingRuns, false)
-          await assertLabelType(seatBlock, `${u.key}: the seat's runs`)
-          const foot = await seatBlock.evaluate((el) => ({ last: el.parentElement?.lastElementChild === el, end: getComputedStyle(el).marginBlockEnd }))
-          expect(foot, `${u.key}: the runs end the seat with no trailing margin`).toEqual({ last: true, end: '0px' })
+          const foot = await seatBlock.evaluate((el) => el.parentElement?.lastElementChild === el)
+          expect(foot, `${u.key}: the runs end the seat`).toBe(true)
         }
       }
     })

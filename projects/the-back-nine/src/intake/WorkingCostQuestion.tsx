@@ -1,10 +1,10 @@
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react'
 import { copy, slots, workingCostHelpCountItems, type CopyKey } from '@ui/copy'
-import type { SpendEntryPeriod, WorkingYearStateTaxReading } from '@shared/model'
+import { helpLeaveOutItems, STATE_HELP, leftOutLine, quoteLine, withWorkingYearCost } from './workingCostFace'
+import type { SpendEntryPeriod } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
 import { CurrencyField, SegmentedControl } from './fields'
 import { formatMoney } from './moneyFormat'
-import { threeThenMore } from './missingFacts'
 import { useGestureHold } from './gestureHold'
 import { useUnsavedBufferHold } from './unsavedBuffer'
 import { workingYearCostFigure } from './intakeMap'
@@ -22,7 +22,6 @@ import {
   writeEnteredWorkingYearCost,
   writeKeptWorkingYearCost,
   writeWorkingYearCostPeriod,
-  type WorkingYearQuote,
 } from './workingYearQuote'
 import { workingYearCostKeepCondition, workingYearCostStaleNote, workingYearCostTypedBelowNote } from './workingYearLeftOver'
 
@@ -91,16 +90,6 @@ export interface WorkingCostQuestionProps {
   readonly figureErrors?: ReactNode
 }
 
-/** The help's two lists (R1), in reading order: what a working year's figure holds (`workingCostHelpCountItems`, the
- *  one home the Result door's cost list reads too), then what the tool works out itself. Each list sits under its own
- *  lead line. */
-const HELP_LEAVE_OUT: readonly CopyKey[] = [
-  'workingCostHelpLeaveOutPayrollTax',
-  'workingCostHelpLeaveOutIncomeTax',
-  'workingCostHelpLeaveOutSavings',
-  'workingCostHelpLeaveOutMedicare',
-]
-
 function HelpList({ leadKey, items }: { readonly leadKey: CopyKey; readonly items: readonly string[] }) {
   return (
     <div className="working-cost__help">
@@ -114,44 +103,8 @@ function HelpList({ leadKey, items }: { readonly leadKey: CopyKey; readonly item
   )
 }
 
-/** The help's state sentence, one per reading (KTD18 — draft-keyed, so it agrees with the spend
- *  step's help on every household). Exhaustive over the persisted vocabulary. */
-const STATE_HELP: Readonly<Record<WorkingYearStateTaxReading, CopyKey>> = {
-  'agi-derived': 'workingCostHelpStateAgiDerived',
-  'class-based': 'workingCostHelpStateClassBased',
-  none: 'workingCostHelpStateNone',
-  unpriced: 'workingCostHelpStateUnpriced',
-}
-
 /** The figure's own text input — the period radios share its box. */
 const isFigureInput = (t: EventTarget): boolean => t instanceof HTMLInputElement && t.type === 'text'
-
-/** `d` with `w` as its W — `d` itself when it already holds it (so a memo on the result is stable). */
-function withWorkingYearCost(d: ScenarioDraft, w: ScenarioDraft['workingYearCost']): ScenarioDraft {
-  if (d.workingYearCost === w) return d
-  if (w !== undefined) return { ...d, workingYearCost: w }
-  const { workingYearCost: _held, ...rest } = d
-  return rest
-}
-
-function quoteLine(quote: WorkingYearQuote): string {
-  const amount = formatMoney(quote.annualReal)
-  if (quote.source === 'budget') {
-    return quote.medicalReal > 0
-      ? slots.workingCostQuoteBudgetMedical(amount, formatMoney(quote.medicalReal))
-      : slots.workingCostQuoteBudget(amount)
-  }
-  return quote.period === 'month'
-    ? slots.workingCostQuoteMonthly(formatMoney(quote.annualReal / 12), amount)
-    : slots.workingCostQuoteYearly(amount)
-}
-
-function leftOutLine(quote: WorkingYearQuote): string | null {
-  if (quote.leftOut.length === 0) return null
-  const { shown, more } = threeThenMore(quote.leftOut.map((l) => l.label))
-  const names = shown.join(', ')
-  return more > 0 ? slots.workingCostLeftOutMore(names, more) : slots.workingCostLeftOut(names)
-}
 
 export function WorkingCostQuestion({
   draft,
@@ -367,7 +320,7 @@ export function WorkingCostQuestion({
           where the state sentence below asks the household to add it (`workingCostHelpCountItems`, the Result door's
           list too). */}
       <HelpList leadKey="workingCostHelpCountLead" items={workingCostHelpCountItems(stateTaxBelongsInW(draft))} />
-      <HelpList leadKey="workingCostHelpLeaveOutLead" items={HELP_LEAVE_OUT.map((k) => copy[k])} />
+      <HelpList leadKey="workingCostHelpLeaveOutLead" items={helpLeaveOutItems()} />
       <p className="field-help">{copy[STATE_HELP[workingYearStateTaxReading(draft)]]}</p>
       {offersYes && (
         <>

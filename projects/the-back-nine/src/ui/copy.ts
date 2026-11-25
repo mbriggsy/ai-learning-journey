@@ -2435,10 +2435,6 @@ export const copy = {
   // words say what a Back keeps and what it drops, true for both.
   workbenchLeaveAsk:
     'You have something open here. Going back closes it: changes you finished stay in your plan, and an entry not yet added is dropped.',
-  // In its place over a step whose own Continue would refuse what was changed: Go puts the whole step back, so "changes
-  // you finished stay" would be false there (round 3 of the milestone-1 review).
-  workbenchLeaveAskPutsBack:
-    'You have a step open here that can’t take what you changed. Going back closes it and puts that step back to how it was when you opened it.',
   workbenchLeaveGo: 'Go back',
   workbenchLeaveStay: 'Stay here',
   // --- Act 6 · RC2, the shell (plan docs/plans/6-rightcapital-ui-plan.md, section 3.1): the top bar, the pages, the
@@ -2454,7 +2450,6 @@ export const copy = {
   shellMenuOpen: 'Menu',
   shellMenuTitle: 'Go to a page',
   shellMenuClose: 'Close',
-  shellInterimBanner: 'This page keeps its old look until it is rebuilt',
   // A Back press (or the wordmark) that would leave these pages while a what-if holds a change: a what-if is never
   // part of the plan, so leaving drops it and changes nothing saved.
   shellLeaveWhatIf: 'Your what-if isn’t kept anywhere. Leaving these pages drops it; your plan stays as it is.',
@@ -2498,7 +2493,7 @@ export const copy = {
   snapshotInvestedTotal: 'Total',
   snapshotInvestedAsEntered: 'Balances as you entered them.',
   snapshotInvestedStopgap: 'B9 doesn’t ask about your home, debts or bank accounts yet.',
-  snapshotInvestedOpen: 'Open your facts',
+  snapshotInvestedOpen: 'See your accounts',
   snapshotFanTitle: 'Your savings across many futures',
   snapshotFanOuter: 'Eight in ten futures',
   snapshotFanInner: 'The middle half of futures',
@@ -2638,8 +2633,6 @@ export const copy = {
     'Your what-if isn’t kept. Saving or backing up opens its own steps, which drops the what-if; your plan stays as it is. To hold on to it, keep it first from the list beside Your plan.',
   shellCeremonyOpenEntry:
     'You have something open here. Going on closes it: changes you finished stay in your plan, and an entry not yet added is dropped.',
-  shellCeremonyPutsBack:
-    'You have a step open here that can’t take what you changed. Going on closes it and puts that step back to how it was when you opened it.',
   shellCeremonyGo: 'Go on',
   /** A Keep with no saved plan yet opens the save steps (the shell unmounts for them) while a deposit change in Action
    *  items still waits for the employer's figure: that change was never in the what-if being kept. */
@@ -2787,66 +2780,10 @@ export const copy = {
    *  above is your plan's, never this table's run. */
   cashFlowsSteadyWhatOther:
     'One future, in a steady market: stocks and bonds each earn the same return every year. It is one future among many, never a forecast; the answer pinned here reads your plan across all of them.',
-  // --- The facts page (Act 5, U8): everything the household told the tool, by the walk's own steps, each group
-  // with one door into that step's own body. Facts read exactly (R11): no "~" and no "about" on a figure the
-  // household gave. The pilot's drafts, shipped flagged for Briggsy's cold read. ---
-  workbenchPageFacts: 'Your facts',
-  workbenchFactsIntro:
-    'Everything you told the tool, grouped the way you answered it. Edit a group and your answer and the table follow. Nothing is kept until you save your plan.',
-  workbenchFactsReadOnly: 'This tab can show your plan but not change it.',
+  // --- A fact's words where a Profile card or Health Care's tray prints it (Act 5, U8's facts page, which RC13b retired;
+  // these outlived it). Facts read exactly (R11): no "~" and no "about" on a figure the household gave. ---
   workbenchFactsEdit: 'Edit',
-  workbenchFactsDone: 'Done',
-  workbenchFactsPeople: 'The two of you',
-  workbenchFactsWork: 'Work',
-  workbenchFactsPay: 'Pay',
-  workbenchFactsSocialSecurity: 'Social Security',
-  workbenchFactsState: 'Where you’ll live',
-  workbenchFactsStateRetired: 'Where you live',
-  workbenchFactsSpending: 'Spending',
-  workbenchFactsHealthQuote: 'Health coverage before Medicare',
-  workbenchFactsEmployerCoverage: 'Coverage at work',
-  workbenchFactsMedical: 'Out-of-pocket health costs',
-  workbenchFactsInvestment: 'Investment income while working',
-  workbenchFactsTaxReturns: 'Your last two tax returns',
-  workbenchFactsMedicareExtras: 'Medicare beyond Part B',
-  workbenchFactsAccounts: 'Accounts',
-  workbenchFactsOtherIncome: 'Other income',
-  workbenchFactsWorkingYear: 'A working year’s cost',
-  workbenchFactsLeftOver: 'Money left over from pay',
-  workbenchFactsChoices: 'Your choices',
-  workbenchFactNotGiven: 'Not given',
-  workbenchFactNotAnswered: 'Not answered yet',
   workbenchFactBlank: 'Left blank',
-  workbenchFactSsStart: 'Social Security starts',
-  workbenchFactSsStarted: 'Social Security started',
-  workbenchFactExtras: 'Beyond Part B, each month',
-  workbenchFactMix: 'How it’s invested',
-  workbenchFactTicker: 'The fund it holds',
-  workbenchFactStreamPension: 'pension',
-  workbenchFactStreamRental: 'rental income',
-  workbenchFactStreamAlimony: 'alimony',
-  workbenchFactStreamAnnuity: 'annuity',
-  workbenchFactStreamOther: 'other income',
-  workbenchFactStreamWhen: 'When it pays',
-  workbenchFactStreamCola: 'Against inflation',
-  workbenchFactAllTaxable: 'All of it',
-  workbenchFactAlimonySigned: 'Agreement signed',
-  workbenchFactAlimonyModified: 'Changed to follow the newer tax rules',
-  workbenchFactAnnuityKind: 'Kind of annuity',
-  workbenchFactBudget: 'Your budget',
-  workbenchFactTierEssential: 'essential',
-  workbenchFactTierExtra: 'extra',
-  workbenchFactBudgetEvery: 'every year',
-  // Where no calendar year can be named for year 0 (a working household whose answer has no dated stop).
-  workbenchFactBudgetYearZero: 'Year 0 is the first year you’ve both stopped working.',
-  workbenchFactGoal: 'Your goal for a recommendation',
-  workbenchFactGoalUnset: 'Not chosen yet',
-  workbenchFactStop: 'When work stops',
-  // The two choices listed with no door (KTD15): why there is none.
-  workbenchFactStopNote: 'Your answer sets this, so it moves when your facts or choices do.',
-  workbenchFactGoalNote: 'Chosen on your answer’s page, beside the recommendation.',
-  // A lever's line on the facts page links to its row in Probability's Action Items tray (RC4b): it opens no editor there.
-  workbenchFactsTry: 'Try a change',
   // --- The lever rail (Act 5, U15; since Act 6 · RC4b the Action Items tray reads these words). A what-if is a copy of the plan with some choices changed; it
   // reads beside the plan on the same futures. The words speak each run's count under its own name and never say a
   // change helps or costs (R20). The pilot's drafts, shipped flagged for Briggsy's read. ---
@@ -2869,8 +2806,6 @@ export const copy = {
   workbenchRailSpendUnnamed: 'A budget line saved before lines had their own mark can’t be changed here.',
   workbenchRailAddLineNeeds: 'A new line needs its dollars a year and a first year.',
   workbenchRailLineNew: 'Added in this what-if.',
-  // Deposits.
-  workbenchRailDepositsTitle: 'Yearly deposits',
   workbenchRailDepositsSpent: 'Money no longer deposited counts as spent in this what-if, not saved.',
   workbenchRailEmployerLabel: 'The employer’s yearly deposit at this amount',
   workbenchRailEmployerWaiting: 'This change waits for the employer’s figure at the lower deposit.',
@@ -2880,15 +2815,13 @@ export const copy = {
   workbenchRailMixBonds: 'Bonds, %',
   workbenchRailMixCash: 'Cash, %',
   workbenchRailMixNote:
-    'A mix can be tried here but not applied: each account’s own mix is set on your facts page, and your plan runs on their blend.',
+    'A mix can be tried here but not applied: each account’s own mix is set on Profile’s Net Worth page, and your plan runs on their blend.',
   // Roth conversions.
   workbenchRailRothTitle: 'Roth conversions',
   workbenchRailRothNone: 'None',
   workbenchRailRothAmount: 'A set amount each year',
   // Withdrawal order.
   workbenchRailOrderTitle: 'Withdrawal order',
-  // Social Security.
-  workbenchRailClaimTitle: 'When Social Security starts',
   // The marketplace regime.
   workbenchRailAcaTitle: 'Help with marketplace premiums',
   // Apply.
@@ -3166,7 +3099,7 @@ export const copy = {
   stressNoneMoves: 'None of these stresses moves your plan’s count by a whole step out of 10.',
   stressRefusedNoBenefit: 'Social Security: nobody in your plan has a Social Security benefit, so there is nothing to lower.',
   stressRefusedNoOop:
-    'Out-of-pocket medical: your plan has no out-of-pocket figure, so there is nothing to raise. Adding one under Profile → Your facts runs this stress too.',
+    'Out-of-pocket medical: your plan has no out-of-pocket figure, so there is nothing to raise. Adding one under Profile → Expenses runs this stress too.',
   stressRefusedNoMarketplace: 'Marketplace discount: nobody in your plan buys marketplace cover before 65, so the subsidy rules don’t reach it.',
   stressRefusedCurrentLaw:
     'Marketplace discount: your plan already uses current law’s smaller discount, the cautious case, so switching the rules could only help. It isn’t a stress for your plan.',
@@ -3320,6 +3253,61 @@ export const copy = {
   profileIncomeWhen: 'When it pays',
   // The person drawer.
   profileStateLabel: 'Your home state',
+  // --- Profile → Expenses and Goals (Act 6 · RC13b; `profileView.ts`'s `expensesView` and `goalsView`, the drawers in
+  // `ExpensesDrawers.tsx`, `WorkingCostDrawer.tsx` and `GoalsDrawers.tsx`). A drawer's fields reuse the walk's labels and
+  // help (written once, above), the out-of-pocket figure's containment law with them; these are the pages' and cards' own
+  // words. ---
+  shellPageGoals: 'Goals',
+  shellPageExpenses: 'Expenses',
+  profileExpensesIntro: 'What the two of you spend, and the medical costs you pay yourself. Pick a card to change it.',
+  profileExpensesIntroWorking:
+    'What the two of you spend, the medical costs you pay yourself, and what a year costs while either of you still works. Pick a card to change it.',
+  profileGoalsIntro: 'When each of you stops working, and what health care costs before and on Medicare. Pick a card to change it.',
+  profileKindLiving: 'Living expenses',
+  profileLivingName: 'Household spending',
+  profileRowSpending: 'Spending',
+  profileRowBudget: 'Set by your budget',
+  profileRowSurvivor: 'If one of you is on your own',
+  profileKindMedical: 'Out-of-pocket medical',
+  profileMedicalName: 'Medical costs you pay yourself',
+  profileKindWorkingCost: 'Pre-retirement',
+  profileWorkingCostName: 'Pre-retirement living expenses',
+  profileRowWorkingYear: 'A working year',
+  profileRowLeftOver: 'Left over',
+  profileKindRetirement: 'Retirement',
+  profileFindsDate: 'Still working: B9 finds your work-optional date',
+  profileKindHealth: 'Before Medicare',
+  profileHealthName: 'Health care before Medicare',
+  profileRowPremium: 'Your premium',
+  profileRowBenchmark: 'Benchmark plan',
+  profileRowCoverage: 'While the other works',
+  profileKindMedicare: 'Medicare',
+  profileMedicareName: 'Medicare',
+  profileKindMoneyPicture: 'Working years',
+  profileMoneyPictureName: 'Your money while working',
+  profileMoneyPictureNoW:
+    'Not drawn yet: it needs what a year costs while either of you still works. Give that figure on the Pre-retirement living expenses card.',
+  // The Living expenses drawer: one figure, or a budget line by line (RightCapital's "Expense approach").
+  profileLivingApproachLegend: 'How you give your spending',
+  profileLivingApproachOne: 'One figure',
+  profileLivingApproachBudget: 'A budget, line by line',
+  profileLivingBudgetHeading: 'Your budget',
+  profileLivingSurvivorHeading: 'If one of you is on your own',
+  profileBudgetRemove: 'Remove',
+  // The Pre-retirement living expenses drawer's two parts below W (the money picture's own words do the rest).
+  profileWorkingPictureHeading: 'Your first working year, and the years that change',
+  profileWorkingLeftOverHeading: 'Money left over in a working year',
+  // The Medicare drawer's look-back part.
+  profileMedicareIncomeHeading: 'Income Medicare looks back at',
+  // The Health care before Medicare drawer's coverage part.
+  profileHealthCoverageHeading: 'While one of you still works',
+  // THE W GAP (RC13b): a household on the date route with no figure for a working year (a person moved to "still working"
+  // after the walk, which asks it last). The run then takes nothing from savings in a working year, as if pay covered every
+  // cost, so the answer can read better than it is: said on every figured page, its door opening the Pre-retirement living
+  // expenses drawer, where Save asks for the figure.
+  stalenessWUnansweredNote:
+    'Your answer doesn’t count what a year costs while either of you still works yet: until you give that figure, each working year is figured as if your pay covers every cost, so the answer can read better than it really is.',
+  stalenessWUnansweredCta: 'Give the figure',
   // THE ENTRY SLICE, composed in LAST: the words the first-load chunk renders live in `entryCopy.ts` (see its
   // header). Spread last, a key typed above that the slice also holds fails to compile (TS2783), so the two
   // halves stay disjoint and `copy` stays ONE whole catalog for `CopyKey`, every copyGuard sweep and every lazy surface.
@@ -4015,7 +4003,7 @@ export const slots = {
    *
    *  ⚠️ DO NOT "FIX" THIS BY DROPPING THE TODAY TICK. That inverts the contradiction into the
    *  defect U13/§S0 already fixed — `bandAnnotations.ts:51-56` records it live from the first
-   *  `?vault=datestale` walk, and `e2e/vertical-fit.spec.ts:3930-3933` (the `?vault=datearrived` arm — "must still
+   *  `?vault=datestale` walk, and `e2e/vertical-fit.spec.ts:3702-3705` (the `?vault=datearrived` arm — "must still
    *  mark WALL-TIME today") forbids a band that loses its wall clock BY NAME. The tick is right; the sentence was wrong. */
   bandAgedPremiseFresh: (buildYear: number): string =>
     `This range runs from ${buildYear}, when the plan was built — the years since are modeled, not records. What you actually hold today is undetermined until you re-confirm.`,
@@ -5173,7 +5161,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:2291` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:2279` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,
@@ -5649,10 +5637,10 @@ export const slots = {
   cashFlowsRunStopsNoDate: (run: string, year: number): string =>
     `${run}: your answer found no date in its window, so work stops in ${year}, the window’s last year.`,
   cashFlowsRunStopsLever: (run: string, year: number): string => `${run}: work stops in ${year}, the year this what-if sets.`,
-  // --- The facts page (Act 5, U8): a fact reads exactly, as given (R11): every figure here is the household's own,
-  // pre-formatted whole dollars, never "~" or "about". The pilot's drafts, shipped flagged. ---
-  /** A group's one door, named for the group it opens (its visible text is "Edit"): "Edit spending", "Edit Social
-   *  Security". A title that opens on a proper noun keeps its capital. */
+  // --- A fact as the Profile cards and Health Care's tray print it (Act 5, U8's facts page, retired by RC13b): it reads
+  // exactly, as given (R11): every figure here is the household's own, pre-formatted whole dollars, never "~" or "about". ---
+  /** A fact's one door, named for what it opens (its visible text is "Edit"): "Edit Social Security", "Edit medicare".
+   *  A title that opens on a proper noun keeps its capital. */
   workbenchFactsEditName: (title: string): string =>
     `Edit ${/^(Social Security|Medicare|Roth)\b/.test(title) ? title : `${title.charAt(0).toLowerCase()}${title.slice(1)}`}`,
   workbenchFactDollars: (amount: string): string => `$${amount}`,
@@ -5661,45 +5649,21 @@ export const slots = {
   workbenchFactPerMonthAndYear: (month: string, year: string): string => `$${month} a month ($${year} a year)`,
   workbenchFactSpendBudget: (total: string): string => `$${total} a year, set by your budget`,
   workbenchFactPercent: (pct: string): string => `${pct}%`,
-  workbenchFactSsStartYear: (year: number, age: number): string => `${year}, at age ${age}`,
   /** An account or a stream, by whose it is: "Sam’s 401(k)", "Your pension". */
   workbenchFactOwned: (possessive: string, noun: string): string => upperFirst(`${possessive} ${noun}`),
-  /** An account's mix, each part it holds: "60% stocks, 30% bonds, 10% cash". */
-  workbenchFactMixParts: (parts: readonly string[]): string => parts.join(', '),
-  workbenchFactMixStocks: (pct: string): string => `${pct}% stocks`,
-  workbenchFactMixBonds: (pct: string): string => `${pct}% bonds`,
-  workbenchFactMixCash: (pct: string): string => `${pct}% cash`,
-  workbenchFactAccountsTotal: (total: string): string => `All accounts together: $${total}`,
-  workbenchFactStreamForLife: (age: number): string => `From age ${age}, for life`,
-  workbenchFactStreamUntil: (start: number, end: number): string => `From age ${start} through age ${end}`,
-  workbenchFactStreamRises: (pct: string): string => `Rises ${pct}% a year`,
   workbenchFactLeftOverSaved: (amount: string): string =>
     `All of it goes into savings or investments (you answered against $${amount} a year left over)`,
   /** A custom withdrawal order, first to last: "Brokerage, then Pre-tax, then Roth". */
   workbenchFactOrder: (buckets: readonly string[]): string => buckets.join(', then '),
   workbenchFactRoth: (amount: string, startYear: number, startPassed: boolean, years: number): string =>
     `$${amount} a year for ${years} year${years === 1 ? '' : 's'}, ${startPassed ? 'started in' : 'starting in'} ${startYear}`,
-  workbenchFactBudgetLine: (amount: string, tier: string, when: string): string => `$${amount} a year, ${tier}, ${when}`,
-  /** A budget line's window in calendar years ("2028 through 2035", "from 2028 on"), or in the editor's own year
-   *  numbers where no calendar year is known ("year 2 through year 9", "from year 2 on"). */
-  workbenchFactBudgetThrough: (from: number, through: number): string => `${from} through ${through}`,
-  workbenchFactBudgetFromOn: (from: number): string => `from ${from} on`,
-  workbenchFactBudgetYearThrough: (from: number, through: number): string => `year ${from} through year ${through}`,
-  workbenchFactBudgetFromYearOn: (from: number): string => `from year ${from} on`,
   /** The Medicare extras the run prices with the tool's own figure (no figure of the household's own). */
   workbenchFactExtrasToolFigure: (monthly: string): string => `$${monthly} a month, the tool’s own figure, not one you gave`,
-  /** A floor-track stop: the date is figured on essentials-only spending (the table heading's words). */
-  workbenchFactStopYearFloor: (year: number): string => `${year}, the year your answer’s date gives on essentials-only spending`,
   /** The budget line's window help on the all-retired route, where year 0 is the plan's first year. */
   budgetWindowHelpRetired: (year: number): string =>
     `Counted from this plan’s first year, ${year} — year 0. Leave “through” blank for always.`,
-  workbenchFactHeirDefault: (pct: string): string => `${pct}%, the tool’s starting figure until you choose one`,
-  workbenchFactStopYear: (year: number): string => `${year}, the year your answer’s date gives`,
-  workbenchFactStopNoDate: (year: number): string =>
-    `${year}: your answer found no date in its window, so the table uses the window’s last year`,
-  /** A facts-page line's link to the action items on Retirement Analysis (RC4b's tray), named for the line it tries. */
-  workbenchFactsTryName: (label: string): string =>
-    `Try a change to ${label.charAt(0).toLowerCase()}${label.slice(1)} in the action items`,
+  /** The heirs' bracket never chosen: the shown rate is the tool's (Tax Strategies' picker, RC13b; the facts page said it). */
+  taxStratHeirDefault: (pct: string): string => `${pct}% is the tool’s starting figure until you choose one.`,
   /** The tray's compared value for a figure the household entered (exact, a fact). */
   trayDollars: (amount: string): string => `$${amount}`,
   /** The tray's compared value for a claim age. */
@@ -6079,6 +6043,12 @@ export const slots = {
   profileRefusedElsewhere: (place: string, message: string): string => `Not saved: this change would leave a problem with ${place}. ${message}`,
   /** A refusal on a field the drawer's facet doesn't show (the account's deposits, from its Net Worth drawer). */
   profileRefusedHidden: (field: string, message: string): string => `${field}: ${message}`,
+  // Act 6 · RC13b, Expenses and Goals.
+  profileRetirementOf: (possessive: string): string => upperFirst(`${possessive} retirement`),
+  profileExtrasOf: (possessive: string): string => upperFirst(`${possessive} Medicare beyond Part B`),
+  profileLeftOverIn: (year: number): string => `Left over in ${year}`,
+  profileShortIn: (year: number): string => `Short in ${year}`,
+  profileBudgetLineOf: (n: number): string => `Budget line ${n}`,
   confidenceRunOutWholePast: (ageA: number, ageB: number, share: string, plural: boolean): string =>
     `The charts stop at ages ${ageA} and ${ageB}: past them, fewer than half of the futures still have one of you living. Over the whole plan, ${share} ${plural ? 'run' : 'runs'} out of money.`,
 } as const

@@ -9,8 +9,8 @@
  * - the aged-balances line (the save is at least one calendar year old, `agedBalancesYearFor`), its door the guided
  *   re-walk (re-confirm your numbers) where the tab can write;
  * - the ONE standing line (`composeAnswerNotes`: W stale first, then the typed-below line, then the moved left over),
- *   its door opening the assumption panel at that cause's seat (the gear's drawer until RC13), drawn only where the tab
- *   can save (a read-only tab reads the fact alone: the composer drops the seat and the parts' `door`).
+ *   its door opening the Pre-retirement living expenses drawer over the page (RC13b; plan 4.0's map), drawn only where
+ *   the tab can save (a read-only tab reads the fact alone: the composer drops the seat and the parts' `door`).
  * Each cause names its own lead and door label (insight 147), moved here from the deleted date hero.
  */
 import type { AnswerNotes, StandingNoteCause } from '../answerNotes'
@@ -22,6 +22,8 @@ import type { NoteParts } from '../noteParts'
  *  reverse, and its door is the act's own. The typed-below line has no digit-free lead (its first sentence names the
  *  answer and both figures itself), so `null`. */
 export const STANDING_DOOR_COPY: Readonly<Record<StandingNoteCause, { readonly lead: CopyKey | null; readonly cta: CopyKey }>> = {
+  // W never given (RC13b): the line is its own whole sentence, its door the act of giving it.
+  'w-unanswered': { lead: null, cta: 'stalenessWUnansweredCta' },
   'w-stale-update': { lead: 'stalenessPayCheckNote', cta: WORKING_COST_ACT_COPY.update.resultDoor },
   'w-stale-confirm-or-change': { lead: 'stalenessPayCheckNote', cta: WORKING_COST_ACT_COPY.confirmOrChange.resultDoor },
   'w-typed-below': { lead: null, cta: WORKING_COST_ACT_COPY.update.resultDoor },

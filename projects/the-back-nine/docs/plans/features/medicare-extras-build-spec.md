@@ -31,14 +31,14 @@ status: shipped
 
 ## F1 — intake shape
 
-The `medicare-extras` step (`src/intake/questions.tsx:893-913`) renders a **per-person PAIRED
+The `medicare-extras` step (`src/intake/questions.tsx:833-853`) renders a **per-person PAIRED
 fieldset on ONE screen** (the two-person law) through the shared `Paired` wrapper — never
 household-combined-then-split (that fabricates a split the domain doesn't support, forfeits the
 survivor-precision win, and the ACA combined-then-split precedent is a FALSE analogy here).
 
 - Each person's own combined monthly Part D / Medigap / Medicare-Advantage premium is asked as
   **one dollar figure** behind a **legible three-arm PAYMENT FORK** — `MedicareExtrasFork`
-  (`src/intake/questions.tsx:805`), a vertical `SegmentedControl` over
+  (`src/intake/questions.tsx:770`), a vertical `SegmentedControl` over
   `'none' | 'entered' | 'typical'` — never a plan-type/MA-vs-Medigap taxonomy the user can't
   self-sort. The shipped arm labels (`src/ui/copy.ts`) are "About nothing beyond Part B (common
   on Medicare Advantage)", "A monthly premium — entered below", and the slot-templated "Not
@@ -50,9 +50,9 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   survivor and blocks the calm first pass — U12 doctrine; R5 never-gate). Nothing on the step
   blocks advance except the self-contradictory entered-with-no-dollar half-answer, which the R19
   sanity rule `medicare-extras-entered-blank` (`src/intake/sanity.ts:354-369`) names at the field.
-- **WHO:** the step is gated on `anyNearMedicare` (`src/intake/steps.ts:75-76`) — any
+- **WHO:** the step is gated on `anyNearMedicare` (`src/intake/steps.ts:96-97`) — any
   member aged 64 or older, the same cohort gate as the IRMAA seed
-  (`src/intake/steps.ts:99` pushes both under the one predicate). That covers the all-65+
+  (`src/intake/steps.ts:120` pushes both under the one predicate). That covers the all-65+
   household and the NEAR-65 date route, but it is narrower than the ratified intent of "everyone
   whose run route-prices Medicare": a household with nobody yet 64 is never asked, while its date
   route still prices Medicare from each member's 65-crossing. Two things keep that gap honest and
@@ -200,7 +200,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   "premiums" line traces literally true post-flip, the sole latent nit being the rare purchased
   Part A, which is consistently carved out.
 
-## F5 — disclosure routing (HARD LOCK — red-team Attack 1; healthSheetChrome.ts:634-644 + answerNotes.ts:124-129)
+## F5 — disclosure routing (HARD LOCK — red-team Attack 1; healthSheetChrome.ts:634-644 + answerNotes.ts:126-131)
 
 - The extras affirmative + per-person adopted-typical provenance + the bi-directional disclosure
   needed a **RENDERED HOME for BOTH populations**, because `showMedicarePricedNote`
@@ -211,7 +211,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
     names extra coverage alongside Part B and its surcharge, and an on-typical household gets a
     per-person bi-directional sentence appended INSIDE the residual paragraph via
     `composeMedicareExtrasTypicalNote` (`src/ui/healthSheetChrome.ts:662`), wired at
-    `src/ui/answerNotes.ts:130-136`. Appended, not a new frame row — the one-frame fit law's tallest
+    `src/ui/answerNotes.ts:132-138`. Appended, not a new frame row — the one-frame fit law's tallest
     composite.
   - **Population B (near-65 date route / the Healthcare door):** the door sheet carries its OWN
     legible extras block — never buried in the six-item run-on — from

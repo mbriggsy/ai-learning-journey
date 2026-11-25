@@ -15,6 +15,7 @@ import { stateLabel } from '../profileView'
 import { buildPerson, buildState, ownNothing, ownPersonField, personFormFrom, stateFormFrom, type PersonField, type PersonForm, type StateForm } from './familyFields'
 import { saveEdit } from './drawerSave'
 import type { DrawerBodyProps } from './drawerProps'
+import { Fact } from './Fact'
 import { ProfileDrawer } from './ProfileDrawer'
 import { useDrawerEdit } from './useDrawerBuffer'
 
@@ -55,6 +56,7 @@ export function PersonDrawer({ index, model, open, readOnly, leaveAsk, onClose, 
       errors={check.elsewhere}
     >
       <DrawerFields>
+        <Fact stamp="person.name">
         <TextInput
           label={copy.nameLabel}
           value={form.name}
@@ -63,6 +65,8 @@ export function PersonDrawer({ index, model, open, readOnly, leaveAsk, onClose, 
           readOnly={readOnly}
           onCommit={(name) => set('name', { name })}
         />
+        </Fact>
+        <Fact stamp="person.birthYear">
         <WholeInput
           label={copy.birthYearLabel}
           value={form.birthYear}
@@ -71,7 +75,9 @@ export function PersonDrawer({ index, model, open, readOnly, leaveAsk, onClose, 
           {...(check.fields.birthYear !== undefined ? { error: check.fields.birthYear } : {})}
           onCommit={(birthYear) => set('birthYear', { birthYear })}
         />
+        </Fact>
         <div className="flex flex-col gap-1">
+          <Fact stamp="person.sex">
           <Select<Sex>
             label={copy.sexLegend}
             items={SEX_ITEMS}
@@ -80,8 +86,10 @@ export function PersonDrawer({ index, model, open, readOnly, leaveAsk, onClose, 
             disabled={readOnly}
             onValueChange={(sex) => set('sex', { sex })}
           />
+          </Fact>
           <p className="text-label text-stone-600">{copy.sexHelp}</p>
         </div>
+        <Fact stamp="person.workStatus">
         <Select<WorkStatus>
           label={copy.workStatusLegend}
           items={WORK_ITEMS}
@@ -90,7 +98,9 @@ export function PersonDrawer({ index, model, open, readOnly, leaveAsk, onClose, 
           disabled={readOnly}
           onValueChange={(workStatus) => set('workStatus', { workStatus })}
         />
+        </Fact>
         {form.workStatus === 'retired' ? (
+          <Fact stamp="person.retirementAge">
           <WholeInput
             label={copy.stopAgeLabel}
             description={copy.stopAgeHelp}
@@ -100,6 +110,7 @@ export function PersonDrawer({ index, model, open, readOnly, leaveAsk, onClose, 
             {...(check.fields.retirementAge !== undefined ? { error: check.fields.retirementAge } : {})}
             onCommit={(retirementAge) => set('retirementAge', { retirementAge })}
           />
+          </Fact>
         ) : null}
       </DrawerFields>
     </ProfileDrawer>
@@ -128,6 +139,7 @@ export function StateDrawer({ model, open, readOnly, leaveAsk, onClose, onClosed
       errors={edit.check.elsewhere}
     >
       <p className="text-body text-stone-900">{copy.stateResidenceLead}</p>
+      <Fact stamp="retirementState">
       <Select<RetirementState>
         label={copy.profileStateLabel}
         items={STATE_ITEMS}
@@ -137,6 +149,7 @@ export function StateDrawer({ model, open, readOnly, leaveAsk, onClose, onClosed
         disabled={readOnly}
         onValueChange={(state) => edit.set('state', { state })}
       />
+      </Fact>
       <p className="text-label text-stone-600">{copy.stateResidenceHelp}</p>
     </ProfileDrawer>
   )

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { ACCOUNT_KINDS } from '@shared/model'
 import { DEV_SEEDS } from '../../../devSeeds'
-import { copy } from '../../../copy'
-import { cardIdOf, familyView, incomeView, netWorthView, savingsView, type AddMenuView, type DrawerTarget } from '../profileView'
+import { copy, slots } from '../../../copy'
+import { cardIdOf, expensesView, familyView, goalsView, incomeView, netWorthView, savingsView, type AddMenuView, type DrawerTarget } from '../profileView'
 
 /**
  * Profile → Family, Income, Savings and Net Worth's composer (Act 6 · RC13a; plan RC13's cards and test scenarios): the cards
@@ -119,5 +119,48 @@ describe('the card a drawer returns focus to', () => {
     expect(cardIdOf({ kind: 'account', index: 1, facet: 'holdings' })).toBe('account-1')
     expect(cardIdOf({ kind: 'new-account', accountKind: 'hsa' })).toBeNull()
     expect(cardIdOf({ kind: 'new-account', accountKind: 'hsa' }, 2)).toBe('account-2')
+  })
+})
+
+describe('Expenses and Goals (RC13b)', () => {
+  const ids = (cards: readonly { readonly id: string }[]) => cards.map((c) => c.id)
+
+  it('a retired household: living expenses and out-of-pocket medical, no Pre-retirement card; Goals with each stop age and Medicare, no money picture', () => {
+    const d = DEV_SEEDS.retired
+    expect(ids(expensesView(d).cards)).toEqual(['living', 'medical'])
+    const goals = goalsView(d)
+    expect(ids(goals.cards)).toEqual(['retirement-0', 'retirement-1', 'medicare'])
+    expect(goals.cards[0]!.rows[0]!.value).toBe(slots.profileStoppedAt(d.people[0].retirementAge!))
+    expect(goals.cards[0]!.target, 'a Retirement card opens the person drawer: one home for the work status').toEqual({ kind: 'person', index: 0 })
+  })
+
+  it('a working household: the Pre-retirement card (W and the left-over answer) and the money picture; the quote and coverage under 65', () => {
+    const d = DEV_SEEDS.date
+    expect(ids(expensesView(d).cards)).toEqual(['living', 'medical', 'working-cost'])
+    const goals = goalsView(d)
+    expect(ids(goals.cards)).toEqual(['retirement-0', 'retirement-1', 'health', 'medicare', 'money-picture'])
+    expect(goals.cards[0]!.rows[0]!.value).toBe(copy.profileFindsDate)
+    expect(goals.cards.find((c) => c.id === 'health')!.rows.map((r) => r.label)).toEqual([copy.profileRowPremium, copy.profileRowBenchmark, copy.profileRowCoverage])
+    const picture = goals.cards.find((c) => c.id === 'money-picture')!
+    expect(picture.target).toEqual({ kind: 'working-cost' })
+    expect(picture.rows[0]!.label).toBe(slots.profileLeftOverIn(d.startCalendarYear))
+  })
+
+  it('THE W GAP: a working household with no W reads so on its card, and the money picture says what it waits for', () => {
+    const { workingYearCost: _w, ...noW } = DEV_SEEDS.date
+    const w = expensesView(noW).cards.find((c) => c.id === 'working-cost')!
+    expect(w.rows[0]!.value).toBe(copy.assumptionWorkingCostUnanswered)
+    const picture = goalsView(noW).cards.find((c) => c.id === 'money-picture')!
+    expect(picture.rows).toEqual([])
+    expect(picture.note).toBe(copy.profileMoneyPictureNoW)
+  })
+
+  it('a governing budget: the card says the budget sets the figure, with its tier split; the blank medical figure reads "Left blank"', () => {
+    const d = DEV_SEEDS.budget
+    const living = expensesView(d).cards[0]!
+    expect(living.rows[0]!.label).toBe(copy.profileRowBudget)
+    expect(living.note).toMatch(/./)
+    const blank = { ...d, health: { ...d.health, oopMedicalAnnual: undefined } }
+    expect(expensesView(blank).cards[1]!.rows[0]!.value).toBe(copy.workbenchFactBlank)
   })
 })

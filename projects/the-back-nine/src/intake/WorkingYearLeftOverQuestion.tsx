@@ -29,8 +29,8 @@
  */
 import { useId, useMemo } from 'react'
 import type { WorkingYearLeftOverKind } from '@shared/model'
+import { LEFT_OVER_LINE, LEFT_OVER_OPTIONS, leftOverCheck, leftOverFigureLine, movedWords } from './leftOverFace'
 import type { ScenarioDraft } from '@store/memoryModel'
-import { slots } from '@ui/copy'
 import { NotePartsBlock } from '@ui/NotePartsBlock'
 import { isPlainNote } from '@ui/noteParts'
 import { SegmentedControl } from './fields'
@@ -44,44 +44,7 @@ import {
   writeWorkingYearLeftOver,
   type TypedBelowSeatHost,
 } from './workingYearLeftOver'
-import { LEFT_OVER_FACE, type LeftOverShownState } from './workingYearLeftOverState'
-
-/** The one line in dollars below the group (R6), by shown state. `live` is today's printed year-0 Left
- *  over (formatted); `moved` is the moved core's two figures (formatted), whether today's ROSE above the
- *  stored one — the stored figure is then the smaller, the one a year adds at most (R8), and the line gives the
- *  household that saves it but not all of today's its own way out; where today's FELL, it is already the one
- *  credited — and the typed figure today's rests on, where the core carries one (U11 walk 7's R2: the line then
- *  names it, beside the typed-below spans below it). A state with no group draws no line. */
-const LINE: Readonly<
-  Record<
-    LeftOverShownState,
-    ((live: string, moved: { stored: string; live: string; rose: boolean; typedBelow: string | null } | null) => string) | null
-  >
-> = {
-  'not-asked': null,
-  'waiting-on-w': null,
-  absent: (live) => slots.workingLedgerLeftOverAbsentLine(live),
-  saved: (live) => slots.workingLedgerLeftOverSavedLine(live),
-  // The moved core supplies both figures; it is non-null in exactly this state.
-  'saved-moved': (live, moved) =>
-    moved === null
-      ? slots.workingLedgerLeftOverSavedLine(live)
-      : moved.typedBelow !== null
-        ? moved.rose
-          ? slots.workingLedgerLeftOverRoseLineAt(moved.typedBelow, moved.stored, moved.live)
-          : slots.workingLedgerLeftOverFellLineAt(moved.typedBelow, moved.stored, moved.live)
-        : moved.rose
-          ? slots.workingLedgerLeftOverRoseLine(moved.stored, moved.live)
-          : slots.workingLedgerLeftOverFellLine(moved.stored, moved.live),
-  spent: (live) => slots.workingLedgerLeftOverSpentLine(live),
-  'not-sure': (live) => slots.workingLedgerLeftOverNotSureLine(live),
-}
-
-const OPTIONS = [
-  { value: 'saved', labelKey: 'workingLedgerLeftOverSaved' },
-  { value: 'spent', labelKey: 'workingLedgerLeftOverSpent' },
-  { value: 'not-sure', labelKey: 'workingLedgerLeftOverNotSure' },
-] as const
+import { LEFT_OVER_FACE } from './workingYearLeftOverState'
 
 export function WorkingYearLeftOverQuestion({
   draft,
@@ -110,7 +73,7 @@ export function WorkingYearLeftOverQuestion({
   const typedBelow = useMemo(() => workingYearLeftOverTypedBelow(draft), [draft])
   const atQuote = useMemo(() => workingYearLeftOverAtQuoteLine(draft, typedBelowHost), [draft, typedBelowHost])
   const face = LEFT_OVER_FACE[state]
-  const line = LINE[state]
+  const line = LEFT_OVER_LINE[state]
   if (face === 'none' || live === null) return null
   if (face === 'waiting') {
     return (
@@ -130,16 +93,12 @@ export function WorkingYearLeftOverQuestion({
     )
   }
   const shown = formatMoney(live)
-  // The check sentence states its dollars: the left over, the deposits row it sits on, and their sum, all
-  // printed rows of the one picture (a year with no deposits row has its own sentence, nothing to sit on).
-  const check =
-    deposits === null || deposits <= 0
-      ? slots.workingLedgerLeftOverCheckNoDeposits(shown)
-      : slots.workingLedgerLeftOverCheck(shown, formatMoney(deposits), formatMoney(live + deposits))
+  // The check sentence (`leftOverCheck`, `leftOverFace.ts`).
+  const check = leftOverCheck(live, deposits)
   return (
     <div className="left-over">
       <p className="left-over__figure" id={figureId}>
-        {typedBelow === null ? slots.workingLedgerLeftOverFigure(shown) : slots.workingLedgerLeftOverFigureAt(typedBelow, shown)}
+        {leftOverFigureLine(shown, typedBelow)}
       </p>
       <p className="field-help" id={checkId}>
         {check}
@@ -150,7 +109,7 @@ export function WorkingYearLeftOverQuestion({
         vertical
         // Nothing pre-checked: an unanswered question checks no reply (R1) — never a default kind.
         value={draft.workingYearLeftOver?.kind}
-        options={OPTIONS}
+        options={LEFT_OVER_OPTIONS}
         // "All of it" stores the figure THIS face shows (KTD8); the write re-checks R5's gate on the
         // store's current draft and stores nothing where it no longer holds.
         onChange={(kind) => onWrite((d) => writeWorkingYearLeftOver(d, kind, live))}
@@ -158,17 +117,7 @@ export function WorkingYearLeftOverQuestion({
       />
       {line !== null && (
         <p className="field-help left-over__line">
-          {line(
-            shown,
-            moved === null
-              ? null
-              : {
-                  stored: formatMoney(moved.stored),
-                  live: formatMoney(moved.live),
-                  rose: moved.live > moved.stored,
-                  typedBelow: moved.typedBelow,
-                },
-          )}
+          {line(shown, movedWords(moved))}
         </p>
       )}
       {/* The typed-below line's runs (U11 walk 7's R2; the whole-window rebuild's KTD6, host 3), after the per-answer

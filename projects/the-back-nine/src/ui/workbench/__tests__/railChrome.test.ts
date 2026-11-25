@@ -425,7 +425,7 @@ describe('the rail’s words never lean (R20)', () => {
   })
 
   it('no rail, tray or paired-form string with no measured reading in it leans', () => {
-    const statics = (Object.entries(copy) as [string, string][]).filter(([k]) => k.startsWith('workbenchRail') || k.startsWith('workbenchPair') || k.startsWith('tray') || k === 'workbenchFactsTry')
+    const statics = (Object.entries(copy) as [string, string][]).filter(([k]) => k.startsWith('workbenchRail') || k.startsWith('workbenchPair') || k.startsWith('tray'))
     expect(statics.length).toBeGreaterThan(60)
     const rendered = [
       slots.workbenchRailStopsPlan(2031),
@@ -439,7 +439,6 @@ describe('the rail’s words never lean (R20)', () => {
       slots.workbenchRailRefusedStopWindow(2026, 2036),
       slots.workbenchPairRanOut('This what-if', 2049),
       slots.workbenchRailRecAction('Pre-tax first', 'none'),
-      slots.workbenchFactsTryName('Withdrawal order'),
       slots.trayDollars('12,000'),
       slots.trayAge(67),
       slots.trayMixPlan('60'),

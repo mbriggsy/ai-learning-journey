@@ -2,8 +2,8 @@
  * src/ui/screens/profile/CardsPage.tsx: a Profile section's page of cards (Act 6 · RC13a; ref 2.4;
  * `rc-shell/profile-05.png`, `profile-07.png`): the section's name as the page title with its plain sentence under it, the
  * blue "Add … >" menu at the head's right, then the cards in rows of four at his window (one column on the phone), each
- * opening its drawer. Draws `profileView.ts`'s view and decides nothing. Family, Income and Savings are this page; RC13b's
- * Expenses and Goals will be too. No panel (ref 2.4: the grid sits straight under the head), so `PageFrame` is `bare`.
+ * opening its drawer. Draws `profileView.ts`'s view and decides nothing. Family, Income, Savings, Expenses and Goals
+ * are this page. No panel (ref 2.4: the grid sits straight under the head), so `PageFrame` is `bare`.
  */
 import type { Ref } from 'react'
 import { AddMenu, PageFrame, ProfileCard, type AddMenuEntry } from '../../kit'
@@ -25,7 +25,8 @@ export interface CardsPageProps {
   readonly view: CardsPageView
   /** The card whose drawer is open (null: none). */
   readonly selected: string | null
-  readonly onOpen: (target: DrawerTarget) => void
+  /** Open a card's drawer; the card's own id goes with it (focus returns there on close). */
+  readonly onOpen: (target: DrawerTarget, card?: string) => void
 }
 
 export function CardsPage({ screen, title, headingRef, view, selected, onOpen }: CardsPageProps) {
@@ -52,7 +53,7 @@ export function CardsPage({ screen, title, headingRef, view, selected, onOpen }:
                     {...(c.note !== undefined ? { note: c.note } : {})}
                     selected={selected === c.id}
                     dimmed={selected !== null}
-                    onOpen={() => onOpen(c.target)}
+                    onOpen={() => onOpen(c.target, c.id)}
                   />
                 </li>
               ))}

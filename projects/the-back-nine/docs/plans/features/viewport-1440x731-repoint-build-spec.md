@@ -199,7 +199,7 @@ Where each frame's pixels come from (measured, Windows; the full stacks are in t
 - `src/viz/band.css` (W7, a new short-tier block after the base drawer and legend rules)
 - `src/ui/styles/tokens.css` (`--bp-laptop-short`'s docblock becomes the law's one home, per KTD4)
 - `src/ui/styles/result.css`, `src/ui/styles/fuckOffDate.css` (short-tier header comments only, per KTD4)
-- `e2e/vertical-fit.spec.ts` (the two-sided density pins, the statestale echo pin, the Medicare leading regimes, the hero-relative twin check, the four-arm probe describe, and the density-tier wording at the lines U1 rewrites: the header's "(40px → 32px, whitespace only)" at `e2e/vertical-fit.spec.ts:72-74`, `assertResultPadding`'s WHITESPACE-ONLY docblock at `e2e/vertical-fit.spec.ts:820-821`, and the four "791 ≤ 840" call-site comments at `e2e/vertical-fit.spec.ts line 1179 at 95c715e19`, `e2e/vertical-fit.spec.ts line 2713 at 95c715e19`, `e2e/vertical-fit.spec.ts line 3056 at 95c715e19` and `e2e/vertical-fit.spec.ts line 4369 at 95c715e19`)
+- `e2e/vertical-fit.spec.ts` (the two-sided density pins, the statestale echo pin, the Medicare leading regimes, the hero-relative twin check, the four-arm probe describe, and the density-tier wording at the lines U1 rewrites: the header's "(40px → 32px, whitespace only)" at `e2e/vertical-fit.spec.ts:53-55`, `assertResultPadding`'s WHITESPACE-ONLY docblock at `e2e/vertical-fit.spec.ts:750-751`, and the four "791 ≤ 840" call-site comments at `e2e/vertical-fit.spec.ts line 1179 at 95c715e19`, `e2e/vertical-fit.spec.ts line 2713 at 95c715e19`, `e2e/vertical-fit.spec.ts line 3056 at 95c715e19` and `e2e/vertical-fit.spec.ts line 4369 at 95c715e19`)
 
 **The instrument (the planning probe), handed over:** `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-repoint\probe\`. `probe.mjs` is the read-only layout probe the Appendix's stacks came from: usage `node probe.mjs <outDir> [scenarioRegex] [candidateCssFile]`, against a dev server on port 4197; read its header before the first run. It drives each frame as its arm does, records the rendered tier, settles, appends any candidate CSS last in `<head>`, re-settles, and reads every block's box from the page top. Its scenarios include the gate plants and the SHOWCASE (1871×917) spine frames, and `PROBE_VP=<w>x<h>x<dpr>` re-targets its 1440×731 scenarios to another viewport (the phone). `cand/` holds the candidate CSS sets; `cand/P.css` is the primary rung set (its header: "the plan primary: p1 + L2 + the gate block g2"; its gate block is wider than W6's confirm scope, which moves no route pixel, KTD6). `summ.mjs` and `tables.mjs` summarise its output.
 
@@ -631,16 +631,16 @@ Provenance: the planning probe, a read-only Playwright script now kept at `C:\Us
 
 ### Live statements of the old window (what R1 and R9 move)
 
-Each entry below states 1536×791, 2.5 DPR or the 800 px law as a live instruction; U4 and U5 move the code and skill entries, U6 the docs. U1, which replaces `assertResultPadding`, moves the density-tier statements it rewrites (`e2e/vertical-fit.spec.ts:72-74`, `:820-821` and the four "791 ≤ 840" comments), so they are listed in U1, not here. Dated measurements stay (the council log, the cold-read log, insights, dated stylesheet notes such as "measured at the real 1536×791 stale frame", and the plan docs already built).
+Each entry below states 1536×791, 2.5 DPR or the 800 px law as a live instruction; U4 and U5 move the code and skill entries, U6 the docs. U1, which replaces `assertResultPadding`, moves the density-tier statements it rewrites (`e2e/vertical-fit.spec.ts:53-55`, `:750-751` and the four "791 ≤ 840" comments), so they are listed in U1, not here. Dated measurements stay (the council log, the cold-read log, insights, dated stylesheet notes such as "measured at the real 1536×791 stale frame", and the plan docs already built).
 
 - `e2e/reviewSurface.ts:16-32`: the `REAL`/`REAL_DPR` docblock and constants, the "1871×917 is his SCREEN" note, and TIER's "the shortest laptop the fit law serves".
-- `e2e/vertical-fit.spec.ts:65`: the frame-contract header's example "a 1536 laptop a stacked device".
-- `e2e/vertical-fit.spec.ts:494`: `assertTier`'s docblock example.
+- `e2e/vertical-fit.spec.ts:46`: the frame-contract header's example "a 1536 laptop a stacked device".
+- `e2e/vertical-fit.spec.ts:424`: `assertTier`'s docblock example.
 - `e2e/vertical-fit.spec.ts line 1731 at 95c715e19`: "both laptop tiers (791, 800)".
 - `e2e/vertical-fit.spec.ts line 2051 at 95c715e19`: "at 24 px both 1536 and 1280 render the stacked tier".
 - `e2e/vertical-fit.spec.ts line 2079-2096 at 95c715e19`: the 20 px docblock's premise ("the 1536 laptop STAYS two-pane", "≤ 22.6 px"); its numbers are re-recorded.
 - `e2e/vertical-fit.spec.ts line 4530-4533 at 95c715e19`: the record arm's "TIGHT BY CONSTRUCTION (~10px at 1536×791)" note and its stale pointer to the copy length note.
-- `e2e/vertical-fit.spec.ts:902`, `e2e/vertical-fit.spec.ts line 1782 at 95c715e19`, `e2e/vertical-fit.spec.ts line 1795 at 95c715e19`: the "at the fit-law tier floor" describe titles.
+- `e2e/vertical-fit.spec.ts line 902 at 1c08f2288`, `e2e/vertical-fit.spec.ts line 1782 at 95c715e19`, `e2e/vertical-fit.spec.ts line 1795 at 95c715e19`: the "at the fit-law tier floor" describe titles.
 - `e2e/chart-text.spec.ts:27`, `e2e/chart-text.spec.ts line 824 at 95c715e19`, `e2e/chart-text.spec.ts line 1289 at 95c715e19`, `e2e/chart-text.spec.ts line 1803 at 95c715e19`: the header's "REAL 1536 @2.5", "from 320 to 1536", the hard-typed "1536 → 320" log string, and the 537.9 px modal-figure note.
 - `e2e/caddie-walk.spec.ts:37`: the "1536px long edge" comment.
 - `e2e/held/council-24px-shots.spec.ts:88`: "this 1536 window renders the STACKED tier".

@@ -19,7 +19,9 @@
  * The provenance is the panel's and the step sheet's (`periodConfirmed`: the drawers exist only after the walk, whose
  * completion is the receipt that the spending period was answered). The W gate's own path
  * (`WORKING_COST_ANSWER_FIELD`) is never touched here: it is the W step's alone, as on the panel (KTD3); and both period
- * rules' disarms are touched, as the panel's are.
+ * rules' disarms are touched, as the panel's are. The one exception is the W step's own home after the walk, the
+ * Pre-retirement living expenses drawer (RC13b): it passes a `TouchedAdjust` that touches the gate and lets the W
+ * period's disarm stand only where its face says so.
  *
  * ON PASS, ONE STORE COMMIT: `model.update` with the checked draft, then, if the draft really moved, the route-aware
  * recompute the panel and the step sheet use (`recomputeAfterEdit`).
@@ -47,13 +49,21 @@ const PROVENANCE = { periodConfirmed: true } as const
 
 /** Every rule's field touched, as if each had been committed: the W gate's answer path excepted (the W step's alone),
  *  both period rules disarmed as the panel disarms them. */
-function touchedAll(d: ScenarioDraft): Set<FieldPath> {
+function touchedAll(d: ScenarioDraft, adjust?: TouchedAdjust): Set<FieldPath> {
   const touched = new Set(allRuleFields(d))
   touched.delete(WORKING_COST_ANSWER_FIELD)
   touched.add('spendEntryPeriod')
   touched.add(WORKING_COST_PERIOD_FIELD)
+  adjust?.(touched)
   return touched
 }
+
+/** THE W STEP'S OWN TOUCHES (Act 6 · RC13b). The Pre-retirement living expenses drawer is the W step's home after the
+ *  walk, so it alone adjusts the touched set: its gate (`WORKING_COST_ANSWER_FIELD`) is touched, as the W step's Continue
+ *  touches it, and the W period's disarm stands only where the face says the unit on screen is answered (ruling 38: a
+ *  period tap, the Keep door's named unit, or an entered W the face opened over), never by default. Every other drawer
+ *  passes none. */
+export type TouchedAdjust = (touched: Set<FieldPath>) => void
 
 const violationKey = (v: SanityViolation): string => `${v.rule}|${v.field}`
 
@@ -74,11 +84,16 @@ export function placeOf(d: ScenarioDraft, field: FieldPath): string {
  * The edit's refusals: `before` is the store's draft as the drawer saves, `after` the draft the drawer's writers made
  * from it, `own` maps a rule's field to the drawer's own field (null: another card's).
  */
-export function checkEdit<K extends string>(before: ScenarioDraft, after: ScenarioDraft, own: (field: FieldPath) => K | null): EditCheck<K> {
-  const held = new Set(validateDraft(before, touchedAll(before), PROVENANCE).map(violationKey))
+export function checkEdit<K extends string>(
+  before: ScenarioDraft,
+  after: ScenarioDraft,
+  own: (field: FieldPath) => K | null,
+  adjust?: TouchedAdjust,
+): EditCheck<K> {
+  const held = new Set(validateDraft(before, touchedAll(before, adjust), PROVENANCE).map(violationKey))
   const fields: Partial<Record<K, string>> = {}
   const elsewhere: string[] = []
-  for (const v of validateDraft(after, touchedAll(after), PROVENANCE)) {
+  for (const v of validateDraft(after, touchedAll(after, adjust), PROVENANCE)) {
     const mine = own(v.field)
     const words = fieldErrorText(v)
     if (mine !== null) {
@@ -109,11 +124,12 @@ export function saveEdit<K extends string>(
   model: MemoryModel,
   build: (draft: ScenarioDraft) => { readonly ok: true; readonly draft: ScenarioDraft } | { readonly ok: false; readonly fields: FieldErrors<K> },
   own: (field: FieldPath) => K | null,
+  adjust?: TouchedAdjust,
 ): { readonly saved: true; readonly moved: boolean } | { readonly saved: false; readonly check: EditCheck<K> } {
   const before = model.getSnapshot().draft
   const built = build(before)
   if (!built.ok) return { saved: false, check: { fields: built.fields, elsewhere: [] } }
-  const check = checkEdit(before, built.draft, own)
+  const check = checkEdit(before, built.draft, own, adjust)
   if (refused(check)) return { saved: false, check }
   return { saved: true, moved: commitEdit(model, before, built.draft) }
 }

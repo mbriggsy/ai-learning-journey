@@ -18,6 +18,7 @@ import { incomeCardName } from '../profileView'
 import { buildOtherIncome, deleteOtherIncome, otherIncomeFormFrom, ownOtherIncomeField, type OtherIncomeField } from './otherIncomeFields'
 import { commitEdit, saveEdit } from './drawerSave'
 import type { DrawerBodyProps } from './drawerProps'
+import { Fact } from './Fact'
 import { ProfileDrawer } from './ProfileDrawer'
 import { useDrawerEdit } from './useDrawerBuffer'
 
@@ -98,6 +99,7 @@ export function OtherIncomeDrawer({
       errors={check.elsewhere}
     >
       <DrawerFields>
+        <Fact stamp="income.ownerIndex">
         <Select<'0' | '1'>
           label={copy.incomeOwnerLegend}
           items={people}
@@ -105,6 +107,8 @@ export function OtherIncomeDrawer({
           disabled={readOnly}
           onValueChange={(v) => set('owner', { ownerIndex: Number(v) as 0 | 1 })}
         />
+        </Fact>
+        <Fact stamp="income.type">
         <Select<IncomeType>
           label={copy.profileIncomeTypeLabel}
           items={TYPE_ITEMS}
@@ -114,6 +118,8 @@ export function OtherIncomeDrawer({
           {...err('type')}
           onValueChange={(type) => set('type', { type })}
         />
+        </Fact>
+        <Fact stamp="income.annualRealToday">
         <MoneyInput
           label={copy.incomeAmountLabel}
           description={copy.incomeAmountHelp}
@@ -123,6 +129,7 @@ export function OtherIncomeDrawer({
           {...err('amount')}
           onCommit={(annualRealToday) => set('amount', { annualRealToday })}
         />
+        </Fact>
         <Select<'now' | 'later'>
           label={copy.incomeTimingLegend}
           items={TIMING_ITEMS}
@@ -133,6 +140,7 @@ export function OtherIncomeDrawer({
           onValueChange={(v) => set('timing', { receivingNow: v === 'now' })}
         />
         {form.receivingNow === false ? (
+          <Fact stamp="income.startAge">
           <WholeInput
             label={copy.incomeStartAgeLabel}
             description={copy.incomeStartAgeHelp}
@@ -142,7 +150,9 @@ export function OtherIncomeDrawer({
             {...err('startAge')}
             onCommit={(startAge) => set('startAge', { startAge })}
           />
+          </Fact>
         ) : null}
+        <Fact stamp="income.endAge">
         <WholeInput
           label={copy.incomeEndAgeLabel}
           description={copy.incomeEndAgeHelp}
@@ -152,6 +162,8 @@ export function OtherIncomeDrawer({
           {...err('endAge')}
           onCommit={(endAge) => set('endAge', { endAge })}
         />
+        </Fact>
+        <Fact stamp="income.colaMode">
         <Select<ColaMode>
           label={copy.incomeColaLegend}
           items={COLA_ITEMS}
@@ -161,7 +173,9 @@ export function OtherIncomeDrawer({
           {...err('colaMode')}
           onValueChange={(colaMode) => set('colaMode', { colaMode })}
         />
+        </Fact>
         {form.colaMode === 'fixed-pct' ? (
+          <Fact stamp="income.colaPct">
           <PercentInput
             label={copy.incomeColaPctLabel}
             description={copy.incomeColaPctHelp}
@@ -171,8 +185,10 @@ export function OtherIncomeDrawer({
             {...err('colaPct')}
             onCommit={(colaPct) => set('colaPct', { colaPct })}
           />
+          </Fact>
         ) : null}
         {isContinuingType(form.type) ? (
+          <Fact stamp="income.survivorPct">
           <PercentInput
             label={copy.incomeSurvivorLabel}
             description={copy.incomeSurvivorHelp}
@@ -182,8 +198,10 @@ export function OtherIncomeDrawer({
             {...err('survivorPct')}
             onCommit={(survivorPct) => set('survivorPct', { survivorPct })}
           />
+          </Fact>
         ) : null}
         {directTaxable ? (
+          <Fact stamp="income.taxableFraction">
           <PercentInput
             label={copy.incomeTaxableLabel}
             description={copy.incomeTaxableHelp}
@@ -193,10 +211,12 @@ export function OtherIncomeDrawer({
             {...err('taxableFraction')}
             onCommit={(taxableFraction) => set('taxableFraction', { taxableFraction })}
           />
+          </Fact>
         ) : null}
         {form.type === 'alimony' ? (
           <>
             <div className="flex flex-col gap-1">
+              <Fact stamp="income.executedAfter2018">
               <Select<'pre' | 'post'>
                 label={copy.incomeAlimonyDateLegend}
                 items={ALIMONY_ITEMS}
@@ -206,10 +226,12 @@ export function OtherIncomeDrawer({
                 {...err('alimonyDate')}
                 onValueChange={(v) => set('alimonyDate', { executedAfter2018: v === 'post' })}
               />
+              </Fact>
               <p className="text-label text-stone-600">{copy.incomeAlimonyDateHelp}</p>
             </div>
             {form.executedAfter2018 === false ? (
               <div className="flex flex-col gap-1">
+                <Fact stamp="income.modifiedAdoptsPost2018Rules">
                 <Select<'no' | 'yes'>
                   label={copy.incomeAlimonyModifiedLegend}
                   items={MODIFIED_ITEMS}
@@ -217,6 +239,7 @@ export function OtherIncomeDrawer({
                   disabled={readOnly}
                   onValueChange={(v) => set('alimonyDate', { modifiedAdoptsPost2018Rules: v === 'yes' })}
                 />
+                </Fact>
                 <p className="text-label text-stone-600">{copy.incomeAlimonyModifiedHelp}</p>
               </div>
             ) : null}
@@ -225,6 +248,7 @@ export function OtherIncomeDrawer({
         {form.type === 'annuity' ? (
           <>
             <div className="flex flex-col gap-1">
+              <Fact stamp="income.qualified">
               <Select<'qualified' | 'nonqual'>
                 label={copy.incomeAnnuityKindLegend}
                 items={ANNUITY_ITEMS}
@@ -234,9 +258,11 @@ export function OtherIncomeDrawer({
                 {...err('annuityKind')}
                 onValueChange={(v) => set('annuityKind', { annuityQualified: v === 'qualified' })}
               />
+              </Fact>
               <p className="text-label text-stone-600">{copy.incomeAnnuityKindHelp}</p>
             </div>
             {form.annuityQualified === false ? (
+              <Fact stamp="income.exclusionFraction">
               <PercentInput
                 label={copy.incomeExclusionLabel}
                 description={copy.incomeExclusionHelp}
@@ -246,6 +272,7 @@ export function OtherIncomeDrawer({
                 {...err('exclusionFraction')}
                 onCommit={(exclusionFraction) => set('exclusionFraction', { exclusionFraction })}
               />
+              </Fact>
             ) : null}
           </>
         ) : null}

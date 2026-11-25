@@ -29,8 +29,9 @@ import { FAN, assertHcText, enterSnapshot, hcAudit, hcFloorPx, hcMarkFailures, h
  */
 
 const SEED = 'retired'
-/** The interim pages (outside any `.rc-root`), and RC6's Cash Flows, the menu's other walk target. */
-const PAGES = [{ screen: 'interim-facts', module: copy.shellModuleProfile, page: copy.workbenchPageFacts, hash: '#/profile/facts' }] as const
+/** The menu's walk targets: Profile → Expenses (RC13b; the interim facts page it replaced was the last interim tab) and
+ *  RC6's Cash Flows. */
+const PAGES = [{ screen: 'profile-expenses', module: copy.shellModuleProfile, page: copy.shellPageExpenses, hash: '#/profile/expenses' }] as const
 const CASH_FLOWS = { screen: 'cash-flows', module: copy.shellModuleRetirement, page: copy.shellPageCashFlows, hash: '#/retirement/cash-flows' } as const
 
 /** The settled answer, which lands on the home, Dashboard → Snapshot (RC4: the shell is the home, no door). */
@@ -67,7 +68,7 @@ const height = (page: Page, selector: string) =>
 test.describe(`RC2 · the shell at his window (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr, compact mode)`, () => {
   test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
 
-  test(`?seed=${SEED}: the top bar is 48 px and the sub-nav 40 px; every interim page reachable, one settled main.result each; a legacy rule's padding survives inside the shell`, async ({ page }) => {
+  test(`?seed=${SEED}: the top bar is 48 px and the sub-nav 40 px; the face is Figtree inside .rc-root; the walked pages reachable, one settled main.result each`, async ({ page }) => {
     test.setTimeout(FINAL_TIER_MS + 60_000)
     await enterShell(page)
     await settleLayout(page)
@@ -89,58 +90,14 @@ test.describe(`RC2 · the shell at his window (${REAL.width}×${REAL.height} @ $
     expect(wordmark.family, 'the top bar renders in Figtree').toMatch(/^Figtree Variable(,|$)/)
     const names = await faceOf(page, 'header.rc-root p[data-shell-names]')
     expect(names.maxWidth, 'a p inside .rc-root carries no legacy reading measure').toBe('none')
-    await showPage(page, PAGES[0])
-    const banner = await faceOf(page, 'p[data-interim-banner]')
-    expect(banner.family, 'the interim banner renders in Figtree').toMatch(/^Figtree Variable(,|$)/)
-    expect(banner.maxWidth, 'the banner carries no legacy reading measure').toBe('none')
-
+    // Every page the menu walks reachable by its address, one settled main.result each (RC13b: the interim tab, its banner
+    // and the legacy padding read inside it went with the facts page, the last interim tab).
     for (const target of PAGES) {
       await showPage(page, target)
       expect(new URL(page.url()).hash, `${target.screen}: the hash names the page`).toBe(target.hash)
       await expect(page.locator('main.result'), `${target.screen}: exactly one main.result`).toHaveCount(1)
       await expect(page.locator(SETTLED_RESULT), `${target.screen}: the settle hook settles here`).toHaveCount(1)
-      await expect(page.getByText(copy.shellInterimBanner, { exact: true }), `${target.screen}: the interim banner`).toBeVisible()
-      await expect(page.locator('main.result .shell-interim__title'), `${target.screen}: the page's heading`).toBeVisible()
     }
-
-    // THE PREFLIGHT SCOPE: the facts page's sections keep their legacy padding (`workbench.css`'s `.wb-facts__section`;
-    // the table page's header cell carried this arm until RC6 rebuilt Cash Flows), and the interim container keeps its
-    // own top padding (20 px). A scoped preflight that reached the container (`.rc-root` on it, or a scope widened past
-    // `.rc-root`) zeroes both.
-    await showPage(page, PAGES[0])
-    await expect(page.locator('.wb-facts__section').first(), 'the facts page never drew').toBeVisible({ timeout: 60_000 })
-    const legacy = await page.evaluate(() => ({
-      th: getComputedStyle(document.querySelector('.wb-facts__section')!).paddingTop,
-      container: getComputedStyle(document.querySelector('.shell-interim')!).paddingTop,
-      insideRcRoot: document.querySelector('.shell-interim')!.closest('.rc-root') !== null,
-    }))
-    expect(legacy.insideRcRoot, 'the interim container sits outside every .rc-root').toBe(false)
-    expect(legacy.th, 'a legacy section’s padding survives inside the shell').toBe('12px')
-    expect(legacy.container, 'the interim container’s legacy padding survives').toBe('20px')
-  })
-
-  test(`?seed=${SEED}: Back with an open drawer holding an edit asks first, in the app; Stay keeps the drawer and the edit`, async ({ page }) => {
-    test.setTimeout(FINAL_TIER_MS + 60_000)
-    await enterShell(page)
-    await showPage(page, PAGES[0])
-    await page.getByRole('button', { name: 'Edit the two of you', exact: true }).click()
-    const sheet = page.getByRole('dialog', { name: copy.workbenchFactsPeople, exact: true })
-    await expect(sheet, 'the step sheet never opened').toBeVisible()
-    const name = sheet.getByLabel(copy.nameLabel, { exact: true }).first()
-    await name.fill('Jordan')
-    await name.blur()
-    const before = page.url()
-    await page.goBack()
-    const ask = page.getByRole('alertdialog', { name: copy.workbenchLeaveAsk })
-    await expect(ask, 'Back with an edit open asked nothing').toBeVisible()
-    expect(page.url(), 'the page’s entry went back on: the address still names the facts page').toBe(before)
-    await expect(page.locator('main.result[data-shell-screen="interim-facts"]')).toBeAttached()
-    await expect(sheet, 'the drawer stays open under the ask').toBeVisible()
-    await expect(ask.getByRole('button', { name: copy.workbenchLeaveStay }), 'focus moves to the safe choice').toBeFocused()
-    await ask.getByRole('button', { name: copy.workbenchLeaveStay }).click()
-    await expect(ask).toHaveCount(0)
-    await expect(sheet, 'Stay keeps the drawer').toBeVisible()
-    await expect(name, 'Stay keeps the edit').toHaveValue('Jordan')
   })
 })
 
@@ -3836,3 +3793,272 @@ test.describe(`RC13a · a Profile drawer's Save and Back (${REAL.width}×${REAL.
     await expect(page.locator('header.rc-root p[data-shell-names]'), 'the change never reached the plan').not.toContainText('Jordan')
   })
 })
+
+// ── RC13b · Profile → Expenses and Goals, and the pay check's drawer (plan 6, RC13; its Fit decision, Verification, and
+//    section 5.2's port of the W step, money picture, left-over seat and coordinate-tap arms to the drawers) ──────────────
+// - Expenses and Goals are scrolling pages: at his window the first frame holds the title, its sentence and the first row
+//   of cards; EVERY card's drawer fits his window (header to footer, its body scrolling on its own) or, on the phone, is a
+//   full-screen sheet that names itself and takes focus; Escape with nothing changed hands focus back to its card (a Goals
+//   Retirement card's too, though it opens the Family person drawer); no page and no drawer scrolls sideways; one R13
+//   disclaimer (the trailing mount: no figure on either page);
+// - the StaleBanner's standing line opens the Pre-retirement living expenses drawer over the page (plan 4.0's map): the
+//   W question's stale face, the money picture under it, the left-over question under the whole picture;
+// - the gesture hold, ported (insight 149): a W period tapped by coordinate right after typing lands, the note's Keep door
+//   tapped right after typing keeps the figure it names, and "All of it" tapped right after typing W stores the figure on
+//   screen at the press. Real coordinate taps (`page.mouse`, `page.touchscreen`), never `.click()`, which re-resolves the
+//   target between the halves: that is the race itself.
+const RC13B_PAGES = {
+  goals: { screen: 'profile-goals', page: copy.shellPageGoals },
+  expenses: { screen: 'profile-expenses', page: copy.shellPageExpenses },
+} as const
+const RC13B_SEEDS = ['budget', 'date', 'datesaved', 'datecoststale', 'tablewidest', 'retired'] as const
+const W_DRAWER = copy.profileWorkingCostName
+
+for (const size of RC12_SIZES) {
+  test.describe(`RC13b · Expenses and Goals ${size.title}`, () => {
+    test.use(size.use)
+    for (const seed of RC13B_SEEDS) {
+      test(`?seed=${seed}: Goals and Expenses${size.phone ? '' : ', each first frame'}; every card's drawer${size.phone ? ' a full-screen sheet' : ' inside the window'}, closed back to its card; one disclaimer`, async ({ page }) => {
+        test.setTimeout(FINAL_TIER_MS + 180_000)
+        await gotoSeedFinal(page, seed)
+        await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
+        for (const [id, target] of Object.entries(RC13B_PAGES)) {
+          const who = `${seed} ${id}`
+          await toProfile(page, target, size.phone)
+          if (!size.phone) await assertProfileFirstFrame(page, who)
+          await noSidewaysScroll(page, who)
+          await assertProfileDisclaimer(page, target.screen)
+          const ids = await page.locator('main.result [data-profile-card]').evaluateAll((els) => els.map((el) => el.getAttribute('data-profile-card')!))
+          expect(ids.length, `${who}: the page draws its cards`).toBeGreaterThanOrEqual(2)
+          for (const cardId of ids) {
+            const card = page.locator(`main.result [data-profile-card="${cardId}"]`)
+            await card.scrollIntoViewIfNeeded()
+            await card.click()
+            await assertDrawerFits(page, `${who} ${cardId}`, size.phone)
+            await page.keyboard.press('Escape')
+            await expect(page.getByRole('dialog'), `${who} ${cardId}: Escape with nothing changed closes the drawer`).toHaveCount(0)
+            await expect(card, `${who} ${cardId}: focus back on the card`).toBeFocused()
+          }
+        }
+      })
+    }
+  })
+}
+
+/** Open the Pre-retirement living expenses drawer from its Expenses card. */
+async function openWDrawer(page: Page, phone: boolean) {
+  await toProfile(page, RC13B_PAGES.expenses, phone)
+  await page.locator('main.result [data-profile-card="working-cost"]').click()
+  const dialog = page.getByRole('dialog', { name: W_DRAWER })
+  await expect(dialog).toBeVisible()
+  await page.waitForTimeout(450)
+  return dialog
+}
+
+/** A press, 80 ms, the release (a human's), or a touch tap, at the centre of `target`, after proving the point hits it
+ *  (insight 119: what the input path hits). */
+async function coordinateTap(page: Page, target: ReturnType<Page['locator']>, touch: boolean, who: string): Promise<void> {
+  const box = await target.boundingBox()
+  expect(box, `${who}: the target has a box`).not.toBeNull()
+  const x = box!.x + box!.width / 2
+  const y = box!.y + box!.height / 2
+  const hits = await target.evaluate((el, [px, py]) => {
+    const hit = document.elementFromPoint(px, py)
+    return hit !== null && el.contains(hit)
+  }, [x, y] as const)
+  expect(hits, `${who}: the tap point is on the target`).toBe(true)
+  if (touch) {
+    await page.touchscreen.tap(x, y)
+  } else {
+    await page.mouse.move(x, y)
+    await page.mouse.down()
+    await page.waitForTimeout(80)
+    await page.mouse.up()
+  }
+}
+
+/** Type into the W figure as a person does, focus kept (the press is what blurs it). */
+async function typeWFigure(page: Page, dialog: ReturnType<Page['getByRole']>, text: string) {
+  const input = dialog.getByRole('textbox', { name: copy.workingCostAmountLabel, exact: true })
+  await input.scrollIntoViewIfNeeded()
+  await input.click()
+  await page.keyboard.press('Control+A')
+  await page.keyboard.type(text)
+  return input
+}
+
+/** `datecoststale` with its W kept through the Keep door ($84,000 a year, stamped at the $78,000 quote, KTD10) and saved,
+ *  then staled on the reading by a move to Pennsylvania (the Home state drawer, saved): the h2 probe's set-up, through the
+ *  drawers. The drawer opens again on the kept figure's stale face. */
+async function staleEnteredWInDrawer(page: Page, phone: boolean) {
+  await gotoSeedFinal(page, 'datecoststale')
+  await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
+  let dialog = await openWDrawer(page, phone)
+  await dialog.getByRole('button', { name: slots.workingCostKeepYearly('84,000') }).click()
+  await expect(dialog.locator('[data-working-cost-note]'), 'the kept figure is fresh').toHaveCount(0)
+  await dialog.getByRole('button', { name: copy.profileDrawerSave }).click()
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  await toProfile(page, PROFILE.family, phone)
+  await page.locator('main.result [data-profile-card="state"]').click()
+  const state = page.getByRole('dialog', { name: copy.profileHomeStateName })
+  await state.getByRole('combobox').click()
+  await page.getByRole('option', { name: /Pennsylvania/ }).click()
+  await state.getByRole('button', { name: copy.profileDrawerSave }).click()
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  dialog = await openWDrawer(page, phone)
+  await expect(dialog.locator('[data-working-cost-note]'), 'the move to PA stales the kept figure').toContainText(slots.workingCostStaleStateKept('84,000'))
+  return dialog
+}
+
+for (const size of RC12_SIZES) {
+  test.describe(`RC13b · the pay check's drawer ${size.title}`, () => {
+    test.use(size.use)
+
+    test('?seed=datecoststale: the standing line opens the drawer over the page; the calm stale note before any tap; "yes" draws the picture, every row inside the drawer', async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 90_000)
+      await gotoSeedFinal(page, 'datecoststale')
+      await expect(page.locator('main.result[data-shell-screen="snapshot"]')).toBeAttached()
+      const line = page.locator('[data-stale-banner] p.cs-paycheck-note')
+      await expect(line, 'the standing line renders above the page').toHaveCount(1)
+      await expect(line).toContainText(copy.stalenessPayCheckNote)
+      await line.getByRole('button', { name: copy.stalenessPayCheckCta }).click()
+      const dialog = page.getByRole('dialog', { name: W_DRAWER })
+      await expect(dialog, 'the door opens the Pre-retirement living expenses drawer').toBeVisible()
+      await expect(page.locator('main.result[data-shell-screen="snapshot"]'), 'over the page it was opened on').toBeAttached()
+      await assertDrawerFits(page, 'datecoststale W drawer', size.phone)
+      await expect(dialog.locator('[data-working-cost-note]')).toContainText(slots.workingCostStaleQuote('84,000', '78,000'))
+      await expect(dialog.getByRole('alert'), 'no alert before any tap').toHaveCount(0)
+      await dialog.locator('[data-choice-group="working-cost"] label').filter({ hasText: copy.workingCostYes }).click()
+      await expect(dialog.getByRole('heading', { level: 4, name: copy.workingLedgerComingIn })).toBeVisible({ timeout: 30_000 })
+      await noSidewaysScroll(page, 'datecoststale W drawer, picture drawn')
+      const rows = await dialog.locator('[data-money-picture] [data-ledger-row]').count()
+      expect(rows, 'the picture drew its rows').toBeGreaterThanOrEqual(4)
+      await dialog.getByRole('button', { name: copy.profileDrawerSave }).click()
+      await expect(page.getByRole('dialog')).toHaveCount(0)
+      await expect(page.locator('[data-stale-banner] p.cs-paycheck-note'), 'the answered W leaves no stale line').toHaveCount(0, { timeout: FINAL_TIER_MS })
+    })
+
+    test('?seed=datesavedrisenlater: the door below today’s quote says "update"; the drawer’s note holds the year-level lean, and no Keep door', async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 60_000)
+      await gotoSeedFinal(page, 'datesavedrisenlater')
+      await page.locator('[data-stale-banner]').getByRole('button', { name: copy.stalenessPayCheckCtaUpdate }).click()
+      const dialog = page.getByRole('dialog', { name: W_DRAWER })
+      await expect(dialog).toBeVisible()
+      await expect(dialog.locator('[data-working-cost-note]')).toContainText(slots.workingCostStaleLeftOverYearsCheaper('84,000'))
+      await expect(dialog.getByRole('button', { name: /^Keep / }), 'no Keep door below today’s quote (ruling 34)').toHaveCount(0)
+      await noSidewaysScroll(page, 'datesavedrisenlater W drawer')
+    })
+
+    test('?seed=datesaved: the left-over question below the whole picture: three replies, "All of it" checked at its figure', async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 60_000)
+      await gotoSeedFinal(page, 'datesaved')
+      const dialog = await openWDrawer(page, size.phone)
+      const seat = dialog.locator('[data-left-over-seat]')
+      await expect(seat.getByRole('radio'), 'exactly the three replies').toHaveCount(3)
+      await expect(seat.getByRole('radio', { name: copy.workingLedgerLeftOverSaved, exact: true })).toBeChecked()
+      await expect(seat.locator('[data-left-over-figure]')).toHaveText(slots.workingLedgerLeftOverFigure('16,985'))
+      await expect(seat.locator('[data-left-over-line]')).toHaveText(slots.workingLedgerLeftOverSavedLine('16,985'))
+      const placed = await dialog.evaluate((d) => {
+        const pic = d.querySelector('[data-money-picture]')!
+        const q = d.querySelector('[data-left-over-seat]')!
+        return { outside: !pic.contains(q), below: q.getBoundingClientRect().top >= pic.getBoundingClientRect().bottom - 0.5 }
+      })
+      expect(placed, 'the question sits below the whole picture, never inside it').toEqual({ outside: true, below: true })
+      await seat.scrollIntoViewIfNeeded()
+      await noSidewaysScroll(page, 'datesaved seat')
+    })
+
+    test(`?seed=date: "All of it" tapped by coordinate right after typing W stores the figure on screen at the press (${size.phone ? 'touch' : 'mouse'})`, async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 60_000)
+      await gotoSeedFinal(page, 'date')
+      const dialog = await openWDrawer(page, size.phone)
+      const seat = dialog.locator('[data-left-over-seat]')
+      const saved = seat.getByRole('radio', { name: copy.workingLedgerLeftOverSaved, exact: true })
+      await expect(saved, '`date` is unanswered').not.toBeChecked()
+      await dialog.locator('[data-choice-group="working-cost"] label').filter({ hasText: copy.workingCostDifferent }).click()
+      await expect(dialog.getByRole('radio', { name: copy.periodMonth }), 'the untapped unit is a month (KTD17)').toBeChecked()
+      // "A different figure" clears the held answer in the drawer's buffer (the walk's arm): type the figure, then a year.
+      const input = await typeWFigure(page, dialog, '72000')
+      await input.press('Tab')
+      await dialog.locator('[data-choice-group="working-cost-period"] label').filter({ hasText: copy.periodYear }).click()
+      // Now the gesture: type over it again, the focus kept, then tap "All of it" by coordinate.
+      await typeWFigure(page, dialog, '60000')
+      const label = seat.locator('label[data-choice="saved"]')
+      await label.scrollIntoViewIfNeeded()
+      await page.waitForTimeout(300)
+      await expect(input, 'the figure still has focus: the press is what blurs it').toBeFocused()
+      const shownAtPress = await seat.locator('[data-left-over-figure]').textContent()
+      await coordinateTap(page, label, size.phone, 'All of it')
+      await expect(saved, 'the tap on "All of it" was lost').toBeChecked()
+      // THE GATE: what was stored is the figure on screen at the press; the press's blur committed $60,000 after it.
+      await expect(seat.locator('[data-left-over-figure]'), 'the hold let go: the live figure draws').not.toHaveText(shownAtPress!)
+      const stored = shownAtPress!.match(/\$([\d,]+)/g)!.at(-1)!.slice(1)
+      await expect(seat.locator('[data-left-over-line]'), 'the line names the stored figure, chosen against at the press').toContainText(stored)
+    })
+  })
+}
+
+const TALL_DRAWER_ARMS = [
+  { name: '1536×1300 window, mouse', touch: false, use: { viewport: { width: 1536, height: 1300 }, deviceScaleFactor: 1.5 } },
+  { name: '1024×1366 touch screen', touch: true, use: { viewport: { width: 1024, height: 1366 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true } },
+] as const
+
+for (const arm of TALL_DRAWER_ARMS) {
+  test.describe(`RC13b · the W period tap right after typing (drawer, ${arm.name})`, () => {
+    test.use(arm.use)
+
+    test('"Each month" tapped by coordinate lands: the note above it stands until the click, and 7,000 is a month', async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 120_000)
+      const dialog = await staleEnteredWInDrawer(page, false)
+      const month = dialog.getByRole('radio', { name: copy.periodMonth })
+      await expect(month, 'the held figure’s own unit, a year, is the one checked').not.toBeChecked()
+      const input = await typeWFigure(page, dialog, '7000')
+      const label = dialog.locator('[data-choice-group="working-cost-period"] label[data-choice="month"]')
+      await label.scrollIntoViewIfNeeded()
+      // THE FLOOR: the note sits above the control, on screen, so its unmount would move the control (the race).
+      const geometry = await label.evaluate((el) => {
+        const note = el.closest('[role="dialog"]')!.querySelector('[data-working-cost-note]')!.getBoundingClientRect()
+        const r = el.getBoundingClientRect()
+        return { noteHeight: note.height, noteAbove: note.bottom <= r.top, noteOnScreen: note.bottom > 0 }
+      })
+      expect(geometry.noteHeight, 'the stale note renders').toBeGreaterThan(0)
+      expect(geometry.noteAbove && geometry.noteOnScreen, `the note sits above the control, on screen (${JSON.stringify(geometry)})`).toBe(true)
+      await page.waitForTimeout(300)
+      await expect(input, 'the figure still has focus: the press is what blurs it').toBeFocused()
+      await coordinateTap(page, label, arm.touch, 'Each month')
+      await expect(month, `the tap on "${copy.periodMonth}" was lost`).toBeChecked()
+      await expect(dialog.locator('[data-working-cost-note]'), 'the commit landed and the hold let go').toHaveCount(0)
+      await expect(input).toHaveValue('7,000')
+    })
+  })
+}
+
+const KEEP_DRAWER_ARMS = [
+  { name: `${REAL.width}×${REAL.height}, mouse`, touch: false, phone: false, use: { viewport: REAL, deviceScaleFactor: REAL_DPR } },
+  { name: `phone ${PHONE.width}×${PHONE.height}, touch`, touch: true, phone: true, use: { viewport: PHONE, deviceScaleFactor: PHONE_DPR, isMobile: true, hasTouch: true } },
+] as const
+
+for (const arm of KEEP_DRAWER_ARMS) {
+  test.describe(`RC13b · the W note's Keep door tapped right after typing (drawer, ${arm.name})`, () => {
+    test.use(arm.use)
+
+    test('"Keep $84,000 a year" tapped by coordinate keeps $84,000, the figure it names, and focus lands on the answer', async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 120_000)
+      const dialog = await staleEnteredWInDrawer(page, arm.phone)
+      const input = await typeWFigure(page, dialog, '7000')
+      const door = dialog.getByRole('button', { name: slots.workingCostKeepYearly('84,000') })
+      await door.scrollIntoViewIfNeeded()
+      await page.waitForTimeout(300)
+      await expect(input, 'the figure still has focus: the press is what blurs it').toBeFocused()
+      await coordinateTap(page, door, arm.touch, 'Keep')
+      await expect(dialog.locator('[data-working-cost-note]'), 'the keep landed and the hold let go').toHaveCount(0)
+      await expect(input, 'the door kept the figure it names, not the typed digits').toHaveValue('84,000')
+      await expect(dialog.getByRole('radio', { name: copy.periodYear })).toBeChecked()
+      const focused = await page.evaluate(() => {
+        const a = document.activeElement
+        return a instanceof HTMLInputElement && a.type === 'radio' && a.checked
+      })
+      expect(focused, 'focus never falls to the page: it lands on the answer that now stands').toBe(true)
+    })
+  })
+}

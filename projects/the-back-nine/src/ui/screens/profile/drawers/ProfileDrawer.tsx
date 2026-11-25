@@ -23,8 +23,12 @@
  *    card the drawer just added takes it), else the page's heading. The card is re-found at close, never held from open
  *    (insight 060's lesson: never bind a node a later render may replace).
  *  - READ-ONLY (a view-only tab, plan 4.0): no Save, no Delete, the fields read-only; Cancel closes.
+ *  - TYPED, NOT YET BLURRED (RC13b): a figure typed into a box is in no buffer until its blur commits it, and a browser
+ *    Back blurs nothing (the page change unmounts the box), so while a box in the body holds typing the drawer holds the
+ *    leave guard too: a Back asks, never dropping the digits silently (insight 071's dying field, for the Back path).
  */
 import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useUnsavedBufferHold } from '@intake/unsavedBuffer'
 import { Button, Drawer } from '../../../kit'
 import { copy } from '../../../copy'
 
@@ -92,6 +96,9 @@ export function ProfileDrawer({ open, title, icon, readOnly, isDirty, onSave, on
   const bodyRef = useRef<HTMLDivElement>(null)
   const [asking, setAsking] = useState(false)
   const [armed, setArmed] = useState(false)
+  // A box in the body holds typed text not yet committed (the header's last law); its blur ends it.
+  const [typing, setTyping] = useState(false)
+  useUnsavedBufferHold(open && !readOnly && typing)
 
   /** Commit the field under focus: the kit's fields commit on blur, synchronously. */
   const commitFocused = () => {
@@ -171,7 +178,15 @@ export function ProfileDrawer({ open, title, icon, readOnly, isDirty, onSave, on
               : {}),
           })}
     >
-      <div ref={bodyRef} className="flex flex-col gap-6" data-profile-drawer-body="">
+      <div
+        ref={bodyRef}
+        className="flex flex-col gap-6"
+        data-profile-drawer-body=""
+        onChange={(e) => {
+          if (e.target instanceof HTMLInputElement && e.target.type === 'text') setTyping(true)
+        }}
+        onBlur={() => setTyping(false)}
+      >
         {errors.length > 0 ? (
           <ul role="alert" className="flex flex-col gap-2 border-l-2 border-stone-900 pl-3 text-label text-stone-900" data-profile-drawer-errors="">
             {errors.map((e) => (

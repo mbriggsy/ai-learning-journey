@@ -6,9 +6,9 @@ import { epochDayToCalendarYear } from '@store/staleness'
 import type { PersonDraft, ScenarioDraft } from '@store/memoryModel'
 import type { RetirementState, WorkStatus } from '@shared/model'
 import { fraMonthsForBirthYear } from '@engine/constants/socialSecurity'
-import { medicareExtrasTypical, medicareExtrasTypicalMonthly } from '@engine/constants/health'
-import { budgetGoverns, isActiveAt } from '@budget/budgetModel'
-import { budgetYearZeroFullTotal, commitBudgetPatch } from '@budget/budgetToSpending'
+import { medicareExtrasTypicalMonthly } from '@engine/constants/health'
+import { budgetGoverns } from '@budget/budgetModel'
+import { commitBudgetPatch } from '@budget/budgetToSpending'
 import { focusHeading } from './a11y'
 import {
   isDateRoute,
@@ -41,12 +41,20 @@ import { ExternalLink } from './ExternalLink'
 import { EXTERNAL_LINKS } from './links'
 import { OOP_MEDICAL_TYPICAL_HOUSEHOLD } from './referenceData'
 import type { StepApi, StepDef } from './stepChecks'
-import type { StepSectionId } from '@ui/workbench/factRegistry'
 import {
+  type StepSectionId,
+  budgetTierSplitAtZero,
   governedSpendNotes,
   intakeStepIds,
   oopExceedsBudgetlessSpend,
-  writeMedicareExtras,
+  writeEmployerCoverage,
+  writeHealthQuote,
+  writeIrmaaSeed,
+  writeMedicareExtrasAmount,
+  writeMedicareExtrasPick,
+  writeOopMedical,
+  writeSpendEntered,
+  writeSpendPeriod,
   writeWorkingYearInvestment,
 } from './steps'
 
@@ -385,9 +393,7 @@ function SpendGovernedFace({
   // The tier readback (cold-read 2026-07-03: the essential/extra answer must be SEEN used) —
   // LINES ONLY at year 0 (the amounts the user typed; OOP medical is carried separately and
   // disclosed by its own sheet line), the same active rule the sheet's running total reads.
-  const linesAt0 = (budget ?? []).filter((it) => isActiveAt(it, 0) && Number.isFinite(it.annualAmountReal))
-  const essentials = linesAt0.reduce((sum, it) => (it.tier === 'essentials' ? sum + it.annualAmountReal : sum), 0)
-  const extras = linesAt0.reduce((sum, it) => (it.tier === 'discretionary' ? sum + it.annualAmountReal : sum), 0)
+  const { essentials, extras } = budgetTierSplitAtZero(budget)
   return (
     <>
       <p className="field-label">{copy.spendLabel}</p>
@@ -449,15 +455,7 @@ function SpendRawFace({
         onCommit={(entered) => {
           // Canonical ANNUAL in the model; the entered unit rides
           // spendEntryPeriod (an explicit answer, persisted — fidelity rule).
-          api.update((d) => ({
-            ...d,
-            annualSpendingReal:
-              entered === undefined
-                ? undefined
-                : d.spendEntryPeriod === 'month'
-                  ? entered * 12
-                  : entered,
-          }))
+          api.update((d) => writeSpendEntered(d, entered))
           api.commitField('annualSpendingReal')
         }}
       />
@@ -472,20 +470,7 @@ function SpendRawFace({
         onChange={(next) => {
           // Re-base the canonical annual to the SAME entered digits under the
           // new unit (the figure the user typed is the truth; the unit moves).
-          api.update((d) => {
-            const enteredNow =
-              d.annualSpendingReal === undefined
-                ? undefined
-                : d.spendEntryPeriod === 'month'
-                  ? d.annualSpendingReal / 12
-                  : d.annualSpendingReal
-            return {
-              ...d,
-              spendEntryPeriod: next,
-              annualSpendingReal:
-                enteredNow === undefined ? undefined : next === 'month' ? enteredNow * 12 : enteredNow,
-            }
-          })
+          api.update((d) => writeSpendPeriod(d, next))
           api.commitField('spendEntryPeriod') // the explicit answer — clears the force-confirm
         }}
       />
@@ -642,18 +627,14 @@ const healthQuoteStep: StepDef = {
         helpKey="healthQuoteHelp"
         field="health.enrolledPremiumMonthlyToday"
         value={api.draft.health.enrolledPremiumMonthlyToday}
-        onCommit={(v) =>
-          api.update((d) => ({ ...d, health: { ...d.health, enrolledPremiumMonthlyToday: v } }))
-        }
+        onCommit={(v) => api.update((d) => writeHealthQuote(d, 'enrolled', v))}
       />
       <CurrencyField
         labelKey="slcspLabel"
         helpKey="slcspHelp"
         field="health.slcspMonthlyToday"
         value={api.draft.health.slcspMonthlyToday}
-        onCommit={(v) =>
-          api.update((d) => ({ ...d, health: { ...d.health, slcspMonthlyToday: v } }))
-        }
+        onCommit={(v) => api.update((d) => writeHealthQuote(d, 'slcsp', v))}
       />
       <p className="resource-links">
         {copy.linkGetQuote}{' '}
@@ -698,12 +679,7 @@ const employerCoverageStep: StepDef = {
           { value: 'covered', labelKey: 'employerCoverageCovered' },
           { value: 'own', labelKey: 'employerCoverageOwn' },
         ]}
-        onChange={(v) =>
-          api.update((d) => ({
-            ...d,
-            health: { ...d.health, employerPlanCoversRetiredMember: v === 'covered' },
-          }))
-        }
+        onChange={(v) => api.update((d) => writeEmployerCoverage(d, v === 'covered'))}
       />
     </>
   ),
@@ -720,20 +696,9 @@ const oopStep: StepDef = {
         helpKey={oopHelpKeyFor(api.draft)}
         field="health.oopMedicalAnnual"
         value={api.draft.health.oopMedicalAnnual}
-        onCommit={(v) =>
-          api.update((d) => {
-            // OOP medical is the SECOND budget-blind writer of the year-0 total: compileBudget
-            // injects M into the sticky floor, so the reconciliation invariant (annualSpendingReal
-            // == Σactive@0 + M) breaks the moment M changes under a governing budget — the engine's
-            // backstop would then demote the confident answer to indeterminate (ultramode
-            // 2026-07-02, P1). Re-reconcile atomically here, exactly as the builder's Apply does;
-            // with no budget, M is a plain input and the scalar is left alone.
-            const health = { ...d.health, oopMedicalAnnual: v }
-            return budgetGoverns(d.budget)
-              ? { ...d, health, annualSpendingReal: budgetYearZeroFullTotal(d.budget, v) }
-              : { ...d, health }
-          })
-        }
+        // OOP medical is the SECOND budget-blind writer of the year-0 total: `writeOopMedical` re-reconciles it
+        // atomically under a governing budget (ultramode 2026-07-02, P1).
+        onCommit={(v) => api.update((d) => writeOopMedical(d, v))}
       />
       {/* The optional-field reference hint shows only while the field is empty:
           a grounded, below-average anchor (referenceData.ts) so a user who doesn't
@@ -837,27 +802,9 @@ export function MedicareExtrasFork({
           { value: 'entered', labelKey: 'medicareExtrasForkEntered' },
           { value: 'typical', label: typicalLabel },
         ]}
-        onChange={(v) =>
-          onWrite(`medicareExtrasByPerson.${i}.monthly`, (d) => {
-            const prev = d.medicareExtrasByPerson?.[i]
-            return writeMedicareExtras(
-              d,
-              i,
-              v === 'none'
-                ? { kind: 'none' }
-                : v === 'typical'
-                  ? { kind: 'typical', adoptionVintage: medicareExtrasTypical.value.vintage }
-                  : {
-                      kind: 'entered',
-                      // Keep an already-entered dollar across a re-tap (idempotent);
-                      // a fresh pick starts blank — the field below asks for it.
-                      ...(prev?.kind === 'entered' && prev.monthly !== undefined
-                        ? { monthly: prev.monthly }
-                        : {}),
-                    },
-            )
-          })
-        }
+        // Keep an already-entered dollar across a re-tap (idempotent); a fresh pick starts blank — the field below
+        // asks for it (`writeMedicareExtrasPick`).
+        onChange={(v) => onWrite(`medicareExtrasByPerson.${i}.monthly`, (d) => writeMedicareExtrasPick(d, i, v))}
       />
       {entry?.kind === 'entered' && (
         <CurrencyField
@@ -865,14 +812,7 @@ export function MedicareExtrasFork({
           helpKey="medicareExtrasAmountHelp"
           field={`medicareExtrasByPerson.${i}.monthly`}
           value={entry.monthly}
-          onCommit={(v) =>
-            onWrite(`medicareExtrasByPerson.${i}.monthly`, (d) =>
-              writeMedicareExtras(d, i, {
-                kind: 'entered',
-                ...(v !== undefined ? { monthly: v } : {}),
-              }),
-            )
-          }
+          onCommit={(v) => onWrite(`medicareExtrasByPerson.${i}.monthly`, (d) => writeMedicareExtrasAmount(d, i, v))}
         />
       )}
       {entry?.kind === 'typical' && <p className="field-help">{copy.medicareExtrasTypicalPicked}</p>}
@@ -923,23 +863,13 @@ const irmaaSeedStep: StepDef = {
         helpKey="irmaaSeedHelp"
         field="health.irmaaMagiSeed.0"
         value={api.draft.health.irmaaMagiSeed?.[0]}
-        onCommit={(v) =>
-          api.update((d) => ({
-            ...d,
-            health: { ...d.health, irmaaMagiSeed: [v, d.health.irmaaMagiSeed?.[1]] },
-          }))
-        }
+        onCommit={(v) => api.update((d) => writeIrmaaSeed(d, 0, v))}
       />
       <CurrencyField
         labelKey="irmaaSeedOneBackLabel"
         field="health.irmaaMagiSeed.1"
         value={api.draft.health.irmaaMagiSeed?.[1]}
-        onCommit={(v) =>
-          api.update((d) => ({
-            ...d,
-            health: { ...d.health, irmaaMagiSeed: [d.health.irmaaMagiSeed?.[0], v] },
-          }))
-        }
+        onCommit={(v) => api.update((d) => writeIrmaaSeed(d, 1, v))}
       />
     </>
   ),

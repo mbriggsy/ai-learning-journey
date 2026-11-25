@@ -76,9 +76,11 @@ export function ProfileCard({ kind, icon, name, rows = [], note, selected = fals
         {rows.length > 0 ? (
           <span className="flex flex-col gap-1.5">
             {rows.map((row) => (
-              <span key={row.label} className="flex items-baseline justify-between gap-3 text-label text-stone-900">
+              // A value too long to sit beside its label (a sentence, never a figure) wraps under it, the full width, so a
+              // card never grows past its column (RC13b: W's and the left-over answer's words).
+              <span key={row.label} className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 text-label text-stone-900">
                 <span className="min-w-0 break-words text-stone-600">{row.label}</span>
-                <span className="shrink-0 text-right tabular-nums">{row.value}</span>
+                <span className="ml-auto min-w-0 max-w-full break-words text-right tabular-nums">{row.value}</span>
               </span>
             ))}
           </span>

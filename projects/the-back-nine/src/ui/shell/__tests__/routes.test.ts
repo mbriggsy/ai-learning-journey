@@ -25,7 +25,7 @@ describe('routes — no dead tabs', () => {
   })
 
   it('a module with no built page is absent; a page appears when its row is added', () => {
-    const rows = [row({ module: 'profile', page: 'facts' })]
+    const rows = [row({ module: 'profile', page: 'goals' })]
     expect(navModules(rows, { profile: 'Profile' }).map((m) => m.id)).toEqual(['profile'])
     const more = [row({ module: 'dashboard', page: 'snapshot' }), ...rows]
     expect(navModules(more, { profile: 'Profile', dashboard: 'Dashboard' }).map((m) => m.id)).toEqual(['dashboard', 'profile'])
@@ -37,7 +37,7 @@ describe('routes — no dead tabs', () => {
   })
 
   it('the order holds whatever the rows’ order', () => {
-    const rows = [row({ module: 'profile', page: 'facts' }), row({ module: 'retirement', page: 'analysis' })]
+    const rows = [row({ module: 'profile', page: 'goals' }), row({ module: 'retirement', page: 'analysis' })]
     expect(navModules(rows, { profile: 'P', retirement: 'R' }).map((m) => m.id)).toEqual(['retirement', 'profile'])
     expect(MODULE_ORDER).toEqual(['dashboard', 'investment', 'retirement', 'tax', 'profile'])
   })
@@ -65,10 +65,12 @@ describe('routes — the hash', () => {
     // The interim What if tab left with RC4b (its levers are Probability's Action Items tray): its old address lands on Probability.
     expect(parseHash('#/retirement/analysis/what-if')).toEqual({ module: 'retirement', page: 'analysis', tab: 'probability' })
     expect(parseHash('#/retirement')).toEqual({ module: 'retirement', page: 'analysis', tab: 'probability' })
-    // RC13a: Net Worth is a page now and Profile's first; a Profile page not built yet (Goals, RC13b) lands on it.
+    // Net Worth is Profile's first page; Goals and Expenses arrived with RC13b, and the interim facts page left with it:
+    // its old address lands on Net Worth.
     expect(parseHash('#/profile/net-worth')).toEqual({ module: 'profile', page: 'net-worth' })
-    expect(parseHash('#/profile/goals')).toEqual({ module: 'profile', page: 'net-worth' })
-    expect(parseHash('#/profile/facts')).toEqual({ module: 'profile', page: 'facts' })
+    expect(parseHash('#/profile/goals')).toEqual({ module: 'profile', page: 'goals' })
+    expect(parseHash('#/profile/expenses')).toEqual({ module: 'profile', page: 'expenses' })
+    expect(parseHash('#/profile/facts')).toEqual({ module: 'profile', page: 'net-worth' })
     expect(parseHash('#/retirement/cash-flows/extra/parts')).toEqual({ module: 'retirement', page: 'cash-flows' })
   })
 

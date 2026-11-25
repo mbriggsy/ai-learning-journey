@@ -17,7 +17,9 @@ import { copy } from '../../src/ui/copy'
  * open after a Refresh with the Social Security stress moved one step; since RC12 Investment's Asset Allocation (Summary,
  * its picker switched, Detail) and Tax Allocation (a part's accounts listed), then both again with a what-if mix set; since
  * RC13a the Profile pages (Net Worth, Income, Savings, Family), each with a drawer open (on the phone, its full-screen
- * sheet), and a drawer refusing a Save (a Social Security figure over its ceiling) with the error under its field. Screenshots land in the repo's gitignored `temp/rc-shots/<unit>/`, named
+ * sheet), and a drawer refusing a Save (a Social Security figure over its ceiling) with the error under its field; since
+ * RC13b Goals and Expenses with every card's drawer, the budget worksheet, and the Pre-retirement living expenses drawer
+ * stale and kept (opened from the standing line). Screenshots land in the repo's gitignored `temp/rc-shots/<unit>/`, named
  * `<screen>-<seed>-<size>.png`, for Briggsy to review the output.
  *
  *     RC_UNIT=RC2 pnpm exec playwright test --config e2e/held/shots.config.ts rc-look
@@ -32,7 +34,6 @@ const ALL_SCREENS = [
   { id: 'health-care', screen: 'health-care', module: copy.shellModuleRetirement, page: copy.shellPageHealthCare },
   { id: 'cash-flows', screen: 'cash-flows', module: copy.shellModuleRetirement, page: copy.shellPageCashFlows },
   { id: 'tax-strategies', screen: 'tax-strategies', module: copy.shellModuleTax, page: copy.shellPageTaxStrategies },
-  { id: 'facts', screen: 'interim-facts', module: copy.shellModuleProfile, page: copy.workbenchPageFacts },
   { id: 'social-security', screen: 'social-security', module: copy.shellModuleRetirement, page: copy.shellPageSocialSecurity },
   { id: 'stress-test', screen: 'stress-test', module: copy.shellModuleRetirement, page: copy.shellPageStressTest },
   { id: 'asset-allocation', screen: 'asset-allocation', module: copy.shellModuleInvestment, page: copy.shellPageAssetAllocation },
@@ -41,6 +42,8 @@ const ALL_SCREENS = [
   { id: 'income', screen: 'profile-income', module: copy.shellModuleProfile, page: copy.shellPageIncome },
   { id: 'savings', screen: 'profile-savings', module: copy.shellModuleProfile, page: copy.shellPageSavings },
   { id: 'family', screen: 'profile-family', module: copy.shellModuleProfile, page: copy.shellPageFamily },
+  { id: 'goals', screen: 'profile-goals', module: copy.shellModuleProfile, page: copy.shellPageGoals },
+  { id: 'expenses', screen: 'profile-expenses', module: copy.shellModuleProfile, page: copy.shellPageExpenses },
 ] as const
 /** `RC_ONLY=stress-test` captures only the named screens (comma-separated ids), and Probability's tray and odds
  *  captures only where Probability is among them. */
@@ -901,5 +904,77 @@ for (const size of SIZES) {
         }
       })
     }
+  })
+}
+
+// ── RC13b · Expenses and Goals and their drawers; the Pre-retirement living expenses drawer stale with Keep; the worksheet ──
+const RC13B_LOOK = [screenById('goals'), screenById('expenses')] as const
+
+for (const size of SIZES) {
+  test.describe(`${UNIT} look, Expenses and Goals at ${size.tag}`, () => {
+    test.use({ ...size.use, reducedMotion: 'reduce' })
+    for (const seed of SEEDS) {
+      test(`?seed=${seed}: Goals and Expenses, each page and every card's drawer open, and the budget worksheet`, async ({ page }) => {
+        test.setTimeout(FINAL_TIER_MS + 240_000)
+        await enterShell(page, seed)
+        const findings: Record<string, Audit> = {}
+        for (const target of RC13B_LOOK) {
+          await showScreen(page, target, size.phone)
+          await shot(page, findings, target.id, seed, size.tag)
+          await page.screenshot({ path: `${OUT}/${target.id}-${seed}-${size.tag}-full.png`, fullPage: true })
+          const cards = await page.locator('main.result [data-profile-card]').evaluateAll((els) => els.map((el) => el.getAttribute('data-profile-card')!))
+          for (const card of cards) await shootDrawer(page, findings, `${target.id}-${card}`, seed, size.tag, card)
+        }
+        // The worksheet: the Living expenses drawer moved to "A budget, line by line", one line added and its figure typed.
+        await showScreen(page, screenById('expenses'), size.phone)
+        await page.locator('[data-profile-card="living"]').click()
+        const living = page.getByRole('dialog')
+        await expect(living).toBeVisible()
+        await living.locator('[data-choice-group="living-approach"] label[data-choice="budget"]').click()
+        const add = living.getByRole('button', { name: copy.budgetAddLine })
+        if ((await add.count()) > 0 && (await living.locator('[data-budget-line]').count()) === 0) {
+          await add.click()
+          await living.getByLabel(copy.budgetAmountLabel).first().fill('24000')
+          await living.getByLabel(copy.budgetAmountLabel).first().blur()
+        }
+        await page.waitForTimeout(450)
+        await shot(page, findings, 'expenses-worksheet', seed, size.tag)
+        await living.getByRole('button', { name: copy.profileDrawerCancel }).click()
+        const drop = living.getByRole('button', { name: copy.profileUnsavedDrop })
+        if ((await drop.count()) > 0) await drop.click()
+        await expect(living).toHaveCount(0)
+        console.log(`[rc-look ${UNIT} expenses-goals ${seed} ${size.tag}] ${JSON.stringify(findings)}`)
+        for (const [id, a] of Object.entries(findings)) {
+          expect.soft(a.sideways, `${id}: sideways scroll`).toBeLessThanOrEqual(0)
+          expect.soft(a.clipped, `${id}: clipped text`).toEqual([])
+          expect.soft(a.overlaps, `${id}: overlapping controls`).toEqual([])
+          expect.soft(a.tiny, `${id}: text under 12 px`).toEqual([])
+        }
+      })
+    }
+
+    test('?seed=datecoststale: the Pre-retirement living expenses drawer stale, its Keep door, opened from the standing line', async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 120_000)
+      await enterShell(page, 'datecoststale')
+      const findings: Record<string, Audit> = {}
+      await shot(page, findings, 'snapshot-w-stale', 'datecoststale', size.tag)
+      await page.locator('[data-stale-banner]').getByRole('button', { name: copy.stalenessPayCheckCta }).click()
+      const dialog = page.getByRole('dialog', { name: copy.profileWorkingCostName })
+      await expect(dialog).toBeVisible()
+      await expect(dialog.locator('[data-working-cost-note]')).toBeVisible()
+      await page.waitForTimeout(450)
+      await shot(page, findings, 'w-stale', 'datecoststale', size.tag)
+      await dialog.getByRole('button', { name: /^Keep / }).click()
+      await expect(dialog.locator('[data-working-cost-note]')).toHaveCount(0)
+      await page.waitForTimeout(300)
+      await shot(page, findings, 'w-kept', 'datecoststale', size.tag)
+      console.log(`[rc-look ${UNIT} w ${size.tag}] ${JSON.stringify(findings)}`)
+      for (const [id, a] of Object.entries(findings)) {
+        expect.soft(a.sideways, `${id}: sideways scroll`).toBeLessThanOrEqual(0)
+        expect.soft(a.clipped, `${id}: clipped text`).toEqual([])
+        expect.soft(a.overlaps, `${id}: overlapping controls`).toEqual([])
+        expect.soft(a.tiny, `${id}: text under 12 px`).toEqual([])
+      }
+    })
   })
 }

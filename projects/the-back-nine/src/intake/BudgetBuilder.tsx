@@ -53,13 +53,11 @@ import { copy, slots } from '@ui/copy'
 import type { BudgetLineItem as BudgetLine } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
 import { freshStableId, idsInUse } from '@shared/stableIds'
-import { budgetGoverns, isRampedBudget, validateBudgetItems, isActiveAt } from '@budget/budgetModel'
-import { anchorTarget } from '@budget/budgetToSpending'
+import { budgetGoverns, validateBudgetItems } from '@budget/budgetModel'
+import { budgetApplyFor, budgetReadout, freshLine } from './budgetForm'
 import { useLiveAnnouncer, focusHeading } from './a11y'
-import { formatMoney } from './moneyFormat'
 import { isDateRoute } from './intakeMap'
 import { BudgetLineItem } from './BudgetLineItem'
-import { medicalExceedsTotal } from './budgetChecks'
 import { bufferMoved, useUnsavedBufferHold } from './unsavedBuffer'
 import './sheetShell.css'
 import './budget.css'
@@ -74,18 +72,6 @@ const FOCUSABLE = [
   'select:not([disabled])',
   '[tabindex]:not([tabindex="-1"])',
 ].join(',')
-
-/** A fresh line: `other` + essentials (the neutral unclassified pick — errs STICKY, insight 055's
- *  conservative direction) with NO amount (NaN blocks Apply until typed — never a silent 0), under the
- *  stable id its Add minted (schema version 6). */
-const freshLine = (id: string): BudgetLine => ({
-  id,
-  category: 'other',
-  label: '',
-  annualAmountReal: Number.NaN,
-  tier: 'essentials',
-  startYear: 0,
-})
 
 export interface BudgetBuilderProps {
   readonly open: boolean
@@ -268,7 +254,9 @@ export function BudgetBuilder({ open, draft, onApply, onEscape, onClose, variant
   const nothingToCommit = items.length === 0 && !governs
 
   const apply = () => {
-    if (nothingToCommit) {
+    // What Apply does with the staged lines (`budgetApplyFor`, `budgetForm.ts`; Card 9, build-gate 2).
+    const outcome = budgetApplyFor(items, governs, hasErrors)
+    if (outcome === 'empty') {
       // Nothing typed and no budget governing: there is nothing to commit, so the CTA SPEAKS
       // rather than closing silently — a silent close is byte-identical to the quiet Cancel beside
       // it. Cancel / Escape / the backdrop still leave in one tap (R8's never-a-gate holds), and
@@ -276,14 +264,14 @@ export function BudgetBuilder({ open, draft, onApply, onEscape, onClose, variant
       announcer.announce(copy.budgetApplyEmpty)
       return
     }
-    if (items.length === 0) {
+    if (outcome === 'escape') {
       // An empty Apply is never `budget: []` (build-gate 2): a budget GOVERNS and every line was
       // removed, so this is the escape back to a single number.
       dirtyRef.current = false
       onEscape()
       return
     }
-    if (hasErrors) {
+    if (outcome === 'blocked') {
       setAttempted(true)
       announcer.announce(copy.budgetApplyBlocked)
       return
@@ -302,32 +290,9 @@ export function BudgetBuilder({ open, draft, onApply, onEscape, onClose, variant
     onEscape()
   }
 
-  // The reconciliation figures (build-gate 1). S may be genuinely absent on a defensive mount —
-  // the readout simply withholds its anchor lines (never a fabricated figure).
-  const S = draft.annualSpendingReal
-  const M = draft.health.oopMedicalAnnual
-  const target = S === undefined ? undefined : anchorTarget(S, M)
-  const running = items.reduce(
-    (sum, it) => (isActiveAt(it, 0) && Number.isFinite(it.annualAmountReal) ? sum + it.annualAmountReal : sum),
-    0,
-  )
-  // The tier split (cold-read 2026-07-03: the essential/extra answer must be SEEN used) — the
-  // same year-0-active rule as `running`, split by the tier the user picked.
-  const essentialsAt0 = items.reduce(
-    (sum, it) =>
-      it.tier === 'essentials' && isActiveAt(it, 0) && Number.isFinite(it.annualAmountReal)
-        ? sum + it.annualAmountReal
-        : sum,
-    0,
-  )
-  const extrasAt0 = running - essentialsAt0
-  // A row that carries no number yet contributes nothing to `running` — and a readout that
-  // SPEAKS "$0" for lines the user never valued is the blank-becomes-a-spoken-zero shape (the
-  // R19 law's readout face; Briggsy's live read 2026-07-11: one "Add a line" click made the
-  // box announce "lines add up to about $0 · essentials $0 · extras $0" over an untouched
-  // field). The running total + tier split wait for the FIRST real dollar anywhere in the
-  // list; all-NaN fresh rows keep the calm anchor-only readout the empty builder shows.
-  const anyValued = items.some((it) => Number.isFinite(it.annualAmountReal))
+  // The reconciliation readout (build-gate 1; `budgetReadout`, `budgetForm.ts`).
+  const readout = budgetReadout(draft, items, validation)
+
   // validateBudgetItems is index-keyed (rows and items share order); touched is ID-keyed.
   const errorsFor = (index: number, id: number) =>
     attempted || touched.has(id) ? validation.errors.filter((e) => e.index === index) : []
@@ -348,45 +313,13 @@ export function BudgetBuilder({ open, draft, onApply, onEscape, onClose, variant
       {/* The reconciliation readout — reserved box (insight 035: it updates on every commit
           and sits above the tap targets; the box never changes height). */}
       <div className="budget-sheet__readout" role="status">
-        {S !== undefined && <p className="budget-readout__line">{slots.budgetAnchorLead(formatMoney(S))}</p>}
-        {S !== undefined && M !== undefined && M > 0 && (
-          <>
-            {/* Carried-medical BEFORE the lines-target (audit 2026-07-03): the reader follows
-                the subtraction in the order it happens — total → what's carried → what's left. */}
-            <p className="budget-readout__line budget-readout__line--muted">
-              {slots.budgetMedicalCarried(formatMoney(M))}
-            </p>
-            {/* The M>S honesty fork (F10): the medical figure alone exceeding S would make the
-                target line read "$0 into the lines below" beside "$M carried" — contradictory —
-                so the honest exceeds line REPLACES it, one line for one line in the SAME reserved
-                box (insight 035: S and M are draft-fixed for the whole open, so the branch never
-                flips mid-gesture and the tap targets below never shuffle). */}
-            {medicalExceedsTotal(S, M) ? (
-              <p className="budget-readout__line">
-                {slots.budgetMedicalExceedsTotal(formatMoney(M), formatMoney(S))}
-              </p>
-            ) : (
-              <p className="budget-readout__line">{slots.budgetLinesTarget(formatMoney(target!))}</p>
-            )}
-          </>
-        )}
-        {anyValued && (
-          <p className="budget-readout__line">{slots.budgetRunningTotal(formatMoney(running))}</p>
-        )}
-        {anyValued && (
-          <p className="budget-readout__line">
-            {slots.budgetTierSplit(formatMoney(essentialsAt0), formatMoney(extrasAt0))}
+        {/* The reserved box's lines (insight 035: S and M are draft-fixed for the whole open, so the medical fork
+            never flips mid-gesture and the tap targets below never shuffle). */}
+        {readout.map((line, i) => (
+          <p key={i} className={line.muted ? 'budget-readout__line budget-readout__line--muted' : 'budget-readout__line'}>
+            {line.text}
           </p>
-        )}
-        {items.length > 0 && isRampedBudget(items) && (
-          <p className="budget-readout__line budget-readout__line--muted">{copy.budgetAnchorRampNote}</p>
-        )}
-        {items.length > 0 &&
-          validation.warnings.map((w) => (
-            <p key={w} className="budget-readout__line budget-readout__line--muted">
-              {w === 'zero-essentials' ? copy.budgetWarnZeroEssentials : copy.budgetWarnNoYearZero}
-            </p>
-          ))}
+        ))}
       </div>
 
       <ul className="budget-sheet__lines">

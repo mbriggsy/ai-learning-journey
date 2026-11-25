@@ -5,10 +5,11 @@
  * 6's RC0, unchanged; `intakeStepIds` is the sequence `intakeSteps` held inline.
  */
 import { copy } from '@ui/copy'
-import type { StepSectionId } from '@ui/workbench/factRegistry'
 import type { ScenarioDraft } from '@store/memoryModel'
 import type { MedicareExtrasEntryV3 } from '@shared/model'
-import { budgetGoverns, isRampedBudget } from '@budget/budgetModel'
+import { budgetGoverns, isActiveAt, isRampedBudget } from '@budget/budgetModel'
+import { budgetYearZeroFullTotal } from '@budget/budgetToSpending'
+import { medicareExtrasTypical } from '@engine/constants/health'
 import { anyPre65OrUnknown, anyRetiredPre65WhileAnotherWorks, isDateRoute } from './intakeMap'
 import { medicalExceedsTotal } from './budgetChecks'
 
@@ -72,6 +73,26 @@ export function writeMedicareExtras(
   return { ...d, medicareExtrasByPerson: next }
 }
 
+/** The guided walk's steps, by id (`intakeSteps`, `questions.tsx`, maps each to its body). Moved here from the deleted
+ *  facts page's registry by Act 6 · RC13b: the walk's own sequence is its one home. */
+export type StepSectionId =
+  | 'names'
+  | 'work'
+  | 'income'
+  | 'social-security'
+  | 'retirement-state'
+  | 'spend'
+  | 'health-quote'
+  | 'employer-coverage'
+  | 'oop-medical'
+  | 'working-income'
+  | 'irmaa-seed'
+  | 'medicare-extras'
+  | 'accounts'
+  | 'other-income'
+  | 'working-cost'
+  | 'working-ledger'
+
 const anyNearMedicare = (d: ScenarioDraft): boolean =>
   d.people.some((p) => p.currentAge !== undefined && p.currentAge >= 64)
 
@@ -106,4 +127,85 @@ export function intakeStepIds(draft: ScenarioDraft): readonly StepSectionId[] {
   // `onComplete()`. No draft gate on either, so the count never moves while the household answers.
   if (working) steps.push('working-cost', 'working-ledger')
   return steps
+}
+
+// ── The walk's remaining writes, moved out of `questions.tsx` unchanged by Act 6 · RC13b, so the walk's step bodies and
+//    the Profile → Expenses and Goals drawers write each fact one way (insight 058). ──────────────────────────────────
+
+/** The spending figure typed in the unit on screen: canonical ANNUAL in the model; the entered unit rides
+ *  `spendEntryPeriod` (an explicit answer, persisted — fidelity rule). A cleared box clears the figure. */
+export function writeSpendEntered(d: ScenarioDraft, entered: number | undefined): ScenarioDraft {
+  return {
+    ...d,
+    annualSpendingReal: entered === undefined ? undefined : d.spendEntryPeriod === 'month' ? entered * 12 : entered,
+  }
+}
+
+/** A period tap: re-base the canonical annual to the SAME entered digits under the new unit (the figure the user typed
+ *  is the truth; the unit moves). */
+export function writeSpendPeriod(d: ScenarioDraft, next: NonNullable<ScenarioDraft['spendEntryPeriod']>): ScenarioDraft {
+  const enteredNow =
+    d.annualSpendingReal === undefined ? undefined : d.spendEntryPeriod === 'month' ? d.annualSpendingReal / 12 : d.annualSpendingReal
+  return {
+    ...d,
+    spendEntryPeriod: next,
+    annualSpendingReal: enteredNow === undefined ? undefined : next === 'month' ? enteredNow * 12 : enteredNow,
+  }
+}
+
+/** The governing budget's tier readback (cold-read 2026-07-03: the essential/extra answer must be SEEN used): LINES ONLY
+ *  at year 0 (the amounts the user typed; OOP medical is carried separately), the builder's own active rule. */
+export function budgetTierSplitAtZero(budget: ScenarioDraft['budget']): { readonly essentials: number; readonly extras: number } {
+  const linesAt0 = (budget ?? []).filter((it) => isActiveAt(it, 0) && Number.isFinite(it.annualAmountReal))
+  return {
+    essentials: linesAt0.reduce((sum, it) => (it.tier === 'essentials' ? sum + it.annualAmountReal : sum), 0),
+    extras: linesAt0.reduce((sum, it) => (it.tier === 'discretionary' ? sum + it.annualAmountReal : sum), 0),
+  }
+}
+
+/** The out-of-pocket medical figure. OOP medical is the SECOND budget-blind writer of the year-0 total: compileBudget
+ *  injects M into the sticky floor, so the reconciliation invariant (annualSpendingReal == Σactive@0 + M) breaks the
+ *  moment M changes under a governing budget (ultramode 2026-07-02, P1). Re-reconcile atomically here, exactly as the
+ *  builder's Apply does; with no budget, M is a plain input and the scalar is left alone. */
+export function writeOopMedical(d: ScenarioDraft, v: number | undefined): ScenarioDraft {
+  const health = { ...d.health, oopMedicalAnnual: v }
+  return budgetGoverns(d.budget) ? { ...d, health, annualSpendingReal: budgetYearZeroFullTotal(d.budget, v) } : { ...d, health }
+}
+
+/** The marketplace quote: the plan the household is enrolled in (`enrolled`) or the benchmark plan (`slcsp`), monthly. */
+export function writeHealthQuote(d: ScenarioDraft, which: 'enrolled' | 'slcsp', v: number | undefined): ScenarioDraft {
+  return which === 'enrolled'
+    ? { ...d, health: { ...d.health, enrolledPremiumMonthlyToday: v } }
+    : { ...d, health: { ...d.health, slcspMonthlyToday: v } }
+}
+
+/** Who pays a retired member's pre-65 coverage while the other works: the working spouse's employer plan, or their own. */
+export function writeEmployerCoverage(d: ScenarioDraft, covered: boolean): ScenarioDraft {
+  return { ...d, health: { ...d.health, employerPlanCoversRetiredMember: covered } }
+}
+
+/** The Medicare surcharge look-back's income: two years back (`0`) or one year back (`1`), the other slot kept. */
+export function writeIrmaaSeed(d: ScenarioDraft, which: 0 | 1, v: number | undefined): ScenarioDraft {
+  const seed = d.health.irmaaMagiSeed
+  return { ...d, health: { ...d.health, irmaaMagiSeed: which === 0 ? [v, seed?.[1]] : [seed?.[0], v] } }
+}
+
+/** One person's Medicare-extras fork pick: an affirmed nothing, the tool's typical figure (stamped with its vintage), or
+ *  their own figure — keeping an already-entered dollar across a re-tap (idempotent); a fresh pick starts blank. */
+export function writeMedicareExtrasPick(d: ScenarioDraft, i: 0 | 1, v: 'none' | 'entered' | 'typical'): ScenarioDraft {
+  const prev = d.medicareExtrasByPerson?.[i]
+  return writeMedicareExtras(
+    d,
+    i,
+    v === 'none'
+      ? { kind: 'none' }
+      : v === 'typical'
+        ? { kind: 'typical', adoptionVintage: medicareExtrasTypical.value.vintage }
+        : { kind: 'entered', ...(prev?.kind === 'entered' && prev.monthly !== undefined ? { monthly: prev.monthly } : {}) },
+  )
+}
+
+/** One person's own extras figure, monthly (a cleared box leaves the pick, figure-less). */
+export function writeMedicareExtrasAmount(d: ScenarioDraft, i: 0 | 1, v: number | undefined): ScenarioDraft {
+  return writeMedicareExtras(d, i, { kind: 'entered', ...(v !== undefined ? { monthly: v } : {}) })
 }

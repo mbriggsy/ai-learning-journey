@@ -1,7 +1,8 @@
 /**
- * src/ui/screens/profile/profileView.ts: Profile → Family, Income, Savings and Net Worth, their pure composer (Act 6 ·
- * RC13a; plan docs/plans/6-rightcapital-ui-plan.md, RC13; ref 2.4, 2.5). The cards per draft, each with the drawer it
- * opens; Net Worth's master-detail. Decides every word and every card; the pages draw and decide nothing.
+ * src/ui/screens/profile/profileView.ts: Profile → Net Worth, Goals, Income, Savings, Expenses and Family, their pure
+ * composer (Act 6 · RC13a, RC13b; plan docs/plans/6-rightcapital-ui-plan.md, RC13; ref 2.4, 2.5). The cards per draft,
+ * each with the drawer it opens; Net Worth's master-detail. Decides every word and every card; the pages draw and decide
+ * nothing.
  *
  * THE CARDS keep B9's input order, so a later card never asks before what its question reads (the walk's own order,
  * `intakeStepIds`): a person's birth year and work before their pay, pay before Social Security, Social Security before
@@ -13,11 +14,20 @@
  * (`readOnly` on the view, which the drawers read).
  */
 import type { AccountKind, EnteredAccount, IncomeStream, IncomeType, RetirementState, TickerClassification } from '@shared/model'
+import { budgetGoverns } from '@budget/budgetModel'
 import { ACCOUNT_KINDS, INCOME_TYPES } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
 import { formatMoney } from '@intake/moneyFormat'
 import { kindLabel } from '@intake/accountKinds'
-import { blendOf } from '@intake/intakeMap'
+import { anyPre65OrUnknown, anyRetiredPre65WhileAnotherWorks, blendOf, isDateRoute, medicareExtrasView, workingYearLeftOverShownState, workingYearLedgerForRun } from '@intake/intakeMap'
+import { budgetTierSplitAtZero, governedSpendNotes, intakeStepIds } from '@intake/steps'
+import { workingCostValueLine } from '@intake/assumptionLines'
+import { workingYearLeftOverWaitingWords } from '@intake/workingYearLeftOver'
+import type { LeftOverShownState } from '@intake/workingYearLeftOverState'
+import { laterLines } from '@intake/workingYearLines'
+import { laterRow, ledgerUnknownLines } from '@intake/workingYearLedgerRows'
+import { formatPercent } from '@intake/moneyFormat'
+import { leftOverLineKey } from '../../assumptionRegistry'
 import { incomeTypeLabel } from '@intake/otherIncome'
 import { annualAdditionsCeilingFor, contributionCeilingFor, isEmployerPlanKind } from '@intake/sanity'
 import { findBlendRow } from '@engine/reference/tickerBlend'
@@ -27,7 +37,7 @@ import { tablePerson } from '../../workbench/tableRun'
 import { accountName } from '../investment/investmentView'
 import type { AccountFacet } from './drawers/accountFields'
 
-export type ProfileScreenId = 'profile-net-worth' | 'profile-income' | 'profile-savings' | 'profile-family'
+export type ProfileScreenId = 'profile-net-worth' | 'profile-goals' | 'profile-income' | 'profile-savings' | 'profile-expenses' | 'profile-family'
 
 /** What a card or an Add menu item opens. */
 export type DrawerTarget =
@@ -40,9 +50,32 @@ export type DrawerTarget =
   | { readonly kind: 'new-income'; readonly type: IncomeType }
   | { readonly kind: 'account'; readonly index: number; readonly facet: Exclude<AccountFacet, 'all'> }
   | { readonly kind: 'new-account'; readonly accountKind: AccountKind }
+  /** Expenses (RC13b): the spending figure or the budget worksheet, with the survivor's share. */
+  | { readonly kind: 'living' }
+  | { readonly kind: 'medical' }
+  /** The pay check's W, with the money picture and the left-over question inside (a working household's). */
+  | { readonly kind: 'working-cost' }
+  /** Goals (RC13b): the marketplace quote and who covers a retired member while the other works; Medicare. */
+  | { readonly kind: 'health' }
+  | { readonly kind: 'medicare' }
 
 /** Which drawing a card's band carries (the page maps each to its line icon). */
-export type CardIcon = 'person' | 'state' | 'salary' | 'social-security' | 'work-invest' | 'savings' | 'hsa' | IncomeType
+export type CardIcon =
+  | 'person'
+  | 'state'
+  | 'salary'
+  | 'social-security'
+  | 'work-invest'
+  | 'savings'
+  | 'hsa'
+  | IncomeType
+  | 'living'
+  | 'medical'
+  | 'working-cost'
+  | 'retirement'
+  | 'health'
+  | 'medicare'
+  | 'money-picture'
 
 export interface CardView {
   /** Stamped on the card (`data-profile-card`): focus comes back to it when its drawer closes. */
@@ -318,6 +351,171 @@ export function savingsView(d: ScenarioDraft, readOnly: boolean): CardsPageView 
   }
 }
 
+// ── Expenses (RC13b) ─────────────────────────────────────────────────────────────────────────────────────────────
+
+/** The spending figure as entered: by the month with its year, by the year, or the budget's year-0 total. */
+export function spendingValue(d: ScenarioDraft): string {
+  const annual = d.annualSpendingReal
+  if (annual === undefined) return copy.profileNotAnswered
+  if (budgetGoverns(d.budget)) return slots.workbenchFactSpendBudget(formatMoney(Math.round(annual)))
+  return d.spendEntryPeriod === 'month'
+    ? slots.workbenchFactPerMonthAndYear(formatMoney(Math.round(annual / 12)), formatMoney(Math.round(annual)))
+    : slots.workbenchFactPerYear(formatMoney(Math.round(annual)))
+}
+
+/** The left-over answer's words by build 2's SHOWN state (`workingYearLeftOverShownState`, the one read the question and
+ *  the panel's methodology row use), never by the stored reply alone: a "saved" reply carries nothing while the figure
+ *  for a working year is out of date, or where the question isn't asked (the U8 review's F1, moved here from the facts
+ *  page). The states whose meaning is not the reply read the methodology row's own line (`leftOverLineKey`). */
+const LEFT_OVER_VALUE: Readonly<Record<LeftOverShownState, (d: ScenarioDraft) => string>> = {
+  'not-asked': (d) => copy[leftOverLineKey('not-asked', workingYearLeftOverWaitingWords(d))],
+  'waiting-on-w': (d) => copy[leftOverLineKey('waiting-on-w', workingYearLeftOverWaitingWords(d))],
+  'saved-moved': (d) => copy[leftOverLineKey('saved-moved', workingYearLeftOverWaitingWords(d))],
+  absent: () => copy.profileNotAnswered,
+  saved: (d) =>
+    d.workingYearLeftOver?.kind === 'saved' ? slots.workbenchFactLeftOverSaved(formatMoney(d.workingYearLeftOver.quotedReal)) : copy.profileNotAnswered,
+  spent: () => copy.workingLedgerLeftOverSpent,
+  'not-sure': () => copy.workingLedgerLeftOverNotSure,
+}
+export const leftOverValue = (d: ScenarioDraft): string => LEFT_OVER_VALUE[workingYearLeftOverShownState(d)](d)
+
+export function expensesView(d: ScenarioDraft): CardsPageView {
+  const governs = budgetGoverns(d.budget)
+  const split = governs ? budgetTierSplitAtZero(d.budget) : null
+  const livingNote = [
+    ...(split !== null && split.essentials + split.extras > 0 ? [slots.budgetTierSplit(formatMoney(split.essentials), formatMoney(split.extras))] : []),
+    ...(governs && d.budget !== undefined ? governedSpendNotes(d.budget) : []),
+  ]
+  const oop = d.health.oopMedicalAnnual
+  const cards: CardView[] = [
+    {
+      id: 'living',
+      kind: copy.profileKindLiving,
+      icon: 'living',
+      name: copy.profileLivingName,
+      rows: [
+        { label: governs ? copy.profileRowBudget : copy.profileRowSpending, value: spendingValue(d) },
+        { label: copy.profileRowSurvivor, value: slots.workbenchFactPercent(formatPercent(d.survivorSpendingRatio)) },
+      ],
+      ...(livingNote.length > 0 ? { note: livingNote.join(' ') } : {}),
+      target: { kind: 'living' },
+    },
+    {
+      id: 'medical',
+      kind: copy.profileKindMedical,
+      icon: 'medical',
+      name: copy.profileMedicalName,
+      rows: [{ label: copy.profileRowEachYear, value: oop === undefined ? copy.workbenchFactBlank : dollars(oop) }],
+      target: { kind: 'medical' },
+    },
+  ]
+  // A working household's Pre-retirement living expenses (RightCapital's card, critique 11): W, and the left-over answer
+  // read by its shown state. An absent W says so in the panel row's own words (the run checks no working year until then).
+  if (isDateRoute(d)) {
+    cards.push({
+      id: 'working-cost',
+      kind: copy.profileKindWorkingCost,
+      icon: 'working-cost',
+      name: copy.profileWorkingCostName,
+      rows: [
+        { label: copy.profileRowWorkingYear, value: workingCostValueLine(d) },
+        { label: copy.profileRowLeftOver, value: leftOverValue(d) },
+      ],
+      target: { kind: 'working-cost' },
+    })
+  }
+  return { intro: isDateRoute(d) ? copy.profileExpensesIntroWorking : copy.profileExpensesIntro, cards, add: null, lines: [] }
+}
+
+// ── Goals (RC13b) ────────────────────────────────────────────────────────────────────────────────────────────────
+
+const perMonth = (v: number | undefined): string => (v === undefined ? copy.profileNotAnswered : slots.workbenchFactPerMonth(formatMoney(Math.round(v))))
+
+/** One person's Medicare extras, from the run's own read (`medicareExtrasView`: an affirmed zero reads "$0 a month", an
+ *  entered figure exactly, and the tool's own figure says it is the tool's), else the stored answer exactly. */
+function extrasValue(d: ScenarioDraft, i: 0 | 1): string {
+  const view = medicareExtrasView(d)
+  if (view !== null) {
+    const p = view[i]
+    if (p === undefined) return copy.profileNotAnswered
+    return p.provenance === 'typical' ? slots.workbenchFactExtrasToolFigure(formatMoney(p.monthly)) : perMonth(p.monthly)
+  }
+  const e = d.medicareExtrasByPerson?.[i]
+  return e?.kind === 'none' ? perMonth(0) : e?.kind === 'entered' ? perMonth(e.monthly) : copy.profileNotAnswered
+}
+
+/** The money picture card's rows: year 0's bottom line, then each later working year that changes or runs short (the
+ *  picture's own lines, `workingYearLedgerRows.ts`), or the one line saying why none can be drawn. */
+function moneyPictureCard(d: ScenarioDraft): CardView {
+  const base = { id: 'money-picture', kind: copy.profileKindMoneyPicture, icon: 'money-picture', name: copy.profileMoneyPictureName, target: { kind: 'working-cost' } } as const
+  if (d.workingYearCost === undefined) return { ...base, rows: [], note: copy.profileMoneyPictureNoW }
+  const ledger = workingYearLedgerForRun(d)
+  if (ledger === 'unknown') return { ...base, rows: [], note: ledgerUnknownLines(d, true).join(' ') }
+  const y0 = ledger.year0
+  const rows = [
+    {
+      label: y0.bottomLine < 0 ? slots.profileShortIn(y0.calendarYear) : slots.profileLeftOverIn(y0.calendarYear),
+      value: y0.bottomLine < 0 ? slots.workingLedgerOutflow(formatMoney(-y0.bottomLine)) : slots.workingLedgerAmount(formatMoney(y0.bottomLine)),
+    },
+    ...laterLines(ledger.laterYears).map((line) => {
+      const r = laterRow(line, d, ledger)
+      return { label: r.label, value: r.value }
+    }),
+  ]
+  return { ...base, rows }
+}
+
+export function goalsView(d: ScenarioDraft): CardsPageView {
+  const steps = intakeStepIds(d)
+  const cards: CardView[] = BOTH.map((i) => ({
+    id: `retirement-${i}`,
+    kind: copy.profileKindRetirement,
+    icon: 'retirement',
+    name: slots.profileRetirementOf(person(d, i).possessive),
+    rows: [{ label: copy.profileRowWork, value: d.people[i].workStatus === 'working' ? copy.profileFindsDate : workValue(d, i) }],
+    target: { kind: 'person', index: i },
+  }))
+  // Health care before Medicare: asked while anyone is under 65 (the walk's own gate, `intakeStepIds`).
+  if (anyPre65OrUnknown(d)) {
+    const v = d.health.employerPlanCoversRetiredMember
+    cards.push({
+      id: 'health',
+      kind: copy.profileKindHealth,
+      icon: 'health',
+      name: copy.profileHealthName,
+      rows: [
+        { label: copy.profileRowPremium, value: perMonth(d.health.enrolledPremiumMonthlyToday) },
+        { label: copy.profileRowBenchmark, value: perMonth(d.health.slcspMonthlyToday) },
+        ...(anyRetiredPre65WhileAnotherWorks(d)
+          ? [{ label: copy.profileRowCoverage, value: v === undefined ? copy.profileNotAnswered : v ? copy.employerCoverageCovered : copy.employerCoverageOwn }]
+          : []),
+      ],
+      target: { kind: 'health' },
+    })
+  }
+  // Medicare: each person's extras (the run prices them for every household it builds health care for), and the
+  // surcharge's look-back income where the walk asks it (anyone 64 or older).
+  const seed = d.health.irmaaMagiSeed
+  cards.push({
+    id: 'medicare',
+    kind: copy.profileKindMedicare,
+    icon: 'medicare',
+    name: copy.profileMedicareName,
+    rows: [
+      ...BOTH.map((i) => ({ label: slots.profileExtrasOf(person(d, i).possessive), value: extrasValue(d, i) })),
+      ...(steps.includes('irmaa-seed')
+        ? [
+            { label: copy.irmaaSeedTwoBackLabel, value: seed?.[0] === undefined ? copy.profileNotAnswered : dollars(seed[0]) },
+            { label: copy.irmaaSeedOneBackLabel, value: seed?.[1] === undefined ? copy.profileNotAnswered : dollars(seed[1]) },
+          ]
+        : []),
+    ],
+    target: { kind: 'medicare' },
+  })
+  if (isDateRoute(d)) cards.push(moneyPictureCard(d))
+  return { intro: copy.profileGoalsIntro, cards, add: null, lines: [] }
+}
+
 // ── Net Worth ────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 function mixWords(d: ScenarioDraft, a: EnteredAccount): string {
@@ -363,15 +561,15 @@ export function netWorthView(d: ScenarioDraft, agedBalancesYear: number | undefi
 }
 
 /** The page of each Profile screen. */
-export function profilePageTitle(screen: ProfileScreenId): string {
-  return screen === 'profile-family'
-    ? copy.shellPageFamily
-    : screen === 'profile-income'
-      ? copy.shellPageIncome
-      : screen === 'profile-savings'
-        ? copy.shellPageSavings
-        : copy.shellPageNetWorth
+const PAGE_TITLE: Readonly<Record<ProfileScreenId, CopyKey>> = {
+  'profile-net-worth': 'shellPageNetWorth',
+  'profile-goals': 'shellPageGoals',
+  'profile-income': 'shellPageIncome',
+  'profile-savings': 'shellPageSavings',
+  'profile-expenses': 'shellPageExpenses',
+  'profile-family': 'shellPageFamily',
 }
+export const profilePageTitle = (screen: ProfileScreenId): string => copy[PAGE_TITLE[screen]]
 
 /** The card a drawer target belongs to (focus returns there on close). `newIndex`: where a new record landed. */
 export function cardIdOf(target: DrawerTarget, newIndex?: number): string | null {
@@ -394,5 +592,11 @@ export function cardIdOf(target: DrawerTarget, newIndex?: number): string | null
       return newIndex === undefined ? null : `income-${newIndex}`
     case 'new-account':
       return newIndex === undefined ? null : `account-${newIndex}`
+    case 'living':
+    case 'medical':
+    case 'working-cost':
+    case 'health':
+    case 'medicare':
+      return target.kind
   }
 }

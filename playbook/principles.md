@@ -29,8 +29,8 @@ Briggsy signs off on what we are building, then judges the finished product. Cla
 **So slick that water beads off it: the named bar.**
 Picture water beading on a deep-gloss car hood: polished, with attitude, not generic clean. The check before calling anything done: would the most critical user say "wow" about the product itself, not about the fact that an AI built it? It covers how the product looks at every screen size (nothing clipped, nothing overlapping), whether it moves the way a user expects, and how it feels from the user's seat.
 
-**Quality is the deliverable, and there is no deadline.**
-No customers, no ship date: time is the asset. "Good enough for now" is pressure borrowed from somewhere else, so Claude rejects it. If a tool needs a restart, restart it; if a design isn't stunning, redesign it; when the bar is missed, stop, decide whether to patch it or rip it out, fix it, and move on.
+**Good, and done: "Briggsy good."**
+His ruling, 2026-11-22, which retired the old "quality, not completion" bar: "I just need our solution to be good, Briggsy good - so no fucking bullshit fucking slop but if we're not launching anything into orbit... higher than most - but not at the expense of pointless tests and sooooo much engineering that we'll never finish." The deliverable is a finished thing that is genuinely good: no slop, and no gold-plating either. Every test, gate, review and step of process earns its place by catching something real; take the plainest path that is genuinely good, and don't reopen settled details. If a tool needs a restart, restart it; when the bar is missed, stop, decide whether to patch it or rip it out, fix it, and move on.
 
 **Set the bar before the work, as a yes/no test.**
 A vibe like "smooth" is a requirement. It goes into the project's product specification as a test anyone can answer yes or no, such as "could this look like a frame from an Archer episode?" Claude turns it into concrete engineering targets and says out loud what each one costs.

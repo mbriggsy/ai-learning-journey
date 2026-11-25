@@ -792,7 +792,10 @@ export default function IntakeApp({
 
       // (6) NOW the store may be touched. Capture what the draft carried first — the ceremony's
       // cancel restores it (see the restore rule at the save phase below).
-      recSavePrevRecord.current = s.draft.savedRecommendation
+      // A second press while this gesture's mint is still outstanding (its save ask is not modal, so the card's Keep
+      // stays pressable) keeps the record captured at the FIRST tap: capturing again would take the first mint as the
+      // prior record, and Stay would put it back instead of taking it off (round 3 of the milestone-1 review).
+      if (!recSaveCeremonyRef.current) recSavePrevRecord.current = s.draft.savedRecommendation
       appModel.update((d) => ({ ...d, savedRecommendation: minted.record }))
 
       // (7) ROUTE. NO VAULT ⇒ THE CEREMONY, NEVER A DEAD CONTROL (R1). `deriveResultSave` maps
@@ -1116,7 +1119,10 @@ export default function IntakeApp({
   // The shell (Act 6 · RC4: the home). A `save` phase whose plan can't be saved falls back to it.
   if (phase === 'workspace' || phase === 'save') {
     const view = deriveResultSave(persist, saveReady, readOnly)
-    const aged = agedBalancesYearFor(persist, view, currentEpochDay())
+    // The aged year reads the save machine as a writable tab would: a read-only tab claims no save of its own (`view` is
+    // 'none'), but its plan still matches the disk's until it is edited, so the aged-balances lines stay true there
+    // (round 3 of the milestone-1 review: every one went missing on a second tab).
+    const aged = agedBalancesYearFor(persist, readOnly ? deriveResultSave(persist, saveReady) : view, currentEpochDay())
     return (
       <ShellSlot
         shell={{

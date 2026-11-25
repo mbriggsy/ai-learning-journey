@@ -34,10 +34,12 @@ vi.mock('../shell/ShellSlot', () => ({
       stalenessNote?: boolean
       leftOverClauseHost?: boolean
       readOnly?: boolean
+      agedBalancesYear?: number
     }
   }) => (
     <div
       data-save-kind={shell.save.kind}
+      data-aged={String(shell.agedBalancesYear ?? 'none')}
       data-backup={shell.backupOffered === true && shell.onBackup !== undefined ? 'offered' : 'none'}
       data-staleness={String(shell.stalenessNote ?? false)}
       data-left-over-host={String(shell.leftOverClauseHost ?? false)}
@@ -458,6 +460,26 @@ describe('IntakeApp — the read-only verdict reaches deriveResultSave (Fork C i
     const stub = await screen.findByText('result stub')
     expect(stub).toHaveAttribute('data-save-kind', 'clean')
     expect(stub).toHaveAttribute('data-read-only', 'false')
+  })
+
+  it('a READ-ONLY tab over a save from an earlier year still names the balances’ year, as the writable twin does: no save claim of its own, but its plan is the disk’s (round 3 of the milestone-1 review)', async () => {
+    // MUTANT: derive the aged year from the read-only save view ('none'): every aged-balances line goes missing on a
+    // second tab — this reds.
+    const fresh = h.model
+    h.model = { ...(fresh as CurrentScenario), savedAt: currentEpochDay() - 800 }
+    try {
+      const aged: string[] = []
+      for (const readOnly of [false, true]) {
+        render(<IntakeApp hydrateFromVault readOnly={readOnly} />)
+        await affirmGate(readOnly)
+        aged.push((await screen.findByText('result stub')).getAttribute('data-aged')!)
+        cleanup()
+      }
+      expect(aged[0], '[test setup] an old save is aged on the writable tab').not.toBe('none')
+      expect(aged[1], 'and on the read-only one').toBe(aged[0])
+    } finally {
+      h.model = fresh
+    }
   })
 })
 

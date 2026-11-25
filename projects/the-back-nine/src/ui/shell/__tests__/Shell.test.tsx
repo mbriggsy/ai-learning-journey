@@ -405,27 +405,21 @@ describe('Shell — RC6: Retirement → Cash Flows', () => {
     expect(screen.getAllByRole('columnheader').map((h) => h.textContent)).toEqual(before)
   })
 
-  it('the StaleBanner rides Cash Flows too (the staleness note over rows built on those rules), without its aged line: the table’s own row-one line says that cause', async () => {
-    const { lanes, settleAll } = heldLanes()
-    render(
-      <RoutedShell save={{ kind: 'none' }} snapshot={snapshotWith(finalAnswer())} lanes={lanes} wallCalendarYear={BUILD_YEAR + 1} stalenessNote agedBalancesYear={BUILD_YEAR} />,
-    )
-    // Before the table lands, no row-one line says the cause: the banner keeps its aged line.
-    expect(screen.queryByText(slots.workbenchAged(BUILD_YEAR))).toBeNull()
-    expect(screen.getByText(slots.staleAgedBalances(BUILD_YEAR)), 'no table yet: the banner says it').toBeInTheDocument()
-    await settleAll('run')
-    expect(document.querySelector('main.result')).toHaveAttribute('data-shell-screen', 'cash-flows')
-    expect(screen.getByText(copy.stalenessHeroNote)).toBeInTheDocument()
-    expect(screen.getByText(slots.workbenchAged(BUILD_YEAR))).toBeInTheDocument()
-    expect(screen.queryByText(slots.staleAgedBalances(BUILD_YEAR)), 'one cause, one line').toBeNull()
-  })
-
-  it('a re-saver on Cash Flows (saved after the year the plan was built) keeps the banner’s aged line: row one’s year is not the save’s', async () => {
-    const { lanes, settleAll } = heldLanes()
-    render(<RoutedShell save={{ kind: 'none' }} snapshot={snapshotWith(finalAnswer())} lanes={lanes} wallCalendarYear={BUILD_YEAR + 2} agedBalancesYear={BUILD_YEAR + 1} />)
-    await settleAll('run')
-    expect(screen.getByText(slots.workbenchAged(BUILD_YEAR))).toBeInTheDocument()
-    expect(screen.getByText(slots.staleAgedBalances(BUILD_YEAR + 1))).toBeInTheDocument()
+  it('the StaleBanner rides Cash Flows too, aged line included, beside the table’s row-one line, which names the build year and claims nothing about the balances (round 3 of the milestone-1 review)', async () => {
+    for (const saved of [BUILD_YEAR, BUILD_YEAR + 1]) {
+      const { lanes, settleAll } = heldLanes()
+      render(
+        <RoutedShell save={{ kind: 'none' }} snapshot={snapshotWith(finalAnswer())} lanes={lanes} wallCalendarYear={BUILD_YEAR + 2} stalenessNote agedBalancesYear={saved} />,
+      )
+      expect(screen.getByText(slots.staleAgedBalances(saved)), `saved ${saved}: no table yet, the banner says it`).toBeInTheDocument()
+      await settleAll('run')
+      expect(document.querySelector('main.result')).toHaveAttribute('data-shell-screen', 'cash-flows')
+      expect(screen.getByText(copy.stalenessHeroNote)).toBeInTheDocument()
+      expect(screen.getByText(slots.workbenchAged(BUILD_YEAR))).toBeInTheDocument()
+      expect(screen.getByText(slots.staleAgedBalances(saved)), `saved ${saved}: the banner keeps the balances’ own year`).toBeInTheDocument()
+      expect(slots.workbenchAged(BUILD_YEAR), 'row one claims no balance date (a re-saver entered them later)').not.toMatch(/balance/i)
+      cleanup()
+    }
   })
 
   it('Download is off with no rows to save, yet keeps its place in the keyboard order (focus never drops to the page when the table goes busy)', async () => {

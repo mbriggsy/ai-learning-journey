@@ -56,7 +56,7 @@ import { useEditorSheets } from '../editorSheets'
 import { useSaveAnnouncer, type ResultSaveProp } from '../saveAnnouncer'
 import { pinnedLines, reserveForms } from '../workbench/pinnedLines'
 import { FactsPage } from '../workbench/FactsPage'
-import { StepSheet } from '../workbench/StepSheet'
+import { StepSheet, type StepEnding } from '../workbench/StepSheet'
 import { composeFacts, stepSectionTitle, type FactStop } from '../workbench/factsChrome'
 import type { FactDoorId, StepSectionId } from '../workbench/factRegistry'
 import { tableRunFor, type TableMeta, type TableRun, type TableView } from '../workbench/tableRun'
@@ -207,7 +207,13 @@ type SheetDoor = Exclude<FactDoorId, StepSectionId>
  *  (the sheet is modal, and an ask beneath it could be neither seen nor pressed): a scrim takes every press meant for
  *  the sheet or the page, Tab and Shift+Tab move between its two choices only, and Escape is Stay (the U8 review's C3,
  *  C7). Focus moves to its safe choice, and goes back where it was on Stay, or to the page's heading when that is gone. */
-function LeaveAsk({ ask, overSheet, fallback }: { readonly ask: ShellLeaveAsk; readonly overSheet: boolean; readonly fallback: () => HTMLElement | null }) {
+/** A leave ask's open-entry line, said over a step whose Go puts it back (its Continue refuses what was changed). */
+const PUTS_BACK_LINES: ReadonlyMap<string, string> = new Map([
+  [copy.workbenchLeaveAsk, copy.workbenchLeaveAskPutsBack],
+  [copy.shellCeremonyOpenEntry, copy.shellCeremonyPutsBack],
+])
+
+function LeaveAsk({ ask, overSheet, fallback }:{ readonly ask: ShellLeaveAsk; readonly overSheet: boolean; readonly fallback: () => HTMLElement | null }) {
   const stayRef = useRef<HTMLButtonElement>(null)
   const goRef = useRef<HTMLButtonElement>(null)
   const returnTo = useRef<HTMLElement | null>(null)
@@ -408,10 +414,10 @@ export default function Shell({
   const openStepTitle = useMemo(() => (openStepId === null ? '' : stepSectionTitle(openStepId, draft)), [openStepId, draft])
   // A page change ends the open step's edit through the sheet's own ending (the focused field commits, a draft its
   // Continue would refuse goes back), never by dropping the open step under it (`StepSheet`'s `endRef`).
-  const stepEndRef = useRef<(() => void) | null>(null)
+  const stepEndRef = useRef<StepEnding | null>(null)
   const endStep = useCallback(() => {
-    const end = stepEndRef.current
-    if (end !== null) end()
+    const ending = stepEndRef.current
+    if (ending !== null) ending.end()
     else setOpenStepId(null)
   }, [])
 
@@ -811,13 +817,11 @@ export default function Shell({
 
   // ── The StaleBanner (RC4): the old answer page's staleness note, aged-balances line and standing line ──────────────
   const figured = screen === 'snapshot' || screen === 'probability' || screen === 'confidence' || screen === 'cash-flows'
-  // Without its aged line exactly where Cash Flows' own row-one line (`workbenchAged`) says that cause for the same year:
-  // a Cash Flows body with no table (loading, refused, failed, withheld), or a re-saver whose save year is not row one,
-  // keeps the banner's line and its door.
-  const cfAgedYear = cfView?.agedYear ?? null
+  // Cash Flows too, aged line and door included: its row-one line (`workbenchAged`) names the build year and claims nothing
+  // about the balances, so the two lines say two causes (round 3 of the milestone-1 review).
   const staleLines = useMemo(
-    () => (figured ? composeStaleLines(notes, !readOnly && onReview !== undefined, cfAgedYear === null || cfAgedYear !== notes.agedBalancesYear) : []),
-    [figured, notes, readOnly, onReview, cfAgedYear],
+    () => (figured ? composeStaleLines(notes, !readOnly && onReview !== undefined) : []),
+    [figured, notes, readOnly, onReview],
   )
 
   const snapshotDoors: SnapshotDoors = { analysis: doorTo('probability'), cashFlows: doorTo('cash-flows'), facts: doorTo('interim-facts') }
@@ -856,11 +860,15 @@ export default function Shell({
   const names = draft.people.map((p) => (p.name ?? '').trim()).filter((n) => n !== '')
 
   // A leave's Go makes its words true before the leave moves: every sheet closes, and an entry not yet added (the
-  // budget's staged rows) is dropped (`workbenchLeaveAsk`, `shellCeremonyOpenEntry`).
+  // budget's staged rows) is dropped (`workbenchLeaveAsk`, `shellCeremonyOpenEntry`). Over a step whose Continue would
+  // refuse what was changed, Go puts that step back (`StepEnding.putsBack`), so the ask says that in place of "changes
+  // you finished stay in your plan".
+  const stepPutsBack = leaveAsk !== undefined && stepEndRef.current?.putsBack() === true
   const shownAsk: ShellLeaveAsk | undefined =
     leaveAsk !== undefined
       ? {
           ...leaveAsk,
+          lines: stepPutsBack ? leaveAsk.lines.map((l) => PUTS_BACK_LINES.get(l) ?? l) : leaveAsk.lines,
           onGo: () => {
             endStep()
             editors.closeAll(true)

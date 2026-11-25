@@ -382,7 +382,7 @@ describe('the facts page through the real phase machine (U8)', () => {
     return field
   }
 
-  it('Go back over a figure the step refuses puts the draft back to what it held at open: a refused value never reaches the answer', async () => {
+  it('Go back over a figure the step refuses puts the draft back to what it held at open, and the ask says so first: a refused value never reaches the answer', async () => {
     await landHydrated()
     const before = appModel.getSnapshot().draft.people[0].pia
     // A yearly figure in the monthly box: 360,000 a year, over the benefit ceiling (the step's Continue refuses it).
@@ -390,7 +390,9 @@ describe('the facts page through the real phase machine (U8)', () => {
     act(() => field.blur())
     expect(appModel.getSnapshot().draft.people[0].pia, 'the blur wrote it, as the walk does').toBe(360_000)
     await pressBack()
-    const ask = screen.getByRole('alertdialog', { name: copy.workbenchLeaveAsk })
+    // Never "changes you finished stay in your plan": Go puts the whole step back (round 3 of the milestone-1 review).
+    expect(screen.queryByText(copy.workbenchLeaveAsk)).toBeNull()
+    const ask = screen.getByRole('alertdialog', { name: copy.workbenchLeaveAskPutsBack })
     await backAndSettle(() => fireEvent.click(within(ask).getByRole('button', { name: copy.workbenchLeaveGo })))
     expect(screenShown()).toBe('snapshot')
     expect(appModel.getSnapshot().draft.people[0].pia, 'the refused figure went with the sheet').toBe(before)

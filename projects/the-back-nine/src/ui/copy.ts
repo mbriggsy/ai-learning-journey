@@ -2507,6 +2507,10 @@ export const copy = {
   // words say what a Back keeps and what it drops, true for both.
   workbenchLeaveAsk:
     'You have something open here. Going back closes it: changes you finished stay in your plan, and an entry not yet added is dropped.',
+  // In its place over a step whose own Continue would refuse what was changed: Go puts the whole step back, so "changes
+  // you finished stay" would be false there (round 3 of the milestone-1 review).
+  workbenchLeaveAskPutsBack:
+    'You have a step open here that can’t take what you changed. Going back closes it and puts that step back to how it was when you opened it.',
   workbenchLeaveGo: 'Go back',
   workbenchLeaveStay: 'Stay here',
   // --- Act 6 · RC2, the shell (plan docs/plans/6-rightcapital-ui-plan.md, section 3.1): the top bar, the pages, the
@@ -2708,6 +2712,8 @@ export const copy = {
     'Your what-if isn’t kept. Saving or backing up opens its own steps, which drops the what-if; your plan stays as it is. To hold on to it, keep it first from the list beside Your plan.',
   shellCeremonyOpenEntry:
     'You have something open here. Going on closes it: changes you finished stay in your plan, and an entry not yet added is dropped.',
+  shellCeremonyPutsBack:
+    'You have a step open here that can’t take what you changed. Going on closes it and puts that step back to how it was when you opened it.',
   shellCeremonyGo: 'Go on',
   /** A Keep with no saved plan yet opens the save steps (the shell unmounts for them) while a deposit change in Action
    *  items still waits for the employer's figure: that change was never in the what-if being kept. */
@@ -2974,6 +2980,10 @@ export const copy = {
   workbenchRailApplyEmpty: 'Nothing to apply yet.',
   workbenchRailApplyWaiting: 'Apply waits until this what-if is worked out on your latest answer.',
   workbenchRailApplyDone: 'Applied. Your plan now holds these changes. Save your plan to keep them.',
+  // Apply from the Recommended pick: the household's own what-if comes back on its side (never dropped by a mode), so
+  // "these changes" would point at it; the words name the recommendation's, and say where the own what-if now stands.
+  workbenchRailApplyDoneRec: 'Applied. Your plan now holds the recommendation’s changes. Save your plan to keep them.',
+  workbenchRailApplyOwnStays: 'Your own what-if is still open, now tried on your plan with those changes in it.',
   workbenchRailApplyWithheldStop:
     'Apply waits: this what-if holds a stop year, which can be tried here but not applied. Put the stop year back to the plan and the rest applies exactly as compared.',
   workbenchRailApplyWithheldMix:
@@ -4910,7 +4920,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:2189` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:2191` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,
@@ -5374,7 +5384,10 @@ export const slots = {
   workbenchFloorTrack: (): string => 'Once work stops, this table shows essentials-only spending: your answer’s date is figured on that level.',
   workbenchNoDate: (year: number): string =>
     `Your answer found no date in its window, so this table has work stopping in ${year}, the window’s last year.`,
-  workbenchAged: (year: number): string => `Row one is ${year}, the year this plan was built; its balances are as of then.`,
+  // Row one's year claims nothing about when the balances were entered (a re-saver entered them later: the build year
+  // survives every save, U17 §S0.3's law, `bandAgedPremiseFresh`'s words); the StaleBanner's aged line says that cause,
+  // from the save's own year (round 3 of the milestone-1 review).
+  workbenchAged: (year: number): string => `Row one is ${year}, the year this plan was built; the years since are modeled, not records.`,
   workbenchSourcePretaxOf: (mid: string): string => `Pre-tax, ${mid}`,
   workbenchAccountOf: (possessive: string, kind: string): string => `${possessive} ${kind}`,
   workbenchRolledIn: (year: number, accounts: string): string => `from ${year}, also ${accounts}, rolled in`,
@@ -5516,6 +5529,10 @@ export const slots = {
   // --- Act 6 · RC3, Snapshot (`snapshotView.ts`, `ringReading.ts`) ---
   /** The ring's caption on the date route: the stop year the reading is taken at. */
   snapshotRingStopIn: (year: number): string => `if you stop in ${year}`,
+  /** The two dials' labels with no date in the window: their rows stop work at the window's top year, the one the ring
+   *  names (round 3 of the milestone-1 review, the no-date dials). */
+  snapshotStatRateNoDateLabel: (year: number): string => `Withdrawal rate in your first retired year if you stop in ${year}, in the steady future`,
+  snapshotStatTaxNoDateLabel: (year: number): string => `Income tax after you stop working, if you stop in ${year}, in the steady future`,
   /** An aged plan whose stop year has passed (`offsetHasPassed`, the odds chart's own test): the count is the plan's own
    *  reading for that year, kept, and the caption speaks of it in the past rather than offering it as a choice. */
   snapshotRingStoppedIn: (year: number): string => `if you’d stopped in ${year}`,

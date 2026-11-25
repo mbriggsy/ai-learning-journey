@@ -202,10 +202,15 @@ function statsView(steady: SteadyRows, working: boolean): StatsView {
   const taxBase = { short: copy.snapshotStatTaxShort, label: working ? copy.snapshotStatTaxWorkingLabel : copy.snapshotStatTaxRetiredLabel }
   if (steady.kind === 'rows') {
     const s = steadyStats(steady.rows, steady.meta)
-    const taxLabel = s.working ? copy.snapshotStatTaxWorkingLabel : copy.snapshotStatTaxRetiredLabel
+    // With no date in the window the rows stop work at the window's top year (`buildTableBase`), which the ring beside
+    // names ("if you stop in 2036"): "after you stop working" alone would point at a date the answer doesn't have.
+    const noDateYear = steady.meta.route === 'no-date' ? steady.meta.stopYear : undefined
+    const taxLabel =
+      noDateYear !== undefined ? slots.snapshotStatTaxNoDateLabel(noDateYear) : s.working ? copy.snapshotStatTaxWorkingLabel : copy.snapshotStatTaxRetiredLabel
+    const rate = noDateYear !== undefined ? { ...rateBase, label: slots.snapshotStatRateNoDateLabel(noDateYear) } : rateBase
     return {
       kind: 'figures',
-      rate: s.ratePercent === null ? { ...rateBase, note: copy.snapshotStatNoRate } : { ...rateBase, value: slots.snapshotRate(s.ratePercent) },
+      rate: s.ratePercent === null ? { ...rate, note: copy.snapshotStatNoRate } : { ...rate, value: slots.snapshotRate(s.ratePercent) },
       tax: { short: copy.snapshotStatTaxShort, label: taxLabel, value: slots.snapshotApprox(formatMmDollar(s.taxPaid)) },
       ...(steady.meta.track === 'floor' ? { trackNote: copy.snapshotStatFloorTrack } : {}),
     }

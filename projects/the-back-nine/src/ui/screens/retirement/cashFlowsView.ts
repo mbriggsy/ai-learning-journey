@@ -115,10 +115,6 @@ export interface CashFlowsView {
   readonly updating: string | null
   /** Above the table: which future, whose lifespans, when work stops, whose age is which. */
   readonly lines: readonly string[]
-  /** The year the lines' aged clause names (`workbenchAged`: row one, the year the plan was built), or null where they
-   *  carry none (no table, or a plan built this year). The shell leaves the StaleBanner's aged line out only where this
-   *  names the same year (insight 101: one cause, one line), so a page with no table keeps the banner's. */
-  readonly agedYear: number | null
   /** Under the table: the stopgaps (the yield line by run, the state clause, the missing kinds, the surtax). */
   readonly stopgaps: readonly string[]
   /** Each year's sentences (R13's flags, the survivor, the steady-from line), "2031: …". */
@@ -530,9 +526,6 @@ function stopLine(meta: TableMeta, run: string, named: boolean): string {
   return named ? slots.cashFlowsRunStopsNoDate(run, meta.stopYear) : slots.workbenchNoDate(meta.stopYear)
 }
 
-/** The year the aged clause names over a table built on `meta` (row one, where the plan was built before this year). */
-const agedYearOf = (meta: TableMeta, input: CashFlowsInput): number | null => (input.wallCalendarYear > meta.startCalendarYear ? meta.startCalendarYear : null)
-
 /** Which future, whose lifespans, when work stops (`stops`), whose age is which: the words over a table. Over a run that
  *  is not your plan, the steady sentence says the pinned answer reads your plan, not this table's run. */
 function aboutLines(meta: TableMeta, future: TableView, input: CashFlowsInput, stops: readonly string[], plansOwn: boolean, withAges = true): string[] {
@@ -542,7 +535,7 @@ function aboutLines(meta: TableMeta, future: TableView, input: CashFlowsInput, s
     lifespansLine(meta.people),
     ...stops,
     meta.track === 'floor' ? slots.workbenchFloorTrack() : '',
-    agedYearOf(meta, input) !== null ? slots.workbenchAged(meta.startCalendarYear) : '',
+    input.wallCalendarYear > meta.startCalendarYear ? slots.workbenchAged(meta.startCalendarYear) : '',
     meta.people.length > 1 && withAges ? slots.cashFlowsAgesKey(meta.people.map((p) => p.label)) : '',
   ].filter((s) => s !== '')
 }
@@ -630,7 +623,6 @@ export function cashFlowsView(input: CashFlowsInput): CashFlowsView {
     body,
     updating: null,
     lines: [],
-    agedYear: null,
     stopgaps: [],
     yearNotes: [],
     footnotes: [],
@@ -701,7 +693,6 @@ export function cashFlowsView(input: CashFlowsInput): CashFlowsView {
       body: { kind: 'table', columns, rows, busy, paired: true },
       updating: busy ? copy.workbenchTableUpdating : null,
       lines: aboutLines(planMeta, future, input, stops, false, false),
-      agedYear: agedYearOf(planMeta, input),
       stopgaps: stopgapLines(table.yieldLines, input),
       yearNotes: table.rows.flatMap((r) => r.notes.map((n) => slots.cashFlowsYearNote(r.year, n))),
       footnotes,
@@ -745,7 +736,6 @@ export function cashFlowsView(input: CashFlowsInput): CashFlowsView {
     body: { kind: 'table', columns, rows: tableRows, busy: run.updating, paired: false },
     updating: run.updating ? copy.workbenchTableUpdating : null,
     lines: aboutLines(meta, future, input, [stopLine(meta, runName, false)], pick === 'plan'),
-    agedYear: agedYearOf(meta, input),
     stopgaps: stopgapLines(yieldWords === null ? [] : [slots.workbenchPairYield(runName, yieldWords)], input),
     yearNotes,
     footnotes: singleFootnotes(columns, meta, rows, tab === 'accounts' && input.accounts === 'deposits', showsTotal),

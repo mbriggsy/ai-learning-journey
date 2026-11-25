@@ -2,8 +2,8 @@
  * src/ui/shell/staleLines.ts: what the StaleBanner says on the figured pages (plan docs/plans/6-rightcapital-ui-plan.md,
  * RC4 "Interim homes"; section 4.0's disclosure map). Pure. The old answer page carried these three in its hero; RC4
  * moved each to the StaleBanner above Snapshot and Probability, unchanged in what it says (fix round 1 of the milestone-1
- * review put it above Cash Flows too, without the aged line wherever that page's own row-one line says it for the same
- * year):
+ * review put it above Cash Flows too; round 3 gave it the aged line there as well, since that page's row-one line names
+ * the build year and claims nothing about the balances):
  * - the staleness note (P3·U13: a rules clock fired at unlock), with build 2's moved left over as its clause where a
  *   rules line hosts it (`composeReentry` decided the host once; insight 101: one cause, one line);
  * - the aged-balances line (the save is at least one calendar year old, `agedBalancesYearFor`), its door the guided
@@ -41,15 +41,13 @@ export type StaleLine =
     }
 
 /** The StaleBanner's lines for the shown answer, in order. `canReconfirm`: the tab can write, so the aged line carries
- *  the re-walk's door. `withAged` false: the page already says the aged cause in its own words, for the same year (Cash
- *  Flows' row-one line, `workbenchAged`, over a table), so the banner leaves its aged line out there (insight 101: one
- *  cause, one line). */
-export function composeStaleLines(notes: AnswerNotes, canReconfirm: boolean, withAged = true): readonly StaleLine[] {
+ *  the re-walk's door. */
+export function composeStaleLines(notes: AnswerNotes, canReconfirm: boolean): readonly StaleLine[] {
   const out: StaleLine[] = []
   if (notes.stalenessNote) {
     out.push({ kind: 'staleness', text: notes.stalenessClause === undefined ? copy.stalenessHeroNote : `${copy.stalenessHeroNote} ${notes.stalenessClause}` })
   }
-  if (withAged && notes.agedBalancesYear !== undefined) {
+  if (notes.agedBalancesYear !== undefined) {
     out.push({ kind: 'aged', text: slots.staleAgedBalances(notes.agedBalancesYear), ...(canReconfirm ? { door: { label: copy.bandPremiseReconfirmCta } } : {}) })
   }
   const standing = notes.standing

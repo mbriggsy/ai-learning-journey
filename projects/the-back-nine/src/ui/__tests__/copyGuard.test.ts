@@ -1158,6 +1158,8 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     workbenchPairRanOut: slots.workbenchPairRanOut('This what-if', 2049),
     workbenchPairYield: slots.workbenchPairYield('Your plan', 'The tool leaves yearly interest and dividends out.'),
     snapshotRingStopIn: slots.snapshotRingStopIn(2031),
+    snapshotStatRateNoDateLabel: slots.snapshotStatRateNoDateLabel(2036),
+    snapshotStatTaxNoDateLabel: slots.snapshotStatTaxNoDateLabel(2036),
     snapshotRingStoppedIn: slots.snapshotRingStoppedIn(2025),
     snapshotInvestedAsEnteredIn: slots.snapshotInvestedAsEnteredIn(2025),
     snapshotApprox: slots.snapshotApprox('$312k'),

@@ -113,18 +113,21 @@ export function ActionItemsTray(props: ActionItemsTrayProps) {
   const { id, open, onOpenChange, whatIf, draft, offers, editedLabel, anchor, crownedOffset, wallCalendarYear, readOnly, current, recommendation, hidden, onHidden, awaiting, onAwaiting, focus, announce } = props
   const view = trayView({ draft, offers, pending: whatIf.pending, committed: whatIf.own, hidden, awaitingEmployer: awaiting, anchor, ...(crownedOffset !== undefined ? { crownedOffset } : {}) })
   const apply = trayApply({ draft, committed: recommendation !== undefined ? whatIf.shown : whatIf.own, pendingDiffers: recommendation === undefined && view.pendingDiffers, current, readOnly })
-  // What Apply last said, held for the state it was said in: a write's words for the bundle after it (the empty one); a
-  // refusal's for the bundle shown, the edits typed and Apply's own state together, so "waits until this what-if is
-  // worked out" goes when the run lands and "waits for Refresh" when Back undoes the edit (an aria-disabled Apply still
-  // takes a press). A writer's refusal over an open Apply stays until one of them moves. A refusal's state is read on
-  // the render after the press (`key: null` until then): a figure the press's own blur committed has moved the edits
-  // by then, and the press's render never saw it (insight 036).
+  // What Apply last said, held for the state it was said in: a write's words for the bundle shown after it and the edits
+  // typed since (none), so the first edit typed after an Apply takes "Applied" away and the line says it waits for
+  // Refresh (round 3 of the milestone-1 review: "Your plan now holds these changes" stood beside an edit the plan did
+  // not hold); a refusal's for the bundle shown, the edits typed and Apply's own state together, so "waits until this
+  // what-if is worked out" goes when the run lands and "waits for Refresh" when Back undoes the edit (an aria-disabled
+  // Apply still takes a press). A writer's refusal over an open Apply stays until one of them moves. The state is read on
+  // the render after the press (`key: null` until then): a write's reset of the bundles, and a figure the press's own
+  // blur committed, have both landed by then, and the press's render saw neither (insight 036).
   const [said, setSaid] = useState<{ readonly words: string; readonly applied: boolean; readonly key: string | null } | null>(null)
-  const refusalKey = `${whatIf.shownKey}|${canonicalIdentityToken(whatIf.pending)}|${apply.kind}`
-  if (said !== null && said.key === null) setSaid({ ...said, key: refusalKey })
+  const editsKey = `${whatIf.shownKey}|${canonicalIdentityToken(whatIf.pending)}`
+  const stateKey = (applied: boolean) => (applied ? editsKey : `${editsKey}|${apply.kind}`)
+  if (said !== null && said.key === null) setSaid({ ...said, key: stateKey(said.applied) })
   // Said once: the words go when their state moves on, so a later return to the same bundle (a Reset back to the empty
   // one after a write) never brings back "Applied" for a write that press did not make.
-  const saidStands = said !== null && (said.key === null || said.key === (said.applied ? whatIf.shownKey : refusalKey))
+  const saidStands = said !== null && (said.key === null || said.key === stateKey(said.applied))
   if (said !== null && !saidStands) setSaid(null)
   const saidNow = saidStands ? said.words : null
   const [editOpen, setEditOpen] = useState(false)
@@ -198,7 +201,7 @@ export function ActionItemsTray(props: ActionItemsTrayProps) {
             className="aria-disabled:cursor-not-allowed aria-disabled:opacity-50"
             onClick={() => {
               const { words: w, applied } = whatIf.apply()
-              setSaid({ words: w, applied, key: applied ? '[]' : null })
+              setSaid({ words: w, applied, key: null })
               announce(w)
             }}
           >

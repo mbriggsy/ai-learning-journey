@@ -236,16 +236,22 @@ export function useWhatIf({
       return again.ok ? again.draft : d
     })
     recomputeAfterEdit(model)
-    ownRef.current = []
-    pendingRef.current = []
-    setOwnState([])
-    setPendingState([])
+    // The plan now holds what was applied. Applied from the household's own bundle, the left side starts a new what-if
+    // (a kept one stays in the list). Applied from the Recommended pick, the household's own what-if, held aside while
+    // the recommendation showed, comes back as it was: the recommendation is a mode, and nothing it does drops the
+    // household's work (the shell's left picker; round 3 of the milestone-1 review found it wiped here, unasked).
+    if (!inRec) {
+      ownRef.current = []
+      pendingRef.current = []
+      setOwnState([])
+      setPendingState([])
+      setSource({ kind: 'new' })
+      setEpoch((e) => e + 1)
+    }
     modeRef.current = 'own'
     setModeState('own')
-    // The plan now holds what was applied: the left side starts a new what-if (a kept one stays in the list).
-    setSource({ kind: 'new' })
-    setEpoch((e) => e + 1)
-    return { words: [copy.workbenchRailApplyDone, ...(state.leftOverNote !== undefined ? [state.leftOverNote] : [])].join(' '), applied: true }
+    const done = inRec ? [copy.workbenchRailApplyDoneRec, ...(ownRef.current.length > 0 ? [copy.workbenchRailApplyOwnStays] : [])] : [copy.workbenchRailApplyDone]
+    return { words: [...done, ...(state.leftOverNote !== undefined ? [state.leftOverNote] : [])].join(' '), applied: true }
   }, [model, recBundle, slot])
 
   const load = useCallback((bundle: readonly WhatIfLeverV6[], next: LeftSource) => {

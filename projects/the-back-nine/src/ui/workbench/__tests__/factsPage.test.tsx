@@ -259,12 +259,18 @@ describe('the step sheet’s ending (U8 review: A1, A2, A3, C2)', () => {
     expect(recompute.mock.calls).toEqual([['final']])
   })
 
-  it('a dismiss never lets a refused value in: the draft goes back to what it held at open, typed or blurred (A2)', async () => {
-    const atOpen = DEV_SEEDS.budget.people[0].pia
+  it('a dismiss never lets a refused value in, and never puts finished work back with no word: over a refused edit the sheet stays open with its error, as Done does, typed or blurred (A2; round 3 of the milestone-1 review)', async () => {
+    const atOpen = DEV_SEEDS.budget.people[0]
     for (const blur of [true, false]) {
       openRoomOn(DEV_SEEDS.budget)
       fireEvent.click(door(copy.workbenchFactsSocialSecurity))
       const sheet = screen.getByRole('dialog', { name: copy.workbenchFactsSocialSecurity })
+      // A finished edit the step takes, then a refused one in the same step.
+      const claim = within(sheet).getAllByLabelText(copy.ssClaimLabel)[0]!
+      fireEvent.focus(claim)
+      fireEvent.change(claim, { target: { value: String(atOpen.birthYear! + 70) } })
+      fireEvent.blur(claim)
+      expect(atOpen.socialSecurityClaimAge, '[test setup] the claim age moves').not.toBe(70)
       const pia = within(sheet).getAllByLabelText(copy.ssAmountLabel)[0]!
       act(() => pia.focus())
       fireEvent.change(pia, { target: { value: '30,000' } })
@@ -273,9 +279,20 @@ describe('the step sheet’s ending (U8 review: A1, A2, A3, C2)', () => {
         expect(draftNow().people[0].pia, '[test setup] the refused monthly figure landed').toBe(360_000)
       }
       fireEvent.keyDown(sheet, { key: 'Escape' })
-      expect(draftNow().people[0].pia, `blurred: ${blur}`).toBe(atOpen)
+      expect(screen.getByRole('dialog', { name: copy.workbenchFactsSocialSecurity }), `blurred: ${blur}: the sheet stays`).toBeInTheDocument()
+      expect(within(sheet).getAllByRole('alert').length, 'it says why').toBeGreaterThan(0)
+      expect(draftNow().people[0].socialSecurityClaimAge, 'the finished edit is still there').toBe(70)
+      expect(recompute, 'the refused figure reaches no answer').not.toHaveBeenCalled()
+      // Fixed, a dismiss closes and keeps the finished edit.
+      fireEvent.focus(pia)
+      fireEvent.change(pia, { target: { value: '2,100' } })
+      fireEvent.blur(pia)
+      fireEvent.keyDown(sheet, { key: 'Escape' })
       await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+      expect(draftNow().people[0].socialSecurityClaimAge).toBe(70)
+      expect(draftNow().people[0].pia).toBe(25_200)
       cleanup()
+      recompute.mockClear()
     }
   })
 

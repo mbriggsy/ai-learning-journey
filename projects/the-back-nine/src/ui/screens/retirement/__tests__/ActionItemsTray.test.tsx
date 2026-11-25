@@ -293,6 +293,10 @@ describe('Apply — the one write (R16, R22; insight 158)', () => {
     fireEvent.click(applyButton())
     expect(within(tray()).getByText(copy.workbenchRailApplyDone)).toBeInTheDocument()
     typeIn(copy.workbenchRailSpendTotalLabel, '50,000')
+    // An edit typed after Apply is not in the plan: "Your plan now holds these changes" goes, and the line says the edit
+    // waits for Refresh (round 3 of the milestone-1 review).
+    expect(within(tray()).queryByText(copy.workbenchRailApplyDone)).toBeNull()
+    expect(tray().querySelector('[data-tray-words]')).toHaveTextContent(copy.trayPending)
     fireEvent.click(refresh())
     fireEvent.click(within(tray()).getByRole('button', { name: copy.trayReset }))
     expect(within(tray()).queryByText(copy.workbenchRailApplyDone)).toBeNull()
@@ -486,6 +490,25 @@ describe('the Recommended side (R22)', () => {
     expect(l.many.request).toHaveBeenCalledTimes(2)
     fireEvent.click(refresh())
     expect(l.many.request, 'the same bundle again: one more ask').toHaveBeenCalledTimes(3)
+  })
+
+  it('Apply on the Recommended pick keeps the household’s own what-if: it comes back on its side, and the words name the recommendation’s changes (round 3 of the milestone-1 review)', async () => {
+    const user = userEvent.setup()
+    const l = openTray(DEV_SEEDS.retired, { recommendation: { record: record({ kind: 'plan', plan }), current: true } })
+    await waitFor(() => expect(l.many.request, '[test setup] the record ran on landing').toHaveBeenCalledTimes(1))
+    fireEvent.click(within(tray()).getByRole('button', { name: copy.workbenchRailRecLeave }))
+    typeIn(copy.workbenchRailSpendTotalLabel, '60,000')
+    fireEvent.click(refresh())
+    await l.settleWhatIf()
+    await user.click(screen.getByRole('combobox', { name: copy.probabilityPickerLabel }))
+    await user.click(await screen.findByRole('option', { name: copy.probabilityPickRecommended }))
+    await l.settleWhatIf()
+    expect(within(tray()).getByText(copy.workbenchRailRecShowing), '[test setup] the recommendation shows').toBeInTheDocument()
+    fireEvent.click(applyButton())
+    expect(draftNow().drawdownPolicy, 'the recommendation’s order is in the plan').toBe('custom')
+    expect(draftNow().annualSpendingReal, 'and the household’s own what-if is not').not.toBe(60_000)
+    expect(tray().querySelector('[data-tray-words]')!.textContent).toContain(`${copy.workbenchRailApplyDoneRec} ${copy.workbenchRailApplyOwnStays}`)
+    expect(within(tray()).getByLabelText(copy.workbenchRailSpendTotalLabel), 'the own what-if is back on its side').toHaveValue('60,000')
   })
 
   it('a record the store no longer reads as current, or one saved before version 6, runs nothing', async () => {

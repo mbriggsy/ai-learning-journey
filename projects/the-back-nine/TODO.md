@@ -456,7 +456,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    (`copy.ts:1157`, `:1162, :1213, :1171, :1179, :1181` — selected by `composeRothOmissionsNote`'s 2×3 matrix, whose
    ACA-priced arm already AFFIRMS the subsidy is counted, so a trend sentence must reconcile with that
    affirmation, not append to it) + the two health-control siblings (`copy.ts:1327`, `:1333`), which CANNOT take it
-   (gated on `statePriced` alone — `copy.ts:1319-1321`). Unfiled: `shadowRateHeadroom` (`copy.ts:4628`)
+   (gated on `statePriced` alone — `copy.ts:1319-1321`). Unfiled: `shadowRateHeadroom` (`copy.ts:4638`)
    quotes cliff headroom against an SLCSP that never trends — the headroom figure inherits the held-price
    optimism; and there is NO ACA cost-trend constant at all (`health.ts` carries only `medicareCostTrend`)
    — ACA premiums are the one health channel with no trend, no clause AND no disclosure, in the
@@ -526,7 +526,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      `sanity.ts:67-92`). ⚑ **Size is M, not S, and a ceiling is the wrong instrument:** a 10× slip on
      $500k is $5M — a perfectly coherent household, so no threshold catches it. The shape that works is
      **one confirm on the household TOTAL** at the accounts step (the figure the engine actually consumes),
-     reusing the running total already rendered at `copy.ts:3126` / `questions.tsx:1066-1068`.
+     reusing the running total already rendered at `copy.ts:3136` / `questions.tsx:1066-1068`.
      ⚑ **"Briggsy sets the number" is the WRONG ask — there IS no honest number** (every total is
      coherent, so any threshold is the guessed plausibility band burned/062 bans). The only rule that
      invents nothing is an **unconditional** one-tap confirm for any household with ≥1 account. That is a
@@ -694,9 +694,9 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     household (up to **14** steps — 8 unconditional + 6 gated, `steps.ts:83-108`) if the
     reader confirms the dialog, because nothing is written until Save (the D1 law; a plaintext
     draft outside the vault is a security-posture ruling, never a build) · the
-    `schemaVersion` migration ladder **does not exist as code for versions 1 and 2** — `IntakeApp.tsx:814`
+    `schemaVersion` migration ladder **does not exist as code for versions 1 and 2** — `IntakeApp.tsx:817`
     refuses anything but the current version, so a v1/v2 plan decodes ok, then meets "That didn't work. Try
-    again." over a reload that cannot succeed (`IntakeApp.tsx:955-972`), and its backups fail identically
+    again." over a reload that cannot succeed (`IntakeApp.tsx:958-975`), and its backups fail identically
     (same bytes, `backup.ts:84-93`). No build ever wrote either. *(Re-scoped 2026-10-31, b9-3: this bullet
     said a future v4 would push today's v3 vaults into that arm. The schema-v4 bump did not: version 3
     relabels to 4 at decode, a label-only step — `docs/architecture.md` §7.3.)* · there is **no way to delete the vault** (`clearVault` exists; its only PRODUCTION
@@ -709,14 +709,14 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     copy" and both nearest register entries — *The aged surface — every 2026 plan changes wording on 2027-01-01, unreviewed* and *Unscored Caddie tape rows plus the four aged-surface tone calls due before 2027-01-01* — are owned **briggsy**; neither is a copy fix; the "three arms with
     corrected costs" existed NOWHERE — they are now written, with sizes, under the register's "The aged
     surface" entry. A shipped copy defect on the SAME cohort WAS pilot and is FIXED (2026-09-04: the singular arm ships at
-    `copy.ts:4532-4534` under the NUMBER AGREEMENT post-mortem at `copy.ts:4518`, covered by `copyGuard.test.ts:1086`):
+    `copy.ts:4542-4544` under the NUMBER AGREEMENT post-mortem at `copy.ts:4528`, covered by `copyGuard.test.ts:1086`):
     `rothPlanRanked` hardcoded the plural "Those years are counted from…" after a correctly-singular "for 1 year" —
     live for any at/past-RMD household on an aged vault (the 1-year clamp, `solveAnchor.ts:263-264`) — and no test
     covered `years: 1, passed: true`. (b) THE LADDER is register `L` · **pilot**, and the v2→v3 ALGORITHM IS
     PRESCRIBED: `model.ts:1882-1884` mints synthetic entered accounts from the old aggregates "so the ladder
     stays total"; the write primitive exists (`db.ts:232 rewriteModel`, pinned `db.test.ts:180`); today's
     ladder is decode-and-return with NO migrate step (`scenarioCodec.ts:1301-1308`, the v1/v2 arms), and a v1 vault survives
-    every store seam on real IndexedDB (`e2e/vaultHarness.ts:24-25`) to die only at `IntakeApp.tsx:814`.
+    every store seam on real IndexedDB (`e2e/vaultHarness.ts:24-25`) to die only at `IntakeApp.tsx:817`.
     Two new defects ride with it: `session.ts:464-468` claims the writer and UNLOCKS before the version is
     judged (the recovery path claims unconditionally, `:539`), and `backup.ts:209-213` LANDS a legacy backup
     on a clean device and only then dead-ends. Size M–L, not S. His word narrows to the TERMINAL arm's
@@ -810,7 +810,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     page and the codified G.S. page both still show the struck "after 2025 — 3.99%", so they read as
     CONTRADICTING the pinned record until they recompile — **session law wins, do not "correct" the
     engine table back to a flat 3.99%.** Comment-only; typecheck · lint · 3289 tests · state-tax gate
-    all green. (`copy.ts:4948` and `caseStateCompanions.ts` were already correct — swept 2026-08-02.)
+    all green. (`copy.ts:4958` and `caseStateCompanions.ts` were already correct — swept 2026-08-02.)
     ⚑ **The CVD half of this cluster is PARKED, not owed — do not re-propose it.** The filed gap ("the CVD
     crops prove PRESENCE only") is real, and a `verify:cvd` pixel-regression gate was designed for it on
     2026-08-02. **Briggsy declined it on the only authority that can:** *"I'm pretty color blind and I think
@@ -826,7 +826,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     screen reader outside require-hedge — the AT twin of the gated `recDeltaTypical` — and its exclusion was
     a RECORDED decision in the SLOT_RENDER fixture's own comment, so the fix reversed a stated call, not an
     accident. **DONE 2026-09-08:** RENAMED onto the existing `recDelta` control prefix (`recDeltaVizAria`,
-    `copy.ts:5343`; a new `recViz` prefix would red the three hedge-free arm labels — each measured to red
+    `copy.ts:5353`; a new `recViz` prefix would red the three hedge-free arm labels — each measured to red
     `require-hedge` on its own) + a catalog canary over `/^rec(?!over)/` (a bare `/^rec/` reds the 16
     innocent `recovery*`/`recover*` intake keys) with a NAMED allowlist that SPLITS flat keys from slots
     (unscoped flat keys get 2 gates, unscoped slots get 3 + catastrophe). Scope is decided ONLY in the test

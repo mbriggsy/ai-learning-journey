@@ -605,7 +605,7 @@ describe('the save gesture — R1: with no vault the tap MINTS and opens the cer
      *
      * So this arm FORCES the two apart — the only way the difference becomes observable — by
      * making the fresh read return a sentinel no committed run could produce. The gesture consumes
-     * `currentDraftFingerprint()` nowhere (`IntakeApp.tsx:704-835` reads only the snapshot), so the
+     * `currentDraftFingerprint()` nowhere (`IntakeApp.tsx:704-838` reads only the snapshot), so the
      * mock cannot perturb the path under test.
      *
      * MUTANT: `s.solve.fingerprint` → `appModel.currentDraftFingerprint()` at the mint — this reds.
@@ -664,6 +664,26 @@ describe('the save gesture — R1: with no vault the tap MINTS and opens the cer
       expect(screen.queryByText(copy.shellCeremonyOpenEntry), 'the tap’s ask is gone').toBeNull()
       expect(draftRecord(), 'the unanswered keep put nothing on the draft').toBeUndefined()
       expect(screen.queryByTestId('ceremony')).toBeNull()
+    } finally {
+      release()
+    }
+  })
+
+  it('a second tap while the first tap’s ask stands (the ask is not modal) keeps the record captured at the first: Stay takes the mint off', async () => {
+    // MUTANT: capture the prior record on every tap: the second takes the first mint as the prior, Stay writes it back,
+    // and the next plan save carries a memory the household never finished keeping (R2; round 3 of the milestone-1
+    // review) — this reds.
+    await mountFresh()
+    const release = holdUnsavedBuffer()
+    try {
+      await tapSave()
+      expect(screen.getByText(copy.shellCeremonyOpenEntry), '[test setup] the tap asks first over the open entry').toBeInTheDocument()
+      await tapSave()
+      expect(draftRecord(), 'the second tap minted again').not.toBeUndefined()
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: copy.workbenchLeaveStay }))
+      })
+      expect(draftRecord(), 'Stay put nothing on the draft').toBeUndefined()
     } finally {
       release()
     }

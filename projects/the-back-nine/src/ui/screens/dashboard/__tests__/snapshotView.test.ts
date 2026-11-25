@@ -276,6 +276,19 @@ describe('Snapshot on a floor-keyed answer (`datemixed`: the floor dated at 7, t
     expect(plain.kind === 'figures' && plain.trackNote).toBeUndefined()
   })
 
+  it('with no date in the window, the dials name the window-top year their rows stop work in, as the ring does; a dated answer’s dials keep their plain labels (round 3 of the milestone-1 review)', () => {
+    const { rows, meta } = steadyFor(answer)
+    const noDate = { ...meta, route: 'no-date', stopYear: meta.startCalendarYear + 10 } as const
+    const stats = snapshotView(input(s, { steady: { kind: 'rows', rows, meta: noDate } })).stats
+    if (stats.kind !== 'figures') throw new Error(`[test] ${stats.kind}`)
+    expect(stats.rate.label).toBe(slots.snapshotStatRateNoDateLabel(noDate.stopYear))
+    expect(stats.tax.label).toBe(slots.snapshotStatTaxNoDateLabel(noDate.stopYear))
+    const dated = snapshotView(input(s, { steady: { kind: 'rows', rows, meta } })).stats
+    if (dated.kind !== 'figures') throw new Error(`[test] ${dated.kind}`)
+    expect(dated.rate.label).toBe(copy.snapshotStatRateLabel)
+    expect(dated.tax.label).toBe(copy.snapshotStatTaxWorkingLabel)
+  })
+
   it('the fan says it prices the essentials only, with both spending levels (essentials $52,000 of lines plus $8,000 medical; the full $90,000 plus the same)', () => {
     const fan = snapshotView(input(s)).fan.view
     expect(fan.kind === 'chart' && fan.trackNote).toBe(slots.bandPricesEssentialsWithLevels('60,000', '98,000'))

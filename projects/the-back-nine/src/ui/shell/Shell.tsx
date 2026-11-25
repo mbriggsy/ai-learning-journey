@@ -1139,11 +1139,20 @@ export default function Shell({
   )
 
   // ── The StaleBanner (RC4): the old answer page's staleness note, aged-balances line and standing line ──────────────
-  // Social Security and Stress Test print the plan's odds, so the lines that say those odds may read better than they
-  // are (the stale pay check, the aged balances, the staleness note) ride above them too.
+  // Every page that prints figures run from the saved balances and pay carries the lines that say those figures may read
+  // better than they are (the stale pay check, the aged balances, the staleness note): Social Security and Stress Test
+  // (their odds), Tax Strategies (its solve, which a reader acts on: Keep, Try it, Apply) and Health Care (its lifetime
+  // costs) too (milestone 2's review, round 3: an aged plan's Find printed its strategies with no aged line there).
   const figured =
-    screen === 'snapshot' || screen === 'probability' || screen === 'confidence' || screen === 'cash-flows' || screen === 'social-security' || screen === 'stress-test'
-  const inFrameCaveat = figured || screen === 'tax-strategies' || screen === 'health-care' || screen === 'asset-allocation' || screen === 'tax-allocation'
+    screen === 'snapshot' ||
+    screen === 'probability' ||
+    screen === 'confidence' ||
+    screen === 'cash-flows' ||
+    screen === 'social-security' ||
+    screen === 'stress-test' ||
+    screen === 'tax-strategies' ||
+    screen === 'health-care'
+  const inFrameCaveat = figured || screen === 'asset-allocation' || screen === 'tax-allocation'
   // Cash Flows too, aged line and door included: its row-one line (`workbenchAged`) names the build year and claims nothing
   // about the balances, so the two lines say two causes (round 3 of the milestone-1 review).
   const staleLines = useMemo(
@@ -1393,6 +1402,7 @@ export default function Shell({
         ) : strat !== null ? (
           <>
             {leave}
+            {staleBanner}
             <TaxStrategies
               headingRef={headingRef}
               strategies={strat}
@@ -1467,6 +1477,7 @@ export default function Shell({
         ) : healthPage !== null ? (
           <>
             {leave}
+            {staleBanner}
             <HealthCare
               headingRef={headingRef}
               view={healthPage}

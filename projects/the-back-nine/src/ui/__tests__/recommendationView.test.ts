@@ -324,15 +324,18 @@ describe('recommendationView — the committed beat (Q1 delta-as-hero + source-b
     expect(noSpine.survivalContext).toBeUndefined()
   })
 
-  it('no-change (winner IS prior OR sub-tenth collapse): NO dollar hero, the "already" compose reassurance', () => {
+  it('no-change (the winner IS your plan): NO dollar hero, the "already" compose reassurance; a sub-tenth collapse alone is NOT no-change', () => {
     const byPrior = asRec(recommendationView(committed(leaveMoreRec({ noChange: true })), { spineConfidence: spine }))
     expect(byPrior.mode).toBe('no-change')
     expect(byPrior.grade.deltaFigure, 'no fabricated dollar hero in no-change').toBeUndefined()
     expect(byPrior.grade.heroLine).toBe(copy.recComposeAlready)
-    // the subTenthCollapse source ALSO routes to no-change (a HOT path).
+    // Milestone 2's review, round 3 (a P0): the grade's subTenthCollapse compares the winner with the RUNNER-UP, never
+    // with your plan, so on `?seed=order` it said "already on one of the strongest paths" while switching saved ~$45,000.
+    // A winner that beats your plan shows its dollar delta against your plan, whatever the runner-up's tenth.
     const bySubTenth = asRec(recommendationView(committed(leaveMoreRec({ grade: grade('just-do-it', true) })), { spineConfidence: spine }))
-    expect(bySubTenth.mode).toBe('no-change')
-    expect(bySubTenth.grade.deltaFigure).toBeUndefined()
+    expect(bySubTenth.mode).toBe('active')
+    expect(bySubTenth.grade.deltaFigure, 'the dollar delta against your plan shows').toBeDefined()
+    expect(bySubTenth.grade.heroLine).not.toBe(copy.recComposeAlready)
   })
 
   it('R23: the runner-up is RETAINED (hedged "why" text); a set without a runner-up carries none (stripping fails the suite)', () => {
@@ -563,8 +566,12 @@ describe('recommendationView — the Summary bars (RC8: the hero’s statistic, 
     expect(runner.value).toBe(slots.taxStratValue(formatDeltaDollar(higherRunnerUp.headlineStatisticB)))
     expect(runner.shade).toBe(0)
     expect(runner.note).toBe(slots.recRunnerUpAheadHere(true))
-    // A reason true on every crown (a tie-break crown included): never a frequency nothing counts.
-    expect(runner.note).toContain('ranked on a separate set of futures, where the recommended one came out ahead or the two came out about even')
+    // A reason true on every crown (a tie-break crown included): never a frequency nothing counts. The odds are named as
+    // the ranking's first key (round 3: a crown won on odds alone, with the runner-up's figure ahead on both sets).
+    expect(runner.note).toContain('puts the odds the money lasts ahead of this figure')
+    expect(runner.note).toContain('a hair’s difference in those odds, or this figure as it reads there, can put it first')
+    expect(copy.recRunnerUpWhy).toContain('the odds the money lasts first')
+    expect(copy.recRunnerUpWhy, 'never "ran close": the runner-up can trail by a wide margin').not.toMatch(/ran close/)
     expect(runner.note).not.toMatch(/more often/)
   })
 })

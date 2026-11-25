@@ -57,6 +57,8 @@ const SURVIVAL_MUST_CATCH: readonly string[] = [
   'Lower tax with no loss in safety.',
   'It doesn’t cost you any odds.',
   'This plan wins on survival.',
+  // Milestone 2's review, round 3: "on THE odds" slipped the gate.
+  'There the recommended one came out ahead on the odds the money lasts.',
   'A less risky way to draw the accounts down.',
   'Your current order is riskier.',
 ]

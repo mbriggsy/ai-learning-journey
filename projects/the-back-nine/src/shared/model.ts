@@ -2543,9 +2543,10 @@ export interface SavedRecommendationVerdictV3 {
    *  runner-up to grade against) — absence IS the sentinel (burned/062), never a defaulted
    *  'coin-flip', which would fabricate a reading the run never made. */
   readonly grade?: SavedRecommendationGrade
-  /** The grade's own qualifier (`GradeResult.subTenthCollapse`): the advantage cleared every
-   *  band but rounds below one display tenth, so the caller routes it into the no-change state
-   *  rather than an unchanged-looking win.
+  /** The grade's own qualifier (`GradeResult.subTenthCollapse`): the winner's advantage over the
+   *  runner-up cleared every band but rounds below one display tenth. Recorded with the grade; no
+   *  surface routes on it since milestone 2's review, round 3 (`recommendationView.ts`: it never
+   *  compares the household's plan, and the hero is a dollar delta against that plan).
    *
    *  PRESENT **IFF** `grade` IS PRESENT — the codec enforces the biconditional in BOTH directions
    *  (the `action.drawdownOrder`-iff-`custom` idiom in the same file, and the
@@ -2554,8 +2555,7 @@ export interface SavedRecommendationVerdictV3 {
    *  a required boolean would force the withheld arm's writer to invent a `false`, which is
    *  precisely the structurally-dormant disclosure fed from an empty default that solve.ts's
    *  phasing law forbids ("the figure and its disclosure land TOGETHER"). Absent grade ⇒ no
-   *  qualifier to make; present grade ⇒ the qualifier ships with it, so no card can overstate a
-   *  win the engine already demoted. */
+   *  qualifier to make; present grade ⇒ the qualifier ships with it. */
   readonly subTenthCollapse?: boolean
   /** The winner IS the conventional prior — the no-change routing signal (R25). Persisted
    *  because "we looked and your current strategy already wins" is a DIFFERENT remembered
@@ -2572,14 +2572,13 @@ export interface SavedRecommendationVerdictV3 {
    * WHY IT CANNOT BE RE-DERIVED FROM THIS RECORD, which is the whole reason it is a stored field.
    * Its producer is `recommendationView.ts`:
    *     `const noDollar = isNoChange || !winnerDisplaysAhead || deltaCollapsesToZero`
-   * Only the first disjunct (`noChange || subTenthCollapse`) is reconstructible here. The other
+   * Only the first disjunct (`noChange`) is reconstructible here. The other
    * two are read off seed-B headline figures — the winner's and the no-action baseline's — that
    * this record DELIBERATELY does not carry (no remembered dollars; see the interface header). So
    * a record minted from a display-INVERSION run, or from a delta that formats to `'0'`, would be
    * BYTE-IDENTICAL to a record minted from a live "switch to taxable-first, keeps ~$41k more"
    * surface. The card would then re-tell as an ACTIVE switch a run whose own live surface refused
-   * to claim any switch at all — the exact overstatement the sub-tenth-collapse rationale exists
-   * to prevent, in the calm-but-wrong direction.
+   * to claim any switch at all — an overstatement in the calm-but-wrong direction.
    *
    * IT MUST BE COPIED FROM THE VIEW'S OWN `noDollar` AT MINT (S5), NEVER RE-COMPUTED. Insight 081
    * is binding: single-sourcing by re-deriving a producer's inputs forks at that producer's first

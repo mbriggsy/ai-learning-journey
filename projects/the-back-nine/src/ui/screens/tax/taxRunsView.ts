@@ -71,9 +71,9 @@ export type TaxRunsGate = { readonly kind: 'run' } | { readonly kind: 'words'; r
 /** Whether Comparison and Details run the two strategies year by year: only beside an ACTIVE Winner card. Anywhere
  *  else they say the Strategies tab's own words for that state, never a chart of "the recommended strategy" the
  *  Strategies tab does not stand behind: before a solve, the waiting words; the no-dollar register, the same-as-plan
- *  words where the winner IS the plan (`noChange`) and the card's own hero line where it is not (a sub-tenth collapse,
- *  a seed-B inversion, a delta that rounds to $0: the crowned plan differs, so "your plan as it stands" would be
- *  false); a payload the render guard refused (Q6), the Strategies tab's unavailable words. */
+ *  words where the winner IS the plan (`noChange`) and the card's own hero line where it is not (a seed-B inversion,
+ *  a delta that rounds to $0: the crowned plan differs, so "your plan as it stands" would be false); a payload the
+ *  render guard refused (Q6), the Strategies tab's unavailable words. */
 export function taxRunsGate(strat: StrategiesView, payload: SolveRecommendation | null): TaxRunsGate {
   if (payload === null || strat.kind !== 'solve') return { kind: 'words', words: copy.taxStratWaiting, toStrategies: true }
   const w = strat.winner

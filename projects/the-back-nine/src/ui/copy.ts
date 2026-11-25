@@ -2317,11 +2317,13 @@ export const copy = {
   // The compose state (surplus + no-change): NO-dollar reassurance, the word "already" carrying the
   // relief, the inherited confidence carrying the honesty. Never a fabricated dollar hero, never "safe
   // either way" (DEAD COPY). recCompose* ⇒ require-hedge-swept ("likely" carries it).
-  // ⚠️ GATED ON FOUR DISJUNCTS (`recommendationView.ts` `noDollar`): `noChange` OR the grade's
-  // `subTenthCollapse` (plan R25) OR a seed-B display inversion OR a delta that formats to $0. `noChange`
-  // CHANGED MEANING 2026-08-03: it once meant "the winner is the CONVENTIONAL default" (so a household told to
-  // switch off its order read "already"); now "the crowned plan IS yours" (by PLAN, `select.ts`'s `isNoChange`).
-  // On the other three the crown is NOT their plan: "already" rides the two being display-indistinguishable.
+  // ⚠️ GATED ON THREE DISJUNCTS (`recommendationView.ts` `noDollar`): `noChange` OR a seed-B display inversion
+  // OR a delta that formats to $0. `noChange` CHANGED MEANING 2026-08-03: it once meant "the winner is the
+  // CONVENTIONAL default" (so a household told to switch off its order read "already"); now "the crowned plan IS
+  // yours" (by PLAN, `select.ts`'s `isNoChange`). On the other two the crown is NOT their plan: "already" rides the
+  // two being display-indistinguishable on the goal's dollars. The grade's `subTenthCollapse` was a fourth until
+  // milestone 2's review, round 3 (a P0): it compares winner and runner-up, never the household's plan, so `order`
+  // read "already" while switching saved ~$45,000.
   recComposeAlready:
     'You’re already on one of the strongest paths we tested — nothing else we tried looks likely to pull clearly ahead.',
 
@@ -2350,8 +2352,12 @@ export const copy = {
 
   // The runner-up, one tap down as TEXT (R23 — retained + reachable; stripping it fails the suite).
   // recRunnerUp* ⇒ swept ("often" carries it).
+  // The ranking's own rule, true on every crown (`select.ts`): odds first, then the goal's figure (milestone 2's review,
+  // round 3: "came out ahead" alone read as the figure, though a crown can be won on odds alone with the runner-up's
+  // figure ahead on both sets of futures; and "ran close" was unsupported where the runner-up trails by a wide margin).
+  // The RULE only, never a survival win or tie for the crown (`SURVIVAL_CLAIMS`, council `wf_6e72eca9-c20`).
   recRunnerUpWhy:
-    'The runner-up ran close; on the set of futures the strategies are ranked on, this one came out ahead or the two came out about even.',
+    'The strategies are ranked on a separate set of futures, the odds the money lasts first and this goal’s figure only after that, so a hair’s difference in those odds, or the figure as it reads there, can be what puts this one ahead of the runner-up.',
 
   // The WITHHELD reasons — one humane string per WithheldReason arm (Q5: the TRUE reason, the DIRECTION
   // honestly, framed as REFUSING TO GUESS; an unclassified reason fails CLOSED with the generic). The
@@ -5075,7 +5081,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:2265` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:2267` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,
@@ -5769,10 +5775,14 @@ export const slots = {
   /** Under the runner-up's row when its figure beats the recommended one's in the goal's direction. The reason holds on
    *  every crown (`select.ts`): the ranking reads its own set of futures (seed A; the printed figures are seed B's), odds
    *  first, then the goal's figure with a lead inside the noise counted as none, a near-tie going to the usual order. So
-   *  the recommended one either came out ahead there or the two were too close to split; never "ahead more often", a
-   *  frequency nothing counts and the tie-break crown contradicts. "About" carries the require-hedge sweep. */
+   *  a hair's difference in those odds, or the figure as it reads there, can put the recommended one first; never "ahead
+   *  more often", a frequency nothing counts and the tie-break crown contradicts. The odds are NAMED as the first key
+   *  (milestone 2's review, round 3): on `borderline`'s leave-more crown the winner leads by 9 futures in 16,000 while
+   *  the runner-up leaves about $10,000 more on both sets, and "came out ahead" alone read as the figure, so a steady
+   *  lead read as a quirk of one set. It states the RULE, never a survival win or tie for the crown (`SURVIVAL_CLAIMS`,
+   *  council `wf_6e72eca9-c20`: a tolerance-0 crown's edge on the odds can be noise). "Can" carries the hedge sweep. */
   recRunnerUpAheadHere: (higher: boolean): string =>
-    `Its average prints ${higher ? 'higher' : 'lower'} here, yet the recommended strategy ranks first: the strategies are ranked on a separate set of futures, where the recommended one came out ahead or the two came out about even.`,
+    `Its average prints ${higher ? 'higher' : 'lower'} here, yet the recommended strategy ranks first: the ranking reads a separate set of futures and puts the odds the money lasts ahead of this figure, so a hair’s difference in those odds, or this figure as it reads there, can put it first.`,
   taxStratValue: (fig: string): string => `~$${fig}`,
   taxStratRothRow: (amount: string, years: number): string =>
     `Roth: ~$${amount} a year for ${years === 1 ? '1 year' : `${years} years`}`,

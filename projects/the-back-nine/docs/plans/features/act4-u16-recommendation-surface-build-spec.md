@@ -263,7 +263,7 @@ to a single commit.
   line — one component, one semantic group (`role="group"` + `aria-describedby`), **one crossfade
   key** (the `.cs-swap` / `@starting-style` CSS-only idiom — a separate fade paints a fresh grade
   beside a stale hedge). The shape note renders the pre-composed `composeShapeDisclosure()` output
-  (`gradeCalibration.ts:457`) translated to HUMANE language ("these two are so close, treat it as a
+  (`gradeCalibration.ts:460`) translated to HUMANE language ("these two are so close, treat it as a
   lean, not a lock" register) — never machine phrasing. Not a fold, not a footnote, not one tap
   down.
 - **The delta hero's MEDIAN qualification** (the median-advantage increment, 2026-07-23, `8b9cab61`
@@ -291,7 +291,7 @@ to a single commit.
   the 2026-08-02 pin**, because it promised a month tied to NC's own certification that no longer
   gates anything, and a withhold that names a date it cannot keep is exactly the promise this
   product must not make. A future state's pin event may have any timing, so the shipped slot commits
-  to none (`copy.ts:5116`).
+  to none (`copy.ts:5122`).
 - **No live household fires the withheld render today, and that is a CLEARED clause, not a
   regression.** Both blocking clauses cleared after U16 shipped: S.L. 2026-41 § 44.1(a) pinned
   `ncRateSchedule` to an enacted statutory schedule on 2026-08-02, retiring the last directional
@@ -314,7 +314,7 @@ to a single commit.
   `recHoldAcaUnverified`, `rec-relevant-primary-directional` → `recHoldPrimaryDirectional`,
   `epsilon-uncalibrated` → `recHoldEpsilon`, `state-certification-pending` → the
   `recHoldStateCert` SLOT; `recHoldGeneric` is the fail-CLOSED humane string an unclassified reason
-  lands on (`recommendationView.ts:371`, `:399`). Two further hold strings ship BESIDE the enum, not
+  lands on (`recommendationView.ts:372`, `:400`). Two further hold strings ship BESIDE the enum, not
   from it: `recHoldCoupling` (the Q5 coupling caveat) and `recHoldDemotionAxis` — the latter added
   2026-08-03 as the Tier-0 crash fix, since a well-funded household whose winner converts used to hit
   `gradeCalibration`'s plain throw and land on the generic compute-error card. It names the shape
@@ -334,7 +334,7 @@ to a single commit.
   lockup rather than folded into that label; scrub stays pointer-only sugar.
 - The surface renders no percentile of its own: the survival context is source-bound BY REFERENCE
   to the spine's rendered confidence object (Q1), which is where the `displayTenth`/`xOfTenClamp`
-  convention lives (`confidence.ts:71`, `gradeCalibration.ts:102`). Nothing is re-typed.
+  convention lives (`confidence.ts:71`, `gradeCalibration.ts:105`). Nothing is re-typed.
 - **`assertObjectiveMatchesHeadline(payload)`** (`src/engine/solver/objectiveHeadline.ts:174`): a
   PURE exported guard the render path AND a unit test both call — the statistic that RANKED
   (seed-A tier2) ≡ the statistic DISPLAYED (seed-B headline) — with PLANTED-MISMATCH arms proving
@@ -344,7 +344,7 @@ to a single commit.
 
 - "Name the active baseline" shipped as a short STATIC label on the no-action figure —
   `copy.recommendBaselineNameplate`, "Compared with your plan today", carried on the view as
-  `baselineNameplate` (`recommendationView.ts:267`, `:697`). NO number. The A↔B residual is never
+  `baselineNameplate` (`recommendationView.ts:268`, `:703`). NO number. The A↔B residual is never
   rendered, quantified, or narrated.
 
 ### The rest of S3, and its nets

@@ -3,8 +3,8 @@
  * view-model the render consumes).
  *
  * A DOWNSTREAM RENDERER (insight 020): this maps the store's structured `SolveAnswer` — the committed
- * payload's PRE-COMPUTED flags (`noChange`, `surplusRegime`, the grade + its `subTenthCollapse`, the
- * named driver, `skewDisclosure`, `withheldConversionLevers`) — to a fully copy-RESOLVED view, and
+ * payload's PRE-COMPUTED flags (`noChange`, `surplusRegime`, the grade, the named driver,
+ * `skewDisclosure`, `withheldConversionLevers`) — to a fully copy-RESOLVED view, and
  * RE-DERIVES NONE of it (the held-out A-decides / B-displays split is this surface's CRN; every wall
  * below is a corollary). It handles EVERY payload shape (active rec / surplus / no-change / withheld
  * (token + conversion) / refused / mint-failed / unwitnessable / demotion / aborted / the §S1 stale
@@ -239,11 +239,12 @@ export interface WinnerActionView {
 /** The committed RECOMMENDATION view — active / surplus / no-change share ONE lockup shape, mode-keyed. */
 export interface RecommendedView {
   readonly kind: 'recommended'
-  /** `active` = a delta hero shows; `no-change` = the compose reassurance (`noChange` OR the grade's
-   *  `subTenthCollapse` — a HOT path, oracle cases i/v — OR a seed-B display inversion where the
-   *  A-crowned winner shows BEHIND the no-action baseline OR the goal-dollar delta collapses to a
-   *  formatted $0: a fabricated positive "keeps ~$X more" (or a "$0 more" hero) is calm-but-wrong, so
-   *  the render routes to the no-dollar register, winner and baseline being display-indistinguishable). */
+  /** `active` = a delta hero shows; `no-change` = the compose reassurance (`noChange`, the crowned plan IS
+   *  the household's, OR a seed-B display inversion where the A-crowned winner shows BEHIND the no-action
+   *  baseline OR the goal-dollar delta collapses to a formatted $0: a fabricated positive "keeps ~$X more"
+   *  (or a "$0 more" hero) is calm-but-wrong, so the render routes to the no-dollar register, winner and
+   *  baseline being display-indistinguishable). The grade's `subTenthCollapse` routes nothing (round 3 of
+   *  milestone 2's review: it compares winner and runner-up, never the household's plan). */
   readonly mode: 'active' | 'no-change'
   /** The over-funded pivot flag (A and B agree over the ε) — carried for the surface's framing; the
    *  survival context (source-bound below) already carries the honest over-funded reading. */
@@ -613,9 +614,14 @@ function winnerActionView(
 /** The committed RECOMMENDATION (active / surplus / no-change). */
 function recommendedView(payload: SolveRecommendation, opts: RecommendationViewOpts | undefined): RecommendedView {
   const goal = payload.goal
-  // no-change routes BOTH sources (plan R25): the winner IS the prior, OR the survival advantage rounds
-  // below one display tenth (the grade's subTenthCollapse). Either way the compose reassurance shows.
-  const isNoChange = payload.noChange || (payload.grade?.subTenthCollapse ?? false)
+  // no-change is the crowned plan BEING the household's own (plan R25, keyed by plan since 2026-08-03). The grade's
+  // `subTenthCollapse` no longer routes here (milestone 2's review, round 3, a P0): it compares the WINNER with the
+  // RUNNER-UP, never with the household's plan, so on `?seed=order` (winner and runner-up both 7 of 10) the card said
+  // "already on one of the strongest paths" while switching saved ~$45,000 of lifetime tax and premiums and the plan
+  // ranked 14th of 77. S4.4's hazard was an unchanged `X of 10` under "just do it"; its own first remedy is "show the
+  // finer figure", and the hero IS that figure now, a dollar delta against today's plan. Every case where that dollar
+  // would mislead is the inversion and $0 guards' (below), neither of which reads the flag.
+  const isNoChange = payload.noChange
 
   // The A-decides / B-displays INVERSION (wall #1's render corollary, for winner-vs-baseline; the ranked list
   // in `strategiesView.ts` shows the runner-up's own figure): the seed-A-crowned winner can

@@ -93,9 +93,11 @@ describe('Comparison and Details run only beside an active Winner card', () => {
     expect(gateFor(leaveMoreRec({ noChange: true }))).toEqual({ kind: 'words', words: copy.taxStratSameAsPlan, toStrategies: false })
   })
 
-  it('the no-dollar register on a DIFFERENT strategy (sub-tenth, a seed-B inversion): the Strategies tab’s own words, never "your plan as it stands"', () => {
-    const subTenth = gateFor(leaveMoreRec({ grade: grade('just-do-it', true) }))
-    expect(subTenth).toEqual({ kind: 'words', words: copy.recComposeAlready, toStrategies: false })
+  it('a sub-tenth collapse alone is an ACTIVE card (round 3 of milestone 2’s review): both strategies run', () => {
+    expect(gateFor(leaveMoreRec({ grade: grade('just-do-it', true) }))).toEqual({ kind: 'run' })
+  })
+
+  it('the no-dollar register on a DIFFERENT strategy (a seed-B inversion): the Strategies tab’s own words, never "your plan as it stands"', () => {
     const inverted = gateFor(leaveMoreRec({ noActionBaseline: armFor('leave-more', 'proportional|user|0', 'proportional', bequest([450_000, 650_000])) }))
     expect(inverted).toEqual({ kind: 'words', words: copy.recComposeAlready, toStrategies: false })
   })

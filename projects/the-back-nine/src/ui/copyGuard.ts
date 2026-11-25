@@ -334,7 +334,8 @@ export const SURVIVAL_CLAIMS: readonly RegExp[] = [
   /\bwithout (giving up|losing|costing|trading|sacrificing)\s+(any\s+)?(of\s+)?(your\s+)?(safety|odds|survival|chances?)\b/i,
   /\bno (loss|drop|cost|change|hit) (in|to|of) (your\s+)?(safety|odds|survival|chances?)\b/i,
   /\bcosts?\s+(you\s+)?(any|no|nothing in)\s+(odds|safety|survival|chances?)\b/i,
-  /\b(wins?|won|winning|ahead|better) on (survival|safety|odds)\b/i,
+  // "on THE odds" too (milestone 2's review, round 3: "came out ahead on the odds the money lasts" passed the gate).
+  /\b(wins?|won|winning|ahead|better) on (the\s+)?(survival|safety|odds)\b/i,
   /\b(less risky|riskier)\b/i,
 ]
 

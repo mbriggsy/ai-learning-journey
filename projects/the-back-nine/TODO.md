@@ -25,7 +25,7 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-11-25, b9-12):** THE TURNAROUND (Briggsy, 2026-11-24; memory `project-b9-mandate-replicate-rightcapital`): B9's UI becomes a RightCapital clone (never its logo, name or artwork); the engine, store, vault and intake mapping stay; nothing waits on him. Plan `docs/plans/6-rightcapital-ui-plan.md` (RC0 to RC12 built; milestone 2's whole-file review ran rounds 1 and 2, fixed in `a883c5e4`; first run the close block's check line). Next: round 3 of milestone 2's review, the harm-class gate (the close block carries its lenses; every seat Opus at xhigh, one question only: can a milestone-2 screen now print a calm, confident, wrong figure or sentence; P0/P1 only, three refuters each, every survivor fixed), then `/distill` (10 owed), then RC13 (Profile pages: card grids and drawers) opened with `/brief <RC13: Profile pages>`, then RC18 (built straight after RC13), RC14, RC15 and milestone 3's review. Each unit by a fresh builder (plan 7.1); the orchestrator re-runs 7.1's checks (`doc:reanchor` once per commit, `verify:doc-stats`, the unit's arms with `-g`, every `e2e/` spec that greps to a moved surface, the look) and looks at the screenshots itself. The D7 queue and the tiered lists below are pre-turnaround.
+▶ **START HERE (2026-11-25, b9-12):** THE TURNAROUND (Briggsy, 2026-11-24; memory `project-b9-mandate-replicate-rightcapital`): B9's UI becomes a RightCapital clone (never its logo, name or artwork); the engine, store, vault and intake mapping stay; nothing waits on him. Plan `docs/plans/6-rightcapital-ui-plan.md` (RC0 to RC12 built; milestone 2's whole-file review ran rounds 1 and 2, fixed in `a883c5e4`; first run the close block's check line). Round 3 (the harm-class gate) RAN 2026-11-25 (b9-1): two P0s and two P1s fixed in its commit (the commit lists them), the rest in the register's Tier 1 milestone-2 entry; no P0/P1 survives, so milestone 2's review is closed. Next: `/distill` (14 owed), then RC13 (Profile pages: card grids and drawers) opened with `/brief <RC13: Profile pages>`, then RC18 (built straight after RC13), RC14, RC15 and milestone 3's review. Each unit by a fresh builder (plan 7.1); the orchestrator re-runs 7.1's checks (`doc:reanchor` once per commit, `verify:doc-stats`, the unit's arms with `-g`, every `e2e/` spec that greps to a moved surface, the look) and looks at the screenshots itself. The D7 queue and the tiered lists below are pre-turnaround.
 U10's Caddie card stays HARD-FLAG on its two builds (filed Tier 0). The register-wide tier sweep's readings (the
 register header's sweep paragraph) bind the next tier sweep. Next, in order:
 1. **Build 2, the surplus question.** Its plan, `docs/plans/features/working-year-surplus-build-spec.md`, is checked as a whole; its
@@ -417,7 +417,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    the same `escalateQuote` factor — so under the cliff a missing trend is **zero** when E=S
    (`devSeeds.ts:731-732` = 4200/4200) and **reversed (pessimistic)** when E<S, which `copy.ts:224` invites.
    It bites one-way optimistic **only over the cliff** (`healthOverlay.ts:308-312`, full enrolled premium).
-   The shipped sibling `recDiscAcaSlcsp` (`copy.ts:2376-2377`) hedges bidirectionally on this exact fact and
+   The shipped sibling `recDiscAcaSlcsp` (`copy.ts:2382-2383`) hedges bidirectionally on this exact fact and
    `medicare-pricing-build-spec.md:43` bans the false unidirectional. Draft to append to BOTH strings:
    *"One modeling choice: these prices step up with your ages, not with the way plan prices themselves climb
    — so a conversion that crosses the income line could cost more than shown."*
@@ -455,7 +455,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    (`copy.ts:1153`, `:1158, :1214, :1165, :1173, :1175` — selected by `composeRothOmissionsNote`'s 2×3 matrix, whose
    ACA-priced arm already AFFIRMS the subsidy is counted, so a trend sentence must reconcile with that
    affirmation, not append to it) + the two health-control siblings (`copy.ts:1298`, `:1304`), which CANNOT take it
-   (gated on `statePriced` alone — `copy.ts:1290-1292`). Unfiled: `shadowRateHeadroom` (`copy.ts:4821`)
+   (gated on `statePriced` alone — `copy.ts:1290-1292`). Unfiled: `shadowRateHeadroom` (`copy.ts:4827`)
    quotes cliff headroom against an SLCSP that never trends — the headroom figure inherits the held-price
    optimism; and there is NO ACA cost-trend constant at all (`health.ts` carries only `medicareCostTrend`)
    — ACA premiums are the one health channel with no trend, no clause AND no disclosure, in the
@@ -472,7 +472,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    Pricing is membership-keyed at `taxOverlay.ts:1692`; `PRICED_STATES` is `constants/stateTax.ts:50`; the
    flip is pinned live at `optimalityOracle.test.ts:295-306` (NC crowns the 12%-top anchor, the state-absent
    twin the 22%-top). Correction (a) is **half-stale** — the `state-certification-pending` WithheldReason
-   (`oracleToken.ts:48`), its humane string (`recommendationView.ts:358-359`) and the whole *held* card
+   (`oracleToken.ts:48`), its humane string (`recommendationView.ts:359-360`) and the whole *held* card
    still ship and are tested; only the **live trigger** is gone, so a new arm is an addition, not a build.
    Correction (b) is **confirmed exact**: `mintOracleToken` has one live call site (`solveEntry.ts:232`),
    reached only via `engineApi.runSolve`; `engineApi.run` (`engineProtocol.ts:433` — headline/confidence)
@@ -484,10 +484,10 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    `model.ts:320` STATE_ROSTER · a sourced(0) constants entry + profile · `copy.ts` `stateOption<X>` +
    `verdictResidualState<X>` (the THREE exhaustive switches at `stateTaxDisclosure.ts:52-63`,
    `stateTaxDisclosure.ts:94-105` (the standalone note, Card 4) and `stateTaxDisclosure.ts:173-182` fail
-   `tsc` until written) · `recommendationView.ts:338-342` · the intake picker **4 → 11 vertical arms**
+   `tsc` until written) · `recommendationView.ts:339-343` · the intake picker **4 → 11 vertical arms**
    against `verify:fit`. Engine cost is genuinely near-zero (`stateTax.ts:163` structural early return).
    ⚑ **The filed "every saved vault decodes Corrupt" blocker is FALSE — do not act on it, and do NOT loosen
-   the compile tie.** `_V3FieldsCover` (`model.ts:3074-3076`) covers only `keyof CurrentScenario`;
+   the compile tie.** `_V3FieldsCover` (`model.ts:3073-3075`) covers only `keyof CurrentScenario`;
    `checkStateTaxVintageV3` (`scenarioCodec.ts:784-789`) is hand-written and compels no `needString`. Safe
    because `scenarioCodec.ts:1036-1037` gates `retirementState` via `needVocab(STATE_ROSTER)`, so no
    pre-widening vault can *be* a household in a newly-priced state. The prescribed remedy — loosening
@@ -525,7 +525,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      `sanity.ts:67-92`). ⚑ **Size is M, not S, and a ceiling is the wrong instrument:** a 10× slip on
      $500k is $5M — a perfectly coherent household, so no threshold catches it. The shape that works is
      **one confirm on the household TOTAL** at the accounts step (the figure the engine actually consumes),
-     reusing the running total already rendered at `copy.ts:3322` / `questions.tsx:1066-1068`.
+     reusing the running total already rendered at `copy.ts:3328` / `questions.tsx:1066-1068`.
      ⚑ **"Briggsy sets the number" is the WRONG ask — there IS no honest number** (every total is
      coherent, so any threshold is the guessed plausibility band burned/062 bans). The only rule that
      invents nothing is an **unconditional** one-tap confirm for any household with ≥1 account. That is a
@@ -708,7 +708,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     copy" and both nearest register entries — *The aged surface — every 2026 plan changes wording on 2027-01-01, unreviewed* and *Unscored Caddie tape rows plus the four aged-surface tone calls due before 2027-01-01* — are owned **briggsy**; neither is a copy fix; the "three arms with
     corrected costs" existed NOWHERE — they are now written, with sizes, under the register's "The aged
     surface" entry. A shipped copy defect on the SAME cohort WAS pilot and is FIXED (2026-09-04: the singular arm ships at
-    `copy.ts:4725-4727` under the NUMBER AGREEMENT post-mortem at `copy.ts:4711`, covered by `copyGuard.test.ts:1071`):
+    `copy.ts:4731-4733` under the NUMBER AGREEMENT post-mortem at `copy.ts:4717`, covered by `copyGuard.test.ts:1073`):
     `rothPlanRanked` hardcoded the plural "Those years are counted from…" after a correctly-singular "for 1 year" —
     live for any at/past-RMD household on an aged vault (the 1-year clamp, `solveAnchor.ts:263-264`) — and no test
     covered `years: 1, passed: true`. (b) THE LADDER is register `L` · **pilot**, and the v2→v3 ALGORITHM IS
@@ -791,7 +791,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     riders, the open copy obligations, the deferred richer market draw, and the `dateinvert` (c) mint —
     its own session, a size-L parameter hunt.
     ⚑ **2026-09-04:** two bullets were half-dead and are closed — the `partBTrendVintage` "no exposure gate"
-    clause was swept in `staleness.ts:747-750` but still lived verbatim at `model.ts:3018` (swept), and
+    clause was swept in `staleness.ts:747-750` but still lived verbatim at `model.ts:3017` (swept), and
     Plan 4's "the record carries `seedA`/`seedB`" (`plans/4-recommendation.md:283`) had outlived its own
     "kill BEFORE S5 mints" deadline — the shipped `SavedRecommendationV3` (`model.ts:2448-2470`) has no seed
     field (struck in the plan). ⚑ (b)'s SOURCE twin outlived that close — `heldOutSeed.ts:13-14` still said
@@ -809,7 +809,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     page and the codified G.S. page both still show the struck "after 2025 — 3.99%", so they read as
     CONTRADICTING the pinned record until they recompile — **session law wins, do not "correct" the
     engine table back to a flat 3.99%.** Comment-only; typecheck · lint · 3289 tests · state-tax gate
-    all green. (`copy.ts:5113` and `caseStateCompanions.ts` were already correct — swept 2026-08-02.)
+    all green. (`copy.ts:5119` and `caseStateCompanions.ts` were already correct — swept 2026-08-02.)
     ⚑ **The CVD half of this cluster is PARKED, not owed — do not re-propose it.** The filed gap ("the CVD
     crops prove PRESENCE only") is real, and a `verify:cvd` pixel-regression gate was designed for it on
     2026-08-02. **Briggsy declined it on the only authority that can:** *"I'm pretty color blind and I think
@@ -836,7 +836,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     flag) and BOTH candidate fixes cost something — "mint through `update()`" turns a deferred false-arm
     into an immediate one; an eager mint in `createMemoryModel` breaks the WRITTEN contract #1b (mint at the
     FIRST ENGINE RUN, `plans/2-first-answer.md:57`) with no test that would catch it. His ruling, framed as
-    those two arms. Two half-swept false comments closed 2026-09-04: `model.ts:3018` and
+    those two arms. Two half-swept false comments closed 2026-09-04: `model.ts:3017` and
     `plans/4-recommendation.md:283`.
 
 ---
@@ -921,6 +921,24 @@ line keeps the facts `/distill` needs; its source line is in this file as it sto
   named its Health Care capture `SCREENS[2]`, but `SCREENS` is filtered by `RC_ONLY`, so under a filter the "health-care"
   shots showed Social Security, with a clean audit (the audit ran on the wrong page). Caught only by opening the shot;
   fixed with `screenById`. Look up by id, never by position, in anything a filter can reorder.
+- (b9-1, milestone 2's review round 3) *Extend 045:* **"the last change of lead holds" written as `lead !== first`
+  is true only for an ODD count of changes.** Social Security's break-even read every even count (ahead, behind, ahead
+  again: the lower earner at 62 beside the higher earner at 70) as "No break-even", the plan "staying ahead" through
+  twenty years of trailing (the P0). The round-1 test named "two crossings" had three. Track "did the lead ever
+  change", and test an even count by name.
+- (b9-1, round 3) *Extend 099:* **a reassurance gated on the winner against the RUNNER-UP says nothing about YOUR
+  plan.** `subTenthCollapse` (winner and runner-up share a displayed tenth) routed to "You're already on one of the
+  strongest paths" on `order`, where switching saved ~$45,000 and the plan ranked 14th of 77 (the P0). The gate was
+  right for its first hero (an unchanged `X of 10`) and outlived it: when a hero's quantity changes, re-key every gate
+  that guards it on the new quantity.
+- (b9-1, round 3) *Extend 160:* **three refuters converged on a fix sentence the project's own law bans.** All three
+  L1-2 seats proposed naming the crown's odds edge ("had better odds", "the same odds"); `SURVIVAL_CLAIMS` (council
+  `wf_6e72eca9-c20`) bans implying a survival win or tie, and only the copy guard caught one of the two. Run a proposed
+  fix sentence through the lint laws before adopting it; a refuter's wording is a draft.
+- (b9-1, round 3) **A subagent that backgrounds its own long probe and goes idle may never wake to report.** Two
+  refuters said "waiting on my probe" and sat idle 15 minutes after their probes finished, until nudged; vitest also
+  swallowed one probe's console output, so its figures were lost. Tell probe-running seats to run in the foreground and
+  write results to a file, and check idle seats against their probe files' timestamps.
 
 ## Driving the app
 

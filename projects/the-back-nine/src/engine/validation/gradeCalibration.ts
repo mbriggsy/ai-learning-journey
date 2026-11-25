@@ -20,7 +20,10 @@
  *  - THE DISPLAY-TENTH RECONCILIATION (S4.4): a survival advantage that rounds below one
  *    display tenth must not render an unchanged `X of 10` under `just-do-it` — when the
  *    winner's and runner-up's displayed tenths agree on ANY member, the grade carries
- *    `subTenthCollapse: true` and U15/U16 route it into the no-change state.
+ *    `subTenthCollapse: true`. The surface once routed it into the no-change state; since
+ *    milestone 2's review, round 3 (2026-11-25), it takes S4.4's other remedy, the finer
+ *    figure: the hero is a dollar delta against the household's own plan, and the flag (which
+ *    never compares that plan) routes nothing (`recommendationView.ts`).
  *
  * FRESH-DRAW PROTOCOL (documented where the machinery lives): seed-set B + every threshold
  * here are used-once-per-release and re-drawn on any change to the candidate set or the
@@ -91,8 +94,8 @@ export interface GradeResult {
   readonly grade: Grade
   readonly memberMargins: readonly MemberMargin[]
   readonly demotionFired: boolean
-  /** True when the advantage clears the bands but rounds below one display tenth — the
-   *  caller routes this into the no-change state rather than an unchanged-looking win. */
+  /** True when the winner's advantage over the runner-up clears the bands but rounds below one
+   *  display tenth. Recorded with the grade; no surface routes on it (see the header's S4.4 bullet). */
   readonly subTenthCollapse: boolean
 }
 

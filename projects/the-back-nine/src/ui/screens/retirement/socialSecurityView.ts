@@ -22,10 +22,12 @@
  * are each snapped to the grain they print at before they are compared or differenced, so "about the same" means equal
  * as printed, and a crossing is never decided on dollars the page cannot show.
  *
- * THE BREAK-EVEN ({@link breakEvenIndex}) is the year the side that started behind passes the other FOR GOOD, whichever
- * picker holds the later claim: two streams whose onsets are decoupled (two claim ages, a survivor benefit, a death
- * before the later claim) can cross more than once (insight 045), so the last change of lead is the one that holds. Only
- * the steady market's years while one of you lives are read: a crossing after the second death is not one.
+ * THE BREAK-EVEN ({@link breakEvenIndex}) is the year one side passes the other FOR GOOD, whichever picker holds the later
+ * claim: two streams whose onsets are decoupled (two claim ages, a survivor benefit, a death before the later claim) can
+ * cross more than once (insight 045), so the last change of lead is the one that holds, whether the side passing started
+ * behind (an odd count of changes) or ahead (an even count). Only the steady market's years while one of you lives are
+ * read: a crossing after the second death is not one. A last year whose two totals print the same has no leader, so it
+ * reads "about the same" by then on either branch, never "stays ahead".
  */
 import { fraMonthsForBirthYear } from '@engine/constants/socialSecurity'
 import { householdBenefits } from '@engine/socialSecurityBenefit'
@@ -237,26 +239,29 @@ export function cumulative(series: readonly number[]): number[] {
 export const lifetimeTotal = (series: readonly number[]): number => series.reduce((a, b) => a + b, 0)
 
 /**
- * THE BREAK-EVEN: the index from which the side that started behind stays ahead through the last year, or null where the
- * lead never changes for good. Each running total is snapped to its printed grain before the two are compared (a tie at
- * the printed grain is no lead), and only the indices given are read (the caller cuts them at the second death).
+ * THE BREAK-EVEN: the index of the last change of lead, the one that holds through the last year read, or null where the
+ * lead never changed (one side led the whole way). The side that passes for good is the one that started behind after an
+ * odd number of changes, and the side that started AHEAD after an even number: a lower earner claiming at 62 beside a
+ * higher earner waiting to 70 leads full retirement age early, trails it for years, then passes it for good (milestone
+ * 2's review, round 3: the old `lead !== first` rule read every even count as "no break-even" and the plan "staying
+ * ahead" through twenty years of trailing). Each running total is snapped to its printed grain before the two are
+ * compared (a tie at the printed grain is no lead), and only the indices given are read (the caller cuts them at the
+ * second death).
  */
 export function breakEvenIndex(a: readonly number[], b: readonly number[]): number | null {
   const n = Math.min(a.length, b.length)
-  let first = 0
   let lead = 0
   let since = -1
+  let changed = false
   for (let t = 0; t < n; t++) {
     const d = snapToGrain(a[t]!) - snapToGrain(b[t]!)
     const s = d > 0 ? 1 : d < 0 ? -1 : 0
-    if (s === 0) continue
-    if (first === 0) first = s
-    if (s !== lead) {
-      lead = s
-      since = t
-    }
+    if (s === 0 || s === lead) continue
+    if (lead !== 0) changed = true
+    lead = s
+    since = t
   }
-  return first !== 0 && lead !== first ? since : null
+  return changed ? since : null
 }
 
 /** A ran-out run's last row index (the money ran out before the steady market's last year), else null. */
@@ -446,16 +451,17 @@ export function claimsComparisonView(input: ClaimsComparisonInput): ClaimsCompar
   }
   const t = breakEvenIndex(va, vb)
   const year = (i: number) => meta.startCalendarYear + i
+  // The lead that holds is the last one at the printed grain (`breakEvenIndex`'s own rule): a tie in the last year is
+  // no lead, so it never hands the lead to the side that trailed throughout.
+  let lead = 0
+  for (let i = Math.min(va.length, vb.length) - 1; i >= 0 && lead === 0; i--) lead = Math.sign(snapToGrain(va[i]!) - snapToGrain(vb[i]!))
+  if (lead === 0) return { ...base, hero: copy.claimsAboutSame, heroLine: slots.claimsSamePaid(sa.phrase, sb.phrase) }
+  // The totals print the same in the last year read: no side leads there, so never "stays ahead through" it (the
+  // yearly view says "About the same" of the same two totals). Checked before either branch: a crossing followed by a
+  // tied last year is not a lead that holds either, so it draws no ring.
+  if (snapToGrain(va[last]!) === snapToGrain(vb[last]!))
+    return { ...base, hero: copy.claimsAboutSame, heroLine: slots.claimsLevelByLine(year(last), first.possessive, ageAt(last), sa.phrase, sb.phrase) }
   if (t === null) {
-    // The lead that holds is the last one at the printed grain (`breakEvenIndex`'s own rule): a tie in the last year is
-    // no lead, so it never hands the lead to the side that trailed throughout.
-    let lead = 0
-    for (let i = Math.min(va.length, vb.length) - 1; i >= 0 && lead === 0; i--) lead = Math.sign(snapToGrain(va[i]!) - snapToGrain(vb[i]!))
-    if (lead === 0) return { ...base, hero: copy.claimsAboutSame, heroLine: slots.claimsSamePaid(sa.phrase, sb.phrase) }
-    // The totals print the same in the last year read: no side leads there, so never "stays ahead through" it (the
-    // yearly view says "About the same" of the same two totals).
-    if (snapToGrain(va[last]!) === snapToGrain(vb[last]!))
-      return { ...base, hero: copy.claimsAboutSame, heroLine: slots.claimsLevelByLine(year(last), first.possessive, ageAt(last), sa.phrase, sb.phrase) }
     const [leader, other] = lead > 0 ? [sa, sb] : [sb, sa]
     return { ...base, hero: copy.claimsNoBreakEven, heroLine: slots.claimsNoBreakEvenLine(year(last), first.possessive, ageAt(last), leader.phrase, other.phrase) }
   }

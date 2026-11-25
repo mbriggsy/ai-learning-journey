@@ -571,7 +571,7 @@ These are bets made without Briggsy's confirmation. Each can be overturned at U2
 
 **Approach:** KTD10, KTD11, KTD12. Start by reading `CURRENT_SCHEMA_VERSION` (N) and checking for Act 5's home build or a real save (KTD11). Mint the version-N fixtures first, from a version-N build, before the writer changes. The ask gate reads the reach predicate U6 exported, per owner and per kind of ask. A plan with the job the owner holds now (or, for a retired owner, the last job) takes its separation from the stop (R8); only a plan from an earlier job gets the separation question. Birth timing is asked only if U2 ruled it in. The asks render U8's drafts. The schema step follows the W precedent (build 2's left-over answer, `a9cacf22`). The floor rises in its own follow-up commit.
 
-**Patterns to follow:** `WORKING_YEAR_LEFT_OVER_KINDS` for a "not sure" answer (`src/shared/model.ts:2715`); the codec's `retirementAge` / `workStatus` biconditional (`src/shared/scenarioCodec.ts:354-358`); the label-only step's writer-bug refusal (`:1318-1334`).
+**Patterns to follow:** `WORKING_YEAR_LEFT_OVER_KINDS` for a "not sure" answer (`src/shared/model.ts:2714`); the codec's `retirementAge` / `workStatus` biconditional (`src/shared/scenarioCodec.ts:354-358`); the label-only step's writer-bug refusal (`:1318-1334`).
 
 **Test scenarios:**
 - A version-N save opens at N+1 with no new answers and runs fully charged; every older fixture still opens through its relabels.

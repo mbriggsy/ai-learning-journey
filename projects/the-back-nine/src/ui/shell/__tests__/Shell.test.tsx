@@ -657,8 +657,12 @@ describe('Shell — the pages with no table speak their own words (milestone 2�
     expect(pageWords('stress-test')).toHaveTextContent(copy.pageWordsWithheldNoLedger)
   })
 
-  it('the StaleBanner rides Social Security and Stress Test, which print the plan’s odds; one in-frame R13 caveat still', () => {
-    for (const route of [SS, STRESS]) {
+  it('the StaleBanner rides Social Security, Stress Test, Tax Strategies and Health Care, which print figures run from the saved balances; one in-frame R13 caveat still', () => {
+    // Tax Strategies and Health Care since milestone 2's review, round 3: an aged plan's Find printed its strategies, and
+    // Health Care its lifetime costs, with no aged line there.
+    const TAX_STRATEGIES = { module: 'tax', page: 'strategies' } as const
+    const HEALTH = { module: 'retirement', page: 'health-care' } as const
+    for (const route of [SS, STRESS, TAX_STRATEGIES, HEALTH]) {
       const { lanes } = heldLanes()
       render(<RoutedShell save={{ kind: 'none' }} snapshot={snapshotWith(finalAnswer())} lanes={lanes} wallCalendarYear={BUILD_YEAR + 2} stalenessNote agedBalancesYear={BUILD_YEAR} initialRoute={route} />)
       expect(screen.getByText(copy.stalenessHeroNote)).toBeInTheDocument()

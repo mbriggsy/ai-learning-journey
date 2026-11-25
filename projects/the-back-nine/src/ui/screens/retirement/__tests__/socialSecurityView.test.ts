@@ -214,10 +214,45 @@ describe('the break-even', () => {
     expect(breakEvenIndex([0, 0, 0], [0, 0, 0])).toBeNull()
   })
 
-  it('hand-built: two crossings (a stream that inverts, insight 045) read the last change of lead, the one that holds', () => {
+  it('hand-built: three changes of lead (a stream that inverts, insight 045) read the last change of lead, the one that holds', () => {
     const a = [0, 100_000, 200_000, 300_000, 500_000, 700_000]
     const b = [50_000, 100_000, 250_000, 280_000, 600_000, 650_000]
     expect(breakEvenIndex(a, b)).toBe(5)
+  })
+
+  // Milestone 2's review, round 3 (P0): a lower earner claiming at 62 beside a higher earner waiting to 70 leads full
+  // retirement age early, trails it for years, then passes it for good. The side that started AHEAD passes for good, and
+  // the old rule (`lead !== first`) read every even count as no break-even, the plan "staying ahead" throughout.
+  const EVEN_PLAN = [10, 10, 10, 10, 10, 10, 10, 60, 60].map((x) => x * 1_000) // running: 10 … 70, 130, 190 (k)
+  const EVEN_FRA = [0, 0, 0, 0, 0, 40, 40, 40, 40].map((x) => x * 1_000) // running: 0 … 40, 80, 120, 160 (k)
+
+  it('hand-built: two changes of lead (ahead, behind, ahead again) read the second, the one that holds', () => {
+    const a = cumulative(EVEN_PLAN)
+    const b = cumulative(EVEN_FRA)
+    // Ahead through index 5, behind at 6 (70k against 80k), ahead for good from 7 (130k against 120k).
+    expect(breakEvenIndex(a, b)).toBe(7)
+    expect(breakEvenIndex(b, a), 'either picker holds the later claim: the same crossing').toBe(7)
+  })
+
+  it('the comparison view: two changes of lead mark the ring at the second, never "No break-even"', () => {
+    const c = choicesOf(RETIRED)
+    const v = claimsComparisonView({ chart: 'cumulative', a: 'seventy', b: 'plan', notes: NOTES(c), rows: { seventy: handRun(EVEN_FRA, 8), plan: handRun(EVEN_PLAN, 8) } })
+    if (v.kind !== 'pair') throw new Error(v.kind)
+    expect(v.hero).toBe(slots.claimsBreakEvenAge(66 + 7))
+    expect(v.crossing?.age).toBe(66 + 7)
+    expect(v.heroLine).toBe(slots.claimsBreakEvenLine('Alex’s', RETIRED.startCalendarYear + 7, copy.claimsPhrasePlan, copy.claimsPhraseSeventy))
+  })
+
+  it('the comparison view: a crossing followed by a tied last year comes out about the same by then, with no ring', () => {
+    const c = choicesOf(RETIRED)
+    // Running totals: claiming at 70 [0, 0, 35,000, 40,000], your plan [10,000, 20,000, 30,000, 40,000]: 70 passes the
+    // plan at index 2, then the two print the same in the last year read, so nothing "stays ahead" through it.
+    const v = claimsComparisonView({ chart: 'cumulative', a: 'seventy', b: 'plan', notes: NOTES(c), rows: { seventy: handRun([0, 0, 35_000, 5_000], 3), plan: handRun([10_000, 10_000, 10_000, 10_000], 3) } })
+    if (v.kind !== 'pair') throw new Error(v.kind)
+    expect(breakEvenIndex(cumulative([0, 0, 35_000, 5_000]), cumulative([10_000, 10_000, 10_000, 10_000])), 'the crossing exists').toBe(2)
+    expect(v.crossing).toBeUndefined()
+    expect(v.hero).toBe(copy.claimsAboutSame)
+    expect(v.heroLine).toBe(slots.claimsLevelByLine(RETIRED.startCalendarYear + 3, 'Alex’s', 69, copy.claimsPhraseSeventy, copy.claimsPhrasePlan))
   })
 
   it('a tie at the printed grain is no lead: $3,000 apart on a million is the same as printed', () => {

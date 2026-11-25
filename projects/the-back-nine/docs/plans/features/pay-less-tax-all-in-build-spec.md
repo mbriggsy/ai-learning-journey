@@ -68,7 +68,7 @@ The words are HIS. The build drafts options (§6) and ships none that Briggsy ha
 | 2 | `objective.ts:74-79` goalHeadlineStatistic (read) | `score.lifetimeTaxMeanReal` | the D2 field, same throw; re-word the docblock `:59-69` and the error text; `goalHigherIsBetter` stays false |
 | 3 | `objectiveHeadline.ts:116-124` headlineStatisticFromDistribution (map) | `mean(ta.lifetimeTaxPaidReal)` | `mean(lifetimeAllInCostPerPath(dist))`; re-word `:102-111` |
 | 4 | `select.ts:194-209` goalPerPathA (read) | `taxAware?.lifetimeTaxPaidReal` (if-chain) | `lifetimeAllInCostPerPath(outcome.distribution)`; convert to the exhaustive switch + never-guard idiom; docblock `:188-193` |
-| 5 | `gradeCalibration.ts:273-281` pairedDecisionDiffs (read) | runner − winner over `lifetimeTaxPaidReal` (if-chain) | runner − winner over D1, refusing undefined; exhaustive switch; docblock `:247` |
+| 5 | `gradeCalibration.ts:276-284` pairedDecisionDiffs (read) | runner − winner over `lifetimeTaxPaidReal` (if-chain) | runner − winner over D1, refusing undefined; exhaustive switch; docblock `:247` |
 
 **Site 5 is the easy one to miss.** It feeds two things:
 - the surplus-regime grade: `gradeAxisFor` → `solve.ts:295-310, :359` (map);
@@ -83,8 +83,8 @@ The MEASURED probe substituted its vector before `adoptObservedOutcome`. The gra
 - `adoptObservedOutcome` and `collectCandidateOutcome`, which re-score via `scoreFromDistribution`;
 - `selectionTieTolerance` (`heldOutSeed.ts:139`), which is vector-generic;
 - `gradeAxisFor`: the axis label is keyed by goal, and `GradeStatistic 'pay-less-tax'` keeps its name;
-- `demotionAxisCalibrated` (`gradeCalibration.ts:163`) is unchanged.
-- ⚑ SKEPTIC (missing readers; each follows through sites 1-2, named so nothing is assumed): the hero delta itself (`recommendationView.ts:628-640` `winnerDisplaysAhead` / `deltaReal`, and the zero-collapse guard at `:652`, which decide dollar vs no-dollar); `runnerUpVizFor` (`recommendationView.ts line 879-880 at b69c28483`, leave-more gated today); `namedDriverProbe` / `namedDriverProbeSteps` (`gradeCalibration.ts:399-436`), which re-rank under `rankCandidates` and drive F2's `aca-enhanced-subsidies` driver and the coin-flip hinge `recGradeNoteHingeAca` (`copy.ts:2306-2307`). That sentence will now fire on PREMIUM-driven flips, so it joins the §8 Caddie read.
+- `demotionAxisCalibrated` (`gradeCalibration.ts:166`) is unchanged.
+- ⚑ SKEPTIC (missing readers; each follows through sites 1-2, named so nothing is assumed): the hero delta itself (`recommendationView.ts:634-646` `winnerDisplaysAhead` / `deltaReal`, and the zero-collapse guard at `:652`, which decide dollar vs no-dollar); `runnerUpVizFor` (`recommendationView.ts line 879-880 at b69c28483`, leave-more gated today); `namedDriverProbe` / `namedDriverProbeSteps` (`gradeCalibration.ts:402-439`), which re-rank under `rankCandidates` and drive F2's `aca-enhanced-subsidies` driver and the coin-flip hinge `recGradeNoteHingeAca` (`copy.ts:2306-2307`). That sentence will now fire on PREMIUM-driven flips, so it joins the §8 Caddie read.
 
 **D5 Byte-identity when healthcare is off.**
 - The premium and Medicare yearly values start at 0 (`taxOverlay.ts:2480-2486`, map).
@@ -130,12 +130,12 @@ Result: the all-in vector equals the tax vector element by element, and its mean
 - `solve.ts:214-224, :385-390` (deltaSkew wording).
 - `stateTaxDisclosure.ts:152-156`: the priced-state layer reaches the hero through the tax addend; the logic is unchanged.
 - `recommendationView.ts:96` and `line 719 at b69c28483`.
-- `copy.ts:2219` comment and `:5147`.
+- `copy.ts:2219` comment and `:5153`.
 - the `recommendationView.test.ts line 596 at b69c28483` comment.
 
 The viz suppression off leave-more stays correct, because all-in is still lower-is-better.
 
-**Copy (HIS, §6):** `recDeltaPayLessTax` (`copy.ts:5056-5057`, read), `goalPayLessTaxGloss` (`:2226`), `recDiscNiit` (`:2362-2363`), `recDiscStateTax` (`:2060-2061`), the optional new `recDisc*`, and `recDeltaTypical*` (`src/ui/copy.ts:3392-3411`) only under a "$X less" hero.
+**Copy (HIS, §6):** `recDeltaPayLessTax` (`copy.ts:5062-5063`, read), `goalPayLessTaxGloss` (`:2226`), `recDiscNiit` (`:2368-2369`), `recDiscStateTax` (`:2060-2061`), the optional new `recDisc*`, and `recDeltaTypical*` (`src/ui/copy.ts:3398-3417`) only under a "$X less" hero.
 
 **Calibration:**
 - Add "an objective-statistic change" to the RE-MEASURE triggers at `fallback.ts:44, :58, :72` (map).
@@ -205,7 +205,7 @@ The viz suppression off leave-more stays correct, because all-in is still lower-
       - Otherwise append the decomposition to the register's as-built note.
       - *Why over Spec 1's record-only:* Spec 1 records the bias but never checks whether it decides a crown. On this point calm-but-wrong is a live risk.
 15. Land Briggsy's chosen strings (§6). Then:
-    - add a `SLOT_RENDER` sample for any new slot, cohort arm or `recDisc*` key (`copyGuard.test.ts:1038-1042`, the burned/070 completeness test);
+    - add a `SLOT_RENDER` sample for any new slot, cohort arm or `recDisc*` key (`copyGuard.test.ts:1040-1044`, the burned/070 completeness test);
     - update the pinned DISCLOSURE_ORDER test (`recommendationView.ts:127-128`, map) if a scope disclosure is added;
     - add the `recommendationView.test` arms (§5.5).
 16. Docs (§7). Then `pnpm doc:reanchor`, grepping the dry run for "(bare, after", the tool's 5th blind class. Then doc-stats.
@@ -330,11 +330,11 @@ Today's objective crowns $100k. All-in crowns $84k, by about $28k.
 
 *The packet as sent (the options he chose among):*
 
-**Constraints the drafts meet.** This was a hand-lint against `copyGuard.ts:148-312` + `HEDGE_TOKENS` (`copy.ts:2652-2866`); the suite runs on whatever he picks.
+**Constraints the drafts meet.** This was a hand-lint against `copyGuard.ts:148-312` + `HEDGE_TOKENS` (`copy.ts:2658-2872`); the suite runs on whatever he picks.
 - A hedge ("about" / "could"); `recDelta*` and `recDisc*` are require-hedge swept (`copyGuard.ts:124-128`).
 - No superlative, no clause-leading directive verb (`:262`), no "pays off" or "better off" (`:251-252`), no em-dash apposition on the figure.
 - The hero stays one line (`recommendationView.ts:168-170`) and keeps "than today’s plan" (the userBaseline seam, `copy.ts:2260-2267`).
-- The slot keeps its one-arg signature, so `recommendationView.ts:667` and `copyGuard.test.ts:899` need no wiring change.
+- The slot keeps its one-arg signature, so `recommendationView.ts:673` and `copyGuard.test.ts:901` need no wiring change.
 - Rejected: "health costs" and "in your pocket". Out-of-pocket and cost-sharing are not counted, and funded-year accrual makes any wealth claim an overclaim. Also do not reuse the health sheet's "Lifetime health costs" lexeme: one lexeme with two referents is the O14 class.
 
 **Hero `recDeltaPayLessTax`.** Today: "Keeps about $X more out of your lifetime tax than today’s plan."

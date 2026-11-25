@@ -25,7 +25,7 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-11-25, b9-12):** THE TURNAROUND (Briggsy, 2026-11-24; memory `project-b9-mandate-replicate-rightcapital`): B9's UI becomes a RightCapital clone (never its logo, name or artwork); the engine, store, vault and intake mapping stay; nothing waits on him. Plan `docs/plans/6-rightcapital-ui-plan.md` (RC0 to RC12 built; milestone 2's whole-file review ran rounds 1 and 2, fixed in `a883c5e4`; first run the close block's check line). Round 3 (the harm-class gate) RAN 2026-11-25 (b9-1): two P0s and two P1s fixed in its commit (the commit lists them), the rest in the register's Tier 1 milestone-2 entry; no P0/P1 survives, so milestone 2's review is closed. Next: `/distill` (14 owed), then RC13 (Profile pages: card grids and drawers) opened with `/brief <RC13: Profile pages>`, then RC18 (built straight after RC13), RC14, RC15 and milestone 3's review. Each unit by a fresh builder (plan 7.1); the orchestrator re-runs 7.1's checks (`doc:reanchor` once per commit, `verify:doc-stats`, the unit's arms with `-g`, every `e2e/` spec that greps to a moved surface, the look) and looks at the screenshots itself. The D7 queue and the tiered lists below are pre-turnaround.
+▶ **START HERE (2026-11-25, b9-12):** THE TURNAROUND (Briggsy, 2026-11-24; memory `project-b9-mandate-replicate-rightcapital`): B9's UI becomes a RightCapital clone (never its logo, name or artwork); the engine, store, vault and intake mapping stay; nothing waits on him. Plan `docs/plans/6-rightcapital-ui-plan.md` (RC0 to RC12 built; milestone 2's whole-file review ran rounds 1 and 2, fixed in `a883c5e4`; first run the close block's check line). Round 3 (the harm-class gate) RAN 2026-11-25 (b9-1): two P0s and two P1s fixed in its commit (the commit lists them), the rest in the register's Tier 1 milestone-2 entry; no P0/P1 survives, so milestone 2's review is closed. `/distill` ran the same day (insights 172 to 177). Next: RC13 (Profile pages: card grids and drawers) opened with `/brief <RC13: Profile pages>`, then RC18 (built straight after RC13), RC14, RC15 and milestone 3's review. Each unit by a fresh builder (plan 7.1); the orchestrator re-runs 7.1's checks (`doc:reanchor` once per commit, `verify:doc-stats`, the unit's arms with `-g`, every `e2e/` spec that greps to a moved surface, the look) and looks at the screenshots itself. The D7 queue and the tiered lists below are pre-turnaround.
 U10's Caddie card stays HARD-FLAG on its two builds (filed Tier 0). The register-wide tier sweep's readings (the
 register header's sweep paragraph) bind the next tier sweep. Next, in order:
 1. **Build 2, the surplus question.** Its plan, `docs/plans/features/working-year-surplus-build-spec.md`, is checked as a whole; its
@@ -876,69 +876,8 @@ line keeps the facts `/distill` needs; its source line is in this file as it sto
 (`git show 89b4fa58:projects/the-back-nine/TODO.md`), where the full original stands. A line marked *Correct* or
 *Extend* amends that insight instead of adding a new one.
 
-- (b9-11, RC11, `912caf66`) **A "stress" that can only help is not a stress.** The plan offered "the ACA subsidy rules
-  switch" wherever someone has pre-65 years; on a plan already on current law (every shipped seed) the switch is the
-  hopeful case, so its bar would rise under "stress" and lift Combined: false comfort. The builder refused it by name
-  where the plan does not count on the bigger discount (`stressOffer`, `already-current-law`). Lesson: before drawing a
-  scenario as a downside, check its direction on THIS plan; a scenario whose sign depends on the plan's own setting is
-  offered only where it points down.
-- (b9-11, RC11) **Scaling an input is not a stress until it reaches what the household pays.** Out-of-pocket medical sits
-  INSIDE the spending figure (`budgetToSpending.ts:161` subtracts it back out), so scaling `health.oopMedicalAnnual`
-  alone on a budgetless plan moved only the HSA cap and the survivor allowance and read "no change" (rosy); the stress
-  raises the spending figure (and a working plan's W) by the same dollars. The plan's own panel edit leaves spending alone
-  on purpose (a correction, not a rise). Trace every reader of a field before calling a scaled copy the scenario.
-- (b9-11, RC11) **A coarse count can make every comparison bar equal, and an equal chart reads as broken.** On `health`
-  all four Stress Test bars printed "9 of 10" (true: no stress moved the count a whole step); a note now says so. Where a
-  page compares counts on a 10-step grid, say when nothing moved a step instead of leaving equal bars to look unrun.
-- (b9-11, `897d4ac2`) *Extend 153:* **an e2e list hand-typed from a registry goes stale on every new entry, and
-  typecheck never sees `e2e/`.** RC11 and RC12 each added routes and updated the unit tests' lists; the RC2 phone-menu
-  arm's hand list reddened CI's fit job (run 45619245873). Where the claim is "matches the registry", derive the
-  expected list from the registry (`navModules()`), keeping the order pinned once in the registry's unit test.
-- (b9-11, RC12, `c2ff8488`) *Extend 168:* **an audit over a chart whose words are HTML overlays passes with zero labels.**
-  RC12's donut centres are HTML over the hole, so `hcAudit` (SVG text) found nothing there and passed; the builder added
-  `assertCentreInHole` (text corners inside the hole, at the floor size). Any audit that can see zero of what it checks
-  needs a presence count or its own geometric check.
-- (b9-12, milestone 2's review) **A window shared across runs, taken as their minimum, lets one short run cut every
-  other run's total.** Social Security's Summary summed each strategy through `Math.min` of every run's last row, so a
-  strategy whose money ran out in the steady market cut the others' "lifetime" totals at its year (the P0; truncation
-  favoured claiming early, so the named leader could flip). Tax Strategies' Comparison had the mirror bug (each run summed
-  over its own length, so a run that ran out "paid less tax"). Lesson: a comparison total runs over each run's own
-  horizon where the runs share lifespans, or over the shared years with the cut named; never a silent min or max.
-- (b9-12) **A per-year median over a shrinking population is 0 once the population empties; gate the year on that
-  population, not a neighbour's count.** Health Care's readout takes each year's medians over FUNDED living paths and
-  `median([])` is 0, while the chartable-year gate counted people LIVING, so a plan whose money ran out drew $0 premiums
-  beside "already counted in this answer". The page now charts a year only while most futures are still funded
-  (`depletionYears`), says where the charts stop, and says a future's lifetime total stops at its run-out.
-- (b9-12) *Extend 170:* **a rewrite retires an honesty GATE as easily as a line.** RC8 deleted `runnerUpVizFor`'s
-  inversion gate (never a picture contradicting the ranking) and the new ranked list printed a runner-up figure better
-  than "Recommended" with no reason; nothing in the inventory of lines caught it because the gate was logic, not copy.
-  Inventory a deleted file's conditions (what it refused to draw, and when) beside its words.
-- (b9-12) *Extend 160:* **a fix's new honesty sentence is a claim too: read it in the state where it is least true.**
-  Round 2 found three of round 1's new notes false somewhere: the runner-up's "came out ahead more often" when the usual
-  order won a near-tie, "the most of these strategies" beside a strategy with no total, "stays ahead" through a tied
-  final year. Each fix sentence gets the round-1 treatment: every route and answer state it renders in.
-- (b9-12) *Extend 168:* **a held instrument that indexes into an env-filtered list shoots the wrong screen.** `rc-look`
-  named its Health Care capture `SCREENS[2]`, but `SCREENS` is filtered by `RC_ONLY`, so under a filter the "health-care"
-  shots showed Social Security, with a clean audit (the audit ran on the wrong page). Caught only by opening the shot;
-  fixed with `screenById`. Look up by id, never by position, in anything a filter can reorder.
-- (b9-1, milestone 2's review round 3) *Extend 045:* **"the last change of lead holds" written as `lead !== first`
-  is true only for an ODD count of changes.** Social Security's break-even read every even count (ahead, behind, ahead
-  again: the lower earner at 62 beside the higher earner at 70) as "No break-even", the plan "staying ahead" through
-  twenty years of trailing (the P0). The round-1 test named "two crossings" had three. Track "did the lead ever
-  change", and test an even count by name.
-- (b9-1, round 3) *Extend 099:* **a reassurance gated on the winner against the RUNNER-UP says nothing about YOUR
-  plan.** `subTenthCollapse` (winner and runner-up share a displayed tenth) routed to "You're already on one of the
-  strongest paths" on `order`, where switching saved ~$45,000 and the plan ranked 14th of 77 (the P0). The gate was
-  right for its first hero (an unchanged `X of 10`) and outlived it: when a hero's quantity changes, re-key every gate
-  that guards it on the new quantity.
-- (b9-1, round 3) *Extend 160:* **three refuters converged on a fix sentence the project's own law bans.** All three
-  L1-2 seats proposed naming the crown's odds edge ("had better odds", "the same odds"); `SURVIVAL_CLAIMS` (council
-  `wf_6e72eca9-c20`) bans implying a survival win or tie, and only the copy guard caught one of the two. Run a proposed
-  fix sentence through the lint laws before adopting it; a refuter's wording is a draft.
-- (b9-1, round 3) **A subagent that backgrounds its own long probe and goes idle may never wake to report.** Two
-  refuters said "waiting on my probe" and sat idle 15 minutes after their probes finished, until nudged; vitest also
-  swallowed one probe's console output, so its figures were lost. Tell probe-running seats to run in the foreground and
-  write results to a file, and check idle seats against their probe files' timestamps.
+(Empty: the 2026-11-25 /distill (b9-1) wrote all fourteen, insights 172 to 177 and extensions to 045, 099, 153, 160,
+168 and 170.)
 
 ## Driving the app
 

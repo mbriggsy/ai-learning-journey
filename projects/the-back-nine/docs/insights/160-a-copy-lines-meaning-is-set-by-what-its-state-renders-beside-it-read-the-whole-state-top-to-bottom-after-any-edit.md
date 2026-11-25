@@ -3,7 +3,7 @@ title: A copy line's meaning is set by what its state renders beside it — a fi
 date: 2026-11-23
 phase: Build 2 (the surplus question) — U11's Caddie walks 4 to 9, and b9-10's 2026-09-27 price re-pin
 modules: [src/ui/copy.ts, src/ui/FuckOffDate.tsx, src/intake/workingYearLeftOver.ts, src/intake/WorkingYearLeftOverQuestion.tsx]
-tags: [copy-contract, co-rendered, same-state, sibling-line, label, contrast, joiner, rider, read-top-to-bottom, caddie, cold-read, calm-but-wrong, part-d, working-years, full-budget]
+tags: [copy-contract, co-rendered, same-state, sibling-line, label, contrast, joiner, rider, read-top-to-bottom, caddie, cold-read, calm-but-wrong, part-d, working-years, full-budget, fix-sentence, least-true-state, runner-up-note, tie-break, break-even, lifetime-total, refuter-wording, survival-claims, copyguard, lint-gap, whole-file-review, act-6]
 ---
 
 ## Problem
@@ -73,3 +73,72 @@ number to look like the neighbor would be the calm-but-wrong fix.
   beside the table's own columns.
 - Any caption that reads the draft beside a headline that reads the answer (walk 9's W9-R7): the two lines describe
   different moments, and the pair is the defect.
+
+## Extended (2026-11-25): a fix's own honesty sentence is a claim too, read it where it is least true
+
+Act 6 milestone 2's whole-file review (b9-12, `a883c5e40`). Round 2 (workflow `wf_5786b0ac-c15`, over round 1's fix
+code) found three sentences that round 1 wrote, or left standing beside its fixes, false in a state the fixer never
+read:
+
+- **The runner-up note.** Round 1 put a note under a runner-up whose printed figure beats Recommended
+  (`slots.recRunnerUpAheadHere`), reusing `copy.recRunnerUpWhy`'s shipped reason: the recommended one "came out a
+  little ahead more often across the futures we tested". The ranking (`selectCore` in `src/engine/solver/select.ts`)
+  takes the odds first, then the goal's shrunk figure, and a tie in the top set goes to the conventional order. Nothing
+  counts "more often", and on a tie-break crown the winner came out behind on both sets of futures. The note renders
+  only when the runner-up looks better, so its false reason always sat beside the figure that argued against it.
+  Two round-2 lenses found it, and all five refuter votes confirmed it.
+- **Social Security's Summary hero.** Round 1's P0 fix (each bar totals its own years) leaves a strategy that runs
+  out with "No lifetime total", and the hero still said "the most of these strategies". The refuters judged the
+  wording older than the fix, which made the gap easier to see. `slots.claimsSummaryLine` now takes `partial` and says
+  "the most of the strategies with a lifetime total here".
+- **The no-break-even line.** Round 1's fix picked the leader from the last lead, and its own new test (running totals
+  0, 0, 30,000 against 10,000, 20,000, 30,000) pinned `claimsNoBreakEvenLine`'s "stays ahead" through a final year
+  where both print ~$30,000, while the same pair's yearly view said "About the same". `slots.claimsLevelByLine` is
+  now the tied-year line.
+
+The runner-up note's round-2 rewrite ("came out ahead or the two came out about even") then failed round 3
+(`ff4e1c0d4`, P1, three of three refuters). On `?seed=borderline` with Leave more, the crown was won on the odds alone,
+by 9 futures in 16,000 (0.6708125 against 0.67025 on the ranking set), while the runner-up left about $10,000 more on
+both sets ($331,391 against $321,302 on the ranking set). Readers took "came out ahead" to mean the figure printed
+beside it, so a steady $10,000 lead read as a quirk of one set of futures. One sentence was rewritten three times, and
+each version was true somewhere and false in the state where it renders.
+
+**What it adds:** a fix sentence gets the same check as the finding it answers. List every route and answer state it
+renders in, and read it first where it is least true. For a note gated on a contradiction, that state is the gate
+itself. And a test the fix writes can pin the false sentence, so read the test's expected words against its own
+fixture.
+
+## Extended (2026-11-25): a refuter's proposed wording is a draft, so run it through the copy laws before adopting it
+
+Round 3 of the same review (b9-1, `ff4e1c0d4`). All three refuters at xhigh voted finding L1-2 (the runner-up note
+above) real and P1. All three also said the hunter's fix, an odds clause gated on `gradeStatistic === 'survival'`, was
+gated too narrowly, because every crown ranks the odds first. Their wordings split:
+
+- Seat C proposed "there the recommended one had the better odds, or the same odds and a figure ahead or about even":
+  a survival win or a survival tie for the crown, stated outright.
+- Seat A proposed "strategies are ranked first on the odds the money lasts and only then on this figure … where the
+  recommended one came out ahead or the two came out about even". That keeps the round-2 clause, and after "first on
+  the odds" it reads as a win or a tie on them.
+- Seat B said the hunter's wording broke a ruled law. `docs/decisions/survival-tie-tolerance.md`, "The known cost",
+  point 2, says no copy may call or imply that the crown is safer, just as safe, or survival-equivalent, or that it won
+  on survival. At tolerance 0 the crown's odds edge can be noise. `SURVIVAL_CLAIMS` in `src/ui/copyGuard.ts` (council
+  `wf_6e72eca9-c20`) enforces that law. B linted three wordings against the guard, and all three passed, including
+  "came out ahead on the odds the money lasts there", because the pattern `(ahead|better) on (survival|safety|odds)`
+  missed "on THE odds". B went further: even "ranked first on the odds" can imply a survival win, so whether the odds
+  key may be named at all is a council question. B proposed wording that names no winner on any key.
+
+The guard catches seat C's sentence through "the same odds" (the `(same|identical|…) (odds|chances|safety)` pattern).
+Its "had the better odds" passes on its own, and still passes in the current tree. The shipped fix states the ranking
+rule in both sentences without saying which key decided this crown. `recRunnerUpAheadHere` now ends "the ranking reads
+a separate set of futures and puts the odds the money lasts ahead of this figure, so a hair's difference in those odds,
+or this figure as it reads there, can put it first." The pattern became `on (the\s+)?(survival|safety|odds)`, and
+"There the recommended one came out ahead on the odds the money lasts." joined `SURVIVAL_MUST_CATCH` in
+`src/ui/__tests__/copyGuard.test.ts`. The commit records the wording, which still names the odds as the rule's first
+key, as the pilot's call, open to Briggsy's read.
+
+**What it adds:** a refuter votes on the finding, and its wording is a draft prescription (insight 105, applied to
+words). Agreement on "real, P1" says nothing about the sentence proposed with it. Here, two of three proposals would
+have shipped a banned claim. Before adopting a fix sentence, check it against the project's ruled copy laws (the
+decision records, not only the lint). The lint is a list of phrasings: it catches "the same odds" and passes "had the
+better odds". When a paraphrase slips through, widen the pattern and pin that sample, as `ff4e1c0d4` did for "on the
+odds".

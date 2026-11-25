@@ -3,7 +3,7 @@ title: A rendered defect is green on every check until someone looks — ten def
 date: 2026-11-25
 phase: Act 6, the RightCapital clone (RC1 to RC7, b9-4 to b9-6, 2026-11-24)
 modules: [e2e/held/rc-look.spec.ts, e2e/rc-screens.spec.ts, e2e/hcTextAudit.ts, src/viz/charts/]
-tags: [look-audit, screenshots, eye-in-the-loop, orchestrator, builder-agent, green-checks, visual-defect, calm-but-wrong, ellipsis-exemption, planted-red, highcharts, fit, phone, clone]
+tags: [look-audit, screenshots, eye-in-the-loop, orchestrator, builder-agent, green-checks, visual-defect, calm-but-wrong, ellipsis-exemption, planted-red, highcharts, fit, phone, clone, vacuous-audit, zero-labels, presence-count, html-overlay, donut, hole, geometric-check, assertCentreInHole, hcAudit, held-instrument, rc-look, RC_ONLY, env-filter, index-lookup, by-id, screenById, wrong-screen, rename]
 ---
 
 ## Problem
@@ -57,3 +57,39 @@ exemption ("ellipsis is fine") cannot see the class it exempts.
   report.
 - [[123]]: a screenshot proves one frame; the look finds the defect, the measured catalog proves it is gone everywhere.
 - Every remaining clone unit (RC8 onward), and any chart re-hosted in a new box.
+
+## Extended (2026-11-25): a clean audit can be blind, because it saw none of what it checks or checked the wrong page
+
+Two more audits in Act 6's second milestone came back clean and proved nothing.
+
+**An audit that reads one layer passes words drawn on another** (RC12, `c2ff8488`, b9-11). Investment's donuts are
+Highcharts pies with the centre words in HTML over the hole (`Donut` in `src/viz/charts/InvestmentCharts.tsx`, its
+`[data-donut-centre]` layer). `hcAudit` (`e2e/hcTextAudit.ts`) reads only the SVG text Highcharts draws: data labels,
+axis labels and titles, plot-line labels, legend items. The rings print none of those, so the text audit in
+`auditRings` (`e2e/rc-screens.spec.ts`), run with nothing required (`{ texts: [], counts: {} }`), reads zero labels and
+passes whatever the centre does: too big, faded, outside the hole, or missing. The builder added `assertCentreInHole`
+beside it: each centre line at the floor size or more and unfaded, every corner of its text inside the hole's circle,
+and "no centre words" as a failure when there are none. Its plant (the centre text made too big) went red once. One
+watch-out on the fix: the hole's size in the check, `DONUT_HOLE = 0.64`, is a copy of `DONUT_INNER = '64%'` in
+`src/viz/charts/donutOptions.ts`, so a hole shrunk in source alone leaves the check measuring against the old, larger
+circle. The kit `Ring` (`src/ui/kit/Ring.tsx`) lays its centre and caption over its SVG the same way; RC4's spill there
+(in the Problem above) was found by eye, and no e2e arm yet measures those words against the circle.
+
+**A held instrument that indexes into a filtered list shoots the wrong screen** (milestone 2's review, `a883c5e40`,
+b9-12). In `e2e/held/rc-look.spec.ts`, RC11 (`912caf66a`) renamed the screen list `ALL_SCREENS` and gave the old name,
+`SCREENS`, to a copy filtered by the `RC_ONLY` environment variable. RC11's and RC12's new code looked screens up by id,
+but nine older lookups kept their positions on the old name, which now meant the filtered list: `HEALTH = SCREENS[2]`,
+`CLAIMS = SCREENS[6]`, `TAX = SCREENS[4]`, `CASH_FLOWS = SCREENS[3]` and five more. With no filter they were still right.
+Under a filter they were not (with `RC_ONLY=probability,health-care,social-security`, for one, `SCREENS[2]` is Social
+Security). In a capture run during the review, the shots named "health-care" showed Social Security, and the audit on
+them was clean, because it audited the page in front of it; the Health Care tray capture, which runs only when
+`[data-health-charts]` is on the page, skipped without a word. Only opening the picture found it. The fix is
+`screenById`, a lookup by id in the unfiltered `ALL_SCREENS`, now used by every capture block (its landmine is in
+`docs/landmines.md`, "The fit gate and e2e").
+
+What both add: a clean audit means nothing until it shows it looked at the right thing. Give an audit a presence count,
+so "found none" fails where something must be there (insight 029's presence companion, for an audit). Measure words in
+the layer they are drawn in, or with a geometric check of your own. Pick what a capture shows by its name, never by its
+position in a list that a filter, an environment variable or a reorder can change, and when a rename hands an old name
+to a new meaning, check every reader that already used the name. The eye on the shot stays the last check: it is the
+only one that reads the page itself, so it is the only one that catches an instrument aimed at the wrong page.

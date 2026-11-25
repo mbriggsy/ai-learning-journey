@@ -3,7 +3,7 @@ title: A guard shipped on the sibling path indicts the unguarded primary — and
 date: 2026-07-22
 phase: U16 recommendation surface (ultramode fold)
 modules: [src/ui/recommendationView.ts, src/ui/money.ts]
-tags: [held-out-split, seed-B, inversion, guard-asymmetry, sibling-sweep, display-gate, calm-but-wrong, component-family, aria-disabled, aria-describedby, blocked-apply, state-style, said-once, message-key, message-lifetime, two-input-claim, editsKey, applied-message, action-items-tray]
+tags: [held-out-split, seed-B, inversion, guard-asymmetry, sibling-sweep, display-gate, calm-but-wrong, component-family, aria-disabled, aria-describedby, blocked-apply, state-style, said-once, message-key, message-lifetime, two-input-claim, editsKey, applied-message, action-items-tray, subTenthCollapse, runner-up, no-change, reassurance, false-reassurance, recComposeAlready, inherited-gate, hero-change, stale-disjunct, seed-order]
 ---
 
 ## Problem
@@ -76,3 +76,36 @@ press.
 
 List what a message's sentence asserts, and key its lifetime on every input behind each assertion. A key on one of two
 inputs makes the message true when written and false the moment the other input moves.
+
+## Extended (2026-11-25, milestone 2 review round 3, b9-1): a gate written for an earlier hero, and a reassurance that never reads your plan
+
+The July fold above named `subTenthCollapse` as a correlated axis, added the inversion and `$0` guards beside it, and
+left it in the gate. It routed the other way from those guards: not a dollar claim that should not show, but a real win
+hidden behind a reassurance. `recommendedView` in `src/ui/recommendationView.ts` set
+`isNoChange = payload.noChange || (payload.grade?.subTenthCollapse ?? false)`, and no-change prints
+`copy.recComposeAlready`, "You're already on one of the strongest paths we tested". The flag
+(`GradeResult.subTenthCollapse`, `src/engine/validation/gradeCalibration.ts`) is true when the winner and the RUNNER-UP
+share a displayed tenth of the odds. It never looks at the household's plan, which is what the sentence is about. On
+`?seed=order` (winner and runner-up both 7 of 10, per the fix's code comment) the card read "already" under "A confident
+lean" while switching saved about $45,000 of lifetime tax and premiums, and the household's plan ranked 14th of 77 (the
+figures the commit records). The same words reached the Winner card, Summary, Comparison, Details and the home card. The
+P0, 3 of 3 refuters.
+
+Why it was there: `docs/plans/4-recommendation.md`'s grade-calibration bullet ("Grade vs. display resolution are
+reconciled", which `gradeCalibration.ts` cites as S4.4) guards an `X of 10` hero, where a sub-tenth win would show an unchanged `X of 10` under "just do it". Its first remedy
+is "show the finer figure". By the first build (`6f9278628`, 2026-07-22) the hero was already a dollar delta against the
+no-action baseline, which is that finer figure, but the routing came across from the plan unchanged and stood four
+months. Fixed in `ff4e1c0d4`: `isNoChange` is `payload.noChange` alone. The inversion and `$0` guards, neither of which
+reads the flag, still cover every misleading dollar. The flag is still computed and saved; nothing routes on it. The
+test in `src/ui/__tests__/recommendationView.test.ts` now expects a sub-tenth collapse alone to stay `active` with its
+dollar delta. In the real app, order's card reads "~$45,000 less in tax and health premiums, compared with your plan
+today".
+
+What it adds: (1) when a hero's quantity changes, re-key every gate that guards it on the new quantity; a gate kept from
+the old hero guards nothing, and here it suppressed the new hero. (2) The no-dollar register is not a safe default: a
+reassurance is a claim about the household's plan, so its gate must compare that plan, not two other candidates. Check
+that the operands a gate reads are the operands its sentence names. (3) A fix that adds guards to an OR'd gate should
+also re-ask whether each old disjunct still earns its place, because the routed sentence is only as true as the weakest
+one. A near cousin is filed, not fixed (`docs/backlog.md`, Tier 1, *Act 6 milestone 2's review: what a reader can misread,
+left open*): the seed-B inversion route can still say "already" where the winner, crowned on the odds, costs more on
+the goal.

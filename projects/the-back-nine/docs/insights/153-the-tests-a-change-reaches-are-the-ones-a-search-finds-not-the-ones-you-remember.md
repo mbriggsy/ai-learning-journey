@@ -3,7 +3,7 @@ title: The tests a change reaches are the ones a search finds, not the ones you 
 date: 2026-11-23
 phase: The RightCapital mandate, gap 1 (the workbench's year-by-year table, U7)
 modules: [src/ui/workbench/, src/ui/devSeeds.ts, src/ui/__tests__/, scripts/__tests__/breakpoint-mirrors.test.ts]
-tags: [test-cadence, reached-tests, partial-run, ci-red, grep-the-tests, sweep-tests, hand-pinned-list, guard-tests, breakpoint-mirrors, dev-seeds, source-bind, readFileSync, moved-code, regex-pin, slot-change, e2e-outside-tsconfig, coordinate-tap-arm, parallel-lanes, grep-by-field, import-search, path-reading-test, moved-surface, deleted-surface, e2e-selectors, live-copy-key]
+tags: [test-cadence, reached-tests, partial-run, ci-red, grep-the-tests, sweep-tests, hand-pinned-list, guard-tests, breakpoint-mirrors, dev-seeds, source-bind, readFileSync, moved-code, regex-pin, slot-change, e2e-outside-tsconfig, coordinate-tap-arm, parallel-lanes, grep-by-field, import-search, path-reading-test, moved-surface, deleted-surface, e2e-selectors, live-copy-key, derive-from-registry, navModules, route-table, phone-menu, rc-screens, stale-expected-list, vacuous-guard]
 ---
 
 ## Problem
@@ -93,3 +93,26 @@ Two more misses, each by a builder whose own list was found by search, just not 
   chose was green. Typecheck never sees `e2e/`, and the copy key still existed, so even the retired-key grep of
   [[086]] had nothing to find. When a surface moves or goes, grep `e2e/` for each of its copy keys and selectors, not
   only for keys being deleted.
+
+## Extended (2026-11-25, Act 6's RC11 and RC12): when an e2e arm's claim is "matches the registry", derive the expected list from the registry, so there is no hand copy to find
+
+Every fix above widens the search. This case is a hand-typed list that two builders missed while editing the file it
+sat in, and the fix removes the list instead of searching harder for it.
+
+- **What went red.** RC2's phone-menu arm in `e2e/rc-screens.spec.ts` asserted "the menu holds every page, in the
+  nav's order" against seven hand-typed copy keys (`copy.shellPageSnapshot` through `copy.workbenchPageFacts`). RC11
+  (`912caf66`) added Stress Test to the route table and RC12 (`c2ff8488`) added Asset Allocation and Tax Allocation.
+  Each updated the route table's unit lists in `src/ui/shell/__tests__/routes.test.ts`, and each changed hundreds of
+  lines of that same spec file for its own arms, but neither touched the menu list. CI run 45619245873, on RC11's
+  commit, failed only `verify-fit` (the unit and RV chart-text jobs passed). The orchestrator's sweep missed it too, and
+  RC12 landed before the fix, so the list was three pages short. Typecheck never sees `e2e/`.
+- **The fix** (`897d4ac2`, b9-11). The phone menu is drawn from `navModules()` (`Shell.tsx` passes it through
+  `TopBar` to `PhoneMenu`), so the arm now reads its expected labels from the same table:
+  `navModules().flatMap((m) => m.pages.map((p) => p.label))`. The order stays pinned once, module by module, in
+  `routes.test.ts`. A setup guard (more than 5 pages) stops the arm passing on an empty table. RC13 to RC20 each add a
+  route, and none of them can red this arm with a stale list.
+- **The lesson.** A hand copy of a registry inside a test is a second registry, and every new entry has to update it
+  too. In `e2e/`, nothing flags a missed update before CI. When the claim is "the screen matches the registry", derive
+  the expected list from the registry and pin the registry's contents in one place, its own unit test. Keep a hand list
+  only where the content itself is the claim (these pages, by these names): a derived list there would agree with
+  whatever the registry says, wrong or not. Give a derived list a non-empty guard, so it cannot pass on nothing.

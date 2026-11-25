@@ -3,7 +3,7 @@ title: A counterfactual differenced AT a transition event understates (or invert
 date: 2026-06-27
 phase: Act 2 · U7 (e1b — the survivor income step-down)
 modules: [src/engine/simulate.ts, src/shared/model.ts, src/engine/__tests__/survivorConditioned.test.ts]
-tags: [counterfactual, survivor, social-security, claim-timing, understatement, cardinal-sin, steady-state, vacuous-test, adversarial-verify]
+tags: [counterfactual, survivor, social-security, claim-timing, understatement, cardinal-sin, steady-state, vacuous-test, adversarial-verify, break-even, breakEvenIndex, crossing, lead-change, parity, even-count, cumulative-totals, tie-at-printed-grain, test-name-vs-fixture]
 ---
 
 ## Problem
@@ -57,3 +57,41 @@ construction" is a claim to be tested on a non-degenerate fixture, not asserted 
   in the dangerous direction long before the median itself flips sign.
 - Pairs with [[029]] (a structurally-zero fixture discriminates nothing) and [[040]] (a stochastic timeline
   preempts a planned input) — both about a test/seam that looks covered but never exercises the live mechanism.
+
+## Extended (2026-11-25, Act 6's milestone 2 review round 3, b9-1): "the last change of lead holds" coded as "the last leader is not the first" is right only for an odd count of changes
+
+Social Security's break-even (`breakEvenIndex` in `src/ui/screens/retirement/socialSecurityView.ts`, built in RC9,
+`7072fecd`) took this insight's warning: two claim streams with decoupled onsets can cross more than once, so the
+break-even is the last change of lead, the one that holds. The code then wrote that as
+`first !== 0 && lead !== first ? since : null`, comparing the last leader with the first. That is true after one or
+three changes and false after two. Ahead, behind, ahead again ends with the first leader back in front, so it returned
+null.
+
+The two-change case is the textbook couple split. The lower earner claims at 62 and the higher earner waits to 70 (the
+household's own plan), set beside both claiming at full retirement age. The plan pays first and leads early, full
+retirement age then led from 68 to 87 by up to ~$80,000, and the plan passed it for good at 89 (the commit's figures).
+The page read "No break-even" and `claimsNoBreakEvenLine`'s "the total paid from your plan’s own ages stays ahead",
+through twenty years in which it trailed. RC9's build and both earlier whole-file rounds passed it. Round 3's harm-class
+hunter found it, and all three refuters confirmed it (P0).
+
+The test had a cover story. RC9's case was named "two crossings", but its fixture (`a = [0, 100k, 200k, 300k, 500k,
+700k]` against `b = [50k, 100k, 250k, 280k, 600k, 650k]`) changes lead three times, at indices 3, 4 and 5. Three is
+odd, the one parity the old rule got right. The name said even and the data was odd. Nobody counted.
+
+The fix (`ff4e1c0d`) keeps a `changed` flag, set when a non-zero sign differs from a non-zero lead, and returns the last
+change's index whenever the lead changed at all. Ties at the printed grain (`snapToGrain`) are still skipped, so a tie
+is never a change. A second gap sat beside it: `claimsComparisonView` checked a tied last year only on the
+no-break-even branch, so a crossing followed by a tied last year could still say "from then on … stays ahead". That
+check now runs before either branch and reads "About the same" with `claimsLevelByLine`. New tests cover two changes of
+lead by hand (in both argument orders: the same index, 7), the same through the view (the ring at the second change,
+never "No break-even"), and a crossing followed by a tied last year (no ring). The renamed RC9 case says "three changes
+of lead".
+
+What this adds to the lesson above:
+
+- Once streams can cross more than once, "who leads at the end against who led at the start" is a parity test, not a
+  change test. Track the change itself (a flag or a count), never the endpoints.
+- Test each parity by name (one change, two, three), and count the changes in the fixture by hand in a comment. A test
+  name that states a count is a claim about the data, and here it was wrong in exactly the way that hid the bug.
+- With a printed grain, a tie is a third state, neither side leading. Handle it on every branch that reads a lead, not
+  only the branch where it first came up.

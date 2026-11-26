@@ -65,7 +65,10 @@ const CSS_INITIAL_FONT_PX = 16
  * it reds here and has to be justified by deleting the entry deliberately.
  */
 const REQUIRED_MIRROR_FILES = [
-  'src/ui/styles/app.css',
+  // The shell's compact variant (`@custom-variant compact`): the 1440 by 731 frame's tighter rhythm sits on the seam.
+  'src/ui/styles/theme.css',
+  // `app.css` left this list at RC19 with the old `.disclaimer` footer (`Disclaimer.tsx`, its last reader); the R13
+  // line is the kit's `Caveat` in each page's footnote row now, laid out by the shell's own rules.
   // `budget.css` and `sheetShell.css` left this list at RC14 with the walk (the budget builder, their last importer); the
   // Living expenses drawer is the kit's, which reads the tiers through its `wide:` and `laptop:` variants.
   // `controls.css` left this list at RC18 with the assumption panel (its last importer, `controlSheet.tsx`, went with it).
@@ -206,8 +209,9 @@ describe('--bp-laptop source-bind', () => {
       `[bp-laptop] the sweep of src/**/*.{css,ts,tsx} + e2e/**/*.ts + scripts/**/*.ts found NO rem ` +
         `width breakpoint at all — the pattern or the walk broke, and every assertion below would ` +
         `pass vacuously.`,
-      // 9 at Act 6 · RC14, after the walk's budget sheets left (11 before); the old sheets' mirrors keep going until RC21.
-    ).toBeGreaterThan(5)
+      // 3 at Act 6 · RC19 (the kit's phone tier, theme.css's compact variant and tokens.css's short-tier prose), after
+      // the old disclaimer's app.css rules left (9 at RC14, 11 before).
+    ).toBeGreaterThan(2)
   })
 
   it.each(REQUIRED_MIRROR_FILES)('%s still carries a --bp-laptop mirror', (file) => {

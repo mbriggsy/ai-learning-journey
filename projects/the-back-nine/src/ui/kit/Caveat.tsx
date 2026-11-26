@@ -11,14 +11,15 @@ import { cn } from './cn'
 
 export interface CaveatProps {
   readonly lines: readonly string[]
-  /** The element's id; the one in-frame id by default. */
-  readonly id?: string
+  /** The element's id; the one in-frame id by default. `null` for App's trailing mount (Act 6 · RC19), which no answer
+   *  names (the page-trailing caveat on a screen with no figure: unlock, the cold start, Profile, Settings). */
+  readonly id?: string | null
   readonly className?: string
 }
 
 export function Caveat({ lines, id = IN_FRAME_DISCLAIMER_ID, className }: CaveatProps) {
   return (
-    <footer id={id} data-caveat="" className={cn('text-label text-stone-600', className)}>
+    <footer id={id ?? undefined} data-caveat="" className={cn('text-label text-stone-600', className)}>
       <p>
         {lines.map((line, i) => (
           <Fragment key={i}>

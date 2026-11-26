@@ -1,7 +1,8 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRegisterSW } from 'virtual:pwa-register/react'
 import { entryCopy } from './entryCopy'
 import { readyToApplyUpdate } from './updateGate'
+import { ToastProvider, useToast } from './kit/Toast'
 
 /**
  * 'Update ready' toast — PWA prompt mode (registerType:'prompt').
@@ -19,6 +20,12 @@ import { readyToApplyUpdate } from './updateGate'
  * AND the Fork B save-ceremony hold (commit → mandatory export, where no write is in flight —
  * SaveFlow raises `holdUpdateApply` across securing+export and the gate refuses while it's
  * open). This component stays dumb wiring either way: a false gate leaves the prompt up.
+ *
+ * Act 6 · RC19: drawn on the kit's Toast (Base UI's Toast under the app's `CSPProvider disableStyleElements`: no runtime
+ * `<style>`, no style attribute string). The toast stays until a press (`timeout: 0`); its action is "Refresh now" (the
+ * same `apply`, the same gate, insight 112: the leave-page guard's hold still stands before every reload this can
+ * cause); its dismiss is "Later", and a swipe away is "Later" too (`onClose`). The stack's region is always mounted
+ * (Base UI's viewport, a polite live region), so the prompt is announced when it lands (burned/045).
  */
 export function UpdateToast() {
   const {
@@ -58,30 +65,61 @@ export function UpdateToast() {
     })()
   }
 
-  // The live region is ALWAYS mounted (empty when idle) so the 'update ready' content is
-  // ANNOUNCED when it appears — a region that first mounts already-populated may not fire
-  // (burned/045; one polite region). Its visible box-reserve + calm positioning is the U8
-  // SLICE-2 CSS pass (design loadout + Briggsy's eye), not a blind style guess here.
+  const later = (): void => {
+    setHeld(false)
+    setNeedRefresh(false)
+  }
+
   return (
-    <div className="update-toast" role="status" aria-live="polite">
-      {needRefresh && (
-        <>
-          <span className="update-toast__text">{held ? entryCopy.updateHeld : entryCopy.updateReady}</span>
-          <button type="button" className="update-toast__action" onClick={apply}>
-            {entryCopy.updateReload}
-          </button>
-          <button
-            type="button"
-            className="update-toast__dismiss"
-            onClick={() => {
-              setHeld(false)
-              setNeedRefresh(false)
-            }}
-          >
-            {entryCopy.updateLater}
-          </button>
-        </>
-      )}
-    </div>
+    <ToastProvider dismissLabel={entryCopy.updateLater} regionLabel={entryCopy.updateRegionLabel}>
+      <UpdatePrompt open={needRefresh} text={held ? entryCopy.updateHeld : entryCopy.updateReady} onApply={apply} onLater={later} />
+    </ToastProvider>
   )
+}
+
+/** Shows the one update toast while `open`, keeps its words current, and closes it when the prompt goes. */
+function UpdatePrompt({
+  open,
+  text,
+  onApply,
+  onLater,
+}: {
+  readonly open: boolean
+  readonly text: string
+  readonly onApply: () => void
+  readonly onLater: () => void
+}) {
+  const toast = useToast()
+  const idRef = useRef<string | null>(null)
+  // The latest handlers, read at the press (the toast object holds the closures it was shown with).
+  const handlers = useRef({ onApply, onLater })
+  handlers.current = { onApply, onLater }
+
+  useEffect(() => {
+    if (open && idRef.current === null) {
+      idRef.current = toast.show({
+        id: 'b9-update',
+        title: text,
+        timeout: 0,
+        action: { label: entryCopy.updateReload, onSelect: () => handlers.current.onApply() },
+        // Every way the toast closes that is not the prompt going away (the dismiss, a swipe) is "Later".
+        onClose: () => {
+          if (idRef.current === null) return
+          idRef.current = null
+          handlers.current.onLater()
+        },
+      })
+    } else if (!open && idRef.current !== null) {
+      const id = idRef.current
+      idRef.current = null
+      toast.close(id)
+    }
+    // `text` is read only when the toast is first shown; the effect below keeps it current.
+  }, [open])
+
+  useEffect(() => {
+    if (idRef.current !== null) toast.update(idRef.current, { title: text })
+  }, [text])
+
+  return null
 }

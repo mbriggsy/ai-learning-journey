@@ -25,12 +25,14 @@
  *
  * Crypto stays out of the entry bundle: dynamic `import('./vaultSession')` in the handlers, and
  * the whole flow is `lazy()`-mounted by App (PassphraseStep pulls the zxcvbn floor seam).
+ *
+ * Act 6 · RC19: a page before unlock in the login card's style (`src/ui/kit/VaultCard.tsx`). Its file step, on the
+ * `damaged` mount, IS the damaged-vault notice: the card says what happened (`restoreIntro`) and offers the way back.
  */
 import { useEffect, useId, useRef, useState } from 'react'
 import { copy } from './copy'
-import './styles/save.css'
 import { useLiveAnnouncer, focusHeading } from '@intake/a11y'
-import { PendingPanel } from './PendingPanel'
+import { Button, FieldNote, PassphraseField, VAULT_ACTIONS, VaultCard, VaultHeading, VaultPage, VaultPending } from './kit'
 import { describeRestoreFailure, describeUnlockReadOnly, type UnlockCopyKey } from './unlockCopy'
 import { PassphraseStep } from './PassphraseStep'
 import type { FloorCheckedPassphrase } from '@crypto/kdf'
@@ -192,176 +194,153 @@ export function RestoreFlow({
   }
 
   return (
-    <main className="save">
+    <VaultPage>
       <div ref={announcer.ref} className="sr-only" role="status" aria-live="polite" aria-atomic="true" />
-
-      {step === 'file' && (
-        <section className="save-step">
-          <h2 className="save-step__heading" tabIndex={-1} ref={headingRef}>
-            {copy.restoreHeading}
-          </h2>
-          {/* Cold entry (onBack set) serves a no-vault device — the damaged intro would misread it. */}
-          <p className="save-step__intro">{onBack ? copy.restoreColdIntro : copy.restoreIntro}</p>
-
-          <div className="save-field">
-            <label className="save-field__label" htmlFor={fileId}>
-              {copy.restoreFileLabel}
-            </label>
-            {/* A REAL file input (council: labelled, never pointer-only). No `accept` filter — a
-                survivor's renamed/re-extensioned export must never be unpickable. */}
-            <input
-              id={fileId}
-              className="save-field__file"
-              type="file"
-              aria-invalid={fileError !== null}
-              aria-describedby={fileError !== null ? fileErrId : undefined}
-              onChange={(e) => void handleFilePick(e.target.files?.[0] ?? null)}
-            />
-            {fileName !== null && fileError === null && <p className="save-step__note">{fileName}</p>}
-            {fileError !== null && (
-              <p className="save-field__note" id={fileErrId} role="alert">
-                {copy[fileError]}
+      <VaultCard wordmark={{ mark: copy.shellMark, title: copy.appTitle }} busy={step === 'restoring'}>
+        {step === 'file' && (
+          <section className="flex flex-col gap-6" data-restore-step="file">
+            <div className="flex flex-col gap-2">
+              <VaultHeading ref={headingRef}>{copy.restoreHeading}</VaultHeading>
+              {/* Cold entry (onBack set) serves a no-vault device — the damaged intro would misread it. */}
+              <p className="text-body text-stone-600" data-restore-intro={onBack ? 'cold' : 'damaged'}>
+                {onBack ? copy.restoreColdIntro : copy.restoreIntro}
               </p>
-            )}
-          </div>
-
-          <div className="save-actions">
-            {/* Only on the cold-entry door: a change-of-mind returns to ColdStart. The damaged
-                mount passes no onBack — its file step is the flow's first, with nowhere to go back to. */}
-            {onBack && (
-              <button type="button" className="btn-quiet" onClick={onBack}>
-                {copy.flowBack}
-              </button>
-            )}
-            <button
-              type="button"
-              className="btn-primary"
-              aria-disabled={fileName === null || fileError !== null}
-              onClick={() => {
-                if (fileTextRef.current !== null && fileError === null) setStep('word')
-              }}
-            >
-              {copy.flowNext}
-            </button>
-          </div>
-        </section>
-      )}
-
-      {step === 'word' && (
-        <section className="save-step">
-          <h2 className="save-step__heading" tabIndex={-1} ref={headingRef}>
-            {copy.recoverHeading}
-          </h2>
-          <p className="save-step__intro">{copy.restoreWordIntro}</p>
-
-          <div className="save-field">
-            <label className="save-field__label" htmlFor={wordId}>
-              {copy.recoverPassphraseLabel}
-            </label>
-            <div className="save-field__row">
-              <input
-                id={wordId}
-                className="save-field__input"
-                type={reveal ? 'text' : 'password'}
-                autoComplete="off"
-                autoCapitalize="none"
-                autoCorrect="off"
-                spellCheck={false}
-                enterKeyHint="next"
-                value={word}
-                aria-invalid={wordError !== null}
-                aria-describedby={wordError !== null ? wordErrId : undefined}
-                onChange={(e) => {
-                  setWord(e.target.value)
-                  if (wordError !== null) setWordError(null) // forgive on re-edit (design law)
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && word !== '') setStep('setNew')
-                }}
-              />
-              <button
-                type="button"
-                className="save-field__reveal"
-                aria-pressed={reveal}
-                onClick={() => setReveal((r) => !r)}
-              >
-                {reveal ? copy.passphraseHide : copy.passphraseShow}
-              </button>
             </div>
-            {wordError !== null && (
-              <p className="save-field__note" id={wordErrId} role="alert">
-                {copy[wordError]}
-              </p>
-            )}
-          </div>
 
-          <div className="save-actions">
-            <button type="button" className="btn-quiet" onClick={() => setStep('file')}>
-              {copy.flowBack}
-            </button>
-            <button
-              type="button"
-              className="btn-primary"
-              aria-disabled={word === ''}
-              onClick={() => {
+            <div className="flex flex-col gap-1.5">
+              <label className="text-body text-stone-900" htmlFor={fileId}>
+                {copy.restoreFileLabel}
+              </label>
+              {/* A REAL file input (council: labelled, never pointer-only). No `accept` filter — a
+                  survivor's renamed/re-extensioned export must never be unpickable. Chromium's own style cuts a long
+                  picked name inside the box with an ellipsis (`text-overflow: ellipsis`, which no page style overrides:
+                  measured, RC19), so the name prints whole under the box. */}
+              <input
+                id={fileId}
+                className="w-full cursor-pointer rounded-control border border-stone-300 bg-bg p-2 text-body text-stone-900 file:mr-3 file:cursor-pointer file:rounded-control file:border file:border-blue-ink file:bg-bg file:px-3 file:py-1.5 file:text-blue-ink focus:outline-2 focus:outline-offset-2 focus:outline-blue-ink"
+                type="file"
+                aria-invalid={fileError !== null}
+                aria-describedby={fileError !== null ? fileErrId : undefined}
+                onChange={(e) => void handleFilePick(e.target.files?.[0] ?? null)}
+              />
+              {fileName !== null && fileError === null && <p className="text-label break-all text-stone-600">{fileName}</p>}
+              {fileError !== null && <FieldNote id={fileErrId}>{copy[fileError]}</FieldNote>}
+            </div>
+
+            <div className={VAULT_ACTIONS}>
+              {/* Only on the cold-entry door: a change-of-mind returns to ColdStart. The damaged
+                  mount passes no onBack — its file step is the flow's first, with nowhere to go back to. */}
+              {onBack && (
+                <Button variant="neutral" onClick={onBack}>
+                  {copy.flowBack}
+                </Button>
+              )}
+              <Button
+                variant="primary"
+                aria-disabled={fileName === null || fileError !== null}
+                onClick={() => {
+                  if (fileTextRef.current !== null && fileError === null) setStep('word')
+                }}
+              >
+                {copy.flowNext}
+              </Button>
+            </div>
+          </section>
+        )}
+
+        {step === 'word' && (
+          <section className="flex flex-col gap-6" data-restore-step="word">
+            <div className="flex flex-col gap-2">
+              <VaultHeading ref={headingRef}>{copy.recoverHeading}</VaultHeading>
+              <p className="text-body text-stone-600">{copy.restoreWordIntro}</p>
+            </div>
+
+            <PassphraseField
+              id={wordId}
+              label={copy.recoverPassphraseLabel}
+              value={word}
+              onChange={(v) => {
+                setWord(v)
+                if (wordError !== null) setWordError(null) // forgive on re-edit (design law)
+              }}
+              autoComplete="off"
+              reveal={reveal}
+              onRevealChange={setReveal}
+              showLabel={copy.passphraseShow}
+              hideLabel={copy.passphraseHide}
+              invalid={wordError !== null}
+              describedBy={wordError !== null ? wordErrId : undefined}
+              enterKeyHint="next"
+              onEnter={() => {
                 if (word !== '') setStep('setNew')
               }}
             >
-              {copy.flowNext}
-            </button>
-          </div>
+              {wordError !== null && <FieldNote id={wordErrId}>{copy[wordError]}</FieldNote>}
+            </PassphraseField>
 
-          {/* Fork C(i) on the restore surface: standing, never an alert. */}
-          <p className="save-step__note">{copy.restoreBothLostNote}</p>
-        </section>
-      )}
+            <div className={VAULT_ACTIONS}>
+              <Button variant="neutral" onClick={() => setStep('file')}>
+                {copy.flowBack}
+              </Button>
+              <Button
+                variant="primary"
+                aria-disabled={word === ''}
+                onClick={() => {
+                  if (word !== '') setStep('setNew')
+                }}
+              >
+                {copy.flowNext}
+              </Button>
+            </div>
 
-      {step === 'setNew' && (
-        <PassphraseStep
-          key="restore-new"
-          heading={copy.recoverNewPassHeading}
-          intro={copy.restoreNewPassIntro}
-          submitLabel={copy.recoverNewPassButton}
-          onSubmit={handleSetNew}
-          onBack={() => {
-            setPairError(null)
-            setStep('word')
-          }}
-          announcer={announcer}
-          externalError={pairError}
-          onFieldEdit={() => setPairError(null)}
-        />
-      )}
+            {/* Fork C(i) on the restore surface: standing, never an alert. */}
+            <p className="border-t border-stone-300 pt-4 text-label text-stone-600">{copy.restoreBothLostNote}</p>
+          </section>
+        )}
 
-      {step === 'restoring' && <PendingPanel status={copy.securingStatus} />}
+        {step === 'setNew' && (
+          <PassphraseStep
+            key="restore-new"
+            heading={copy.recoverNewPassHeading}
+            intro={copy.restoreNewPassIntro}
+            submitLabel={copy.recoverNewPassButton}
+            onSubmit={handleSetNew}
+            onBack={() => {
+              setPairError(null)
+              setStep('word')
+            }}
+            announcer={announcer}
+            externalError={pairError}
+            onFieldEdit={() => setPairError(null)}
+          />
+        )}
 
-      {step === 'error' && (
-        <section className="save-step">
-          <h2 className="save-step__heading" tabIndex={-1} ref={headingRef}>
-            {copy.restoreHeading}
-          </h2>
-          <p className="save-step__note" role="alert">
-            {copy[opError]}
-          </p>
-          <div className="save-actions">
-            <button type="button" className="btn-quiet" onClick={() => setStep('file')}>
-              {copy.flowBack}
-            </button>
-            {opError === 'restoreVaultExists' ? (
-              // vault-exists is NOT transient — a retry deterministically re-refuses (backup.ts:135),
-              // so the primary action matches the copy's own instruction: reload (re-probes fresh,
-              // and the healthy vault routes to the unlock screen). Ultramode review 2026-07-02.
-              <button type="button" className="btn-primary" onClick={() => window.location.reload()}>
-                {copy.restoreRetry}
-              </button>
-            ) : (
-              <button type="button" className="btn-primary" onClick={() => void runRestore()}>
-                {copy.exportRetry}
-              </button>
-            )}
-          </div>
-        </section>
-      )}
-    </main>
+        {step === 'restoring' && <VaultPending status={copy.securingStatus} />}
+
+        {step === 'error' && (
+          <section className="flex flex-col gap-6" data-restore-step="error">
+            <VaultHeading ref={headingRef}>{copy.restoreHeading}</VaultHeading>
+            <FieldNote>{copy[opError]}</FieldNote>
+            <div className={VAULT_ACTIONS}>
+              <Button variant="neutral" onClick={() => setStep('file')}>
+                {copy.flowBack}
+              </Button>
+              {opError === 'restoreVaultExists' ? (
+                // vault-exists is NOT transient — a retry deterministically re-refuses (backup.ts:135),
+                // so the primary action matches the copy's own instruction: reload (re-probes fresh,
+                // and the healthy vault routes to the unlock screen). Ultramode review 2026-07-02.
+                <Button variant="primary" onClick={() => window.location.reload()}>
+                  {copy.restoreRetry}
+                </Button>
+              ) : (
+                <Button variant="primary" onClick={() => void runRestore()}>
+                  {copy.exportRetry}
+                </Button>
+              )}
+            </div>
+          </section>
+        )}
+      </VaultCard>
+    </VaultPage>
   )
 }

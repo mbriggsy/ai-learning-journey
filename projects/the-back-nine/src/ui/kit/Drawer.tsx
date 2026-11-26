@@ -22,6 +22,12 @@
  * and pops no phone keyboard), and `finalFocus` names where focus goes on close when the opener may be gone (a card the
  * drawer just added or deleted).
  *
+ * Since Act 6 · RC19 (the save and backup drawers): `footer` replaces the stone footer's Delete / Cancel / Save with the
+ * caller's own row, or with nothing (`null`: a stepped ceremony draws its own Back and Continue under each step);
+ * `dismissible={false}` takes the X away for a stretch the caller will not let close (the save's commit and its
+ * mandatory backup), and the caller's `onOpenChange` refuses the Escape and the scrim there (the open state is the
+ * caller's); `initialFocus` names the element focus lands on when the drawer opens (a step's own heading).
+ *
  * Motion (plan 2.1 decision 8): Base UI's CSS transitions, the panel sliding in from the right in 300 ms on the drawer
  * curve and out in 200 ms, the scrim fading; under reduced motion both only fade. Focus moves into the drawer on open
  * and returns to the element that opened it on close (Base UI's focus manager; the real-browser check is in
@@ -69,6 +75,12 @@ export interface DrawerProps {
   readonly focusTitle?: boolean
   /** Where focus goes on close; Base UI's default (the opener) when absent or when it returns null. */
   readonly finalFocus?: () => HTMLElement | null
+  /** Where focus lands on open; Base UI's default (the first control) when absent or when it returns null. */
+  readonly initialFocus?: () => HTMLElement | null
+  /** The footer's own row in place of Delete / Cancel / Save; `null` draws no footer. */
+  readonly footer?: ReactNode
+  /** False hides the X (the caller's `onOpenChange` refuses every close while so). */
+  readonly dismissible?: boolean
   readonly children: ReactNode
 }
 
@@ -95,6 +107,9 @@ export function Drawer({
   notice,
   focusTitle = false,
   finalFocus,
+  initialFocus,
+  footer,
+  dismissible = true,
   children,
 }: DrawerProps) {
   const [ownOpen, setOwnOpen] = useState(false)
@@ -126,7 +141,7 @@ export function Drawer({
         />
         <Dialog.Popup
           ref={popupRef}
-          {...(focusTitle ? { initialFocus: titleRef } : {})}
+          {...(focusTitle ? { initialFocus: titleRef } : initialFocus !== undefined ? { initialFocus: () => initialFocus() ?? true } : {})}
           {...(finalFocus !== undefined ? { finalFocus: () => finalFocus() ?? true } : {})}
           className={cn(
             'fixed inset-y-0 right-0 z-50 flex h-dvh w-full flex-col bg-bg shadow-drawer outline-none',
@@ -155,13 +170,20 @@ export function Drawer({
                 <ChevronDown size={20} strokeWidth={1.5} aria-hidden="true" />
               </button>
             ) : null}
-            <span aria-hidden="true" className="h-6 w-px bg-bg/40" />
-            <Dialog.Close className={bandButton} aria-label={closeLabel}>
-              <X size={20} strokeWidth={1.5} aria-hidden="true" />
-            </Dialog.Close>
+            {dismissible ? (
+              <>
+                <span aria-hidden="true" className="h-6 w-px bg-bg/40" />
+                <Dialog.Close className={bandButton} aria-label={closeLabel}>
+                  <X size={20} strokeWidth={1.5} aria-hidden="true" />
+                </Dialog.Close>
+              </>
+            ) : null}
           </header>
           {notice !== undefined && notice !== null ? <div className="shrink-0 border-b border-stone-300 bg-stone-100 px-6 py-4">{notice}</div> : null}
           <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6 text-body text-stone-900">{children}</div>
+          {footer !== undefined ? (
+            footer === null ? null : <footer className="flex shrink-0 flex-wrap items-center gap-3 bg-stone-200 px-6 py-4">{footer}</footer>
+          ) : (
           <footer className="flex shrink-0 flex-wrap items-center gap-3 bg-stone-200 px-6 py-4">
             {onDelete !== undefined && deleteLabel !== undefined ? (
               <Button
@@ -201,6 +223,7 @@ export function Drawer({
               ) : null}
             </div>
           </footer>
+          )}
         </Dialog.Popup>
       </Dialog.Portal>
     </Dialog.Root>

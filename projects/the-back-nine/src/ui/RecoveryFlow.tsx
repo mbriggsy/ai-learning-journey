@@ -21,12 +21,14 @@
  * the handlers (the UnlockScreen pattern), AND the whole flow is `lazy()`-mounted by App (warmed on
  * the unlock screen), because `PassphraseStep` statically pulls the zxcvbn floor seam that must not
  * ride the entry chunk.
+ *
+ * Act 6 · RC19: a page before unlock in the login card's style (`src/ui/kit/VaultCard.tsx`); the steps, their guards and
+ * their order are unchanged.
  */
 import { useEffect, useId, useRef, useState } from 'react'
 import { copy } from './copy'
-import './styles/save.css'
 import { useLiveAnnouncer, focusHeading } from '@intake/a11y'
-import { PendingPanel } from './PendingPanel'
+import { Button, FieldNote, PassphraseField, VAULT_ACTIONS, VaultCard, VaultHeading, VaultPage, VaultPending } from './kit'
 import { describeUnlockFailure, type UnlockCopyKey } from './unlockCopy'
 import { PassphraseStep } from './PassphraseStep'
 import type { FloorCheckedPassphrase } from '@crypto/kdf'
@@ -164,114 +166,86 @@ export function RecoveryFlow({
   }
 
   return (
-    <main className="save">
+    <VaultPage>
       <div ref={announcer.ref} className="sr-only" role="status" aria-live="polite" aria-atomic="true" />
-
-      {step === 'word' &&
-        (busy ? (
-          <PendingPanel status={copy.restoringStatus} />
-        ) : (
-          <section className="save-step">
-            <h2 className="save-step__heading" tabIndex={-1} ref={headingRef}>
-              {copy.recoverHeading}
-            </h2>
-            <p className="save-step__intro">{copy.recoverIntro}</p>
-
-            <div className="save-field">
-              <label className="save-field__label" htmlFor={wordId}>
-                {copy.recoverPassphraseLabel}
-              </label>
-              <div className="save-field__row">
-                <input
-                  id={wordId}
-                  className="save-field__input"
-                  type={reveal ? 'text' : 'password'}
-                  autoComplete="off"
-                  autoCapitalize="none"
-                  autoCorrect="off"
-                  spellCheck={false}
-                  enterKeyHint="go"
-                  value={word}
-                  aria-invalid={errorKey !== null}
-                  aria-describedby={errorKey !== null ? errId : undefined}
-                  onChange={(e) => {
-                    setWord(e.target.value)
-                    if (errorKey !== null) setErrorKey(null) // forgive on re-edit (design law)
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') void handleWord()
-                  }}
-                />
-                <button
-                  type="button"
-                  className="save-field__reveal"
-                  aria-pressed={reveal}
-                  onClick={() => setReveal((r) => !r)}
-                >
-                  {reveal ? copy.passphraseHide : copy.passphraseShow}
-                </button>
+      <VaultCard wordmark={{ mark: copy.shellMark, title: copy.appTitle }} busy={busy || step === 'securing'}>
+        {step === 'word' &&
+          (busy ? (
+            <VaultPending status={copy.restoringStatus} />
+          ) : (
+            <section className="flex flex-col gap-6" data-recovery-step="word">
+              <div className="flex flex-col gap-2">
+                <VaultHeading ref={headingRef}>{copy.recoverHeading}</VaultHeading>
+                <p className="text-body text-stone-600">{copy.recoverIntro}</p>
               </div>
-              {errorKey !== null && (
-                <p className="save-field__note" id={errId} role="alert">
-                  {copy[errorKey]}
-                </p>
-              )}
-            </div>
 
-            <div className="save-actions">
-              <button type="button" className="btn-quiet" onClick={onExit}>
-                {copy.flowBack}
-              </button>
-              <button
-                type="button"
-                className="btn-primary"
-                aria-disabled={word === ''}
-                onClick={() => void handleWord()}
+              <PassphraseField
+                id={wordId}
+                label={copy.recoverPassphraseLabel}
+                value={word}
+                onChange={(v) => {
+                  setWord(v)
+                  if (errorKey !== null) setErrorKey(null) // forgive on re-edit (design law)
+                }}
+                autoComplete="off"
+                reveal={reveal}
+                onRevealChange={setReveal}
+                showLabel={copy.passphraseShow}
+                hideLabel={copy.passphraseHide}
+                invalid={errorKey !== null}
+                describedBy={errorKey !== null ? errId : undefined}
+                enterKeyHint="go"
+                onEnter={() => void handleWord()}
               >
-                {copy.recoverButton}
-              </button>
+                {errorKey !== null && <FieldNote id={errId}>{copy[errorKey]}</FieldNote>}
+              </PassphraseField>
+
+              <div className={VAULT_ACTIONS}>
+                <Button variant="neutral" onClick={onExit}>
+                  {copy.flowBack}
+                </Button>
+                <Button variant="primary" aria-disabled={word === ''} onClick={() => void handleWord()}>
+                  {copy.recoverButton}
+                </Button>
+              </div>
+
+              {/* Fork C(i): the STANDING both-credentials-lost line — always present, never an
+                  alert. No-backdoor truth + the export-file steer + the honest no-lockout note. */}
+              <p className="border-t border-stone-300 pt-4 text-label text-stone-600">{copy.recoverBothLostNote}</p>
+            </section>
+          ))}
+
+        {step === 'setNew' && (
+          <PassphraseStep
+            key="recover-new"
+            heading={copy.recoverNewPassHeading}
+            intro={copy.recoverNewPassIntro}
+            submitLabel={copy.recoverNewPassButton}
+            onSubmit={(checked) => void handleSetNew(checked)}
+            onBack={() => void handleBail()}
+            announcer={announcer}
+            externalError={pairError}
+            onFieldEdit={() => setPairError(null)}
+          />
+        )}
+
+        {step === 'securing' && <VaultPending status={copy.securingStatus} />}
+
+        {step === 'error' && (
+          <section className="flex flex-col gap-6" data-recovery-step="error">
+            <VaultHeading ref={errPanelHeadingRef}>{copy.recoverNewPassHeading}</VaultHeading>
+            <FieldNote>{copy[remintError]}</FieldNote>
+            <div className={VAULT_ACTIONS}>
+              <Button variant="neutral" onClick={() => void handleBail()}>
+                {copy.flowBack}
+              </Button>
+              <Button variant="primary" onClick={() => setStep('setNew')}>
+                {copy.exportRetry}
+              </Button>
             </div>
-
-            {/* Fork C(i): the STANDING both-credentials-lost line — always present, never an
-                alert. No-backdoor truth + the export-file steer + the honest no-lockout note. */}
-            <p className="save-step__note">{copy.recoverBothLostNote}</p>
           </section>
-        ))}
-
-      {step === 'setNew' && (
-        <PassphraseStep
-          key="recover-new"
-          heading={copy.recoverNewPassHeading}
-          intro={copy.recoverNewPassIntro}
-          submitLabel={copy.recoverNewPassButton}
-          onSubmit={(checked) => void handleSetNew(checked)}
-          onBack={() => void handleBail()}
-          announcer={announcer}
-          externalError={pairError}
-          onFieldEdit={() => setPairError(null)}
-        />
-      )}
-
-      {step === 'securing' && <PendingPanel status={copy.securingStatus} />}
-
-      {step === 'error' && (
-        <section className="save-step">
-          <h2 className="save-step__heading" tabIndex={-1} ref={errPanelHeadingRef}>
-            {copy.recoverNewPassHeading}
-          </h2>
-          <p className="save-step__note" role="alert">
-            {copy[remintError]}
-          </p>
-          <div className="save-actions">
-            <button type="button" className="btn-quiet" onClick={() => void handleBail()}>
-              {copy.flowBack}
-            </button>
-            <button type="button" className="btn-primary" onClick={() => setStep('setNew')}>
-              {copy.exportRetry}
-            </button>
-          </div>
-        </section>
-      )}
-    </main>
+        )}
+      </VaultCard>
+    </VaultPage>
   )
 }

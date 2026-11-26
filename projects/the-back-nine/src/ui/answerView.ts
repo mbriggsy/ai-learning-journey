@@ -334,7 +334,7 @@ export function resolvedFocusKey(elevated: ElevatedAnswer): string | undefined {
  * consumer from it: the in-frame mount, and `main.result`'s `data-inframe-disclaimer`, behind which
  * app.css hides the page-trailing copy. Before this they were two expressions of one condition kept
  * equal by hand, and a frame where the two disagree shows the caveat twice or not at all
- * (`Disclaimer.tsx`'s two-mount contract).
+ * (the R13 two-mount contract: app.css's swap rule; App's trailing mount is the kit's Caveat since Act 6 · RC19).
  */
 export interface CaveatSeat {
   /** `'actions'`: inside the actions node, on every frame that is not computing: a resolved reading on

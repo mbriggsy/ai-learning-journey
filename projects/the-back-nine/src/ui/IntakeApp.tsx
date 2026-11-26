@@ -40,14 +40,13 @@ import type { KeptEdit, KeptWriteOutcome } from './screens/retirement/planListVi
 import { LANDING, parseHash, routeEquals, routeHash, type Route } from './shell/routes'
 import { describeSaveFailure } from './unlockCopy'
 import { useUnloadGuard } from './unloadGuard'
-import { PendingPanel } from './PendingPanel'
+import { Button, FieldNote, VaultCard, VaultHeading, VaultPage, VaultPending } from './kit'
 import { ReEntry } from './ReEntry'
 import { composeReentry, type ReentryView } from './reentryChrome'
 import { deriveStaleness } from '@store/staleness'
 import { exposureForDraft } from './stalenessExposure'
 import { copy } from './copy'
 import { DEFAULT_DISPLAY, type DisplaySettings } from './displaySettings'
-import './styles/save.css'
 
 // The ceremony rides its own lazy chunk (it pulls the crypto/zxcvbn graph) — kept off the
 // already-lazy intake chunk's first paint; the Save beat only ever appears on the result screen.
@@ -288,7 +287,7 @@ export default function IntakeApp({
   // re-point every seed route, i.e. the Caddie walk and `pnpm verify:fit`, would arm on landing). A
   // hydrated vault needs no baseline write: persist flips to 'saved' and the compare goes disk-side.
   // Chromium shows the dialog only after sticky user activation — a programmatic-only draft never
-  // sees one (not a bug). The same-tab healthcare.gov link is target="_blank" (ExternalLink.tsx).
+  // sees one (not a bug). The healthcare.gov link opens a new tab (the kit's OutLink, target="_blank").
   // ACCEPTED RESIDUALS, both bounded to ONE field: (a) text fields commit on blur (fields.tsx), so
   // a single un-blurred field's in-progress text is in neither operand; (b) the listener registers
   // in a passive effect one scheduler task after the commit that first arms it, so the reload-button
@@ -1003,9 +1002,13 @@ export default function IntakeApp({
 
   if (phase === 'restoring') {
     return (
-      <main className="save">
-        <PendingPanel status={copy.restoringStatus} />
-      </main>
+      // The unlock card's "Opening your plan…" carried on (the same card, the same words) until the gate or the answer is
+      // ready (Act 6 · RC19, in place of the old PendingPanel).
+      <VaultPage>
+        <VaultCard wordmark={{ mark: copy.shellMark, title: copy.appTitle }} busy>
+          <VaultPending status={copy.restoringStatus} />
+        </VaultCard>
+      </VaultPage>
     )
   }
 
@@ -1031,21 +1034,15 @@ export default function IntakeApp({
 
   if (phase === 'restore-failed') {
     return (
-      <main className="save">
-        <section className="save-step">
-          <h2 className="save-step__heading" tabIndex={-1}>
-            {copy.unlockHeading}
-          </h2>
-          <p className="save-step__note" role="alert">
-            {copy.unlockGeneric}
-          </p>
-          <div className="save-actions">
-            <button type="button" className="btn-primary" onClick={() => window.location.reload()}>
-              {copy.restoreRetry}
-            </button>
-          </div>
-        </section>
-      </main>
+      <VaultPage>
+        <VaultCard wordmark={{ mark: copy.shellMark, title: copy.appTitle }}>
+          <VaultHeading>{copy.unlockHeading}</VaultHeading>
+          <FieldNote>{copy.unlockGeneric}</FieldNote>
+          <Button variant="primary" className="w-full" onClick={() => window.location.reload()}>
+            {copy.restoreRetry}
+          </Button>
+        </VaultCard>
+      </VaultPage>
     )
   }
 

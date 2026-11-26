@@ -715,10 +715,10 @@ async function assertTypedBelowParts(block: Locator, who: string, runShapes: rea
     for (const t of tops.slice(1)) expect(t, `${who}: a run's paragraphs stand --space-2 apart`).toBeCloseTo(css.space2, 2)
   })
   expect(css.closingTop, `${who}: the survivor part stands --space-5 off the runs' list`).toBeCloseTo(css.space5, 2)
-  // The figure law of the label's own surface: the gate (the old face, `ReEntry.tsx`) keeps lining numerals; inside the
-  // clone's `.rc-root` (the StaleBanner) Act 6's law is Figtree with `tabular-nums` on every number, lining by design.
-  const gate = who.includes('(gate)')
-  expect(css.labelNumeric, `${who}: the label keeps its surface's figure law`).toMatch(gate ? /lining-nums/ : /tabular-nums/)
+  // The figure law of the label's own surface: inside the clone's `.rc-root` (the StaleBanner, and since Act 6 · RC19 the
+  // gate too: `ReEntry.tsx` moved off the old face, which kept lining numerals) Act 6's law is Figtree with
+  // `tabular-nums` on every number, lining by design.
+  expect(css.labelNumeric, `${who}: the label keeps its surface's figure law`).toMatch(/tabular-nums/)
   expect(css.labelNumeric, `${who}: …and its tabular ones`).toMatch(/\btabular-nums\b/)
 }
 
@@ -811,50 +811,10 @@ async function assertTappableInSheet(target: Locator, who: string): Promise<void
   expect(hit.onTarget, `${who}: covered or clipped, the point hits ${hit.at} (${JSON.stringify(hit)})`).toBe(true)
 }
 
-/** The re-entry gate's short-tier rung, W6 (the 1440×731 re-point plan's KTD6 and KTD11; the tier's LAW lives once, in
- *  tokens.css `--bp-laptop-short`'s docblock), read on the gate's open frame: the gate's first short-tier block
- *  (`save.css`), on its top spacing and its confirm half only. Two rules are gate-wide and lift both halves as a block —
- *  the step's top padding 40 → 32 and the grid's row-gap under the heading 20 → 12 — and three tighten the confirm half:
- *  its stack gap 20 → 12, and the lead-ins of the second read-back group and of the buttons 16 → 8. The first group keeps
- *  the ≥68rem block's zero, so the halves still start on one line. The story column's own gap stays --space-5 (20 px):
- *  W6 never touches it (the walk-9 form council reasoned the survivor part's --space-5 against it; that margin is
- *  `assertTypedBelowParts`'s). Read inside the short tier only: no contract sets a tall rhythm for the gate (the plan's
- *  Scope Boundaries; the planning probe found the 917 showcase and the phone byte-identical at build). Exact strings,
- *  `rowGap` never the `gap` shorthand, so deleting any W6 rule reds HERE on every platform (insight 075). Every plant
- *  this reads draws both read-back groups, and the helper asserts that count; a gate draws one where a bucket set is
- *  empty (`ReEntry.tsx`'s `ReadbackGroup` renders nothing for no rows), so a one-group plant would need its own read. */
-async function assertGateDensity(page: Page, who: string): Promise<void> {
-  const read = await page.evaluate(() => {
-    const style = (sel: string) => {
-      const el = document.querySelector(sel)
-      return el === null ? null : getComputedStyle(el)
-    }
-    return {
-      short: window.matchMedia('(min-width: 68rem) and (max-height: 840px)').matches,
-      padTop: style('main.save.save--reentry')?.paddingTop ?? null,
-      gridRowGap: style('section.reentry')?.rowGap ?? null,
-      confirmRowGap: style('.reentry-confirm')?.rowGap ?? null,
-      groupTops: Array.from(document.querySelectorAll('.reentry-confirm > .reentry-group')).map((g) => getComputedStyle(g).marginTop),
-      actionsTop: style('.reentry-confirm > .save-actions')?.marginTop ?? null,
-      storyRowGap: style('.reentry-story')?.rowGap ?? null,
-    }
-  })
-  const at = '(density tier ON)'
-  expect(read.short, `${who}: the gate arm runs inside the short tier (≥68rem ∧ ≤840px, tokens.css --bp-laptop-short)`).toBe(true)
-  expect(read.padTop, `${who}: W6: the gate's top padding ${at}`).toBe('32px')
-  expect(read.gridRowGap, `${who}: W6: the gate grid's row-gap under the heading ${at}`).toBe('12px')
-  expect(read.confirmRowGap, `${who}: W6: the confirm half's row-gap ${at}`).toBe('12px')
-  // Every plant this helper reads draws BOTH read-back groups (the docblock above), so the count is
-  // asserted, never branched on: a plant that dropped to one group would silently take W6's group rule
-  // off its only pin (insight 029; the re-point's review, 2026-11-20). A one-group plant added on purpose
-  // changes this line with it.
-  expect(read.groupTops.length, `${who}: the confirm half draws both read-back groups (insight 029)`).toBe(2)
-  expect(read.groupTops[0], `${who}: the first read-back group keeps no lead-in, so the halves start on one line`).toBe('0px')
-  expect(read.groupTops[1], `${who}: W6: the second read-back group's lead-in ${at}`).toBe('8px')
-  expect(read.actionsTop, `${who}: W6: the confirm half's buttons' lead-in ${at}`).toBe('8px')
-  expect(read.storyRowGap, `${who}: the story column's gap is never W6's (--space-5)`).toBe('20px')
-}
-
+/* The re-entry gate's short-tier density pins (`assertGateDensity`: save.css's W6 rung, exact paddings and gaps) retired
+   with save.css at Act 6 · RC19 (plan 5.2: an arm that guards the old layout retires with its surface). The gate's
+   honesty laws stay below: one note by name, the door the buttons' next sibling, the route and the affirm in the first
+   frame at his window. */
 /** The standing line's seat since RC4: the StaleBanner above the home (it left the old answer page's lead). It sits in
  *  the banner stack after the other stale lines (the old "the lead's last note"), the stack above the page's heading,
  *  and the home's one R13 caveat is reachable below it. While the StaleBanner holds lines, any shell page may scroll:
@@ -947,7 +907,7 @@ for (const u of PAY_CHECK_UNLOCKS) {
       } else {
         await expect(door, `${u.key}: exactly one door under the buttons`).toHaveCount(1)
         const placed = await page.evaluate(() => {
-          const actions = document.querySelector('.reentry-confirm > .save-actions')
+          const actions = document.querySelector('.reentry-confirm > .reentry-actions')
           const d = document.querySelector('section.reentry-door')
           return actions !== null && d !== null && actions.nextElementSibling === d
         })
@@ -974,9 +934,6 @@ for (const u of PAY_CHECK_UNLOCKS) {
         expect(doorBox, 'the door reported no box').not.toBeNull()
         console.log(`[route fit] ?vault=${u.key}: the route's bottom at ${(doorBox!.y + doorBox!.height).toFixed(1)} of ${REAL.height} px`)
         expect(doorBox!.y + doorBox!.height, `${u.key}: route in frame`).toBeLessThanOrEqual(REAL.height)
-        // The gate's density pins read AFTER the route fit (a deleted W6 rule reds on its own line with the route check
-        // already passed). REAL sits inside the short tier (tokens.css --bp-laptop-short carries the tier's law).
-        await assertGateDensity(page, u.key)
       }
 
       await affirm.click()
@@ -1024,7 +981,8 @@ for (const u of PAY_CHECK_UNLOCKS) {
         // The rebuild's host 3 in a real browser (round 2, finding #9: jsdom loads no stylesheet): where the line speaks
         // two or more runs, the left-over seat below draws them as one block whose labels are a step above their text in
         // the body face, at this width where the control sheet's laptop rule widens `.field-help`; and the block ends the
-        // seat with no trailing margin (intake.css's `.left-over > div.note-parts:last-child`, the design read). The
+        // seat (it is the seat's last child; intake.css's old trailing-margin rule keyed on a class the drawer no longer
+        // draws, and left with that sheet at Act 6 · RC19). The
         // survivor part rides the seat too, its paragraph after the runs' list (KD7); the seat passes no button, so the
         // survivor part is the block's last part.
         if (u.standingRuns !== undefined) {

@@ -8,8 +8,8 @@ import { join } from 'node:path'
 
 // Vite 8 / Rolldown convention (mirrors projects/burned): `rolldownOptions`, not
 // `rollupOptions`; `resolve.tsconfigPaths` (native, no vite-tsconfig-paths plugin);
-// `import.meta.dirname`. Two HTML entries (build.rolldownOptions.input below): the app, and Act 6's stack
-// probe (kit-probe.html, deleted at RC19). The engine worker emits as its own hashed chunk via `new URL(...)`
+// `import.meta.dirname`. One HTML entry, the app (Act 6's stack probe, kit-probe.html, was a second entry from RC1
+// until RC19 deleted it: every probe part now renders in a real screen). The engine worker emits as its own hashed chunk via `new URL(...)`
 // in src/store/engineClient.ts and is precached through the globPatterns below.
 export default defineConfig(({ mode }) => ({
   plugins: [
@@ -101,7 +101,16 @@ export default defineConfig(({ mode }) => ({
     rolldownOptions: {
       input: {
         main: join(import.meta.dirname, 'index.html'),
-        kitProbe: join(import.meta.dirname, 'kit-probe.html'),
+      },
+      output: {
+        // Modules run in the order they are imported, whatever chunk each lands in (Act 6 · RC19). Highcharts' master
+        // and the modules that compose onto it (highcharts-more, the accessibility module; src/viz/charts/Chart.tsx)
+        // must evaluate in import order, and @highcharts/react names every series module as a lazy `import()`: once
+        // the kit probe (a second entry) was deleted, Rolldown's chunking split them into chunks that import each
+        // other and the built page died with "Class extends value undefined" (a pinned Highcharts chunk only moved the
+        // fault: "Cannot read properties of undefined (reading 'prototype')"). The price is a few bytes of runtime
+        // helpers; download size is not a concern here (Briggsy, 2026-11-22). docs/landmines.md, UI and product.
+        strictExecutionOrder: true,
       },
     },
   },

@@ -14,12 +14,20 @@
  * RecoveryFlow — a green suite cannot see an orphaned alert). `externalError` marks the PASSPHRASE
  * field because all three consumers pass a pairing collision about the value being set here
  * (RecoveryFlow/RestoreFlow `pairError`, SaveFlow `recoveryError`) — never the confirm field.
+ *
+ * Act 6 · RC19: drawn in the kit (`PassphraseField`, `FieldNote`, `Button`), inside the save drawer and the restore and
+ * recovery cards. Its strength reading stays the named floor line (which floor is unmet, as text), not a scored bar:
+ * `passphraseStrength.ts` returns the floor verdict and no score by design (U8's meter-less law), and this unit changes
+ * no logic, so the plan's "strength meter" is that line. Each field keeps its own Show toggle, and the value lives in
+ * this step's state exactly as before.
  */
 import { useEffect, useId, useRef, useState } from 'react'
 import { copy } from './copy'
 import { focusHeading } from '@intake/a11y'
 import type { Announcer } from '@intake/a11y'
 import { evaluatePassphrase, passphrasesMatch, EMPTY_VERDICT, type PassphraseVerdict } from './passphraseStrength'
+import { Button } from './kit/Button'
+import { FieldNote, PassphraseField, VAULT_ACTIONS, VaultHeading } from './kit/VaultCard'
 import type { FloorCheckedPassphrase } from '@crypto/kdf'
 
 /** Join whichever note ids are live, per `aria-describedby`'s space-separated contract; `undefined`
@@ -124,117 +132,67 @@ export function PassphraseStep({
   }
 
   return (
-    <section className="save-step" aria-busy={busy || checking}>
-      <h2 className="save-step__heading" tabIndex={-1} ref={headingRef}>
-        {heading}
-      </h2>
-      <p className="save-step__intro">{intro}</p>
-      {secondaryIntro && <p className="save-step__intro save-step__intro--secondary">{secondaryIntro}</p>}
-
-      <div className="save-field">
-        <label className="save-field__label" htmlFor={passId}>
-          {fieldLabel ?? copy.passphraseLabel}
-        </label>
-        <div className="save-field__row">
-          <input
-            id={passId}
-            className="save-field__input"
-            type={reveal ? 'text' : 'password'}
-            autoComplete="new-password"
-            autoCapitalize="none"
-            autoCorrect="off"
-            spellCheck={false}
-            value={passphrase}
-            aria-invalid={showFloor || externalError !== null}
-            aria-describedby={describedBy(
-              showFloor ? noteId : null,
-              externalError !== null ? externalErrId : null,
-            )}
-            disabled={busy}
-            onChange={(e) => {
-              setPassphrase(e.target.value)
-              onFieldEdit?.()
-            }}
-            onBlur={() => void evaluate()}
-          />
-          <button
-            type="button"
-            className="save-field__reveal"
-            aria-pressed={reveal}
-            disabled={busy}
-            onClick={() => setReveal((r) => !r)}
-          >
-            {reveal ? copy.passphraseHide : copy.passphraseShow}
-          </button>
-        </div>
-        {showFloor && (
-          <p className="save-field__note" id={noteId} role="alert">
-            {verdict.lengthUnmet ? copy.passphraseTooShort : copy.passphraseTooWeak}
-          </p>
-        )}
+    <section className="flex flex-col gap-6" aria-busy={busy || checking} data-passphrase-step="">
+      <div className="flex flex-col gap-2">
+        <VaultHeading ref={headingRef}>{heading}</VaultHeading>
+        <p className="text-body text-stone-600">{intro}</p>
+        {secondaryIntro && <p className="text-body text-stone-600">{secondaryIntro}</p>}
       </div>
 
-      <div className="save-field">
-        <label className="save-field__label" htmlFor={confirmId}>
-          {confirmFieldLabel ?? copy.passphraseConfirmLabel}
-        </label>
-        <div className="save-field__row">
-          <input
-            id={confirmId}
-            className="save-field__input"
-            type={revealConfirm ? 'text' : 'password'}
-            autoComplete="new-password"
-            autoCapitalize="none"
-            autoCorrect="off"
-            spellCheck={false}
-            value={confirm}
-            aria-invalid={showMismatch}
-            aria-describedby={showMismatch ? mismatchId : undefined}
-            disabled={busy}
-            onChange={(e) => {
-              setConfirm(e.target.value)
-              setShowMismatch(false)
-              onFieldEdit?.()
-            }}
-            onBlur={() => setShowMismatch(!passphrasesMatch(passphrase, confirm) && confirm.length > 0)}
-          />
-          <button
-            type="button"
-            className="save-field__reveal"
-            aria-pressed={revealConfirm}
-            disabled={busy}
-            onClick={() => setRevealConfirm((r) => !r)}
-          >
-            {revealConfirm ? copy.passphraseHide : copy.passphraseShow}
-          </button>
-        </div>
-        {showMismatch && (
-          <p className="save-field__note" id={mismatchId} role="alert">
-            {copy.passphraseMismatch}
-          </p>
-        )}
-      </div>
+      <PassphraseField
+        id={passId}
+        label={fieldLabel ?? copy.passphraseLabel}
+        value={passphrase}
+        onChange={(v) => {
+          setPassphrase(v)
+          onFieldEdit?.()
+        }}
+        autoComplete="new-password"
+        reveal={reveal}
+        onRevealChange={setReveal}
+        showLabel={copy.passphraseShow}
+        hideLabel={copy.passphraseHide}
+        invalid={showFloor || externalError !== null}
+        describedBy={describedBy(showFloor ? noteId : null, externalError !== null ? externalErrId : null)}
+        onBlur={() => void evaluate()}
+        disabled={busy}
+      >
+        {showFloor && <FieldNote id={noteId}>{verdict.lengthUnmet ? copy.passphraseTooShort : copy.passphraseTooWeak}</FieldNote>}
+      </PassphraseField>
 
-      {externalError && (
-        <p className="save-field__note save-field__note--block" id={externalErrId} role="alert">
-          {externalError}
-        </p>
-      )}
+      <PassphraseField
+        id={confirmId}
+        label={confirmFieldLabel ?? copy.passphraseConfirmLabel}
+        value={confirm}
+        onChange={(v) => {
+          setConfirm(v)
+          setShowMismatch(false)
+          onFieldEdit?.()
+        }}
+        autoComplete="new-password"
+        reveal={revealConfirm}
+        onRevealChange={setRevealConfirm}
+        showLabel={copy.passphraseShow}
+        hideLabel={copy.passphraseHide}
+        invalid={showMismatch}
+        describedBy={showMismatch ? mismatchId : undefined}
+        onBlur={() => setShowMismatch(!passphrasesMatch(passphrase, confirm) && confirm.length > 0)}
+        disabled={busy}
+      >
+        {showMismatch && <FieldNote id={mismatchId}>{copy.passphraseMismatch}</FieldNote>}
+      </PassphraseField>
 
-      <div className="save-actions">
+      {externalError && <FieldNote id={externalErrId}>{externalError}</FieldNote>}
+
+      <div className={VAULT_ACTIONS}>
         {onBack && (
-          <button type="button" className="btn-quiet" disabled={busy} onClick={onBack}>
+          <Button variant="neutral" disabled={busy} onClick={onBack}>
             {copy.flowBack}
-          </button>
+          </Button>
         )}
-        <button
-          type="button"
-          className="btn-primary"
-          aria-disabled={!ready || busy}
-          onClick={() => void handleSubmit()}
-        >
+        <Button variant="primary" aria-disabled={!ready || busy} onClick={() => void handleSubmit()}>
           {submitLabel}
-        </button>
+        </Button>
       </div>
     </section>
   )

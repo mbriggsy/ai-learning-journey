@@ -2,11 +2,14 @@
  * U8 decrypt-on-return — the Unlock screen (SLICE 2 UI, surface 1). The returning-user's door: the
  * startup probe found an encrypted vault, so this asks for the daily passphrase and opens it.
  *
- * Mirrors the first-Save ceremony's calm step chrome (save.css `save-step`/`save-field`, the ONE
- * polite live region, focus-to-heading, the `aria-pressed` show/hide toggle) — this is the same
- * credential-entry surface, read side. It is a RAW-STRING single field (no confirm, no floor gate —
- * unlock derives whatever is typed; the floor only guards a SET path, kdf.ts), distinct from the
- * reused `PassphraseStep`.
+ * Act 6 · RC19: a RightCapital-style login card (`src/ui/kit/VaultCard.tsx`): a centred white card on `--stone-100`, the
+ * wordmark, the passphrase field, the blue Open button and the link to the recovery flow. The same calm contracts as the
+ * first-Save ceremony (the ONE polite live region, focus-to-heading, the `aria-pressed` show/hide toggle). It is a
+ * RAW-STRING single field (no confirm, no floor gate — unlock derives whatever is typed; the floor only guards a SET
+ * path, kdf.ts), distinct from the reused `PassphraseStep`. No "restore from a backup file" link here: a restore over a
+ * healthy vault is refused by the store (`restoreVault`'s `vault-exists`), so the link would end in a refusal after the
+ * file, the word and a new passphrase (insight 054: a remedy that cannot work is never drawn). The restore door lives
+ * where it can work: the cold start (a wiped device) and the damaged-vault notice.
  *
  * CRYPTO STAYS OUT OF THE ENTRY BUNDLE. `vaultSession` statically pulls the crypto/KDF/backup graph;
  * App imports THIS component into the entry chunk, so `getVaultSession` is loaded via a DYNAMIC
@@ -27,9 +30,9 @@
  */
 import { useEffect, useId, useRef, useState } from 'react'
 import { entryCopy } from './entryCopy'
-import './styles/save.css'
 import { useLiveAnnouncer, focusHeading } from '@intake/a11y'
-import { PendingPanel } from './PendingPanel'
+import { Button } from './kit/Button'
+import { FieldNote, PassphraseField, TextLink, VaultCard, VaultHeading, VaultPage, VaultPending } from './kit/VaultCard'
 import { describeUnlockFailure, describeUnlockReadOnly, type UnlockCopyKey } from './unlockCopy'
 
 export function UnlockScreen({
@@ -100,76 +103,49 @@ export function UnlockScreen({
   }
 
   return (
-    <main className="save">
+    <VaultPage>
       <div ref={announcer.ref} className="sr-only" role="status" aria-live="polite" aria-atomic="true" />
-      {busy ? (
-        <PendingPanel status={entryCopy.restoringStatus} />
-      ) : (
-        <section className="save-step">
-          <h2 className="save-step__heading" tabIndex={-1} ref={headingRef}>
-            {entryCopy.unlockHeading}
-          </h2>
-          <p className="save-step__intro">{entryCopy.unlockIntro}</p>
-
-          <div className="save-field">
-            <label className="save-field__label" htmlFor={passId}>
-              {entryCopy.unlockLabel}
-            </label>
-            <div className="save-field__row">
-              <input
-                id={passId}
-                className="save-field__input"
-                type={reveal ? 'text' : 'password'}
-                autoComplete="current-password"
-                autoCapitalize="none"
-                autoCorrect="off"
-                spellCheck={false}
-                enterKeyHint="go"
-                value={passphrase}
-                aria-invalid={errorKey !== null}
-                aria-describedby={errorKey !== null ? errId : undefined}
-                onChange={(e) => {
-                  setPassphrase(e.target.value)
-                  if (errorKey !== null) setErrorKey(null) // forgive on re-edit (design law)
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') void handleUnlock()
-                }}
-              />
-              <button
-                type="button"
-                className="save-field__reveal"
-                aria-pressed={reveal}
-                onClick={() => setReveal((r) => !r)}
-              >
-                {reveal ? entryCopy.passphraseHide : entryCopy.passphraseShow}
-              </button>
+      <VaultCard wordmark={{ mark: entryCopy.shellMark, title: entryCopy.appTitle }} busy={busy}>
+        {busy ? (
+          <VaultPending status={entryCopy.restoringStatus} />
+        ) : (
+          <section className="flex flex-col gap-6" data-unlock="">
+            <div className="flex flex-col gap-2">
+              <VaultHeading ref={headingRef}>{entryCopy.unlockHeading}</VaultHeading>
+              <p className="text-body text-stone-600">{entryCopy.unlockIntro}</p>
             </div>
-            {errorKey !== null && (
-              <p className="save-field__note" id={errId} role="alert">
-                {entryCopy[errorKey]}
-              </p>
-            )}
-          </div>
 
-          <div className="save-actions">
-            <button
-              type="button"
-              className="btn-primary"
-              aria-disabled={passphrase === ''}
-              onClick={() => void handleUnlock()}
+            <PassphraseField
+              id={passId}
+              label={entryCopy.unlockLabel}
+              value={passphrase}
+              onChange={(v) => {
+                setPassphrase(v)
+                if (errorKey !== null) setErrorKey(null) // forgive on re-edit (design law)
+              }}
+              autoComplete="current-password"
+              reveal={reveal}
+              onRevealChange={setReveal}
+              showLabel={entryCopy.passphraseShow}
+              hideLabel={entryCopy.passphraseHide}
+              invalid={errorKey !== null}
+              describedBy={errorKey !== null ? errId : undefined}
+              enterKeyHint="go"
+              onEnter={() => void handleUnlock()}
             >
-              {entryCopy.unlockButton}
-            </button>
-            {onForgot && (
-              <button type="button" className="btn-quiet" onClick={onForgot}>
-                {entryCopy.unlockForgot}
-              </button>
-            )}
-          </div>
-        </section>
-      )}
-    </main>
+              {errorKey !== null && <FieldNote id={errId}>{entryCopy[errorKey]}</FieldNote>}
+            </PassphraseField>
+
+            <div className="flex flex-col gap-2">
+              <Button variant="primary" className="w-full" aria-disabled={passphrase === ''} onClick={() => void handleUnlock()}>
+                {entryCopy.unlockButton}
+              </Button>
+              {onForgot && <TextLink onClick={onForgot}>{entryCopy.unlockForgot}</TextLink>}
+            </div>
+          </section>
+        )}
+      </VaultCard>
+    </VaultPage>
   )
 }
 

@@ -10,7 +10,8 @@ import { copy } from '../src/ui/copy'
  *     bundling regression here would silently ship the Georgia/system fallback. Read from the
  *     font set's FontFace entries (`status === 'loaded'`), with a fake family as the control;
  *     never `document.fonts.check`, which is true for a family that does not exist (insight 116).
- *     Act 6's Figtree gets the same two arms on the kit probe page (its own describe below).
+ *     Act 6's Figtree gets the same two arms on the cold start (its own describe below; on the kit probe page until
+ *     Act 6 · RC19 deleted it).
  *  2. THE FIGURE LAW: digits in the body face render at equal advance widths under the
  *     app's inherited `font-variant-numeric: tabular-nums` (base.css), so an in-place
  *     recompute can never jitter a dollar figure horizontally. A font silently lacking
@@ -76,12 +77,14 @@ async function digitWidths(page: Page, family: string) {
 /**
  * Act 6 · RC1 (plan docs/plans/6-rightcapital-ui-plan.md, section 2.3): Figtree, the clone's one face, self-hosted from
  * `@fontsource-variable/figtree`. In RC1 only the kit probe page loaded it, so these arms read `kit-probe.html` on the
- * same enforced origin; since RC2 the main entry imports it too, and one arm reads it inside the shell. Its default digits are proportional (ref 3.5), so the figure law is the tabular pair below with
+ * same enforced origin; since RC2 the main entry imports it too, and one arm reads it inside the shell; since RC19 (the
+ * probe page deleted) the other two read the cold start, the main app's first `.rc-root` screen. Its default digits are proportional (ref 3.5), so the figure law is the tabular pair below with
  * its proportional control, exactly as for the body face above.
  */
-test.describe('design tokens — Figtree (the kit probe and the main app)', () => {
+test.describe('design tokens — Figtree (the cold start and the shell)', () => {
   test('Figtree loads under the enforced CSP (and the check can fail: a fake family reads unloaded)', async ({ page }) => {
-    await page.goto('/kit-probe.html')
+    await page.goto('/')
+    await expect(page.locator('main.rc-root[data-vault-page]'), 'the cold start never drew').toBeVisible({ timeout: 30_000 })
     const loaded = await loadedFamilies(page, ['Figtree Variable', FAKE_FAMILY])
     expect(loaded['Figtree Variable'], 'Figtree Variable failed to load — the clone’s face falling back').toBe(true)
     expect(loaded[FAKE_FAMILY], 'a family that does not exist read as loaded — the check is deaf').toBe(false)
@@ -104,14 +107,16 @@ test.describe('design tokens — Figtree (the kit probe and the main app)', () =
   })
 
   test('Figtree’s digits are tabular under tabular-nums (and the probe can fail: proportional-nums changes widths)', async ({ page }) => {
-    await page.goto('/kit-probe.html')
+    await page.goto('/')
+    await expect(page.locator('main.rc-root[data-vault-page]'), 'the cold start never drew').toBeVisible({ timeout: 30_000 })
     const w = await digitWidths(page, 'Figtree Variable')
     expect(Math.abs(w.tab1 - w.tab9), `tabular widths differ: ${JSON.stringify(w)}`).toBeLessThan(0.5)
     expect(
       Math.abs(w.prop1 - w.prop9),
       `proportional-nums did not change Figtree’s digit widths — tnum/pnum may be missing from the shipped file: ${JSON.stringify(w)}`,
     ).toBeGreaterThan(0.5)
-    // The kit root inherits tabular-nums (theme.css's scoped base), so a number on a new screen is tabular by default.
+    // A kit root (the cold start's card page) inherits tabular-nums (theme.css's scoped base), so a number on a new screen
+    // is tabular by default.
     const inherited = await page.locator('main.rc-root').evaluate((el) => getComputedStyle(el).fontVariantNumeric)
     expect(inherited).toContain('tabular-nums')
   })

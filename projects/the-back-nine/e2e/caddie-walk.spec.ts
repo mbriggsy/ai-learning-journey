@@ -404,7 +404,7 @@ const FOLD_TARGETS = [
   '[data-assumption-seat="working-year-left-over"]',
   '.intake-nav',
   '.reentry-notes',
-  '.save-actions',
+  '.reentry-actions',
   '.reentry-door',
   '.result-backup-door',
   '.result-save-slot',
@@ -1614,7 +1614,7 @@ async function assertGateLine(page: Page, who: string, witness: LeftOverWitness)
   await expect(door, `${who}: the gate must draw exactly one door under its buttons`).toHaveCount(1)
   const placed = await page.evaluate(() => {
     const d = document.querySelector('section.reentry-door')
-    return d !== null && d.previousElementSibling?.matches('.save-actions') === true
+    return d !== null && d.previousElementSibling?.matches('.reentry-actions') === true
   })
   expect(placed, `${who}: the gate's door is the next sibling after its buttons`).toBe(true)
   await expect(door.locator('h3.reentry-door__heading')).toHaveText(witness.gate.door.heading)

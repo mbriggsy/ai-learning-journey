@@ -17,12 +17,24 @@
  *
  * Holds the ONE polite live region (back-nine-design: a single announcer, clear-after-announce),
  * mounted once at the top so it never goes stale across step swaps.
+ *
+ * Act 6 · RC19: a right drawer (the kit's Drawer, its band titled "Save your plan on this device"): the passphrase with
+ * its floor line, then the recovery passphrase, then the backup, then the done state, each step its own heading and its
+ * own Back and Continue inside the drawer's body. The drawer opens over a quiet stone page (`VaultGround`), never over
+ * the live shell: the shell unmounts across the ceremony by design (the leave asks before it, `IntakeApp`'s
+ * `toCeremony`, name what that drops), and this unit moves no such seam. WHAT A CLOSE MEANS, per step (insights 031 and
+ * 049: every way out keeps every guard the old path held): before the commit (passphrase, recovery, the error) the X,
+ * Escape and the scrim are the old Back to the answer (`onCancel`: nothing was written); across `securing` (the commit
+ * in flight) and `export` (the mandatory backup, its leave-page guard and update hold up) the drawer cannot close, the X
+ * is gone and every close request is refused, so the minted credential's backup step can never be skipped by a close;
+ * at `complete` a close is Done (`onComplete`: the plan is saved, and the drawer says so until it goes).
  */
 import { useEffect, useRef, useState } from 'react'
+import { Check, Lock } from 'lucide-react'
 import { copy } from './copy'
-import './styles/save.css'
 import { useLiveAnnouncer, focusHeading } from '@intake/a11y'
-import { PendingPanel } from './PendingPanel'
+import { Button, Drawer, FieldNote, VAULT_ACTIONS, VaultHeading, VaultPending } from './kit'
+import { VaultGround } from './VaultGround'
 import { getVaultSession } from './vaultSession'
 import { holdUpdateApply } from './updateGate'
 import { useUnloadGuard } from './unloadGuard'
@@ -178,53 +190,81 @@ export function SaveFlow({
         )
 
       case 'securing':
-        return <PendingPanel status={copy.securingStatus} />
+        return <VaultPending status={copy.securingStatus} />
 
       case 'export':
         return <ExportConfirm announcer={announcer} onFinish={() => setStep('complete')} />
 
       case 'complete':
         return (
-          <section className="save-step save-step--complete">
-            <h2 className="save-step__heading save-done__heading" tabIndex={-1} ref={inlineHeadingRef}>
-              <span className="save-done__mark" aria-hidden="true" />
-              {copy.savedHeading}
-            </h2>
-            <p className="save-step__intro">{copy.savedBody}</p>
-            <div className="save-actions">
-              <button type="button" className="btn-primary" onClick={onComplete}>
+          <section className="flex flex-col gap-6" data-save-complete="">
+            <div className="flex flex-col gap-2">
+              <VaultHeading ref={inlineHeadingRef}>
+                <span className="flex items-center gap-2">
+                  <span aria-hidden="true" className="flex size-7 shrink-0 items-center justify-center rounded-full bg-plum text-bg">
+                    <Check size={16} strokeWidth={2} />
+                  </span>
+                  {copy.savedHeading}
+                </span>
+              </VaultHeading>
+              <p className="text-body text-stone-600">{copy.savedBody}</p>
+            </div>
+            <div className={VAULT_ACTIONS}>
+              <Button variant="primary" onClick={onComplete}>
                 {copy.savedDone}
-              </button>
+              </Button>
             </div>
           </section>
         )
 
       case 'error':
         return (
-          <section className="save-step">
-            <h2 className="save-step__heading" tabIndex={-1} ref={inlineHeadingRef}>
-              {copy.saveHeading}
-            </h2>
-            <p className="save-step__note" role="alert">
-              {copy[errorKey]}
-            </p>
-            <div className="save-actions">
-              <button type="button" className="btn-quiet" onClick={onCancel}>
+          <section className="flex flex-col gap-6" data-save-error="">
+            <VaultHeading ref={inlineHeadingRef}>{copy.saveHeading}</VaultHeading>
+            <FieldNote>{copy[errorKey]}</FieldNote>
+            <div className={VAULT_ACTIONS}>
+              <Button variant="neutral" onClick={onCancel}>
                 {copy.flowBack}
-              </button>
-              <button type="button" className="btn-primary" onClick={() => setStep('passphrase')}>
+              </Button>
+              <Button variant="primary" onClick={() => setStep('passphrase')}>
                 {copy.flowNext}
-              </button>
+              </Button>
             </div>
           </section>
         )
     }
   }
 
+  // A close is the step's own way out (the header): Back to the answer before the commit, refused while the commit and
+  // the mandatory backup run, Done once the plan is saved.
+  const lockedOpen = step === 'securing' || step === 'export'
+  const onClose = () => {
+    if (lockedOpen) return
+    if (step === 'complete') onComplete()
+    else onCancel()
+  }
+
   return (
-    <main className="save">
-      <div ref={announcer.ref} className="sr-only" role="status" aria-live="polite" aria-atomic="true" />
-      {renderStep()}
-    </main>
+    <>
+      <VaultGround />
+      <Drawer
+        open
+        onOpenChange={(open) => {
+          if (!open) onClose()
+        }}
+        title={copy.saveDrawerTitle}
+        icon={<Lock strokeWidth={1.5} aria-hidden="true" />}
+        closeLabel={copy.profileDrawerClose}
+        cancelLabel={copy.profileDrawerCancel}
+        dismissible={!lockedOpen}
+        footer={null}
+        initialFocus={() => document.querySelector<HTMLElement>('[data-save-ceremony] [data-vault-heading]')}
+      >
+        <div className="flex flex-col" data-save-ceremony="" data-save-step={step}>
+          <div ref={announcer.ref} className="sr-only" role="status" aria-live="polite" aria-atomic="true" />
+          {renderStep()}
+        </div>
+      </Drawer>
+    </>
   )
 }

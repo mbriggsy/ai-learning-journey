@@ -320,12 +320,13 @@ function LeaveAsk({ ask, overSheet, fallback }:{ readonly ask: ShellLeaveAsk; re
         </p>
       ))}
       <div className="workbench__ask-actions">
-        <button type="button" className="btn-primary" ref={stayRef} onClick={stay}>
+        {/* The kit's buttons since Act 6 · RC19 (the old `.btn-primary` / `.btn-quiet` rules left with intake.css). */}
+        <Button variant="primary" ref={stayRef} onClick={stay}>
           {copy.workbenchLeaveStay}
-        </button>
-        <button type="button" className="btn-quiet" ref={goRef} onClick={ask.onGo}>
+        </Button>
+        <Button variant="neutral" ref={goRef} onClick={ask.onGo}>
           {ask.goLabel ?? copy.workbenchLeaveGo}
-        </button>
+        </Button>
       </div>
     </div>
   )

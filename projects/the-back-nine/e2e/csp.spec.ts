@@ -17,6 +17,9 @@ import { roughWindow, ROUGH_WINDOW_YEARS } from '../src/engine/reference/roughSe
  * make the blocked assertion vacuous.
  */
 const CONTROL_ORIGIN = 'http://127.0.0.1:4181'
+/** The shell arm's vault leg (Act 6 · RC19): a daily passphrase and a recovery word that clear the floor and differ. */
+const VAULT_PASSPHRASE = 'plinth otter vivid casket 92 lampoon'
+const VAULT_RECOVERY = 'lattice harbor cinder vellum 48 thicket'
 /** The ENFORCED origin — the config's `baseURL`, where the build's own chunks and workers are served. */
 const ENFORCED_ORIGIN = 'http://127.0.0.1:4180'
 
@@ -230,7 +233,7 @@ test.describe('CSP — real browser enforcement', () => {
     expect(v.some((x) => /worker-src|script-src/.test(x.violatedDirective))).toBe(false)
   })
 
-  test('the shell loads under the enforced CSP: the home, Probability and its Action Items tray, Confidence, Comparisons, Retirement Details and Savings, Cash Flows, Stress Test, Social Security, Health Care, Asset Allocation and Tax Allocation, Tax Strategies, Net Worth and one Profile drawer, Expenses and its Living expenses drawer, Settings and the Display drawer, and both its menus, no violation, and no request outside the build’s own files', async ({ page }) => {
+  test('the shell loads under the enforced CSP: the home, Probability and its Action Items tray, Confidence, Comparisons, Retirement Details and Savings, Cash Flows, Stress Test, Social Security, Health Care, Asset Allocation and Tax Allocation (the chart cascade), Tax Strategies, Net Worth and one Profile drawer, Expenses and its Living expenses drawer, Settings and the Display drawer, both its menus, then the save drawer, a reload, a refused and a right unlock and the re-entry gate back to the home, no violation, and no request outside the build’s own files', async ({ page }) => {
     // Act 6 · RC2 (plan 6, section 3.1's Verification; the workbench room's arm before it, U6 to U15), re-pointed at RC4:
     // the real intake lands on the home (Dashboard → Snapshot), the shell's lazy chunk and its styles load with it on the
     // served build, Probability draws its rings and its two balance bars (Highcharts again), and every page is
@@ -244,7 +247,19 @@ test.describe('CSP — real browser enforcement', () => {
     // are walked and whose survivor row opens the Living expenses drawer over it; the lock menu (a portaled Base UI menu)
     // opens and closes; at a phone width the menu (a portaled Base UI dialog that animates) moves the page. The way home
     // is the wordmark.
-    test.setTimeout(180_000)
+    // Act 6 · RC19 folded the kit probe arm in here (plan 5.2; the probe page is deleted): every probe part a real screen
+    // draws is visited by this arm. The drawer (a Profile drawer, focus back on its opener), the picker, the switch, the
+    // folder tabs, the chart title's menu, the tray, the data table and a chart's tooltip and legend were already here;
+    // the Add menu rides the real intake (`driveIntakeToResult`'s account), and this arm adds the slider (Stress Test),
+    // the accessibility module's hidden region and the credit (Confidence's fan), and the probe's cascade read (a new
+    // kind of check since RC1: the colour-blind second cue on a Highcharts chart) on Tax Allocation, the first screen
+    // here whose hatched series this household always draws (its one 401(k) is pre-tax, hatched in slot 2's ink), with
+    // the palette read on Asset Allocation's solid stock slice. Then RC19's own screens: the save drawer from the lock
+    // menu (passphrase, recovery word, the backup, the done state), a reload to the unlock card, a refused passphrase
+    // with its words, the right one, and the re-entry gate's affirm back to the home. Its control pair (a planted
+    // `<style>`, blocked and applied) runs on the cold start, below. The kit's Tooltip and ScrollArea render in no screen
+    // yet, and the Toast only on a waiting service worker (the update prompt), which no single build can produce.
+    test.setTimeout(240_000)
     await installCollector(page)
     const outside: string[] = []
     page.on('request', (r) => {
@@ -278,7 +293,7 @@ test.describe('CSP — real browser enforcement', () => {
     expect(new URL(page.url()).hash).toBe('#/retirement/analysis/probability')
     await expect(page.locator('[data-ring-half="compared"]'), 'the plan’s ring never drew').toBeVisible({ timeout: 60_000 })
     // The first run's household reads off track with a $0 middle balance, so its bars give way to their words (the bar charts'
-    // own CSP proof is the kit probe's Highcharts arm and the home's fan above); either way, one of the two stands.
+    // own CSP proof is the home's fan above and Investment's donuts below); either way, one of the two stands.
     await expect(page.locator('[data-bar="compared"] .highcharts-series-group, [data-bar-none]').first(), 'neither the bar nor its words').toBeAttached({
       timeout: 60_000,
     })
@@ -304,6 +319,10 @@ test.describe('CSP — real browser enforcement', () => {
     await expect(page.locator('[data-chart="runout"] .highcharts-series-group, [data-runout-stopgap]').first(), 'neither the run-out chart nor its stopgap').toBeAttached({ timeout: 30_000 })
     await confFan.locator('.highcharts-legend-item', { hasText: copy.snapshotFanOuter }).click()
     await confFan.locator('.highcharts-legend-item', { hasText: copy.snapshotFanOuter }).click()
+    // The probe's chart checks, on a real chart (RC19): the accessibility module drew its hidden screen-reader region, and
+    // the licence's credit stands (plan 2.1 decision 5).
+    await expect(confFan.locator('[id^="highcharts-screen-reader-region-before-"]'), 'the accessibility module drew no screen-reader region').toBeAttached()
+    await expect(confFan.locator('.highcharts-credits'), 'the credit is gone').toHaveText('Highcharts.com')
     expect(await page.evaluate(() => document.querySelectorAll('style').length), 'Confidence injected a <style> element').toBe(0)
     // RC17's three tabs: Comparisons' overlapping areas (its chart menu, a portaled Base UI menu, opened to the bars as
     // retirement begins), Retirement Details' year columns (the new `incomeSourcesOptions` chart, its patterns and, where the
@@ -394,6 +413,14 @@ test.describe('CSP — real browser enforcement', () => {
     await expect(page.locator('[data-stress] [aria-busy="true"]'), 'a stress run never landed').toHaveCount(0, { timeout: 240_000 })
     await page.getByRole('button', { name: copy.trayHandle, exact: true }).click()
     await expect(page.locator('#b9-stress-items [data-tray-row]').first(), 'the stress tray never opened').toBeVisible()
+    // The kit's slider (RC19, from the probe): one key press moves it, one brings it back.
+    const slider = page.locator('#b9-stress-items').getByRole('slider').first()
+    const was = await slider.getAttribute('aria-valuenow')
+    await slider.focus()
+    await slider.press('ArrowRight')
+    await expect(slider, 'the slider never moved').not.toHaveAttribute('aria-valuenow', was ?? '')
+    await slider.press('ArrowLeft')
+    await expect(slider, 'the slider never came back').toHaveAttribute('aria-valuenow', was ?? '')
     await page.getByRole('button', { name: copy.trayEdit, exact: true }).click()
     await expect(page.getByRole('dialog', { name: copy.stressEditTitle }), 'the Edit drawer never opened').toBeVisible()
     await page.keyboard.press('Escape')
@@ -409,10 +436,39 @@ test.describe('CSP — real browser enforcement', () => {
     await page.locator('[data-asset-side="current"] [role="combobox"]').click()
     await expect(page.getByRole('option', { name: copy.assetScopeAll, exact: true }), 'the picker never opened').toBeVisible()
     await page.keyboard.press('Escape')
+    // The probe's palette read (RC19): the solid stock slice (slot 6) paints palette.ts's own colour, written once through
+    // the CSSOM, so neither highcharts.css nor Highcharts' default palette won.
+    const { RC_SERIES } = await import('../src/viz/palette')
+    const rgbOf = (h: string) => `rgb(${parseInt(h.slice(1, 3), 16)}, ${parseInt(h.slice(3, 5), 16)}, ${parseInt(h.slice(5, 7), 16)})`
+    const palette = await page.evaluate(() => ({
+      root: getComputedStyle(document.documentElement).getPropertyValue('--highcharts-color-0').trim(),
+      stock: (() => {
+        const el = document.querySelector('[data-chart="mix-current"] .highcharts-point.b9-donut-part--stock')
+        return el ? getComputedStyle(el).fill : 'MISSING'
+      })(),
+    }))
+    expect(palette.root, 'the CSSOM write of --highcharts-color-0 did not land').toBe(RC_SERIES[0])
+    expect(palette.stock, 'the stock slice is not painted from palette.ts (highcharts.css or its default palette won)').toBe(rgbOf(RC_SERIES[6]))
     await page.getByRole('tab', { name: copy.assetTabDetail, exact: true }).click()
     await expect(page.locator('[data-asset-detail-row]').first(), 'Detail never showed').toBeVisible()
     await page.getByRole('navigation', { name: copy.shellPagesLabel }).getByRole('link', { name: copy.shellPageTaxAllocation, exact: true }).click()
     await expect(page.locator('[data-chart="tax-allocation"] .highcharts-series-group'), 'the tax ring never drew').toBeAttached({ timeout: 60_000 })
+    // The probe's cascade read, moved here (RC19): the household's one pre-tax part is hatched, its fill from the shared
+    // defs' `url("#b9-hatch")` (highcharts.css sits inside the charts layer, so it never strips it), the pattern built into
+    // this chart, and its ink this part's own colour (slot 2), never the shared fallback.
+    const cascade = await page.evaluate(() => {
+      const chart = document.querySelector('[data-chart="tax-allocation"]')
+      const point = chart?.querySelector('.highcharts-point.b9-hatch') ?? null
+      const ink = chart?.querySelector('pattern#b9-hatch .b9-pattern-ink') ?? null
+      return {
+        fill: point ? getComputedStyle(point).fill : 'MISSING',
+        pattern: chart?.querySelectorAll('pattern#b9-hatch').length ?? 0,
+        ink: ink ? getComputedStyle(ink).stroke : 'MISSING',
+      }
+    })
+    expect(cascade.pattern, 'the shared defs built no #b9-hatch pattern into the chart').toBeGreaterThan(0)
+    expect(cascade.fill, 'the hatched part lost its pattern fill').toBe('url("#b9-hatch")')
+    expect(cascade.ink, 'the hatch’s ink is not its part’s colour (slot 2)').toBe(rgbOf(RC_SERIES[2]))
     await page.locator('[data-taxalloc-part]').first().click()
     await expect(page.locator('[data-taxalloc-account]').first(), 'a part’s accounts never listed').toBeVisible()
     expect(await page.evaluate(() => document.querySelectorAll('style').length), 'Investment injected a <style> element').toBe(0)
@@ -543,243 +599,75 @@ test.describe('CSP — real browser enforcement', () => {
     await expect(page.locator('main.result[data-shell-screen="snapshot"]')).toBeAttached({ timeout: 30_000 })
     await expect(page.getByText(copy.shellLeaveWhatIf, { exact: true })).toHaveCount(0)
 
-    expect(await violations(page)).toEqual([])
-    expect(outside, 'a request left the build’s own origin').toEqual([])
-  })
-
-  /**
-   * Act 6 · RC1 (plan docs/plans/6-rightcapital-ui-plan.md, section 2.3): the new stack under the real header, before any
-   * screen is built; from RC2 (section 3.1) the probe page (`kit-probe.html`, a second build entry) wears the KIT
-   * (`src/ui/kit`) under `CSPProvider disableStyleElements`, and this arm opens every kit part that portals or animates:
-   * the drawer (with its record steps, Escape, and focus back on its opener, the one real-browser read of insight 071),
-   * the Add menu and a flyout, the picker, the chart title's menu, the folder tabs, the tooltip, the toast, the switch,
-   * the checkbox, and the Action Items tray (a panel on the laptop, a full-height sheet on the phone); plus the slider,
-   * the scroll area, the TanStack data table and the Highcharts chart in styled mode with the accessibility module and
-   * the shared pattern defs. ANY violation reds (the part that injected a `<style>` or a style attribute is the one
-   * being opened), and so does any request off the build's origin. The fallbacks a red points at: React Aria
-   * (components), Recharts (charts). The same arm reads the cascade the colour-blind cue rests on: the hatched series and
-   * its legend symbol fill from `url("#b9-hatch")`, and series 0 fills with palette.ts's own hex, so neither
-   * `highcharts.css` nor Highcharts' default palette won.
-   */
-  test('the kit probe: every kit part opened under the enforced CSP — no violation, no request off the origin, the chart cascade intact', async ({ page }) => {
-    test.setTimeout(120_000)
-    await installCollector(page)
-    const outside: string[] = []
-    page.on('request', (r) => {
-      const url = new URL(r.url())
-      if (url.protocol === 'data:' || url.protocol === 'blob:') return
-      if (url.origin !== ENFORCED_ORIGIN) outside.push(r.url())
-    })
-    const response = await page.goto('/kit-probe.html')
-    // The probe was served the strict policy (a harness that dropped it would make every assertion below vacuous).
-    const csp = response?.headers()['content-security-policy'] ?? ''
-    expect(csp, 'the probe page was served without the strict CSP').toContain("style-src 'self'")
-    expect(csp).not.toContain("'unsafe-inline'")
-    await expect(page.getByRole('heading', { name: 'Kit probe' })).toBeVisible()
-
-    const insideRcRoot = 'xpath=ancestor::*[contains(concat(" ", normalize-space(@class), " "), " rc-root ")]'
-
-    // The drawer (a Base UI Dialog docked right): open, step a record, close on Escape with focus back on its opener
-    // (insight 071: jsdom's teardown order is not the browser's, so this is the real read), then again through Cancel.
-    const opener = page.getByRole('button', { name: 'Open the drawer' })
-    await opener.click()
-    const drawer = page.getByRole('dialog', { name: 'Salary' })
-    await expect(drawer).toBeVisible()
-    await expect(drawer.locator(insideRcRoot)).toHaveCount(1)
-    await expect(drawer.getByRole('button', { name: 'Delete' })).toBeVisible()
-    await drawer.getByRole('button', { name: 'The next record' }).click()
-    await expect(drawer.locator('[data-probe="record"]')).toHaveText('Record 2 of 3')
-    await page.keyboard.press('Escape')
-    await expect(drawer).toHaveCount(0)
-    await expect(opener, 'focus did not return to the drawer’s opener').toBeFocused()
-    await opener.click()
-    await expect(drawer).toBeVisible()
-    await drawer.getByRole('button', { name: 'Cancel' }).click()
-    await expect(drawer).toHaveCount(0)
-
-    // Select: open the list, pick the second item.
-    await page.getByRole('combobox').click()
-    await expect(page.getByRole('listbox')).toBeVisible()
-    await expect(page.getByRole('listbox').locator(insideRcRoot)).toHaveCount(1)
-    await page.getByRole('option', { name: 'Years' }).click()
-    await expect(page.getByRole('listbox')).toHaveCount(0)
-    await expect(page.getByRole('combobox')).toContainText('Years')
-
-    // Slider: one key press moves it.
-    const thumb = page.getByRole('slider')
-    const before = await thumb.getAttribute('aria-valuenow')
-    await thumb.focus()
-    await thumb.press('ArrowRight')
-    await expect(thumb).not.toHaveAttribute('aria-valuenow', before ?? '')
-
-    // Toast: shown, then dismissed.
-    await page.getByRole('button', { name: 'Show a toast' }).click()
-    await expect(page.getByText('Your plan is saved on this device.')).toBeVisible()
-    // Base UI hides a toast's close from the accessibility tree until the stack is hovered or focused (it expands).
-    await page.getByText('Your plan is saved on this device.').hover()
-    await page.getByRole('button', { name: 'Dismiss' }).click()
-    await expect(page.getByText('Your plan is saved on this device.')).toHaveCount(0)
-
-    // The Add menu: the blue panel, a flyout, a pick that closes both.
-    await page.getByRole('button', { name: 'Add', exact: true }).click()
-    const addMenu = page.getByRole('menu').first()
-    await expect(addMenu).toBeVisible()
-    await expect(addMenu.locator(insideRcRoot)).toHaveCount(1)
-    await page.getByRole('menuitem', { name: 'Property' }).click()
-    await expect(page.getByRole('menuitem', { name: 'Rental property' })).toBeVisible()
-    await page.getByRole('menuitem', { name: 'Rental property' }).click()
-    await expect(page.getByRole('menu')).toHaveCount(0)
-    await expect(page.locator('[data-probe="added"]')).toHaveText('Added: Rental property')
-
-    // The chart title's menu, the folder tabs, the switch, the checkbox.
-    await page.getByRole('button', { name: 'Savings over time' }).click()
-    await page.getByRole('menuitemradio', { name: 'Income sources' }).click()
-    await expect(page.getByRole('menu')).toHaveCount(0)
-    await expect(page.getByRole('heading', { name: 'Income sources' })).toBeVisible()
-    await page.getByRole('tab', { name: 'Confidence' }).click()
-    await expect(page.getByRole('tab', { name: 'Confidence' })).toHaveAttribute('aria-selected', 'true')
-    await page.getByRole('tab', { name: 'Probability' }).click()
-    const future = page.getByRole('switch', { name: 'Future dollars' })
-    await future.click()
-    await expect(future).toHaveAttribute('aria-checked', 'true')
-    const joint = page.getByRole('checkbox', { name: 'Held jointly' })
-    await joint.click()
-    await expect(joint).toHaveAttribute('aria-checked', 'false')
-
-    // The tooltip: hovered, its words shown in an .rc-root portal.
-    await page.getByRole('button', { name: 'About the annual increase' }).hover()
-    const tip = page.getByText('How much the figure grows each year.')
-    await expect(tip).toBeVisible()
-    await expect(tip.locator(insideRcRoot)).toHaveCount(1)
-    await page.mouse.move(0, 0)
-    await expect(tip).toHaveCount(0)
-
-    // The Action Items tray on the laptop: the handle opens it under the panel; a changed figure wears its mark.
-    const handle = page.getByRole('button', { name: 'Action items' })
-    await handle.click()
-    await expect(handle).toHaveAttribute('aria-expanded', 'true')
-    const tray = page.locator('[data-tray]')
-    await expect(tray).toBeVisible()
-    await expect(tray.getByText('Monthly spending in retirement').first()).toBeVisible()
-    const spend = tray.getByLabel('Monthly spending in retirement')
-    await spend.fill('5,000')
-    await spend.press('Enter')
-    await expect(spend.locator('xpath=..')).toHaveAttribute('data-changed', 'true')
-    await handle.click()
-    await expect(tray).toHaveCount(0)
-
-    // …and on the phone, a full-height sheet with its own close.
-    await page.setViewportSize({ width: 390, height: 844 })
-    await handle.click()
-    const sheet = page.getByRole('dialog', { name: 'Action items' })
-    await expect(sheet).toBeVisible()
-    await sheet.getByRole('button', { name: 'Close the action items' }).click()
-    await expect(sheet).toHaveCount(0)
-    await expect(handle).toHaveAttribute('aria-expanded', 'false')
+    // Act 6 · RC19: the save drawer (the kit's Drawer over the quiet stone page) from the lock menu's Keep, past the
+    // ceremony's ask over the tray's unkept what-if: the passphrase, the recovery word, the backup (shown as text, the
+    // channel with no download), the done state.
     await page.setViewportSize({ width: 1280, height: 720 })
+    await page.getByRole('button', { name: new RegExp(`^${copy.lockMenuLabel}`) }).click()
+    await page.getByRole('menuitem', { name: copy.saveCta }).click()
+    const goOn = page.getByRole('button', { name: copy.shellCeremonyGo, exact: true })
+    await expect(goOn, 'the ceremony never asked over the unkept what-if').toBeVisible()
+    await goOn.click()
+    const saveDrawer = page.getByRole('dialog', { name: copy.saveDrawerTitle })
+    await expect(saveDrawer, 'the save drawer never opened').toBeVisible()
+    await saveDrawer.getByLabel(copy.passphraseLabel, { exact: true }).fill(VAULT_PASSPHRASE)
+    await saveDrawer.getByLabel(copy.passphraseConfirmLabel, { exact: true }).fill(VAULT_PASSPHRASE)
+    await saveDrawer.getByRole('button', { name: copy.flowNext, exact: true }).click()
+    await expect(saveDrawer.getByRole('heading', { name: copy.recoveryHeading })).toBeVisible({ timeout: 30_000 })
+    await saveDrawer.getByLabel(copy.recoveryLabel, { exact: true }).fill(VAULT_RECOVERY)
+    await saveDrawer.getByLabel(copy.recoveryConfirmLabel, { exact: true }).fill(VAULT_RECOVERY)
+    await saveDrawer.getByRole('button', { name: copy.flowNext, exact: true }).click()
+    await expect(saveDrawer.getByRole('heading', { name: copy.exportHeading }), 'the commit never reached the backup step').toBeVisible({ timeout: 60_000 })
+    await saveDrawer.getByRole('button', { name: copy.exportShowText, exact: true }).click()
+    await saveDrawer.getByRole('button', { name: copy.exportTextSaved, exact: true }).click()
+    await saveDrawer.getByRole('button', { name: copy.exportFinish, exact: true }).click()
+    await expect(saveDrawer.getByRole('heading', { name: copy.savedHeading })).toBeVisible()
+    await saveDrawer.getByRole('button', { name: copy.savedDone, exact: true }).click()
+    await expect(saveDrawer, 'the save drawer never closed').toHaveCount(0)
+    await expect(page.locator('main.result'), 'back in the shell').toHaveCount(1)
+    expect(await page.evaluate(() => document.querySelectorAll('style').length), 'the save drawer injected a <style> element').toBe(0)
 
-    // ScrollArea: it scrolls, and its native scrollbar is hidden by OUR rule (Base UI's own <style> is switched off).
-    const viewport = page.locator('[aria-label="Probe lines"]')
-    const scroll = await viewport.evaluate((el) => {
-      el.scrollTop = 60
-      return { top: el.scrollTop, cls: el.classList.contains('base-ui-disable-scrollbar'), sw: getComputedStyle(el).scrollbarWidth }
-    })
-    expect(scroll.top, 'the scroll area did not scroll').toBeGreaterThan(0)
-    expect(scroll.cls, 'Base UI no longer tags its viewport with base-ui-disable-scrollbar').toBe(true)
-    expect(scroll.sw, 'theme.css’s .base-ui-disable-scrollbar rule did not apply').toBe('none')
+    // A reload finds the vault: the unlock card. A wrong passphrase is refused with its words; the right one opens the plan
+    // onto the re-entry gate, whose affirm lands on the home.
+    await page.reload()
+    await expect(page.getByRole('heading', { name: copy.unlockHeading }), 'the reload never reached the unlock card').toBeVisible({ timeout: 30_000 })
+    const passBox = page.getByLabel(copy.unlockLabel, { exact: true })
+    await passBox.fill('not the passphrase at all')
+    await page.getByRole('button', { name: copy.unlockButton, exact: true }).click()
+    await expect(page.getByRole('alert').filter({ hasText: copy.unlockWrongCredential }), 'the refused unlock said nothing').toBeVisible({ timeout: 30_000 })
+    await passBox.fill(VAULT_PASSPHRASE)
+    await page.getByRole('button', { name: copy.unlockButton, exact: true }).click()
+    const affirm = page.getByRole('button', { name: copy.reentryAffirmCta, exact: true })
+    await expect(affirm, 'the unlock never reached the re-entry gate').toBeVisible({ timeout: 60_000 })
+    await affirm.click()
+    await expect(page.getByRole('heading', { level: 1, name: copy.shellPageSnapshot }), 'the gate never landed on the home').toBeVisible({ timeout: 120_000 })
+    expect(await page.evaluate(() => document.querySelectorAll('style').length), 'the vault screens injected a <style> element').toBe(0)
 
-    // The kit's TanStack table: a grouped header (two header rows) over four body rows, a negative in parentheses.
-    const table = page.locator('[data-probe="table"] table')
-    await expect(table.locator('thead tr')).toHaveCount(2)
-    await expect(table.locator('thead tr').first().locator('th', { hasText: 'Income' })).toHaveAttribute('colspan', '2')
-    await expect(table.locator('tbody tr')).toHaveCount(4)
-    await expect(table.locator('tbody tr').first().locator('td').last()).toHaveText('(36,000)')
-
-    // The chart: drawn, with the accessibility module's hidden screen-reader region and the credit.
-    const chart = page.locator('.highcharts-container')
-    await expect(chart.locator('.highcharts-series.highcharts-series-1 .highcharts-point')).toHaveCount(4)
-    await expect(page.locator('[id^="highcharts-screen-reader-region-before-"]'), 'the accessibility module drew no screen-reader region').toBeAttached()
-    await expect(page.locator('.highcharts-a11y-proxy-group-legend .highcharts-a11y-proxy-element'), 'no keyboard proxy for each legend item').toHaveCount(3)
-    await expect(chart.locator('.highcharts-credits')).toHaveText('Highcharts.com')
-
-    // Hover a point until its tooltip shows.
-    await chart.locator('.highcharts-series.highcharts-series-0 .highcharts-point').nth(2).hover()
-    await expect(chart.locator('.highcharts-tooltip')).toBeVisible()
-    await expect(chart.locator('.highcharts-tooltip')).toContainText('Solid series')
-
-    // Click a legend item to hide its series, then again to show it.
-    const legendItem = chart.locator('.highcharts-legend-item.highcharts-series-1')
-    await legendItem.click()
-    await expect(legendItem).toHaveClass(/highcharts-legend-item-hidden/)
-    await legendItem.click()
-    await expect(legendItem).not.toHaveClass(/highcharts-legend-item-hidden/)
-
-    // The cascade (a new kind of check): the colour-blind second cue survives highcharts.css and the default palette.
-    const fills = await page.evaluate(() => {
-      const fill = (sel: string) => {
-        const el = document.querySelector(sel)
-        return el ? getComputedStyle(el).fill : 'MISSING'
-      }
-      return {
-        hatched: fill('.highcharts-series.highcharts-series-1 .highcharts-point'),
-        hatchedLegend: fill('.highcharts-legend-item.highcharts-series-1 .highcharts-point'),
-        solid: fill('.highcharts-series.highcharts-series-0 .highcharts-point'),
-        root: getComputedStyle(document.documentElement).getPropertyValue('--highcharts-color-0').trim(),
-        pattern: document.querySelectorAll('pattern#b9-hatch').length,
-        // RC3 (owed from RC1): each pattern kind's own ink, so two patterned series keep their colour difference.
-        hatchInk: (() => {
-          const el = document.querySelector('pattern#b9-hatch .b9-pattern-ink')
-          return el ? getComputedStyle(el).stroke : 'MISSING'
-        })(),
-        dotsInk: (() => {
-          const el = document.querySelector('pattern#b9-dots .b9-pattern-ink')
-          return el ? getComputedStyle(el).fill : 'MISSING'
-        })(),
-        dotted: fill('.highcharts-series.highcharts-series-2 .highcharts-point'),
-      }
-    })
-    // Imported here, not at the top, so the lines this file's other arms are cited by keep their numbers.
-    const { RC_SERIES } = await import('../src/viz/palette')
-    const hex = RC_SERIES[0]
-    const rgb = `rgb(${parseInt(hex.slice(1, 3), 16)}, ${parseInt(hex.slice(3, 5), 16)}, ${parseInt(hex.slice(5, 7), 16)})`
-    expect(fills.pattern, 'the shared defs built no #b9-hatch pattern into the chart').toBeGreaterThan(0)
-    expect(fills.hatched, 'the hatched series lost its pattern fill').toBe('url("#b9-hatch")')
-    expect(fills.hatchedLegend, 'the hatched series’ legend symbol lost its pattern fill').toBe('url("#b9-hatch")')
-    expect(fills.root, 'the CSSOM write of --highcharts-color-0 did not land').toBe(hex)
-    expect(fills.solid, 'series 0 is not painted from palette.ts (highcharts.css or its default palette won)').toBe(rgb)
-    // Two patterned series in one chart: each pattern's ink computes its own series' colour, never one shared ink.
-    const rgbOf = (h: string) => `rgb(${parseInt(h.slice(1, 3), 16)}, ${parseInt(h.slice(3, 5), 16)}, ${parseInt(h.slice(5, 7), 16)})`
-    expect(fills.dotted, 'the dotted series lost its pattern fill').toBe('url("#b9-dots")')
-    expect(fills.hatchInk, 'the hatch’s ink is not its series’ colour (slot 1)').toBe(rgbOf(RC_SERIES[1]))
-    expect(fills.dotsInk, 'the dots’ ink is not its series’ colour (slot 2)').toBe(rgbOf(RC_SERIES[2]))
-    expect(fills.hatchInk, 'two patterned series in one chart share one ink').not.toBe(fills.dotsInk)
-
-    // Nothing injected a <style> element, and nothing was blocked along the way.
-    expect(await page.evaluate(() => document.querySelectorAll('style').length), 'a library injected a <style> element').toBe(0)
     expect(await violations(page)).toEqual([])
     expect(outside, 'a request left the build’s own origin').toEqual([])
   })
 
-  /** The probe arm's own control (insight 016): on the probe page, a planted `<style>` is BLOCKED on the enforced origin
-   *  and APPLIES on the no-CSP control origin, so "no violation" above is a real reading, never a deaf collector. */
-  test('the kit probe: a planted <style> is blocked under the CSP (style-src) …', async ({ page }) => {
+  /** The stack's control pair (insight 016), on the main app since Act 6 · RC19 deleted the kit probe page: on the cold
+   *  start, a planted `<style>` is BLOCKED on the enforced origin and APPLIES on the no-CSP control origin, so the shell
+   *  arm's "no violation, no `<style>`" is a real reading, never a deaf collector. */
+  test('a planted <style> is blocked under the CSP (style-src) …', async ({ page }) => {
     await installCollector(page)
-    await page.goto('/kit-probe.html')
-    await expect(page.getByRole('heading', { name: 'Kit probe' })).toBeVisible()
+    await page.goto('/')
+    await expect(page.getByRole('heading', { level: 1, name: copy.coldStartQuestion })).toBeVisible({ timeout: 30_000 })
     expect(await plantStyle(page), 'the planted <style> applied under the enforced CSP').toBe(false)
     expect((await violations(page)).some((x) => x.violatedDirective.startsWith('style-src'))).toBe(true)
   })
 
-  test('CONTROL: … and the same planted <style> applies on the kit probe when no CSP is served', async ({ page }) => {
+  test('CONTROL: … and the same planted <style> applies on the cold start when no CSP is served', async ({ page }) => {
     await installCollector(page)
-    await page.goto(`${CONTROL_ORIGIN}/kit-probe.html`)
-    await expect(page.getByRole('heading', { name: 'Kit probe' })).toBeVisible()
+    await page.goto(`${CONTROL_ORIGIN}/`)
+    await expect(page.getByRole('heading', { level: 1, name: copy.coldStartQuestion })).toBeVisible({ timeout: 30_000 })
     expect(await plantStyle(page), 'the planted <style> did not apply with no CSP — the plant is broken').toBe(true)
     expect(await violations(page)).toHaveLength(0)
   })
 })
 
-/** Appends a `<style>` that would give the probe's heading a 7 px outline; true when the rule took effect. */
+/** Appends a `<style>` that would give the page's first h1 a 7 px outline; true when the rule took effect. */
 async function plantStyle(page: Page): Promise<boolean> {
   return page.evaluate(async () => {
     const s = document.createElement('style')

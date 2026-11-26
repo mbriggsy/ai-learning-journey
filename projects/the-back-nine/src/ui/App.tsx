@@ -1,8 +1,8 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { ColdStart } from '@intake/coldStart'
-import { entryCopy } from './entryCopy'
+import { entryCopy, staticDisclosures } from './entryCopy'
 import { UpdateToast } from './UpdateToast'
-import { Disclaimer } from './Disclaimer'
+import { Caveat } from './kit/Caveat'
 import { UnlockScreen } from './UnlockScreen'
 import { ViewOnlyBanner } from './ViewOnlyBanner'
 import { AppErrorBoundary } from './ErrorBoundary'
@@ -260,7 +260,15 @@ export function App({ seed, vaultSeed }: { seed?: string | null; vaultSeed?: str
         </Suspense>
       )}
       <UpdateToast />
-      <Disclaimer />
+      {/* R13's page-trailing caveat (Act 6 · RC19: the kit's Caveat, in place of `Disclaimer.tsx`). A figured shell page
+          carries its own in-frame caveat, and its `main.result[data-inframe-disclaimer]` hides this one through
+          app.css's sibling rule, so this stays a later sibling of `main.result`, never wrapped, and carries no display
+          utility of its own (a utility would beat the legacy layer's `display: none`). No id: no answer names it. */}
+      <Caveat
+        id={null}
+        lines={[staticDisclosures.honestLimitsScope, staticDisclosures.honestLimitsValidate]}
+        className="disclaimer rc-root w-full px-4 pt-4 pb-8 text-center"
+      />
     </AppErrorBoundary>
   )
 }

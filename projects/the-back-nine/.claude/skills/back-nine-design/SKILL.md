@@ -27,9 +27,9 @@ B9's UI becomes a RightCapital clone: its screens, layout, navigation, flow, cha
   a 2 px left bar; layouts read the tiers as `wide:` (past the 48rem phone tier), `laptop:` (the 68rem seam) and
   `compact:` (the one short tier), never a new literal width or height; no text is ever cut to fit (no `truncate`,
   `line-clamp` or ellipsis: a label, title or shown choice wraps, and its box grows with `min-h-*`, never a fixed
-  `h-*`), and a look audit counts an ellipsis as clipped. A new kit part gets a visit in `e2e/csp.spec.ts`'s kit probe
-  arm if it portals or animates.
-- **The CSP rules for the stack:** Base UI only under `<CSPProvider disableStyleElements>`; never shadcn's `chart` or `sonner`; never motion's `popLayout` or layout animations; no runtime `<style>` from anything. `pnpm verify:csp`'s kit probe arm is the proof (`docs/architecture.md` §10).
+  `h-*`), and a look audit counts an ellipsis as clipped. A new kit part gets a visit in `e2e/csp.spec.ts`'s shell
+  arm if it portals or animates (the kit probe arm folded into it at RC19).
+- **The CSP rules for the stack:** Base UI only under `<CSPProvider disableStyleElements>`; never shadcn's `chart` or `sonner`; never motion's `popLayout` or layout animations; no runtime `<style>` from anything. `pnpm verify:csp`'s shell arm is the proof (`docs/architecture.md` §10).
 
 ## Tone law (the one-paragraph version)
 

@@ -272,7 +272,7 @@ describe('IntakeApp — build 2’s moved left over reaches the re-entry gate fr
   const TYPED_ROUTE =
     'After “Balances still about right — show my answer”, press “Update your figure for a working year” on your answer; “Something’s changed — update them” asks about it among its questions.'
   const doorText = () => {
-    const door = document.querySelector('.save-actions + section.reentry-door')
+    const door = document.querySelector('.reentry-actions + section.reentry-door')
     return { heading: door?.querySelector('h3')?.textContent, scope: door?.querySelector('p')?.textContent }
   }
 
@@ -385,7 +385,7 @@ describe('IntakeApp — build 2’s moved left over reaches the re-entry gate fr
       ])
       // The door, through IntakeApp's own call (council `wf_22858e04-f7a` (2)): under the buttons, the heading, the
       // scope sentence, the route; the W row's choices ride the Result and the W row only (the move, (3)).
-      const door = document.querySelector('.save-actions + section.reentry-door')
+      const door = document.querySelector('.reentry-actions + section.reentry-door')
       expect(door?.querySelector('h3')?.textContent).toBe(slots.workingCostStaleDoorHeadingConfirm('84,000'))
       expect(door?.querySelector('p')?.textContent).toBe(
         [slots.workingCostStaleGateScopeConfirm('84,000'), slots.workingCostStaleGateRoute(copy.stalenessPayCheckCta)].join(' '),
@@ -441,7 +441,7 @@ describe('IntakeApp — build 2’s moved left over reaches the re-entry gate fr
           slots.workingCostStaleLowerAddsMore('90,000', '10,985', '6,000', '16,985'),
         ].join(' '),
       ])
-      const door = document.querySelector('.save-actions + section.reentry-door')
+      const door = document.querySelector('.reentry-actions + section.reentry-door')
       expect(door?.querySelector('h3')?.textContent).toBe(slots.workingCostStaleDoorHeadingUpdate('84,000'))
       expect(door?.querySelector('p')?.textContent).toBe(
         [slots.workingCostStaleGateScopeUpdate('84,000'), slots.workingCostStaleGateRoute(copy.stalenessPayCheckCtaUpdate)].join(' '),
@@ -646,7 +646,7 @@ describe('IntakeApp — the U13 re-entry gate (council 2026-07-09, constraints (
       render(<IntakeApp hydrateFromVault />)
       await screen.findByRole('button', { name: copy.reentryAffirmCta })
       expect(payCheckLine(), 'the same line, writable').toBeDefined()
-      expect(document.querySelector('.save-actions + section.reentry-door p')?.textContent, 'the writable tab names the door').toBe(door)
+      expect(document.querySelector('.reentry-actions + section.reentry-door p')?.textContent, 'the writable tab names the door').toBe(door)
     } finally {
       h.model = fresh
     }

@@ -17,12 +17,12 @@ export type ButtonVariant = (typeof BUTTON_VARIANTS)[number]
 
 const VARIANT: Record<ButtonVariant, string> = {
   primary:
-    'border-blue-ink bg-blue-ink text-bg hover:bg-[color-mix(in_oklab,var(--color-blue-ink)_86%,var(--color-stone-900))]',
-  secondary: 'border-blue-ink bg-bg text-blue-ink hover:bg-blue-tint',
+    'border-blue-ink bg-blue-ink text-bg not-aria-disabled:hover:bg-[color-mix(in_oklab,var(--color-blue-ink)_86%,var(--color-stone-900))]',
+  secondary: 'border-blue-ink bg-bg text-blue-ink not-aria-disabled:hover:bg-blue-tint',
   destructive:
-    'border-coral-ink bg-coral-ink text-bg hover:bg-[color-mix(in_oklab,var(--color-coral-ink)_86%,var(--color-stone-900))]',
-  neutral: 'border-stone-300 bg-bg text-stone-900 hover:bg-stone-100',
-  quiet: 'border-transparent bg-transparent px-2 text-stone-900 underline-offset-4 hover:underline',
+    'border-coral-ink bg-coral-ink text-bg not-aria-disabled:hover:bg-[color-mix(in_oklab,var(--color-coral-ink)_86%,var(--color-stone-900))]',
+  neutral: 'border-stone-300 bg-bg text-stone-900 not-aria-disabled:hover:bg-stone-100',
+  quiet: 'border-transparent bg-transparent px-2 text-stone-900 underline-offset-4 not-aria-disabled:hover:underline',
 }
 
 const SIZE = {
@@ -37,6 +37,10 @@ export function buttonClasses(variant: ButtonVariant = 'primary', size: keyof ty
     'font-regular transition-[scale,background-color,border-color] duration-150 ease-settle active:scale-97',
     'motion-reduce:transition-none motion-reduce:active:scale-100',
     'disabled:cursor-not-allowed disabled:opacity-50 data-disabled:cursor-not-allowed data-disabled:opacity-50',
+    // A withheld button (`aria-disabled`, kept pressable so it can say why: the BudgetBuilder law) reads as withheld and
+    // never darkens on hover (every hover above is `not-aria-disabled:`; `tokens.test.ts` pins it, as it pinned the old
+    // `.btn-primary` rule until Act 6 · RC19 deleted it).
+    'aria-disabled:cursor-not-allowed aria-disabled:opacity-50 aria-disabled:active:scale-100',
     '[&_svg]:shrink-0',
     VARIANT[variant],
     SIZE[size],

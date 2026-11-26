@@ -21,12 +21,11 @@ describe('ColdStart — the one calm entry frame', () => {
     const begin = screen.getByRole('button', { name: copy.coldStartBegin })
     const restore = screen.getByRole('button', { name: copy.coldStartRestoreAction })
     // Visual hierarchy is load-bearing (back-nine-design: the subordinate affordance must never
-    // compete with the primary action). Begin is the sole btn-primary; restore is btn-quiet.
-    expect(begin).toHaveClass('btn-primary')
-    expect(restore).toHaveClass('btn-quiet')
-    expect(restore).not.toHaveClass('btn-primary')
-    expect(screen.queryAllByRole('button').filter((b) => b.classList.contains('btn-primary'))).toHaveLength(1)
-    // The whisper's prompt line sits with it (the rare returning-user cue).
+    // compete with the primary action). Begin is the sole primary (the kit's blue Button); restore is a quiet link
+    // (Act 6 · RC19: the kit's TextLink, no button variant at all).
+    expect(begin).toHaveAttribute('data-variant', 'primary')
+    expect(restore).not.toHaveAttribute('data-variant')
+    expect(screen.queryAllByRole('button').filter((b) => b.getAttribute('data-variant') === 'primary')).toHaveLength(1)
     expect(screen.getByText(copy.coldStartRestorePrompt, { exact: false })).toBeTruthy()
   })
 

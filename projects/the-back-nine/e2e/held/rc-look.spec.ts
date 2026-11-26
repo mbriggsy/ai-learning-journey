@@ -24,7 +24,10 @@ import { copy, slots } from '../../src/ui/copy'
  * from Settings over each seed, and on a fresh plan "Start a new plan", each empty step, Complete waiting on facts and Next
  * refusing with the W drawer at its field (filter `-g "the first-run stepper"`); since RC16 Balance Sheet: Current, its DETAILS
  * breakdown open and its Details tab (filter `-g "Balance Sheet, both tabs"`); since RC17 Analysis's Comparisons, Savings
- * and Retirement Details, chart by chart (filter `-g "Analysis runs tabs"`). Screenshots land in the repo's gitignored `temp/rc-shots/<unit>/`, named
+ * and Retirement Details, chart by chart (filter `-g "Analysis runs tabs"`); since RC19 the vault and session screens: the
+ * cold start, the unlock card and a refused unlock, recovery, restore, the damaged-vault notice, the save drawer step by step,
+ * the backup drawer, the re-entry gate, a second tab's view-only banner and the error boundary (filter
+ * `-g "the vault and session screens"`). Screenshots land in the repo's gitignored `temp/rc-shots/<unit>/`, named
  * `<screen>-<seed>-<size>.png`, for Briggsy to review the output.
  *
  *     RC_UNIT=RC2 pnpm exec playwright test --config e2e/held/shots.config.ts rc-look
@@ -1401,5 +1404,154 @@ for (const size of SIZES) {
         auditAll(findings)
       })
     }
+  })
+}
+
+// ── RC19 · the vault and session screens: the cold start, the unlock card (and a refused unlock with its words), the
+//    recovery and restore cards, the damaged-vault notice, the save drawer's steps (passphrase, recovery word, backup,
+//    done), the backup drawer, the re-entry gate, a second tab's view-only banner and the error boundary. Filter by this
+//    block's own words: `-g "the vault and session screens"`. ─────────────────────────────────────────────────────────
+import { DEV_VAULT_PASSPHRASE } from '../../src/ui/devSeeds'
+
+const RC19_RECOVERY = 'lattice harbor cinder vellum 48 thicket'
+
+for (const size of SIZES) {
+  test.describe(`${UNIT} look, the vault and session screens at ${size.tag}`, () => {
+    test.use({ ...size.use, reducedMotion: 'reduce' })
+
+    test('the cold start, restore, the unlock card, a refused unlock, recovery and the damaged-vault notice', async ({ page }) => {
+      test.setTimeout(180_000)
+      const findings: Record<string, Audit> = {}
+      await page.goto('/')
+      await expect(page.getByRole('heading', { level: 1, name: copy.coldStartQuestion })).toBeVisible({ timeout: 30_000 })
+      await shot(page, findings, 'vault-cold-start', 'fresh', size.tag)
+      await page.getByRole('button', { name: copy.coldStartRestoreAction }).click()
+      await expect(page.getByRole('heading', { name: copy.restoreHeading })).toBeVisible({ timeout: 30_000 })
+      await shot(page, findings, 'vault-restore-cold', 'fresh', size.tag)
+
+      // A planted vault: the unlock card (the dev plant fills the field), then a refused passphrase with its words.
+      await page.goto('/?vault=retired')
+      const unlock = page.getByRole('button', { name: copy.unlockButton })
+      await expect(unlock).toBeVisible({ timeout: 60_000 })
+      const box = page.getByLabel(copy.unlockLabel, { exact: true })
+      await box.fill('')
+      await shot(page, findings, 'vault-unlock', 'retired', size.tag)
+      await box.fill('not the passphrase at all')
+      await unlock.click()
+      await expect(page.getByRole('alert').filter({ hasText: copy.unlockWrongCredential })).toBeVisible({ timeout: 30_000 })
+      await shot(page, findings, 'vault-unlock-refused', 'retired', size.tag)
+
+      // The recovery card, then back.
+      await page.getByRole('button', { name: copy.unlockForgot }).click()
+      await expect(page.getByRole('heading', { name: copy.recoverHeading })).toBeVisible({ timeout: 30_000 })
+      await shot(page, findings, 'vault-recovery', 'retired', size.tag)
+
+      // The damaged-vault notice: one of the vault's three records taken away, then a reload.
+      await page.evaluate(
+        () =>
+          new Promise<void>((resolve, reject) => {
+            const open = indexedDB.open('the-back-nine-vault')
+            open.onsuccess = () => {
+              const tx = open.result.transaction('vault', 'readwrite')
+              tx.objectStore('vault').delete('recoveryWrap')
+              tx.oncomplete = () => {
+                open.result.close()
+                resolve()
+              }
+              tx.onerror = () => reject(tx.error)
+            }
+            open.onerror = () => reject(open.error)
+          }),
+      )
+      await page.goto('/')
+      await expect(page.locator('[data-restore-intro="damaged"]'), 'the damaged-vault notice').toBeVisible({ timeout: 30_000 })
+      await shot(page, findings, 'vault-damaged', 'retired', size.tag)
+      console.log(`[rc-look ${UNIT} vault entry ${size.tag}] ${JSON.stringify(findings)}`)
+      auditAll(findings)
+    })
+
+    test('the save drawer, step by step, then the backup drawer from the lock menu', async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 120_000)
+      const findings: Record<string, Audit> = {}
+      await enterShell(page, 'retired')
+      await page.getByRole('button', { name: new RegExp(`^${copy.lockMenuLabel}`) }).click()
+      await page.getByRole('menuitem', { name: copy.saveCta }).click()
+      const drawer = page.getByRole('dialog', { name: copy.saveDrawerTitle })
+      await expect(drawer).toBeVisible({ timeout: 30_000 })
+      await page.waitForTimeout(400)
+      await shot(page, findings, 'vault-save-passphrase', 'retired', size.tag)
+      // A passphrase under the floor, refused with its words, then one that clears it.
+      await drawer.getByLabel(copy.passphraseLabel, { exact: true }).fill('short')
+      await drawer.getByLabel(copy.passphraseConfirmLabel, { exact: true }).fill('short')
+      // Withheld (`aria-disabled`, kept pressable so it can say why): Playwright's click waits for "enabled", so force it.
+      await drawer.getByRole('button', { name: copy.flowNext, exact: true }).click({ force: true })
+      await expect(drawer.getByRole('alert').filter({ hasText: copy.passphraseTooShort })).toBeVisible({ timeout: 30_000 })
+      await shot(page, findings, 'vault-save-refused', 'retired', size.tag)
+      await drawer.getByLabel(copy.passphraseLabel, { exact: true }).fill(DEV_VAULT_PASSPHRASE)
+      await drawer.getByLabel(copy.passphraseConfirmLabel, { exact: true }).fill(DEV_VAULT_PASSPHRASE)
+      await drawer.getByRole('button', { name: copy.flowNext, exact: true }).click()
+      await expect(drawer.getByRole('heading', { name: copy.recoveryHeading })).toBeVisible({ timeout: 30_000 })
+      await shot(page, findings, 'vault-save-recovery', 'retired', size.tag)
+      await drawer.getByLabel(copy.recoveryLabel, { exact: true }).fill(RC19_RECOVERY)
+      await drawer.getByLabel(copy.recoveryConfirmLabel, { exact: true }).fill(RC19_RECOVERY)
+      await drawer.getByRole('button', { name: copy.flowNext, exact: true }).click()
+      await expect(drawer.getByRole('heading', { name: copy.exportHeading })).toBeVisible({ timeout: 60_000 })
+      await shot(page, findings, 'vault-save-backup', 'retired', size.tag)
+      await drawer.getByRole('button', { name: copy.exportShowText, exact: true }).click()
+      await drawer.getByRole('button', { name: copy.exportTextSaved, exact: true }).click()
+      await shot(page, findings, 'vault-save-backup-saved', 'retired', size.tag)
+      await drawer.getByRole('button', { name: copy.exportFinish, exact: true }).click()
+      await expect(drawer.getByRole('heading', { name: copy.savedHeading })).toBeVisible()
+      await shot(page, findings, 'vault-save-done', 'retired', size.tag)
+      await drawer.getByRole('button', { name: copy.savedDone, exact: true }).click()
+      await expect(drawer).toHaveCount(0)
+      // Back up and export: the lock menu's door opens its own drawer.
+      await page.getByRole('button', { name: new RegExp(`^${copy.lockMenuLabel}`) }).click()
+      await page.getByRole('menuitem', { name: copy.backupDoorCta }).click()
+      const backup = page.getByRole('dialog', { name: copy.backupDoorCta })
+      await expect(backup).toBeVisible({ timeout: 30_000 })
+      await page.waitForTimeout(400)
+      await shot(page, findings, 'vault-backup-drawer', 'retired', size.tag)
+      console.log(`[rc-look ${UNIT} vault save ${size.tag}] ${JSON.stringify(findings)}`)
+      auditAll(findings)
+    })
+
+    test('the re-entry gate on a return, then a second tab: view-only, its gate and its banner over the home', async ({ page, context }) => {
+      test.setTimeout(FINAL_TIER_MS + 180_000)
+      const findings: Record<string, Audit> = {}
+      await page.goto('/?vault=date')
+      await page.getByRole('button', { name: copy.unlockButton }).click()
+      await expect(page.getByRole('heading', { name: copy.reentryHeading })).toBeVisible({ timeout: 60_000 })
+      await shot(page, findings, 'vault-reentry', 'date', size.tag)
+      // The first tab holds the writer; a second tab of the same browser opens the plan view-only.
+      const second = await context.newPage()
+      await second.goto('/')
+      await second.getByLabel(copy.unlockLabel, { exact: true }).fill(DEV_VAULT_PASSPHRASE)
+      await second.getByRole('button', { name: copy.unlockButton }).click()
+      await expect(second.getByRole('button', { name: copy.reentryContinueCta })).toBeVisible({ timeout: 60_000 })
+      await expect(second.getByText(copy.unlockReadOnlyLead, { exact: true })).toBeVisible()
+      await shot(second, findings, 'vault-reentry-view-only', 'date', size.tag)
+      await second.getByRole('button', { name: copy.reentryContinueCta }).click()
+      await expect(second.locator('main.result[data-shell-screen="snapshot"]')).toBeAttached({ timeout: 60_000 })
+      await expect(second.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
+      await second.evaluate(() => window.scrollTo(0, 0))
+      await shot(second, findings, 'vault-view-only-banner', 'date', size.tag)
+      console.log(`[rc-look ${UNIT} vault return ${size.tag}] ${JSON.stringify(findings)}`)
+      auditAll(findings)
+    })
+
+    test('the error boundary in the shell’s frame (a chunk that never loads)', async ({ page }) => {
+      test.setTimeout(120_000)
+      const findings: Record<string, Audit> = {}
+      // The lazy intake chunk fails to load (offline with an evicted cache, insight 053): "Start a new plan" meets the
+      // boundary, never a blank page.
+      await page.route('**/src/ui/IntakeApp.tsx*', (r) => r.abort())
+      await page.goto('/')
+      await page.getByRole('button', { name: copy.coldStartBegin }).click()
+      await expect(page.getByRole('button', { name: copy.restoreRetry })).toBeVisible({ timeout: 30_000 })
+      await shot(page, findings, 'vault-error-boundary', 'fresh', size.tag)
+      console.log(`[rc-look ${UNIT} vault boundary ${size.tag}] ${JSON.stringify(findings)}`)
+      auditAll(findings)
+    })
   })
 }

@@ -8,7 +8,7 @@
  * ssa.gov/myaccount returns 403 to automated requests (SSA bot-blocks curl — see insight 033),
  * but it is the correct "my Social Security" portal a real browser reaches.
  *
- * Every consumer opens these in a NEW TAB (see ExternalLink) so a half-finished, not-yet-saved
+ * Every consumer opens these in a NEW TAB (the kit's `OutLink`) so a half-finished, not-yet-saved
  * intake is never discarded by a same-tab navigation.
  */
 export const EXTERNAL_LINKS = {

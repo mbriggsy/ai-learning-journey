@@ -13,10 +13,15 @@ import { copy } from '../copy'
  * `../vaultSession` (the DYNAMIC import inside apply()). The REAL {@link readyToApplyUpdate} +
  * {@link holdUpdateApply} run — so a refactor that disconnects UpdateToast from the gate fails HERE.
  *
- * The contracts: the region is a `role='status'` mounted EMPTY when idle (burned/045 — a live region
+ * The contracts: the region is a polite live region mounted EMPTY when idle (burned/045 — a live region
  * must exist before it populates or the announce may not fire), renders the reload CTA when an update
  * is ready, applies (skipWaiting + dismiss) when the gate is open, and REFUSES while the Fork B
  * save-ceremony hold is raised (commit→export is a no-reload window) — leaving the prompt up.
+ *
+ * Act 6 · RC19: the toast is the kit's (Base UI's Toast). Its region is Base UI's viewport (`role="region"`,
+ * `aria-live="polite"`, named by `updateRegionLabel`), and Base UI keeps a toast's dismiss out of the accessibility
+ * tree until the stack is hovered or focused (it expands), so the "Later" arms hover the region first, as a pointer
+ * does.
  */
 
 // The SW hook's mutable state, shared with the hoisted mock factory. `needRefresh` is toggled per
@@ -53,21 +58,28 @@ beforeEach(() => {
 afterEach(cleanup)
 
 const reloadBtn = () => screen.getByRole('button', { name: copy.updateReload })
+const region = () => screen.getByRole('region', { name: copy.updateRegionLabel })
+/** "Later", reached as a pointer reaches it: the stack expands on hover, and its dismiss joins the accessibility tree. */
+const laterBtn = async () => {
+  fireEvent.mouseEnter(region())
+  return screen.findByRole('button', { name: copy.updateLater })
+}
 
 describe('UpdateToast — the update-ready prompt and its apply gate', () => {
   it('renders the live region EMPTY (zero footprint) when no update is ready — mounted, never populated', () => {
     h.needRefresh = false
     render(<UpdateToast />)
-    const region = screen.getByRole('status')
-    expect(region).toBeEmptyDOMElement()
+    expect(region()).toHaveAttribute('aria-live', 'polite')
+    expect(region()).toBeEmptyDOMElement()
   })
 
-  it('when an update is ready it renders the reload CTA + the dismiss control (still a status, never an alert)', () => {
+  it('when an update is ready it renders the reload CTA + the dismiss control (still a status, never an alert)', async () => {
     h.needRefresh = true
     render(<UpdateToast />)
-    expect(screen.getByText(copy.updateReady)).toBeInTheDocument()
+    expect(await screen.findByText(copy.updateReady)).toBeInTheDocument()
+    expect(region()).toContainElement(screen.getByText(copy.updateReady))
     expect(reloadBtn()).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: copy.updateLater })).toBeInTheDocument()
+    expect(await laterBtn()).toBeInTheDocument()
     // An available update is calm news, never an alarm.
     expect(screen.queryByRole('alert')).toBeNull()
   })
@@ -75,7 +87,7 @@ describe('UpdateToast — the update-ready prompt and its apply gate', () => {
   it('clicking reload applies the waiting SW and dismisses the prompt when the gate is open (no write, no hold)', async () => {
     h.needRefresh = true
     render(<UpdateToast />)
-    fireEvent.click(reloadBtn())
+    fireEvent.click(await screen.findByRole('button', { name: copy.updateReload }))
     await waitFor(() => expect(h.updateServiceWorker).toHaveBeenCalledWith(true))
     expect(h.setNeedRefresh).toHaveBeenCalledWith(false) // the prompt clears on apply
   })
@@ -84,7 +96,7 @@ describe('UpdateToast — the update-ready prompt and its apply gate', () => {
     h.needRefresh = true
     render(<UpdateToast />)
     const release = holdUpdateApply() // commit→export is a no-reload window the write signal can't see
-    fireEvent.click(reloadBtn())
+    fireEvent.click(await screen.findByRole('button', { name: copy.updateReload }))
     // The apply path RAN (it consulted the write gate) but the open hold made readyToApplyUpdate refuse.
     await waitFor(() => expect(h.isWriteInFlight).toHaveBeenCalled())
     expect(h.updateServiceWorker).not.toHaveBeenCalled()
@@ -102,15 +114,20 @@ describe('UpdateToast — the update-ready prompt and its apply gate', () => {
 
   it('"Later" after a refused tap resets the held line with the prompt — the next update-ready frame opens calm', async () => {
     h.needRefresh = true
-    render(<UpdateToast />)
+    const { rerender } = render(<UpdateToast />)
     const release = holdUpdateApply()
-    fireEvent.click(reloadBtn())
+    fireEvent.click(await screen.findByRole('button', { name: copy.updateReload }))
     await screen.findByText(copy.updateHeld)
-    fireEvent.click(screen.getByRole('button', { name: copy.updateLater }))
+    fireEvent.click(await laterBtn())
     expect(h.setNeedRefresh).toHaveBeenCalledWith(false)
-    // The mocked hook keeps needRefresh true, so the toast stays rendered — which is exactly what
-    // lets this assert the TEXT reset on its own, independent of the prompt's visibility.
-    expect(screen.getByText(copy.updateReady)).toBeInTheDocument()
+    // The real hook then drops needRefresh (the mock does not on its own): the prompt goes. The next update-ready
+    // frame shows the READY line, never the held one — the held state was reset with the prompt.
+    h.needRefresh = false
+    rerender(<UpdateToast />)
+    await waitFor(() => expect(screen.queryByText(copy.updateHeld)).toBeNull())
+    h.needRefresh = true
+    rerender(<UpdateToast />)
+    expect(await screen.findByText(copy.updateReady)).toBeInTheDocument()
     expect(screen.queryByText(copy.updateHeld)).toBeNull()
     release()
   })

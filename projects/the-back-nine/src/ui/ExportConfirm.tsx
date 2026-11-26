@@ -5,12 +5,19 @@
  * storage would otherwise brick an un-skippable gate). The show-text path has no OS
  * dependency, so the gate can always be cleared. No remind-me-later bypass: Finish is
  * `aria-disabled` (never native `disabled`) until the backup is saved by some channel.
+ *
+ * Act 6 · RC19: drawn in the kit, inside the save drawer (its export step) and the backup drawer: the download as the
+ * blue primary (an anchor wearing the kit Button's classes), copy and show-the-text as outlined buttons, the confirm line
+ * with a check beside it, Finish at the end.
  */
 import { useCallback, useEffect, useId, useRef, useState } from 'react'
+import { Check } from 'lucide-react'
 import { copy } from './copy'
 import { focusHeading } from '@intake/a11y'
 import type { Announcer } from '@intake/a11y'
 import { exportVaultFile, recordBackupMade } from './vaultSession'
+import { Button, buttonClasses } from './kit/Button'
+import { FieldNote, VAULT_ACTIONS, VaultHeading } from './kit/VaultCard'
 
 const BACKUP_FILENAME = 'the-back-nine-backup.json'
 
@@ -108,32 +115,28 @@ export function ExportConfirm({
   }
 
   return (
-    <section className="save-step">
-      <h2 className="save-step__heading" tabIndex={-1} ref={headingRef}>
-        {copy.exportHeading}
-      </h2>
-      <p className="save-step__intro">{copy.exportIntro}</p>
-      {/* Council-mandated substance (2026-06-30): the entropy downgrade + the estate handoff. */}
-      <p className="save-step__intro save-step__intro--secondary">{copy.exportEntropyNote}</p>
-      <p className="save-step__intro save-step__intro--secondary">{copy.exportEstateNote}</p>
+    <section className="flex flex-col gap-6" data-export-step="">
+      <div className="flex flex-col gap-2">
+        <VaultHeading ref={headingRef}>{copy.exportHeading}</VaultHeading>
+        <p className="text-body text-stone-600">{copy.exportIntro}</p>
+        {/* Council-mandated substance (2026-06-30): the entropy downgrade + the estate handoff. */}
+        <p className="text-body text-stone-600">{copy.exportEntropyNote}</p>
+        <p className="text-body text-stone-600">{copy.exportEstateNote}</p>
+      </div>
 
       {exportError ? (
-        <>
-          <p className="save-step__note" role="alert">
-            {copy.exportUnavailable}
-          </p>
-          <div className="save-actions">
-            <button type="button" className="btn-primary" onClick={loadBackup}>
-              {copy.exportRetry}
-            </button>
-          </div>
-        </>
+        <div className="flex flex-col gap-3">
+          <FieldNote>{copy.exportUnavailable}</FieldNote>
+          <Button variant="primary" className="self-start" onClick={loadBackup}>
+            {copy.exportRetry}
+          </Button>
+        </div>
       ) : (
-        <>
-          <div className="save-export">
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-3 wide:flex-row wide:flex-wrap [&>*]:h-auto [&>*]:min-h-10 [&>*]:whitespace-normal [&>*]:py-2" data-export-channels="">
             {downloadUrl && (
               <a
-                className="btn-primary save-export__channel"
+                className={buttonClasses('primary')}
                 href={downloadUrl}
                 download={BACKUP_FILENAME}
                 onClick={() => markExported('exportDownloaded')}
@@ -141,40 +144,51 @@ export function ExportConfirm({
                 {copy.exportDownload}
               </a>
             )}
-            <button type="button" className="btn-quiet save-export__channel" disabled={fileText === null} onClick={() => void handleCopy()}>
+            <Button variant="secondary" disabled={fileText === null} onClick={() => void handleCopy()}>
               {copy.exportCopy}
-            </button>
-            <button type="button" className="btn-quiet save-export__channel" disabled={fileText === null} onClick={() => setShowText(true)}>
+            </Button>
+            <Button variant="secondary" disabled={fileText === null} onClick={() => setShowText(true)}>
               {copy.exportShowText}
-            </button>
+            </Button>
           </div>
 
-          {confirmKey && <p className="save-export__confirm">{copy[confirmKey]}</p>}
-          {copyFailed && <p className="save-step__note">{copy.exportTextHint}</p>}
+          {confirmKey && (
+            <p className="flex items-start gap-1.5 text-body font-medium text-stone-900" data-export-confirm="">
+              <Check size={18} strokeWidth={2} aria-hidden="true" className="mt-0.5 shrink-0 text-plum" />
+              {copy[confirmKey]}
+            </p>
+          )}
+          {copyFailed && <p className="text-label text-stone-600">{copy.exportTextHint}</p>}
 
           {showText && fileText !== null && (
-            <div className="save-export__text">
-              <label className="save-field__label" htmlFor={textId}>
+            <div className="flex flex-col gap-2">
+              <label className="text-body text-stone-900" htmlFor={textId}>
                 {copy.exportTextHint}
               </label>
-              <textarea id={textId} className="save-export__textarea" readOnly value={fileText} rows={6} />
-              <button type="button" className="btn-quiet" onClick={() => markExported(null)}>
+              <textarea
+                id={textId}
+                className="min-h-32 w-full rounded-control border border-stone-300 bg-stone-100 p-3 font-mono text-label break-all text-stone-900 outline-none focus:outline-2 focus:outline-offset-2 focus:outline-blue-ink"
+                readOnly
+                value={fileText}
+                rows={6}
+              />
+              <Button variant="secondary" className="self-start" onClick={() => markExported(null)}>
                 {copy.exportTextSaved}
-              </button>
+              </Button>
             </div>
           )}
-        </>
+        </div>
       )}
 
-      <div className="save-actions">
+      <div className={VAULT_ACTIONS}>
         {onCancel && (
-          <button type="button" className="btn-quiet" onClick={onCancel}>
+          <Button variant="neutral" onClick={onCancel}>
             {copy.backupNotNow}
-          </button>
+          </Button>
         )}
-        <button type="button" className="btn-primary" aria-disabled={!exported} onClick={handleFinish}>
+        <Button variant="primary" aria-disabled={!exported} onClick={handleFinish}>
           {copy.exportFinish}
-        </button>
+        </Button>
       </div>
     </section>
   )

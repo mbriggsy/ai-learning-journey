@@ -22,7 +22,23 @@
 @import 'tailwindcss/theme.css' layer(theme);
 @import 'tailwindcss/utilities.css' layer(utilities) source(none);
 
-@source '../../kit-probe.tsx';
+/* Act 6 · RC19: the vault and session screens outside the kit and the screen folders (each named, never a glob over
+   src/ui, so an old component's class never picks up a utility). */
+@source '../App.tsx';
+@source '../UnlockScreen.tsx';
+@source '../PassphraseStep.tsx';
+@source '../SaveFlow.tsx';
+@source '../BackupStep.tsx';
+@source '../ExportConfirm.tsx';
+@source '../RestoreFlow.tsx';
+@source '../RecoveryFlow.tsx';
+@source '../ReEntry.tsx';
+@source '../ViewOnlyBanner.tsx';
+@source '../UpdateToast.tsx';
+@source '../ErrorBoundary.tsx';
+@source '../VaultGround.tsx';
+@source '../IntakeApp.tsx';
+@source '../../intake/coldStart.tsx';
 @source '../kit';
 @source '../shell';
 @source '../screens';
@@ -414,5 +430,18 @@
   .rc-root [data-kept-row]:hover [data-row-actions],
   .rc-root [data-kept-row]:focus-within [data-row-actions] {
     opacity: 1;
+  }
+}
+
+/* Act 6 · RC19: a vault card's page (`VaultPage`, `src/ui/kit/VaultCard.tsx`: unlock, the cold start, restore, recovery,
+   the error boundary, the ground under the save and backup drawers) paints the whole window `--stone-100`, so App's
+   trailing R13 caveat, a sibling below it, sits on the same ground as the card. */
+@layer kit {
+  #root:has(> [data-vault-page]) {
+    background-color: var(--color-stone-100);
+  }
+  /* The re-entry gate's page is white (the stepper's frame), and so is the ground its trailing caveat sits on. */
+  #root:has(> [data-reentry-page]) {
+    background-color: var(--color-bg);
   }
 }

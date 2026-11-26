@@ -1296,7 +1296,7 @@ refusal witness), so `gotoSeedFinal` times out on it — anchor on `main.result`
   preflight copy in `theme.css` resets margins, padding, borders and heading size and weight, not `base.css`'s heading
   face, leading, tracking and colour, `p`'s reading measure or `small`'s colour: the shell's phone menu drew its headings
   in Fraunces until `theme.css`'s base layer neutralised them under `:where(.rc-root)`. A new legacy element rule needs
-  its line there too. The probe page loads no `base.css`, so it never shows this; `e2e/rc-screens.spec.ts` reads it in
+  its line there too. The probe page (deleted at RC19) loaded no `base.css`, so it never showed this; `e2e/rc-screens.spec.ts` reads it in
   the main app. And a face the main entry never imports falls back silently: Figtree reached the main app only at RC2.
 - **(b9-4, 11-24) Two `main.result` on one page make `SETTLED_RESULT` a strict-mode error in every gate.** The shell owns
   `main.result`; the answer page's `<main>` carries `result result-page` until RC4, and the legacy layout rules key on
@@ -1306,9 +1306,16 @@ refusal witness), so `gotoSeedFinal` times out on it — anchor on `main.result`
   built page dies with "Cannot read properties of undefined (reading 'prototype')". And under `pnpm dev`, Vite's
   dependency pre-bundler split the module and the master into chunks that import each other ("Class extends value
   undefined") while `pnpm build` ran clean: `vite.config.ts` excludes both packages from `optimizeDeps`. A green build is
-  not a green dev server for Highcharts; load a chart page under `pnpm dev` before trusting it (RC1, `src/kit-probe.tsx`).
-  And the editor's language server (the global TypeScript 6) flags `installChartDefaults(Highcharts, …)` in
-  `src/kit-probe.tsx` as a type mismatch between two copies of Highcharts' types (`highcharts.src` against `highcharts`);
+  not a green dev server for Highcharts; load a chart page under `pnpm dev` before trusting it (RC1, the deleted `src/kit-probe.tsx`).
+  **And the build's chunking can break the order too (RC19, 11-26):** deleting the kit probe (a second entry) let
+  Rolldown split the master and its modules (with @highcharts/react's lazy series modules) into chunks that import each
+  other, and the BUILT home's fan died with "Class extends value undefined" while every unit test and the dev server
+  stayed green; pinning Highcharts into one `codeSplitting` group only moved the fault ("reading 'prototype'", and with
+  a broad group the entry imported the whole Highcharts chunk through Vite's preload helper). `vite.config.ts` turns on
+  `output.strictExecutionOrder`; after any change to the build's entries or chunking, load a chart page on the BUILT app
+  (`verify:csp`'s shell arm draws the home's fan first).
+  And the editor's language server (the global TypeScript 6) flagged `installChartDefaults(Highcharts, …)` in
+  `src/kit-probe.tsx` (deleted at RC19; `src/viz/charts/Chart.tsx` makes the same call) as a type mismatch between two copies of Highcharts' types (`highcharts.src` against `highcharts`);
   the project's pinned TypeScript 5.9 does not, and `pnpm typecheck` is the gate. Expect it to turn real on the day the
   project moves to TypeScript 6.
 - **(b9-4, 11-24) A Tailwind utility beats every old stylesheet.** The old sheets sit in `@layer legacy`, the lowest

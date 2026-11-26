@@ -1078,7 +1078,7 @@ describe('ReEntry — the surface', () => {
     const text = `${copy.stalenessPayCheckGateLead} ${workingYearCostStaleNote(d)}`
     const notes = container.querySelector('.reentry-notes')!
     expect(notes.querySelector('.note-parts')).toBeNull()
-    expect(Array.from(notes.children).map((c) => c.outerHTML)).toContain(`<p class="save-step__note save-field__note--block">${text}</p>`)
+    expect(Array.from(notes.children).map((c) => c.outerHTML)).toContain(`<p class="reentry-note">${text}</p>`)
   })
 
   it('W’s door sits right after the buttons it names: section.reentry-door, its h3 the heading, the scope sentence the affirm button’s description; it names no W-row button and points neither above nor below', () => {
@@ -1086,7 +1086,7 @@ describe('ReEntry — the surface', () => {
     const { container } = render(<ReEntry view={wStaleView(d)} readOnly={false} onAffirm={() => {}} onUpdate={() => {}} />)
     const door = container.querySelector('section.reentry-door')!
     expect(door, 'drawn where the tab can save').not.toBeNull()
-    expect(container.querySelector('.save-actions')?.nextElementSibling).toBe(door)
+    expect(container.querySelector('.reentry-actions')?.nextElementSibling).toBe(door)
     expect(door.querySelector('h3')?.textContent).toBe('To confirm or change your $84,000 figure')
     const affirm = screen.getByRole('button', { name: copy.reentryAffirmCta })
     expect(affirm).toHaveAccessibleDescription('Neither button on this page confirms or changes your $84,000 figure; both lead to where you can.')
@@ -1179,9 +1179,9 @@ describe('ReEntry — the surface', () => {
     expect(typedBelowView(d, false).noteLines).toEqual([TYPED_GATE_NOTE])
     const { container } = render(<ReEntry view={view} readOnly={false} onAffirm={() => {}} onUpdate={() => {}} />)
     expect(Array.from(container.querySelector('.reentry-notes')!.children).map((c) => c.outerHTML)).toEqual([
-      `<p class="save-step__note save-field__note--block">${TYPED_GATE_LINE}</p>`,
+      `<p class="reentry-note">${TYPED_GATE_LINE}</p>`,
     ])
-    expect(container.querySelector('.save-actions')?.nextElementSibling).toBe(container.querySelector('section.reentry-door'))
+    expect(container.querySelector('.reentry-actions')?.nextElementSibling).toBe(container.querySelector('section.reentry-door'))
     expect(screen.getByRole('button', { name: copy.reentryAffirmCta })).toHaveAccessibleDescription(
       'Neither button on this page updates your $84,000 figure; both lead to where you can.',
     )

@@ -30,7 +30,7 @@ import {
 import { openCheck, saveEdit } from './drawerSave'
 import type { DrawerBodyProps } from './drawerProps'
 import { Fact } from './Fact'
-import { OutLink } from './OutLink'
+import { OutLink } from '../../../kit/OutLink'
 import { EXTERNAL_LINKS } from '@intake/links'
 import { ProfileDrawer } from './ProfileDrawer'
 import { useDrawerEdit } from './useDrawerBuffer'

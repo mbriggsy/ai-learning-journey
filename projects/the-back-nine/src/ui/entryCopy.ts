@@ -2,7 +2,7 @@
  * THE ENTRY SLICE of the copy catalog — the words the first-load (entry) chunk renders, and nothing else:
  * `appTitle`, the PWA update toast, the cold-start frame and its three quote links, the passphrase reveal toggle,
  * the whole unlock screen (its honesty-critical errors, keyed by `unlockCopy.ts`'s `UnlockCopyKey`, the read-only
- * notice and the reload affordance `AppErrorBoundary` shows), and the R13 `staticDisclosures` the `Disclaimer` mounts.
+ * notice and the reload affordance `AppErrorBoundary` shows), and the R13 `staticDisclosures` App's trailing caveat mounts.
  *
  * WHY IT IS ITS OWN FILE. `copy.ts` is ~100 KB of minified strings, and every module the entry graph imports ships in
  * the first-load JS. While the entry imported `copy.ts`, every feature's words were first-load bytes, though all but
@@ -27,10 +27,14 @@
 /** The entry graph's catalog keys — composed into `copy` (and so swept by copyGuard) by `copy.ts`. */
 export const entryCopy = {
   appTitle: 'The Back Nine',
+  // The plum mark beside the name (the shell's top bar, the stepper's header and, since Act 6 · RC19, the vault cards).
+  shellMark: 'B9',
   // --- PWA update toast (prompt mode — the user chooses when) ---
   updateReady: 'A new version is ready — refresh whenever you’re done.',
   updateReload: 'Refresh now',
   updateLater: 'Later',
+  // Act 6 · RC19: the name of the toast stack's live region (Base UI's viewport), so no built-in word reads instead.
+  updateRegionLabel: 'App updates',
   // The refused tap's reason (2026-09-03): the apply gate holds while a save is landing, the
   // ceremony is between commit and backup, or typed work is unsaved (the leave-page guard). One
   // line true on all three arms — "save first" is the remedy for each.
@@ -62,7 +66,8 @@ export const entryCopy = {
   unlockIntro: 'Your saved plan is encrypted on this device. Enter your passphrase to open it.',
   unlockLabel: 'Passphrase',
   unlockButton: 'Open my plan',
-  unlockForgot: 'I forgot my passphrase',
+  // Act 6 · RC19: the unlock card's link to the recovery flow, named as the page it opens is (`recoverHeading`).
+  unlockForgot: 'Use your recovery word',
   restoringStatus: 'Opening your plan…',
   // The honesty-critical error copy (keys match unlockCopy.ts UnlockCopyKey).
   unlockWrongCredential:

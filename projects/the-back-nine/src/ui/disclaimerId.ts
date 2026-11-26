@@ -1,7 +1,8 @@
 /**
- * The R13 caveat's one id and the verdict's description list that names it (`Disclaimer.tsx` mounts the caveat; both
- * heroes build their `aria-describedby` here). Moved out of `Disclaimer.tsx` by Act 6's RC0, unchanged. Not named
- * `disclaimer.ts`: on Windows's case-blind disk `./Disclaimer` would resolve to it before `Disclaimer.tsx`.
+ * The R13 caveat's one id and the verdict's description list that names it (the kit's `Caveat` carries the id; every
+ * figured page builds its `aria-describedby` here). Moved out of `Disclaimer.tsx` by Act 6's RC0, unchanged; RC19
+ * deleted `Disclaimer.tsx` (App's trailing mount is the kit's Caveat). Not named `disclaimer.ts`: on Windows's
+ * case-blind disk `./Disclaimer` resolved to it before `Disclaimer.tsx` while that file lived.
  */
 
 /** The in-frame mount's element id — the verdict elements name it in `aria-describedby`, so the

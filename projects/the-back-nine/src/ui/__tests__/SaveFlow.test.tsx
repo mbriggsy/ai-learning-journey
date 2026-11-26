@@ -122,3 +122,55 @@ describe('SaveFlow — the Fork B update-apply hold across commit→export', () 
     expect(await readyToApplyUpdate(idleGate)).toBe(true)
   })
 })
+
+/** Act 6 · RC19: the ceremony is a right drawer, and each close is the step's own way out (insights 031 and 049: every
+ *  path out keeps every guard the old path held). Before the commit a close is the old Back to the answer; across the
+ *  commit and the mandatory backup no close is honoured (the X is gone, Escape is refused), so a close can never skip
+ *  the backup of a credential already minted; once the plan is saved, a close is Done. */
+describe('SaveFlow — the save drawer’s closes, step by step (RC19)', () => {
+  const escape = () => fireEvent.keyDown(document.activeElement ?? document.body, { key: 'Escape' })
+
+  it('before the commit, Escape is the Back to the answer (onCancel), and nothing is saved', async () => {
+    const onCancel = vi.fn()
+    render(<SaveFlow scenario={scenario()} onCancel={onCancel} onCommitted={vi.fn()} onComplete={vi.fn()} />)
+    await screen.findByRole('heading', { name: copy.saveHeading })
+    expect(screen.getByRole('button', { name: copy.profileDrawerClose })).toBeInTheDocument()
+    escape()
+    await waitFor(() => expect(onCancel).toHaveBeenCalledTimes(1))
+    expect(firstSave).not.toHaveBeenCalled()
+  })
+
+  it('across the mandatory backup no close is honoured: no X, Escape refused, still the backup step', async () => {
+    firstSave.mockResolvedValue({ ok: true })
+    const onCancel = vi.fn()
+    const onComplete = vi.fn()
+    const onCommitted = vi.fn()
+    render(<SaveFlow scenario={scenario()} onCancel={onCancel} onCommitted={onCommitted} onComplete={onComplete} />)
+    await reachSecuring()
+    await screen.findByRole('heading', { name: copy.exportHeading })
+    expect(onCommitted).toHaveBeenCalledTimes(1)
+    expect(screen.queryByRole('button', { name: copy.profileDrawerClose }), 'the X is gone across the backup').toBeNull()
+    escape()
+    // A beat for any close the drawer might have reported.
+    await new Promise((r) => setTimeout(r, 50))
+    expect(onCancel).not.toHaveBeenCalled()
+    expect(onComplete).not.toHaveBeenCalled()
+    expect(screen.getByRole('heading', { name: copy.exportHeading })).toBeInTheDocument()
+  })
+
+  it('once the plan is saved, a close is Done (onComplete), never a Back that would read as unsaved', async () => {
+    firstSave.mockResolvedValue({ ok: true })
+    const onCancel = vi.fn()
+    const onComplete = vi.fn()
+    render(<SaveFlow scenario={scenario()} onCancel={onCancel} onCommitted={vi.fn()} onComplete={onComplete} />)
+    await reachSecuring()
+    await screen.findByRole('heading', { name: copy.exportHeading })
+    fireEvent.click(await screen.findByRole('button', { name: copy.exportShowText }))
+    fireEvent.click(screen.getByRole('button', { name: copy.exportTextSaved }))
+    fireEvent.click(screen.getByRole('button', { name: copy.exportFinish }))
+    await screen.findByRole('heading', { name: copy.savedHeading })
+    fireEvent.click(screen.getByRole('button', { name: copy.profileDrawerClose }))
+    await waitFor(() => expect(onComplete).toHaveBeenCalledTimes(1))
+    expect(onCancel).not.toHaveBeenCalled()
+  })
+})

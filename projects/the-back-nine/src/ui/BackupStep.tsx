@@ -13,10 +13,17 @@
  * believed-finished save. Here the vault has been durable all along and the note is written only on
  * a CONFIRMED channel — an interruption mid-offer degrades to the safe re-offer on the next return.
  * Do not "fix" the omission by copying SaveFlow's hold (ultramode 2026-07-03).
+ *
+ * Act 6 · RC19: "Back up and export" is a right drawer (the kit's Drawer, titled as the lock menu's door, "Save a backup
+ * file") over the quiet stone page (`VaultGround`; the shell unmounts across it, as before). Its X, Escape and scrim are
+ * the step's own "Not now": the invited offer declines in one press and records nothing, so every close is that.
  */
+import { Download } from 'lucide-react'
 import { useLiveAnnouncer } from '@intake/a11y'
+import { copy } from './copy'
+import { Drawer } from './kit'
 import { ExportConfirm } from './ExportConfirm'
-import './styles/save.css'
+import { VaultGround } from './VaultGround'
 
 export function BackupStep({
   onFinish,
@@ -31,9 +38,25 @@ export function BackupStep({
   // before its node mounts (useLiveAnnouncer's callback ref binds late; insight 060).
   const announcer = useLiveAnnouncer()
   return (
-    <main className="save">
-      <div ref={announcer.ref} className="sr-only" role="status" aria-live="polite" aria-atomic="true" />
-      <ExportConfirm announcer={announcer} onFinish={onFinish} onCancel={onCancel} />
-    </main>
+    <>
+      <VaultGround />
+      <Drawer
+        open
+        onOpenChange={(open) => {
+          if (!open) onCancel()
+        }}
+        title={copy.backupDoorCta}
+        icon={<Download strokeWidth={1.5} aria-hidden="true" />}
+        closeLabel={copy.profileDrawerClose}
+        cancelLabel={copy.profileDrawerCancel}
+        footer={null}
+        initialFocus={() => document.querySelector<HTMLElement>('[data-backup-step] [data-vault-heading]')}
+      >
+        <div className="flex flex-col" data-backup-step="">
+          <div ref={announcer.ref} className="sr-only" role="status" aria-live="polite" aria-atomic="true" />
+          <ExportConfirm announcer={announcer} onFinish={onFinish} onCancel={onCancel} />
+        </div>
+      </Drawer>
+    </>
   )
 }

@@ -3,7 +3,7 @@ title: A rendered defect is green on every check until someone looks — ten def
 date: 2026-11-25
 phase: Act 6, the RightCapital clone (RC1 to RC7, b9-4 to b9-6, 2026-11-24)
 modules: [e2e/held/rc-look.spec.ts, e2e/rc-screens.spec.ts, e2e/hcTextAudit.ts, src/viz/charts/]
-tags: [look-audit, screenshots, eye-in-the-loop, orchestrator, builder-agent, green-checks, visual-defect, calm-but-wrong, ellipsis-exemption, planted-red, highcharts, fit, phone, clone, vacuous-audit, zero-labels, presence-count, html-overlay, donut, hole, geometric-check, assertCentreInHole, hcAudit, held-instrument, rc-look, RC_ONLY, env-filter, index-lookup, by-id, screenById, wrong-screen, rename]
+tags: [look-audit, screenshots, eye-in-the-loop, orchestrator, builder-agent, green-checks, visual-defect, calm-but-wrong, ellipsis-exemption, planted-red, highcharts, fit, phone, clone, vacuous-audit, zero-labels, presence-count, html-overlay, donut, hole, geometric-check, assertCentreInHole, hcAudit, held-instrument, rc-look, RC_ONLY, env-filter, index-lookup, by-id, screenById, wrong-screen, rename, instrument-state, known-state, call-log, progress-mark, stepper-check]
 ---
 
 ## Problem
@@ -93,3 +93,17 @@ the layer they are drawn in, or with a geometric check of your own. Pick what a 
 position in a list that a filter, an environment variable or a reorder can change, and when a rename hands an old name
 to a new meaning, check every reader that already used the name. The eye on the shot stays the last check: it is the
 only one that reads the page itself, so it is the only one that catches an instrument aimed at the wrong page.
+
+## Extended (2026-11-26): the instrument's own assumptions and a progress mark are claims too
+
+**A look instrument that toggles shell-level state from an assumed state undoes what an earlier capture left open**
+(RC18, `6fef3010`): the tray's handle state lives on the shell and survives a page move, so a capture that pressed the
+handle "to open it" shut the tray an earlier capture had opened, then timed out waiting on a row it had just hidden. The
+run read as a slow machine until the call log's waiting locator named the row. Put the instrument in a known state
+before acting (read the handle's `aria-expanded`, then press only if needed), and read the call log before blaming the
+machine.
+
+**A progress mark is a claim the look must check against the facts it summarizes** (RC14, `c43d7a50`): the look found
+every setup step marked ✓ while the box under Complete listed that step's missing facts, and "· 5 more" hid what
+Complete still needed. Mark a step done only on its own facts and its own check (milestone 3's round 1 made the box name
+every fact; round 2 dropped a step's ✓ when its check refuses).

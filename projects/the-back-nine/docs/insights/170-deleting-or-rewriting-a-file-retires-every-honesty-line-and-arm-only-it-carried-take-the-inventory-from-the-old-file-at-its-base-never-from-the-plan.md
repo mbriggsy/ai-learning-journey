@@ -3,7 +3,7 @@ title: Deleting or rewriting a file retires every honesty line and test arm only
 date: 2026-11-25
 phase: Act 6, the RightCapital clone (RC4a, b9-5; milestone 1's whole-file review, b9-7, 2026-11-24)
 modules: [docs/plans/6-rightcapital-ui-plan.md, src/ui/copy.ts, e2e/vertical-fit.spec.ts, e2e/rc-screens.spec.ts]
-tags: [deletion, rewrite, port, lost-line, honesty-line, disclosure-map, copy-keys, no-reader, dead-code, test-retirement, describe-titles, port-list, inventory-from-base, calm-but-wrong, datemixed, clone, gate, honesty-gate, conditions, early-return, suppression, inversion, runner-up, runnerUpVizFor, ranked-list, no-dollar, taxRunsGate]
+tags: [deletion, rewrite, port, lost-line, honesty-line, disclosure-map, copy-keys, no-reader, dead-code, test-retirement, describe-titles, port-list, inventory-from-base, calm-but-wrong, datemixed, clone, gate, honesty-gate, conditions, early-return, suppression, inversion, runner-up, runnerUpVizFor, ranked-list, no-dollar, taxRunsGate, port-before-delete, ported-tests, stale-W-picture, second-reader]
 ---
 
 ## Problem
@@ -104,3 +104,18 @@ pinned still applied to the new list. A third check:
 
 A gate belongs to the claim it protects (this pair, this figure), not to the picture it was first written on. Carry it
 by name to one new picture, as the plan did for Summary, and every other new picture of the same pair goes ungated.
+
+## Extended (2026-11-26): port the old surface's tests onto its replacement before deleting them; the gate case, seen again
+
+**Port first, delete second** (RC14, `c43d7a50`). RC14 deleted the walk; before the deletion its unit tests were ported
+onto RC13's drawers, which had replaced the walk's steps a unit earlier. The port found five regressions RC13 had shipped
+green, one calm-but-wrong: a through-year typed "2.5" saved as a lifelong budget line under its own error, because a
+drawer's Save ran past a box holding text it had refused. The old tests held laws the new host never re-implemented, and
+nothing else would have read them again. A ported test left red is a finding about the replacement, never a test to
+adjust.
+
+**The gate case above, seen again** (milestone 3's review round 1, `4be1d777`). The facts page's "no money picture over a
+stale W" gate went to one of the two new pictures of the same ledger (the W drawer withholds its picture) and not the
+other: Goals' money picture card printed "Left over in 2026: $16,985" where year 0 at today's spending ran $4,015 short.
+Every copy key survived. Inventory every condition on a deleted surface, then grep every new reader of the data it
+guarded, not only the reader the plan named.

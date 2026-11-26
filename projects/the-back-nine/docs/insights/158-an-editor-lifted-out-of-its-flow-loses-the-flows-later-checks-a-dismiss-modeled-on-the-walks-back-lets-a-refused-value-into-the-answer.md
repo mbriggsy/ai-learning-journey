@@ -3,7 +3,7 @@ title: An editor lifted out of its flow loses the flow's later checks — a shee
 date: 2026-11-23
 phase: The RightCapital mandate, gap 1 (the workbench's U8, the facts page)
 modules: [src/ui/workbench/StepSheet.tsx, src/intake/flow.tsx, src/intake/questions.tsx]
-tags: [hosted-editor, walk-step, continue-check, discardOnBack, dismiss, refused-value, validate-before-mutate, sanity-rules, calm-but-wrong, rosy-direction, flow-invariant, rollback, multi-edit-step, finished-work, leave-ask, ending-changed, reroute, putsBack, promise-sentence, step-sheet]
+tags: [hosted-editor, walk-step, continue-check, discardOnBack, dismiss, refused-value, validate-before-mutate, sanity-rules, calm-but-wrong, rosy-direction, flow-invariant, rollback, multi-edit-step, finished-work, leave-ask, ending-changed, reroute, putsBack, promise-sentence, step-sheet, re-host, reverse-direction, only-after, buffered-edit, leave-guard]
 ---
 
 ## Problem
@@ -72,3 +72,18 @@ Two lessons. A fix proven on the one-field case is a hypothesis for the many-edi
 changes, grep every sentence that promises what that ending does, then read each one's words off the ending itself, so
 the next reroute cannot leave a sentence behind ([[100]]: copy that names an outcome is a contract with the code that
 delivers it).
+
+## Extended (2026-11-26): the reverse direction, and buffering as the structural cure
+
+**Moving an editor EARLIER than the flow it was written for breaks it the same way.** Act 6's Profile drawers were
+written for after the walk, and their save helper carried that premise in its header (`drawerSave.ts`: "the drawers
+exist only after the walk, whose completion is the receipt that the spending period was answered"). RC14 re-hosted the
+same drawers inside first-run setup, where no walk had run, and the after-setup constant silently disarmed the 12×
+spending check on a brand-new plan. Before re-hosting a part, grep its docstrings for "only after", "never before",
+"the receipt" and "exists only": each is a premise the new host may break. (The receipt's later history, where a
+narrower receipt was still wrong twice, is [[144]]'s 2026-11-26 extension.)
+
+**Buffering the edits until Save removes this insight's class and [[159]]'s by construction** (RC13a, `1c08f228`): a
+drawer edits a copy, Save runs every check on the whole edit, and nothing refused reaches the store, so no run can
+sample a half-edit. The cost is two duties the walk never had: a dismiss over unsaved work must ask, and the shell's
+leave guard must hold while the buffer differs from the plan (and, since RC13b, while a box still holds typing).

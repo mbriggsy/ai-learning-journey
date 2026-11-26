@@ -3,7 +3,7 @@ title: "A state change made in a capture-phase click listener on window re-rende
 date: 2026-10-31
 phase: the pay check's h2 cure (b9-1). The register's CLOSED Tier 0 on the W period tap, and the Keep door found while building it
 modules: [src/intake/gestureHold.ts, src/intake/__tests__/gestureHold.test.tsx, e2e/vertical-fit.spec.ts]
-tags: [react, event-order, capture-phase, bubble-phase, microtask, trusted-event, jsdom-vs-browser, pointer-events, isPrimary, label-forwarded-click, gesture-hold, blur-commit, testing-library, playwright, release-after-task, held-label, forwarded-click-live-render]
+tags: [react, event-order, capture-phase, bubble-phase, microtask, trusted-event, jsdom-vs-browser, pointer-events, isPrimary, label-forwarded-click, gesture-hold, blur-commit, testing-library, playwright, release-after-task, held-label, forwarded-click-live-render, onEdit, live-text, notice-before-save, commit-on-blur, pointer-press]
 ---
 
 ## Problem
@@ -41,3 +41,21 @@ When a listener's state change must land AFTER the app has handled an event, the
 - An e2e step that clicks through `locator.evaluate(el => el.click())` or `dispatchEvent` is script-dispatched too, and as blind to this race as jsdom. Coordinate input (`page.mouse`, `page.touchscreen`, `locator.click()`) reproduces it.
 - Any guard on a `PointerEvent` field (`isPrimary`, `pointerType`, `pressure`) in code that is unit-tested through `fireEvent`: a scripted event takes the spec default, so the tests run a path no device takes.
 - Insight 071's family (jsdom's teardown order is not the browser's), here at the event-dispatch layer. Insight 035's layout race is what the hold cures.
+
+## Extended (2026-11-26): words that must stand before Save cannot be drawn from a box that commits on blur
+
+Milestone 3's review round 2 made the Family drawer name, before Save and never blocking, what a changed birth year would
+shift ("Sam's Social Security would start in 2029 instead of 2028, still at age 67"). The notice read the drawer's form,
+and the kit's number box commits to the form only on blur or Enter. With a pointer the order is: mousedown on Save blurs
+the box, the commit renders the notice, then the click saves and closes the drawer. So the notice showed only while the
+button was held down. In WebKit, where a click does not focus the button, the kit's Save blurs and saves in one handler
+and the notice never rendered at all. Round 3 found it (`c82ae5cd`); jsdom tests that blurred the box first had passed.
+
+The fix: the kit's number input reports its raw text on every keystroke (`onEdit` in `src/ui/kit/NumberInputs.tsx`,
+writes nothing), and the drawer draws the notice from the typed year once it is four digits, so the notice stands
+before the pointer reaches Save. Save still reads the committed form.
+
+**What it adds.** This insight's order (the press blurs and re-renders before the click lands) also decides what a
+pointer user can read: anything drawn from a commit-on-blur value appears and vanishes inside one press. Words that must
+be read before an action (a consequence, a warning, a receipt) come from the live text, never from the commit, and their
+test types without blurring.

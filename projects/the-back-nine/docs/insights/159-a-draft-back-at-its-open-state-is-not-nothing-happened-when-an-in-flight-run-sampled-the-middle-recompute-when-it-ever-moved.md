@@ -3,7 +3,7 @@ title: A draft back at its open state is not "nothing happened" when an in-fligh
 date: 2026-11-23
 phase: The RightCapital mandate, gap 1 (the workbench's U8, the facts page)
 modules: [src/ui/workbench/StepSheet.tsx, src/ui/editorSheets.tsx, src/store/memoryModel.ts]
-tags: [endpoint-compare, in-flight, sampled-middle, recompute-skip, stale-final, newest-key, same-input-settle, date-route, provisional-final, epoch, calm-but-wrong]
+tags: [endpoint-compare, in-flight, sampled-middle, recompute-skip, stale-final, newest-key, same-input-settle, date-route, provisional-final, epoch, calm-but-wrong, buffered-edit, drawer]
 ---
 
 ## Problem
@@ -43,3 +43,10 @@ the store's own idempotent path (here, the same-input settle) absorb the revert.
 - U15's rail lanes: a lever pulled and put back while a previous what-if run is queued.
 - The unsaved mark: equal endpoints are the right answer there (no run reads the middle), which is why the hold keeps
   the endpoint compare.
+
+## Extended (2026-11-26): the drawers buffer, so this class is closed there by construction
+
+Act 6's Profile drawers (RC13a, `1c08f228`) edit a copy and write the store only on Save, so no in-flight run can sample
+a half-edit and the endpoint compare above has no middle to miss. The duties that buffering adds (a dismiss over unsaved
+work asks; the leave guard holds while the buffer differs) are [[158]]'s 2026-11-26 extension. Any editor that still
+writes through on each change keeps this insight's rule.

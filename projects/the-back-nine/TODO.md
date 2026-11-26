@@ -878,34 +878,7 @@ line keeps the facts `/distill` needs; its source line is in this file as it sto
 (`git show 89b4fa58:projects/the-back-nine/TODO.md`), where the full original stands. A line marked *Correct* or
 *Extend* amends that insight instead of adding a new one.
 
-- (b9-2, 11-25, RC13b `87e3c807`) **An input the engine reads as absent-means-nothing is a silent rosy default:** with no
-  W on the date route `buildDateInput` sends no W and `simulate.ts` draws $0 in every working year, so the answer reads
-  as if pay covers every cost; W could not join the missing facts (KTD3 keeps the walk's early provisional answer), so a
-  standing line (`w-unanswered`, first in `composeAnswerNotes`) names the lean on every figured page. Lesson: list the
-  inputs whose absence the engine reads as "nothing needed", and give each a standing line or an ask.
-- (b9-2, 11-25, RC13a `1c08f228`) *Extend 158 and 159:* buffering a drawer's edits until Save removes both classes by
-  construction (nothing refused reaches the store; no run can sample a half-edit), at the cost of a dismiss that must
-  ask over unsaved work and a leave-guard hold while the buffer differs (and while a box holds typing, RC13b).
-- (b9-2, 11-25, RC18 `6fef3010`) *Extend 168:* a held instrument that toggles shell-level state (the tray handle) from
-  an assumed state shuts what an earlier capture left open, then times out on a row it hid; the run read as a slow
-  machine until the waiting locator in the call log named the row. Act from a known state; read the call log first.
-- (b9-3, 11-25, RC14 `c43d7a50`) *Extend 170:* **port a replaced surface's tests onto its replacement before deleting
-  them.** Porting the walk's unit tests onto RC13's drawers found five regressions RC13 had shipped green, one
-  calm-but-wrong (a through-year typed "2.5" saved as a lifelong budget line under its own error; any drawer Saved past
-  a box holding refused text). The old tests held laws the new host never re-implemented; a port left red is a finding.
-- (b9-3, 11-25, RC14) *Extend 158, the reverse direction:* a host written for after a flow carries that premise in its
-  header (`drawerSave.ts`: "the drawers exist only after the walk, whose completion is the receipt that the spending
-  period was answered"); moving it earlier (into first-run setup) silently disarms the walk's 12× guard on a fresh
-  plan. Grep a re-hosted part's docstrings for "only after", "never before" and "the receipt" before re-hosting it.
-- (b9-3, 11-25, RC14) *Extend 168:* a progress mark is a claim: the look found every setup step ✓ while the box below
-  listed its missing facts, and "· 5 more" hid what Complete still needed. Mark a step done only on its own facts.
-- (b9-2, 11-25) **Stopping a background wrapper does not stop its child on Windows:** TaskStop on `pnpm dev` left the
-  `vite.js` node process listening, and a second Vite server on the project then broke the fit harness's (27 of 30
-  arms red, all connection-refused). Check the port's PID after every stop.
-- (b9-4, 11-26, milestone 3 rounds 1 and 2) *Extend the b9-3 "reverse direction" entry above (158):* **a receipt keyed on a figure being present proves nothing when its gate fires only above a floor.** Round 1 replaced the stepper's false "Complete answered the period" receipt with "the drawer opened over a one-figure amount"; round 2 found a figure under the $8,000 floor is never asked, so 6,500 a month and a later 96,000 still saved $1,152,000 a year. The cure keys the receipt on the gate tripping, one probe shared by Complete and the drawer (`periodGateTrips`); `IntakeApp.tsx`'s header held the law all along.
-- (b9-4, 11-26, round 2 `4bad8f72`) **An automatic re-anchor that guesses intent the draft does not record fails its own round trip:** round 1 made a birth-year change keep a typed claim year and pull "paying now" streams to the new age; round 2's adversary showed A→B→A ≠ A (a typo fixed back made a pension typed for next year pay now) and that the tray writes claim AGES, not years. Where the model cannot hold the intent, name the consequence before Save and let the household choose; test any transform A→B→A.
-- (b9-4, 11-26, round 1 `4be1d777`) **A guard put in one host misses every sibling built on the same primitive:** RC14 put the refused-text guard in ProfileDrawer and the tray's Refresh/Apply; the tray's portalled line drawer (the kit Drawer) escaped, and a through-year "2.5" became a lifelong line again. Put the guard in the primitive (`kit/Drawer.tsx`'s Save), and keep its own focus (round 2: the guard blurred Save itself).
-- (b9-4, 11-26, round 1) *Extend 170:* **a copy-key inventory cannot see a lost condition.** The panel's "no picture of a stale W" gate went to one of the two new pictures of the same ledger (the W drawer) and not the other (Goals' money picture card printed "Left over $16,985" where the year was $4,015 short). Inventory every gate on a deleted surface, then grep every new reader of the data it guarded.
+(Empty: b9-5 distilled all eleven on 2026-11-26, plus round 3’s two: insights 178 to 180 and extensions to 144, 149, 158, 159, 168 and 170.)
 
 ## Driving the app
 

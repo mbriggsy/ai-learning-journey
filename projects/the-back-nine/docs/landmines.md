@@ -395,6 +395,8 @@ tests
   `ERR_CONNECTION_REFUSED` at 4190 and "Execution context was destroyed" (the two optimizing deps over each other);
   with it killed the same 30 passed. TaskStop on the background `pnpm dev` does NOT end its child `node … vite.js` on
   Windows: `netstat -ano | grep :<port>`, check the PID's command line, `Stop-Process -Id <pid>`, before any fit run.
+  **Seen again (b9-5, 11-26):** TaskStop on a look's `pnpm dev --port 5181` left `vite.js` answering 200 under its
+  `cmd.exe`; `Get-NetTCPConnection -LocalPort 5181 -State Listen` named the PID and `taskkill /PID <it> /T /F` closed it.
 - **(b9-2, 11-25) `rc-look.spec.ts` stamps `${UNIT}` into every describe title,** so `-g "RC18"` with `RC_UNIT=RC18`
   matches all 52 look tests, not the unit's block: filter by the block's own words (`-g "Settings and the Display"`).
   And a capture that toggles shell-level state (the tray handle; its open state lives on the shell, so it survives a

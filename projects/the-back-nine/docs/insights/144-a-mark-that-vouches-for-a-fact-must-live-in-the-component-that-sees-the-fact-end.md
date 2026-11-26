@@ -3,7 +3,7 @@ title: "A mark that vouches for a fact must live in the component that sees the 
 date: 2026-10-31
 phase: the pay check's whole-file review (Phase C, b9-9) — ruling 38; Phase B's review (b9-3) — `discardOnBack`
 modules: [src/intake/WorkingCostQuestion.tsx, src/intake/questions.tsx, src/intake/flow.tsx, src/intake/sanity.ts, src/intake/AssumptionPanel.tsx]
-tags: [state-ownership, lifecycle, provenance, disarm, touched, period-rule, gated-step, back-exit, mount, single-home, unit-tap, convert-vs-reread, keep-stamp, round-trip, reversible-control]
+tags: [state-ownership, lifecycle, provenance, disarm, touched, period-rule, gated-step, back-exit, mount, single-home, unit-tap, convert-vs-reread, keep-stamp, round-trip, reversible-control, receipt, writer-census, periodGateTrips, floor, budget-escape, tray-total]
 ---
 
 ## Problem
@@ -69,3 +69,30 @@ $84,000 unstamped, so a stale kept figure came back as typed, fresh forever, wit
 lenses found it (b9-2). For a reversible control beside a provenance mark, test the round trip: the mark comes back with
 the figure. [[058]]'s 2026-11-23 extension has the sibling: every writer that rebuilds the object a stamp rides on can
 drop the stamp.
+
+## Extended (2026-11-26): a receipt is only as true as the census of every road to the state it reads
+
+Act 6 moved the spending figure's 12× check into the Living expenses drawer and gave it a receipt: "this plan's unit was
+already answered, so don't ask again". Three rounds of milestone 3's review each found the receipt vouching for a unit
+nobody answered, and each fix narrowed what the receipt reads.
+
+1. **A flag from the flow's end** (RC14, `drawerSave.ts`'s header): "setup's Complete answered the period". Complete
+   passes with no spending figure while a budget governs, so a household that set up on a budget, then typed 96,000
+   under the pre-checked month, saved $1,152,000 a year. Round 1 keyed it on the plan at open instead: a one-figure
+   amount.
+2. **A figure being present** (round 2, `4bad8f72`): a figure under the gate's $8,000 floor in its shown unit was never
+   asked, so 6,500 a month at open, then 96,000, still saved $1,152,000. Round 2 keyed the receipt on the gate itself
+   tripping on the plan at open (`periodGateTrips` in `src/intake/sanity.ts`, the rule's own predicate, one probe shared
+   with IntakeApp's Complete).
+3. **"Every road here passed the gate"** (round 3, `c82ae5cd`, found by two seats independently): two writers put a
+   yearly figure in the field with no gate at all, the worksheet's escape to one figure (`withoutBudget` keeps the
+   total) and the tray's "Spending, dollars a year" Apply. Both left the stored unit at the untapped default month, so
+   the next open read $120,000 as 10,000 a month, the gate tripped, and the receipt vouched for it. The fix: each writer
+   stores the unit its figure came in ("Each year"), which makes the receipt's premise true.
+
+**What it adds.** A receipt that reads state ("this draft could only exist if the gate passed") is a claim about every
+writer of that state, not about the gate. Before trusting one, grep every writer of the guarded field
+(`annualSpendingReal` here: the walk, the drawer, the budget's reconcile and escape, the tray's arms, the codec, the dev
+seeds) and check that each one either passes the gate or writes the field in a form the gate's premise covers. A new
+writer added later breaks the receipt silently, so write the census into the receipt's docblock, where the next writer's
+author will read it (`periodGateTrips` names its two gateless roads).

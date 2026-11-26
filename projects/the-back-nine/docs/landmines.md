@@ -680,6 +680,9 @@ said squeaky clears `temp/` UNCONDITIONALLY; its step 4 now deletes only the clo
 - **(b9-12, 11-25) The held look instrument looks up screens by id** (`screenById` in `e2e/held/rc-look.spec.ts`). Its
   index lookups into the `RC_ONLY`-filtered list once shot Social Security under the name "health-care", with a clean
   audit; a new capture block takes its screen by id, never by position.
+- **(b9-6, 2026-11-26) A collector installed by `page.addInitScript` resets on every navigation, a `page.reload()`
+  included.** RC19 put a reload before the CSP shell arm's only `violations()` check, so every violation from the walk
+  went unheard under a green arm (fixed `6aa20fa6`). Read the collector before each navigation that resets it.
 
 ## The mutation harness
 
@@ -1381,6 +1384,10 @@ rasterizer SILENTLY
   RC13). The third rule, `.shell-interim .result-page` (the doubled gutter above, `d01dcc7f`), went with RC8, whose
   Tax Strategies page was its only reader. A unit that clears "workbench.css's remaining rules" deletes only the rules
   nothing reads (grep each selector over `src` and `e2e`).
+- **(b9-6, 2026-11-26) A Highcharts plot band at a year with no point sits past the axis** (the axis ends at the last
+  point plus the 1% default `maxPadding`): it draws as a sliver and an `inside` label wraps one word per line. Set
+  `xAxis.max` to the band's year, and give the label a NUMBER `style.width` (Highcharts appends `px` itself; a string
+  "300px" becomes "300pxpx"). RC17's money-ran-out band (`incomeSourcesOptions.ts`, fixed `5bae2f61`).
 
 ## Research and re-verification
 

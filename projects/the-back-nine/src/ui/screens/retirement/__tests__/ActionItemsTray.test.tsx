@@ -216,6 +216,34 @@ describe('explicit Refresh: edits are pending, Refresh commits the bundle once a
     expect(l.many.request.mock.calls[0]![0].params.annualSpendingReal).toBe(50_000)
   })
 
+  it('text a box could not read stops Refresh and Apply, the box saying why: no what-if runs on a figure it is not showing (RC14)', async () => {
+    const l = openTray(DEV_SEEDS.retired)
+    typeIn(copy.workbenchRailSpendTotalLabel, '60,000')
+    fireEvent.click(refresh())
+    await l.settleWhatIf()
+    expect(l.many.request).toHaveBeenCalledTimes(1)
+    const spendBefore = draftNow().annualSpendingReal
+    const field = within(tray()).getByLabelText(copy.workbenchRailSpendTotalLabel)
+    act(() => field.focus())
+    fireEvent.change(field, { target: { value: '55,0x0' } })
+    // The press's own blur refuses the text in the same task; the press then finds the mark and stops.
+    act(() => {
+      field.blur()
+      refresh().click()
+    })
+    expect(field).toHaveAttribute('aria-invalid', 'true')
+    expect(field).toHaveAttribute('data-typed-refused')
+    expect(l.many.request, 'no run on the last good 60,000 under a box showing 55,0x0').toHaveBeenCalledTimes(1)
+    fireEvent.click(applyButton())
+    expect(draftNow().annualSpendingReal, 'Apply writes nothing while the box holds refused text').toBe(spendBefore)
+    // Mended, the box clears its mark and Refresh runs the figure it shows.
+    typeIn(copy.workbenchRailSpendTotalLabel, '55,000')
+    expect(field).not.toHaveAttribute('data-typed-refused')
+    fireEvent.click(refresh())
+    expect(l.many.request).toHaveBeenCalledTimes(2)
+    expect(l.many.request.mock.calls[1]![0].params.annualSpendingReal).toBe(55_000)
+  })
+
   it('a Refresh of an unchanged bundle still asks once: a skip on "looks the same" is never taken (insight 159)', async () => {
     const l = openTray(DEV_SEEDS.retired)
     typeIn(copy.workbenchRailSpendTotalLabel, '60,000')

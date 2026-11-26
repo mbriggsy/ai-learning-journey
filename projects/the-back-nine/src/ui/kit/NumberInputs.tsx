@@ -8,10 +8,15 @@
  * and autofill off; silent while typing; the figure is read on blur or Enter; a blank commits "no figure" (never 0);
  * text the parser refuses (misgrouped commas, an exponent, hex, words) commits NOTHING, keeps what was typed, and
  * shows the caller's words beside a mark, tied by `aria-invalid` and `aria-describedby`; editing again clears it. The
- * shown figure is reformatted after the commit, never per keystroke.
+ * shown figure is reformatted after the commit, never per keystroke. While refused text sits in the box, the input carries
+ * `data-typed-refused`, set in the same task as the refusal (not on the next render), so a form's Save that blurs the box
+ * first can see it and refuse to save past text the plan never received (Act 6 · RC14: a through-year typed as "2.5" was
+ * otherwise saved as a lifelong line under its own error).
  *
  * A caller's own refusal (`error`: a Profile drawer's Save that the walk's checks refuse, Act 6 · RC13a) shows the same
- * way, under the box beside the mark; the caller clears it when the field is edited again.
+ * way, under the box beside the mark. It is forgiven on the first keystroke (back-nine-design: silent while typing,
+ * checked on leave, forgiven on return; the walk's fields did it through `onEdit`, Act 6 · RC14 put it in the box): hidden
+ * from that keystroke until the blur, when the caller's word stands again unless the commit cleared it.
  *
  * Two tray marks: `readOnly` fills the box `--stone-200` (RightCapital's locked field), and `changed` is the tray's
  * changed value: blue-ink words on the pale blue box, medium weight and a 2 px left bar, so colour is never the only
@@ -78,11 +83,19 @@ function NumberInput({
   // `null` while the box shows the committed figure; the typed text while it is being edited.
   const [draft, setDraft] = useState<string | null>(null)
   const [invalid, setInvalid] = useState(false)
+  // Typed since focus arrived: the caller's refusal is forgiven until the blur (the header).
+  const [editing, setEditing] = useState(false)
   const shown = draft ?? affix.format(value)
   // The committed figure as the box showed it when focus arrived (null when focus found typed text). The shown figure
   // is rounded (whole dollars, two decimals of a percent), so text still equal to it commits nothing: a tab through the
   // box never writes the rounded figure over the exact one.
   const seed = useRef<string | null>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+  /** The refusal mark, written on the element at once (the header). */
+  const markRefused = (on: boolean) => {
+    if (on) inputRef.current?.setAttribute('data-typed-refused', '')
+    else inputRef.current?.removeAttribute('data-typed-refused')
+  }
 
   const commit = () => {
     if (draft === null || readOnly) return
@@ -102,6 +115,7 @@ function NumberInput({
     const parsed = affix.parse(draft)
     if (parsed === undefined) {
       setInvalid(true)
+      markRefused(true)
       return
     }
     setDraft(null)
@@ -113,7 +127,7 @@ function NumberInput({
     if (e.key === 'Enter') commit()
   }
 
-  const shownError = invalid ? invalidMessage : error
+  const shownError = invalid ? invalidMessage : editing ? undefined : error
   const describedBy = [description !== undefined ? helpId : null, shownError !== undefined ? errorId : null].filter(Boolean).join(' ')
 
   return (
@@ -133,6 +147,7 @@ function NumberInput({
       >
         {affix.prefix !== undefined ? <span aria-hidden="true">{affix.prefix}</span> : null}
         <input
+          ref={inputRef}
           id={inputId}
           type="text"
           inputMode={affix.inputMode ?? 'decimal'}
@@ -153,8 +168,13 @@ function NumberInput({
           onChange={(e) => {
             setDraft(e.target.value)
             setInvalid(false)
+            markRefused(false)
+            setEditing(true)
           }}
-          onBlur={commit}
+          onBlur={() => {
+            setEditing(false)
+            commit()
+          }}
           onKeyDown={onKeyDown}
           className={cn(
             'min-w-0 flex-1 bg-transparent tabular-nums outline-none',

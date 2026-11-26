@@ -41,7 +41,8 @@ export const entryCopy = {
     'A quiet co-pilot for a married couple’s next chapter. About five minutes of questions, answered as honestly as the math.',
   coldStartPreflight:
     'Handy to have nearby: recent account statements, and a health-insurance quote for everyone under 65 in the household, at your ages and ZIP — the benchmark Silver figure and the premium of a plan you’d pick.',
-  coldStartBegin: 'Begin',
+  // Act 6 · RC14: RightCapital's first button, which opens the new plan's names (the first-run stepper's start).
+  coldStartBegin: 'Start a new plan',
   // The quiet returning-user door on the brand-new user's first screen: a WIPED/evicted device
   // probes no-vault → ColdStart, so a saved backup is the only way back. Subordinate to Begin
   // (R11 — invited, never a nag); the button label matches the restore surface's own heading.

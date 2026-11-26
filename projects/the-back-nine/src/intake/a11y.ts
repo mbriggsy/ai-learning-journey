@@ -6,10 +6,9 @@
  * focus moves to the new step's HEADING (`tabindex="-1"`), NEVER the input —
  * auto-focusing an input pops the mobile keyboard before the user can read the
  * question, and the heading-as-focus-target IS the announcement (no
- * double-announce) — and on an intake STEP CHANGE the document scroll is reset
- * to 0 with it, so the answer strip (the whole answer-during-entry surface) is
- * in view on arrival rather than scrolled off the top of the window. The
- * heading must be faded with OPACITY ONLY while focused on mount — a
+ * double-announce). (The walk's step hook, which also reset the scroll, left with
+ * the walk at Act 6 · RC14: the first-run stepper does the same in `Stepper.tsx`.)
+ * The heading must be faded with OPACITY ONLY while focused on mount — a
  * `visibility`/`autoAlpha` toggle makes `.focus()` a silent no-op
  * (ai-journey-stats/006, generalized from a modal to a wizard step).
  *
@@ -18,7 +17,7 @@
  * text never lingers in the a11y tree (keeps Playwright/N=1 snapshot
  * verification honest — exactly one current question in the tree).
  */
-import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { useCallback, useMemo, useRef } from 'react'
 
 /** Move focus to a step/verdict heading. The heading carries `tabIndex={-1}`
  *  (focusable, not tabbable). Safe to call mid-enter-animation — the step
@@ -33,62 +32,13 @@ import { useCallback, useEffect, useMemo, useRef } from 'react'
  *  can drive) and it disqualified itself on its own non-vacuity read — the accounts
  *  list at PHONE (390×844) has a scrollable range of only 281 px, while the editor's
  *  heading lands 383.3 px down the document, so at every scroll a reader can reach it is
- *  ALREADY on screen and the browser has nothing to scroll (e2e/intake-fold.spec.ts's
- *  docblock carries the numbers). Treat this default as load-bearing and unguarded.
- *  The opt-in is used by exactly ONE of the call sites, `useFocusHeadingOnStep` below,
- *  which owns the scroll position itself. */
+ *  ALREADY on screen and the browser has nothing to scroll (the retired intake-fold spec's
+ *  docblock carried the numbers). Treat this default as load-bearing and unguarded. */
 export function focusHeading(
   el: HTMLElement | null,
   opts?: { readonly preventScroll?: boolean },
 ): void {
   el?.focus({ preventScroll: opts?.preventScroll ?? false })
-}
-
-/** React hook: returns a ref to attach to the current step's heading; focuses
- *  it whenever `stepId` changes (including the first mount of the flow), and
- *  puts the page back at the top so the step is entered from its own first line.
- *
- *  WHY THE RESET. The DOCUMENT is the scroller — `.intake-shell` declares no
- *  `overflow` and neither does `html` or `body` (base.css) — so the scroll offset
- *  survives the step swap. On a phone the reader routinely has to scroll to reach
- *  Continue: measured 2026-09-08 at 390 CSS px on the `?seed=datesolo` re-walk,
- *  Continue's bottom edge sits below the 862 px window at scroll 0 on SIX of that
- *  route's twelve steps, reaching 1430 px on the Social Security step. The answer
- *  strip sits ABOVE the step heading, so a carried offset lands it off the top of
- *  the window: on that walk four steps arrived scrolled, three of them with the
- *  strip 48 px, 210 px and 152 px above the fold (the pay, retirement-state and
- *  health-coverage steps).
- *
- *  WHY `preventScroll` HERE AND NOWHERE ELSE. `focus()` scrolls its target into
- *  view, and on this surface that scroll really fires — but only once the incoming
- *  heading is off screen, and the heading sits ~308–400 px down the page: a carried
- *  400 px was pulled to 0 by the focus scroll alone, while a carried 120 px was left
- *  exactly where it was (both measured in the same session). So the offsets a phone
- *  reader actually produces are the ones the browser leaves alone. Focusing WITHOUT
- *  scroll and resetting afterwards makes the landing frame the same one every time,
- *  instead of one that depends on how far the reader had scrolled.
- *
- *  WHAT THIS OPT-IN IS AND IS NOT GATED BY (measured 2026-09-08). The RESET is gated:
- *  deleting the two lines below reds e2e/intake-fold.spec.ts's arrival arm. The
- *  `{ preventScroll: true }` argument is NOT, and cannot be — the `scrollTop = 0` two
- *  lines down lands in the SAME task, so dropping it changes no frame any oracle can
- *  observe. It is belt-and-braces (it spares `focus()` scroll work this effect is about
- *  to undo), never a load-bearing behaviour: do not write a test that pretends otherwise.
- *  The DEFAULT above is the opposite case — load-bearing and unguarded. */
-export function useFocusHeadingOnStep(stepId: string) {
-  const ref = useRef<HTMLHeadingElement | null>(null)
-  useEffect(() => {
-    focusHeading(ref.current, { preventScroll: true })
-    // `document.scrollingElement`, not `window.scrollTo`: jsdom logs "Not implemented:
-    // window.scrollTo" and that line would print through every intake test in the suite.
-    // THE GUARD IS NULLISH, NOT `!== null`: jsdom (29.x) does not implement
-    // `scrollingElement` at all — `'scrollingElement' in document` is false there, so the
-    // read is `undefined` while the DOM lib types it `Element | null`. A `!== null` guard
-    // typechecks, passes lint, and throws in every jsdom test that mounts the flow.
-    const scroller = document.scrollingElement ?? undefined
-    if (scroller !== undefined) scroller.scrollTop = 0
-  }, [stepId])
-  return ref
 }
 
 /** Clear-after-announce delay: long enough for every screen reader to pick up

@@ -16,12 +16,18 @@
  *  - a violation on another card's fact blocks Save only when this edit brought it in (a birth year that puts an
  *    account's deposits over the catch-up-less limit), and is named in the drawer's own words with the fact's place;
  *    one the draft already held is left to its own card (never a drawer that can't save anything).
- * The provenance is the panel's and the step sheet's (`periodConfirmed`: the drawers exist only after the walk, whose
- * completion is the receipt that the spending period was answered). The W gate's own path
- * (`WORKING_COST_ANSWER_FIELD`) is never touched here: it is the W step's alone, as on the panel (KTD3); and both period
- * rules' disarms are touched, as the panel's are. The one exception is the W step's own home after the walk, the
+ * THE SPENDING PERIOD'S PROVENANCE. After setup (the shell's drawers) it is `periodConfirmed`: the first-run stepper's
+ * Complete is the receipt that the spending period was answered (it runs the walk's Continue check of every step, the
+ * spend step's period gate among them, `src/ui/screens/setup/stepperView.ts`), so both period rules' disarms are touched.
+ * DURING setup (Act 6 · RC14: the same drawers, on a fresh draft) that receipt does not exist yet, so the one drawer that
+ * writes the spending figure and its unit, Living expenses, passes a `SpendPeriodSetup`: the stepper's own provenance (a
+ * vault or a dev seed, `IntakeApp`'s), and the spend period's disarm only where its unit was answered this session (a
+ * tap on it, in this drawer or an earlier Save of it). Every other drawer keeps the after-setup constant, and that is
+ * exact, not loose: the spend-period rule reads only the spending figure and its unit, which no other drawer writes, so
+ * no other drawer can bring it in or clear it. The W gate's own path (`WORKING_COST_ANSWER_FIELD`) is never touched
+ * here: it is the W step's alone, as on the panel (KTD3). The one exception is the W step's own home, the
  * Pre-retirement living expenses drawer (RC13b): it passes a `TouchedAdjust` that touches the gate and lets the W
- * period's disarm stand only where its face says so.
+ * period's disarm stand only where its face says so (setup and after alike: the W period's disarm is the face's).
  *
  * ON PASS, ONE STORE COMMIT: `model.update` with the checked draft, then, if the draft really moved, the route-aware
  * recompute the panel and the step sheet use (`recomputeAfterEdit`).
@@ -45,14 +51,23 @@ export interface EditCheck<K extends string> {
   readonly elsewhere: readonly string[]
 }
 
-const PROVENANCE = { periodConfirmed: true } as const
+/** The after-setup provenance (the header's receipt). */
+const AFTER_SETUP: SpendPeriodSetup = { periodConfirmed: true, spendPeriodAnswered: true }
+
+/** THE SPEND PERIOD DURING SETUP (the header): `periodConfirmed` the stepper's provenance (a vault or a dev seed answered
+ *  it before), `spendPeriodAnswered` its unit answered this session. */
+export interface SpendPeriodSetup {
+  readonly periodConfirmed: boolean
+  readonly spendPeriodAnswered: boolean
+}
 
 /** Every rule's field touched, as if each had been committed: the W gate's answer path excepted (the W step's alone),
- *  both period rules disarmed as the panel disarms them. */
-function touchedAll(d: ScenarioDraft, adjust?: TouchedAdjust): Set<FieldPath> {
+ *  the W period disarmed as the panel disarms it (the W drawer's `adjust` re-arms it), the spend period only where its
+ *  unit was answered. */
+function touchedAll(d: ScenarioDraft, adjust: TouchedAdjust | undefined, period: SpendPeriodSetup): Set<FieldPath> {
   const touched = new Set(allRuleFields(d))
   touched.delete(WORKING_COST_ANSWER_FIELD)
-  touched.add('spendEntryPeriod')
+  if (period.spendPeriodAnswered) touched.add('spendEntryPeriod')
   touched.add(WORKING_COST_PERIOD_FIELD)
   adjust?.(touched)
   return touched
@@ -89,11 +104,13 @@ export function checkEdit<K extends string>(
   after: ScenarioDraft,
   own: (field: FieldPath) => K | null,
   adjust?: TouchedAdjust,
+  period: SpendPeriodSetup = AFTER_SETUP,
 ): EditCheck<K> {
-  const held = new Set(validateDraft(before, touchedAll(before, adjust), PROVENANCE).map(violationKey))
+  const provenance = { periodConfirmed: period.periodConfirmed }
+  const held = new Set(validateDraft(before, touchedAll(before, adjust, period), provenance).map(violationKey))
   const fields: Partial<Record<K, string>> = {}
   const elsewhere: string[] = []
-  for (const v of validateDraft(after, touchedAll(after, adjust), PROVENANCE)) {
+  for (const v of validateDraft(after, touchedAll(after, adjust, period), provenance)) {
     const mine = own(v.field)
     const words = fieldErrorText(v)
     if (mine !== null) {
@@ -107,6 +124,18 @@ export function checkEdit<K extends string>(
 }
 
 export const refused = <K extends string>(c: EditCheck<K>): boolean => c.elsewhere.length > 0 || Object.keys(c.fields).length > 0
+
+/** A drawer opened AT a refusal (Act 6 · RC14: the stepper's Next, or its Complete, found a step's check blocked on one of
+ *  this drawer's fields): the refusals on its own fields the draft already holds, with every rule's field touched, as
+ *  Save would show them. Nothing elsewhere (the draft held all of it). */
+export function openCheck<K extends string>(
+  draft: ScenarioDraft,
+  own: (field: FieldPath) => K | null,
+  adjust?: TouchedAdjust,
+  period?: SpendPeriodSetup,
+): EditCheck<K> {
+  return checkEdit(draft, draft, own, adjust, period)
+}
 
 /** The one store commit: the checked draft in, then the recompute when it really moved. Returns whether it moved. A draft
  *  that changed under the drawer between its check and here (nothing synchronous can) is never overwritten. */
@@ -125,11 +154,12 @@ export function saveEdit<K extends string>(
   build: (draft: ScenarioDraft) => { readonly ok: true; readonly draft: ScenarioDraft } | { readonly ok: false; readonly fields: FieldErrors<K> },
   own: (field: FieldPath) => K | null,
   adjust?: TouchedAdjust,
+  period?: SpendPeriodSetup,
 ): { readonly saved: true; readonly moved: boolean } | { readonly saved: false; readonly check: EditCheck<K> } {
   const before = model.getSnapshot().draft
   const built = build(before)
   if (!built.ok) return { saved: false, check: { fields: built.fields, elsewhere: [] } }
-  const check = checkEdit(before, built.draft, own, adjust)
+  const check = checkEdit(before, built.draft, own, adjust, period)
   if (refused(check)) return { saved: false, check }
   return { saved: true, moved: commitEdit(model, before, built.draft) }
 }

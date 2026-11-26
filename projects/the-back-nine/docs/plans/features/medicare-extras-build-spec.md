@@ -31,14 +31,14 @@ status: shipped
 
 ## F1 — intake shape
 
-The `medicare-extras` step (`src/intake/questions.tsx:833-853`) renders a **per-person PAIRED
+The `medicare-extras` step (`src/intake/questions.tsx line 833-853 at 7933cf12e`) renders a **per-person PAIRED
 fieldset on ONE screen** (the two-person law) through the shared `Paired` wrapper — never
 household-combined-then-split (that fabricates a split the domain doesn't support, forfeits the
 survivor-precision win, and the ACA combined-then-split precedent is a FALSE analogy here).
 
 - Each person's own combined monthly Part D / Medigap / Medicare-Advantage premium is asked as
   **one dollar figure** behind a **legible three-arm PAYMENT FORK** — `MedicareExtrasFork`
-  (`src/intake/questions.tsx:770`), a vertical `SegmentedControl` over
+  (`src/intake/questions.tsx line 770 at 7933cf12e`), a vertical `SegmentedControl` over
   `'none' | 'entered' | 'typical'` — never a plan-type/MA-vs-Medigap taxonomy the user can't
   self-sort. The shipped arm labels (`src/ui/copy.ts`) are "About nothing beyond Part B (common
   on Medicare Advantage)", "A monthly premium — entered below", and the slot-templated "Not
@@ -50,9 +50,9 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   survivor and blocks the calm first pass — U12 doctrine; R5 never-gate). Nothing on the step
   blocks advance except the self-contradictory entered-with-no-dollar half-answer, which the R19
   sanity rule `medicare-extras-entered-blank` (`src/intake/sanity.ts:354-369`) names at the field.
-- **WHO:** the step is gated on `anyNearMedicare` (`src/intake/steps.ts:96-97`) — any
+- **WHO:** the step is gated on `anyNearMedicare` (`src/intake/steps.ts:97-98`) — any
   member aged 64 or older, the same cohort gate as the IRMAA seed
-  (`src/intake/steps.ts:120` pushes both under the one predicate). That covers the all-65+
+  (`src/intake/steps.ts:121` pushes both under the one predicate). That covers the all-65+
   household and the NEAR-65 date route, but it is narrower than the ratified intent of "everyone
   whose run route-prices Medicare": a household with nobody yet 64 is never asked, while its date
   route still prices Medicare from each member's 65-crossing. Two things keep that gap honest and

@@ -353,58 +353,59 @@ export async function gotoVaultFinal(page: Page, key: string): Promise<void> {
 }
 
 /**
- * Re-walk a dev seed's intake to the step headed `heading` — the ONE route into the intake flow with
- * a real household behind it. `?seed=` applies a complete draft and lands on the home (there are no
- * steps to advance there); Settings' re-walk door (behind the gear; the assumption panel's until Act 6 · RC18) remounts
- * the flow at index 0 over that draft, which is what a returning reader does. Lives HERE because two specs drive it (intake-fold's
- * own spec-local copy predates it, and vertical-fit's pay-check arms need it) and a spec cannot import
- * another spec.
+ * Re-walk a dev seed's setup to the first-run stepper's step titled `title` (`setupTitle`, "Step 5 – Spending") — the
+ * ONE route into the stepper with a real household behind it. `?seed=` applies a complete draft and lands on the home;
+ * Settings' re-walk door (behind the gear) opens the stepper at its first step over that draft, which is what a returning
+ * reader does. Since Act 6 · RC14 the stepper is the walk's successor (the walk's step headings are gone), so callers that
+ * still pass a walk heading (the Caddie walk, re-pointed at RC21) never reach it and fail loud. Lives HERE because more
+ * than one spec drives it, and a spec cannot import another spec.
  *
- * The anchor is the gear itself, never `SETTLED_RESULT`: the refusal witness
- * (`datesolo`) never stamps a tier. For a buildable seed pass `final: true` so the final-tier recompute
- * commits BEFORE the walk starts (it would otherwise land mid-walk). Advances are IN-PAGE clicks on
- * the step's primary button (no Playwright auto-scroll), and a step that will not advance fails loud
- * — a W gate holding Continue on a stale or absent W is exactly that.
+ * The anchor is the gear itself, never `SETTLED_RESULT`: the refusal witness (`datesolo`) never stamps a tier. For a
+ * buildable seed pass `final: true` so the final-tier recompute commits BEFORE the re-walk starts. Advances are IN-PAGE
+ * clicks on Next (no Playwright auto-scroll), and a step that will not advance fails loud: a refusal opens its drawer
+ * (a W gate on a stale or absent W is exactly that).
  */
 export async function rewalkSeedTo(
   page: Page,
   seed: string,
-  heading: string,
+  title: string,
   opts: { readonly final?: boolean } = {},
 ): Promise<void> {
   await page.goto(`/?seed=${seed}`)
   if (opts.final === true) {
     await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
   }
-  // Since Act 6 · RC4 the seed lands on the shell (the home); since RC18 the gear opens Settings, which holds the re-walk.
   const door = page.locator('[data-gear]')
   await expect(door, `?seed=${seed}: no gear — the home never offered Settings and its re-walk`).toBeVisible({
     timeout: FINAL_TIER_MS,
   })
   await door.click()
   await page.getByRole('button', { name: copy.assumptionRewalkCta }).click()
-  await advanceIntakeTo(page, heading, `?seed=${seed}`)
+  await advanceIntakeTo(page, title, `?seed=${seed}`)
 }
 
 /**
- * Advance the re-walk the page has just opened (Settings' `assumptionRewalkCta`) to the step headed
- * `heading`, and settle layout. Advances are IN-PAGE clicks on the step's primary button (no Playwright
- * auto-scroll), and a step that will not advance fails loud. `who` names the route in the errors. The
- * second half of `rewalkSeedTo`, for a caller that changed the draft in the panel before re-walking.
+ * Advance the stepper the page has just opened (Settings' `assumptionRewalkCta`) to the step titled `title`, and
+ * settle layout. Advances are IN-PAGE clicks on Next (no Playwright auto-scroll); a step that will not advance (its
+ * refusal opened a drawer) fails loud. `who` names the route in the errors.
  */
-export async function advanceIntakeTo(page: Page, heading: string, who: string): Promise<void> {
-  await expect(page.locator('.intake-shell')).toBeVisible({ timeout: 30_000 })
-  for (let taken = 0; taken < 30; taken += 1) {
-    const now = await page.locator('.step-heading').textContent()
-    if (now === heading) {
+export async function advanceIntakeTo(page: Page, title: string, who: string): Promise<void> {
+  const heading = page.locator('main[data-setup-step] h1')
+  await expect(heading, `${who}: the stepper never opened`).toBeVisible({ timeout: 30_000 })
+  for (let taken = 0; taken < 8; taken += 1) {
+    const now = await heading.textContent()
+    if (now === title) {
       await settleLayout(page)
       return
     }
-    await page.evaluate(() => document.querySelector<HTMLButtonElement>('.intake-nav .btn-primary')?.click())
+    await page.evaluate(() => {
+      const next = [...document.querySelectorAll<HTMLButtonElement>('[data-setup-nav] button')].at(-1)
+      next?.click()
+    })
     await page.waitForTimeout(350)
-    if ((await page.locator('.step-heading').textContent()) === now) {
-      throw new Error(`${who}: Continue did not advance past "${now ?? '?'}" on the way to "${heading}"`)
+    if ((await heading.textContent()) === now) {
+      throw new Error(`${who}: Next did not advance past "${now ?? '?'}" on the way to "${title}"`)
     }
   }
-  throw new Error(`${who}: never reached the step headed "${heading}"`)
+  throw new Error(`${who}: never reached the step titled "${title}"`)
 }

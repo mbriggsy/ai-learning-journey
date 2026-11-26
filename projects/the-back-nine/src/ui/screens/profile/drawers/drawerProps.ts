@@ -15,4 +15,7 @@ export interface DrawerBodyProps {
   readonly onClose: (focusCard?: string | null) => void
   readonly onClosed: () => void
   readonly finalFocus: () => HTMLElement | null
+  /** Opened AT a refusal (Act 6 · RC14: the stepper's Next or Complete found one on this drawer's fields): the drawer opens
+   *  showing it under its field, as its Save would (`openCheck`). */
+  readonly checkAtOpen?: boolean
 }

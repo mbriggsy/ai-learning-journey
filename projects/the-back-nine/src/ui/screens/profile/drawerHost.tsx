@@ -42,13 +42,13 @@ export function DrawerFor({ target, ...props }: DrawerBodyProps & { readonly tar
     case 'account':
       return <AccountDrawer at={{ index: target.index, facet: target.facet }} {...props} />
     case 'new-account':
-      return <AccountDrawer at={{ kind: target.accountKind }} {...props} />
+      return <AccountDrawer at={{ kind: target.accountKind, ...(target.ownerIndex !== undefined ? { ownerIndex: target.ownerIndex } : {}) }} {...props} />
     case 'living':
       return <LivingDrawer {...props} />
     case 'medical':
       return <MedicalDrawer {...props} />
     case 'working-cost':
-      return <WorkingCostDrawer {...props} />
+      return <WorkingCostDrawer costOnly={target.costOnly === true} {...props} />
     case 'health':
       return <HealthDrawer {...props} />
     case 'medicare':
@@ -62,12 +62,14 @@ interface OpenDrawer {
   readonly open: boolean
   /** The card the drawer was opened from (null: none, an outside door). */
   readonly card: string | null
+  /** Opened at a refusal (the first-run stepper's Next or Complete, Act 6 · RC14). */
+  readonly checkAtOpen: boolean
 }
 
 export interface DrawerHost {
   /** Open a drawer; `card` is the card it belongs to where the target alone doesn't name it (Goals' Retirement cards open
    *  the person drawer), `null` for an outside door. */
-  readonly open: (target: DrawerTarget, card?: string | null) => void
+  readonly open: (target: DrawerTarget, card?: string | null, opts?: { readonly checkAtOpen?: boolean }) => void
   /** Close the drawer (its exit runs, then it is dropped); `card` re-aims where focus goes. */
   readonly close: (card?: string | null) => void
   readonly isOpen: boolean
@@ -84,12 +86,12 @@ export function useDrawerHost(fallback: () => HTMLElement | null): DrawerHost {
   const focusCard = useRef<string | null>(null)
   const opener = useRef<HTMLElement | null>(null)
 
-  const open = useCallback((target: DrawerTarget, card?: string | null) => {
+  const open = useCallback((target: DrawerTarget, card?: string | null, opts?: { readonly checkAtOpen?: boolean }) => {
     seq.current += 1
     const id = card === undefined ? cardIdOf(target) : card
     focusCard.current = id
     opener.current = document.activeElement instanceof HTMLElement && document.activeElement !== document.body ? document.activeElement : null
-    setDrawer({ seq: seq.current, target, open: true, card: id })
+    setDrawer({ seq: seq.current, target, open: true, card: id, checkAtOpen: opts?.checkAtOpen === true })
   }, [])
   const close = useCallback((card?: string | null) => {
     if (card !== undefined) focusCard.current = card
@@ -122,6 +124,7 @@ export function useDrawerHost(fallback: () => HTMLElement | null): DrawerHost {
           onClose={close}
           onClosed={closed}
           finalFocus={finalFocus}
+          {...(drawer.checkAtOpen ? { checkAtOpen: true } : {})}
         />
       ),
   }

@@ -250,7 +250,13 @@ export function App({ seed, vaultSeed }: { seed?: string | null; vaultSeed?: str
           {/* `notice !== null` is the read-only verdict (the notice IS the read-only-open caveat) —
               the SAME signal the standing ViewOnlyBanner keys off, so the banner discloses and the
               result surface withholds every save CTA in lockstep (a save can't land in this tab). */}
-          <IntakeApp seed={seed} hydrateFromVault={entry.hydrate} readOnly={entry.notice !== null} />
+          <IntakeApp
+            seed={seed}
+            hydrateFromVault={entry.hydrate}
+            readOnly={entry.notice !== null}
+            // Act 6 · RC14: "Start a new plan" dismissed before it began returns to the cold start (nothing was kept).
+            onCancelNewPlan={() => setEntry({ kind: 'cold' })}
+          />
         </Suspense>
       )}
       <UpdateToast />

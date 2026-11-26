@@ -25,25 +25,31 @@ export interface NetWorthProps {
   readonly view: NetWorthView
   readonly selected: string | null
   readonly onOpen: (target: DrawerTarget) => void
-  readonly caveat: readonly string[]
+  /** The R13 caveat's lines; absent on the first-run stepper's Net Worth step (Act 6 · RC14), which is outside the shell
+   *  and keeps the app's trailing mount (plan 4.0: every screen outside the shell does). */
+  readonly caveat?: readonly string[]
+  /** The page title (the stepper's "Step 4 – …"); Profile's own by default. */
+  readonly title?: string
+  /** The page's screen id (`data-screen`). */
+  readonly screen?: string
 }
 
-export function NetWorth({ headingRef, view, selected, onOpen, caveat }: NetWorthProps) {
+export function NetWorth({ headingRef, view, selected, onOpen, caveat, title = copy.shellPageNetWorth, screen = 'profile-net-worth' }: NetWorthProps) {
   return (
-    <div className="flex w-full flex-1 flex-col bg-bg" data-screen="profile-net-worth">
+    <div className="flex w-full flex-1 flex-col bg-bg" data-screen={screen}>
       <PageFrame
         bare
-        title={copy.shellPageNetWorth}
+        title={title}
         headingRef={headingRef}
         intro={view.intro}
         {...(view.add !== null ? { headAction: <AddMenu label={view.add.label} items={addEntries(view.add, onOpen)} /> } : {})}
-        caveat={<Caveat lines={caveat} />}
+        {...(caveat !== undefined ? { caveat: <Caveat lines={caveat} /> } : {})}
       >
         <div className="flex flex-col gap-8 laptop:grid laptop:grid-cols-[minmax(0,35fr)_minmax(0,65fr)] laptop:items-start" data-networth="">
           <div className="flex flex-col gap-3">
             <p className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 bg-plum px-6 py-5 text-intro font-semibold text-bg" data-networth-band="">
               <span>{view.bandLabel}</span>
-              <span className="tabular-nums" aria-describedby={verdictDescribedBy()} data-networth-total="">
+              <span className="tabular-nums" aria-describedby={caveat !== undefined ? verdictDescribedBy() : undefined} data-networth-total="">
                 {view.total}
               </span>
             </p>

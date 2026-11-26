@@ -28,8 +28,9 @@ import { Button, ChoiceGroup, DrawerFields, MoneyInput, PercentInput, Select, Te
 import { copy, slots } from '../../../copy'
 import { ProfileIcon } from '../profileIcons'
 import { buildLiving, buildMedical, livingFormFrom, medicalFormFrom, ownLivingField, ownMedicalField, type LivingApproach, type LivingField, type LivingForm, type MedicalField, type MedicalForm } from './expensesFields'
-import { saveEdit } from './drawerSave'
+import { openCheck, saveEdit, type SpendPeriodSetup } from './drawerSave'
 import type { DrawerBodyProps } from './drawerProps'
+import { useSetupPeriod } from './setupPeriod'
 import { Fact } from './Fact'
 import { ProfileDrawer } from './ProfileDrawer'
 import { useDrawerEdit } from './useDrawerBuffer'
@@ -132,10 +133,20 @@ function LineRow({
   )
 }
 
-export function LivingDrawer({ model, open, readOnly, leaveAsk, onClose, onClosed, finalFocus }: DrawerBodyProps) {
+export function LivingDrawer({ model, open, readOnly, leaveAsk, onClose, onClosed, finalFocus, checkAtOpen }: DrawerBodyProps) {
   const draft = model.getSnapshot().draft
   const [seed] = useState<LivingForm>(() => livingFormFrom(draft))
-  const edit = useDrawerEdit<LivingForm, LivingField>(seed, open)
+  // Act 6 · RC14: inside the first-run stepper the spending period's provenance is the stepper's, and its unit counts as
+  // answered only once tapped (`drawerSave.ts`'s header); after setup there is none (null) and the constant stands.
+  const setup = useSetupPeriod()
+  // A tap on the unit, already-checked month included (the kit's ChoiceGroup reports it): the walk's explicit answer.
+  const [unitTapped, setUnitTapped] = useState(false)
+  const periodNow = (approach: LivingApproach): SpendPeriodSetup | undefined =>
+    setup === null
+      ? undefined
+      : { periodConfirmed: setup.periodConfirmed, spendPeriodAnswered: setup.spendPeriodAnswered || unitTapped || approach === 'budget' }
+  const [initial] = useState(() => (checkAtOpen === true ? openCheck(draft, ownLivingField, undefined, periodNow(seed.approach)) : undefined))
+  const edit = useDrawerEdit<LivingForm, LivingField>(seed, open, initial)
   const { form, check, set } = edit
   // A line's errors show once it was edited, or after a Save the worksheet refused (silent while typing, checked on leave).
   const [touchedLines, setTouchedLines] = useState<ReadonlySet<string>>(() => new Set())
@@ -154,11 +165,11 @@ export function LivingDrawer({ model, open, readOnly, leaveAsk, onClose, onClose
       readOnly={readOnly}
       isDirty={edit.isDirty}
       onSave={() => {
-        const res = saveEdit(model, (d) => buildLiving(d, seed, edit.read()), ownLivingField)
+        const res = saveEdit(model, (d) => buildLiving(d, seed, edit.read()), ownLivingField, undefined, periodNow(edit.read().approach))
         if (!res.saved) {
           edit.setCheck(res.check)
           setAttempted(true)
-        }
+        } else if (unitTapped) setup?.markSpendPeriodAnswered()
         return res.saved
       }}
       onClose={() => onClose()}
@@ -194,7 +205,10 @@ export function LivingDrawer({ model, open, readOnly, leaveAsk, onClose, onClose
               items={PERIOD_ITEMS}
               value={form.period ?? null}
               disabled={readOnly}
-              onValueChange={(period) => set('amount', { period })}
+              onValueChange={(period) => {
+                setUnitTapped(true)
+                set('amount', { period })
+              }}
             />
           </DrawerFields>
         </Fact>

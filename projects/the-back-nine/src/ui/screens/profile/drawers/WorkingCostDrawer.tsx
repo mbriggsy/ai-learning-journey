@@ -76,7 +76,7 @@ import { currentEpochDay } from '../../../scenarioFromDraft'
 import { Button, ChoiceGroup, MoneyInput } from '../../../kit'
 import { copy, slots, workingCostHelpCountItems } from '../../../copy'
 import { ProfileIcon } from '../profileIcons'
-import { saveEdit } from './drawerSave'
+import { openCheck, saveEdit } from './drawerSave'
 import type { DrawerBodyProps } from './drawerProps'
 import { Fact } from './Fact'
 import { ProfileDrawer } from './ProfileDrawer'
@@ -129,13 +129,15 @@ interface FaceProps {
   readonly onWrite: (write: (d: ScenarioDraft) => ScenarioDraft) => void
   readonly onPeriodTap: () => void
   readonly onPeriodReset: () => void
+  /** A fork pick or a unit tap: answering forgives the last Save's refusal (the walk's re-edit forgiveness). */
+  readonly onAnswered: () => void
   /** The gate's refusal (an unanswered or stale W) and the figure's own (a $0, an unconfirmed period), from Save. */
   readonly answerError: string | undefined
   readonly figureError: string | undefined
 }
 
 /** The W question over the buffered draft (the header). */
-function WorkingCostFace({ draft, rootRef, readOnly, onWrite, onPeriodTap, onPeriodReset, answerError, figureError }: FaceProps) {
+function WorkingCostFace({ draft, rootRef, readOnly, onWrite, onPeriodTap, onPeriodReset, onAnswered, answerError, figureError }: FaceProps) {
   const w = draft.workingYearCost
   const quote = workingYearQuote(draft)
   const staleness = workingYearCostStaleness(draft)
@@ -265,6 +267,9 @@ function WorkingCostFace({ draft, rootRef, readOnly, onWrite, onPeriodTap, onPer
           describedByIds={forkDescribedBy}
           {...(!gateOnFigure && answerError !== undefined ? { error: answerError } : {})}
           onValueChange={(v) => {
+            // Answering forgives (the walk's onPickFigure): the gate's message goes until the next Save, and never moves,
+            // unasked, to the figure a "different figure" opens.
+            onAnswered()
             if (v === 'yes') {
               setFigureOpen(false)
               onWrite(writeConfirmedWorkingYearCost)
@@ -306,6 +311,8 @@ function WorkingCostFace({ draft, rootRef, readOnly, onWrite, onPeriodTap, onPer
             value={period}
             disabled={readOnly}
             onValueChange={(next) => {
+              // Answering the unit forgives its prompt until the next Save (the walk's period tap disarmed it at once).
+              onAnswered()
               periodTapped.current = true
               setPendingPeriod(next)
               onPeriodTap()
@@ -332,10 +339,10 @@ function PictureGroup({ group }: { readonly group: LedgerGroup }) {
           <div key={i} className={r.emphasis === true ? 'flex flex-col gap-0.5 border-t border-stone-300 pt-2 font-medium' : 'flex flex-col gap-0.5'} data-ledger-row="">
             <div className="flex flex-wrap items-baseline justify-between gap-x-4">
               <dt className="text-body text-stone-900">{r.label}</dt>
-              <dd className="text-body text-stone-900 tabular-nums">{r.value}</dd>
+              <dd className="text-body text-stone-900 tabular-nums" data-ledger-value="">{r.value}</dd>
             </div>
             {(r.details ?? []).map((d, j) => (
-              <dd key={j} className="text-label text-stone-600">
+              <dd key={j} className="text-label text-stone-600" data-ledger-detail="">
                 {d}
               </dd>
             ))}
@@ -343,6 +350,23 @@ function PictureGroup({ group }: { readonly group: LedgerGroup }) {
         ))}
       </dl>
     </section>
+  )
+}
+
+/** The picture's own face over a composed picture (`ledgerPicture`): its lead, then each group, the savings-tax line
+ *  under the savings group. Exported for its unit test, which draws hand-built pictures (Act 6 · RC14 moved the walk's
+ *  picture arms here with the walk's `WorkingYearLedger.tsx`). */
+export function LedgerPicture({ picture }: { readonly picture: ReturnType<typeof ledgerPicture> }) {
+  return (
+    <>
+      <p className="text-label text-stone-600">{picture.lead}</p>
+      <PictureGroup group={picture.comingIn} />
+      <PictureGroup group={picture.goingOut} />
+      <PictureGroup group={picture.bottom} />
+      <PictureGroup group={picture.savings} />
+      {picture.savingsTax !== null ? <p className="text-label text-stone-600">{picture.savingsTax}</p> : null}
+      <PictureGroup group={picture.later} />
+    </>
   )
 }
 
@@ -358,21 +382,13 @@ function MoneyPicture({ shown, aged }: { readonly shown: ScenarioDraft; readonly
     <section className="flex flex-col gap-4 border-t border-stone-300 pt-6" data-money-picture="">
       <h3 className="text-body font-medium text-stone-900">{copy.profileWorkingPictureHeading}</h3>
       {picture === null ? (
-        ledgerUnknownLines(shown, true).map((line) => (
+        ledgerUnknownLines(shown).map((line) => (
           <p key={line} className="text-label text-stone-600">
             {line}
           </p>
         ))
       ) : (
-        <>
-          <p className="text-label text-stone-600">{picture.lead}</p>
-          <PictureGroup group={picture.comingIn} />
-          <PictureGroup group={picture.goingOut} />
-          <PictureGroup group={picture.bottom} />
-          <PictureGroup group={picture.savings} />
-          {picture.savingsTax !== null ? <p className="text-label text-stone-600">{picture.savingsTax}</p> : null}
-          <PictureGroup group={picture.later} />
-        </>
+        <LedgerPicture picture={picture} />
       )}
     </section>
   )
@@ -440,10 +456,30 @@ function LeftOverSeat({ shown, seatRef, readOnly, onWrite }: { readonly shown: S
   )
 }
 
-export function WorkingCostDrawer({ model, open, readOnly, leaveAsk, onClose, onClosed, finalFocus }: DrawerBodyProps) {
+export function WorkingCostDrawer({
+  model,
+  open,
+  readOnly,
+  leaveAsk,
+  onClose,
+  onClosed,
+  finalFocus,
+  checkAtOpen,
+  costOnly = false,
+}: DrawerBodyProps & {
+  /** Act 6 · RC14: the W question alone, the walk's W step (the first-run stepper's Expenses card). The money picture and
+   *  the left-over question read Goals' answers too (the coverage and the quote), so in setup they come last, from the
+   *  Goals step's money picture card, which opens the whole drawer (the walk put its picture after every input). */
+  readonly costOnly?: boolean
+}) {
   const storeDraft = model.getSnapshot().draft
   const [seed] = useState<WorkingCostForm>(() => workingCostFormFrom(storeDraft))
-  const edit = useDrawerEdit<WorkingCostForm, WorkingCostField>(seed, open)
+  // Opened at the gate (the stepper's Next): the gate's refusal, the face's own mount rule standing for the period (an
+  // entered W's unit was answered before it could be stored; ruling 38).
+  const [initial] = useState(() =>
+    checkAtOpen === true ? openCheck(storeDraft, ownWorkingCostField, workingCostTouches(storeDraft.workingYearCost?.kind === 'entered')) : undefined,
+  )
+  const edit = useDrawerEdit<WorkingCostForm, WorkingCostField>(seed, open, initial)
   const { form, check, setCheck } = edit
   const buffered = useMemo(() => withWorkingCostForm(storeDraft, form), [storeDraft, form])
   // Ruling 38's mark, the face's to set and drop (never part of the buffer: answering a unit changes no fact).
@@ -489,14 +525,21 @@ export function WorkingCostDrawer({ model, open, readOnly, leaveAsk, onClose, on
           onPeriodReset={() => {
             periodAnswered.current = false
           }}
+          onAnswered={() => {
+            if (check.fields.answer !== undefined || check.fields.figure !== undefined || check.elsewhere.length > 0) setCheck({ fields: {}, elsewhere: [] })
+          }}
           answerError={check.fields.answer}
           figureError={check.fields.figure}
         />
       </Fact>
-      <MoneyPicture shown={shown} aged={aged} />
-      <Fact stamp="workingYearLeftOver">
-        <LeftOverSeat shown={shown} seatRef={seatRef} readOnly={readOnly} onWrite={write} />
-      </Fact>
+      {costOnly ? null : (
+        <>
+          <MoneyPicture shown={shown} aged={aged} />
+          <Fact stamp="workingYearLeftOver">
+            <LeftOverSeat shown={shown} seatRef={seatRef} readOnly={readOnly} onWrite={write} />
+          </Fact>
+        </>
+      )}
     </ProfileDrawer>
   )
 }

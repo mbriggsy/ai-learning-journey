@@ -160,22 +160,21 @@ test.describe('CSP — real browser enforcement', () => {
   })
 
   test("engine module Web Worker constructs + round-trips under worker-src 'self' — through the REAL intake", async ({ page }) => {
-    // This walk is a full intake + TWO engine round trips (the strip's provisional reading, then the
-    // Result's). Playwright's 30 s default cannot hold it on a 4-vCPU runner, and the 60 / 90 s waits
+    // This is a full first run through the stepper (Act 6 · RC14) + the home's two engine round trips (the provisional
+    // reading, then the final). Playwright's 30 s default cannot hold it on a 4-vCPU runner, and the 60 / 90 s waits
     // below are dead letters without a test budget above them (a matcher timeout never clamps to the
     // test deadline — the test dies first with a bare "Test timeout", and no custom message prints).
     // Scoped to THIS test, not the config: the fast control arms keep the default so a hang there
     // still reads as one (playwright.fit.config.ts carries the same hardware reasoning).
     test.setTimeout(180_000)
-    // RETARGETED at D1 (the U0 smoke readout is gone): drives the real product
-    // path — cold start → the guided intake → a live provisional engine reading
-    // — under the ENFORCED policy. Strictly stronger than the smoke arm: the
-    // worker constructs at module eval, the React surface renders under
-    // style-src 'self', and the 2000-path engine round-trips a transferred
-    // buffer into the answer strip.
+    // RETARGETED at D1 (the U0 smoke readout is gone), and at RC14 (the walk and its answer strip are gone): drives the
+    // real product path — cold start → "Start a new plan" → the first-run stepper's cards and drawers → Complete → the
+    // home's live engine reading — under the ENFORCED policy. Strictly stronger than the smoke arm: the worker constructs
+    // at module eval, the React surface renders under style-src 'self', and the engine round-trips a transferred buffer
+    // into the home's fan.
     await installCollector(page)
     await driveIntakeToResult(page)
-    // Act 6 · RC4: the walk lands on the home (Dashboard → Snapshot), whose fan is the real chart under the real
+    // Act 6 · RC4: the first run lands on the home (Dashboard → Snapshot), whose fan is the real chart under the real
     // headers: Highcharts in styled mode, its fills reaching it through the CSSOM (`--b9-fan-outer`, written once at
     // start-up), never a runtime <style>. The old band's chart-text layer left with the answer page.
     await expect(page.getByRole('heading', { level: 1, name: copy.shellPageSnapshot })).toBeVisible({ timeout: 90_000 })
@@ -196,7 +195,7 @@ test.describe('CSP — real browser enforcement', () => {
   })
 
   test("the POOLED solve's workers construct under worker-src 'self' — a coordinator + the eval workers, alive and violation-free", async ({ page }) => {
-    // The intake walk (above) + the invite → the pool spawn. The solve itself runs for minutes and is
+    // The first run (above) + the invite → the pool spawn. The solve itself runs for minutes and is
     // never awaited: this arm proves the pool's members construct and LIVE under the enforced policy.
     test.setTimeout(240_000)
     // The pool's size is a function of the device (`poolSizeFor`: every core but two). Pin the device
@@ -254,7 +253,7 @@ test.describe('CSP — real browser enforcement', () => {
       if (url.origin !== ENFORCED_ORIGIN) outside.push(r.url())
     })
     await driveIntakeToResult(page)
-    // Act 6 · RC4: the walk's end lands on the home, Dashboard → Snapshot (no answer page, no door), the app's first
+    // Act 6 · RC4: the first run's end lands on the home, Dashboard → Snapshot (no answer page, no door), the app's first
     // Highcharts chart under the real header (the fan, its lazy chunk, highcharts-more and the accessibility module, its
     // styled-mode CSS and its hover tooltip).
     await expect(page.getByRole('heading', { level: 1, name: copy.shellPageSnapshot })).toBeVisible({ timeout: 120_000 })
@@ -278,7 +277,7 @@ test.describe('CSP — real browser enforcement', () => {
     await expect(page.getByRole('heading', { level: 1, name: copy.analysisTitle })).toBeVisible({ timeout: 30_000 })
     expect(new URL(page.url()).hash).toBe('#/retirement/analysis/probability')
     await expect(page.locator('[data-ring-half="compared"]'), 'the plan’s ring never drew').toBeVisible({ timeout: 60_000 })
-    // The walk's household reads off track with a $0 middle balance, so its bars give way to their words (the bar charts'
+    // The first run's household reads off track with a $0 middle balance, so its bars give way to their words (the bar charts'
     // own CSP proof is the kit probe's Highcharts arm and the home's fan above); either way, one of the two stands.
     await expect(page.locator('[data-bar="compared"] .highcharts-series-group, [data-bar-none]').first(), 'neither the bar nor its words').toBeAttached({
       timeout: 60_000,
@@ -335,7 +334,7 @@ test.describe('CSP — real browser enforcement', () => {
     await expect(page.getByRole('combobox', { name: copy.cashFlowsAccountsLabel })).toBeVisible()
     expect(await page.evaluate(() => document.querySelectorAll('style').length), 'Cash Flows injected a <style> element').toBe(0)
 
-    // Retirement → Social Security (RC9): its strategy runs on their own slots (the walk's household, 65 and 63, both
+    // Retirement → Social Security (RC9): its strategy runs on their own slots (the first run's household, 65 and 63, both
     // claiming at 67, always has a choice), the yearly pairs, the running totals with the crossing's ring (a scatter
     // mark), Summary's bars on a category axis, and the filing steps in the tray.
     await page.getByRole('navigation', { name: copy.shellPagesLabel }).getByRole('link', { name: copy.shellPageSocialSecurity, exact: true }).click()
@@ -353,7 +352,7 @@ test.describe('CSP — real browser enforcement', () => {
     expect(await page.evaluate(() => document.querySelectorAll('style').length), 'Social Security injected a <style> element').toBe(0)
 
     // Retirement → Health Care (RC10): its four small charts (each its own Highcharts chart, the cliff's bracket a line
-    // series) or the page's own words where the walk's household prices no health premiums, and its Action Items tray.
+    // series) or the page's own words where the first run's household prices no health premiums, and its Action Items tray.
     await page.getByRole('navigation', { name: copy.shellPagesLabel }).getByRole('link', { name: copy.shellPageHealthCare, exact: true }).click()
     await expect(page.getByRole('heading', { level: 1, name: copy.shellPageHealthCare })).toBeVisible({ timeout: 30_000 })
     expect(new URL(page.url()).hash).toBe('#/retirement/health-care')

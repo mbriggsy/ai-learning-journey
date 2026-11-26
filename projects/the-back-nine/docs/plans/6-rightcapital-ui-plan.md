@@ -1874,6 +1874,48 @@ stepper; a working household gets W and the money picture, a retired one does no
 REAL and PHONE (step change to top; a drawer names itself and takes focus; the step nav yields while a drawer is
 open). `e2e/intake-fold.spec.ts` retires here. Local look.
 
+**Calls made in the build** *(the pilot's call, 2026-11-25, b9-3 (Briggsy pre-approved all changes))*:
+- **The spending period's provenance during setup.** RC13's drawers took the period as answered (the walk's completion
+  was the receipt). In setup the Living expenses drawer passes the stepper's provenance instead (`SpendPeriodSetup` in
+  `drawerSave.ts`, through `setupPeriod.ts`'s context): a vault or an applied dev seed confirms it, as `IntakeApp` passed
+  the walk; otherwise its unit counts as answered only once tapped (the already-checked month included: the kit's
+  `ChoiceGroup` now reports that press, as the walk's control did), for the rest of the session. A budget's own Save asks
+  no unit (its lines are yearly). Every other drawer keeps the after-setup constant: the rule reads only the spending
+  figure and its unit, which no other drawer writes. Next touches the spend period where the session answered it, the
+  provenance holds, or a budget governs; it always touches W's period, whose disarm is the face's (no W reaches the draft
+  but through the W drawer's Save or a vault or seed). Complete runs every step's check, so it is the walk's terminal
+  advance and the after-setup receipt still holds.
+- **Expenses' W card opens the W question alone; Goals' money picture card opens the whole drawer.** The picture and the
+  left-over question read Goals' coverage and quote, so in setup they come last (the walk put the picture after every
+  input).
+- **Savings pre-makes a 401(k) card for each working person with no account**, opening a new account for them; nothing is
+  stored until its Save. Goals shows the Medicare card only where the walk asked its step.
+- **No gear in the stepper's bar**: Settings is a workspace page, and during setup nothing reads it (insight 054).
+- **A chevron forward runs the checks of the steps it passes**; Complete runs all six. The step nav is `inert` while a
+  drawer is open (the drawer is modal, so a press there is the drawer's own dismiss, which asks over unsaved work).
+- **Setup sends no recompute** (the drawers get the store with `recompute` a no-op): nothing reads an answer until
+  Complete's reveal, as the walk's terminal advance superseded every provisional run.
+- **"Start a new plan" asks only the first names** (B9 holds no last name or email); both stay optional, as the walk's
+  were; its Cancel returns to the cold start.
+- **On the last step the missing facts stand beside Complete**, below the cards, never a live region, with their own lead
+  ("still waiting on a few facts"; the withheld lead where nothing can be entered); Complete still opens the plan. The
+  walk's "Nothing's saved to this device yet" line stands beside the nav while no plan is saved.
+- **The Net Worth step prints no in-frame caveat**: the stepper is outside the shell and keeps the app's trailing mount.
+- **Re-homed honesty lines**: the Social Security statement link (`linkFindSsStatement`) in the Social Security drawer;
+  the unanswered extras fork's standing line (`medicareExtrasPanelStanding`) in the Medicare drawer after setup only; the
+  widow's number in words (`survivorNoteFor`) as the note on each other-income card on Income. The kit's `Select` takes
+  `required` (`aria-required`), set on the account kind and the income drawer's alimony-date and annuity-kind choices.
+  From the look audit: a passed step takes its check only when it owes no fact the household can enter (`stepOwesFacts`,
+  each `missingRequiredFacts` key mapped to its step, an unmapped key counting on every step; a fact no entry can fix
+  takes no check away), otherwise it stays filled with its number; the box beside Complete names every missing fact
+  (`missingFactNamesAll`), with whose where two people owe the same one ("Birth year (Sam)"); the phone strip's edges
+  fade where more steps lie beyond (a mask class keyed to `data-fade`, set from its scroll). The Action Items tray's
+  Refresh and Apply stop while a box holds text it could not read, as a drawer's Save does.
+- **Regressions the test port found, fixed here**: a kit box now forgives its refusal on the first keystroke (shown again
+  on blur unless the commit cleared it), the account mix's refusal is tied to each % box, the W face's fork pick and unit
+  tap forgive the last Save's refusal, and a drawer never saves past a box holding text it could not read (a through-year
+  typed "2.5" was saved as a lifelong line under its own error).
+
 ### RC15: Profile → Blueprint
 
 **Clones.** Ref 2.6. Screens: `rc-shell/site-blueprint-net-worth.png`, `rc-shell/planoverview-02.png`,

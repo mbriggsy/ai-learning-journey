@@ -13,7 +13,7 @@ import { tablePerson } from '../../../workbench/tableRun'
 import { ProfileIcon } from '../profileIcons'
 import { stateLabel } from '../profileView'
 import { buildPerson, buildState, ownNothing, ownPersonField, personFormFrom, stateFormFrom, type PersonField, type PersonForm, type StateForm } from './familyFields'
-import { saveEdit } from './drawerSave'
+import { openCheck, saveEdit } from './drawerSave'
 import type { DrawerBodyProps } from './drawerProps'
 import { Fact } from './Fact'
 import { ProfileDrawer } from './ProfileDrawer'
@@ -32,9 +32,10 @@ const WORK_ITEMS = [
 /** The priced roster and the honest "somewhere else" (the walk's picker's own arms, `questions.tsx`). */
 const STATE_ITEMS: readonly { value: RetirementState; label: string }[] = (['NC', 'PA', 'FL', 'elsewhere'] as const).map((s) => ({ value: s, label: stateLabel(s) }))
 
-export function PersonDrawer({ index, model, open, readOnly, leaveAsk, onClose, onClosed, finalFocus }: DrawerBodyProps & { readonly index: 0 | 1 }) {
+export function PersonDrawer({ index, model, open, readOnly, leaveAsk, onClose, onClosed, finalFocus, checkAtOpen }: DrawerBodyProps & { readonly index: 0 | 1 }) {
   const [seed] = useState<PersonForm>(() => personFormFrom(model.getSnapshot().draft, index))
-  const edit = useDrawerEdit<PersonForm, PersonField>(seed, open)
+  const [initial] = useState(() => (checkAtOpen === true ? openCheck(model.getSnapshot().draft, ownPersonField(index)) : undefined))
+  const edit = useDrawerEdit<PersonForm, PersonField>(seed, open, initial)
   const { form, check, set } = edit
   const title = tablePerson(model.getSnapshot().draft, index, 0, 0).label
   return (

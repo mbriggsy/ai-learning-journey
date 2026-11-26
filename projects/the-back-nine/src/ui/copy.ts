@@ -57,36 +57,29 @@ export const copy = {
   // --- flow chrome ---
   flowBack: 'Back',
   flowNext: 'Continue',
-  flowProgressLabel: 'Progress',
   // --- the preamble questions (D1 — paired two-person screens) ---
   personYou: 'You',
   personSpouse: 'Your spouse',
   // The same two, mid-sentence ("if you pass", "if your spouse passes").
   personYouMid: 'you',
   personSpouseMid: 'your spouse',
-  qNamesHeading: 'First — who are the two of you?',
   nameLabel: 'First name',
   birthYearLabel: 'Birth year',
-  birthYearPlaceholder: 'e.g. 1962',
   sexLegend: 'Sex',
   sexMale: 'Male',
   sexFemale: 'Female',
   sexHelp: 'The Social Security survival tables are split this way.',
-  qWorkHeading: 'Where does work stand today?',
   workStatusLegend: 'Work status',
   workStatusWorking: 'Still working',
   workStatusRetired: 'Already retired',
   stopAgeLabel: 'The age work stopped',
   stopAgeHelp: 'The age this person actually stopped working — even if Social Security came later.',
-  qIncomeHeading: 'What does work pay?',
   salaryLabel: 'Yearly pay, before tax',
   salaryHelp: 'A steady figure in today’s dollars is enough.',
-  qSsHeading: 'Social Security',
   ssAmountLabel: 'Monthly benefit at full retirement age',
   ssAmountHelp:
     'The figure your statement shows at full retirement age — not the one for age 62 or 70. If you start earlier or later, the tool adjusts from there.',
   ssClaimLabel: 'The year you’ll start Social Security',
-  ssClaimYearPlaceholder: 'e.g. 2032',
   ssSpousalNote:
     'Spousal and survivor benefits are worked out from both of these — there’s nothing extra to enter.',
   // --- the retirement-state question (the state-tax unit, S3). A HOUSEHOLD-level single step
@@ -95,11 +88,6 @@ export const copy = {
   //     names WHY it matters (state income tax on withdrawals) in plain words; the help line is
   //     honest that only a few states are priced so far and that nothing is assumed for an unpriced
   //     one. This is the ONLY state-tax disclosure copy S3 owns (S5 owns verdict/omission/spendHelp). ---
-  qStateHeading: 'Where will you live in retirement?',
-  /** The route-true sibling (the state-tax Caddie chair fix, 2026-07-15): an ALREADY-retired
-   *  household reads the future tense as "not applicable to us" — the reentryIntroRetired
-   *  precedent. intakeSteps picks by the derived route. */
-  qStateHeadingRetired: 'Where do you live in retirement?',
   stateResidenceLead:
     'Where you settle sets the state income tax on the money you take from savings each year — some states tax it, some don’t. A best guess is fine; you can change it whenever your plans firm up.',
   // Tense-neutral (council F3, 2026-07-17): the old "Where you’ll retire" stayed future-tense for
@@ -113,7 +101,6 @@ export const copy = {
   stateOptionElsewhere: 'Somewhere else — not priced yet',
   stateResidenceHelp:
     'So far the tool prices a few states in full. If yours isn’t here yet, pick “Somewhere else” — its state tax stays out of these numbers for now, and nothing is assumed in its place.',
-  qSpendHeading: 'What does your life cost?',
   spendLabel: 'Household spending, all in',
   // The ask-for-Medicare-extras BOUNDARY FLIP (F4, fund-first — this wording ships in the same
   // commit as the engine funding, never ahead of it): Part D / Medigap / MA premiums moved OUT
@@ -147,11 +134,6 @@ export const copy = {
   //  AssumptionPanel, where the period control sits ABOVE the spend field.)
   periodConfirmPrompt:
     'That number could be dollars each month or dollars each year — tap “Each month” or “Each year” so it’s read the way you meant it.',
-  // --- U9b: the spend question under a GOVERNING budget (council 2026-07-02 Q4). The raw field
-  //     is replaced by labeled read-only text + a steer — the budget's atomic patch is the ONLY
-  //     writer of the spending scalar (a raw edit here was the budget-blind second writer). ---
-  spendBudgetGovernedNote: 'This figure comes from your budget now — edit the lines, and it follows.',
-  spendEditBudgetCta: 'Edit the budget',
   // --- U9b: the budget builder (the deepening of the single-total answer — R8: reached from the
   //     answer, never an intake gate). Calm plain language; quantities ride slots.
   //     Council 2026-07-03 (wf_67fa22e5-fbb): the invite/title/intro carry the AXIS (what must
@@ -159,18 +141,9 @@ export const copy = {
   //     lands sooner/safer/sharper (the R27 100%-FPL/PTC inversion can make the essentials-only
   //     date land LATER; dateFloorInversionNote ships the opposite claim post-split). Reward
   //     copy lives ONLY in these static strings, never the role=status readout slots. ---
-  //     (Full-axis label measured single-line in the Result quiet row at 1280×800, 2026-07-03 —
-  //     the row wraps to the same two lines with or without it.)
-  budgetCta: 'Split what must hold from what could give',
-  budgetSheetTitle: 'What must hold — and what could give',
   budgetSheetIntro:
     'Essentials are the part that has to hold; extras are what could give if it ever came to that. Mark which is which, and the answer takes each on its own terms.',
-  budgetApply: 'Use this budget',
-  // 'Cancel' is Briggsy's own 2026-07-03 pick (was 'Not now' — he renamed it for honesty; the
-  // council's later 'neutral leave' note does not outrank the recorded N=1 word).
-  budgetCancel: 'Cancel',
   budgetAddLine: 'Add a line',
-  budgetBackToSingle: 'Back to a single number',
   budgetBackToSingleHint:
     'Puts the plan back on one overall spending figure — these lines are let go.',
   budgetCatLabel: 'Category',
@@ -182,7 +155,6 @@ export const copy = {
   budgetCatGifts: 'Gifts & giving',
   budgetCatOther: 'Other',
   budgetLineLabelLabel: 'Name, if you like',
-  budgetLineLabelPlaceholder: 'e.g. Groceries',
   budgetAmountLabel: 'Dollars a year',
   budgetTierLegend: 'Which kind is it?',
   budgetTierEssentials: 'Essential',
@@ -211,7 +183,6 @@ export const copy = {
   // names a line that does not exist, which is the calm-but-wrong sin one level down.
   budgetApplyEmpty:
     'There are no lines yet, so there is nothing to use — add a line, or Cancel to keep the single figure.',
-  qHealthHeading: 'Health coverage before Medicare',
   enrolledPremiumLabel: 'Your household’s combined monthly premium',
   slcspLabel: 'Benchmark Silver plan, monthly (whole household)',
   healthQuoteHelp:
@@ -230,7 +201,6 @@ export const copy = {
   // the household's own frame. NOT "marketplace"/"ACA"/"exchange" on the question face — the
   // reader is a spouse with no finance background, and the plain contrast (a plan at work vs
   // buying your own) is the whole distinction the engine turns on.
-  qEmployerCoverageHeading: 'Coverage while one of you keeps working',
   employerCoverageLegend: 'Coverage for the one who has stopped working',
   employerCoverageCovered: 'Covered by the other one’s plan at work',
   employerCoverageOwn: 'Buying their own coverage',
@@ -242,7 +212,6 @@ export const copy = {
   // the household's to put in W, asked a few steps on (date route only, like this step).
   employerCoverageHelp:
     'While one of you is still working, the tool adds no health cost of its own for the one who has already stopped, until their Medicare starts. That only holds if a plan at work covers you both. Once their Medicare starts, the tool adds it, paid from savings. What the plan at work costs from pay belongs in your figure for a working year, which comes up a few questions on.',
-  qOopHeading: 'Out-of-pocket health costs',
   oopLabel: 'A typical year, out of pocket',
   // The containment contrast stays VERBATIM ("should already be inside your spending figure" — the
   // dedicated question must never invite double-exclusion). Since the 2026-10-08 survivor-medical
@@ -265,7 +234,6 @@ export const copy = {
   // PILOT-DRAFTED, shipped flagged.
   oopHelpWorking:
     'A rough yearly figure is plenty. The tool adds health premiums on top from the year the last of you stops working, and Medicare premiums for anyone on Medicare who has already stopped. Premiums paid while either of you still works belong in what a working year costs, which has its own question. Out-of-pocket costs should already be inside your spending figure. If you have an HSA, the tool uses this to size its tax-free draw. And if one of you is on your own later, the tool keeps this amount whole rather than scaling it down — a deliberately cautious choice.',
-  qWorkIncomeHeading: 'Income Medicare looks at',
   // C3 → Option B, simplified (2026-06-30, Briggsy's call): the working-year IRMAA-MAGI is the
   // already-entered salary (`earnedIncomeReal`, derived at `intakeMap.buildDateInput`) PLUS the
   // ONE genuinely-new fact — working-year investment income. We do NOT re-ask pay (redundant +
@@ -294,7 +262,6 @@ export const copy = {
   // (b)). The MA arm's wording is LOAD-BEARING copy: it is how the Medicare-Advantage
   // plurality lands honestly on an AFFIRMED $0. The fork starts with NOTHING selected —
   // never pre-filled with the high anchor. ---
-  qMedicareExtrasHeading: 'Medicare, beyond Part B',
   medicareExtrasIntro:
     'The tool adds the Part B premium and its income surcharge by itself. Most people also pay something for extra coverage — a Part D drug plan, a Medigap supplement plan, or a Medicare Advantage plan. Tell it what each of you pays a month for those and it adds that on top too — so keep it out of your spending figure.',
   medicareExtrasForkLegend: 'Beyond Part B, this is…',
@@ -305,30 +272,8 @@ export const copy = {
     'Everything this person pays each month for coverage beyond Part B — drug plan, supplement plan, or Medicare Advantage premium, added together.',
   medicareExtrasTypicalPicked:
     'A typical figure, not a bill — it assumes the pricier supplement-plus-drug-plan path. Real costs sit higher or lower, including next to nothing on many Medicare Advantage plans. Swap in your own number any time.',
-  // A quiet, color-free requiredness cue for a segmented group with no native
-  // "unanswered" signal (the reader is color blind — text, never a red asterisk).
-  fieldRequiredMarker: '(required)',
   // --- the account loop (D1 — variable-length, single entry pass) ---
-  qAccountsHeading: 'Now, the accounts themselves',
-  accountsIntro:
-    'One at a time, from your statements — type, balance, what it holds, and what still goes in each year.',
-  accountsEmpty: 'No accounts yet.',
   addAccount: 'Add an account',
-  // The account loop's two SWAPPED VIEWS each own a heading (2026-09-08). Tapping Add or Edit
-  // replaces the whole step body with the editor, and returning replaces it again — a swap the
-  // step heading above never reflects, because the step never changed. Without these the reader
-  // (sighted or not) was handed a new screenful of fields with nothing naming it, and focus stayed
-  // wherever the vanished button had been. Both are h3 under the step's h2 — never a second h2.
-  accountEntryAddHeading: 'Add an account',
-  accountEntryEditHeading: 'Edit this account',
-  accountsListHeading: 'Your accounts',
-  accountSave: 'Add this account',
-  accountCancel: 'Never mind',
-  accountEdit: 'Edit',
-  accountRemove: 'Remove',
-  accountRemoveConfirm: 'Tap again to remove',
-  accountOwnerLegend: 'Whose account is this?',
-  accountKindLegend: 'What kind of account?',
   kind401k: '401(k)',
   kind403b: '403(b)',
   kindTraditionalIra: 'Traditional IRA',
@@ -360,22 +305,7 @@ export const copy = {
   errAccountValueRequired: 'Still need the balance today.',
   // --- other income in retirement (R40 — pension/rental/alimony/annuity/other;
   //     opt-in off the 5-minute path; session-only until the vault is saved) ---
-  qOtherIncomeHeading: 'Other income (in retirement)',
-  otherIncomeIntro:
-    'Money that keeps coming in after work stops — a pension, a rental, an annuity, alimony. Skip this if none applies.',
-  otherIncomeEmpty: 'No other income added.',
-  addOtherIncome: 'Add other income',
-  // The other-income loop's twin of `accountEntryAddHeading` above — same swap, same law.
-  otherIncomeEntryAddHeading: 'Add other income',
-  otherIncomeEntryEditHeading: 'Edit this income',
-  otherIncomeListHeading: 'Your other income',
-  otherIncomeSave: 'Add this income',
-  otherIncomeCancel: 'Never mind',
-  otherIncomeEdit: 'Edit',
-  otherIncomeRemove: 'Remove',
-  otherIncomeRemoveConfirm: 'Tap again to remove',
   incomeOwnerLegend: 'Whose income is this?',
-  incomeTypeLegend: 'What kind of income?',
   incomeTypePension: 'Pension',
   incomeTypeRental: 'Rental',
   incomeTypeAlimony: 'Alimony',
@@ -418,7 +348,6 @@ export const copy = {
   incomeExclusionLabel: 'The tax-free part each year',
   incomeExclusionHelp:
     'For a non-qualified annuity, the share that’s a tax-free return of what was paid in. From the issuer’s exclusion-ratio figure.',
-  incomeAdvancedToggle: 'Fine-tuning (optional)',
   incomeEndAgeLabel: 'The age it stops (leave blank if for life)',
   incomeEndAgeHelp:
     'Blank means it pays for life. Set an age only if it ends earlier — a term-certain annuity, say.',
@@ -454,7 +383,6 @@ export const copy = {
   //     here. The Hawk's narrowed ban binds every string ("conservative", "worst case", "only
   //     later" never appear — `copyGuard.test.ts`); no key is a verdict or control key.
   //     PILOT-DRAFTED, shipped flagged under the batched-oracle law (KTD19). ---
-  qWorkingCostHeading: 'What does a year cost while you’re still working?',
   // The fork's legend names its figure since U11 walk 5 (copy-law F8: "Is that about…" sat two help lists below its
   // referent, so a reader keeping $84,000 pressed "Yes" without seeing what it sets): `slots.workingCostLegendFigure`.
   // KTD17's static legend was mechanical — `SegmentedControl` took only a catalog key — and it now takes a string.
@@ -514,7 +442,6 @@ export const copy = {
   // working year that changes or runs short. Grouped `<dl>`s, each under a legend that says "a year";
   // outflows carry a minus sign as well as their group, and the bottom line carries a word AND a
   // sign — never color alone.
-  qWorkingLedgerHeading: 'How a working year adds up',
   workingLedgerComingIn: 'Coming in, a year',
   workingLedgerGoingOut: 'Going out, a year',
   workingLedgerBottomLine: 'The bottom line, a year',
@@ -668,10 +595,6 @@ export const copy = {
   // …where nothing left to enter would draw one (every blocker is one this version cannot price, or
   // the engine refused the run): "yet" there promised an unlock the strip beside it rules out.
   workingLedgerUnknownLeadFinal: 'There’s no money picture to show.',
-  // The walk's unknown face points at the answer strip instead of echoing it: the strip sits at the
-  // top of the same screen and already names every blocker word for word (b9-5's walk read the pair
-  // twice on one screen). The panel's row keeps the echo — its sheet covers the strip.
-  workingLedgerUnknownSeeStrip: 'What stands in the way is named at the top of this page.',
   workingLedgerUnknownRefused: 'The tool can’t work out a working year from these answers.',
   // The panel's W row (U8): its name, the value line for the two faces with no figure, and the one
   // announcement when an edit in the open panel makes the answer stale (KTD21).
@@ -681,10 +604,6 @@ export const copy = {
   assumptionWorkingCostUnanswered: 'Not answered yet — the working years aren’t checked until it is.',
   // --- the provisional answer strip (D1 — surfaces and sharpens during entry;
   //     D2 builds the full state-adaptive surface over U6/U7) ---
-  // A STABLE, state-agnostic region name: the strip's accessible label must not
-  // contradict its content once a real reading lands (D1 review — it was the
-  // incomplete-only string, wrong when the strip shows "On track — 7 of 10").
-  answerRegionLabel: 'Your provisional answer',
   answerIncomplete: 'Your answer takes shape as you go.',
   answerStillNeeded: 'Still needed:',
   answerNoSynthesis: 'The tool never guesses these — it prices only what you enter.',
@@ -727,7 +646,6 @@ export const copy = {
   answerNotYet:
     'Not there yet — with what’s entered so far. Accounts usually move this; the picture isn’t complete.',
   dateFreeToday: 'Your fuck-off date is today, by this math',
-  dateWindowEdge: 'at the edge of what this window can confirm',
   // --- D2 elevated fuck-off-date surface (the landed magic moment — the date-first lead for a
   //     not-yet-retired household). VERDICT-SCOPED ("date" prefix → free-numeral + superlative): no
   //     bare numeral (the year count rides slots.dateInYears / noDateInWindow), no superlative, no
@@ -3304,6 +3222,41 @@ export const copy = {
   stalenessWUnansweredNote:
     'Your answer doesn’t count what a year costs while either of you still works yet: until you give that figure, each working year is figured as if your pay covers every cost, so the answer can read better than it really is.',
   stalenessWUnansweredCta: 'Give the figure',
+  // --- The first-run stepper (Act 6 · RC14; `src/ui/screens/setup/`; ref 2.3, `rc-shell/dataentry-03.png` to `-09.png`):
+  // "Start a new plan" asks the two first names, then six steps of Profile's cards. The cards and their drawers keep
+  // their own words (above); these are the stepper's frame, each step's head and its one sentence. ---
+  setupNewPlanTitle: 'Start a new plan',
+  setupNewPlanNote: 'Your first names. The rest of your plan comes one step at a time after this.',
+  setupNameYou: 'Your first name',
+  setupNameSpouse: 'Your spouse’s first name',
+  setupNewPlanStart: 'Start',
+  setupStepsLabel: 'Setting up your plan',
+  setupStepDone: 'done',
+  setupHeadFamily: 'Family',
+  setupHeadIncome: 'Pay and other income',
+  setupHeadSavings: 'Saving from pay',
+  setupHeadNetWorth: 'Your accounts',
+  setupHeadExpenses: 'Spending',
+  setupHeadGoals: 'Retirement and health care',
+  setupIntroFamily:
+    'Start with the two of you: the year each of you was born, whether you still work, and the state you live in. Pick a card to fill it in.',
+  setupIntroIncome:
+    'Pay while you work, Social Security, and any other income, such as a pension, rent or an annuity. Pick a card to fill it in, and add other income with Add income.',
+  setupIntroSavings:
+    'What goes into each account every year while its owner still works. Pick a card to fill it in, and add another account with Add saving.',
+  setupSavingsPremade:
+    'Each card here starts as a 401(k) for one of you who still works. Pick it to fill it in; you can change its kind there, or add another account with Add saving.',
+  setupIntroNetWorth: 'Every account the two of you hold today: what is in it, and how it is invested. Add each one with Add account.',
+  setupIntroExpenses: 'What the two of you spend in a year, and the medical costs you pay yourselves. Pick a card to fill it in.',
+  setupIntroExpensesWorking:
+    'What the two of you spend in a year in retirement, the medical costs you pay yourselves, and what a year costs while either of you still works. Pick a card to fill it in.',
+  setupIntroGoals:
+    'When each of you stops working, and what health care costs before Medicare and on it. Pick a card to fill it in; Complete then opens your plan.',
+  setupMissingLead: 'Your answer is still waiting on a few facts.',
+  setupMissingNote: 'Complete still opens your plan. Until these are in, its pages say what the answer is waiting for.',
+  setupPrevious: 'Previous',
+  setupNext: 'Next',
+  setupComplete: 'Complete',
   // THE ENTRY SLICE, composed in LAST: the words the first-load chunk renders live in `entryCopy.ts` (see its
   // header). Spread last, a key typed above that the slice also holds fails to compile (TS2783), so the two
   // halves stay disjoint and `copy` stays ONE whole catalog for `CopyKey`, every copyGuard sweep and every lazy surface.
@@ -3843,9 +3796,6 @@ const atMostReach = (laterShort: boolean): string => (laterShort ? ', in each wo
  * answer surface (their first consumer).
  */
 export const slots = {
-  /** SR-announced flow position (the visible thread carries no counter — the
-   *  flow is variable-length). */
-  questionPosition: (n: number): string => `Question ${n}`,
   /** The derived-age echo under the SS claim-YEAR field — the year the user
    *  enters maps to this whole-year age (a fact echo, so they can sanity-check
    *  the year against the 62–70 window). */
@@ -3867,17 +3817,6 @@ export const slots = {
       ? `Your full retirement age is ${years}.`
       : `Your full retirement age is ${years} years, ${months} months.`
   },
-  /** One committed account in the loop's quiet list. */
-  accountSummary: (kindLabel: string, owner: string, valueFormatted: string): string =>
-    `${kindLabel} · ${owner} · $${valueFormatted}`,
-  /** The running total under the account list (cold-read: the user wants to see what they've
-   *  entered add up). Amount pre-formatted by the caller. */
-  accountsTotal: (valueFormatted: string): string => `Everything entered so far — $${valueFormatted}`,
-  /** One committed other-income stream's quiet row (R40 — type · owner · ~$X/yr).
-   *  The `~` is the humane-precision hedge; the amount is pre-formatted by the
-   *  caller (the ui layer can't import the intake money formatter). */
-  incomeSummary: (typeLabel: string, owner: string, amountFormatted: string): string =>
-    `${typeLabel} · ${owner} · ~$${amountFormatted}/yr`,
   /** The widow's-number row note (R40 — surfaces what the SURVIVOR keeps in plain
    *  language, NEVER a raw survivorPct). `survivorPct ∈ [0,1]`; `keeper` is the
    *  OTHER spouse's name/pronoun, `owner` is the stream owner's. "would keep"
@@ -3999,7 +3938,7 @@ export const slots = {
    *
    *  ⚠️ DO NOT "FIX" THIS BY DROPPING THE TODAY TICK. That inverts the contradiction into the
    *  defect U13/§S0 already fixed — `bandAnnotations.ts:51-56` records it live from the first
-   *  `?vault=datestale` walk, and `e2e/vertical-fit.spec.ts:3481-3484` (the `?vault=datearrived` arm — "must still
+   *  `?vault=datestale` walk, and `e2e/vertical-fit.spec.ts:3030-3033` (the `?vault=datearrived` arm — "must still
    *  mark WALL-TIME today") forbids a band that loses its wall clock BY NAME. The tick is right; the sentence was wrong. */
   bandAgedPremiseFresh: (buildYear: number): string =>
     `This range runs from ${buildYear}, when the plan was built — the years since are modeled, not records. What you actually hold today is undetermined until you re-confirm.`,
@@ -4171,6 +4110,8 @@ export const slots = {
   /** The "still needed" strip's overflow counter — a self-describing list item
    *  (its own span), never a bare "(+N)" glyph fused onto the prior fact name. */
   factsMore: (n: number): string => `${n} more`,
+  /** A missing fact two people both owe, named with whose it is (setup's box beside Complete, Act 6 · RC14). */
+  missingFactOf: (fact: string, whose: string): string => `${fact} (${whose})`,
   // --- THE PAY CHECK'S W STEP, MONEY PICTURE AND PANEL ROW (U8 — the flat keys' block explains).
   //     Every figure arrives PRE-formatted by the intake money formatter (digits and grouping, no
   //     glyph); the templates add the `$`, the minus sign (U+2212) and the period words, and stay
@@ -4888,9 +4829,6 @@ export const slots = {
    *  SEEN used, not just collected) — rendered in the sheet readout AND the governed spend step. */
   budgetTierSplit: (essentialsFormatted: string, extrasFormatted: string): string =>
     `Essentials about $${essentialsFormatted} · extras about $${extrasFormatted} a year.`,
-  /** The governed spend step's read-only value line (Q4 — the budget is the only writer). */
-  spendBudgetTotal: (totalFormatted: string): string =>
-    `About $${totalFormatted} a year — set by your budget.`,
   /** The remove-line control's accessible name (icon-only button). */
   budgetRemoveLine: (label: string): string => `Remove ${label}`,
   // --- R19 ceiling errors (F10) — the calm error grammar, QUOTING the statutory limit ----------
@@ -5157,7 +5095,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:2279` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:2282` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,
@@ -6011,6 +5949,8 @@ export const slots = {
    *  it never reads as a second answer to the chart's question. */
   // --- Profile (Act 6 · RC13a). The figures are the household's own entries (facts), so no "~". ---
   profileBornIn: (year: number, age: number | undefined): string => (age === undefined ? `${year}` : `${year} (age ${age})`),
+  // The first-run stepper (Act 6 · RC14): a step page's title, its number and its head ("Step 2 – Pay and other income").
+  setupStepTitle: (n: number, head: string): string => `Step ${n} – ${head}`,
   profileStoppedAt: (age: number): string => `Stopped at ${age}`,
   profileStartsAt: (age: number, year: number): string => `At ${age}, in ${year}`,
   profilePaysFrom: (age: number): string => `From age ${age}`,

@@ -28,9 +28,11 @@ import {
   type MedicareField,
   type MedicareForm,
 } from './goalsFields'
-import { saveEdit } from './drawerSave'
+import { openCheck, saveEdit } from './drawerSave'
 import type { DrawerBodyProps } from './drawerProps'
 import { Fact } from './Fact'
+import { OutLink } from './OutLink'
+import { useSetupPeriod } from './setupPeriod'
 import { ProfileDrawer } from './ProfileDrawer'
 import { useDrawerEdit } from './useDrawerBuffer'
 
@@ -40,14 +42,6 @@ const COVERAGE_ITEMS = [
 ] as const satisfies readonly { value: 'covered' | 'own'; label: string }[]
 
 /** A link out (the walk's resource links): a new tab, no referrer. */
-function Out({ href, children }: { readonly href: string; readonly children: string }) {
-  return (
-    <a href={href} target="_blank" rel="noopener noreferrer" className="text-blue-ink underline underline-offset-2">
-      {children}
-    </a>
-  )
-}
-
 export function HealthDrawer({ model, open, readOnly, leaveAsk, onClose, onClosed, finalFocus }: DrawerBodyProps) {
   const draft = model.getSnapshot().draft
   const [seed] = useState<HealthForm>(() => healthFormFrom(draft))
@@ -98,9 +92,9 @@ export function HealthDrawer({ model, open, readOnly, leaveAsk, onClose, onClose
         </Fact>
       </DrawerFields>
       <p className="text-label text-stone-600">
-        {copy.linkGetQuote} <Out href={EXTERNAL_LINKS.healthcareGov}>{copy.linkHealthcareGov}</Out>
+        {copy.linkGetQuote} <OutLink href={EXTERNAL_LINKS.healthcareGov}>{copy.linkHealthcareGov}</OutLink>
         {' · '}
-        <Out href={EXTERNAL_LINKS.kffCalculator}>{copy.linkKffCalculator}</Out>
+        <OutLink href={EXTERNAL_LINKS.kffCalculator}>{copy.linkKffCalculator}</OutLink>
       </p>
       {asksCoverage ? (
         <Fact stamp="health.employerPlanCoversRetiredMember">
@@ -124,13 +118,15 @@ export function HealthDrawer({ model, open, readOnly, leaveAsk, onClose, onClose
   )
 }
 
-export function MedicareDrawer({ model, open, readOnly, leaveAsk, onClose, onClosed, finalFocus }: DrawerBodyProps) {
+export function MedicareDrawer({ model, open, readOnly, leaveAsk, onClose, onClosed, finalFocus, checkAtOpen }: DrawerBodyProps) {
   const draft = model.getSnapshot().draft
   const [seed] = useState<MedicareForm>(() => medicareFormFrom(draft))
-  const edit = useDrawerEdit<MedicareForm, MedicareField>(seed, open)
+  const [initial] = useState(() => (checkAtOpen === true ? openCheck(draft, ownMedicareField) : undefined))
+  const edit = useDrawerEdit<MedicareForm, MedicareField>(seed, open, initial)
   const { form, check, set } = edit
   // The look-back income is asked where the walk asks it (anyone 64 or older); the extras of every household.
   const asksSeed = intakeStepIds(draft).includes('irmaa-seed')
+  const inSetup = useSetupPeriod() !== null
   const typical = formatMoney(Math.round(medicareExtrasTypicalMonthly()))
   const extrasItems = [
     { value: 'none', label: copy.medicareExtrasForkNone },
@@ -186,6 +182,14 @@ export function MedicareDrawer({ model, open, readOnly, leaveAsk, onClose, onClo
                 />
               ) : null}
               {pick === 'typical' ? <p className="text-label text-stone-600">{copy.medicareExtrasTypicalPicked}</p> : null}
+              {/* An unanswered fork after setup says what the plan prices meanwhile (the panel's standing line, re-homed by
+                  RC14: its last host was the walk's fork). Never in setup: mid-answer, "it's already handled" steers toward
+                  inertia, and nothing is checked on the reader's behalf. */}
+              {pick === undefined && !inSetup ? (
+                <p className="text-label text-stone-600" data-extras-standing="">
+                  {slots.medicareExtrasPanelStanding(typical)}
+                </p>
+              ) : null}
             </section>
           )
         })}

@@ -25,11 +25,11 @@ export default defineConfig({
   // The chart TEXT gate (e2e/chart-text.spec.ts, 2026-09-05) rides this harness: like the fit law it
   // needs the dev-only `?seed=` routes and a real browser's layout — and riding `verify:fit` is what
   // makes it CI-enforced (a gate wired into no workflow is not a gate).
-  // The phone intake FOLD gate (e2e/intake-fold.spec.ts, 2026-09-08) rides it for the same two
-  // reasons: it enters through a dev-only `?seed=` route, and listing it here is what makes it
-  // CI-enforced.
+  // The phone intake FOLD gate (e2e/intake-fold.spec.ts, 2026-09-08) rode it until Act 6 · RC14 deleted the walk: its laws
+  // (each step at its own top, an editor naming itself and taking focus, the step nav yielding) are the first-run
+  // stepper's arms in e2e/rc-screens.spec.ts.
   // Act 6's screens (e2e/rc-screens.spec.ts, from RC2): each clone unit's fit arms, on the dev-only `?seed=` routes.
-  testMatch: ['**/vertical-fit.spec.ts', '**/chart-text.spec.ts', '**/intake-fold.spec.ts', '**/rc-screens.spec.ts'],
+  testMatch: ['**/vertical-fit.spec.ts', '**/chart-text.spec.ts', '**/rc-screens.spec.ts'],
   fullyParallel: true,
   // The date seeds are CPU-BOUND: a 16k-path final across two arms takes ~60 s alone, and the two
   // MEASURING specs render one's final 57 times (re-counted 2026-11-05 against the current specs:
@@ -41,10 +41,7 @@ export default defineConfig({
   // cure's six datecoststale gesture arms, and build 2's ten: datesaved's walk step, its panel seat,
   // datesavedmoved's Result and the coordinate tap on "All of it" over `date`, each at both sizes,
   // and the ?vault=datesavedmoved and ?vault=datesavedstale unlock lines; its computing-frame probe
-  // loads dip but never waits for the final). The THIRD spec on this harness adds
-  // NONE: intake-fold drives `?seed=datesolo`, the refusal witness whose `buildDateInput` returns null,
-  // so it renders the date ROUTE without ever running a solve — and so does vertical-fit's own
-  // datesolo pay-check arm.
+  // loads dip but never waits for the final; the walk's pay-check arms in that count left with the walk at RC14).
   // Playwright's default (50% of logical cores) is 10 workers on a 20-thread
   // laptop — ten concurrent solves saturate the cores and stretch a 60 s final past the tier wait
   // (measured 2026-09-05: the datesplit arms timed out only once the chart-text spec grew to 18 date

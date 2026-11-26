@@ -46,11 +46,12 @@ export interface DrawerEdit<F, K extends string> extends DrawerBuffer<F> {
   readonly set: (field: K, p: Partial<F>) => void
 }
 
-/** The buffer plus the last Save's refusals: what every Profile drawer body holds. */
-export function useDrawerEdit<F extends object, K extends string>(seed: F, open: boolean): DrawerEdit<F, K> {
+/** The buffer plus the last Save's refusals: what every Profile drawer body holds. `initial`: the refusals it opens with
+ *  (a drawer opened at one, `openCheck`). */
+export function useDrawerEdit<F extends object, K extends string>(seed: F, open: boolean, initial?: EditCheck<K>): DrawerEdit<F, K> {
   const buffer = useDrawerBuffer(seed, open)
   const { patch } = buffer
-  const [check, setCheck] = useState<EditCheck<K>>(NO_REFUSALS)
+  const [check, setCheck] = useState<EditCheck<K>>(initial ?? NO_REFUSALS)
   const set = useCallback(
     (field: K, p: Partial<F>) => {
       patch(p)

@@ -34,6 +34,9 @@ export interface SelectProps<Value extends string> {
   /** The caller's refusal (a fact still needed), shown under the box beside a mark. */
   readonly error?: string
   readonly disabled?: boolean
+  /** A choice the form needs before it saves: announced up front (`aria-required`), never only by a refusal (Act 6 · RC14,
+   *  the walk's required choices). */
+  readonly required?: boolean
   /** The tray's changed value (ref 2.8): blue-ink words on the pale blue box, medium weight, a 2 px left bar. */
   readonly changed?: boolean
   readonly className?: string
@@ -48,6 +51,7 @@ export function Select<Value extends string>({
   placeholder,
   error,
   disabled = false,
+  required = false,
   changed = false,
   className,
 }: SelectProps<Value>) {
@@ -68,6 +72,7 @@ export function Select<Value extends string>({
         <SelectPrimitive.Trigger
           data-changed={changed || undefined}
           aria-invalid={error !== undefined || undefined}
+          aria-required={required || undefined}
           {...(error !== undefined ? { 'aria-describedby': errorId } : {})}
           className={cn(
             'flex min-h-10 min-w-40 cursor-pointer items-center justify-between gap-3 rounded-control border border-stone-300 bg-bg px-3 py-1.5',

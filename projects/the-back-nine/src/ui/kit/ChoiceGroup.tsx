@@ -98,6 +98,12 @@ export function ChoiceGroup<T extends string>({
                 checked={checked}
                 disabled={disabled}
                 onChange={() => onValueChange?.(item.value)}
+                // A press on the ALREADY-checked choice fires no change event, yet it is an explicit answer: the
+                // per-period money control's untapped month must count once pressed (the walk's SegmentedControl did
+                // the same; Act 6 · RC14). Only when checked at render, so a press that changes the choice reports once.
+                onClick={() => {
+                  if (checked) onValueChange?.(item.value)
+                }}
                 className="peer sr-only"
               />
               <span

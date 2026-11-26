@@ -20,7 +20,9 @@ import { copy } from '../../src/ui/copy'
  * sheet), and a drawer refusing a Save (a Social Security figure over its ceiling) with the error under its field; since
  * RC13b Goals and Expenses with every card's drawer, the budget worksheet, and the Pre-retirement living expenses drawer
  * stale and kept (opened from the standing line); since RC18 Settings, each folder tab (and the W row's drawer over it on
- * a working seed), and the Display drawer open over Analysis. Screenshots land in the repo's gitignored `temp/rc-shots/<unit>/`, named
+ * a working seed), and the Display drawer open over Analysis; since RC14 the first-run stepper: its six steps re-walked
+ * from Settings over each seed, and on a fresh plan "Start a new plan", each empty step, Complete waiting on facts and Next
+ * refusing with the W drawer at its field (filter `-g "the first-run stepper"`). Screenshots land in the repo's gitignored `temp/rc-shots/<unit>/`, named
  * `<screen>-<seed>-<size>.png`, for Briggsy to review the output.
  *
  *     RC_UNIT=RC2 pnpm exec playwright test --config e2e/held/shots.config.ts rc-look
@@ -1054,5 +1056,87 @@ for (const size of SIZES) {
         }
       })
     }
+  })
+}
+
+// ── RC14 · the first-run stepper: each of the six steps re-walked over a retired and a working seed (Settings' re-walk),
+//    "Start a new plan" on a fresh plan, Complete waiting on facts still to enter, and Next refusing with the W drawer
+//    opened at its field. Filter by this block's own words: `-g "the first-run stepper"`. ───────────────────────────────
+const SETUP_STEP_IDS = ['family', 'income', 'savings', 'net-worth', 'expenses', 'goals'] as const
+
+/** The stepper's Next (or Complete), pressed in-page. */
+const setupNext = (page: Page) => page.evaluate(() => [...document.querySelectorAll<HTMLButtonElement>('[data-setup-nav] button')].at(-1)?.click())
+
+async function setupShot(page: Page, findings: Record<string, Audit>, id: string, seed: string, tag: string): Promise<void> {
+  await page.evaluate(() => window.scrollTo(0, 0))
+  await shot(page, findings, id, seed, tag)
+  await page.screenshot({ path: `${OUT}/${id}-${seed}-${tag}-full.png`, fullPage: true })
+}
+
+function auditAll(findings: Record<string, Audit>): void {
+  for (const [id, a] of Object.entries(findings)) {
+    expect.soft(a.sideways, `${id}: sideways scroll`).toBeLessThanOrEqual(0)
+    expect.soft(a.clipped, `${id}: clipped text`).toEqual([])
+    expect.soft(a.overlaps, `${id}: overlapping controls`).toEqual([])
+    expect.soft(a.tiny, `${id}: text under 12 px`).toEqual([])
+  }
+}
+
+for (const size of SIZES) {
+  test.describe(`${UNIT} look, the first-run stepper at ${size.tag}`, () => {
+    test.use({ ...size.use, reducedMotion: 'reduce' })
+    for (const seed of SEEDS) {
+      test(`?seed=${seed}: the first-run stepper's six steps, re-walked from Settings`, async ({ page }) => {
+        test.setTimeout(FINAL_TIER_MS + 120_000)
+        await enterShell(page, seed)
+        await page.locator('[data-gear]').click()
+        await page.getByRole('button', { name: copy.assumptionRewalkCta }).click()
+        const heading = page.locator('main[data-setup-step] h1')
+        await expect(heading).toBeVisible({ timeout: 30_000 })
+        const findings: Record<string, Audit> = {}
+        for (const step of SETUP_STEP_IDS) {
+          await expect(page.locator(`main[data-setup-step="${step}"]`)).toBeAttached()
+          await setupShot(page, findings, `setup-${step}`, seed, size.tag)
+          if (step !== 'goals') await setupNext(page)
+        }
+        console.log(`[rc-look ${UNIT} stepper ${seed} ${size.tag}] ${JSON.stringify(findings)}`)
+        auditAll(findings)
+      })
+    }
+
+    test('a fresh plan: the first-run stepper’s "Start a new plan", each empty step, Complete waiting on facts, and Next refusing at the W gate', async ({ page }) => {
+      test.setTimeout(120_000)
+      const findings: Record<string, Audit> = {}
+      await page.goto('/')
+      await page.getByRole('button', { name: copy.coldStartBegin }).click()
+      const names = page.getByRole('dialog', { name: copy.setupNewPlanTitle })
+      await expect(names).toBeVisible({ timeout: 30_000 })
+      await page.waitForTimeout(450)
+      await shot(page, findings, 'setup-new-plan', 'fresh', size.tag)
+      await names.getByLabel(copy.setupNameYou).fill('Alex')
+      await names.getByLabel(copy.setupNameSpouse).fill('Sam')
+      await names.getByRole('button', { name: copy.setupNewPlanStart }).click()
+      await expect(page.getByRole('dialog')).toHaveCount(0)
+      for (const step of SETUP_STEP_IDS) {
+        await expect(page.locator(`main[data-setup-step="${step}"]`)).toBeAttached()
+        await setupShot(page, findings, step === 'goals' ? 'setup-complete-waiting' : `setup-${step}`, 'fresh', size.tag)
+        if (step !== 'goals') await setupNext(page)
+      }
+      // Back to Family: one of them still working; then a chevron forward to Goals stops at Expenses on the missing W,
+      // the W drawer opened at its field.
+      await page.locator('[data-setup-steps] button').first().click()
+      await page.locator('[data-profile-card="person-0"]').click()
+      const person = page.getByRole('dialog')
+      await person.getByRole('combobox', { name: copy.workStatusLegend }).click()
+      await page.getByRole('option', { name: copy.workStatusWorking, exact: true }).click()
+      await person.getByRole('button', { name: copy.profileDrawerSave }).click()
+      await expect(page.getByRole('dialog')).toHaveCount(0)
+      await page.locator('[data-setup-steps] button').last().click()
+      await expect(page.getByRole('dialog', { name: copy.profileWorkingCostName })).toBeVisible()
+      await page.waitForTimeout(600)
+      await shot(page, findings, 'setup-next-refused', 'fresh', size.tag)
+      console.log(`[rc-look ${UNIT} stepper fresh ${size.tag}] ${JSON.stringify(findings)}`)
+      auditAll(findings)
+    })
   })
 }

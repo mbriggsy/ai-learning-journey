@@ -36,7 +36,6 @@ export default defineConfig({
     '**/vertical-fit.spec.ts',
     '**/chart-text.spec.ts',
     '**/chart-text-rv.spec.ts',
-    '**/intake-fold.spec.ts',
     '**/rc-screens.spec.ts',
     '**/caddie-walk.spec.ts',
     // INSTRUMENTS, never gates — e2e/held/shots.config.ts (dev server) and e2e/held/solve-timing.config.ts
@@ -63,10 +62,10 @@ export default defineConfig({
     // design-tokens.spec.ts measures Chromium font advance widths, and vault.spec.ts's KDF-location
     // spike records a verdict about Chromium's WebCrypto thread pool — each would red under WebKit for
     // the wrong reason. csp.spec.ts is NOT one of them: its corroborations are already engine-tolerant
-    // by construction (`violatedDirective.startsWith('script-src')` at e2e/csp.spec.ts:189, and the same
+    // by construction (`violatedDirective.startsWith('script-src')` at e2e/csp.spec.ts:188, and the same
     // prefix match at :215 / :229 / :247 / :263 — written so Chromium's granular `script-src-elem` and a
     // bare `script-src` both pass). What holds IT back is COST: its worker/intake walk is a full intake
-    // plus two engine round trips on a Chromium-tuned budget (`test.setTimeout(180_000)`, csp.spec.ts:316 —
+    // plus two engine round trips on a Chromium-tuned budget (`test.setTimeout(180_000)`, csp.spec.ts:315 —
     // and since 2026-10-03 a SECOND walk to the pooled solve's spawn, `test.setTimeout(240_000)` at :321;
     // both sized for a 4-vCPU runner), so tagging the spec would drive those walks a second time on an
     // engine whose wall clock nobody has measured. Its fast enforced/control arms (six today) COULD be

@@ -1,18 +1,26 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import '@testing-library/jest-dom/vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
+import { NAME_CEILING } from '@shared/nameBounds'
 import { Button, BUTTON_VARIANTS } from '../Button'
 import { Checkbox } from '../Checkbox'
+import { ChoiceGroup } from '../ChoiceGroup'
 import { Switch } from '../Switch'
 import { MoneyInput, PercentInput, WholeInput } from '../NumberInputs'
+import { TextInput } from '../TextInput'
 
 /**
- * The kit's button variants and its two figure boxes. The boxes parse and format through `src/intake/moneyFormat.ts`
- * (the intake's own currency discipline), so a figure the walk refuses is refused here the same way: nothing is
- * committed, what was typed stays, and the caller's words say why, tied to the field.
+ * The kit's button variants, its figure boxes, its words box and its choice group. The figure boxes parse and format
+ * through `src/intake/moneyFormat.ts` (the intake's own currency discipline), so a figure the walk refused is refused
+ * here the same way: nothing is committed, what was typed stays, and the caller's words say why, tied to the field.
+ * Since Act 6 · RC14 deleted the walk's own fields (`src/intake/fields.tsx`) these are their only home: a figure box is
+ * a text field with the number keypad and no autofill (never `type="number"`), silent and unformatted while typing, the
+ * raw figure committed on blur, a blank committed as "no figure" (never 0), a refusal forgiven the instant the box is
+ * edited again; a name stops at the name ceiling as it is typed and a stored longer one is never rewritten; a press on
+ * a choice already checked still counts as an answer.
  */
 afterEach(cleanup)
 
@@ -66,7 +74,50 @@ function MoneyHost({ onCommit, start }: { readonly onCommit: (v: number | undefi
   )
 }
 
+describe('every figure box', () => {
+  it('is a text field with the number keypad and no autofill, never type="number"', () => {
+    render(
+      <>
+        <MoneyInput label="Money" value={undefined} invalidMessage="x" />
+        <PercentInput label="Percent" value={undefined} invalidMessage="x" />
+        <WholeInput label="Whole" value={undefined} invalidMessage="x" />
+      </>,
+    )
+    for (const [label, keypad] of [['Money', 'decimal'], ['Percent', 'decimal'], ['Whole', 'numeric']] as const) {
+      const box = screen.getByLabelText(label)
+      expect(box, label).toHaveAttribute('type', 'text')
+      expect(box, label).toHaveAttribute('inputmode', keypad)
+      expect(box, label).toHaveAttribute('autocomplete', 'off')
+    }
+  })
+
+  // back-nine-design: "errors clear the instant the field is re-edited (on input), not on the next blur". The walk's
+  // fields did it through `onEdit`; the kit shows a caller's refusal until the caller drops it, and the caller hears
+  // nothing before the blur commits.
+  it('a caller’s refusal clears the instant the box is edited again, not on its blur', () => {
+    render(<MoneyInput label="Balance" value={undefined} error="Still need the balance today." invalidMessage="x" />)
+    const box = screen.getByLabelText('Balance')
+    expect(screen.getByRole('alert')).toHaveTextContent('Still need the balance today.')
+    fireEvent.focus(box)
+    fireEvent.change(box, { target: { value: '1' } })
+    expect(screen.queryByRole('alert')).toBeNull()
+    expect(box).not.toHaveAttribute('aria-invalid')
+  })
+})
+
 describe('MoneyInput', () => {
+  it('what is typed stays exactly as typed until the blur (no reformat mid-typing: the caret never jumps); the blur commits the raw figure and shows it formatted', () => {
+    const onCommit = vi.fn()
+    render(<MoneyHost onCommit={onCommit} />)
+    const box = screen.getByLabelText('Yearly pay')
+    fireEvent.focus(box)
+    fireEvent.change(box, { target: { value: '8500' } })
+    expect(box).toHaveValue('8500')
+    fireEvent.blur(box)
+    expect(onCommit).toHaveBeenCalledWith(8500)
+    expect(box).toHaveValue('8,500')
+  })
+
   it('"$1,234" commits 1234 on blur and shows "1,234" with the $ outside the text', async () => {
     const onCommit = vi.fn()
     const user = userEvent.setup()
@@ -226,6 +277,108 @@ describe('WholeInput (the tray’s year and age boxes, RC4b)', () => {
     await user.type(box, '2033')
     await user.tab()
     expect(onCommit).toHaveBeenCalledWith(2033)
+  })
+})
+
+// The name ceiling (Briggsy's design-ceiling ruling, 2026-11-21; the frames-outside plan's KTD12), as the person drawer
+// and the new-plan drawer pass it to the words box. The 20 is typed here once on purpose, never read from NAME_CEILING:
+// a test that derives its number from the constant moves with the constant and can never catch a wrong edit to it
+// (insight 151).
+describe('TextInput with the name ceiling: typing stops at it; a stored name is never rewritten', () => {
+  const name25 = 'Abcdefghijklmnopqrstuvwxy'
+  const nameBox = (value: string | undefined, onCommit: (v: string | undefined) => void) => (
+    <>
+      <TextInput label="First name" value={value} maxLength={NAME_CEILING} autoComplete="given-name" onCommit={onCommit} />
+      <button type="button">elsewhere</button>
+    </>
+  )
+
+  it('typing a 25-character name keeps the first 20, and commits those 20', async () => {
+    const onCommit = vi.fn()
+    const user = userEvent.setup()
+    render(nameBox(undefined, onCommit))
+    const box = screen.getByLabelText('First name')
+    await user.type(box, name25)
+    expect(box).toHaveValue(name25.slice(0, 20))
+    await user.click(screen.getByRole('button', { name: 'elsewhere' }))
+    expect(onCommit).toHaveBeenCalledWith(name25.slice(0, 20))
+  })
+
+  it('a 20-character name is kept whole', async () => {
+    const onCommit = vi.fn()
+    const user = userEvent.setup()
+    render(nameBox(undefined, onCommit))
+    await user.type(screen.getByLabelText('First name'), 'Abcdefghij Klmnopqrs')
+    await user.click(screen.getByRole('button', { name: 'elsewhere' }))
+    expect(onCommit).toHaveBeenCalledWith('Abcdefghij Klmnopqrs')
+  })
+
+  it('a restored name already longer than the ceiling shows whole and commits whole (the cap limits typing only)', async () => {
+    const onCommit = vi.fn()
+    const user = userEvent.setup()
+    render(nameBox(name25, onCommit))
+    const box = screen.getByLabelText('First name')
+    expect(box).toHaveValue(name25)
+    await user.click(box)
+    await user.click(screen.getByRole('button', { name: 'elsewhere' }))
+    expect(onCommit.mock.calls).toEqual([[name25]])
+    expect(box).toHaveValue(name25)
+  })
+})
+
+describe('ChoiceGroup: native radios in their labels, the checked one marked by more than colour', () => {
+  function Host({ onValueChange, start }: { readonly onValueChange: (v: 'month' | 'year') => void; readonly start?: 'month' | 'year' }) {
+    const [value, setValue] = useState<'month' | 'year' | undefined>(start)
+    return (
+      <ChoiceGroup<'month' | 'year'>
+        legend="How often?"
+        name="period"
+        items={[
+          { value: 'month', label: 'A month' },
+          { value: 'year', label: 'A year' },
+        ]}
+        value={value}
+        onValueChange={(v) => {
+          setValue(v)
+          onValueChange(v)
+        }}
+      />
+    )
+  }
+
+  it('real radios, named by their words; nothing checked unless the caller says so', () => {
+    render(<Host onValueChange={() => {}} />)
+    const radios = screen.getAllByRole('radio')
+    expect(radios).toHaveLength(2)
+    expect(radios.every((r) => !(r as HTMLInputElement).checked)).toBe(true)
+    expect(screen.getByRole('group', { name: 'How often?' })).toBeInTheDocument()
+  })
+
+  it('a press on an unchecked choice reports it once; a press on the ALREADY-checked choice reports it once too (an explicit answer)', async () => {
+    const onValueChange = vi.fn()
+    const user = userEvent.setup()
+    render(<Host onValueChange={onValueChange} start="month" />)
+    await user.click(screen.getByText('A year'))
+    expect(onValueChange.mock.calls).toEqual([['year']])
+    expect(screen.getByRole('radio', { name: 'A year' })).toBeChecked()
+    onValueChange.mockClear()
+    await user.click(screen.getByText('A year'))
+    expect(onValueChange.mock.calls).toEqual([['year']])
+    onValueChange.mockClear()
+    await user.click(screen.getByRole('radio', { name: 'A year' }))
+    expect(onValueChange.mock.calls).toEqual([['year']])
+  })
+
+  it('the checked choice carries a filled dot and medium weight, the other neither (weight and fill, never hue alone)', () => {
+    render(<Host onValueChange={() => {}} start="year" />)
+    const year = screen.getByRole('radio', { name: 'A year' }).closest('label')!
+    const month = screen.getByRole('radio', { name: 'A month' }).closest('label')!
+    expect(year).toHaveAttribute('data-checked', 'true')
+    expect(year).toHaveClass('font-medium')
+    expect(year.querySelector('[aria-hidden="true"] > span')).not.toBeNull()
+    expect(month).not.toHaveAttribute('data-checked')
+    expect(month).not.toHaveClass('font-medium')
+    expect(month.querySelector('[aria-hidden="true"] > span')).toBeNull()
   })
 })
 

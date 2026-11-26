@@ -26,7 +26,7 @@ import { resolve } from 'node:path'
  *    old recommendInvite idiom): both resolve only through the real worker. The DRAFT is
  *    deliberately NOT faked: it flows from the real store, so every `appModel.update` this gesture
  *    makes (and every one it must NOT make) is observable on the real singleton.
- *  - `SaveFlow` and `IntakeFlow` are stubbed to their controls only (the ceremony's crypto/zxcvbn
+ *  - `SaveFlow` and the first-run `Stepper` are stubbed to their controls only (the ceremony's crypto/zxcvbn
  *    graph and the intake questions are not what is under test here).
  *
  * Everything else — the mint, the codec round-trip in the save gate, the store's trichotomy, the
@@ -129,11 +129,10 @@ vi.mock('../SaveFlow', () => ({
   ),
 }))
 
-/** The intake questions, reduced to the terminal advance — it drives IntakeApp's REAL `complete()`. The rest of the
- *  module stays real: the shell (the home since Act 6 · RC4) hosts the facts page's step sheet, which reads it. */
-vi.mock('@intake/flow', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@intake/flow')>()),
-  IntakeFlow: ({ onComplete }: { onComplete?: () => void }) => (
+/** The first-run stepper (Act 6 · RC14, in place of the walk's IntakeFlow), reduced to its Complete: it drives IntakeApp's
+ *  REAL `complete()`. */
+vi.mock('../screens/setup/Stepper', () => ({
+  Stepper: ({ onComplete }: { onComplete?: () => void }) => (
     <div>
       flow stub
       <button type="button" onClick={() => onComplete?.()}>

@@ -1,15 +1,9 @@
 // @vitest-environment jsdom
-import { useMemo, useRef, useSyncExternalStore } from 'react'
+import { useRef } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import '@testing-library/jest-dom/vitest'
-import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
-import { intakeSteps } from '../questions'
-import { IntakeFlow } from '../flow'
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { GESTURE_HOLD_FALLBACK_MS, useGestureHold } from '../gestureHold'
-import { createMemoryModel, type MemoryModel, type ScenarioDraft } from '@store/memoryModel'
-import type { EngineClient } from '@store/engineClient'
-import { copy, slots } from '@ui/copy'
-import { DEV_SEEDS } from '@ui/devSeeds'
 
 /**
  * The h2 cure (`src/intake/gestureHold.ts`; the register's Tier 0 "On a screen taller than his laptop's,
@@ -17,7 +11,8 @@ import { DEV_SEEDS } from '@ui/devSeeds'
  * these pin the half it can see: what the face DRAWS between a press and its click. The press's blur
  * commits (the store moves at once); the content above the tapped control stays as it was until the
  * click has been delivered, then the commit's face lands. That the control then stays under a real
- * coordinate tap is the four `verify:fit` arms' job (`e2e/vertical-fit.spec.ts`).
+ * coordinate tap is the W drawer's `verify:fit` arms' job (`e2e/rc-screens.spec.ts`, RC13b); the hook's own arms are
+ * here, and the W face over it is `expensesGoalsSave.test.tsx`'s (the walk's W step arms left with the walk, Act 6 · RC14).
  *
  * The gesture is spelled out event by event, in a real browser's order: pointerdown → mousedown (which
  * blurs the focused figure — jsdom does not, so the blur is fired by hand) → pointerup → mouseup → click.
@@ -370,140 +365,5 @@ describe('useGestureHold — what a face showed at a press stands until that pre
     expect(shown()).toBe('x')
     rerender(<Swap value="y" flip />)
     expect(shown()).toBe('y')
-  })
-})
-
-// ── the W face in the walk (the panel's arms moved to the W drawer's test with RC18: expensesGoalsSave.test.tsx) ───────────────────────────────────────────────────────────────
-
-const nullClient: EngineClient = {
-  runningInWorker: true,
-  reset: () => {},
-  engine: {
-    ping: async () => 'pong' as const,
-    run: async () => ({ kind: 'calm-error', reason: 'unused' }) as const,
-    setLatestEpoch: async () => {},
-    runDateSearch: async () => ({ kind: 'date-search', outcome: { kind: 'cancelled' } }) as const,
-    runTwoArm: async () => ({ kind: 'calm-error', reason: 'unused' }) as const,
-    runSpendSolve: async () => ({ kind: 'calm-error', reason: 'unused' }) as const,
-    setLatestSpendEpoch: async () => {},
-    runSolve: async () => ({ kind: 'calm-error', reason: 'unused' }) as const,
-  },
-}
-
-function modelWith(draft: ScenarioDraft): MemoryModel {
-  const m = createMemoryModel({
-    client: nullClient,
-    builders: { buildSpineParams: () => null, buildDateInput: () => null },
-    mintSeed: () => 1,
-    startCalendarYear: 2026,
-  })
-  m.update(() => draft)
-  return m
-}
-
-const TAIL = new Set(['other-income', 'working-cost', 'working-ledger'])
-function Walk({ model }: { readonly model: MemoryModel }) {
-  const snap = useSyncExternalStore(model.subscribe, model.getSnapshot)
-  const steps = useMemo(() => {
-    const all = intakeSteps(snap.draft).filter((s) => TAIL.has(s.id))
-    return all.slice(all.findIndex((s) => s.id === 'working-cost'))
-  }, [snap.draft])
-  return <IntakeFlow steps={steps} model={model} />
-}
-
-const w = (m: MemoryModel) => m.getSnapshot().draft.workingYearCost
-const label = (root: HTMLElement, key: 'periodMonth' | 'periodYear') =>
-  within(root).getByRole('radio', { name: copy[key] }).closest('label')!
-
-/** `date`'s household, W entered at $84,000 a YEAR under FL (no income tax), the state answer since moved
- *  to PA — stale on the reading alone (a typed W never stales on the quote). The lens's repro draft. */
-const { workingYearCost: _none, ...dateNoW } = DEV_SEEDS.date
-const staleEnteredYearly: ScenarioDraft = {
-  ...dateNoW,
-  retirementState: 'PA',
-  workingYearCost: { kind: 'entered', amountReal: 84_000, entryPeriod: 'year', stateTaxReading: 'none' },
-}
-const STALE_NOTE = slots.workingCostStaleStateEntered('84,000')
-const KEEP = slots.workingCostKeepYearly('84,000')
-
-/** Type `digits` into the figure, then the FIRST half of a tap on `target`: the press, and the focus move
- *  its mousedown makes — onto a focusable target (the Keep door), else off the figure — whose blur is the
- *  figure's commit. Real focus moves, so `document.activeElement` reads as a browser's would. */
-function typeThenPress(scope: HTMLElement, digits: string, target: HTMLElement) {
-  const input = within(scope).getByLabelText(copy.workingCostAmountLabel)
-  act(() => input.focus())
-  fireEvent.change(input, { target: { value: digits } })
-  fireEvent.pointerDown(target)
-  fireEvent.mouseDown(target)
-  act(() => (target instanceof HTMLButtonElement ? target.focus() : input.blur()))
-  return input
-}
-
-/** The SECOND half: the release, the click it delivers, and the one task after it in which the hold lets go. */
-async function release(target: Element) {
-  fireEvent.pointerUp(target)
-  fireEvent.mouseUp(target)
-  fireEvent.click(target)
-  await letGo()
-}
-
-describe('the walk: a tap on "Each month" right after typing — the note above it stands until the click', () => {
-  it('the blur commits at once, the note the press saw stays drawn word for word, and the click moves the unit', async () => {
-    const m = modelWith(staleEnteredYearly)
-    render(<Walk model={m} />)
-    const month = label(document.body, 'periodMonth')
-    typeThenPress(document.body, '7000', month)
-    // The commit landed in the store: the figure is fresh, $7,000 a year …
-    expect(w(m)).toEqual({ kind: 'entered', amountReal: 7_000, entryPeriod: 'year', stateTaxReading: 'class-based' })
-    // … but nothing above the control moved: the note is still there, saying what it said at the press.
-    expect(screen.getByRole('note')).toHaveTextContent(STALE_NOTE)
-    expect(screen.getByRole('button', { name: KEEP })).toBeInTheDocument()
-    // Only the note is held: the field below it already shows the committed figure.
-    expect(screen.getByLabelText(copy.workingCostAmountLabel)).toHaveValue('7,000')
-    await release(month)
-    expect(screen.queryByRole('note')).toBeNull()
-    expect(w(m)).toEqual({ kind: 'entered', amountReal: 84_000, entryPeriod: 'month', stateTaxReading: 'class-based' })
-    expect(screen.getByRole('radio', { name: copy.periodMonth })).toBeChecked()
-  })
-
-  it('a keyboard leave holds nothing: the note goes the moment the figure commits', () => {
-    const m = modelWith(staleEnteredYearly)
-    render(<Walk model={m} />)
-    const input = screen.getByLabelText(copy.workingCostAmountLabel)
-    fireEvent.focus(input)
-    fireEvent.change(input, { target: { value: '7000' } })
-    fireEvent.blur(input)
-    expect(screen.queryByRole('note')).toBeNull()
-  })
-
-  it('a tap on "Keep $84,000 a year" right after typing keeps $84,000 — the figure the door names — and focus lands on the answer', async () => {
-    const m = modelWith(staleEnteredYearly)
-    render(<Walk model={m} />)
-    const keep = screen.getByRole('button', { name: KEEP })
-    const input = typeThenPress(document.body, '7000', keep)
-    expect(w(m)).toMatchObject({ amountReal: 7_000, entryPeriod: 'year' }) // the blur's commit
-    expect(screen.getByRole('button', { name: KEEP }), 'the door the press landed on is still there').toBe(keep)
-    await release(keep)
-    // Kept as it stood, re-stamped under the CURRENT reading (PA): fresh, so the note goes.
-    expect(w(m)).toEqual({ kind: 'entered', amountReal: 84_000, entryPeriod: 'year', stateTaxReading: 'class-based' })
-    expect(screen.queryByRole('note')).toBeNull()
-    expect(input).toHaveValue('84,000')
-    expect(document.activeElement, 'focus never falls to the page').toBe(
-      document.querySelector('input[type="radio"]:checked'),
-    )
-  })
-
-  it('clearing the figure and then tapping Keep keeps $84,000 a year and never asks its unit back', async () => {
-    const m = modelWith(staleEnteredYearly)
-    render(<Walk model={m} />)
-    const keep = screen.getByRole('button', { name: KEEP })
-    typeThenPress(document.body, '', keep)
-    expect(w(m), 'the walk clears W on a cleared figure').toBeUndefined()
-    await release(keep)
-    expect(w(m)).toEqual({ kind: 'entered', amountReal: 84_000, entryPeriod: 'year', stateTaxReading: 'class-based' })
-    expect(screen.getByRole('radio', { name: copy.periodYear })).toBeChecked()
-    expect(screen.queryByText(copy.periodConfirmPrompt), 'the door named its unit: no period question').toBeNull()
-    fireEvent.click(screen.getByRole('button', { name: copy.flowNext }))
-    expect(screen.getByRole('heading', { level: 2 }).textContent).toBe(copy.qWorkingLedgerHeading)
   })
 })

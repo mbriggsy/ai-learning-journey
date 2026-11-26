@@ -6,12 +6,19 @@ import type { WorkingYearHeldBackRaise, WorkingYearLedger, WorkingYearLedgerLate
 import type { ScenarioDraft } from '@store/memoryModel'
 import { copy, slots } from '@ui/copy'
 import { DEV_SEEDS } from '@ui/devSeeds'
-import { WorkingYearLedgerPicture, WorkingYearLedgerUnknown } from '../WorkingYearLedger'
-import { workingYearLedgerForRun } from '../intakeMap'
-import { confirmedWorkingYearCost } from '../workingYearQuote'
-import { formatMoney } from '../moneyFormat'
+import { workingYearLedgerForRun } from '@intake/intakeMap'
+import { confirmedWorkingYearCost } from '@intake/workingYearQuote'
+import { formatMoney } from '@intake/moneyFormat'
+import { ledgerPicture, ledgerUnknownLines } from '@intake/workingYearLedgerRows'
+import { LedgerPicture } from '../WorkingCostDrawer'
 
 /**
+ * Act 6 · RC14: the walk's `WorkingYearLedger.tsx` left with the walk; its arms moved here, onto the face the money
+ * picture now has, the Pre-retirement living expenses drawer's (`LedgerPicture`, over the same composer `ledgerPicture`),
+ * and its unknown face's arms onto `ledgerUnknownLines` (the drawer prints those lines as they are). Retired with the walk:
+ * the heading level the walk's host chose (the drawer's groups are h4 under its own h3) and the walk's pointer at its
+ * answer strip (the strip left setup; every host now echoes the facts).
+ *
  * The money picture's face (`docs/plans/features/working-year-pay-check-build-spec.md` R16, KTD12, U8) over
  * HAND-BUILT pictures — the component computes nothing, so every branch of its wording is reachable
  * without an engine run; the one real-seed arm proves it shows the producer's dollars as they are.
@@ -69,20 +76,20 @@ const withWindow = (ledger: Omit<WorkingYearLedger, 'workingYears'>): WorkingYea
   ],
 })
 
-const renderPicture = (ledger: Omit<WorkingYearLedger, 'workingYears'>, d: ScenarioDraft = draft(), headingLevel: 3 | 4 = 3, aged = false) =>
-  render(<WorkingYearLedgerPicture ledger={withWindow(ledger)} draft={d} headingLevel={headingLevel} aged={aged} />)
+const renderPicture = (ledger: Omit<WorkingYearLedger, 'workingYears'>, d: ScenarioDraft = draft(), aged = false) =>
+  render(<LedgerPicture picture={ledgerPicture(withWindow(ledger), d, aged)} />)
 
 /** The `<dd>` value beside a `<dt>` label. */
 const valueOf = (label: string) => {
   const dt = screen.getByText(label, { selector: 'dt' })
-  return dt.parentElement?.querySelector('.wy-row__value')?.textContent
+  return dt.parentElement?.querySelector('[data-ledger-value]')?.textContent
 }
 
 describe('the money picture — year 0 (R16)', () => {
   it('groups the lines under legends that each say "a year", every outflow with a minus sign, the bottom line with a word AND a sign', () => {
     renderPicture({ year0: year0(), laterYears: [] })
     for (const legend of [copy.workingLedgerComingIn, copy.workingLedgerGoingOut, copy.workingLedgerBottomLine]) {
-      expect(screen.getByRole('heading', { level: 3, name: legend })).toBeInTheDocument()
+      expect(screen.getByRole('heading', { level: 4, name: legend })).toBeInTheDocument()
       expect(legend).toMatch(/a year$/)
     }
     expect(valueOf(copy.workingLedgerPay)).toBe('$60,000')
@@ -107,14 +114,14 @@ describe('the money picture — year 0 (R16)', () => {
     renderPicture({ year0: year0({ bottomLine: 2_210, cash: 2_210, savingsTaxLine: false }), laterYears: [] })
     expect(valueOf(copy.workingLedgerLeftOver)).toBe('$2,210')
     const bottomRow = (): Element | null | undefined =>
-      screen.getByText(copy.workingLedgerLeftOver).closest('.wy-row')
+      screen.getByText(copy.workingLedgerLeftOver).closest('[data-ledger-row]')
     expect(bottomRow(), '[test setup] the Left over row').toBeTruthy()
-    expect(bottomRow()?.querySelectorAll('.wy-row__detail').length, 'no sentence under the Left over row').toBe(0)
+    expect(bottomRow()?.querySelectorAll('[data-ledger-detail]').length, 'no sentence under the Left over row').toBe(0)
     expect(screen.queryByText(copy.workingLedgerSavingsTax)).toBeNull()
     cleanup()
     renderPicture({ year0: year0({ bottomLine: 0, cash: 0 }), laterYears: [] })
     expect(valueOf(copy.workingLedgerLeftOver)).toBe('$0')
-    expect(bottomRow()?.querySelectorAll('.wy-row__detail').length).toBe(0)
+    expect(bottomRow()?.querySelectorAll('[data-ledger-detail]').length).toBe(0)
   })
 
   it('the Social Security row shows what is PAID and names what the test held back inside the row — never in the sum', () => {
@@ -127,7 +134,7 @@ describe('the money picture — year 0 (R16)', () => {
       laterYears: [],
     })
     expect(valueOf(copy.workingLedgerSocialSecurity)).toBe('$8,597')
-    const row = screen.getByText(copy.workingLedgerSocialSecurity, { selector: 'dt' }).parentElement!
+    const row = screen.getByText(copy.workingLedgerSocialSecurity, { selector: 'dt' }).closest<HTMLElement>('[data-ledger-row]')!
     expect(within(row).getByText(slots.workingLedgerSsHeldBack('9,763'))).toBeInTheDocument()
     expect(within(row).getByText(copy.workingLedgerHeldBackNote)).toBeInTheDocument()
   })
@@ -155,8 +162,8 @@ describe('the money picture — year 0 (R16)', () => {
     ],
   ] as const)('held back where the run credits some months none — %s — never claims the raise for them', (_name, heldBackRaise, lines) => {
     renderPicture({ year0: year0({ socialSecurityHeldBack: amt(2_760), heldBackRaise }), laterYears: [] })
-    const row = screen.getByText(copy.workingLedgerSocialSecurity, { selector: 'dt' }).parentElement!
-    const details = [...row.querySelectorAll('.wy-row__detail')].map((d) => d.textContent)
+    const row = screen.getByText(copy.workingLedgerSocialSecurity, { selector: 'dt' }).closest<HTMLElement>('[data-ledger-row]')!
+    const details = [...row.querySelectorAll('[data-ledger-detail]')].map((d) => d.textContent)
     expect(details).toEqual([slots.workingLedgerSsHeldBack('2,760'), ...lines])
     expect(details).not.toContain(copy.workingLedgerHeldBackNote)
   })
@@ -255,14 +262,8 @@ describe('the money picture — year 0 (R16)', () => {
     expect(group.textContent).not.toContain('−') // paid from savings, outside the sum: no outflow sign
   })
 
-  it('takes its heading level from the host: h3 in the step, h4 in the panel (ruling 13)', () => {
-    renderPicture({ year0: year0(), laterYears: [] }, draft(), 4)
-    expect(screen.getByRole('heading', { level: 4, name: copy.workingLedgerComingIn })).toBeInTheDocument()
-    expect(screen.queryByRole('heading', { level: 3 })).toBeNull()
-  })
-
   it('reads the plan clock: an aged plan says it shows its first year as entered', () => {
-    renderPicture({ year0: year0(), laterYears: [] }, draft(), 3, true)
+    renderPicture({ year0: year0(), laterYears: [] }, draft(), true)
     expect(screen.getByText(slots.workingLedgerLeadAged(2026))).toBeInTheDocument()
     cleanup()
     renderPicture({ year0: year0(), laterYears: [] })
@@ -339,7 +340,7 @@ describe('the money picture — later working years (KTD12)', () => {
         later(2, -800, [{ code: 'earningsTestStep' }, { code: 'stillShort' }]),
       ],
     })
-    const row = screen.getByText(slots.workingLedgerLaterYear(2028)).closest('div')!
+    const row = screen.getByText(slots.workingLedgerLaterYear(2028)).closest('[data-ledger-row]') as HTMLElement
     expect(within(row).getByText(copy.workingLedgerEventEarningsTest)).toBeInTheDocument()
     expect(within(row).getByText(slots.workingLedgerStillShortSince(2026))).toBeInTheDocument()
     cleanup()
@@ -448,13 +449,13 @@ describe('the money picture — the engine’s own figures (a real seed)', () =>
       const { d, ledger } = ledgerFor(c.state)
       expect(ledger.year0.taxOnOutsideIncomeState.dollars > 0, `${String(c.state)}: the run's state slice`).toBe(c.slice)
       renderPicture(ledger, d)
-      const row = screen.getByText(c.label, { selector: 'dt' }).parentElement!
+      const row = screen.getByText(c.label, { selector: 'dt' }).closest<HTMLElement>('[data-ledger-row]')!
       for (const line of inWLines) {
         if (line === c.inW) expect(within(row).getByText(line), `${String(c.state)}`).toBeInTheDocument()
         else expect(within(row).queryByText(line), `${String(c.state)}`).toBeNull()
       }
       // Said once: where the tax line shows, the W line carries no second reminder.
-      const costRow = screen.getByText(copy.workingLedgerCost, { selector: 'dt' }).parentElement!
+      const costRow = screen.getByText(copy.workingLedgerCost, { selector: 'dt' }).closest<HTMLElement>('[data-ledger-row]')!
       for (const line of [copy.workingLedgerCostStatePayInW, copy.workingLedgerCostStateInW]) {
         expect(within(costRow).queryByText(line), `${String(c.state)}: no second reminder`).toBeNull()
       }
@@ -496,7 +497,7 @@ describe('the money picture — the engine’s own figures (a real seed)', () =>
         expect(ledger.year0.goingOut.taxOnOutsideIncome.dollars, `${String(c.state)}: no tax line`).toBe(0)
         expect(screen.queryByText(copy.workingLedgerIncomeTaxFederal, { selector: 'dt' })).toBeNull()
       }
-      const costRow = screen.getByText(copy.workingLedgerCost, { selector: 'dt' }).parentElement!
+      const costRow = screen.getByText(copy.workingLedgerCost, { selector: 'dt' }).closest<HTMLElement>('[data-ledger-row]')!
       for (const line of [copy.workingLedgerCostStatePayInW, copy.workingLedgerCostStateInW]) {
         if (line === c.onCost) expect(within(costRow).getByText(line), String(c.state)).toBeInTheDocument()
         else expect(within(costRow).queryByText(line), String(c.state)).toBeNull()
@@ -517,7 +518,7 @@ describe('the money picture — the engine’s own figures (a real seed)', () =>
     if (ledger === 'unknown') throw new Error('[test setup] date must draw a picture')
     expect(ledger.year0.goingOut.taxOnOutsideIncome.dollars, 'the line shows').toBeGreaterThan(0)
     renderPicture(ledger, d)
-    const row = screen.getByText(copy.workingLedgerIncomeTaxFederal, { selector: 'dt' }).parentElement!
+    const row = screen.getByText(copy.workingLedgerIncomeTaxFederal, { selector: 'dt' }).closest<HTMLElement>('[data-ledger-row]')!
     expect(within(row).getByText(slots.workingLedgerIncomeTaxInvestment('30,000'))).toBeInTheDocument()
     cleanup()
     // A figure the draft holds for a member who no longer works never reaches the run, so the line
@@ -534,47 +535,21 @@ describe('the money picture — the engine’s own figures (a real seed)', () =>
 })
 
 describe('the money picture — the unknown face (U8)', () => {
-  it('names a fact this version cannot price in the strip’s own words, with no list and no zeros', () => {
-    const { container } = render(<WorkingYearLedgerUnknown draft={DEV_SEEDS.datesolo} echoStrip />)
-    // Nothing the household can add draws a picture: no "yet", and the strip's own closing line.
-    expect(screen.getByText(copy.workingLedgerUnknownLeadFinal)).toBeInTheDocument()
-    expect(screen.getByText(`${copy.answerCannotPrice} ${copy.employerCoverageUnpriced}`)).toBeInTheDocument()
-    expect(screen.getByText(copy.answerCannotPriceTail)).toBeInTheDocument()
-    expect(screen.queryByText(copy.workingLedgerUnknownSeeStrip)).toBeNull()
-    expect(container.querySelector('dl')).toBeNull()
+  it('names a fact this version cannot price in the missing facts’ own words (the drawer prints these lines, no list and no zeros)', () => {
+    const lines = ledgerUnknownLines(DEV_SEEDS.datesolo)
+    // Nothing the household can add draws a picture: no "yet", and the cannot-price block's own closing line.
+    expect(lines).toEqual([copy.workingLedgerUnknownLeadFinal, `${copy.answerCannotPrice} ${copy.employerCoverageUnpriced}`, copy.answerCannotPriceTail])
   })
 
   it('names facts still to enter apart from a refusal', () => {
-    const d = { ...DEV_SEEDS.date, annualSpendingReal: undefined }
-    render(<WorkingYearLedgerUnknown draft={d} echoStrip />)
+    const lines = ledgerUnknownLines({ ...DEV_SEEDS.date, annualSpendingReal: undefined })
     // Every blocker is one the household can still enter: the lead keeps its "yet".
-    expect(screen.getByText(copy.workingLedgerUnknownLead)).toBeInTheDocument()
-    expect(screen.getByText(`${copy.answerStillNeeded} ${copy.spendLabel}`, { exact: false })).toBeInTheDocument()
-    expect(screen.queryByText(copy.workingLedgerUnknownRefused)).toBeNull()
+    expect(lines[0]).toBe(copy.workingLedgerUnknownLead)
+    expect(lines.some((l) => l.startsWith(`${copy.answerStillNeeded} `) && l.includes(copy.spendLabel))).toBe(true)
+    expect(lines).not.toContain(copy.workingLedgerUnknownRefused)
   })
 
-  it('beside the strip (echoStrip false), points at it instead of printing its lines again — on both kinds of blocker', () => {
-    for (const [d, lead] of [
-      [DEV_SEEDS.datesolo, copy.workingLedgerUnknownLeadFinal],
-      [{ ...DEV_SEEDS.date, annualSpendingReal: undefined }, copy.workingLedgerUnknownLead],
-    ] as const) {
-      const { container } = render(<WorkingYearLedgerUnknown draft={d} echoStrip={false} />)
-      expect(screen.getByText(lead)).toBeInTheDocument()
-      expect(screen.getByText(copy.workingLedgerUnknownSeeStrip)).toBeInTheDocument()
-      expect(container.textContent).not.toContain(copy.answerCannotPrice)
-      expect(container.textContent).not.toContain(copy.answerStillNeeded)
-      expect(container.textContent).not.toContain(copy.answerCannotPriceTail)
-      cleanup()
-    }
-  })
-
-  it('with nothing missing (the engine refused the run), says so plainly — and points nowhere, from either host', () => {
-    for (const echoStrip of [true, false]) {
-      render(<WorkingYearLedgerUnknown draft={DEV_SEEDS.date} echoStrip={echoStrip} />)
-      expect(screen.getByText(copy.workingLedgerUnknownRefused)).toBeInTheDocument()
-      // The strip names nothing for a refused run, so there is nothing at the top to point at.
-      expect(screen.queryByText(copy.workingLedgerUnknownSeeStrip)).toBeNull()
-      cleanup()
-    }
+  it('with nothing missing (the engine refused the run), says so plainly', () => {
+    expect(ledgerUnknownLines(DEV_SEEDS.date)).toEqual([copy.workingLedgerUnknownLeadFinal, copy.workingLedgerUnknownRefused])
   })
 })

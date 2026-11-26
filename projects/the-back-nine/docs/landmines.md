@@ -1011,6 +1011,15 @@ chair; chair from a digest script, never the raw result, and expect the window t
 
 ## Claude Code, workflows and sessions
 
+- **(b9-3, 11-25) A teammate's idle notice reading `"idleReason":"interrupted"` is usually your own message landing
+  mid-turn, not a stop.** RC14's builder logged it at 01:03:25 the instant the lead's next message was injected
+  (its transcript: the `<teammate-message>` entry at 01:03:25.178), started a new request 100 ms later and kept
+  working; the lead read it as "cut off" and sent a needless "continue". Before nudging, read the teammate's
+  transcript (`<session>/subagents/agent-<name>-*.jsonl`) around the notice's timestamp. And batch rulings into one
+  message: four short ones crossed the builder's replies, each answering an older one.
+- **(b9-3, 11-25) A builder's held look run (`e2e/held/rc-look.spec.ts`) can be declined by the permission prompt in
+  its own seat** while the same command runs in the orchestrator's (RC14: declined for the builder, 6/6 for b9-3,
+  and Briggsy declined nothing he knows of). The builder rightly stops; the orchestrator runs the look itself, which 7.1 asks of it anyway.
 - **(b9-2, 11-25) A builder's report past about 1,500 words arrives cut off** in its idle notice ("result truncated"),
   twice in three Act 6 builds; asking for the rest costs a round trip. Brief each builder to send its report in at
   most two messages of about 1,200 words. A builder's own helper subagent can also report to the orchestrator instead

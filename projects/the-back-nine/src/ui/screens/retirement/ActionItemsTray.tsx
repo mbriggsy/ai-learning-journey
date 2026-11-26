@@ -9,6 +9,9 @@
  * Enter, so a press of Refresh or Apply that blurs a box reads the figure the blur committed (the presses read the
  * hook's refs, insights 036 and 149). Neither button is ever `disabled`: a disabled button takes no focus, so the box
  * would never blur and the typed figure would be lost; Apply is `aria-disabled` and its handler re-checks at the press.
+ * A box holding text it could not read (the kit marks it `data-typed-refused` and says why beneath it) stops both
+ * presses, as it stops a drawer's Save (Act 6 · RC14): its last good figure is not what it shows, so no what-if runs on
+ * it and Apply writes none of it.
  *
  * NOTHING MOVES UNDER A FINGER (insights 035, 149): each row's "Back to the plan" keeps its room when the row is not
  * pulled (invisible and inert), so a commit that pulls a row moves nothing below it.
@@ -156,6 +159,15 @@ export function ActionItemsTray(props: ActionItemsTrayProps) {
     return () => cancelAnimationFrame(raf)
   }, [focus, id])
 
+  /** Blur the box under focus (its commit, or its refusal, lands first), then whether any tray box holds text it could
+   *  not read: Refresh and Apply stop while one does, the box's own words saying why. */
+  const refusedBoxHeld = (): boolean => {
+    const tray = document.getElementById(id)
+    const active = document.activeElement
+    if (active instanceof HTMLElement && tray?.contains(active) === true) active.blur()
+    return tray?.querySelector('[data-typed-refused]') != null
+  }
+
   const set = whatIf.setLever
   const rows = (list: readonly TrayRowView[]) => list.map((row) => <Row key={`${row.id}|${whatIf.epoch}`} row={row} {...{ set, draft, anchor, wallCalendarYear, awaiting, onAwaiting, pending: whatIf.pending, onOpenLine: (l: WhatIfBudgetLineV6) => setLine({ open: true, editing: l }) }} />)
 
@@ -181,7 +193,13 @@ export function ActionItemsTray(props: ActionItemsTrayProps) {
             <Button variant="secondary" onClick={() => setEditOpen(true)}>
               {copy.trayEdit}
             </Button>
-            <Button variant="primary" onClick={whatIf.refresh} data-tray-refresh="">
+            <Button
+              variant="primary"
+              onClick={() => {
+                if (!refusedBoxHeld()) whatIf.refresh()
+              }}
+              data-tray-refresh=""
+            >
               {copy.trayRefresh}
             </Button>
           </>
@@ -193,6 +211,7 @@ export function ActionItemsTray(props: ActionItemsTrayProps) {
             aria-describedby={words !== null ? applyId : undefined}
             className="aria-disabled:cursor-not-allowed aria-disabled:opacity-50"
             onClick={() => {
+              if (refusedBoxHeld()) return
               const { words: w, applied } = whatIf.apply()
               setSaid({ words: w, applied, key: null })
               announce(w)

@@ -27,9 +27,11 @@ import {
   type WorkInvestField,
   type WorkInvestForm,
 } from './incomeFields'
-import { saveEdit } from './drawerSave'
+import { openCheck, saveEdit } from './drawerSave'
 import type { DrawerBodyProps } from './drawerProps'
 import { Fact } from './Fact'
+import { OutLink } from './OutLink'
+import { EXTERNAL_LINKS } from '@intake/links'
 import { ProfileDrawer } from './ProfileDrawer'
 import { useDrawerEdit } from './useDrawerBuffer'
 
@@ -75,9 +77,10 @@ export function SalaryDrawer({ index, model, open, readOnly, leaveAsk, onClose, 
   )
 }
 
-export function SocialSecurityDrawer({ index, model, open, readOnly, leaveAsk, onClose, onClosed, finalFocus }: DrawerBodyProps & { readonly index: 0 | 1 }) {
+export function SocialSecurityDrawer({ index, model, open, readOnly, leaveAsk, onClose, onClosed, finalFocus, checkAtOpen }: DrawerBodyProps & { readonly index: 0 | 1 }) {
   const [seed] = useState<SocialSecurityForm>(() => socialSecurityFormFrom(model.getSnapshot().draft, index))
-  const edit = useDrawerEdit<SocialSecurityForm, SocialSecurityField>(seed, open)
+  const [initial] = useState(() => (checkAtOpen === true ? openCheck(model.getSnapshot().draft, ownSocialSecurityField(index)) : undefined))
+  const edit = useDrawerEdit<SocialSecurityForm, SocialSecurityField>(seed, open, initial)
   const { form, check } = edit
   const draft = model.getSnapshot().draft
   const birthYear = draft.people[index].birthYear
@@ -130,6 +133,9 @@ export function SocialSecurityDrawer({ index, model, open, readOnly, leaveAsk, o
         </Fact>
       </DrawerFields>
       <p className="text-label text-stone-600">{copy.ssSpousalNote}</p>
+      <p className="text-label text-stone-600">
+        <OutLink href={EXTERNAL_LINKS.ssaMyAccount}>{copy.linkFindSsStatement}</OutLink>
+      </p>
     </ProfileDrawer>
   )
 }

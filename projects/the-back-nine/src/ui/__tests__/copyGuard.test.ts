@@ -336,13 +336,15 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
   //     require-hedge (a modal), which is a different gate and would mush the CTA. ---
   it('U9b: the budget AXIS copy promises no DIRECTION — the 2026-07-03 hawk veto, enforced (drift-pin)', () => {
     const DIRECTIONAL = /sooner|earlier|later|faster|safer|sharper|comes? forward/i
-    for (const k of ['budgetCta', 'budgetSheetTitle', 'budgetSheetIntro'] as const) {
+    // Act 6 · RC14: the walk's invite (`budgetCta`) and sheet title (`budgetSheetTitle`) left with the walk; the axis is
+    // asked in the Living expenses drawer, by its approach choice, its worksheet heading and the worksheet's intro.
+    for (const k of ['profileLivingApproachBudget', 'profileLivingBudgetHeading', 'budgetSheetIntro'] as const) {
       expect(copy[k], `${k}: "${copy[k]}" promises a direction the engine can invert`).not.toMatch(DIRECTIONAL)
     }
     // NON-VACUITY, two ways. (1) The axis must still be NAMED — silencing the copy is not a
     // pass, or the gate would reward deleting the strings it guards.
-    expect(copy.budgetCta, 'the axis survives: what could give').toContain('what could give')
-    expect(copy.budgetSheetTitle, 'the axis survives: must hold').toContain('must hold')
+    expect(copy.budgetSheetIntro, 'the axis survives: what could give').toContain('what could give')
+    expect(copy.budgetSheetIntro, 'the axis survives: has to hold').toContain('has to hold')
     expect(copy.budgetSheetIntro, 'the axis survives: each on its own terms').toContain('on its own terms')
     // (2) The regex must be able to BITE. `dateFloorInversionNote` is the engine's own
     // opposite-direction disclosure — it MUST match, proving this is a live net and not a
@@ -736,13 +738,9 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
   //     so they are NOT free-numeral scanned; the verdict voice still must hold. Record<keyof typeof
   //     slots, …> makes a new slot without a sample a COMPILE error (no silent no-op — burned/070). ---
   const SLOT_RENDER: Record<keyof typeof slots, string> = {
-    questionPosition: slots.questionPosition(3),
     ssClaimAge: slots.ssClaimAge(64),
     ssClaimWindow: slots.ssClaimWindow(2030, 2038),
     fraEcho: slots.fraEcho(803),
-    accountSummary: slots.accountSummary('401(k)', 'You', '120,000'),
-    accountsTotal: slots.accountsTotal('1,400,000'),
-    incomeSummary: slots.incomeSummary('Pension', 'You', '30,000'),
     incomeSurvivorNote: slots.incomeSurvivorNote('Your spouse', 'you', 0.5, true),
     bandClockAges: slots.bandClockAges(63, 61),
     bandClockTodayDesc: slots.bandClockTodayDesc(63, 61),
@@ -777,12 +775,12 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     budgetMedicalExceedsTotal: slots.budgetMedicalExceedsTotal('6,500', '5,000'),
     budgetRunningTotal: slots.budgetRunningTotal('70,000'),
     budgetTierSplit: slots.budgetTierSplit('36,000', '42,000'),
-    spendBudgetTotal: slots.spendBudgetTotal('78,000'),
     budgetRemoveLine: slots.budgetRemoveLine('Groceries'),
     stepDownNote: slots.stepDownNote(2030),
     oopHint: slots.oopHint('3,000', '3,400'),
     oopExceedsSpend: slots.oopExceedsSpend('6,500', '5,000'),
     factsMore: slots.factsMore(3),
+    missingFactOf: slots.missingFactOf('Birth year', 'your spouse'),
     verdictRoomClause: slots.verdictRoomClause('6,500'),
     verdictTrimClause: slots.verdictTrimClause('2,500'),
     verdictRoomLead: slots.verdictRoomLead('6,500'),
@@ -1183,6 +1181,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     confidenceRunOutWholePast: slots.confidenceRunOutWholePast(93, 92, 'about 12 in 100 futures', true),
     // Act 6 · RC13a, the Profile pages and drawers.
     profileBornIn: slots.profileBornIn(1960, 66),
+    setupStepTitle: slots.setupStepTitle(2, 'Pay and other income'),
     profileStoppedAt: slots.profileStoppedAt(65),
     profileStartsAt: slots.profileStartsAt(67, 2027),
     profilePaysFrom: slots.profilePaysFrom(67),
@@ -1605,6 +1604,9 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
         'stalenessLeftOverGateDoor',
         'employerCoverageHelp',
         'oopHelpWorking',
+        // The pay check's home since the walk left (Act 6 · RC13b, RC14): the drawer's and its Goals card's names.
+        'profileWorkingCostName',
+        'profileMoneyPictureName',
       ].includes(k),
   )
   const PAY_CHECK_SLOTS = (Object.keys(slots) as (keyof typeof slots)[]).filter(
@@ -1622,7 +1624,8 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
   it('the pay check’s enumeration is non-vacuous — its prefixes reach every new string', () => {
     expect(PAY_CHECK_KEYS.length, PAY_CHECK_KEYS.join(', ')).toBeGreaterThanOrEqual(60)
     expect(PAY_CHECK_SLOTS.length, PAY_CHECK_SLOTS.join(', ')).toBeGreaterThanOrEqual(40)
-    for (const named of ['qWorkingCostHeading', 'qWorkingLedgerHeading', 'errWorkingCostUnanswered', 'stalenessPayCheckNote'] as const) {
+    // The walk's two step headings left with the walk (Act 6 · RC14); the drawer's own names stand in for them.
+    for (const named of ['profileWorkingCostName', 'profileMoneyPictureName', 'errWorkingCostUnanswered', 'stalenessPayCheckNote'] as const) {
       expect(PAY_CHECK_KEYS).toContain(named)
     }
     for (const named of ['errWorkingCostStaleBelowQuote', 'errWorkingCostStaleKeep'] as const) {
@@ -2492,7 +2495,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
   // 2026-09-08 — THE rec* SCOPE CANARY. copyGuard's scopes are prefix ALLOWLISTS, so a NEW `rec*` key
   // lands in NEITHER scope silently — the hole that left the RecommendationViz aria sentence outside
   // require-hedge until it was renamed `recDeltaVizAria`. `/^rec(?!over)/` is the net: a bare `/^rec/`
-  // would sweep the 16 `recovery*`/`recover*` intake keys (copy.ts:970-980, :1026-1043), which are correctly
+  // would sweep the 16 `recovery*`/`recover*` intake keys (copy.ts:888-898, :944-961), which are correctly
   // unscoped. The two allowlists are SPLIT because the surfaces differ: an unscoped FLAT key rides only
   // the three universal gates (the `entries` loops at the top of this file — superlative and free-numeral
   // are verdict-scoped); an unscoped SLOT rides the four voice gates (survival-claim included) + catastrophe (the SLOT_RENDER loop

@@ -1,8 +1,8 @@
 /**
- * The intake walk's pure parts (`questions.tsx` renders the step bodies): the step sequence as step ids
- * (`intakeStepIds`, which `intakeSteps` maps to its bodies), the budgetless M > S fork, the governing budget's notes,
- * and the one write shape of each fact the walk and the AssumptionPanel share. Moved out of `questions.tsx` by Act
- * 6's RC0, unchanged; `intakeStepIds` is the sequence `intakeSteps` held inline.
+ * The intake walk's pure parts, which outlived it: the step sequence as step ids (`intakeStepIds`), each step's checked
+ * fields (`walkStepFields`), the budgetless M > S fork, the governing budget's notes, and the one write shape of each fact.
+ * Moved out of `questions.tsx` by Act 6's RC0; since RC14 deleted the walk, the first-run stepper places these step ids
+ * on its six steps (`src/ui/screens/setup/stepperView.ts`) and the Profile drawers write through these writers.
  */
 import { copy } from '@ui/copy'
 import type { ScenarioDraft } from '@store/memoryModel'
@@ -12,6 +12,7 @@ import { budgetYearZeroFullTotal } from '@budget/budgetToSpending'
 import { medicareExtrasTypical } from '@engine/constants/health'
 import { anyPre65OrUnknown, anyRetiredPre65WhileAnotherWorks, isDateRoute } from './intakeMap'
 import { medicalExceedsTotal } from './budgetChecks'
+import { accountField, personField, WORKING_COST_ANSWER_FIELD, WORKING_COST_FIELD, type FieldPath } from './sanity'
 
 /** The notes a governing budget's spending total carries, wherever it is shown (the spend step's governed face, the
  *  panel's governed row, the workbench's facts page): the year-0 figure is an anchor, not every year's spending, when
@@ -73,7 +74,7 @@ export function writeMedicareExtras(
   return { ...d, medicareExtrasByPerson: next }
 }
 
-/** The guided walk's steps, by id (`intakeSteps`, `questions.tsx`, maps each to its body). Moved here from the deleted
+/** The guided walk's steps, by id (the first-run stepper places each on one of its six steps, `stepperView.ts`). Moved here from the deleted
  *  facts page's registry by Act 6 · RC13b: the walk's own sequence is its one home. */
 export type StepSectionId =
   | 'names'
@@ -99,8 +100,8 @@ const anyNearMedicare = (d: ScenarioDraft): boolean =>
 /** The full intake sequence for the current draft state, as the walk's step ids: the household
  *  preamble (spend + ACA inputs BEFORE the loop — first-acceptance
  *  reachability), then the variable-length account loop, then the opt-in
- *  other-income loop, and — on the date route — the pay check's two steps. `intakeSteps`
- *  (`questions.tsx`) maps each id to its step body, so the order has this one home. */
+ *  other-income loop, and — on the date route — the pay check's two steps. The first-run stepper
+ *  (`stepperView.ts`) places each id on its step, so the order has this one home. */
 export function intakeStepIds(draft: ScenarioDraft): readonly StepSectionId[] {
   // "Anyone still working" is the date route's own predicate (`isDateRoute`), read here for every
   // working-only step — one predicate, never a private copy of it (insight 081).
@@ -109,7 +110,7 @@ export function intakeStepIds(draft: ScenarioDraft): readonly StepSectionId[] {
   if (working) steps.push('income')
   // The retirement-state step lands UNCONDITIONALLY, right BEFORE spend — the placement is
   // load-bearing (S5's spendHelp branches on the answered state; a step after spend would leave
-  // spendHelp generic). Its heading follows the route (`intakeSteps` picks the body).
+  // spendHelp generic).
   steps.push('social-security', 'retirement-state', 'spend')
   if (anyPre65OrUnknown(draft)) steps.push('health-quote')
   // Straight after the quote it qualifies: the quote says what pre-65 coverage COSTS, this says
@@ -127,6 +128,41 @@ export function intakeStepIds(draft: ScenarioDraft): readonly StepSectionId[] {
   // `onComplete()`. No draft gate on either, so the count never moves while the household answers.
   if (working) steps.push('working-cost', 'working-ledger')
   return steps
+}
+
+/** THE FIELDS EACH WALK STEP'S CONTINUE TOUCHED AND CHECKED, the walk's own lists (each step body's `fields`, moved here
+ *  from the deleted `questions.tsx` by Act 6 · RC14, unchanged): the first-run stepper's Next runs the walk's Continue
+ *  check over them (`continueCheck`, `stepChecks.ts`). A step that gated nothing lists none: its facts are optional or
+ *  required-but-named (the missing facts), never a wall. Exhaustive over the step ids, so a new step must say. */
+export function walkStepFields(d: ScenarioDraft, id: StepSectionId): readonly FieldPath[] {
+  switch (id) {
+    case 'names':
+      return [personField(0, 'birthYear'), personField(1, 'birthYear')]
+    case 'work':
+      return [personField(0, 'retirementAge'), personField(1, 'retirementAge')]
+    case 'social-security':
+      // The benefit's 12× ceiling gates beside the claim window.
+      return [personField(0, 'pia'), personField(1, 'pia'), personField(0, 'socialSecurityClaimAge'), personField(1, 'socialSecurityClaimAge')]
+    case 'spend':
+      return ['annualSpendingReal']
+    case 'medicare-extras':
+      return ['medicareExtrasByPerson.0.monthly', 'medicareExtrasByPerson.1.monthly']
+    case 'accounts':
+      return d.enteredAccounts.flatMap((_, i) => [accountField(i, 'annualContribution'), accountField(i, 'employerMatchAnnual')])
+    case 'working-cost':
+      // The pay check's W (KTD3): its own gate, required through this step alone.
+      return [WORKING_COST_FIELD, WORKING_COST_ANSWER_FIELD]
+    case 'income':
+    case 'retirement-state':
+    case 'health-quote':
+    case 'employer-coverage':
+    case 'oop-medical':
+    case 'working-income':
+    case 'irmaa-seed':
+    case 'other-income':
+    case 'working-ledger':
+      return []
+  }
 }
 
 // ── The walk's remaining writes, moved out of `questions.tsx` unchanged by Act 6 · RC13b, so the walk's step bodies and

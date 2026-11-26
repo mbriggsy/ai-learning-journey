@@ -92,10 +92,10 @@ vi.mock('../BackupStep', () => ({
 // Props-echo for the intake phase (the bogus-seed provenance pin + the completed-intake
 // period-disarm block below) — the hydrate tests never mount it (they land on the Result
 // phase). The complete-stub button drives IntakeApp's REAL `complete()` (the terminal-advance
-// callback); the prop→behavior link (periodConfirmed ⇒ the spend-step advance sails through
-// the real rule) is pinned with the REAL IntakeFlow in src/intake/__tests__/flow.test.tsx.
-vi.mock('@intake/flow', () => ({
-  IntakeFlow: ({
+// callback); the prop→behavior link (periodConfirmed ⇒ the Living drawer's period gate asks nothing) is pinned with the
+// REAL Stepper in src/ui/screens/setup/__tests__/stepper.test.tsx (Act 6 · RC14: the stepper replaced the walk's IntakeFlow).
+vi.mock('../screens/setup/Stepper', () => ({
+  Stepper: ({
     periodConfirmed = false,
     onComplete,
   }: {

@@ -65,9 +65,9 @@ const CSS_INITIAL_FONT_PX = 16
  * it reds here and has to be justified by deleting the entry deliberately.
  */
 const REQUIRED_MIRROR_FILES = [
-  'src/intake/budget.css',
-  'src/intake/sheetShell.css',
   'src/ui/styles/app.css',
+  // `budget.css` and `sheetShell.css` left this list at RC14 with the walk (the budget builder, their last importer); the
+  // Living expenses drawer is the kit's, which reads the tiers through its `wide:` and `laptop:` variants.
   // `controls.css` left this list at RC18 with the assumption panel (its last importer, `controlSheet.tsx`, went with it).
   // `recommendation.css` and `result.css` left this list at RC8 with the interim Tax Strategies tab (its old answer frame
   // and recommendation surface); the clone's Tax Strategies page reads the tiers through the kit's `laptop:` variant.
@@ -206,7 +206,8 @@ describe('--bp-laptop source-bind', () => {
       `[bp-laptop] the sweep of src/**/*.{css,ts,tsx} + e2e/**/*.ts + scripts/**/*.ts found NO rem ` +
         `width breakpoint at all — the pattern or the walk broke, and every assertion below would ` +
         `pass vacuously.`,
-    ).toBeGreaterThan(10)
+      // 9 at Act 6 · RC14, after the walk's budget sheets left (11 before); the old sheets' mirrors keep going until RC21.
+    ).toBeGreaterThan(5)
   })
 
   it.each(REQUIRED_MIRROR_FILES)('%s still carries a --bp-laptop mirror', (file) => {

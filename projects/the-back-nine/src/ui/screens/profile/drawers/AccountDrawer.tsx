@@ -7,7 +7,7 @@
  * refusal on a field this facet doesn't show (a kind changed on Net Worth that puts the deposits over the new kind's
  * limit) is named in the drawer's line at the top. Delete (Net Worth only) removes the account.
  */
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import type { AccountKind } from '@shared/model'
 import { ACCOUNT_KINDS } from '@shared/model'
 import { kindLabel } from '@intake/accountKinds'
@@ -19,7 +19,7 @@ import { tablePerson } from '../../../workbench/tableRun'
 import { ProfileIcon } from '../profileIcons'
 import { accountCardName, limitLines } from '../profileView'
 import { accountFormFromDraft, buildAccountEdit, deleteAccount, FACET_FIELDS, knownFund, ownAccountField, type AccountDrawerForm, type AccountFacet, type AccountField } from './accountFields'
-import { commitEdit, saveEdit } from './drawerSave'
+import { commitEdit, openCheck, saveEdit } from './drawerSave'
 import type { DrawerBodyProps } from './drawerProps'
 import { Fact } from './Fact'
 import { ProfileDrawer } from './ProfileDrawer'
@@ -46,13 +46,35 @@ const FIELD_LABEL: Readonly<Record<AccountField, string>> = {
   hsaEmployer: copy.accountHsaEmployerLabel,
 }
 
-/** Three legs (stocks, bonds, cash) as typed, the walk's allocation entry's three boxes; a typed split is checked on Save. */
-function LegsFields({ legs, onLegs, readOnly, error, legend, help }: { readonly legs: Legs; readonly onLegs: (l: Legs) => void; readonly readOnly: boolean; readonly error?: string; readonly legend: string; readonly help?: string }) {
+/** Three legs (stocks, bonds, cash) as typed, the walk's allocation entry's three boxes; a typed split is checked on Save.
+ *  A refused split is one line under the three, and each box carries it (`aria-invalid`, `aria-describedby`: the walk's
+ *  allocation entry tied its sum error to every leg); the first keystroke in any leg forgives it (`onEdit`, Act 6 · RC14). */
+function LegsFields({
+  legs,
+  onLegs,
+  onEdit,
+  readOnly,
+  error,
+  legend,
+  help,
+}: {
+  readonly legs: Legs
+  readonly onLegs: (l: Legs) => void
+  readonly onEdit: () => void
+  readonly readOnly: boolean
+  readonly error?: string
+  readonly legend: string
+  readonly help?: string
+}) {
+  const errorId = useId()
   const leg = (k: keyof Legs, label: string) => (
     <TextInput
       label={label}
       value={legs[k] === '' ? undefined : legs[k]}
       readOnly={readOnly}
+      invalid={error !== undefined}
+      {...(error !== undefined ? { describedByIds: errorId } : {})}
+      onEdit={onEdit}
       onCommit={(v) => onLegs({ ...legs, [k]: v ?? '' })}
       className="min-w-0"
     />
@@ -67,7 +89,7 @@ function LegsFields({ legs, onLegs, readOnly, error, legend, help }: { readonly 
         {leg('cash', copy.classifierCashPct)}
       </div>
       {error !== undefined ? (
-        <p role="alert" className="text-label text-stone-900">
+        <p id={errorId} role="alert" className="text-label text-stone-900">
           {error}
         </p>
       ) : null}
@@ -84,12 +106,16 @@ export function AccountDrawer({
   onClose,
   onClosed,
   finalFocus,
-}: DrawerBodyProps & { readonly at: { readonly index: number; readonly facet: Exclude<AccountFacet, 'all'> } | { readonly kind: AccountKind } }) {
+  checkAtOpen,
+}: DrawerBodyProps & { readonly at: { readonly index: number; readonly facet: Exclude<AccountFacet, 'all'> } | { readonly kind: AccountKind; readonly ownerIndex?: 0 | 1 } }) {
   const [opened] = useState(() => model.getSnapshot().draft)
-  const [seed] = useState<AccountDrawerForm>(() => accountFormFromDraft(opened, 'index' in at ? { index: at.index } : { kind: at.kind, ownerIndex: firstWorking(opened) }))
+  const [seed] = useState<AccountDrawerForm>(() =>
+    accountFormFromDraft(opened, 'index' in at ? { index: at.index } : { kind: at.kind, ownerIndex: at.ownerIndex ?? firstWorking(opened) }),
+  )
   const index = 'index' in at ? at.index : ('new' as const)
   const facet: AccountFacet = 'index' in at ? at.facet : 'all'
-  const edit = useDrawerEdit<AccountDrawerForm, AccountField>(seed, open)
+  const [initial] = useState(() => (checkAtOpen === true && index !== 'new' ? openCheck(opened, ownAccountField(index)) : undefined))
+  const edit = useDrawerEdit<AccountDrawerForm, AccountField>(seed, open, initial)
   const { form, check, set } = edit
   const shows = (k: AccountField) => FACET_FIELDS[facet].includes(k)
   const err = (k: AccountField) => (check.fields[k] !== undefined ? { error: check.fields[k] } : {})
@@ -154,6 +180,7 @@ export function AccountDrawer({
               value={kind ?? null}
               placeholder={copy.profileChoose}
               disabled={readOnly}
+              required
               {...err('kind')}
               onValueChange={(k) => set('kind', { kind: k })}
             />
@@ -201,13 +228,14 @@ export function AccountDrawer({
             ) : null}
             {form.mixHow === 'hand' ? (
               <Fact stamp="account.manualBlend">
-              <LegsFields legs={form.legs} onLegs={(legs) => set('mix', { legs })} readOnly={readOnly} legend={copy.classifierLegend} {...err('mix')} />
+              <LegsFields legs={form.legs} onLegs={(legs) => set('mix', { legs })} onEdit={() => set('mix', {})} readOnly={readOnly} legend={copy.classifierLegend} {...err('mix')} />
               </Fact>
             ) : form.ticker.trim() !== '' && fund === undefined ? (
               <Fact stamp="tickerClassifications">
               <LegsFields
                 legs={form.tickerLegs}
                 onLegs={(tickerLegs) => set('tickerMix', { tickerLegs })}
+                onEdit={() => set('tickerMix', {})}
                 readOnly={readOnly}
                 legend={copy.profileTickerUnknownLegend}
                 help={copy.profileTickerUnknownHelp}

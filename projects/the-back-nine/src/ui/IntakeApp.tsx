@@ -1,8 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
-import { IntakeFlow } from '@intake/flow'
-import { intakeSteps } from '@intake/questions'
-import { AnswerStrip } from '@intake/AnswerStrip'
-import { isDateRoute, missingRequiredFacts } from '@intake/intakeMap'
+import { isDateRoute } from '@intake/intakeMap'
 import { validateDraft, type FieldPath } from '@intake/sanity'
 import { subscribeUnsavedBuffers, unsavedBuffersHeld } from '@intake/unsavedBuffer'
 import { isWorkingYearCostStale } from '@intake/workingYearQuote'
@@ -37,6 +34,7 @@ import {
 } from './resultSave'
 import type { ResultSaveProp } from './saveAnnouncer'
 import { ShellSlot } from './shell/ShellSlot'
+import { Stepper } from './screens/setup/Stepper'
 import type { KeptEdit, KeptWriteOutcome } from './screens/retirement/planListView'
 import { LANDING, parseHash, routeEquals, routeHash, type Route } from './shell/routes'
 import { describeSaveFailure } from './unlockCopy'
@@ -107,18 +105,18 @@ export interface RecommendationSaveTicket {
  * still module-level, still outside any render path, still StrictMode-proof
  * (contract #1a); it simply lives in the lazy chunk because its builders do.
  *
- * THE TWO PHASES (D2). During `intake` the quiet provisional AnswerStrip
- * co-exists above the questions (the question stays the hero). The terminal
- * advance fires the FINAL-tier recompute AND flips to `result` — the elevated
- * state-adaptive magic moment (FuckOffDate / ConfidenceStatement). `review`
- * returns to intake with every answer preserved (the draft lives in `appModel`;
- * nothing is persisted — U8 owns Save). Re-entering intake restarts the step
- * sequence at the first question; the data is intact, only the cursor resets.
+ * THE PHASES. `intake` is the first-run stepper (Act 6 · RC14, in place of the
+ * walk and its provisional answer strip: setup shows no answer). Its Complete
+ * runs the reveal (provisional, then final) and lands on the home, the
+ * `workspace` phase (RC4). Settings' re-walk and the re-entry gate's update
+ * return to the stepper with every answer preserved (the draft lives in
+ * `appModel`; nothing is persisted until Save); it opens at its first step.
  */
 export default function IntakeApp({
   seed,
   hydrateFromVault = false,
   readOnly = false,
+  onCancelNewPlan,
 }: {
   seed?: string | null
   /** Decrypt-on-return: after a successful unlock, hydrate the result from the session's decrypted
@@ -128,6 +126,8 @@ export default function IntakeApp({
    *  banner is the disclosure; the result surface must derive NO save CTA (a save can't land in this
    *  tab — session.save would refuse), so this is threaded into deriveResultSave. */
   readOnly?: boolean
+  /** Act 6 · RC14: "Start a new plan" dismissed before it began (its names drawer's Cancel): back to the cold start. */
+  onCancelNewPlan?: () => void
 }) {
   // Act 6 · RC4 — the shell is the home: setup's end, a reopened vault and every dev seed land in the
   // `workspace` phase on Snapshot. The old answer page's `result` phase is gone; the save and backup
@@ -182,7 +182,7 @@ export default function IntakeApp({
   const [devSeedApplied, setDevSeedApplied] = useState(false)
   // THE COMPLETED-INTAKE PERIOD PROVENANCE (the council-ratified NARROW disarm, F10 carry-in
   // 2026-07-08 — explicitly NOT a lift of the flow's touched state). `touched` is
-  // IntakeFlow-LOCAL and the flow UNMOUNTS on the phase flip to 'result', so a Review remount
+  // the stepper's own (the walk's IntakeFlow's until RC14) and it UNMOUNTS on Complete, so a re-walk remount
   // starts it empty — an explicit period answer given THIS session cannot survive as a touched
   // entry (the same channel gap sanity.ts's SanityProvenance documents for the vault
   // round-trip), and the force-confirm was re-firing on every post-completion spend-step
@@ -199,6 +199,9 @@ export default function IntakeApp({
   // that household). Mount-lifetime like devSeedApplied; never persisted (the vault round-trip
   // carries its own provenance via hydrateFromVault).
   const [periodAnswerProven, setPeriodAnswerProven] = useState(false)
+  // Act 6 · RC14: a brand-new plan (no vault, no dev seed) opens the stepper on "Start a new plan"'s names, once; its
+  // Complete (and any later re-walk) never asks them again.
+  const [newPlan, setNewPlan] = useState(() => !hydrateFromVault && seed == null)
 
   // ── U17 §S5 — THE RECOMMENDATION SAVE GESTURE'S OWN STATE ──────────────────────────────────
   // Five values, none of which the plan rail's machine can carry: `resultSave.ts` describes the
@@ -258,8 +261,6 @@ export default function IntakeApp({
   persistRef.current = persist
 
   const snapshot = useSyncExternalStore(appModel.subscribe, appModel.getSnapshot)
-  const steps = useMemo(() => intakeSteps(snapshot.draft), [snapshot.draft])
-  const missing = useMemo(() => missingRequiredFacts(snapshot.draft), [snapshot.draft])
   // The Save beat appears only when the draft is genuinely persistable (an indeterminate answer
   // can reach the result screen — the gate, not the screen, decides saveability).
   const saveReady = useMemo(() => scenarioFromDraft(snapshot.draft), [snapshot.draft])
@@ -269,7 +270,7 @@ export default function IntakeApp({
   // browser's own beforeunload dialog (ui/unloadGuard.ts — which also HOLDS the PWA update-apply
   // gate for the same window, so "Refresh now" refuses instead of racing the dialog) and writes
   // nothing. It arms on "would a reload lose typed work?", read from TWO derived operands and never
-  // a touched set (IntakeFlow's `touched` is a VALIDATION set marked on every attempt-to-advance
+  // a touched set (the walk's `touched`, the stepper's session flag since RC14, is a VALIDATION set marked on every attempt-to-advance
   // and it dies on the flip to 'result', where the biggest loss window — a complete, never-saved
   // household — lives):
   //  · the DRAFT — resultSave.ts `unsavedWorkPending`, disk-derived: with no vault, "has the draft
@@ -565,7 +566,6 @@ export default function IntakeApp({
    *  superseded entry is simply not this draft's, so it cannot render. */
   const recSaveRefusalStanding: RecommendationSaveRefusal | null =
     recSaveRefusal !== null && recSaveRefusal.draft === snapshot.draft ? recSaveRefusal.reason : null
-  const retry = useCallback(() => void appModel.recompute(), [])
   // The reveal cadence, ONE seam (ultramode 2026-07-09 — it was open-coded at three sites):
   // reveal the magic moment on the FAST provisional tier, then sharpen to the final IN
   // PLACE — never block the reveal on the final-tier sweep (16k paths × candidates ≈ a
@@ -1208,12 +1208,18 @@ export default function IntakeApp({
     )
   }
 
+  // Act 6 · RC14: the `intake` phase is the first-run stepper (the walk is deleted). A fresh plan (no vault, no dev seed)
+  // opens on "Start a new plan"'s names; a re-walk (Settings, the re-entry gate's update) opens on its first step.
   return (
-    <IntakeFlow
-      steps={steps}
+    <Stepper
       model={appModel}
-      onComplete={complete}
-      answerSlot={<AnswerStrip snapshot={snapshot} missing={missing} onRetry={retry} />}
+      onComplete={() => {
+        setNewPlan(false)
+        void complete()
+      }}
+      askNames={newPlan}
+      notSaved={persist.kind === 'unsaved'}
+      {...(onCancelNewPlan !== undefined ? { onCancelNewPlan } : {})}
       // Provenance: a vault-decrypted (or genuinely APPLIED dev-seed) draft answered the
       // spend period before it could ever be saved, and a completed intake whose draft trips
       // the gate proved the explicit answer on the way through (periodAnswerProven above) —

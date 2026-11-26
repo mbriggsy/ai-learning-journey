@@ -223,6 +223,7 @@ export function OtherIncomeDrawer({
                 value={form.executedAfter2018 === undefined ? null : form.executedAfter2018 ? 'post' : 'pre'}
                 placeholder={copy.profileChoose}
                 disabled={readOnly}
+                required
                 {...err('alimonyDate')}
                 onValueChange={(v) => set('alimonyDate', { executedAfter2018: v === 'post' })}
               />
@@ -255,6 +256,7 @@ export function OtherIncomeDrawer({
                 value={form.annuityQualified === undefined ? null : form.annuityQualified ? 'qualified' : 'nonqual'}
                 placeholder={copy.profileChoose}
                 disabled={readOnly}
+                required
                 {...err('annuityKind')}
                 onValueChange={(v) => set('annuityKind', { annuityQualified: v === 'qualified' })}
               />

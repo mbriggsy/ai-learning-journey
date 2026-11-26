@@ -165,3 +165,20 @@ describe('read-only and Delete', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
   })
 })
+
+describe('the widow’s number (R40), on the Income card that shows the stream', () => {
+  it('a pension with a survivor share reads as what the other one keeps, in words, never a raw share (Act 6 · RC14 gave it this home)', () => {
+    const start = {
+      ...DEV_SEEDS.retired,
+      people: [{ ...DEV_SEEDS.retired.people[0], name: 'Alex' }, { ...DEV_SEEDS.retired.people[1], name: 'Sam' }] as typeof DEV_SEEDS.retired.people,
+      incomeStreams: [{ ownerIndex: 1 as const, type: 'pension' as const, annualRealToday: 18_000, startAge: 60, colaMode: 'real-flat' as const, survivorPct: 0.5 }],
+    }
+    const { model } = profileStore(start)
+    render(<Host model={model} screen="profile-income" />)
+    const pension = card('income-0')
+    // Typed by hand from the slot's own words (`slots.incomeSurvivorNote`): Alex keeps half of Sam's pension.
+    expect(pension).toHaveTextContent('Alex would keep')
+    expect(pension).toHaveTextContent('50%')
+    expect(pension.textContent).not.toContain('0.5')
+  })
+})

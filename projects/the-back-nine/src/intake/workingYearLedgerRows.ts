@@ -320,21 +320,18 @@ export function ledgerPicture(ledger: WorkingYearLedger, draft: ScenarioDraft, a
   }
 }
 
-/** The `'unknown'` face's lines (U8): no `<dl>` and no zeros — one calm line, then what stands in the way in the answer
- *  strip's own words (`missingFactLines`), or a pointer to the strip where it sits on the same screen (`echoStrip`
- *  false), or — with nothing missing — a plain "can't work it out" (the engine refused the run). The lead says "yet" only
- *  where every blocker is one the household can still enter. */
-export function ledgerUnknownLines(draft: ScenarioDraft, echoStrip: boolean): readonly string[] {
+/** The `'unknown'` face's lines (U8): no `<dl>` and no zeros — one calm line, then what stands in the way in the
+ *  missing facts' own words (`missingFactLines`), or — with nothing missing — a plain "can't work it out" (the engine
+ *  refused the run). The lead says "yet" only where every blocker is one the household can still enter. (The walk's face
+ *  pointed at its answer strip instead; both left with Act 6 · RC14, and every host now echoes the facts.) */
+export function ledgerUnknownLines(draft: ScenarioDraft): readonly string[] {
   const missing = missingRequiredFacts(draft)
   const { stillNeeded, cannotPrice } = missingFactLines(missing)
   const answerable = stillNeeded !== null && cannotPrice === null
   return [
     answerable ? copy.workingLedgerUnknownLead : copy.workingLedgerUnknownLeadFinal,
-    ...(echoStrip
-      ? [...(stillNeeded !== null ? [stillNeeded] : []), ...(cannotPrice !== null ? [cannotPrice, copy.answerCannotPriceTail] : [])]
-      : missing.length > 0
-        ? [copy.workingLedgerUnknownSeeStrip]
-        : []),
+    ...(stillNeeded !== null ? [stillNeeded] : []),
+    ...(cannotPrice !== null ? [cannotPrice, copy.answerCannotPriceTail] : []),
     ...(missing.length === 0 ? [copy.workingLedgerUnknownRefused] : []),
   ]
 }

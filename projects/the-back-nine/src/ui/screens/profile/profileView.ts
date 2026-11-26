@@ -28,7 +28,7 @@ import { laterLines } from '@intake/workingYearLines'
 import { laterRow, ledgerUnknownLines } from '@intake/workingYearLedgerRows'
 import { formatPercent } from '@intake/moneyFormat'
 import { leftOverLineKey } from '../../assumptionRegistry'
-import { incomeTypeLabel } from '@intake/otherIncome'
+import { incomeTypeLabel, survivorNoteFor } from '@intake/otherIncome'
 import { annualAdditionsCeilingFor, contributionCeilingFor, isEmployerPlanKind } from '@intake/sanity'
 import { findBlendRow } from '@engine/reference/tickerBlend'
 import type { CopyKey } from '../../copy'
@@ -49,12 +49,14 @@ export type DrawerTarget =
   | { readonly kind: 'income'; readonly index: number }
   | { readonly kind: 'new-income'; readonly type: IncomeType }
   | { readonly kind: 'account'; readonly index: number; readonly facet: Exclude<AccountFacet, 'all'> }
-  | { readonly kind: 'new-account'; readonly accountKind: AccountKind }
+  /** A new account; `ownerIndex` names its first owner (the first-run stepper's pre-made card for a working person). */
+  | { readonly kind: 'new-account'; readonly accountKind: AccountKind; readonly ownerIndex?: 0 | 1 }
   /** Expenses (RC13b): the spending figure or the budget worksheet, with the survivor's share. */
   | { readonly kind: 'living' }
   | { readonly kind: 'medical' }
-  /** The pay check's W, with the money picture and the left-over question inside (a working household's). */
-  | { readonly kind: 'working-cost' }
+  /** The pay check's W, with the money picture and the left-over question inside (a working household's); `costOnly`, the
+   *  W question alone (the first-run stepper's Expenses card: the picture comes last, from Goals). */
+  | { readonly kind: 'working-cost'; readonly costOnly?: boolean }
   /** Goals (RC13b): the marketplace quote and who covers a retired member while the other works; Medicare. */
   | { readonly kind: 'health' }
   | { readonly kind: 'medicare' }
@@ -270,6 +272,9 @@ export function incomeView(d: ScenarioDraft, readOnly: boolean): CardsPageView {
         { label: copy.profileRowEachYear, value: dollars(s.annualRealToday) },
         { label: copy.profileRowPays, value: paysValue(d, s) },
       ],
+      // The widow's number in plain words, never a raw survivor share (R40): what the other keeps if the owner dies.
+      // The walk's other-income list printed it under each stream; Act 6 · RC14 deleted that list and gave it this home.
+      note: survivorNoteFor(d, s),
       target: { kind: 'income', index },
     })
   })
@@ -450,7 +455,7 @@ function moneyPictureCard(d: ScenarioDraft): CardView {
   const base = { id: 'money-picture', kind: copy.profileKindMoneyPicture, icon: 'money-picture', name: copy.profileMoneyPictureName, target: { kind: 'working-cost' } } as const
   if (d.workingYearCost === undefined) return { ...base, rows: [], note: copy.profileMoneyPictureNoW }
   const ledger = workingYearLedgerForRun(d)
-  if (ledger === 'unknown') return { ...base, rows: [], note: ledgerUnknownLines(d, true).join(' ') }
+  if (ledger === 'unknown') return { ...base, rows: [], note: ledgerUnknownLines(d).join(' ') }
   const y0 = ledger.year0
   const rows = [
     {

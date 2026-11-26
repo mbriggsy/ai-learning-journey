@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { expect, type Page } from '@playwright/test'
-import { FINAL_TIER_MS, FLOOR, PHONE, PHONE_DPR, REAL, REAL_DPR, SETTLED_RESULT, armRefiguringWatch, expectRefiguringSeen, gotoSeedFinal, gotoVaultFinal, pinPlantDay, pinnedDay, pinnedYear, refiguringLog, settleLayout, test } from './reviewSurface'
+import { FINAL_TIER_MS, FLOOR, PHONE, PHONE_DPR, REAL, REAL_DPR, SETTLED_RESULT, armRefiguringWatch, expectRefiguringSeen, gotoSeedFinal, gotoVaultFinal, pinPlantDay, pinnedDay, pinnedYear, refiguringLog, rewalkSeedTo, settleLayout, test } from './reviewSurface'
 import { copy, slots } from '../src/ui/copy'
 import { navModules } from '../src/ui/shell/routes'
 import { ENGINE_PRICING_LEDGER } from '../src/engine/pricingVersion'
@@ -3955,6 +3955,10 @@ for (const size of RC12_SIZES) {
       const dialog = page.getByRole('dialog', { name: W_DRAWER })
       await expect(dialog).toBeVisible()
       await expect(dialog.locator('[data-working-cost-note]')).toContainText(slots.workingCostStaleLeftOverYearsCheaper('84,000'))
+      // Ported from the walk's W step arm (vertical-fit, retired at RC14): no whole-answer lean on a "saved" note, and no
+      // figure at the quote in the fork's description (the red team's attack 4).
+      await expect(dialog.locator('[data-working-cost-note]'), 'no whole-answer lean on a "saved" note').not.toContainText(slots.workingCostStaleLeansBetter('84,000'))
+      await expect(dialog.locator('[data-working-cost-note]'), 'no figure at the quote in the fork’s description').not.toContainText('5,985')
       await expect(dialog.getByRole('button', { name: /^Keep / }), 'no Keep door below today’s quote (ruling 34)').toHaveCount(0)
       await noSidewaysScroll(page, 'datesavedrisenlater W drawer')
     })
@@ -4220,6 +4224,195 @@ for (const size of RC12_SIZES) {
       await d.getByRole('button', { name: copy.profileDrawerSave, exact: true }).click()
       await expect.poll(async () => (await fanAxis()).title, { message: 'the fan’s axis never came back to ages' }).toBe(ages.title)
       await noSidewaysScroll(page, 'Confidence after the Display drawer')
+    })
+  })
+}
+
+// ── RC14 · the first-run stepper (plan 6, RC14; its Fit decision, Verification and Test scenarios; section 5.2's port of
+//    `e2e/intake-fold.spec.ts`, retired here, and of the walk's pay-check arms from `e2e/vertical-fit.spec.ts`) ──────────
+// - a fresh plan opens on "Start a new plan": a drawer that names itself and takes focus on its title (a full-screen sheet
+//   on the phone); Start opens the stepper with its bar and the step's title in the first frame at his window;
+// - each step change opens the new step at its own top with focus on its title, a scroll carried into the press reset
+//   (intake-fold's law 1, ported: the press is an IN-PAGE click, as there, so no auto-scroll replaces the carried offset);
+// - a card's drawer names itself and takes focus (law 2), and the step nav yields while it is open: inert, and a press
+//   where Next sits lands on the drawer, never on Next (law 3);
+// - Next over a working household with no W refuses: the stepper stays, and the W drawer opens with the gate's message at
+//   its field (the walk's "blocked Continue", ported);
+// - a re-walk of the refusal witness (`datesolo`) passes every step; on Goals the missing facts stand beside Complete in
+//   their own frame (the withheld lead, the cannot-price line naming the blocker), the money picture card opens the
+//   drawer's one calm line naming it, and Complete lands on the home;
+// - the picture at its fullest (`dateshort`), in the drawer (the walk's arm, ported);
+// - nothing scrolls sideways; one R13 disclaimer (the trailing mount: the stepper prints no figure it did not take as a
+//   fact), at both sizes.
+const SETUP_TITLE = {
+  family: slots.setupStepTitle(1, copy.setupHeadFamily),
+  income: slots.setupStepTitle(2, copy.setupHeadIncome),
+  savings: slots.setupStepTitle(3, copy.setupHeadSavings),
+  netWorth: slots.setupStepTitle(4, copy.setupHeadNetWorth),
+  expenses: slots.setupStepTitle(5, copy.setupHeadExpenses),
+  goals: slots.setupStepTitle(6, copy.setupHeadGoals),
+} as const
+const SETUP_ORDER = [SETUP_TITLE.family, SETUP_TITLE.income, SETUP_TITLE.savings, SETUP_TITLE.netWorth, SETUP_TITLE.expenses, SETUP_TITLE.goals] as const
+
+const setupHeading = (page: Page) => page.locator('main[data-setup-step] h1')
+
+/** The stepper's Next (or Complete), pressed IN-PAGE (no Playwright auto-scroll: the scroll is what some arms measure). */
+const pressNext = (page: Page) =>
+  page.evaluate(() => [...document.querySelectorAll<HTMLButtonElement>('[data-setup-nav] button')].at(-1)?.click())
+
+/** Exactly one visible R13 disclaimer (the stepper is outside the shell: the trailing mount). */
+async function assertOneSetupDisclaimer(page: Page, who: string): Promise<void> {
+  const visible = await page.evaluate(
+    () => [...document.querySelectorAll('footer.disclaimer, [data-caveat]')].filter((el) => getComputedStyle(el).display !== 'none' && (el as HTMLElement).getClientRects().length > 0).length,
+  )
+  expect(visible, `${who}: exactly one visible R13 disclaimer`).toBe(1)
+}
+
+/** A fresh plan from the cold start, through "Start a new plan" (its drawer read on the way) to Family. */
+async function startFreshPlan(page: Page, phone: boolean): Promise<void> {
+  await page.goto('/')
+  await page.getByRole('button', { name: copy.coldStartBegin }).click()
+  const names = page.getByRole('dialog', { name: copy.setupNewPlanTitle })
+  await expect(names).toBeVisible({ timeout: 30_000 })
+  await assertDrawerFits(page, 'Start a new plan', phone)
+  await names.getByLabel(copy.setupNameYou).fill('Alex')
+  await names.getByLabel(copy.setupNameSpouse).fill('Sam')
+  await names.getByRole('button', { name: copy.setupNewPlanStart }).click()
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  await expect(setupHeading(page)).toHaveText(SETUP_TITLE.family)
+  await settleLayout(page)
+}
+
+for (const size of RC12_SIZES) {
+  test.describe(`RC14 · the first-run stepper ${size.title}`, () => {
+    test.use(size.use)
+
+    test(`a fresh plan: "Start a new plan" names itself; the bar and the title${size.phone ? '' : ' in the first frame'}; every step change at its own top, focus on its title; nothing sideways; one disclaimer`, async ({ page }) => {
+      test.setTimeout(120_000)
+      await startFreshPlan(page, size.phone)
+      const frame = await page.evaluate(() => ({
+        bar: document.querySelector('[data-setup-steps]')!.getBoundingClientRect().bottom,
+        title: document.querySelector('main[data-setup-step] h1')!.getBoundingClientRect().bottom,
+        vh: window.innerHeight,
+      }))
+      expect(frame.bar, 'the stepper bar in the first frame').toBeLessThanOrEqual(frame.vh)
+      expect(frame.title, 'the step’s title in the first frame').toBeLessThanOrEqual(frame.vh)
+      await noSidewaysScroll(page, 'Family')
+      await assertOneSetupDisclaimer(page, 'Family')
+      for (let i = 1; i < SETUP_ORDER.length; i += 1) {
+        const who = SETUP_ORDER[i]!
+        // Carry a scroll into the press (what the page can take; a short step may take none at his window).
+        const carried = await page.evaluate(() => {
+          const s = document.scrollingElement!
+          s.scrollTop = 120
+          return s.scrollTop
+        })
+        if (size.phone) expect(carried, `${who}: the pre-press scroll never landed (the reset arm would be vacuous)`).toBeGreaterThan(0)
+        await pressNext(page)
+        await expect(setupHeading(page), `${who}: Next advanced`).toHaveText(who)
+        await page.waitForTimeout(250)
+        const at = await page.evaluate(() => ({
+          scrollTop: document.scrollingElement!.scrollTop,
+          focused: document.activeElement === document.querySelector('main[data-setup-step] h1'),
+          titleBottom: document.querySelector('main[data-setup-step] h1')!.getBoundingClientRect().bottom,
+          vh: window.innerHeight,
+        }))
+        expect(at.scrollTop, `${who}: the step opens at its own top (carried ${carried}px)`).toBe(0)
+        expect(at.focused, `${who}: focus on the new step’s title`).toBe(true)
+        expect(at.titleBottom, `${who}: the title in the first frame`).toBeLessThanOrEqual(at.vh)
+        await noSidewaysScroll(page, who)
+        await assertOneSetupDisclaimer(page, who)
+      }
+      await expect(page.getByRole('button', { name: copy.setupComplete }), 'the last step ends with Complete').toBeVisible()
+    })
+
+    test('a card’s drawer names itself and takes focus; the step nav yields while it is open (inert, and a press where Next sits lands on the drawer)', async ({ page }) => {
+      test.setTimeout(90_000)
+      await startFreshPlan(page, size.phone)
+      await page.locator('[data-profile-card="person-0"]').click()
+      await assertDrawerFits(page, 'Family person drawer', size.phone)
+      await expect(page.locator('[data-setup-nav]'), 'the step nav yields: inert under the drawer').toHaveAttribute('inert', '')
+      // A press where Next sits (its centre, held inside the window) lands on the drawer or its scrim, never on Next.
+      const onNext = await page.evaluate(() => {
+        const btn = [...document.querySelectorAll('[data-setup-nav] button')].at(-1)!
+        const r = btn.getBoundingClientRect()
+        const hit = document.elementFromPoint(r.left + r.width / 2, Math.min(Math.max(r.top + r.height / 2, 1), window.innerHeight - 2))
+        return hit !== null && btn.contains(hit)
+      })
+      expect(onNext, 'a press where Next sits reaches Next under an open drawer').toBe(false)
+      await page.keyboard.press('Escape')
+      await expect(page.getByRole('dialog')).toHaveCount(0)
+      await expect(page.locator('[data-profile-card="person-0"]'), 'focus back on the card').toBeFocused()
+      await expect(page.locator('[data-setup-nav]')).not.toHaveAttribute('inert', '')
+      await expect(setupHeading(page), 'no step change happened').toHaveText(SETUP_TITLE.family)
+    })
+
+    test('Next over a working household with no W refuses: the step stays, and the W drawer opens with the gate’s message at its field', async ({ page }) => {
+      test.setTimeout(90_000)
+      await startFreshPlan(page, size.phone)
+      await page.locator('[data-profile-card="person-0"]').click()
+      const person = page.getByRole('dialog')
+      await person.getByRole('combobox', { name: copy.workStatusLegend }).click()
+      await page.getByRole('option', { name: copy.workStatusWorking, exact: true }).click()
+      await person.getByRole('button', { name: copy.profileDrawerSave }).click()
+      await expect(page.getByRole('dialog')).toHaveCount(0)
+      for (const t of [SETUP_TITLE.income, SETUP_TITLE.savings, SETUP_TITLE.netWorth, SETUP_TITLE.expenses]) {
+        await pressNext(page)
+        await expect(setupHeading(page)).toHaveText(t)
+      }
+      await pressNext(page)
+      const w = page.getByRole('dialog', { name: copy.profileWorkingCostName })
+      await expect(w, 'the refusal opened the W drawer').toBeVisible({ timeout: 10_000 })
+      await expect(setupHeading(page), 'Next refused: still on Expenses').toHaveText(SETUP_TITLE.expenses)
+      await assertDrawerFits(page, 'W drawer at the gate', size.phone)
+      await expect(w.getByRole('alert')).toContainText(copy.errWorkingCostUnanswered)
+      // A fresh plan has no spending yet, so no quote to offer: the figure is the whole question and carries the gate.
+      await expect(w.getByRole('textbox', { name: copy.workingCostAmountLabel, exact: true }), 'the figure carries the refusal').toHaveAttribute('aria-invalid', 'true')
+      await expect(w.locator('[data-money-picture]'), 'the W question alone on Expenses').toHaveCount(0)
+    })
+
+    test('?seed=datesolo re-walked: every step passes; beside Complete the missing facts in their own frame; the picture’s one calm line; Complete lands on the home', async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 60_000)
+      await rewalkSeedTo(page, 'datesolo', SETUP_TITLE.goals)
+      const missing = page.locator('[data-setup-missing]')
+      await expect(missing).toContainText(copy.answerWithheldLead)
+      await expect(missing).toContainText(`${copy.answerCannotPrice} ${copy.employerCoverageUnpriced}`)
+      await expect(missing, 'an unpriceable fact never wears "Still needed"').not.toContainText(copy.answerStillNeeded)
+      await noSidewaysScroll(page, 'Goals with the missing facts')
+      await page.locator('[data-profile-card="money-picture"]').click()
+      const w = page.getByRole('dialog', { name: copy.profileWorkingCostName })
+      await expect(w).toBeVisible()
+      const picture = w.locator('[data-money-picture]')
+      await expect(picture).toContainText(copy.workingLedgerUnknownLeadFinal)
+      await expect(picture).not.toContainText(copy.workingLedgerUnknownLead)
+      await expect(picture.locator('dl'), 'no list and no zeros').toHaveCount(0)
+      expect(
+        await picture.evaluate((el, needle) => el.textContent!.split(needle).length - 1, copy.employerCoverageUnpriced),
+        'the blocker is named once in the picture',
+      ).toBe(1)
+      await page.keyboard.press('Escape')
+      await expect(page.getByRole('dialog')).toHaveCount(0)
+      await pressNext(page)
+      await expect(page.locator('main.result[data-shell-screen="snapshot"]'), 'Complete lands on the home').toBeAttached({ timeout: 60_000 })
+    })
+
+    test('?seed=dateshort: the money picture at its fullest in its drawer — held-back Social Security, Medicare from savings, every later year short (the walk’s arm, ported)', async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 60_000)
+      await gotoSeedFinal(page, 'dateshort')
+      await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
+      const dialog = await openWDrawer(page, size.phone)
+      const picture = dialog.locator('[data-money-picture]')
+      await expect(picture).toContainText(copy.workingLedgerShort)
+      // The held-back words are the shipped slot's; $2,760 is U10's hand derivation (Alex's $30,000 of pay less the 2026
+      // lower exempt amount, $1 held back for every $2 above it), carried from the walk's arm.
+      await expect(picture).toContainText(slots.workingLedgerSsHeldBack('2,760'))
+      await expect(picture.getByRole('heading', { name: copy.workingLedgerAlsoFromSavings })).toBeVisible()
+      await expect(picture.getByRole('heading', { name: copy.workingLedgerLaterHeading })).toBeVisible()
+      await expect(picture.locator('[role="alert"], [aria-live]'), 'the picture is never an alarm').toHaveCount(0)
+      // (c)'s floor from the walk's arm: pay and Social Security coming in; payroll tax, deposits and W going out; the
+      // bottom line; a line under each of the two headings above: 8 rows.
+      expect(await picture.locator('[data-ledger-row]').count(), 'the picture drew every row').toBeGreaterThanOrEqual(8)
+      await noSidewaysScroll(page, 'dateshort picture')
     })
   })
 }

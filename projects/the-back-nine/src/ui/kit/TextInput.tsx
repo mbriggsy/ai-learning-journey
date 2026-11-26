@@ -5,7 +5,10 @@
  * value (a drawer's buffer). `readOnly` fills the box `--stone-200` (RightCapital's locked field).
  *
  * An error is the caller's (`error`): its words under the box beside a mark, tied by `aria-invalid` and
- * `aria-describedby`, so colour is never the only signal.
+ * `aria-describedby`, so colour is never the only signal. A refusal drawn outside the box (one line under a group of
+ * boxes, the account drawer's mix) marks each box with `invalid` and names its line with `describedByIds`. Either is
+ * forgiven on the first keystroke until the blur (back-nine-design; Act 6 · RC14), and `onEdit` tells the caller then,
+ * so a group's own line can go too.
  */
 import { useId, useState, type KeyboardEvent } from 'react'
 import { CircleAlert } from 'lucide-react'
@@ -21,15 +24,23 @@ export interface TextInputProps {
   readonly autoComplete?: string
   readonly description?: string
   readonly error?: string
+  /** Refused by a line outside the box (its id in `describedByIds`). */
+  readonly invalid?: boolean
+  readonly describedByIds?: string
+  /** The first keystroke since focus arrived (the caller forgives its refusal). */
+  readonly onEdit?: () => void
   readonly readOnly?: boolean
   readonly className?: string
 }
 
-export function TextInput({ label, value, onCommit, maxLength, autoComplete = 'off', description, error, readOnly = false, className }: TextInputProps) {
+export function TextInput({ label, value, onCommit, maxLength, autoComplete = 'off', description, error, invalid = false, describedByIds, onEdit, readOnly = false, className }: TextInputProps) {
   const id = useId()
   const helpId = `${id}-help`
   const errorId = `${id}-error`
   const [draft, setDraft] = useState<string | null>(null)
+  const [editing, setEditing] = useState(false)
+  const shownError = editing ? undefined : error
+  const refused = !editing && (invalid || shownError !== undefined)
   const commit = () => {
     if (draft === null || readOnly) return
     const t = draft.trim()
@@ -39,7 +50,7 @@ export function TextInput({ label, value, onCommit, maxLength, autoComplete = 'o
   const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') commit()
   }
-  const describedBy = [description !== undefined ? helpId : null, error !== undefined ? errorId : null].filter(Boolean).join(' ')
+  const describedBy = [describedByIds ?? null, description !== undefined ? helpId : null, shownError !== undefined ? errorId : null].filter(Boolean).join(' ')
   return (
     <div className={cn('flex flex-col gap-1', className)}>
       <label htmlFor={id} className="text-body text-stone-900">
@@ -54,19 +65,28 @@ export function TextInput({ label, value, onCommit, maxLength, autoComplete = 'o
         readOnly={readOnly}
         maxLength={maxLength}
         value={draft ?? value ?? ''}
-        aria-invalid={error !== undefined || undefined}
+        aria-invalid={refused || undefined}
         aria-describedby={describedBy === '' ? undefined : describedBy}
         onFocus={() => {
           if (!readOnly) setDraft(value ?? '')
         }}
-        onChange={(e) => setDraft(e.target.value)}
-        onBlur={commit}
+        onChange={(e) => {
+          setDraft(e.target.value)
+          if (!editing) {
+            setEditing(true)
+            onEdit?.()
+          }
+        }}
+        onBlur={() => {
+          setEditing(false)
+          commit()
+        }}
         onKeyDown={onKeyDown}
         className={cn(
           'h-10 min-w-0 rounded-control border border-stone-300 bg-bg px-3 text-body text-stone-900 outline-none',
           'focus:outline-2 focus:outline-offset-2 focus:outline-blue-ink',
           readOnly && 'cursor-default bg-stone-200',
-          error !== undefined && 'border-stone-900',
+          refused && 'border-stone-900',
         )}
       />
       {description !== undefined ? (
@@ -74,10 +94,10 @@ export function TextInput({ label, value, onCommit, maxLength, autoComplete = 'o
           {description}
         </p>
       ) : null}
-      {error !== undefined ? (
+      {shownError !== undefined ? (
         <p id={errorId} role="alert" className="flex items-start gap-1.5 text-label text-stone-900">
           <CircleAlert size={16} strokeWidth={1.5} aria-hidden="true" className="mt-0.5 shrink-0" />
-          {error}
+          {shownError}
         </p>
       ) : null}
     </div>

@@ -5,7 +5,8 @@
  *
  * THE CONTRACT (insights 158, 159, 112, 149, 071, 060):
  *  - BUFFERED. The drawer edits its own copy of its fields (`useDrawerBuffer`); the store's draft moves only on Save.
- *  - SAVE commits the focused field first (a figure typed and not yet blurred is part of the edit), then runs the
+ *  - SAVE commits the focused field first (a figure typed and not yet blurred is part of the edit), refuses while a box
+ *    still holds text it could not read (the box says so under itself; the kit marks it `data-typed-refused`), then runs the
  *    caller's save (`drawerSave.ts`: every check the walk's Continue runs, plus the entry form's own decision tree, with
  *    every rule's field touched because a drawer has no later Continue); a refusal shows each error under its own field
  *    (a fact on another card in a line at the top of the body), and the drawer stays open; a pass is ONE store commit and
@@ -62,6 +63,8 @@ export interface ProfileDrawerProps {
   readonly leaveAsk?: DrawerLeaveAsk
   /** Refusals on no field the drawer shows (another card's fact), each a sentence. */
   readonly errors?: readonly string[]
+  /** Save's word where it is not "Save" (the first-run stepper's names drawer: "Start"). */
+  readonly saveLabel?: string
   readonly children: ReactNode
 }
 
@@ -92,7 +95,7 @@ function Ask({ lines, keep, drop }: { readonly lines: readonly string[]; readonl
   )
 }
 
-export function ProfileDrawer({ open, title, icon, readOnly, isDirty, onSave, onDelete, onClose, onClosed, finalFocus, leaveAsk, errors = [], children }: ProfileDrawerProps) {
+export function ProfileDrawer({ open, title, icon, readOnly, isDirty, onSave, onDelete, onClose, onClosed, finalFocus, leaveAsk, errors = [], saveLabel = copy.profileDrawerSave, children }: ProfileDrawerProps) {
   const bodyRef = useRef<HTMLDivElement>(null)
   const [asking, setAsking] = useState(false)
   const [armed, setArmed] = useState(false)
@@ -156,10 +159,13 @@ export function ProfileDrawer({ open, title, icon, readOnly, isDirty, onSave, on
       {...(readOnly
         ? {}
         : {
-            saveLabel: copy.profileDrawerSave,
+            saveLabel,
             onSave: () => {
               commitFocused()
               setAsking(false)
+              // Never past a box holding text its parser refused (its own words show under it): that text never reached
+              // the buffer, so saving would keep the old figure, or none, under a refusal on screen (Act 6 · RC14).
+              if (bodyRef.current?.querySelector('[data-typed-refused]') != null) return false
               if (onSave()) onClose()
               return false
             },

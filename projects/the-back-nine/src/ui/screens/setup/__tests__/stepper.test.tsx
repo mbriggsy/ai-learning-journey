@@ -6,6 +6,8 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testi
 import userEvent from '@testing-library/user-event'
 import { createMemoryModel, type MemoryModel, type ScenarioDraft } from '@store/memoryModel'
 import type { EngineClient } from '@store/engineClient'
+import { clearVault, openVaultDb, writeVault } from '@store/db'
+import { VAULT_DB_NAME } from '@shared/model'
 import { DEV_SEEDS } from '../../../devSeeds'
 import { copy, slots } from '../../../copy'
 import { Stepper } from '../Stepper'
@@ -26,8 +28,9 @@ import { WALK_HOUSEHOLDS } from './walkDrafts.fixture'
  *  - the walk's flow laws, ported: a step change moves focus to the new step's title; Previous keeps every answer; Next
  *    reads the store's current draft; Complete runs every step's check (a step skipped by its chevron is checked too);
  *    the step nav yields (inert) while a drawer is open;
- *  - the no-IndexedDB-write-until-Save seam (the walk's `noWriteSeam.test.tsx`, ported): every branch of setup, a refused
- *    Save, Previous, an account, an income stream and an abandon leave IndexedDB untouched, against the real store layer.
+ *  - the no-IndexedDB-write-until-Save seam (the walk's `noWriteSeam.test.tsx`, ported with its planted control): every
+ *    branch of setup, a refused Save, Previous, an account, an income stream and an abandon leave IndexedDB untouched,
+ *    against the real store layer.
  */
 afterEach(cleanup)
 
@@ -45,7 +48,7 @@ function freshModel(start?: ScenarioDraft): MemoryModel {
   return model
 }
 
-function mount(model: MemoryModel, opts: { readonly periodConfirmed?: boolean; readonly askNames?: boolean } = {}) {
+function mount(model: MemoryModel, opts: { readonly periodConfirmed?: boolean; readonly askNames?: boolean; readonly notSaved?: boolean } = {}) {
   const onComplete = vi.fn()
   const onCancelNewPlan = vi.fn()
   render(
@@ -55,7 +58,7 @@ function mount(model: MemoryModel, opts: { readonly periodConfirmed?: boolean; r
       askNames={opts.askNames ?? false}
       onComplete={onComplete}
       onCancelNewPlan={onCancelNewPlan}
-      notSaved
+      notSaved={opts.notSaved ?? true}
     />,
   )
   return { onComplete, onCancelNewPlan }
@@ -289,7 +292,7 @@ describe('Next and Complete run the walk’s Continue', () => {
     expect(onComplete).not.toHaveBeenCalled()
   })
 
-  it('a step skipped by its chevron is checked at Complete: Goals reached past Expenses still stops on the missing W', async () => {
+  it('a forward chevron runs the passed steps’ checks: the Goals chevron past a missing W stops on Expenses with the W drawer open', async () => {
     const model = freshModel(noW)
     const { onComplete } = mount(model)
     // A forward chevron runs the passed steps' checks, so it stops at Expenses too.
@@ -297,6 +300,39 @@ describe('Next and Complete run the walk’s Continue', () => {
     expect(title()).toBe(setupTitle('expenses'))
     await waitFor(() => expect(screen.getByRole('dialog', { name: copy.profileWorkingCostName })).toBeInTheDocument())
     expect(onComplete).not.toHaveBeenCalled()
+  })
+
+  it('Complete over a refusal on a step already passed: a switch to working on Goals owes W on Expenses; its ✓ drops, the box beside Complete never says Complete still opens the plan, and Complete lands on Expenses with the W drawer’s alert', async () => {
+    const model = freshModel(DEV_SEEDS.retired)
+    const { onComplete } = mount(model, { periodConfirmed: true })
+    for (let i = 0; i < 5; i += 1) next()
+    expect(title()).toBe(setupTitle('goals'))
+    const expensesStep = () => screen.getByRole('button', { name: new RegExp(copy.shellPageExpenses) })
+    expect(expensesStep(), 'every passed step is done before the switch').toHaveAttribute('data-setup-step-state', 'done')
+    await open('retirement-0')
+    await pick(copy.workStatusLegend, copy.workStatusWorking)
+    await save()
+    expect(model.getSnapshot().draft.people[0].workStatus).toBe('working')
+    expect(model.getSnapshot().draft.workingYearCost, '[test setup] no W yet').toBeUndefined()
+    expect(expensesStep(), 'W is owed: no ✓ over Expenses').toHaveAttribute('data-setup-step-state', 'passed')
+    const box = document.querySelector('[data-setup-missing]')
+    expect(box, '[test setup] the switch leaves facts missing, so the box shows').not.toBeNull()
+    expect(box, 'Complete would refuse: no "still opens"').not.toHaveTextContent(copy.setupMissingOpens)
+    expect(box).toHaveTextContent(copy.setupMissingUntil)
+    act(() => fireEvent.click(screen.getByRole('button', { name: copy.setupComplete })))
+    expect(title(), 'Complete refused: back on Expenses').toBe(setupTitle('expenses'))
+    await waitFor(() => expect(screen.getByRole('dialog', { name: copy.profileWorkingCostName })).toBeInTheDocument())
+    expect(within(dialog()).getByRole('alert')).toHaveTextContent(copy.errWorkingCostUnanswered)
+    expect(onComplete).not.toHaveBeenCalled()
+  })
+
+  it('"Nothing’s saved to this device yet" stands beside the nav while no plan is saved, and is gone once one is', () => {
+    mount(freshModel(DEV_SEEDS.retired), { notSaved: true })
+    expect(document.querySelector('[data-setup-not-saved]')).toHaveTextContent(copy.notSavedYet)
+    cleanup()
+    mount(freshModel(DEV_SEEDS.retired), { notSaved: false })
+    expect(document.querySelector('[data-setup-not-saved]')).toBeNull()
+    expect(screen.queryByText(copy.notSavedYet)).toBeNull()
   })
 
   it('a step change moves focus to the new step’s title; Previous keeps every answer', async () => {
@@ -400,6 +436,28 @@ describe('Start a new plan', () => {
 
 describe('the no-IndexedDB-write-until-Save seam (against the REAL store layer; the walk’s, ported)', () => {
   const databaseNames = async () => (await indexedDB.databases()).map((d) => d.name ?? '<unnamed>')
+
+  // The walk's `noWriteSeam.test.tsx` control, ported: a probe that could never see a write would be vacuously green.
+  it('PLANTED CONTROL: a real write through db.ts IS detected by the probe (non-vacuous)', async () => {
+    expect(await databaseNames()).toEqual([])
+    const db = await openVaultDb()
+    const bytes = (n: number) => new Uint8Array([n, n, n])
+    await writeVault(db, {
+      model: { iv: bytes(1), ciphertext: bytes(2) },
+      passphraseWrap: { salt: bytes(3), iv: bytes(4), wrappedDataKey: bytes(5) },
+      recoveryWrap: { salt: bytes(6), iv: bytes(7), wrappedDataKey: bytes(8) },
+    })
+    expect(await databaseNames()).not.toEqual([]) // the probe CAN fail
+    await clearVault(db)
+    db.close()
+    // Back to the no-write baseline for the real arm below (fake-indexeddb is one global per process).
+    await new Promise<void>((resolve, reject) => {
+      const req = indexedDB.deleteDatabase(VAULT_DB_NAME)
+      req.onsuccess = () => resolve()
+      req.onerror = () => reject(req.error as Error)
+    })
+    expect(await databaseNames()).toEqual([])
+  })
 
   it('names, a refused Save, Previous, an account, an income stream and an abandon leave IndexedDB untouched', async () => {
     expect(await databaseNames()).toEqual([])

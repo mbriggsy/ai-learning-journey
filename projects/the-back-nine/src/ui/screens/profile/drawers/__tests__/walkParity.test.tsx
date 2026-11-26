@@ -43,7 +43,14 @@ describe('Family', () => {
     const { start, walked } = at('person')
     const seed = personFormFrom(start, 0)
     const drawer = buildPerson(start, 0, seed, { ...seed, name: 'Alexis', birthYear: 1958, sex: 'female' })
-    expect(drawer.ok && drawer.draft).toEqual(walked)
+    // ONE DELIBERATE DEPARTURE (milestone 3's review, X4): the walk kept the typed Social Security claim AGE when a known
+    // birth year moved, so the claim YEAR the household typed silently moved with it; the drawer keeps the year (the claim
+    // age shifts by the move). Every other field is the walk's.
+    const p = start.people[0]
+    expect(p.birthYear !== undefined && p.socialSecurityClaimAge !== undefined, '[test setup] a known birth year and claim age').toBe(true)
+    const keptYear = { ...walked.people[0], socialSecurityClaimAge: p.socialSecurityClaimAge! + p.birthYear! - 1958 }
+    expect(drawer.ok && drawer.draft).toEqual({ ...walked, people: [keptYear, walked.people[1]] })
+    expect(drawer.ok && drawer.draft.people[0].birthYear! + drawer.draft.people[0].socialSecurityClaimAge!).toBe(p.birthYear! + p.socialSecurityClaimAge!)
   })
 
   it('still working to retired, with the age work stopped: the work step’s writes', () => {
@@ -98,9 +105,10 @@ describe('Savings and Net Worth', () => {
     const { start, walked } = at('accountDeposits')
     const seed = accountFormFromDraft(start, { index: 0 })
     const drawer = buildAccountEdit(start, 0, seed, { ...seed, annualContribution: 22_000, employerMatchAnnual: 6_000 })
-    // The walk's entry asked no fund (it held a hand-typed mix only); the drawer keeps this account's fund, as it was.
-    expect(drawer.ok && drawer.draft.enteredAccounts[0]).toEqual({ ...walked.enteredAccounts[0]!, ticker: 'VTI' })
-    expect(drawer.ok && drawer.draft.enteredAccounts[1]).toEqual(walked.enteredAccounts[1])
+    // The whole draft, not the accounts alone (milestone 3's review, H8): a stray write anywhere else is caught. The walk's
+    // entry asked no fund (it held a hand-typed mix only); the drawer keeps this account's fund, as it was.
+    const [first, ...others] = walked.enteredAccounts
+    expect(drawer.ok && drawer.draft).toEqual({ ...walked, enteredAccounts: [{ ...first!, ticker: 'VTI' }, ...others] })
   })
 
   it('a new brokerage account, its balance, cost basis and hand-typed mix: the account entry’s account (its fresh id aside)', () => {
@@ -110,7 +118,9 @@ describe('Savings and Net Worth', () => {
     const { id: _walkId, ...walkedRest } = walked.enteredAccounts.at(-1)!
     const added = drawer.ok ? drawer.draft.enteredAccounts.at(-1)! : undefined
     const { id: drawerId, ...drawerRest } = added!
-    expect(drawerRest).toEqual(walkedRest)
+    // The whole draft, the new account's id aside (milestone 3's review, H8).
+    const idAside = (d: ScenarioDraft, rest: typeof walkedRest): ScenarioDraft => ({ ...d, enteredAccounts: [...d.enteredAccounts.slice(0, -1), rest as never] })
+    expect(drawer.ok && idAside(drawer.draft, drawerRest)).toEqual(idAside(walked, walkedRest))
     expect(drawerId, 'a new account is minted an id no account holds').toMatch(/./)
     expect(start.enteredAccounts.some((a) => a.id === drawerId)).toBe(false)
   })

@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { ACCOUNT_KINDS } from '@shared/model'
+import { workingYearCostStaleNote } from '@intake/workingYearLeftOver'
+import { workingYearCostStaleness } from '@intake/workingYearQuote'
 import { DEV_SEEDS } from '../../../devSeeds'
 import { copy, slots } from '../../../copy'
 import { cardIdOf, expensesView, familyView, goalsView, incomeView, netWorthView, savingsView, type AddMenuView, type DrawerTarget } from '../profileView'
@@ -54,10 +56,41 @@ describe('Income', () => {
     expect(v.cards[1]!.rows.find((r) => r.label === copy.profileRowClaiming)?.value).toBe(copy.profileNo)
   })
 
+  // Milestone 3's review, B7: unknown where either age is, never a "No" the draft can't back.
+  it('Already claiming reads "Not answered yet" when the claim age or the current age is unknown', () => {
+    const { socialSecurityClaimAge: _c, ...noClaim } = retired.people[0]
+    const { currentAge: _a, ...noAge } = retired.people[1]
+    const v = incomeView({ ...retired, people: [noClaim, noAge] }, false)
+    expect(v.cards[0]!.rows.find((r) => r.label === copy.profileRowClaiming)?.value).toBe(copy.profileNotAnswered)
+    expect(v.cards[1]!.rows.find((r) => r.label === copy.profileRowClaiming)?.value).toBe(copy.profileNotAnswered)
+  })
+
+  // Milestone 3's review, X8: the card carries the start and end and the raise rule the deleted facts page printed.
+  it('an other-income card says when it pays with its end, and how it keeps up with inflation; never "Now" past its end', () => {
+    const age = retired.people[0].currentAge!
+    const base = { ownerIndex: 0, type: 'pension', annualRealToday: 12_000, colaMode: 'real-flat', survivorPct: 0.5 } as const
+    const card = (s: Record<string, unknown>) => {
+      const c = incomeView({ ...retired, incomeStreams: [{ ...base, ...s } as never] }, false).cards.find((x) => x.id === 'income-0')!
+      return { pays: c.rows.find((r) => r.label === copy.profileRowPays)?.value, raise: c.rows.find((r) => r.label === copy.profileRowAgainstInflation)?.value }
+    }
+    expect(card({ startAge: age - 2, endAge: 70 }).pays).toBe(`Now, through age 70`)
+    expect(card({ startAge: age - 2 }).pays).toBe('Now, for life')
+    expect(card({ startAge: age + 1 }).pays).toBe(`From age ${age + 1}, for life`)
+    expect(card({ startAge: age + 1, endAge: age + 5 }).pays).toBe(`From age ${age + 1} through age ${age + 5}`)
+    expect(card({ startAge: age - 6, endAge: age - 1 }).pays).toBe(`Ended at ${age - 1}`)
+    expect(card({ startAge: age }).raise).toBe(copy.incomeColaReal)
+    expect(card({ startAge: age, colaMode: 'nominal-flat' }).raise).toBe(copy.incomeColaNominal)
+    expect(card({ startAge: age, colaMode: 'fixed-pct', colaPct: 0.02 }).raise).toBe('Rises 2% a year')
+  })
+
   it('the Add income menu offers every kind of other income; a read-only view has none', () => {
     const add = incomeView(working, false).add!
     expect(leaves(add).map((t) => (t.kind === 'new-income' ? t.type : null))).toEqual(['pension', 'rental', 'alimony', 'annuity', 'other'])
     expect(incomeView(working, true).add).toBeNull()
+    // Milestone 3's review, X12's class: no door words where no Add menu is drawn.
+    expect(incomeView(working, false).lines).toContain(copy.profileIncomeOtherNone)
+    expect(incomeView(working, true).lines).toContain(copy.profileIncomeOtherNoneReadOnly)
+    expect(incomeView(working, true).lines).not.toContain(copy.profileIncomeOtherNone)
   })
 })
 
@@ -77,6 +110,15 @@ describe('Savings', () => {
 
   it('read-only: no Add menu', () => {
     expect(savingsView(working, true).add).toBeNull()
+  })
+
+  // Milestone 3's review, X12: "Add one with Add saving" only where the Add menu is drawn.
+  it('a working household with no account of a working owner: the door words with an Add menu, none on a read-only tab', () => {
+    const noAccounts = { ...working, enteredAccounts: [] }
+    expect(savingsView(noAccounts, false).lines).toEqual([copy.profileSavingsNoAccounts])
+    expect(savingsView(noAccounts, true).lines).toEqual([copy.profileSavingsNoAccountsReadOnly])
+    expect(netWorthView(noAccounts, undefined, false).empty).toBe(copy.profileNetWorthNoAccounts)
+    expect(netWorthView(noAccounts, undefined, true).empty).toBe(copy.profileNetWorthNoAccountsReadOnly)
   })
 })
 
@@ -153,6 +195,16 @@ describe('Expenses and Goals (RC13b)', () => {
     const picture = goalsView(noW).cards.find((c) => c.id === 'money-picture')!
     expect(picture.rows).toEqual([])
     expect(picture.note).toBe(copy.profileMoneyPictureNoW)
+  })
+
+  // Milestone 3's review, X3: a stale W draws no ledger (it read "Left over in 2026: $16,985" where year 0 runs short).
+  it('a STALE W (?seed=datesavedrisenshort): the money picture draws no rows, only the W drawer’s own stale words', () => {
+    const d = DEV_SEEDS.datesavedrisenshort
+    expect(workingYearCostStaleness(d), '[test setup] the seed’s W is stale').not.toBeNull()
+    const picture = goalsView(d).cards.find((c) => c.id === 'money-picture')!
+    expect(picture.rows).toEqual([])
+    expect(picture.note).toBe(workingYearCostStaleNote(d))
+    expect(picture.note).not.toContain('16,985')
   })
 
   it('a governing budget: the card says the budget sets the figure, with its tier split; the blank medical figure reads "Left blank"', () => {

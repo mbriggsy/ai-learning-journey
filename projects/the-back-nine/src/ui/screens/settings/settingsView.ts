@@ -13,7 +13,8 @@
  * walk's own checks so a refused value never lands; the Action Items tray at the lever's row (the withdrawal order, the
  * Roth plan, the subsidy rules: tried beside the plan and written by Apply, U15's rule); or Tax Strategies (the heirs'
  * bracket, set beside the goal it ranks). A door shows only where its home can act (no hollow door, council 2026-07-03):
- * the tray's withdrawal order needs an account, its Roth row a married couple, its subsidy rules a priced pre-65 year.
+ * the tray's withdrawal order needs an account, its Roth row a married couple with pre-tax money (`rothDoorOpen`, the
+ * tray's own rule), its subsidy rules a priced pre-65 year.
  *
  * READ-ONLY (plan 4.0): a read-only tab shows every value and line and no door at all.
  */
@@ -34,7 +35,7 @@ import { METHODOLOGY_DISCLOSURES, leftOverLineKey, methodologyLines, type Assump
 import { rothPlanStartFor, type BandPlanClockAnchor } from '../../bandAnnotations'
 import { copy, slots, type CopyKey } from '../../copy'
 import { formatBracketPercent } from '../../money'
-import { policyWords } from '../../workbench/railChrome'
+import { policyWords, rothDoorOpen } from '../../workbench/railChrome'
 import { tablePerson } from '../../workbench/tableRun'
 import { extrasValue, stateLabel, type DrawerTarget } from '../profile/profileView'
 
@@ -150,8 +151,18 @@ export function settingsRows(d: ScenarioDraft, readOnly: boolean, anchor: BandPl
         ? copy.assumptionNoneApplied
         : slots.rothPlanEcho(formatMoney(roth.annualAmountReal), rothStart.year, rothStart.passed, roth.years),
     ],
-    lines: [roth === undefined ? copy.settingsRothNoneLine : copy.settingsRothPlanLine],
-    ...door(d.filing === 'mfj', { kind: 'tray', lever: 'roth', label: roth === undefined ? copy.leverRothDoorCta : copy.leverRothDoorEditCta } as const),
+    // The none-line names the tray only where the tray draws the Roth row (`rothDoorOpen`, the tray's own rule), and
+    // "apply it there" only where the tab can apply.
+    lines: [
+      roth !== undefined
+        ? copy.settingsRothPlanLine
+        : !rothDoorOpen(d)
+          ? copy.settingsRothNoneNoPretax
+          : readOnly
+            ? copy.settingsRothNoneLineReadOnly
+            : copy.settingsRothNoneLine,
+    ],
+    ...door(rothDoorOpen(d), { kind: 'tray', lever: 'roth', label: roth === undefined ? copy.leverRothDoorCta : copy.leverRothDoorEditCta } as const),
   }
   const survivor: SettingsRow = {
     seat: 'survivor-ratio',
@@ -178,7 +189,18 @@ export function settingsRows(d: ScenarioDraft, readOnly: boolean, anchor: BandPl
         name: copy.assumptionWorkingCostLeftOverName,
         values: [],
         lines: [copy[leftOverLineKey(shownState, workingYearLeftOverWaitingWords(d))]],
-        ...door(true, { kind: 'drawer', target: { kind: 'working-cost' }, label: copy.settingsLeftOverDoor } as const),
+        // The door's verb follows the state: unanswered, answer it; answered, change it; waiting on W, the drawer opens
+        // on W's own question first (the W row's words).
+        ...door(true, {
+          kind: 'drawer',
+          target: { kind: 'working-cost' },
+          label:
+            shownState === 'absent'
+              ? copy.settingsLeftOverDoor
+              : LEFT_OVER_FACE[shownState] === 'waiting'
+                ? copy.settingsWorkingCostDoor
+                : copy.settingsLeftOverChangeDoor,
+        } as const),
       })
     }
   }
@@ -205,13 +227,18 @@ export function settingsRows(d: ScenarioDraft, readOnly: boolean, anchor: BandPl
     ...door(true, { kind: 'drawer', target: { kind: 'state' }, label: copy.settingsStateDoor } as const),
   }
   const tax: SettingsRow[] = [stateRow, disclosureRow(d, 'conversion-tax'), disclosureRow(d, 'working-year-tax')]
-  // The heirs' bracket ranks only the leave-more goal's strategies: anywhere else a row would be a hollow door.
-  if (d.chosenGoal === 'leave-more') {
+  // The heirs' bracket ranks only the leave-more goal's strategies, and Tax Strategies ranks nothing on the date route
+  // (its working-route words): anywhere else a row would be a hollow door. Unchosen, the line says the figure is the
+  // tool's starting one (Tax Strategies' own words beside its picker).
+  if (d.chosenGoal === 'leave-more' && !dateRoute) {
     tax.push({
       seat: 'heir-bracket',
       name: copy.assumptionHeirBracketLabel,
       values: [slots.assumptionHeirBracketOption(formatBracketPercent(d.heirBracket ?? solverAssumedHeirBracket.value))],
-      lines: [copy.assumptionHeirBracketHelp],
+      lines: [
+        copy.assumptionHeirBracketHelp,
+        ...(d.heirBracket === undefined ? [slots.taxStratHeirDefault(formatBracketPercent(solverAssumedHeirBracket.value))] : []),
+      ],
       ...door(true, { kind: 'tax-strategies', label: copy.settingsHeirDoor } as const),
     })
   }

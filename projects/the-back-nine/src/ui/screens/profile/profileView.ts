@@ -22,7 +22,8 @@ import { kindLabel } from '@intake/accountKinds'
 import { anyPre65OrUnknown, anyRetiredPre65WhileAnotherWorks, blendOf, isDateRoute, medicareExtrasView, workingYearLeftOverShownState, workingYearLedgerForRun } from '@intake/intakeMap'
 import { budgetTierSplitAtZero, governedSpendNotes, intakeStepIds } from '@intake/steps'
 import { workingCostValueLine } from '@intake/assumptionLines'
-import { workingYearLeftOverWaitingWords } from '@intake/workingYearLeftOver'
+import { workingYearCostStaleNote, workingYearLeftOverWaitingWords } from '@intake/workingYearLeftOver'
+import { workingYearCostStaleness } from '@intake/workingYearQuote'
 import type { LeftOverShownState } from '@intake/workingYearLeftOverState'
 import { laterLines } from '@intake/workingYearLines'
 import { laterRow, ledgerUnknownLines } from '@intake/workingYearLedgerRows'
@@ -221,9 +222,19 @@ const INCOME_NOUN: Readonly<Record<IncomeType, CopyKey>> = {
 export const incomeCardName = (d: ScenarioDraft, s: IncomeStream): string =>
   slots.workbenchFactOwned(person(d, s.ownerIndex).possessive, copy[INCOME_NOUN[s.type]].toLowerCase())
 
+/** When a stream pays, with its end (milestone 3's review, X8: the deleted facts page printed both): "Now, through age 70",
+ *  "From age 66, for life", or "Ended at 70" once the owner is past its last paying age (never "Now" past the end). */
 function paysValue(d: ScenarioDraft, s: IncomeStream): string {
   const age = d.people[s.ownerIndex]?.currentAge
-  return age !== undefined && s.startAge <= age ? copy.profilePaysNow : slots.profilePaysFrom(s.startAge)
+  if (age !== undefined && s.endAge !== undefined && s.endAge < age) return slots.profileEndedAt(s.endAge)
+  return slots.profilePaysSpan(age !== undefined && s.startAge <= age ? null : s.startAge, s.endAge)
+}
+
+/** How a stream keeps up with inflation (the deleted facts page's "Against inflation" row). */
+function raiseValue(s: IncomeStream): string {
+  if (s.colaMode === 'real-flat') return copy.incomeColaReal
+  if (s.colaMode === 'nominal-flat') return copy.incomeColaNominal
+  return s.colaPct === undefined ? copy.profileNotAnswered : slots.profileRises(formatPercent(s.colaPct))
 }
 
 export function incomeView(d: ScenarioDraft, readOnly: boolean): CardsPageView {
@@ -243,7 +254,8 @@ export function incomeView(d: ScenarioDraft, readOnly: boolean): CardsPageView {
   for (const i of BOTH) {
     const p = d.people[i]
     const claimYear = p.birthYear !== undefined && p.socialSecurityClaimAge !== undefined ? p.birthYear + p.socialSecurityClaimAge : undefined
-    const claimed = p.currentAge !== undefined && p.socialSecurityClaimAge !== undefined && p.currentAge >= p.socialSecurityClaimAge
+    // Unknown where either age is (milestone 3's review, B7): never a "No" the draft can't back.
+    const claimed = p.currentAge === undefined || p.socialSecurityClaimAge === undefined ? undefined : p.currentAge >= p.socialSecurityClaimAge
     cards.push({
       id: `ss-${i}`,
       kind: copy.profileKindSocialSecurity,
@@ -252,7 +264,7 @@ export function incomeView(d: ScenarioDraft, readOnly: boolean): CardsPageView {
       rows: [
         { label: copy.profileRowMonthlyAtFra, value: p.pia === undefined ? copy.profileNotAnswered : dollars(p.pia / 12) },
         { label: copy.profileRowStarts, value: claimYear === undefined || p.socialSecurityClaimAge === undefined ? copy.profileNotAnswered : slots.profileStartsAt(p.socialSecurityClaimAge, claimYear) },
-        { label: copy.profileRowClaiming, value: claimed ? copy.profileYes : copy.profileNo },
+        { label: copy.profileRowClaiming, value: claimed === undefined ? copy.profileNotAnswered : claimed ? copy.profileYes : copy.profileNo },
       ],
       target: { kind: 'social-security', index: i },
     })
@@ -278,6 +290,7 @@ export function incomeView(d: ScenarioDraft, readOnly: boolean): CardsPageView {
       rows: [
         { label: copy.profileRowEachYear, value: dollars(s.annualRealToday) },
         { label: copy.profileRowPays, value: paysValue(d, s) },
+        { label: copy.profileRowAgainstInflation, value: raiseValue(s) },
       ],
       // The widow's number in plain words, never a raw survivor share (R40): what the other keeps if the owner dies.
       // The walk's other-income list printed it under each stream; Act 6 · RC14 deleted that list and gave it this home.
@@ -293,7 +306,11 @@ export function incomeView(d: ScenarioDraft, readOnly: boolean): CardsPageView {
     intro: copy.profileIncomeIntro,
     cards,
     add,
-    lines: [...(anyWorking ? [copy.profileSalaryStopgap] : []), ...(d.incomeStreams.length === 0 ? [copy.profileIncomeOtherNone] : [])],
+    lines: [
+      ...(anyWorking ? [copy.profileSalaryStopgap] : []),
+      // Door words only where the Add menu is drawn (milestone 3's review, X12).
+      ...(d.incomeStreams.length === 0 ? [readOnly ? copy.profileIncomeOtherNoneReadOnly : copy.profileIncomeOtherNone] : []),
+    ],
   }
 }
 
@@ -353,7 +370,9 @@ export function savingsView(d: ScenarioDraft, readOnly: boolean): CardsPageView 
       target: { kind: 'account', index, facet: 'deposits' },
     })
   })
-  const lines = !anyWorking ? [copy.profileSavingsNoneWorking] : cards.length === 0 ? [copy.profileSavingsNoAccounts] : [copy.profileSavingsLimitsNote]
+  // Door words ("Add one with Add saving") only where the Add menu is drawn (milestone 3's review, X12).
+  const noAccounts = readOnly ? copy.profileSavingsNoAccountsReadOnly : copy.profileSavingsNoAccounts
+  const lines = !anyWorking ? [copy.profileSavingsNoneWorking] : cards.length === 0 ? [noAccounts] : [copy.profileSavingsLimitsNote]
   return {
     intro: cards.length > 0 ? copy.profileSavingsIntro : copy.profileSavingsIntroNoCards,
     cards,
@@ -457,10 +476,14 @@ export function extrasValue(d: ScenarioDraft, i: 0 | 1): string {
 }
 
 /** The money picture card's rows: year 0's bottom line, then each later working year that changes or runs short (the
- *  picture's own lines, `workingYearLedgerRows.ts`), or the one line saying why none can be drawn. */
+ *  picture's own lines, `workingYearLedgerRows.ts`), or the one line saying why none can be drawn. A STALE W draws no
+ *  rows (milestone 3's review, X3): the ledger would read a W the household no longer stands by ("Left over in 2026:
+ *  $16,985" where year 0 at today's spending runs $4,015 short), so the card says what the W drawer says, which withholds
+ *  its picture too (`WorkingCostDrawer.tsx`'s `MoneyPicture`). */
 function moneyPictureCard(d: ScenarioDraft): CardView {
   const base = { id: 'money-picture', kind: copy.profileKindMoneyPicture, icon: 'money-picture', name: copy.profileMoneyPictureName, target: { kind: 'working-cost' } } as const
   if (d.workingYearCost === undefined) return { ...base, rows: [], note: copy.profileMoneyPictureNoW }
+  if (workingYearCostStaleness(d) !== null) return { ...base, rows: [], note: workingYearCostStaleNote(d) ?? workingCostValueLine(d) }
   const ledger = workingYearLedgerForRun(d)
   if (ledger === 'unknown') return { ...base, rows: [], note: ledgerUnknownLines(d).join(' ') }
   const y0 = ledger.year0
@@ -562,7 +585,7 @@ export function netWorthView(d: ScenarioDraft, agedBalancesYear: number | undefi
     categoryTotal: dollars(total),
     header: slots.profileInvestmentTotal(copy.profileNetWorthInvestment, dollars(total)),
     rows,
-    empty: rows.length === 0 ? copy.profileNetWorthNoAccounts : null,
+    empty: rows.length === 0 ? (readOnly ? copy.profileNetWorthNoAccountsReadOnly : copy.profileNetWorthNoAccounts) : null,
     add: readOnly ? null : { label: copy.profileAddAccount, items: accountAddItems() },
     notes: [
       agedBalancesYear === undefined ? copy.snapshotInvestedAsEntered : slots.snapshotInvestedAsEnteredIn(agedBalancesYear),

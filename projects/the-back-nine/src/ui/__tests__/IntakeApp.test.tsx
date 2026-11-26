@@ -35,6 +35,8 @@ vi.mock('../shell/ShellSlot', () => ({
       leftOverClauseHost?: boolean
       readOnly?: boolean
       agedBalancesYear?: number
+      display?: { timeAxis: string; sameScale: boolean }
+      onDisplayChange?: (next: { timeAxis: 'ages' | 'years'; sameScale: boolean }) => void
     }
   }) => (
     <div
@@ -44,8 +46,12 @@ vi.mock('../shell/ShellSlot', () => ({
       data-staleness={String(shell.stalenessNote ?? false)}
       data-left-over-host={String(shell.leftOverClauseHost ?? false)}
       data-read-only={String(shell.readOnly ?? false)}
+      data-time-axis={shell.display?.timeAxis ?? 'none'}
     >
       result stub
+      <button type="button" onClick={() => shell.onDisplayChange?.({ timeAxis: 'years', sameScale: true })}>
+        display-years-stub
+      </button>
       <button type="button" onClick={shell.onReview}>
         review-stub
       </button>
@@ -98,11 +104,13 @@ vi.mock('../screens/setup/Stepper', () => ({
   Stepper: ({
     periodConfirmed = false,
     onComplete,
+    notSaved,
   }: {
     periodConfirmed?: boolean
     onComplete?: () => void
+    notSaved?: boolean
   }) => (
-    <div data-period-confirmed={String(periodConfirmed)}>
+    <div data-period-confirmed={String(periodConfirmed)} data-not-saved={String(notSaved)}>
       flow stub
       <button type="button" onClick={() => onComplete?.()}>
         complete-stub
@@ -118,6 +126,7 @@ import { DEV_SEEDS, doctorWorkingYearsStaleVault } from '../devSeeds'
 import { copy, slots } from '../copy'
 import { readyToApplyUpdate } from '../updateGate'
 import { holdUnsavedBuffer } from '@intake/unsavedBuffer'
+import { validateDraft } from '@intake/sanity'
 import type { ScenarioDraft } from '@store/memoryModel'
 import { CURRENT_SCHEMA_VERSION, scenarioIdentityKey, type CurrentScenario } from '@shared/model'
 import { decodeScenario, encodeScenario } from '@shared/scenarioCodec'
@@ -659,8 +668,8 @@ describe('IntakeApp — dev-seed provenance flips only on an APPLIED seed (the R
 describe('IntakeApp — the completed-intake period disarm (the council-ratified NARROW fix, F10 carry-in)', () => {
   // The disarm's proof rides the DRAFT at completion: a draft that trips the spend-period gate
   // (probed with no touches / no provenance) can only have advanced past the spend step via an
-  // explicit period answer. These pin the prop; flow.test.tsx ('periodConfirmed disarms the
-  // force-confirm end-to-end') pins prop→behavior against the REAL flow + rule.
+  // explicit period answer. These pin the prop; stepper.test.tsx ('the stepper’s provenance (a vault or a dev seed
+  // answered it before) asks nothing') pins prop→behavior against the REAL stepper + rule.
   const seedSpend = (annualSpendingReal: number | undefined, spendEntryPeriod: 'month' | 'year') =>
     appModel.update((d) => ({ ...d, annualSpendingReal, spendEntryPeriod }))
 
@@ -686,6 +695,21 @@ describe('IntakeApp — the completed-intake period disarm (the council-ratified
     expect(screen.getByText('flow stub')).toHaveAttribute('data-period-confirmed', 'false')
   })
 
+  it('a budget household’s completion proves no period answer: a budget asks no unit, so its total under the default month never disarms a re-walk (the review’s D4)', async () => {
+    // A budget whose year-0 total is $120,000 (at or past $96,000, so $10,000+ a month under the untouched month).
+    appModel.update(() => ({ ...DEV_SEEDS.budget, annualSpendingReal: 120_000, spendEntryPeriod: 'month' as const }))
+    const d = appModel.getSnapshot().draft
+    expect(
+      validateDraft(d, new Set(['annualSpendingReal'] as const), {}).some((v) => v.rule === 'spend-period-unconfirmed'),
+      '[test setup] the probe alone WOULD fire on this draft (so the budget gate is what holds it)',
+    ).toBe(true)
+    render(<IntakeApp />)
+    fireEvent.click(screen.getByRole('button', { name: 'complete-stub' }))
+    await screen.findByText('result stub')
+    fireEvent.click(screen.getByRole('button', { name: 'review-stub' }))
+    expect(screen.getByText('flow stub')).toHaveAttribute('data-period-confirmed', 'false')
+  })
+
   it('a completion whose draft NEVER trips the gate does NOT disarm — a Review-first ambiguous entry is a fresh first answer', async () => {
     // No spend figure at all: the intake completes (absent inputs are never a hard wall) but
     // proves nothing about the period. A bare completed-once flag would disarm here and let a
@@ -697,6 +721,34 @@ describe('IntakeApp — the completed-intake period disarm (the council-ratified
     await screen.findByText('result stub')
     fireEvent.click(screen.getByRole('button', { name: 'review-stub' }))
     expect(screen.getByText('flow stub')).toHaveAttribute('data-period-confirmed', 'false')
+  })
+})
+
+describe('IntakeApp — what it hands the stepper and the shell for the session', () => {
+  it('"Nothing’s saved to this device yet": a fresh session tells the stepper so; a hydrated one re-walked does not', async () => {
+    render(<IntakeApp />)
+    expect(screen.getByText('flow stub')).toHaveAttribute('data-not-saved', 'true')
+    cleanup()
+    render(<IntakeApp hydrateFromVault />)
+    await affirmGate()
+    await screen.findByText('result stub')
+    fireEvent.click(screen.getByRole('button', { name: 'review-stub' }))
+    expect(await screen.findByText('flow stub')).toHaveAttribute('data-not-saved', 'false')
+  })
+
+  it('the Display choices outlive the shell’s unmount: a first save through the ceremony keeps them (they last until B9 closes)', async () => {
+    appModel.update(() => DEV_SEEDS.retired)
+    render(<IntakeApp />)
+    fireEvent.click(screen.getByRole('button', { name: 'complete-stub' }))
+    await screen.findByText('result stub')
+    expect(screen.getByText('result stub')).toHaveAttribute('data-time-axis', 'ages')
+    fireEvent.click(screen.getByRole('button', { name: 'display-years-stub' }))
+    expect(screen.getByText('result stub')).toHaveAttribute('data-time-axis', 'years')
+    fireEvent.click(screen.getByRole('button', { name: 'keep-stub' }))
+    await screen.findByText('save stub')
+    fireEvent.click(screen.getByRole('button', { name: 'save-commit-stub' }))
+    fireEvent.click(screen.getByRole('button', { name: 'save-done-stub' }))
+    expect(await screen.findByText('result stub'), 'the shell mounted again with the choice kept').toHaveAttribute('data-time-axis', 'years')
   })
 })
 

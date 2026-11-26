@@ -1,7 +1,9 @@
 /**
  * src/ui/screens/profile/drawers/setupPeriod.ts: the spending period's provenance while the drawers run inside the
  * first-run stepper (Act 6 · RC14; `drawerSave.ts`'s header). The stepper provides it; the shell provides none, so a
- * drawer reading `null` is after setup, where the stepper's Complete is the receipt that the period was answered.
+ * drawer reading `null` is after setup. Neither is the whole receipt (milestone 3's review, X2): the Living expenses
+ * drawer ANDs `periodConfirmed` with the plan's shape at open (a one-figure amount no budget governs), because setup's
+ * Complete passes with no figure under a governing budget.
  *
  * `periodConfirmed` is the stepper's provenance (a vault or an applied dev seed answered the period before the plan could
  * be saved; `IntakeApp` passes it as it passed the walk's). `spendPeriodAnswered` is this session's answer: the walk kept

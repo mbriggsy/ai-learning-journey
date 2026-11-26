@@ -11,8 +11,10 @@ export interface DrawerBodyProps {
   readonly open: boolean
   readonly readOnly: boolean
   readonly leaveAsk?: DrawerLeaveAsk
-  /** Close the drawer; `focusCard` is the card focus goes to (a record just added: its new card), null for the page's heading. */
-  readonly onClose: (focusCard?: string | null) => void
+  /** Close the drawer; `focusCard` is the card focus goes to (a record just added: its new card), null for none (the
+   *  opener, else the page's heading). `deleted`: the record is gone, so focus goes to the page's heading, never the
+   *  opener (with index keys the next record's card takes the deleted one's node, milestone 3's review, X11). */
+  readonly onClose: (focusCard?: string | null, opts?: { readonly deleted?: boolean }) => void
   readonly onClosed: () => void
   readonly finalFocus: () => HTMLElement | null
   /** Opened AT a refusal (Act 6 · RC14: the stepper's Next or Complete found one on this drawer's fields): the drawer opens

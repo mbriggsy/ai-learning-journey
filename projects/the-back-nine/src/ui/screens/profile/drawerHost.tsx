@@ -7,7 +7,10 @@
  * ONE DRAWER AT A TIME per host. Each open is numbered, so a reopened drawer always seeds afresh from the store's draft;
  * the drawer stays mounted through its exit and is dropped after it (`onClosed`). On close, focus goes to the card the
  * drawer belongs to (a record just added: its new card), re-found by `data-profile-card` at close, else to the control
- * that opened it while it is still on the page, else to the page's heading (a record just deleted; an outside door gone).
+ * that opened it while it is still on the page, else to the page's heading (an outside door gone). A DELETE closes with its
+ * own signal (`deleted`) and focus goes to the heading: the cards key by index, so the deleted card's node (the opener)
+ * stays on the page as the NEXT record's card, and "the opener while it is still on the page" sent focus there (milestone
+ * 3's review, X11).
  * Nothing is held from open but what can be re-found (insight 060).
  */
 import { useCallback, useRef, useState } from 'react'
@@ -70,8 +73,9 @@ export interface DrawerHost {
   /** Open a drawer; `card` is the card it belongs to where the target alone doesn't name it (Goals' Retirement cards open
    *  the person drawer), `null` for an outside door. */
   readonly open: (target: DrawerTarget, card?: string | null, opts?: { readonly checkAtOpen?: boolean }) => void
-  /** Close the drawer (its exit runs, then it is dropped); `card` re-aims where focus goes. */
-  readonly close: (card?: string | null) => void
+  /** Close the drawer (its exit runs, then it is dropped); `card` re-aims where focus goes; `deleted` sends it to the
+   *  page's heading (the record is gone). */
+  readonly close: (card?: string | null, opts?: { readonly deleted?: boolean }) => void
   readonly isOpen: boolean
   /** The card whose drawer is open (it reads selected; the rest dim). */
   readonly selected: string | null
@@ -93,8 +97,12 @@ export function useDrawerHost(fallback: () => HTMLElement | null): DrawerHost {
     opener.current = document.activeElement instanceof HTMLElement && document.activeElement !== document.body ? document.activeElement : null
     setDrawer({ seq: seq.current, target, open: true, card: id, checkAtOpen: opts?.checkAtOpen === true })
   }, [])
-  const close = useCallback((card?: string | null) => {
+  const close = useCallback((card?: string | null, opts?: { readonly deleted?: boolean }) => {
     if (card !== undefined) focusCard.current = card
+    if (opts?.deleted === true) {
+      focusCard.current = null
+      opener.current = null
+    }
     setDrawer((d) => (d === null ? d : { ...d, open: false }))
   }, [])
   const closed = useCallback(() => setDrawer((d) => (d !== null && !d.open ? null : d)), [])

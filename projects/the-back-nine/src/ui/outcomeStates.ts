@@ -12,10 +12,10 @@
  * THE SIXTH-STATE ASYMMETRY (verified 2026-06-24 — do not "fix" it): there are SIX glyphs
  * (verdictSignal) but only FIVE outcome WORDS (copy.ts has no `outcomeIndeterminate`).
  * `indeterminate` is not a verdict — it is range/incomplete — so it carries `verdictWordKey: null`
- * and `framing: 'range'`, and the surface sources its text from the provisional-answer strip
- * (`answerIncomplete` / `answerPending` / `answerNotYet`), chosen by the surface's OWN mode
- * (pending vs incomplete vs not-yet). The asymmetry is intentional; it is encoded here so it can
- * never be mistaken for a gap.
+ * and `framing: 'range'`, and the surface sources its text from its own waiting words (the
+ * missing-facts lead `answerIncomplete` through `missingFacts.ts`, or `answerPending` while a run
+ * is out), chosen by the surface's OWN mode (pending vs incomplete). The asymmetry is
+ * intentional; it is encoded here so it can never be mistaken for a gap.
  */
 import type { OutcomeState } from '@shared/model'
 import type { CopyKey } from './copy'

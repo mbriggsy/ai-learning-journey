@@ -1128,7 +1128,7 @@ describe('the left-over question — a typed figure below the spending (the rebu
       'A working year almost always costs at least your spending of $105,000 a year. At your spending, your first working year would have $5,985 left over, so the answer at that spending would add at most $5,985 in any working year. What each answer adds to your savings in each working year you’re both alive:',
     )
     const credit = (gloss: string): readonly string[] => [
-      'The answer at your spending would add at most $5,985 a year. This answer adds at most $26,985 a year.',
+      'The answer at your spending would add at most $5,985 a year. Your answer adds at most $26,985 a year.',
       `At your spending, that’s $21,000 a year less in your savings, ${RIDER}${gloss}.`,
     ]
     expect([...block!.querySelectorAll(':scope > ol.note-parts__runs > li.note-parts__run')].map((li) => [...li.children].map((p) => p.textContent))).toEqual([
@@ -1136,13 +1136,13 @@ describe('the left-over question — a typed figure below the spending (the rebu
       [
         '2029 through 2030, while you’re still working',
         'At your spending, each working year you’re both alive comes up $4,015 short, which would be taken from your savings, and the answer at that spending would add nothing.',
-        'Your figure of $84,000 a year leaves those shortfalls out of this answer, which adds at most $16,985 a year, all that’s left over at your figure in those years.',
+        'Your figure of $84,000 a year leaves those shortfalls out of your answer, which adds at most $16,985 a year, all that’s left over at your figure in those years.',
         `At your spending, that’s at most $21,000 a year less in your savings, ${RIDER}.`,
       ],
       [
         '2031 through 2032, while you’re still working',
         'At your spending, each working year you’re both alive comes up $3,652 short, which would be taken from your savings, and the answer at that spending would add nothing.',
-        'Your figure leaves those shortfalls out of this answer, which adds at most $17,348 a year, all that’s left over at your figure in those years.',
+        'Your figure leaves those shortfalls out of your answer, which adds at most $17,348 a year, all that’s left over at your figure in those years.',
         `At your spending, that’s at most $21,000 a year less in your savings, ${RIDER}.`,
       ],
       ['2033 through 2035, while you’re still working', ...credit('')],
@@ -1170,7 +1170,7 @@ describe('the left-over question — a typed figure below the spending (the rebu
     expect(p?.textContent).toBe(
       'A working year almost always costs at least your spending of $90,000 a year. ' +
         'At your spending, your first working year would have $10,985 left over, so the answer at that spending would add at most $10,985 in any working year. ' +
-        'This answer adds at most $16,985 a year to your savings. ' +
+        'Your answer adds at most $16,985 a year to your savings. ' +
         `At your spending, that’s $6,000 less in your savings in each working year you’re both alive, ${RIDER}${GLOSS}. ` +
         'In a working year with only one of you alive, that year’s costs count as $63,000 at your figure of $84,000 a year and $67,500 at your spending of $90,000 a year. ' +
         `At your spending, that’s at most $4,500 a year less in your savings, ${RIDER}.`,

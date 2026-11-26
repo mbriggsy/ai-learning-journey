@@ -2,6 +2,7 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import '@testing-library/jest-dom/vitest'
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { annualAdditions415c2026, catchUpForAge, employerPlan2026, ira2026 } from '@engine/constants/contributions'
 import { blendOf, missingRequiredFacts } from '@intake/intakeMap'
 import { formatMoney } from '@intake/moneyFormat'
@@ -113,6 +114,43 @@ describe('the kind and the owner decide which facts an account can carry', () =>
     expect(within(d).queryByLabelText(copy.accountContributionLabel)).toBeNull()
     expect(within(d).queryByLabelText(copy.accountMatchLabel)).toBeNull()
     expect(within(d).getByText(copy.profileDepositsRetired)).toBeInTheDocument()
+  })
+
+  // Milestone 3's review, X9: "stopped working" only for a person marked retired.
+  it('an owner whose work status is blank: no deposit box, and a line saying it is still needed on Family, never "stopped working"', () => {
+    const { workStatus: _w, ...sam } = at61.people[1]
+    renderDrawer({ kind: 'new-account', accountKind: '401k', ownerIndex: 1 }, { ...at61, people: [at61.people[0], sam] })
+    const d = screen.getByRole('dialog')
+    expect(within(d).queryByLabelText(copy.accountContributionLabel)).toBeNull()
+    expect(within(d).getByText(copy.profileDepositsWorkUnanswered)).toBeInTheDocument()
+    expect(within(d).queryByText(copy.profileDepositsRetired)).toBeNull()
+  })
+
+  // Milestone 3's review, A7: a new account's title follows the kind picked in the drawer.
+  it('a new account’s title names the kind picked in the drawer', async () => {
+    renderDrawer({ kind: 'new-account', accountKind: 'brokerage', ownerIndex: 0 }, at61)
+    expect(screen.getByRole('dialog', { name: slots.profileNewAccountTitle(copy.kindBrokerage) })).toBeInTheDocument()
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('combobox', { name: copy.profileKindLabel }))
+    await user.click(await screen.findByRole('option', { name: copy.kindRothIra }))
+    expect(screen.getByRole('dialog', { name: slots.profileNewAccountTitle(copy.kindRothIra) })).toBeInTheDocument()
+  })
+})
+
+// Milestone 3's review, B4: every leg of an unknown fund's mix cleared lets the household's mix go, as a blank hand mix does.
+describe('an unknown fund’s mix cleared', () => {
+  it('drops the household’s classification for that fund, never keeping the old mix under blank boxes', () => {
+    const blend = { kind: 'exact', stockPct: 60, bondPct: 30, cashPct: 10 } as const
+    const held: ScenarioDraft = {
+      ...at61,
+      enteredAccounts: [{ id: 'acct-fund', ownerIndex: 0, kind: 'roth-ira', valueToday: 100_000, ticker: 'ZZZQX' }],
+      tickerClassifications: { ...at61.tickerClassifications, ZZZQX: blend },
+    }
+    const seed = accountFormFromDraft(held, { index: 0 })
+    expect(seed.mixHow, '[test setup] the fund face').toBe('fund')
+    const res = buildAccountEdit(held, 0, seed, { ...seed, tickerLegs: { stock: '', bond: '', cash: '' } })
+    expect(res.ok && res.draft.tickerClassifications.ZZZQX).toBeUndefined()
+    expect(res.ok && res.draft.enteredAccounts[0]!.ticker).toBe('ZZZQX')
   })
 })
 

@@ -270,6 +270,7 @@ describe('the shell’s history', () => {
     expect(screen.getByText(copy.settingsIntroReadOnly)).toBeInTheDocument()
     expect(document.querySelectorAll('[data-assumption-seat]').length).toBeGreaterThan(0)
     expect(document.querySelector('[data-settings-door]')).toBeNull()
+    expect(document.querySelector('[data-settings-rewalk]'), 'no re-walk into setup from a read-only tab').toBeNull()
     // A household with a marketplace quote and someone under 65 (the page's door would show on a writable tab).
     act(() =>
       appModel.update((d) => ({

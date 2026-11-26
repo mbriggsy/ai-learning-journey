@@ -10,6 +10,13 @@
  * view-only tab passes neither. Every word is a prop (plan 2.1 decision 10). Save and Delete close the drawer unless their
  * handler returns `false` (a refused figure, a delete waiting for its second press, keeps it open).
  *
+ * SAVE NEVER RUNS PAST A REFUSED BOX (milestone 3's review, X1): Save first blurs the focused element when it sits inside
+ * the drawer (a figure typed and not yet blurred commits, the kit's fields commit on blur), then, while any box in the
+ * drawer holds text its parser refused (the kit's number inputs mark it `data-typed-refused` in the blur's own task,
+ * `NumberInputs.tsx`), it calls no `onSave` and the drawer stays open: that text never reached the caller, so a save
+ * would keep the old figure, or none, under a refusal on screen (the tray's line drawer staged a lifelong line from a
+ * Through year typed "2.5"). Every drawer on the kit gets this, whatever its caller checks.
+ *
  * Since Act 6 · RC13a (the Profile drawers): `notice` is a slot between the band and the scrolling body that never scrolls
  * away (a drawer's "these changes aren't saved" ask); `focusTitle` moves focus to the title on open (it names the drawer
  * and pops no phone keyboard), and `finalFocus` names where focus goes on close when the opener may be gone (a card the
@@ -92,6 +99,7 @@ export function Drawer({
 }: DrawerProps) {
   const [ownOpen, setOwnOpen] = useState(false)
   const titleRef = useRef<HTMLHeadingElement>(null)
+  const popupRef = useRef<HTMLDivElement>(null)
   const isOpen = open ?? ownOpen
   const setOpen = (next: boolean) => {
     if (open === undefined) setOwnOpen(next)
@@ -117,6 +125,7 @@ export function Drawer({
           )}
         />
         <Dialog.Popup
+          ref={popupRef}
           {...(focusTitle ? { initialFocus: titleRef } : {})}
           {...(finalFocus !== undefined ? { finalFocus: () => finalFocus() ?? true } : {})}
           className={cn(
@@ -173,6 +182,11 @@ export function Drawer({
                   variant="primary"
                   disabled={saveDisabled}
                   onClick={() => {
+                    // The header's law: commit the focused field, then never past a box holding text it could not read.
+                    const popup = popupRef.current
+                    const active = document.activeElement
+                    if (popup !== null && active instanceof HTMLElement && popup.contains(active)) active.blur()
+                    if (popup?.querySelector('[data-typed-refused]') != null) return
                     if (onSave() !== false) setOpen(false)
                   }}
                 >

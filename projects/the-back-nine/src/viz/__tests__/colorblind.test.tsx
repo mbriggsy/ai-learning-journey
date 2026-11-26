@@ -254,6 +254,14 @@ describe('CVD self-test — the clone’s side-by-side pairs (RC_PAIRS)', () => 
     expect(floorFailures([planted])).toHaveLength(1)
   })
 
+  it('Blueprint’s sky tiles are measured in the hex they draw: RC_HUES.skyTile IS theme.css’s --color-sky, and every other tile tone is its series hue', () => {
+    expect(readThemeToken('--color-sky').toLowerCase()).toBe(RC_HUES.skyTile)
+    expect(readThemeToken('--color-green').toLowerCase()).toBe(RC_HUES.green)
+    expect(readThemeToken('--color-blue').toLowerCase()).toBe(RC_HUES.blue)
+    expect(readThemeToken('--color-orange').toLowerCase()).toBe(RC_HUES.orange)
+    expect(readThemeToken('--color-coral').toLowerCase()).toBe(RC_HUES.red)
+  })
+
   it('the 22% bracket line is drawn in sand-ink: it clears the floor against the 24% orange where sand itself does not', () => {
     expect(weakest(RC_HUES.sandInk, RC_HUES.orange).d).toBeGreaterThanOrEqual(CVD_MIN_OKLAB)
     expect(weakest(RC_HUES.sand, RC_HUES.orange).d).toBeLessThan(CVD_MIN_OKLAB)

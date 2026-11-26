@@ -1,4 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
+import { budgetGoverns } from '@budget/budgetModel'
 import { isDateRoute } from '@intake/intakeMap'
 import { validateDraft, type FieldPath } from '@intake/sanity'
 import { subscribeUnsavedBuffers, unsavedBuffersHeld } from '@intake/unsavedBuffer'
@@ -45,6 +46,7 @@ import { composeReentry, type ReentryView } from './reentryChrome'
 import { deriveStaleness } from '@store/staleness'
 import { exposureForDraft } from './stalenessExposure'
 import { copy } from './copy'
+import { DEFAULT_DISPLAY, type DisplaySettings } from './displaySettings'
 import './styles/save.css'
 
 // The ceremony rides its own lazy chunk (it pulls the crypto/zxcvbn graph) — kept off the
@@ -202,6 +204,10 @@ export default function IntakeApp({
   // Act 6 · RC14: a brand-new plan (no vault, no dev seed) opens the stepper on "Start a new plan"'s names, once; its
   // Complete (and any later re-walk) never asks them again.
   const [newPlan, setNewPlan] = useState(() => !hydrateFromVault && seed == null)
+  // Act 6 · RC18: the Display drawer's two choices, for the session (`displaySessionNote`: they last until B9 closes).
+  // Held here, beside the other session state, because the shell unmounts across a first save, a Keep's ceremony and a
+  // backup; held in the shell they reset on every one of those. Never saved (no saved shape in this act).
+  const [display, setDisplay] = useState<DisplaySettings>(DEFAULT_DISPLAY)
 
   // ── U17 §S5 — THE RECOMMENDATION SAVE GESTURE'S OWN STATE ──────────────────────────────────
   // Five values, none of which the plan rail's machine can carry: `resultSave.ts` describes the
@@ -588,10 +594,13 @@ export default function IntakeApp({
     // completed draft trips the spend-period gate on a no-touches/no-provenance evaluation,
     // the spend step can only have been advanced through an explicit period answer (the
     // provenance proof on periodAnswerProven above) — record it before the flow unmounts.
+    // A governing budget asks no unit (its lines are yearly figures, its face has no unit control), so its completion
+    // proves no period answer: a budget total at or past the band under the untouched default month trips the probe
+    // and would wrongly disarm a later re-walk's one-figure gate (the review's D4).
+    const done = appModel.getSnapshot().draft
     if (
-      validateDraft(appModel.getSnapshot().draft, PERIOD_PROBE_TOUCHED, {}).some(
-        (v) => v.rule === 'spend-period-unconfirmed',
-      )
+      !budgetGoverns(done.budget) &&
+      validateDraft(done, PERIOD_PROBE_TOUCHED, {}).some((v) => v.rule === 'spend-period-unconfirmed')
     ) {
       setPeriodAnswerProven(true)
     }
@@ -1143,6 +1152,9 @@ export default function IntakeApp({
           onReview: reviewFromShell,
           // The committed answer every page reads, and the draft the facts page reads (U8).
           snapshot,
+          // The Display drawer's choices, for the session (held here: the shell unmounts across a save or a backup).
+          display,
+          onDisplayChange: setDisplay,
           // A read-only tab's facts page draws no door (U8): `save.kind` can't carry it (`none` is also a plan
           // that can't be saved yet).
           readOnly,

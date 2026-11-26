@@ -7,6 +7,8 @@
 import { personField, type FieldPath } from '@intake/sanity'
 import { writeWorkingYearInvestment } from '@intake/steps'
 import type { PersonDraft, ScenarioDraft } from '@store/memoryModel'
+import { slots } from '../../../copy'
+import { tablePerson } from '../../../workbench/tableRun'
 import type { FieldErrors } from './drawerSave'
 
 type Built<K extends string> = { readonly ok: true; readonly draft: ScenarioDraft } | { readonly ok: false; readonly fields: FieldErrors<K> }
@@ -54,6 +56,8 @@ export function buildSocialSecurity(d: ScenarioDraft, i: 0 | 1, seed: SocialSecu
   if (form.monthly !== seed.monthly) next = withPerson(next, i, { pia: form.monthly === undefined ? undefined : form.monthly * 12 })
   if (form.claimYear !== seed.claimYear) {
     const birthYear = next.people[i].birthYear
+    // A typed year with no birth year to read it as an age is refused, never dropped (milestone 3's review, X6).
+    if (form.claimYear !== undefined && birthYear === undefined) return { ok: false, fields: { claimYear: slots.profileBirthYearFirst(tablePerson(d, i, 0, 0).possessive, false) } }
     next = withPerson(next, i, { socialSecurityClaimAge: form.claimYear === undefined || birthYear === undefined ? undefined : form.claimYear - birthYear })
   }
   return { ok: true, draft: next }

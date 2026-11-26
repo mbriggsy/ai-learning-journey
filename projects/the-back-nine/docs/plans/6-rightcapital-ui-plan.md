@@ -678,7 +678,7 @@ its key-metric sentence or legend ("in the steady future"), so a one-path pictur
 | The Medicare-extras appendix (F5) | `composeMedicareExtrasTypicalNote` over `medicareExtrasDisclosureView`, through `composeAnswerNotes` | `medicareExtrasTypicalBoth`, `medicareExtrasTypicalOne` and their fact slots | Probability's footnote row, after the Medicare residual; Health Care's key-metric column |
 | The provisional tag and the re-figuring line | `answerView.ts` | `answerProvisionalTag`, `answerRefiguringCaption`, `answerRefiguringDate`, `answerRefiguringVerdict` | the page intro on Probability and Snapshot's ring card; the chart title on Odds by stop year |
 | The thin-cohort cut | `truncateFanAtThinCohort` (moved to `src/viz/cohort.ts` by RC0) | none (the fan is cut where the cohort thins) | the fan everywhere. **The shipped cut stays**; the reference's "fade and say so" is not built (the 2026-07-03 cold-read ruling stands) *(the pilot's call, 2026-11-24, b9-3 (Briggsy pre-approved all changes))* |
-| The non-monotone dip and the window-edge tell | `curveMarks.ts` (the `isDip` field of each `CurveMark`), `dateSplit.ts` | `dateNonMonotoneNote`, `dateWindowEdge`, `dateWindowEdgeNote` | Odds by stop year (on the column and under the chart); the Probability intro |
+| The non-monotone dip and the window-edge tell | `curveMarks.ts` (the `isDip` field of each `CurveMark`), `dateSplit.ts` | `dateNonMonotoneNote`, `dateWindowEdgeNote` (the inline `dateWindowEdge` fragment retired with the answer strip at RC14, its only reader) | Odds by stop year (on the column and under the chart); the Probability intro |
 | The survivor spending basis | `verdictSentence.ts` | `verdictSurvivorSpendBasis` | under the "As the survivor" row on Probability |
 | The survivor income step-down (one Social Security benefit ends, single filer's brackets: why the survivor's odds read lower) | `headlineRows` in `probabilityView.ts`, over `SurvivorReading.incomeStepDownMonthlyReal` (shown only for a drop that does not round to $0, as the old survivor card drew it) | `verdictSurvivorStepDown` | under the "As the survivor" row on Probability, after the spending basis: said once under both halves when both match (`shareRowNotes`), in each half when a lever moves it (a claim age) *(fix round 1 of the milestone-1 review: it died with `SurvivorReadout.tsx` in RC4, left off this map by oversight)* |
 | The leave-more skew and the delta skew | `recommendationView.ts` (`skew`, `deltaSkew`) | `recSkewMedian` and the delta-skew line | the Winner card, beside its hero figure |
@@ -1885,6 +1885,14 @@ open). `e2e/intake-fold.spec.ts` retires here. Local look.
   provenance holds, or a budget governs; it always touches W's period, whose disarm is the face's (no W reaches the draft
   but through the W drawer's Save or a vault or seed). Complete runs every step's check, so it is the walk's terminal
   advance and the after-setup receipt still holds.
+  *(Amended 2026-11-25, b9-4, milestone 3's review — the pilot's call: the after-setup receipt did NOT hold. Complete
+  passes with no spending figure (the period rule fires only on a figure), and a budget plan passes it under
+  `budgetGoverns` with its unit never answered, so after setup 96,000 typed under the pre-checked "Each month" saved
+  $1,152,000 a year unasked, from a first figure or a budget switched to one. The Living drawer now keys the receipt on
+  the plan's shape at open: the unit counts as answered only where the drawer opened over a one-figure amount with no
+  budget governing (every road that put such a figure there passed the period gate; the W face's rule, `sanity.ts`'s
+  provenance note), else it asks until its unit is tapped, after setup as in setup; in setup the stepper's provenance
+  counts only on that same shape. Complete's probe skips a governing budget, so a re-walk's provenance stays honest.)*
 - **Expenses' W card opens the W question alone; Goals' money picture card opens the whole drawer.** The picture and the
   left-over question read Goals' coverage and quote, so in setup they come last (the walk put the picture after every
   input).
@@ -1900,6 +1908,10 @@ open). `e2e/intake-fold.spec.ts` retires here. Local look.
 - **On the last step the missing facts stand beside Complete**, below the cards, never a live region, with their own lead
   ("still waiting on a few facts"; the withheld lead where nothing can be entered); Complete still opens the plan. The
   walk's "Nothing's saved to this device yet" line stands beside the nav while no plan is saved.
+  *(Amended 2026-11-25, b9-4, milestone 3's review — the pilot's call: "Until these are in, …" rides only the facts the
+  household can still enter, never a withheld-only box (it promised an answer no entry can give); "Complete still opens
+  your plan." prints only while Complete would pass, and a passed step whose check is still owed (W, after a person
+  turns working on Goals) loses its ✓.)*
 - **The Net Worth step prints no in-frame caveat**: the stepper is outside the shell and keeps the app's trailing mount.
 - **Re-homed honesty lines**: the Social Security statement link (`linkFindSsStatement`) in the Social Security drawer;
   the unanswered extras fork's standing line (`medicareExtrasPanelStanding`) in the Medicare drawer after setup only; the

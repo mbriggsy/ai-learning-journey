@@ -15,7 +15,8 @@ import type { CopyKey } from '@ui/copy'
 import { canonicalIdentityToken, type IncomeType } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
 import type { FieldErrors } from './drawerSave'
-import { copy } from '../../../copy'
+import { copy, slots } from '../../../copy'
+import { tablePerson } from '../../../workbench/tableRun'
 
 export type OtherIncomeField =
   | 'owner'
@@ -48,6 +49,7 @@ const ERROR_FIELD: Readonly<Partial<Record<CopyKey, OtherIncomeField>>> = {
   errIncomeAnnuityKindRequired: 'annuityKind',
   errIncomeExclusionRequired: 'exclusionFraction',
   errIncomeExclusionRange: 'exclusionFraction',
+  errIncomeEndBeforeStart: 'endAge',
 }
 
 /** The form for a stream at `index` (an edit), or a new stream of `type` for `ownerIndex` (from the Add menu). */
@@ -64,7 +66,14 @@ export function buildOtherIncome(
 ): { readonly ok: true; readonly draft: ScenarioDraft } | { readonly ok: false; readonly fields: FieldErrors<OtherIncomeField> } {
   if (index !== 'new' && canonicalIdentityToken(form) === canonicalIdentityToken(seed)) return { ok: true, draft: d }
   const built = buildIncomeStream(form, d)
-  if (!built.ok) return { ok: false, fields: { [ERROR_FIELD[built.error] ?? 'type']: copy[built.error] } }
+  if (!built.ok) {
+    // "Paying now" with no birth year: the start age box isn't drawn, so the refusal goes under the timing it came from,
+    // naming the birth year it needs (milestone 3's review, X7).
+    if (built.error === 'errIncomeStartAgeRequired' && form.receivingNow === true) {
+      return { ok: false, fields: { timing: slots.profileBirthYearFirst(tablePerson(d, form.ownerIndex, 0, 0).possessive, true) } }
+    }
+    return { ok: false, fields: { [ERROR_FIELD[built.error] ?? 'type']: copy[built.error] } }
+  }
   const next = [...d.incomeStreams]
   if (index === 'new') next.push(built.stream)
   else next[index] = built.stream

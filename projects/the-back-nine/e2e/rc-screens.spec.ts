@@ -4461,8 +4461,19 @@ for (const size of RC12_SIZES) {
           await expect(page.locator(`[data-blueprint-tab="${id}"]`)).toBeAttached()
           await settleLayout(page)
           await noSidewaysScroll(page, who)
-          // The R13 tie: Net Worth's headline figure; Goals' crowned date where one is settled; the lanes print facts only.
-          const crowned = (await page.locator('[data-bp-value][aria-describedby]').count()) > 0
+          // The R13 tie: Net Worth's headline figure; Goals' crowned date where one is settled (the tie on the tile's own
+          // button); the lanes print facts only. The crown is found by its icon, never by the tie it is meant to prove: on
+          // the working seed's settled answer a crown MUST render, and then its button MUST name the in-frame caveat (an
+          // `if` on the tie attribute could run zero times and pass with the tie gone).
+          const crowns = page.locator('main.result [data-bp-tile]:has(svg.lucide-crown)')
+          const crowned = (await crowns.count()) > 0
+          if (seed === 'date' && id === 'goals') {
+            expect(crowned, `${who}: the settled answer's crowned date renders`).toBe(true)
+            await expect(crowns.first(), `${who}: the crowned tile's button names the in-frame caveat`).toHaveAttribute(
+              'aria-describedby',
+              new RegExp(`(^|\\s)${IN_FRAME_DISCLAIMER_ID}(\\s|$)`),
+            )
+          }
           await assertOneVisibleCaveat(page, null, id === 'net-worth' || (id === 'goals' && crowned))
           const legend = await page.locator('[data-bp-legend] li').allInnerTexts()
           const categories = await page.locator('main.result [data-bp-tile] [data-bp-category]').evaluateAll((els) =>
@@ -4484,7 +4495,7 @@ for (const size of RC12_SIZES) {
               els.map((el) => ({
                 year: Number(el.querySelector('[data-bp-year]')?.textContent),
                 ages: el.querySelector('[data-bp-ages]')?.textContent ?? '',
-                crowned: el.querySelector('[data-bp-value][aria-describedby]')?.textContent ?? null,
+                crowned: el.querySelector('[data-bp-tile]:has(svg.lucide-crown) [data-bp-value]')?.textContent ?? null,
               })),
             )
             expect(groups.length, `${who}: a timeline`).toBeGreaterThan(0)

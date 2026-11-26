@@ -120,8 +120,10 @@ export function AccountDrawer({
   const shows = (k: AccountField) => FACET_FIELDS[facet].includes(k)
   const err = (k: AccountField) => (check.fields[k] !== undefined ? { error: check.fields[k] } : {})
   const account = index === 'new' ? undefined : opened.enteredAccounts[index]
-  const title = account !== undefined ? accountCardName(opened, account) : slots.profileNewAccountTitle(kindLabel(seed.kind ?? 'brokerage'))
-  const ownerWorking = opened.people[form.ownerIndex]?.workStatus === 'working'
+  // A new account's title names the kind picked in the drawer (milestone 3's review, A7), never only the one it opened on.
+  const title = account !== undefined ? accountCardName(opened, account) : slots.profileNewAccountTitle(kindLabel(form.kind ?? seed.kind ?? 'brokerage'))
+  const ownerStatus = opened.people[form.ownerIndex]?.workStatus
+  const ownerWorking = ownerStatus === 'working'
   const people = ([0, 1] as const).map((i) => ({ value: String(i) as '0' | '1', label: tablePerson(opened, i, 0, 0).label }))
   const fund = form.mixHow === 'fund' ? knownFund(form.ticker) : undefined
   // A refusal on a field this facet doesn't draw, named with the field's label at the top (never pointing at nothing).
@@ -151,7 +153,7 @@ export function AccountDrawer({
             onDelete: () => {
               const before = model.getSnapshot().draft
               commitEdit(model, before, deleteAccount(before, index))
-              onClose(null)
+              onClose(null, { deleted: true })
             },
           })}
       onClose={() => onClose(index === 'new' ? null : undefined)}
@@ -250,7 +252,11 @@ export function AccountDrawer({
         <section className="flex flex-col gap-4 border-t border-stone-300 pt-6 first:border-t-0 first:pt-0" data-profile-section="deposits">
           <h3 className="text-body font-semibold text-stone-900">{copy.profileDepositsHeading}</h3>
           {!ownerWorking ? (
-            <p className="text-body text-stone-600">{copy.profileDepositsRetired}</p>
+            // "Stopped working" only for a person marked retired (milestone 3's review, X9); a blank work status says it is
+            // still needed, on Family, and opens no deposit box.
+            <p className="text-body text-stone-600" data-profile-deposits-closed={ownerStatus === 'retired' ? 'retired' : 'unanswered'}>
+              {ownerStatus === 'retired' ? copy.profileDepositsRetired : copy.profileDepositsWorkUnanswered}
+            </p>
           ) : (
             <>
               <DrawerFields>

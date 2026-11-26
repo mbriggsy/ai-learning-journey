@@ -234,7 +234,7 @@ State at close:
 - Done: the first-run stepper (the walk deleted; the same answers give the same plan, field by field, against drafts recorded from the walk itself) and Profile → Blueprint. On the final tree: typecheck 0, lint 0, the reached unit files green (RC14: 148 files / 3039; RC15: 25 / 579), `verify:csp` 25 passed, fit RC14 + RC13a/b + RC18 + both trays 65/65, vertical-fit 15/15, RC15 + RC2 8/8, `verify:doc-stats` OK, each unit's look block run with a clean audit and the shots read by the orchestrator. CI on `c43d7a50` and `760ed0bb`: every job green.
 - **Check at start:** CI is fully green on `c43d7a50` (RC14) and `760ed0bb` (RC15), both workflows, every job (read at close); the close's own docs push runs the quick job only. `pnpm verify:aca` goes stale ~2026-12-12. U14's timing was borderline: re-time on a quiet machine with `e2e/held/whatif-timing.spec.ts`; clearly over 2 s flips the plan's U14 branch to a plan-base lane.
 - **Where to aim milestone 3's review** (beyond plan 7.3's standing questions): RC14's in-setup spending-period provenance (`SpendPeriodSetup`, `src/ui/screens/profile/drawers/setupPeriod.ts`, `drawerSave.ts`'s header: the walk's 12× guard on a fresh plan) and whether any other drawer premise assumed "after the walk"; the refused-text guard (`data-typed-refused`, `ProfileDrawer.tsx` and `ActionItemsTray.tsx`: every box kind covered?); `stepOwesFacts` (`src/ui/screens/setup/stepperView.ts`: an unmapped fact counts on every step); setup sends no recompute; Blueprint's settled-only anchor (`blueprintView.ts`'s `stopAnchor`: a calendar year only from a final, crowned, not-refiguring answer) and the Medicare tile's wording for a member still working.
-- **The milestone's register pass:** (1) the budget worksheet prints a line's window as years counted from the first retirement year: on a retired household print the calendar year beside each offset (`startCalendarYear` + offset) in `src/ui/screens/profile/drawers/ExpensesDrawers.tsx`'s worksheet rows (RC15's `blueprintView.ts` `stopAnchor` is the anchor rule to reuse); (2) the register entries on the panel's 12× re-label trap (`docs/backlog.md` ~229-256 and ~4342) describe a surface RC18 deleted (citations pinned at `87e3c807`): close each or re-point it to the Living drawer. Also file: no arm drives the re-entry gate's "update" into the stepper (RC14's builder); and the pre-existing citation rot the re-anchor's pair-check showed (each already wrong at `7933cf12`, re-point by content): `docs/backlog.md` ~2186's `:1449`/`:1461` ("The rare Part A premium belongs…": grep that quote in `src/ui/copy.ts`), ~1024's `:543-545` (the trimming sentences: find their file first), ~3701's `:1449`; `docs/plans/features/pay-less-tax-all-in-build-spec.md` ~138's `goalPayLessTaxGloss`, `recDiscNiit`, `recDiscStateTax` line numbers (grep each key).
+- **The milestone's register pass:** (1) the budget worksheet prints a line's window as years counted from the first retirement year: on a retired household print the calendar year beside each offset (`startCalendarYear` + offset) in `src/ui/screens/profile/drawers/ExpensesDrawers.tsx`'s worksheet rows (RC15's `blueprintView.ts` `stopAnchor` is the anchor rule to reuse); (2) the register entries on the panel's 12× re-label trap (`docs/backlog.md` ~229-256 and ~4342) describe a surface RC18 deleted (citations pinned at `87e3c807`): close each or re-point it to the Living drawer. Also file: no arm drives the re-entry gate's "update" into the stepper (RC14's builder); and the pre-existing citation rot the re-anchor's pair-check showed (each already wrong at `7933cf12`, re-point by content): `docs/backlog.md` ~2186's `:1449`/`:1461` ("The rare Part A premium belongs…": grep that quote in `src/ui/copy.ts`), ~1024's `:545-547` (the trimming sentences: find their file first), ~3701's `:1449`; `docs/plans/features/pay-less-tax-all-in-build-spec.md` ~138's `goalPayLessTaxGloss`, `recDiscNiit`, `recDiscStateTax` line numbers (grep each key).
 - Open for Act 6 (unchanged): the store's sticky seam waits for RC21; `e2e/caddie-walk.spec.ts` still drives old surfaces (RC21); `held/solve-timing` was re-pointed by RC8 and not run; the Tier 1 *Stress Test's out-of-pocket stress, refused on a plan with no out-of-pocket figure…* stays open; Cash Flows' table carries no R13 tie (the Tier 4 leftovers entry); round 3's findings stay in the register's Tier 1 *Act 6 milestone 2's review: what a reader can misread, left open*; `intake.css` still holds the walk's dead rules (RC19 deletes it); Blueprint's connector elbows draw square corners (cosmetic).
 - **Landmines for the review:** check `~/.claude/statusline-meters.json` (`seven_day`) before the fan-out; milestone 2's review ran three rounds. A teammate's `"idleReason":"interrupted"` is your own message landing, not a stop, and a builder's look run can be declined in its own seat (both in `docs/landmines.md`, *Claude Code, workflows and sessions*).
 - For Briggsy: `temp/rc-shots/RC14/` (the stepper: "Start a new plan", every step for a fresh, a retired and a working household, Complete naming every missing fact, Next refusing at the W gate) and `RC15/` (Blueprint's three tabs, a drawer open, Edit).
@@ -457,7 +457,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    (`copy.ts:1069`, `:1074, :1126, :1080, :1088, :1090` — selected by `composeRothOmissionsNote`'s 2×3 matrix, whose
    ACA-priced arm already AFFIRMS the subsidy is counted, so a trend sentence must reconcile with that
    affirmation, not append to it) + the two health-control siblings (`copy.ts:1210`, `:1216`), which CANNOT take it
-   (gated on `statePriced` alone — `copy.ts:1202-1204`). Unfiled: `shadowRateHeadroom` (`copy.ts:4865`)
+   (gated on `statePriced` alone — `copy.ts:1202-1204`). Unfiled: `shadowRateHeadroom` (`copy.ts:4878`)
    quotes cliff headroom against an SLCSP that never trends — the headroom figure inherits the held-price
    optimism; and there is NO ACA cost-trend constant at all (`health.ts` carries only `medicareCostTrend`)
    — ACA premiums are the one health channel with no trend, no clause AND no disclosure, in the
@@ -629,7 +629,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    committed answer, not the draft, and anchoring candidates at a future retirement year is a real ranking
    question.
    ⚑ **2026-09-04 anchors:** the gates are `Result.tsx line 382 at 95c715e19` (surface) and Result.tsx line 296 at 95c715e19 (the invite conjunct; door
-   `Result.tsx line 454-461 at 95c715e19`); a THIRD exclusion kills the record card at its producer (`IntakeApp.tsx:481`). Strike
+   `Result.tsx line 454-461 at 95c715e19`); a THIRD exclusion kills the record card at its producer (`IntakeApp.tsx:487`). Strike
    "~89px headroom" — that is the SPINE idle frame's figure; the date arms of `verify:fit` assert ORDER + REACHABILITY only — never fit
    (spec header `vertical-fit.spec.ts line 53-54 at 1c08f2288`). `Result.tsx line 270-272 at 95c715e19`'s "covers the date route honestly" comment was FALSE (never
    minted there; a route-flip render is dropped) — swept 2026-09-04. A crowned-offset params builder ALREADY
@@ -695,9 +695,9 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     household (up to **14** steps — 8 unconditional + 6 gated, `steps.ts:105-130`) if the
     reader confirms the dialog, because nothing is written until Save (the D1 law; a plaintext
     draft outside the vault is a security-posture ruling, never a build) · the
-    `schemaVersion` migration ladder **does not exist as code for versions 1 and 2** — `IntakeApp.tsx:817`
+    `schemaVersion` migration ladder **does not exist as code for versions 1 and 2** — `IntakeApp.tsx:826`
     refuses anything but the current version, so a v1/v2 plan decodes ok, then meets "That didn't work. Try
-    again." over a reload that cannot succeed (`IntakeApp.tsx:958-975`), and its backups fail identically
+    again." over a reload that cannot succeed (`IntakeApp.tsx:967-984`), and its backups fail identically
     (same bytes, `backup.ts:84-93`). No build ever wrote either. *(Re-scoped 2026-10-31, b9-3: this bullet
     said a future v4 would push today's v3 vaults into that arm. The schema-v4 bump did not: version 3
     relabels to 4 at decode, a label-only step — `docs/architecture.md` §7.3.)* · there is **no way to delete the vault** (`clearVault` exists; its only PRODUCTION
@@ -710,14 +710,14 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     copy" and both nearest register entries — *The aged surface — every 2026 plan changes wording on 2027-01-01, unreviewed* and *Unscored Caddie tape rows plus the four aged-surface tone calls due before 2027-01-01* — are owned **briggsy**; neither is a copy fix; the "three arms with
     corrected costs" existed NOWHERE — they are now written, with sizes, under the register's "The aged
     surface" entry. A shipped copy defect on the SAME cohort WAS pilot and is FIXED (2026-09-04: the singular arm ships at
-    `copy.ts:4772-4774` under the NUMBER AGREEMENT post-mortem at `copy.ts:4758`, covered by `copyGuard.test.ts:1071`):
+    `copy.ts:4785-4787` under the NUMBER AGREEMENT post-mortem at `copy.ts:4771`, covered by `copyGuard.test.ts:1071`):
     `rothPlanRanked` hardcoded the plural "Those years are counted from…" after a correctly-singular "for 1 year" —
     live for any at/past-RMD household on an aged vault (the 1-year clamp, `solveAnchor.ts:263-264`) — and no test
     covered `years: 1, passed: true`. (b) THE LADDER is register `L` · **pilot**, and the v2→v3 ALGORITHM IS
     PRESCRIBED: `model.ts:1882-1884` mints synthetic entered accounts from the old aggregates "so the ladder
     stays total"; the write primitive exists (`db.ts:232 rewriteModel`, pinned `db.test.ts:180`); today's
     ladder is decode-and-return with NO migrate step (`scenarioCodec.ts:1301-1308`, the v1/v2 arms), and a v1 vault survives
-    every store seam on real IndexedDB (`e2e/vaultHarness.ts:24-25`) to die only at `IntakeApp.tsx:817`.
+    every store seam on real IndexedDB (`e2e/vaultHarness.ts:24-25`) to die only at `IntakeApp.tsx:826`.
     Two new defects ride with it: `session.ts:464-468` claims the writer and UNLOCKS before the version is
     judged (the recovery path claims unconditionally, `:539`), and `backup.ts:209-213` LANDS a legacy backup
     on a clean device and only then dead-ends. Size M–L, not S. His word narrows to the TERMINAL arm's
@@ -811,7 +811,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     page and the codified G.S. page both still show the struck "after 2025 — 3.99%", so they read as
     CONTRADICTING the pinned record until they recompile — **session law wins, do not "correct" the
     engine table back to a flat 3.99%.** Comment-only; typecheck · lint · 3289 tests · state-tax gate
-    all green. (`copy.ts:5157` and `caseStateCompanions.ts` were already correct — swept 2026-08-02.)
+    all green. (`copy.ts:5170` and `caseStateCompanions.ts` were already correct — swept 2026-08-02.)
     ⚑ **The CVD half of this cluster is PARKED, not owed — do not re-propose it.** The filed gap ("the CVD
     crops prove PRESENCE only") is real, and a `verify:cvd` pixel-regression gate was designed for it on
     2026-08-02. **Briggsy declined it on the only authority that can:** *"I'm pretty color blind and I think

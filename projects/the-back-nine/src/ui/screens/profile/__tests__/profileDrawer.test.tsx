@@ -167,6 +167,24 @@ describe('read-only and Delete', () => {
     expect(recompute).toHaveBeenCalledTimes(1)
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
   })
+
+  // Milestone 3's review, X11: the cards key by index, so the deleted card's node stays as the next record's card; focus
+  // goes to the page's heading, never there.
+  it('Delete of the first of two accounts sends focus to the page’s heading, never the next record’s card', async () => {
+    const { model } = profileStore(DEV_SEEDS.date)
+    render(<Host model={model} screen="profile-net-worth" />)
+    const opener = card('account-0')
+    act(() => opener.focus())
+    fireEvent.click(opener)
+    const dialog = screen.getByRole('dialog')
+    fireEvent.click(within(dialog).getByRole('button', { name: copy.profileDrawerDelete }))
+    fireEvent.click(within(dialog).getByRole('button', { name: copy.profileDrawerDeleteConfirm }))
+    expect(model.getSnapshot().draft.enteredAccounts).toHaveLength(1)
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+    expect(card('account-0'), '[test setup] the next record now holds the first card').not.toBeNull()
+    await waitFor(() => expect(document.activeElement?.tagName).toMatch(/^H[1-6]$/))
+    expect(document.activeElement?.closest('[data-profile-card]')).toBeNull()
+  })
 })
 
 describe('the widow’s number (R40), on the Income card that shows the stream', () => {

@@ -153,6 +153,33 @@ describe('no safe default: a Save commits a whole stream or nothing (R40.7)', ()
     expect(saveNew(newForm('pension')).refusal).toEqual(refusedOn({ survivorPct: 'errIncomeSurvivorRequired' }))
   })
 
+  // Milestone 3's review, X8: a last paying age before the first is no stream; refused under the end age, drawn.
+  it('an end age before the start age never commits, its refusal under the end age (paying now starts at today’s age)', () => {
+    expect(saveNew(newForm('pension', { receivingNow: false, startAge: 70, endAge: 68, survivorPct: 0.5 })).refusal).toEqual(refusedOn({ endAge: 'errIncomeEndBeforeStart' }))
+    expect(saveNew(newForm('pension', { endAge: 60, survivorPct: 0.5 })).refusal).toEqual(refusedOn({ endAge: 'errIncomeEndBeforeStart' }))
+    expect(saveNew(newForm('pension', { receivingNow: false, startAge: 70, endAge: 70, survivorPct: 0.5 })).stream).toMatchObject({ startAge: 70, endAge: 70 })
+    expectRefusedOnField(withStreams(PENSION), copy.incomeEndAgeLabel, '60', 'errIncomeEndBeforeStart')
+  })
+
+  // Milestone 3's review, G2: the two choices a Save needs are announced up front, never only by a refusal.
+  it('the timing and the inflation choices carry aria-required', () => {
+    const { dialog } = openDrawer(withStreams(PENSION))
+    expect(within(dialog).getByRole('combobox', { name: copy.incomeTimingLegend })).toHaveAttribute('aria-required', 'true')
+    expect(within(dialog).getByRole('combobox', { name: copy.incomeColaLegend })).toHaveAttribute('aria-required', 'true')
+  })
+
+  // Milestone 3's review, X7: "paying now" with no birth year refused on the drawn timing box, naming the birth year.
+  it('"paying now" with no birth year is refused under the timing (drawn), naming the owner’s birth year, never an undrawn start age', () => {
+    const { birthYear: _b, currentAge: _a, ...sam } = retired.people[1]
+    const noBirth: ScenarioDraft = { ...retired, people: [retired.people[0], sam] }
+    const { model } = profileStore(noBirth)
+    const seed = otherIncomeFormFrom(noBirth, { type: 'pension' })
+    const res = saveEdit(model, (d) => buildOtherIncome(d, 'new', seed, { ...seed, ownerIndex: 1, annualRealToday: 9_000, receivingNow: true, colaMode: 'real-flat', survivorPct: 0.5 }), ownOtherIncomeField(0))
+    expect(res.saved).toBe(false)
+    if (res.saved) return
+    expect(res.check.fields).toEqual({ timing: slots.profileBirthYearFirst('Sam’s', true) })
+  })
+
   it('a stream paying now anchors at its OWNER’s current age, never a typed start age or the other person’s (KTD-8b)', () => {
     const { stream } = saveNew(newForm('pension', { ownerIndex: 1, startAge: 70, survivorPct: 0.5 }))
     expect(stream).toMatchObject({ ownerIndex: 1, type: 'pension', annualRealToday: 30_000, startAge: 65, colaMode: 'real-flat', survivorPct: 0.5 })

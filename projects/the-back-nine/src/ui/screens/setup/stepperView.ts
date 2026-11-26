@@ -251,7 +251,11 @@ export const setupNames = (d: ScenarioDraft): readonly string[] => d.people.map(
 
 /** What the answer still waits for, on the last step beside Complete (the provisional strip's lines, which left setup;
  *  plan RC14): the lead, then each block with its closing line, the household's still-needed facts first. Null where
- *  nothing is missing. Complete still opens the plan, whose pages name the same facts (never a wall). */
+ *  nothing is missing. Complete still opens the plan, whose pages name the same facts (never a wall), and the box says
+ *  so only while it is true: `completeOpens` is the stepper's own `checkSteps` over the whole run (a step whose check
+ *  refuses, W's owed after a switch to working, say, keeps Complete on that step). "Until these are in" goes with the
+ *  still-needed facts alone, right after them: a fact no entry can fix is never "in", so a withheld-only box promises
+ *  no until, and the line never sits after the tool's-limit tail (the review's D2). */
 export interface MissingBlock {
   readonly lead: string
   readonly lines: readonly string[]
@@ -287,18 +291,24 @@ export function stepOwesFacts(d: ScenarioDraft, step: SetupStepId): boolean {
   return missingRequiredFacts(d).some((m) => (m.kind ?? 'absent') === 'absent' && factSteps(m.labelKey).includes(step))
 }
 
-export function missingBlock(d: ScenarioDraft): MissingBlock | null {
+export function missingBlock(d: ScenarioDraft, completeOpens: boolean): MissingBlock | null {
   const missing = missingRequiredFacts(d)
   if (missing.length === 0) return null
   // Every name, never "N more": the last screen before the answer has the room, and whose where two people owe one.
   const { stillNeeded, cannotPrice } = missingFactLines(missing, { people: d.people })
+  const opens = completeOpens ? [copy.setupMissingOpens] : []
   return {
     // The strip's keep-going lead ("takes shape as you go") reads wrong beside Complete; the withheld lead stands as it is.
     lead: blockedLeadFor(missing) === copy.answerWithheldLead ? copy.answerWithheldLead : copy.setupMissingLead,
-    lines: [
-      ...(stillNeeded !== null ? [stillNeeded, copy.answerNoSynthesis] : []),
-      ...(cannotPrice !== null ? [cannotPrice, copy.answerCannotPriceTail] : []),
-      copy.setupMissingNote,
-    ],
+    lines:
+      stillNeeded !== null
+        ? [
+            stillNeeded,
+            copy.answerNoSynthesis,
+            ...opens,
+            copy.setupMissingUntil,
+            ...(cannotPrice !== null ? [cannotPrice, copy.answerCannotPriceTail] : []),
+          ]
+        : [...(cannotPrice !== null ? [cannotPrice, copy.answerCannotPriceTail] : []), ...opens],
   }
 }

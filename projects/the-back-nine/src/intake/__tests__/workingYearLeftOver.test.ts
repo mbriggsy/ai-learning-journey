@@ -1351,7 +1351,7 @@ describe('workingYearCostTypedBelowLine and its door — R1 over the whole worki
     expect(line(sam56, RESULT_HOSTED)).toEqual(plain(`${counts('This', '84,000', '90,000')} ${A_CAP} ${body('This')}`))
     expect(line(sam56, GATE)).toEqual(plain(`${counts('Your', '84,000', '90,000')} ${A_CAP} ${body('Your')}`))
     expect(line(sam56, GATE_HOSTED)).toEqual(plain(`${counts('Your', '84,000', '90,000')} ${A_CAP} ${body('Your')}`))
-    expect(workingYearLeftOverAtQuoteLine(sam56, 'sheet'), 'the sheet: the floor alone, then "This" (KD9)').toEqual(plain(`${bareLean('90,000')} ${A_CAP} ${body('This')}`))
+    expect(workingYearLeftOverAtQuoteLine(sam56, 'sheet'), 'the sheet: the floor alone, then "Your" (KD9; milestone 3’s review B6: the drawer shows no answer)').toEqual(plain(`${bareLean('90,000')} ${A_CAP} ${body('Your')}`))
     expect(workingYearLeftOverAtQuoteLine(sam56, 'step')).toEqual(plain(`${counts('Your', '84,000', '90,000')} ${A_CAP} ${body('Your')}`))
   })
 
@@ -2003,7 +2003,7 @@ describe('workingYearCostTypedBelowLine and its door — R1 over the whole worki
    *  title and warning already say "this answer": pilot call 6), "Your" where none is yet (the gate, the walk's step) — in
    *  the counts sentence, the lean, the runs, and nowhere the other noun. In the sheet no counts sentence and a bare lean. */
   type LineHost = 'result' | 'gate' | 'sheet' | 'step'
-  const HOST_NOUN: Readonly<Record<LineHost, 'This' | 'Your'>> = { result: 'This', gate: 'Your', sheet: 'This', step: 'Your' }
+  const HOST_NOUN: Readonly<Record<LineHost, 'This' | 'Your'>> = { result: 'This', gate: 'Your', sheet: 'Your', step: 'Your' }
   const N_COUNTS = 'the counts sentence opens on the host’s noun, and the lean names it (in the sheet neither: no counts sentence, the floor alone)'
   const N_RUNS = 'the runs name the host’s noun, and only it'
   const N_OTHER = 'the other noun nowhere on the line'
@@ -2650,17 +2650,17 @@ describe('workingYearLeftOverTypedBelow and workingYearLeftOverAtQuoteLine — t
     return parts
   }
 
-  it('A (one run): in the sheet the lean’s floor alone, the cap sentence and T’s twin in "This" words, a plain paragraph ending on the survivor part ($63,000 at the figure, $67,500 at the spending: AE2); on the step the counts sentence and the whole lean first, and "Your" in its lean and its run (KD9)', () => {
+  it('A (one run): in the sheet the lean’s floor alone, the cap sentence and T’s twin in "Your" words, a plain paragraph ending on the survivor part ($63,000 at the figure, $67,500 at the spending: AE2); on the step the counts sentence and the whole lean first, and "Your" in its lean and its run (KD9)', () => {
     const d = DEV_SEEDS.datesavedtyped
     expect(workingYearLeftOverTypedBelow(d)).toBe('84,000')
-    expect(seat(d, 'sheet')).toEqual(plain(`${bareLean('90,000')} ${A_CAP} ${A_TAIL('This')}`))
+    expect(seat(d, 'sheet')).toEqual(plain(`${bareLean('90,000')} ${A_CAP} ${A_TAIL('Your')}`))
     expect(seat(d, 'step')).toEqual(plain(`${counts('Your', '84,000', '90,000')} ${A_CAP} ${A_TAIL('Your')}`))
     for (const host of ['sheet', 'step'] as const) expect(isPlainNote(seat(d, host)), `${host}: one run stays a plain note`).toBe(true)
   })
 
-  it('TM (three runs): in the sheet the lean’s floor, the cap sentence and the scoped lead, then one item per run in "This" words — the short run keeping "of $84,000 a year" as the line’s first mention of the figure (call (1b)) — then the survivor part after the list; on the step the counts sentence and the whole lean ahead of them, and "Your" in every run', () => {
+  it('TM (three runs): in the sheet the lean’s floor, the cap sentence and the scoped lead, then one item per run in "Your" words — the short run keeping "of $84,000 a year" as the line’s first mention of the figure (call (1b)) — then the survivor part after the list; on the step the counts sentence and the whole lean ahead of them, and "Your" in every run', () => {
     const d = DEV_SEEDS.datesavedtypedmoved
-    expect(seat(d, 'sheet')).toEqual(block(`${bareLean('105,000')} ${TM_CAP} ${SCOPED_LEAD}`, TM_RUNS('This', true), TM_SURVIVOR))
+    expect(seat(d, 'sheet')).toEqual(block(`${bareLean('105,000')} ${TM_CAP} ${SCOPED_LEAD}`, TM_RUNS('Your', true), TM_SURVIVOR))
     expect(seat(d, 'step')).toEqual(block(`${counts('Your', '84,000', '105,000')} ${TM_CAP} ${SCOPED_LEAD}`, TM_RUNS('Your'), TM_SURVIVOR))
     expect(workingYearLeftOverTypedBelow(d)).toBe('84,000')
   })
@@ -2688,15 +2688,15 @@ describe('workingYearLeftOverTypedBelow and workingYearLeftOverAtQuoteLine — t
     // The pension household's one-year short runs carry the one-year scope ("that working year, if you’re both alive,"); in
     // the sheet 2029 is the figure's first mention, so it keeps "of $84,000 a year", and 2032 does not.
     const pensionSheet = runsOf(seat(TYPED_BELOW_WITNESSES.pension, 'sheet'))
-    expect(pensionSheet[1]!.sentences[1]).toBe('Your figure of $84,000 a year leaves that shortfall out of this answer, which adds at most $16,985.')
+    expect(pensionSheet[1]!.sentences[1]).toBe('Your figure of $84,000 a year leaves that shortfall out of your answer, which adds at most $16,985.')
     expect(pensionSheet[3]!.sentences).toEqual([
       'At your spending, that working year, if you’re both alive, comes up $3,652 short, which would be taken from your savings, and the answer at that spending would add nothing.',
-      'Your figure leaves that shortfall out of this answer, which adds at most $16,985.',
+      'Your figure leaves that shortfall out of your answer, which adds at most $16,985.',
       `At your spending, that’s at most $20,637 less in your savings${RIDER}`,
     ])
   })
 
-  it('ONE composer (U4 test 5): on every witness the step’s line is the gate’s whole where the gate does not host the moved clause ("Your" on both), and the sheet’s is the Result’s after its counts sentence, its lean the floor alone, its runs the Result’s but for the first mention of the typed figure, which keeps its dollars (call (1b)); "This" on both — the hosts can never word a run or the survivor part two ways', () => {
+  it('ONE composer (U4 test 5): on every witness the step’s line is the gate’s whole where the gate does not host the moved clause ("Your" on both), and the sheet’s is the Result’s after its counts sentence, its lean the floor alone, its runs the Result’s but for the first mention of the typed figure, which keeps its dollars (call (1b)), "Your" for "This" (the drawer shows no answer: milestone 3’s review, B6) — the hosts can never word a run or the survivor part two ways', () => {
     /** The sheet's runs with the typed figure's first mention said as a line with a counts sentence says it. */
     const asAfterCounts = (items: readonly NoteSegment[], typedFigure: string): readonly NoteSegment[] =>
       items.map((s) => ({ label: s.label, sentences: s.sentences.map((x) => x.split(`our figure of $${typedFigure} a year`).join('our figure')) }))
@@ -2709,12 +2709,12 @@ describe('workingYearLeftOverTypedBelow and workingYearLeftOverAtQuoteLine — t
       const quote = /below your (?:spending of|budget’s first year after work stops, which comes to) \$([\d,.]+) a year\./.exec(result.opening)?.[1]
       expect(quote, `${key}: the Result names its quote`).toBeDefined()
       expect(sheet.opening.startsWith(bareLean(quote!)), `${key}: the sheet opens on the lean’s floor`).toBe(true)
-      expect(result.opening.endsWith(sheet.opening.slice(bareLean(quote!).length)), `${key}: the Result ends its opening on the sheet’s, after the lean`).toBe(true)
+      expect(toYour(result.opening).endsWith(sheet.opening.slice(bareLean(quote!).length)), `${key}: the Result ends its opening on the sheet’s, after the lean, "Your" for "This"`).toBe(true)
       if (runsOf(gate).length === 0) {
         expect(isPlainNote(sheet), key).toBe(true)
-        expect(gate.opening.endsWith(toYour(sheet.opening.slice(bareLean(quote!).length))), `${key}: the gate ends on the sheet’s one run and survivor part, "Your" for "This"`).toBe(true)
+        expect(gate.opening.endsWith(sheet.opening.slice(bareLean(quote!).length)), `${key}: the gate ends on the sheet’s one run and survivor part ("Your" on both)`).toBe(true)
       } else {
-        expect(asAfterCounts(runsOf(sheet), typedFigure), `${key}: the sheet’s runs are the Result’s`).toEqual(runsOf(result))
+        expect(asAfterCounts(runsOf(sheet), typedFigure), `${key}: the sheet’s runs are the Result’s, "Your" for "This"`).toEqual(runsToYour(runsOf(result)))
         expect(sheet.runs!.closing, `${key}: and its survivor part`).toEqual(result.runs!.closing)
         expect(gate.runs, `${key}: the gate’s are the Result’s, "Your" for "This"`).toEqual({ items: runsToYour(runsOf(result)), closing: result.runs!.closing })
         expect(sheet.runs!.closing, `${key}: every witness opens the gate, so every list carries a survivor part`).not.toBeNull()

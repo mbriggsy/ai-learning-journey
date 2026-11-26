@@ -16,15 +16,18 @@
  *  - a violation on another card's fact blocks Save only when this edit brought it in (a birth year that puts an
  *    account's deposits over the catch-up-less limit), and is named in the drawer's own words with the fact's place;
  *    one the draft already held is left to its own card (never a drawer that can't save anything).
- * THE SPENDING PERIOD'S PROVENANCE. After setup (the shell's drawers) it is `periodConfirmed`: the first-run stepper's
- * Complete is the receipt that the spending period was answered (it runs the walk's Continue check of every step, the
- * spend step's period gate among them, `src/ui/screens/setup/stepperView.ts`), so both period rules' disarms are touched.
- * DURING setup (Act 6 · RC14: the same drawers, on a fresh draft) that receipt does not exist yet, so the one drawer that
- * writes the spending figure and its unit, Living expenses, passes a `SpendPeriodSetup`: the stepper's own provenance (a
- * vault or a dev seed, `IntakeApp`'s), and the spend period's disarm only where its unit was answered this session (a
- * tap on it, in this drawer or an earlier Save of it). Every other drawer keeps the after-setup constant, and that is
- * exact, not loose: the spend-period rule reads only the spending figure and its unit, which no other drawer writes, so
- * no other drawer can bring it in or clear it. The W gate's own path (`WORKING_COST_ANSWER_FIELD`) is never touched
+ * THE SPENDING PERIOD'S PROVENANCE. The one drawer that writes the spending figure and its unit, Living expenses, always
+ * passes a `SpendPeriodSetup` keyed on the plan's SHAPE at open (milestone 3's review, X2): `periodConfirmed` only where
+ * the drawer opened over a one-figure amount no budget governs (every road that put such a figure there passed the period
+ * gate), and the spend period's disarm only where its unit was answered (a tap on it, a worksheet whose lines are
+ * yearly, or, during setup, an earlier Save of it with its unit tapped). Setup's Complete is NOT the receipt: it passes
+ * with no spending figure while a budget governs (RC14's budget disarm, `stepperView.ts`), so a household that set up
+ * on a budget, or with none, and then typed 96,000 under the pre-checked month saved $1,152,000 a year unasked. The W
+ * gate records the same failure class and its fix (`src/intake/sanity.ts`'s provenance note: a flag captured where the
+ * surface opened outlived the figure it vouched for). During setup the stepper's own provenance (a vault or a dev seed,
+ * `IntakeApp`'s) is ANDed with that shape, so a vault plan saved with no figure and re-walked asks too. Every other
+ * drawer keeps the after-setup constant, and that is exact, not loose: the spend-period rule reads only the spending
+ * figure and its unit, which no other drawer writes, so no other drawer can bring it in or clear it. The W gate's own path (`WORKING_COST_ANSWER_FIELD`) is never touched
  * here: it is the W step's alone, as on the panel (KTD3). The one exception is the W step's own home, the
  * Pre-retirement living expenses drawer (RC13b): it passes a `TouchedAdjust` that touches the gate and lets the W
  * period's disarm stand only where its face says so (setup and after alike: the W period's disarm is the face's).
@@ -51,11 +54,13 @@ export interface EditCheck<K extends string> {
   readonly elsewhere: readonly string[]
 }
 
-/** The after-setup provenance (the header's receipt). */
+/** The provenance every drawer but Living expenses passes (none of them writes the spending figure or its unit, so the
+ *  spend-period rule can neither come in nor clear on their Save: the header). */
 const AFTER_SETUP: SpendPeriodSetup = { periodConfirmed: true, spendPeriodAnswered: true }
 
-/** THE SPEND PERIOD DURING SETUP (the header): `periodConfirmed` the stepper's provenance (a vault or a dev seed answered
- *  it before), `spendPeriodAnswered` its unit answered this session. */
+/** THE SPEND PERIOD AS THE LIVING EXPENSES DRAWER SEES IT (the header): `periodConfirmed` the plan's shape at open (a
+ *  one-figure amount, no budget; during setup ANDed with the stepper's provenance), `spendPeriodAnswered` its unit
+ *  answered (tapped, a yearly worksheet, or an earlier Save during setup). */
 export interface SpendPeriodSetup {
   readonly periodConfirmed: boolean
   readonly spendPeriodAnswered: boolean

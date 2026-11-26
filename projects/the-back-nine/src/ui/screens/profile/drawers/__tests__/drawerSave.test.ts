@@ -5,7 +5,7 @@ import { applyBundle } from '@intake/whatIf'
 import { draftIdentityKey, type ScenarioDraft } from '@store/memoryModel'
 import type { WhatIfLeverV6 } from '@shared/model'
 import { DEV_SEEDS } from '../../../../devSeeds'
-import { copy } from '../../../../copy'
+import { copy, slots } from '../../../../copy'
 import { refusalWords } from '../../../../workbench/railChrome'
 import { profileStore } from '../../__tests__/profileStore'
 import { accountFormFromDraft, buildAccountEdit, deleteAccount, ownAccountField } from '../accountFields'
@@ -44,6 +44,20 @@ describe('a refused Save reaches nothing', () => {
     expect(res.saved || res.check.fields.claimYear).toBe(copy.errSsClaimWindow)
   })
 
+  // Milestone 3's review, X6: a typed claim year with no birth year to read it as an age is refused, never dropped.
+  it('a claim year typed with no birth year: refused under the claim year, naming the birth year it needs; the store untouched', () => {
+    const { birthYear: _b, currentAge: _a, socialSecurityClaimAge: _c, ...sam } = retired.people[1]
+    const noBirth: ScenarioDraft = { ...retired, people: [retired.people[0], sam] }
+    const { model, recompute } = profileStore(noBirth)
+    const seed = socialSecurityFormFrom(noBirth, 1)
+    const res = saveEdit(model, (d) => buildSocialSecurity(d, 1, seed, { ...seed, claimYear: 2030 }), ownSocialSecurityField(1))
+    expect(res.saved).toBe(false)
+    if (res.saved) return
+    expect(res.check.fields).toEqual({ claimYear: slots.profileBirthYearFirst('Sam’s', false) })
+    expect(model.getSnapshot().draft).toBe(noBirth)
+    expect(recompute).not.toHaveBeenCalled()
+  })
+
   it('a birth year not yet come, and a retired person’s stop age in the future: each under its own field', () => {
     const { model } = profileStore(retired)
     const seed = personFormFrom(model.getSnapshot().draft, 0)
@@ -74,7 +88,14 @@ describe('a refused Save reaches nothing', () => {
   })
 
   it('a birth year that drops a person’s catch-up puts their deposits over the limit on another card: refused, and named there (insight 158)', () => {
-    const big: ScenarioDraft = { ...working, enteredAccounts: [{ ...working.enteredAccounts[0]!, annualContribution: 30_000, employerMatchAnnual: 0 }, working.enteredAccounts[1]!] }
+    // No claim age typed: a birth year moved 14 years would also carry a typed claim YEAR out of 62–70 (X4), a second
+    // refusal this arm is not about.
+    const { socialSecurityClaimAge: _claim, ...alex } = working.people[0]
+    const big: ScenarioDraft = {
+      ...working,
+      people: [alex, working.people[1]],
+      enteredAccounts: [{ ...working.enteredAccounts[0]!, annualContribution: 30_000, employerMatchAnnual: 0 }, working.enteredAccounts[1]!],
+    }
     const { model } = profileStore(big)
     expect(validateDraft(big, new Set([accountField(0, 'annualContribution')]), {}), '[test setup] legal at 58').toEqual([])
     const seed = personFormFrom(big, 0)
@@ -140,6 +161,67 @@ describe('the person drawer writes as the walk’s work step writes', () => {
     const wSeed = personFormFrom(working, 0)
     const toRetired = buildPerson(working, 0, wSeed, { ...wSeed, workStatus: 'retired', retirementAge: 57 })
     expect(toRetired.ok && toRetired.draft.people[0]).toMatchObject({ workStatus: 'retired', retirementAge: 57, earnedIncomeReal: 0 })
+  })
+
+  // Milestone 3's review, X5: a retired person's investment-income slot holds the forced $0, never an answer.
+  it('to working: the investment income while working is re-asked (the forced retired $0 cleared), the other slot kept', () => {
+    const start: ScenarioDraft = { ...retired, health: { ...retired.health, workingYearInvestmentByPerson: [0, 0] } }
+    const seed = personFormFrom(start, 1)
+    const toWorking = buildPerson(start, 1, seed, { ...seed, workStatus: 'working' })
+    expect(toWorking.ok && toWorking.draft.health.workingYearInvestmentByPerson).toEqual([0, undefined])
+  })
+
+  // Milestone 3's review, X4: a birth year moved from one known year to another keeps the calendar facts.
+  describe('a birth year moved from one known year to another', () => {
+    const at = (birthYear: number): ScenarioDraft => {
+      const age = retired.startCalendarYear - birthYear
+      const people: ScenarioDraft['people'] = [{ ...retired.people[0], birthYear, currentAge: age, socialSecurityClaimAge: 67 }, retired.people[1]]
+      return {
+        ...retired,
+        people,
+        incomeStreams: [
+          { ownerIndex: 0, annualRealToday: 12_000, startAge: age, colaMode: 'real-flat', survivorPct: 0.5, type: 'pension' },
+          { ownerIndex: 0, annualRealToday: 6_000, startAge: age + 3, endAge: age + 10, colaMode: 'real-flat', survivorPct: 0, type: 'other' },
+          { ownerIndex: 1, annualRealToday: 5_000, startAge: retired.people[1].currentAge!, colaMode: 'real-flat', survivorPct: 0, type: 'other' },
+        ],
+      }
+    }
+    const move = (from: number, to: number) => {
+      const d = at(from)
+      const seed = personFormFrom(d, 0)
+      const built = buildPerson(d, 0, seed, { ...seed, birthYear: to })
+      if (!built.ok) throw new Error('[test setup] refused')
+      return { before: d, after: built.draft }
+    }
+
+    it('1960 → 1961 (a year younger): the claim YEAR holds, and income paying now keeps paying now', () => {
+      const { before, after } = move(1960, 1961)
+      const p = after.people[0]
+      expect(p.currentAge).toBe(before.people[0].currentAge! - 1)
+      expect(p.birthYear! + p.socialSecurityClaimAge!).toBe(1960 + 67)
+      expect(after.incomeStreams[0]!.startAge).toBe(p.currentAge)
+      expect(after.incomeStreams[1], 'a later stream’s typed ages stay').toEqual(before.incomeStreams[1])
+      expect(after.incomeStreams[2], 'the other person’s stream is untouched').toEqual(before.incomeStreams[2])
+    })
+
+    it('1961 → 1960 (a year older): the claim YEAR holds; no stream moves (paying now stays paying now)', () => {
+      const { before, after } = move(1961, 1960)
+      const p = after.people[0]
+      expect(p.birthYear! + p.socialSecurityClaimAge!).toBe(1961 + 67)
+      expect(after.incomeStreams).toEqual(before.incomeStreams)
+    })
+
+    it('a held claim year whose age leaves 62–70 is refused on its own card, named in the drawer', () => {
+      const d = at(1960)
+      const late: ScenarioDraft = { ...d, people: [{ ...d.people[0], socialSecurityClaimAge: 70 }, d.people[1]] }
+      const { model } = profileStore(late)
+      const seed = personFormFrom(late, 0)
+      const res = saveEdit(model, (x) => buildPerson(x, 0, seed, { ...seed, birthYear: 1959 }), ownPersonField(0))
+      expect(res.saved).toBe(false)
+      if (res.saved) return
+      expect(res.check.elsewhere.join(' ')).toContain(copy.errSsClaimWindow)
+      expect(model.getSnapshot().draft).toBe(late)
+    })
   })
 
   it('the rule fields it owns are its own; another person’s are not', () => {

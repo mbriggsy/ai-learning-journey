@@ -89,7 +89,7 @@ export function OtherIncomeDrawer({
             onDelete: () => {
               const before = model.getSnapshot().draft
               commitEdit(model, before, deleteOtherIncome(before, index))
-              onClose(null)
+              onClose(null, { deleted: true })
             },
           })}
       onClose={() => onClose(index === 'new' ? null : undefined)}
@@ -136,6 +136,7 @@ export function OtherIncomeDrawer({
           value={form.receivingNow === undefined ? null : form.receivingNow ? 'now' : 'later'}
           placeholder={copy.profileChoose}
           disabled={readOnly}
+          required
           {...err('timing')}
           onValueChange={(v) => set('timing', { receivingNow: v === 'now' })}
         />
@@ -170,6 +171,7 @@ export function OtherIncomeDrawer({
           value={form.colaMode ?? null}
           placeholder={copy.profileChoose}
           disabled={readOnly}
+          required
           {...err('colaMode')}
           onValueChange={(colaMode) => set('colaMode', { colaMode })}
         />

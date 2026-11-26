@@ -592,6 +592,49 @@ describe('the Edit drawer and an added spending line', () => {
     fireEvent.click(link)
     expect(await screen.findByRole('dialog', { name: copy.trayLineTitle })).toBeInTheDocument()
   })
+
+  /** Open the line drawer on the budgeted seed, its name and amount filled (the amount blurred). */
+  async function openLineDrawer() {
+    openTray(budgeted)
+    fireEvent.click(within(tray()).getByRole('button', { name: copy.trayEdit }))
+    const drawer = await screen.findByRole('dialog', { name: copy.trayEditTitle })
+    fireEvent.click(within(drawer).getByRole('button', { name: copy.trayEditAddNew }))
+    fireEvent.click(await screen.findByRole('menuitem', { name: copy.traySectionExpenses }))
+    fireEvent.click(await screen.findByRole('menuitem', { name: copy.trayEditAddLine }))
+    const line = await screen.findByRole('dialog', { name: copy.trayLineTitle })
+    fireEvent.change(within(line).getByLabelText(copy.budgetLineLabelLabel), { target: { value: 'Boat' } })
+    return line
+  }
+
+  // Milestone 3's review, X1: the kit drawer's Save blurs the focused box, then stops on a box holding text it refused.
+  it.each([
+    ['Through year "2.5", typed and not blurred', copy.budgetWindowThroughLabel, '2.5', copy.profileInvalidYearOffset],
+    ['From year "1.5", typed and not blurred', copy.budgetWindowFromLabel, '1.5', copy.profileInvalidYearOffset],
+    // The edited-amount arm: 9,000 already held, then "9,000x" typed over it; without the kit's stop Save staged 9,000.
+    ['an amount "9,000x" typed over a held 9,000, not blurred', copy.budgetAmountLabel, '9,000x', copy.errBudgetAmountNonFinite],
+  ])('Save stages nothing past a refused box: %s', async (_name, label, text, words) => {
+    const line = await openLineDrawer()
+    const amount = within(line).getByLabelText(copy.budgetAmountLabel)
+    act(() => amount.focus())
+    fireEvent.change(amount, { target: { value: '9,000' } })
+    act(() => amount.blur())
+    const box = within(line).getByLabelText(label)
+    act(() => box.focus())
+    fireEvent.change(box, { target: { value: text } })
+    fireEvent.click(within(line).getByRole('button', { name: copy.traySave }))
+    expect(screen.getByRole('dialog', { name: copy.trayLineTitle })).toBeInTheDocument()
+    expect(within(line).getByText(words)).toBeInTheDocument()
+    expect(within(tray()).queryByRole('button', { name: 'Boat' })).toBeNull()
+  })
+
+  it('an amount typed and not blurred is the one Save stages (the blur commits inside the press)', async () => {
+    const line = await openLineDrawer()
+    const amount = within(line).getByLabelText(copy.budgetAmountLabel)
+    act(() => amount.focus())
+    fireEvent.change(amount, { target: { value: '9,000' } })
+    fireEvent.click(within(line).getByRole('button', { name: copy.traySave }))
+    expect(await within(tray()).findByRole('button', { name: 'Boat' })).toBeInTheDocument()
+  })
 })
 
 describe('the Roth row carries the Roth sheet’s honesty lines while it holds a plan (plan 5.2’s port)', () => {

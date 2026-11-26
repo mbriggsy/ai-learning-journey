@@ -78,6 +78,9 @@ export interface BlueprintTile {
   readonly note?: string
   /** The answer's own work-optional date (the crown); its sentence is tied to the R13 caveat. */
   readonly crowned?: boolean
+  /** The tile prints the answer's own sentence (the crowned date, or the no-date words): the page then carries the
+   *  StaleBanner's lines, as every figured page does. */
+  readonly answers?: boolean
   readonly target: DrawerTarget
 }
 
@@ -140,6 +143,9 @@ export interface BlueprintView {
   readonly body: BlueprintBody
   /** Lines under the body (Goals' one-figure spending line). */
   readonly lines: readonly string[]
+  /** A tile on this tab, as drawn (Edit's hidden categories left out), prints the answer's own sentence: the shell
+   *  draws the StaleBanner's lines above the page then (the review's E3; `Shell.tsx`). */
+  readonly answerShown: boolean
 }
 
 export interface BlueprintInput {
@@ -305,12 +311,22 @@ function goalsBody(d: ScenarioDraft, stop: StopAnchor): { body: BlueprintBody; l
     if (p.workStatus === 'working') {
       if (stop.kind === 'calendar') {
         placed.push({
-          tile: { ...stopBase, value: stop.lead ?? copy.profileFindsDate, ...(stop.edge === true ? { note: copy.dateWindowEdgeNote } : {}), crowned: true },
+          tile: {
+            ...stopBase,
+            value: stop.lead ?? copy.profileFindsDate,
+            ...(stop.edge === true ? { note: copy.dateWindowEdgeNote } : {}),
+            crowned: true,
+            ...(stop.lead !== undefined ? { answers: true } : {}),
+          },
           at: { kind: 'year', year: stop.year },
           rank: 0,
         })
       } else {
-        placed.push({ tile: { ...stopBase, value: stop.lead ?? copy.profileFindsDate }, at: { kind: 'after', years: 0 }, rank: 0 })
+        placed.push({
+          tile: { ...stopBase, value: stop.lead ?? copy.profileFindsDate, ...(stop.lead !== undefined ? { answers: true } : {}) },
+          at: { kind: 'after', years: 0 },
+          rank: 0,
+        })
       }
     } else if (p.workStatus === 'retired' && p.retirementAge !== undefined) {
       const year = yearAtAge(i, p.retirementAge)
@@ -418,8 +434,14 @@ function iseBody(d: ScenarioDraft, readOnly: boolean): BlueprintBody {
       {
         id: 'savings',
         label: iseLegend('savings').label,
-        // A retired person's accounts take no deposits (the Savings page's own rule): the cell says so.
-        cells: perPerson(savings, iseLegend('savings'), (i) => (d.people[i]?.workStatus === 'working' ? copy.profileSavingsNoAccounts : copy.blueprintNothingGoesIn)),
+        // A retired person's accounts take no deposits (the Savings page's own rule): the cell says so. A working person's
+        // empty cell is that person's own line (the Savings page's sentence is about the household), with door words
+        // naming this page's Add menu only where it is drawn (a read-only tab has none).
+        cells: perPerson(savings, iseLegend('savings'), (i) =>
+          d.people[i]?.workStatus === 'working'
+            ? slots.bpNoDepositAccount(person(d, i).possessive, readOnly ? null : { menu: copy.blueprintAdd, item: copy.blueprintAddAccount })
+            : copy.blueprintNothingGoesIn,
+        ),
       },
       {
         id: 'expenses',
@@ -501,6 +523,7 @@ export function blueprintView(input: BlueprintInput): BlueprintView {
     body = iseBody(d, readOnly)
   }
   const hiddenLabels = legend.filter((l) => hidden.has(l.id)).map((l) => l.label)
+  const shown = hide(body, hidden)
   return {
     title: copy.shellPageBlueprint,
     intro: copy.blueprintIntro,
@@ -518,7 +541,20 @@ export function blueprintView(input: BlueprintInput): BlueprintView {
     notes: [...notes, ...(hiddenLabels.length > 0 ? [slots.bpHidden(hiddenLabels)] : [])],
     edit: { label: copy.blueprintEdit, legend: copy.blueprintEditLegend },
     add: addFor(tab, d, readOnly, agedBalancesYear),
-    body: hide(body, hidden),
+    body: shown,
     lines,
+    answerShown: bodyTiles(shown).some((t) => t.answers === true),
+  }
+}
+
+/** Every tile a body draws. */
+function bodyTiles(body: BlueprintBody): readonly BlueprintTile[] {
+  switch (body.kind) {
+    case 'net-worth':
+      return body.columns.flatMap((c) => c.tiles)
+    case 'goals':
+      return [...body.groups, ...(body.after?.groups ?? [])].flatMap((g) => g.tiles).concat(body.unplaced?.tiles ?? [])
+    case 'ise':
+      return body.lanes.flatMap((l) => [...(l.cells ?? []).flatMap((c) => c.tiles), ...(l.shared?.tiles ?? [])])
   }
 }

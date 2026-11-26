@@ -119,23 +119,42 @@ describe('the pages', () => {
 describe('what the answer still waits for, beside Complete', () => {
   it('nothing missing: nothing shown', () => {
     expect(missingFactsOf(DEV_SEEDS.retired)).toEqual([])
-    expect(missingBlock(DEV_SEEDS.retired)).toBeNull()
+    expect(missingBlock(DEV_SEEDS.retired, true)).toBeNull()
   })
 
   it('a fact still to enter is named under "Still needed" with the never-guesses line, and the lead waits', () => {
-    const block = missingBlock({ ...DEV_SEEDS.retired, annualSpendingReal: undefined })!
+    const block = missingBlock({ ...DEV_SEEDS.retired, annualSpendingReal: undefined }, true)!
     expect(block.lead).toBe(copy.setupMissingLead)
     expect(block.lines[0]).toMatch(new RegExp(`^${copy.answerStillNeeded} `))
-    expect(block.lines).toContain(copy.answerNoSynthesis)
-    expect(block.lines.at(-1)).toBe(copy.setupMissingNote)
+    expect(block.lines.slice(1)).toEqual([copy.answerNoSynthesis, copy.setupMissingOpens, copy.setupMissingUntil])
   })
 
   it('a fact no entry can fix never wears the "Still needed" frame: the withheld lead and the tool’s-limit line', () => {
-    const block = missingBlock(DEV_SEEDS.datesolo)!
+    const block = missingBlock(DEV_SEEDS.datesolo, true)!
     expect(block.lead).toBe(copy.answerWithheldLead)
     expect(block.lines.some((l) => l.startsWith(copy.answerStillNeeded))).toBe(false)
     expect(block.lines).toContain(`${copy.answerCannotPrice} ${copy.employerCoverageUnpriced}`)
     expect(block.lines).toContain(copy.answerCannotPriceTail)
+  })
+
+  it('a withheld-only box promises no "until": nobody can enter what the tool cannot price (the review’s D2)', () => {
+    const block = missingBlock(DEV_SEEDS.datesolo, true)!
+    expect(block.lines).not.toContain(copy.setupMissingUntil)
+    expect(block.lines.at(-1)).toBe(copy.setupMissingOpens)
+    expect(missingBlock(DEV_SEEDS.datesolo, false)!.lines.at(-1), 'Complete refusing: not even "still opens"').toBe(copy.answerCannotPriceTail)
+  })
+
+  it('mixed: "until" goes right after the still-needed facts, never after the tool’s-limit tail', () => {
+    const lines = missingBlock({ ...DEV_SEEDS.datesolo, annualSpendingReal: undefined }, true)!.lines
+    expect(lines[0]).toMatch(new RegExp(`^${copy.answerStillNeeded} `))
+    expect(lines.slice(1, 4)).toEqual([copy.answerNoSynthesis, copy.setupMissingOpens, copy.setupMissingUntil])
+    expect(lines.slice(4)).toEqual([`${copy.answerCannotPrice} ${copy.employerCoverageUnpriced}`, copy.answerCannotPriceTail])
+  })
+
+  it('"Complete still opens your plan" only while Complete would (the review’s D5)', () => {
+    const lines = missingBlock({ ...DEV_SEEDS.retired, annualSpendingReal: undefined }, false)!.lines
+    expect(lines).not.toContain(copy.setupMissingOpens)
+    expect(lines.at(-1)).toBe(copy.setupMissingUntil)
   })
 })
 
@@ -179,7 +198,7 @@ describe('a step’s ✓ only where none of its own facts is missing (the look a
 
 describe('beside Complete, every missing fact by name (the look audit’s B)', () => {
   it('no "N more": each fact named, and a fact both owe says whose', () => {
-    const block = missingBlock(freshPair(DEV_SEEDS.retired))!
+    const block = missingBlock(freshPair(DEV_SEEDS.retired), true)!
     const needed = block.lines[0]!
     expect(needed).not.toMatch(/\d+ more/)
     for (const name of ['Alex', 'Sam']) {
@@ -191,6 +210,6 @@ describe('beside Complete, every missing fact by name (the look audit’s B)', (
 
   it('a fact one person owes, or the household’s own, stands bare', () => {
     const d = { ...DEV_SEEDS.retired, annualSpendingReal: undefined }
-    expect(missingBlock(d)!.lines[0]).toBe(`${copy.answerStillNeeded} ${copy.spendLabel}`)
+    expect(missingBlock(d, true)!.lines[0]).toBe(`${copy.answerStillNeeded} ${copy.spendLabel}`)
   })
 })

@@ -683,4 +683,35 @@ describe('Shell — the pages with no table speak their own words (milestone 2�
       cleanup()
     }
   })
+
+  it('Blueprint’s Goals tab prints the crowned date with the StaleBanner’s lines; its Net Worth tab, which prints no answer, carries none (the review’s E3)', () => {
+    const working = DEV_SEEDS.date
+    const track = { kind: 'confirmed-date', offsetYears: 4, grade: { quantizedLowerBound: 0.9, survivalFraction: 0.92, marginAboveBar: 0.05 }, nonMonotoneOffsets: [], curve: [] }
+    const answer = {
+      kind: 'date',
+      tier: 'final',
+      draft: working,
+      inputKey: 'k',
+      outcome: { kind: 'dates', tier: 'final', floor: track, lifestyle: track, windowTopYears: 15, seed: 1 },
+    } as unknown as ModelAnswer
+    const BLUEPRINT = { module: 'profile', page: 'blueprint' } as const
+    render(
+      <RoutedShell
+        save={{ kind: 'none' }}
+        snapshot={{ ...snapshotWith(answer), draft: working }}
+        lanes={heldLanes().lanes}
+        wallCalendarYear={BUILD_YEAR + 2}
+        stalenessNote
+        agedBalancesYear={BUILD_YEAR}
+        initialRoute={BLUEPRINT}
+      />,
+    )
+    expect(document.querySelector('[data-blueprint-tab]')).toHaveAttribute('data-blueprint-tab', 'net-worth')
+    expect(screen.queryByText(copy.stalenessHeroNote), 'no answer on Net Worth: no banner').toBeNull()
+    fireEvent.click(screen.getByRole('tab', { name: copy.shellPageGoals }))
+    expect(document.querySelector('[data-blueprint-tab]')).toHaveAttribute('data-blueprint-tab', 'goals')
+    expect(document.querySelector('[data-bp-tile] svg.lucide-crown'), '[test setup] the crown renders').not.toBeNull()
+    expect(screen.getByText(copy.stalenessHeroNote)).toBeInTheDocument()
+    expect(screen.getByText(slots.staleAgedBalances(BUILD_YEAR))).toBeInTheDocument()
+  })
 })

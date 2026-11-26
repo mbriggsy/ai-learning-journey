@@ -107,6 +107,8 @@ export function buildIncomeStream(
     if (form.startAge === undefined) return { ok: false, error: 'errIncomeStartAgeRequired' }
     startAge = form.startAge
   }
+  // A last paying age before the first is no stream at all (milestone 3's review, X8): refused under the end age.
+  if (form.endAge !== undefined && form.endAge < startAge) return { ok: false, error: 'errIncomeEndBeforeStart' }
   // fixed-pct requires a finite COLA rate (KTD-2 — never coerced to 0)…
   if (form.colaMode === 'fixed-pct') {
     if (form.colaPct === undefined || !Number.isFinite(form.colaPct)) {

@@ -1011,15 +1011,17 @@ chair; chair from a digest script, never the raw result, and expect the window t
 
 ## Claude Code, workflows and sessions
 
-- **(b9-3, 11-25) A teammate's idle notice reading `"idleReason":"interrupted"` is usually your own message landing
-  mid-turn, not a stop.** RC14's builder logged it at 01:03:25 the instant the lead's next message was injected
-  (its transcript: the `<teammate-message>` entry at 01:03:25.178), started a new request 100 ms later and kept
-  working; the lead read it as "cut off" and sent a needless "continue". Before nudging, read the teammate's
-  transcript (`<session>/subagents/agent-<name>-*.jsonl`) around the notice's timestamp. And batch rulings into one
-  message: four short ones crossed the builder's replies, each answering an older one.
-- **(b9-3, 11-25) A builder's held look run (`e2e/held/rc-look.spec.ts`) can be declined by the permission prompt in
-  its own seat** while the same command runs in the orchestrator's (RC14: declined for the builder, 6/6 for b9-3,
-  and Briggsy declined nothing he knows of). The builder rightly stops; the orchestrator runs the look itself, which 7.1 asks of it anyway.
+- **(b9-3, 11-25) A lead's message that lands while a teammate's shell call is still waiting on auto mode's safety
+  check cancels that call, and the teammate is told "User rejected tool use … STOP and wait for the user"** (the
+  result's `toolUseResult` reads "User rejected tool use" and carries no `permissionDecision`; all 291 shell calls that
+  ran in that builder carry `accept`, from the classifier or an allow rule). RC14's builder's look run waited 17.6 s on
+  the check (01:03:07 to 01:03:25.131); the lead's next ruling landed at 01:03:25.178; the builder rightly stopped and
+  reported the run "declined", its idle notice read `"idleReason":"interrupted"`, and the lead read both as a
+  permission problem. The same run had passed twice earlier in that builder, and RC15's builder ran it too. So: send a
+  builder ONE batched message, never while a long command may be pending; on "User rejected tool use" with no prompt
+  shown, or an "interrupted" notice, read the transcript (`<session>/subagents/agent-<name>-*.jsonl`: the result's
+  `toolUseResult`, the call's `permissionDecision`) before calling it a refusal; the orchestrator runs the look itself
+  either way (plan 7.1).
 - **(b9-2, 11-25) A builder's report past about 1,500 words arrives cut off** in its idle notice ("result truncated"),
   twice in three Act 6 builds; asking for the rest costs a round trip. Brief each builder to send its report in at
   most two messages of about 1,200 words. A builder's own helper subagent can also report to the orchestrator instead

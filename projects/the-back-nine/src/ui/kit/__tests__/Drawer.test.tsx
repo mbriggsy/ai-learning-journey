@@ -1,10 +1,11 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import '@testing-library/jest-dom/vitest'
-import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Button } from '../Button'
 import { Drawer, type DrawerProps } from '../Drawer'
+import { WholeInput } from '../NumberInputs'
 
 /**
  * The drawer's contract (plan 3.1): it opens from its trigger (closed first, then open: the shape a real page has,
@@ -123,5 +124,34 @@ describe('Drawer', () => {
     await user.click(screen.getByRole('button', { name: 'Save' }))
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
     expect(onCancel, 'Save is not a cancel').toHaveBeenCalledTimes(3)
+  })
+
+  // Milestone 3's review, X1: Save blurs the focused box first (its commit lands), and never calls onSave while a box
+  // holds text it refused; the drawer stays open with the box's words under it.
+  it('Save commits the focused box, then calls no onSave past a box holding text it refused', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn(() => true)
+    const onCommit = vi.fn()
+    render(
+      <Drawer {...base} saveLabel="Save" onSave={onSave}>
+        <WholeInput label="Through year" value={undefined} invalidMessage="Not a whole number." onCommit={onCommit} />
+      </Drawer>,
+    )
+    const dialog = await open(user)
+    const box = within(dialog).getByLabelText('Through year')
+    act(() => box.focus())
+    fireEvent.change(box, { target: { value: '2.5' } })
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }))
+    expect(onSave).not.toHaveBeenCalled()
+    expect(box).toHaveAttribute('data-typed-refused')
+    expect(within(dialog).getByText('Not a whole number.')).toBeInTheDocument()
+    expect(screen.getByRole('dialog', { name: 'Salary' })).toBeInTheDocument()
+    // Fixed and still focused: the press commits it, then saves.
+    act(() => box.focus())
+    fireEvent.change(box, { target: { value: '3' } })
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }))
+    expect(onCommit).toHaveBeenLastCalledWith(3)
+    expect(onSave).toHaveBeenCalledTimes(1)
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
   })
 })

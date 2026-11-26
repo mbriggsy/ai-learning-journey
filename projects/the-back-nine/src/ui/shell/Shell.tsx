@@ -62,8 +62,8 @@
  * SETTINGS AND THE DISPLAY DRAWER (RC18; `Settings.tsx` over `settingsView.ts`, `DisplayDrawer.tsx`): the gear opens
  * Settings, the assumptions behind the plan, on every tab (a read-only tab reads it with no door). "Today's dollars"
  * beside a value page's folder tabs opens the Display drawer; its two choices (`displaySettings.ts`: years or ages on
- * every time axis, one scale or two for Probability's balance bars) are held here for the session and handed to every
- * composer that draws a chart over the plan's years.
+ * every time axis, one scale or two for Probability's balance bars) are held by IntakeApp for the session (the shell
+ * unmounts across a save or a backup) and handed to every composer that draws a chart over the plan's years.
  *
  * THE TWO-UP AND THE PLAN LIST (RC5): Probability's right side runs on its own slot (`useSlotRun`, made once here), so any
  * two of your plan, the kept what-ifs, Recommended and the new what-if sit side by side. The pencil beside the right
@@ -188,6 +188,11 @@ export interface ShellProps {
   /** Told whether the what-if holds a change the plan doesn't (a leave would drop it). */
   readonly onWhatIfHeld?: (held: boolean) => void
   readonly snapshot: MemoryModelSnapshot
+  /** The Display drawer's two choices and their setter, held by IntakeApp beside its other session state (the shell
+   *  unmounts across a first save, a Keep's ceremony and a backup, and the drawer's words promise they last until B9
+   *  closes). Left out (a test's mount), the shell holds its own. */
+  readonly display?: DisplaySettings
+  readonly onDisplayChange?: (next: DisplaySettings) => void
   readonly model?: MemoryModel
   /** The unlock's read-only arm: no control that writes the plan or the vault. */
   readonly readOnly?: boolean
@@ -340,6 +345,8 @@ export default function Shell({
   leaveAsk,
   onWhatIfHeld,
   snapshot,
+  display: displayProp,
+  onDisplayChange,
   model = appModel,
   readOnly = false,
   lanes: lanesProp,
@@ -484,8 +491,11 @@ export default function Shell({
     [onNavigate, setWhatIfMode],
   )
 
-  // ── The Display drawer's choices (RC18): held for the session, handed to every chart composer below ──
-  const [display, setDisplay] = useState<DisplaySettings>(DEFAULT_DISPLAY)
+  // ── The Display drawer's choices (RC18): held for the session (IntakeApp's, so they outlive the shell's unmounts),
+  //    handed to every chart composer below ──
+  const [ownDisplay, setOwnDisplay] = useState<DisplaySettings>(DEFAULT_DISPLAY)
+  const display = displayProp ?? ownDisplay
+  const setDisplay = onDisplayChange ?? setOwnDisplay
   const [displayOpen, setDisplayOpen] = useState(false)
   const openDisplay = useCallback(() => setDisplayOpen(true), [])
   // A drawer belongs to the page it was opened on: a page change (a leave ask's Go, a plain Back or Forward) closes every
@@ -857,9 +867,10 @@ export default function Shell({
     const goal = pickedGoal ?? model.getSnapshot().draft.chosenGoal
     if (goal === undefined) return
     model.update((d) => {
-      const bracket = pickedBracket ?? d.heirBracket ?? DEFAULT_HEIR_BRACKET
       const next = d.chosenGoal === goal ? d : { ...d, chosenGoal: goal }
-      return goal === 'leave-more' && bracket !== (d.heirBracket ?? DEFAULT_HEIR_BRACKET) ? { ...next, heirBracket: bracket } : next
+      // A touched picker is a choice, even of the starting figure: written, so the page stops calling it the tool's
+      // starting figure (the review's C8). An untouched one writes nothing.
+      return goal === 'leave-more' && pickedBracket !== undefined && pickedBracket !== d.heirBracket ? { ...next, heirBracket: pickedBracket } : next
     })
     setPickedGoal(undefined)
     setPickedBracket(undefined)
@@ -1112,9 +1123,11 @@ export default function Shell({
   const [profileDrawerOpen, setProfileDrawerOpen] = useState(false)
   // Cash Flows too, aged line and door included: its row-one line (`workbenchAged`) names the build year and claims nothing
   // about the balances, so the two lines say two causes (round 3 of the milestone-1 review).
+  // Blueprint too, drawn only while its tab prints the answer's own sentence (its Goals timeline's date: the review's E3;
+  // `ProfilePages`'s `answerBanner`).
   const staleLines = useMemo(
-    () => (figured ? composeStaleLines(notes, !readOnly && onReview !== undefined) : []),
-    [figured, notes, readOnly, onReview],
+    () => (figured || screen === 'profile-blueprint' ? composeStaleLines(notes, !readOnly && onReview !== undefined) : []),
+    [figured, screen, notes, readOnly, onReview],
   )
 
   // ── Settings (RC18): its folder tab held here, so a page move keeps it ──
@@ -1127,7 +1140,13 @@ export default function Shell({
   const onSettingsDoor = (door: SettingsDoor) => {
     if (door.kind === 'drawer') openDrawer(door.target, null)
     else if (door.kind === 'tray') tryLever(door.lever)
-    else onNavigate(routeOfScreen('tax-strategies'))
+    else {
+      // The heirs' bracket is set on Tax Strategies' Strategies tab, and where a Winner card shows, its picker sits
+      // behind "Pick again": the door opens both, so it lands on the control it names.
+      setTaxTab('strategies')
+      if (taxPayload !== null) setRepick(true)
+      onNavigate(routeOfScreen('tax-strategies'))
+    }
   }
 
   // The Invested accounts card's door: Profile → Net Worth, where the accounts are (RC13b; the facts page is gone).
@@ -1487,6 +1506,7 @@ export default function Shell({
               answer={snapshot.answer}
               refiguring={snapshot.refiguring}
               anchor={anchor}
+              {...(screen === 'profile-blueprint' ? { answerBanner: staleBanner } : {})}
               {...(shownAsk !== undefined ? { leaveAsk: shownAsk } : {})}
               onDrawerOpen={setProfileDrawerOpen}
             />

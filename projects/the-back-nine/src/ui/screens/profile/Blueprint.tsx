@@ -18,7 +18,7 @@
  * open the tile carries a 2 px plum-dark ring and `aria-current`, and the rest fade. No text is ever cut.
  *
  * The R13 caveat closes the panel on every tab (the shell stamps the page as carrying it in frame); the Net Worth
- * headline's figure and the work-optional date's sentence are tied to it by `aria-describedby`.
+ * headline's figure and the crowned work-optional date's tile (its button) are tied to it by `aria-describedby`.
  *
  * Fit decision (plan RC15): a scrolling page; its first frame holds the title, the intro and the panel's top row.
  */
@@ -67,6 +67,9 @@ function Tile({ tile, selected, onOpen, edge = 'left' }: TileProps) {
       type="button"
       aria-haspopup="dialog"
       aria-current={isSelected ? 'true' : undefined}
+      // The crowned date's tie to the R13 caveat sits on the button, the element a reader lands on (a description on an
+      // inner span of a button is never read).
+      aria-describedby={tile.crowned === true && tile.value !== undefined ? verdictDescribedBy() : undefined}
       onClick={() => onOpen(tile.target, tile.id)}
       data-profile-card={tile.id}
       data-bp-tile=""
@@ -91,11 +94,7 @@ function Tile({ tile, selected, onOpen, edge = 'left' }: TileProps) {
         {tile.name}
       </span>
       {tile.value !== undefined ? (
-        <span
-          className="text-body font-semibold break-words text-stone-900 tabular-nums"
-          aria-describedby={tile.crowned === true ? verdictDescribedBy() : undefined}
-          data-bp-value=""
-        >
+        <span className="text-body font-semibold break-words text-stone-900 tabular-nums" data-bp-value="">
           {tile.value}
         </span>
       ) : null}

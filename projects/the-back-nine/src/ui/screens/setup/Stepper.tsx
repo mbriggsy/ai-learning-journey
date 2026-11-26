@@ -5,8 +5,8 @@
  *
  * LAYOUT, as RightCapital draws it: no module nav, only the B9 mark and the two names; a full-width chevron bar of six
  * steps (passed and current filled plum, the rest white; the current carries `aria-current="step"` and medium weight; a
- * passed step that owes no fact the household can enter a check in place of its number, never colour alone, so a check
- * never stands over the box's "Still needed"; on the phone the bar scrolls sideways in its own strip, the current step
+ * passed step that owes no fact the household can enter, and whose own check still passes, a check in place of its
+ * number, never colour alone, so a check never stands over the box's "Still needed" or a check Complete would refuse; on the phone the bar scrolls sideways in its own strip, the current step
  * brought into it, each edge with more steps beyond it fading out, so a cut label reads as more that way); the step's title and its sentence; Profile's cards for the step (RC13's, each opening its
  * drawer); Previous and Next at the bottom right, Complete on the last. The settings gear is left out: Settings is a page
  * of the plan's workspace, and during setup there is no plan for it to read (an affordance that changes nothing does not
@@ -38,7 +38,7 @@ import { NetWorth } from '../profile/NetWorth'
 import { useDrawerHost } from '../profile/drawerHost'
 import { SetupPeriodContext, type SetupPeriod } from '../profile/drawers/setupPeriod'
 import { NewPlanDrawer } from './NewPlanDrawer'
-import { checkSteps, missingBlock, SETUP_STEPS, setupNames, setupNavLabel, setupPage, setupTitle, stepOwesFacts, type StepBlock } from './stepperView'
+import { checkStep, checkSteps, missingBlock, SETUP_STEPS, setupNames, setupNavLabel, setupPage, setupTitle, stepOwesFacts, type StepBlock } from './stepperView'
 
 export interface StepperProps {
   readonly model: MemoryModel
@@ -212,7 +212,11 @@ export function Stepper({ model, periodConfirmed, askNames, onCancelNewPlan, onC
   const page = setupPage(draft, step)
   const names2 = setupNames(draft)
   const last = index === SETUP_STEPS.length - 1
-  const missing = last ? missingBlock(draft) : null
+  // Complete opens the plan only past every step's check: the box beside it says so only then (stepperView's D2).
+  const missing = last ? missingBlock(draft, checkSteps(model, 0, SETUP_STEPS.length, period) === null) : null
+  // A passed step owes while one of its facts is missing OR its own check now refuses (an edit on a later step can
+  // re-arm an earlier one: a switch to working on Goals owes W on Expenses), so its ✓ drops (the review's D5).
+  const owes = SETUP_STEPS.map((s, i) => stepOwesFacts(draft, s) || (i < index && checkStep(model, s, period) !== null))
   return (
     <SetupPeriodContext.Provider value={period}>
       <div className="rc-root flex min-h-svh w-full flex-col bg-bg" data-setup="">
@@ -237,7 +241,7 @@ export function Stepper({ model, periodConfirmed, askNames, onCancelNewPlan, onC
         </header>
         <main className="flex flex-1 flex-col" data-setup-step={step}>
           <div className="mx-auto w-full max-w-[90rem] px-4 pt-6 wide:px-10 wide:pt-10 compact:pt-5">
-            <StepBar index={index} owes={SETUP_STEPS.map((s) => stepOwesFacts(draft, s))} onGo={go} />
+            <StepBar index={index} owes={owes} onGo={go} />
           </div>
           <div key={step} className="flex flex-1 flex-col transition-opacity duration-200 ease-out starting:opacity-0 motion-reduce:duration-100">
             {page.kind === 'cards' ? (

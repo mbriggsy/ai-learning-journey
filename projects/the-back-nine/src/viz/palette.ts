@@ -108,6 +108,10 @@ export const RC_HUES = {
   salmon: '#e0897f',
   /** The 22% bracket line's stroke: sand itself is 1.79:1 on white, this is 3.56:1 (plan 2.2). Not a series slot. */
   sandInk: '#a8822f',
+  /** The chrome's sky (`theme.css`'s `--color-sky`, ref's `--sky`: RightCapital's stat-ring dashes and its sky tiles),
+   *  which Blueprint's sky tiles draw. Not a series slot: listed so RC_PAIRS measures the hex Blueprint draws, never the
+   *  series sky beside it; `colorblind.test.tsx` holds it equal to the token. */
+  skyTile: '#5ebaf3',
 } as const
 
 export type RcHue = keyof typeof RC_HUES
@@ -220,11 +224,13 @@ export const RC_PAIRS: readonly RcPair[] = [
     verdict: { kind: 'cue', cue: 'cash dotted in its slice, its bar and its key mark; each part named with its share in the table beside the ring' },
   },
   // Blueprint (RC15): tiles side by side, each with a 4 px edge in its category's colour AND the category word printed
-  // above its name. Net Worth's treatments take the stacks' colours (pre-tax orange, Roth green, taxable blue, HSA sky:
-  // their pairs are the rows above, but pre-tax against HSA); Goals' retirement green, Social Security blue, Medicare sky,
-  // spending red; Income, Savings, Expenses green, blue, red (all rows above but Medicare against spending).
-  { a: 'orange', b: 'sky', where: 'Blueprint pre-tax beside HSA tiles', verdict: { kind: 'floor' } },
-  { a: 'sky', b: 'red', where: 'Blueprint Medicare beside spending tiles', verdict: { kind: 'floor' } },
+  // above its name. Net Worth's treatments take the stacks' colours (pre-tax orange, Roth green, taxable blue, HSA sky);
+  // Goals' retirement green, Social Security blue, Medicare sky, spending red; Income, Savings, Expenses green, blue, red
+  // (rows above). Its sky is the chrome's (`skyTile`, the hex the tiles draw), so every pair with it is its own row.
+  { a: 'blue', b: 'skyTile', where: 'Blueprint taxable beside HSA tiles; Social Security beside Medicare', verdict: { kind: 'floor' } },
+  { a: 'skyTile', b: 'green', where: 'Blueprint HSA beside Roth tiles; Medicare beside retirement', verdict: { kind: 'floor' } },
+  { a: 'orange', b: 'skyTile', where: 'Blueprint pre-tax beside HSA tiles', verdict: { kind: 'floor' } },
+  { a: 'skyTile', b: 'red', where: 'Blueprint Medicare beside spending tiles', verdict: { kind: 'floor' } },
   { a: 'green', b: 'teal', where: 'series slots 1 and 11', verdict: { kind: 'apart' } },
 ]
 

@@ -20,7 +20,7 @@
  * line drawer (a budget household only: a line needs a budget to sit in). A line added only in this what-if wears the
  * green "+" dot with words, and its name is a link back to its drawer.
  */
-import { useEffect, useId, useState, type ReactNode } from 'react'
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { Undo2 } from 'lucide-react'
 import type { ScenarioDraft } from '@store/memoryModel'
 import { canonicalIdentityToken, type BudgetTier, type DrawdownPolicy, type WhatIfBudgetLineV6, type WhatIfLeverKind, type WhatIfLeverV6 } from '@shared/model'
@@ -866,11 +866,19 @@ function LineDrawer({
   readonly onSave: (line: WhatIfBudgetLineV6) => void
   readonly onDelete: (line: WhatIfBudgetLineV6) => void
 }) {
-  const [line, setLine] = useState<NewLine>(
+  const [line, setLineState] = useState<NewLine>(
     editing !== undefined
       ? { label: editing.label, amount: editing.annualAmountReal, tier: editing.tier, startYear: editing.startYear, ...(editing.endYear !== undefined ? { endYear: editing.endYear } : {}) }
       : { label: '', tier: 'essentials', startYear: 0 },
   )
+  // Save reads the line through a ref: the kit's Save blurs the focused box first, and that blur's commit lands here in
+  // the same press, before the render that would refresh `line` (insights 036 and 149). A box that refused its text
+  // commits nothing and the kit's Save stops on its mark, so no refused figure is ever staged (milestone 3's review, X1).
+  const lineRef = useRef(line)
+  const setLine = (next: (l: NewLine) => NewLine) => {
+    lineRef.current = next(lineRef.current)
+    setLineState(lineRef.current)
+  }
   const [error, setError] = useState<string | undefined>(undefined)
   const nameId = useId()
   const windowHelp = draft.people.some((p) => p.workStatus === 'working') ? copy.budgetWindowHelp : slots.budgetWindowHelpRetired(draft.startCalendarYear)
@@ -885,14 +893,15 @@ function LineDrawer({
       cancelLabel={copy.trayCancel}
       saveLabel={copy.traySave}
       onSave={() => {
-        const { amount, startYear, endYear } = line
+        const now = lineRef.current
+        const { amount, startYear, endYear } = now
         if (amount === undefined || startYear === undefined || (endYear !== undefined && endYear < startYear)) {
           setError(endYear !== undefined && startYear !== undefined && endYear < startYear ? copy.errBudgetWindowReversed : copy.workbenchRailAddLineNeeds)
           return false
         }
         const id =
           editing?.id ?? freshStableId(new Set([...idsInUse(draft), ...pending.flatMap((l) => (l.kind === 'spending' && l.op !== 'remove' && l.op !== 'total' ? [l.line.id] : []))]))
-        onSave({ id, category: editing?.category ?? 'other', label: line.label.trim(), annualAmountReal: amount, tier: line.tier, startYear, ...(endYear !== undefined ? { endYear } : {}) })
+        onSave({ id, category: editing?.category ?? 'other', label: now.label.trim(), annualAmountReal: amount, tier: now.tier, startYear, ...(endYear !== undefined ? { endYear } : {}) })
         onClose()
         return true
       }}
@@ -916,8 +925,8 @@ function LineDrawer({
           <MoneyInput label={copy.budgetAmountLabel} value={line.amount} invalidMessage={copy.errBudgetAmountNonFinite} onCommit={(v) => setLine((l) => ({ ...l, ...(v === undefined ? { amount: undefined } : { amount: v }) }))} />
           <Select<BudgetTier> label={copy.budgetTierLegend} items={TIERS} value={line.tier} onValueChange={(tier) => setLine((l) => ({ ...l, tier }))} />
           <span aria-hidden="true" className="hidden wide:block" />
-          <WholeInput label={copy.budgetWindowFromLabel} value={line.startYear} invalidMessage={copy.trayInvalidWhole} onCommit={(v) => setLine((l) => ({ ...l, ...(v === undefined ? { startYear: undefined } : { startYear: v }) }))} />
-          <WholeInput label={copy.budgetWindowThroughLabel} value={line.endYear} invalidMessage={copy.trayInvalidWhole} onCommit={(v) => setLine((l) => ({ ...l, ...(v === undefined ? { endYear: undefined } : { endYear: v }) }))} />
+          <WholeInput label={copy.budgetWindowFromLabel} value={line.startYear} invalidMessage={copy.profileInvalidYearOffset} onCommit={(v) => setLine((l) => ({ ...l, ...(v === undefined ? { startYear: undefined } : { startYear: v }) }))} />
+          <WholeInput label={copy.budgetWindowThroughLabel} value={line.endYear} invalidMessage={copy.profileInvalidYearOffset} onCommit={(v) => setLine((l) => ({ ...l, ...(v === undefined ? { endYear: undefined } : { endYear: v }) }))} />
         </DrawerFields>
         <p className={cn('text-label text-stone-600')}>{windowHelp}</p>
         {error !== undefined ? (

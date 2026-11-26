@@ -11,7 +11,8 @@
  * The dollars are today's dollars, the engine's own unit (it runs in real dollars): the drawer states it and offers no
  * future-dollars switch until `src/engine/priceIndex.ts` backs one (critique 12; plan section 6's "A future-dollars view").
  *
- * The choices last for the session only (the shell holds them): no saved shape in this act (plan 7.2).
+ * The choices last for the session only (IntakeApp holds them, so the shell's unmounts keep them): no saved shape in
+ * this act (plan 7.2).
  */
 
 export type TimeAxis = 'ages' | 'years'

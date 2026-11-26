@@ -375,6 +375,8 @@ export const copy = {
   errIncomeAlimonyDateRequired: 'Still need when the agreement was signed.',
   errIncomeAnnuityKindRequired: 'Still need the kind of annuity.',
   errIncomeExclusionRequired: 'Still need the tax-free part of the annuity.',
+  // The end age under the age it starts (milestone 3's review, X8): a stream paying now starts at the owner's age today.
+  errIncomeEndBeforeStart: 'The age it stops can’t be before the age it starts paying, or before the owner’s age today if it’s paying now.',
   // --- THE PAY CHECK'S W STEP, ITS MONEY PICTURE AND THE PANEL'S W ROW (U8;
   //     `docs/plans/features/working-year-pay-check-build-spec.md` KTD3, KTD5, KTD12, KTD17, KTD18,
   //     KTD21). Date route only, asked after the other-income loop: W is what a year costs while
@@ -643,8 +645,6 @@ export const copy = {
   answerRefiguringDate: 'Figuring your date again with your latest change. The one shown is from before it.',
   answerRefiguringVerdict: 'Figuring this again with your latest change. The answer shown is from before it.',
   answerRefiguringCaption: 'Your latest change isn’t in these figures yet.',
-  answerNotYet:
-    'Not there yet — with what’s entered so far. Accounts usually move this; the picture isn’t complete.',
   dateFreeToday: 'Your fuck-off date is today, by this math',
   // --- D2 elevated fuck-off-date surface (the landed magic moment — the date-first lead for a
   //     not-yet-retired household). VERDICT-SCOPED ("date" prefix → free-numeral + superlative): no
@@ -2405,11 +2405,15 @@ export const copy = {
   settingsHeadOther: 'Lifespans and Social Security',
   settingsRothNoneLine:
     'No money moves from pre-tax savings to Roth. A conversion pays some tax now so less is taxed later: try one in the action items, and apply it there if it helps.',
+  settingsRothNoneLineReadOnly:
+    'No money moves from pre-tax savings to Roth. A conversion pays some tax now so less is taxed later: try one in the action items.',
+  settingsRothNoneNoPretax: 'No money moves to Roth: a conversion moves pre-tax savings, and the plan holds none.',
   settingsRothPlanLine:
     'Each year of the conversion, that much moves from pre-tax savings to Roth. Tax Assumptions says how its tax is paid.',
   settingsSurvivorRatioDoor: 'Change it in Living expenses',
   settingsWorkingCostDoor: 'Open Pre-retirement living expenses',
   settingsLeftOverDoor: 'Answer it in Pre-retirement living expenses',
+  settingsLeftOverChangeDoor: 'Change it in Pre-retirement living expenses',
   settingsStateDoor: 'Change your retirement state',
   settingsStateLine:
     'The plan prices this state’s income tax on your retirement income where B9 knows the state’s rules; each figured page’s state line says whether it does.',
@@ -3112,11 +3116,15 @@ export const copy = {
   profileNone: 'None',
   profileNotAnswered: 'Not answered yet',
   profileNoLimit: 'No legal limit',
-  profilePaysNow: 'Now',
+  profileRowAgainstInflation: 'Against inflation',
   profileHomeStateName: 'Where you live in retirement',
   profileStateUnanswered: 'Not answered yet: no state’s income tax is in your numbers until you pick one.',
   profileSavingsNoneWorking: 'Deposits count only while their owner still works, and neither of you is working, so there are none to set.',
   profileSavingsNoAccounts: 'No accounts belong to someone still working yet. Add one with Add saving.',
+  // The same lines on a view-only tab, which has no Add menu to name (milestone 3's review, X12).
+  profileSavingsNoAccountsReadOnly: 'No accounts belong to someone still working yet.',
+  profileIncomeOtherNoneReadOnly: 'No other income is entered.',
+  profileNetWorthNoAccountsReadOnly: 'No accounts yet.',
   profileSavingsLimitsNote:
     'Each person’s deposits are held to this year’s legal limits, counted across all of that person’s accounts of one kind. Open an account to see its limit.',
   profileIncomeOtherNone: 'No other income is entered. Add a pension, rental, annuity or other income with Add income.',
@@ -3144,6 +3152,9 @@ export const copy = {
   profileChoose: 'Choose one',
   profileInvalidMoney: 'That didn’t read as a dollar figure, like 80,000.',
   profileInvalidAge: 'That didn’t read as a whole number, like 65.',
+  // A budget line's From / Through boxes count years from this year (0 = this year), never an age or a calendar year
+  // (the Living worksheet and the tray's line drawer).
+  profileInvalidYearOffset: 'That didn’t read as a whole number of years, like 3.',
   profileInvalidYear: 'That didn’t read as a year, like 1962.',
   profileInvalidPercent: 'That didn’t read as a percent, like 50.',
   profilePlaceOther: 'another of your facts',
@@ -3160,8 +3171,9 @@ export const copy = {
   errProfileTickerRequired: 'Still need the fund’s ticker.',
   profileDepositsHeading: 'Each year, while its owner still works',
   profileDepositsRetired: 'Its owner has stopped working, so nothing more goes in.',
+  // An owner whose work status is still blank (milestone 3's review, X9): deposits are set only for someone still working.
+  profileDepositsWorkUnanswered: 'Whether its owner still works isn’t answered yet. Answer it on Family; deposits are set here only while they work.',
   profileHoldingsHeading: 'What it holds',
-  profileRecordGone: 'This record is gone, so there is nothing here to change.',
   // The income drawer's choice words.
   profileIncomeTypeLabel: 'Kind of income',
   profileIncomeWhen: 'When it pays',
@@ -3277,7 +3289,8 @@ export const copy = {
   setupIntroGoals:
     'When each of you stops working, and what health care costs before Medicare and on it. Pick a card to fill it in; Complete then opens your plan.',
   setupMissingLead: 'Your answer is still waiting on a few facts.',
-  setupMissingNote: 'Complete still opens your plan. Until these are in, its pages say what the answer is waiting for.',
+  setupMissingOpens: 'Complete still opens your plan.',
+  setupMissingUntil: 'Until these are in, your plan’s pages say what the answer is waiting for.',
   setupPrevious: 'Previous',
   setupNext: 'Next',
   setupComplete: 'Complete',
@@ -5119,7 +5132,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:2296` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:2300` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,
@@ -5977,7 +5990,17 @@ export const slots = {
   setupStepTitle: (n: number, head: string): string => `Step ${n} – ${head}`,
   profileStoppedAt: (age: number): string => `Stopped at ${age}`,
   profileStartsAt: (age: number, year: number): string => `At ${age}, in ${year}`,
-  profilePaysFrom: (age: number): string => `From age ${age}`,
+  // When an other-income stream pays (milestone 3's review, X8: the deleted facts page's start and end words): `start`
+  // null is paying now; `end` absent is for life.
+  profilePaysSpan: (start: number | null, end: number | undefined): string =>
+    start === null ? (end === undefined ? 'Now, for life' : `Now, through age ${end}`) : end === undefined ? `From age ${start}, for life` : `From age ${start} through age ${end}`,
+  profileEndedAt: (age: number): string => `Ended at ${age}`,
+  profileRises: (pct: string): string => `Rises ${pct}% a year`,
+  // A year read as an age needs the person's birth year (milestone 3's review, X6, X7): a claim year, or "paying now".
+  profileBirthYearFirst: (possessive: string, payingNow: boolean): string =>
+    payingNow
+      ? `Still need ${possessive} birth year, on Family: “paying now” starts at ${possessive} age today.`
+      : `Still need ${possessive} birth year, on Family: the year it starts is read as an age from it.`,
   profileSalaryOf: (possessive: string): string => upperFirst(`${possessive} salary`),
   profileSocialSecurityOf: (possessive: string): string => upperFirst(`${possessive} Social Security`),
   profileWorkInvestOf: (possessive: string): string => upperFirst(`${possessive} investment income while working`),
@@ -6016,6 +6039,9 @@ export const slots = {
   bpAges: (parts: readonly string[]): string => parts.join(' · '),
   bpRowValue: (label: string, value: string): string => `${label}: ${value}`,
   bpNoAccounts: (possessive: string): string => upperFirst(`no accounts are in ${possessive} name.`),
+  /** A working person's empty Savings cell; the door words name Blueprint's own Add menu, only where it is drawn. */
+  bpNoDepositAccount: (possessive: string, door: { readonly menu: string; readonly item: string } | null): string =>
+    upperFirst(`no account in ${possessive} name takes deposits yet.`) + (door === null ? '' : ` Add one with ${door.menu}, then ${door.item}.`),
   bpMedicareOf: (possessive: string): string => upperFirst(`${possessive} Medicare`),
   bpClaimAt: (age: number): string => `Claiming at ${age}`,
   /** A budget line placed on the calendar: lifelong ("from 2026 on") or with its count of years and its last year. */

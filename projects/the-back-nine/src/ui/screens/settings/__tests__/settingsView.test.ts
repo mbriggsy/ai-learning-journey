@@ -9,10 +9,14 @@ import { productionMarket } from '@engine/reference/methodology'
 import { formatPercent } from '@intake/moneyFormat'
 import { workingCostValueLine } from '@intake/assumptionLines'
 import { workingYearCostStaleness } from '@intake/workingYearQuote'
+import { draftPretaxTotal, workingYearLeftOverShownState } from '@intake/intakeMap'
+import { railOffers } from '../../../workbench/railChrome'
 import { DEV_SEEDS } from '../../../devSeeds'
 import { copy, slots } from '../../../copy'
 import { planClockAnchor } from '../../../bandAnnotations'
 import { requiredSeats, type AssumptionSeat } from '../../../assumptionRegistry'
+import { formatBracketPercent } from '../../../money'
+import { DEFAULT_HEIR_BRACKET } from '../../tax/strategiesView'
 import { SETTINGS_TABS, settingsRows, settingsView, type SettingsRow, type SettingsTab } from '../settingsView'
 
 const anchorOf = (d: ScenarioDraft) => planClockAnchor(d.startCalendarYear, d.startCalendarYear)
@@ -83,6 +87,24 @@ describe('each line follows its value', () => {
     expect(plan.lines).toEqual([copy.settingsRothPlanLine])
   })
 
+  it('the Roth door is the tray’s own rule (a joint return with pre-tax money): no pre-tax money, no door and no line sending you to try one (the review’s C1)', () => {
+    const steer = DEV_SEEDS.steer
+    expect(draftPretaxTotal(steer), '[test setup] the steer household holds no pre-tax money').toBe(0)
+    expect(steer.filing).toBe('mfj')
+    expect(railOffers(steer, undefined).roth, 'the tray draws no Roth row').toBeUndefined()
+    const r = row({ ...steer, rothConversion: undefined }, 'roth-conversion')
+    expect(r.door).toBeUndefined()
+    expect(r.lines).toEqual([copy.settingsRothNoneNoPretax])
+    expect(railOffers(RETIRED, undefined).roth, '[test setup] RETIRED holds pre-tax money').toBeDefined()
+    expect(row(RETIRED, 'roth-conversion').door).toMatchObject({ kind: 'tray', lever: 'roth' })
+  })
+
+  it('read-only: the Roth none-line names the action items but never "apply it there"', () => {
+    const ro = rowsOf({ ...RETIRED, rothConversion: undefined }, true).methodology.find((x) => x.seat === 'roth-conversion')!
+    expect(ro.lines).toEqual([copy.settingsRothNoneLineReadOnly])
+    expect(copy.settingsRothNoneLineReadOnly).not.toMatch(/apply/i)
+  })
+
   it('the subsidy rules’ line follows the rules shown', () => {
     expect(row({ ...RETIRED, enhancedSubsidies: true }, 'subsidy-regime').lines).toEqual([copy.leverHealthRegimeEnhancedHelp])
     const { enhancedSubsidies: _e, ...reverted } = RETIRED
@@ -134,6 +156,30 @@ describe('the doors: each editable row opens its one home', () => {
     expect(row(RETIRED, 'survivor-ratio').door).toMatchObject({ kind: 'drawer', target: { kind: 'living' } })
     expect(row(RETIRED, 'retirement-state').door).toMatchObject({ kind: 'drawer', target: { kind: 'state' } })
     expect(row(RETIRED, 'medicare-extras').door).toMatchObject({ kind: 'drawer', target: { kind: 'medicare' } })
+  })
+
+  it('the left-over door’s verb follows its state: answer it, change it, or W’s own door while it waits on W (the review’s C6)', () => {
+    const byState = (state: string) => Object.values(DEV_SEEDS).find((d) => workingYearLeftOverShownState(d) === state)
+    const saved = byState('saved')!
+    expect(row(saved, 'working-year-left-over').door).toMatchObject({ label: copy.settingsLeftOverChangeDoor })
+    const absent: ScenarioDraft = (() => {
+      const { workingYearLeftOver: _l, ...rest } = saved
+      return rest as ScenarioDraft
+    })()
+    expect(workingYearLeftOverShownState(absent), '[test setup]').toBe('absent')
+    expect(row(absent, 'working-year-left-over').door).toMatchObject({ label: copy.settingsLeftOverDoor })
+    const waiting = byState('waiting-on-w')
+    expect(waiting, '[test setup] a dev seed waits on W').toBeDefined()
+    expect(row(waiting!, 'working-year-left-over').door).toMatchObject({ label: copy.settingsWorkingCostDoor })
+  })
+
+  it('the heirs’ bracket: never on the date route (Tax Strategies ranks nothing there); unchosen, it says the figure is the tool’s starting one', () => {
+    expect(allRows({ ...SAVED, chosenGoal: 'leave-more' }).map((r) => r.seat)).not.toContain('heir-bracket')
+    expect(row({ ...LEAVE_MORE, heirBracket: undefined }, 'heir-bracket').lines).toEqual([
+      copy.assumptionHeirBracketHelp,
+      slots.taxStratHeirDefault(formatBracketPercent(DEFAULT_HEIR_BRACKET)),
+    ])
+    expect(row({ ...LEAVE_MORE, heirBracket: 0.32 }, 'heir-bracket').lines).toEqual([copy.assumptionHeirBracketHelp])
   })
 
   it('the withdrawal order, the Roth plan and the subsidy rules open the tray at their lever (Apply writes them, U15)', () => {

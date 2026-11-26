@@ -101,6 +101,13 @@ export interface RailOffers {
   readonly aca?: { readonly planEnhanced: boolean }
 }
 
+/** The answer's own door rule for the Roth plan (no hollow door): it rides the joint return, and needs pre-tax money to
+ *  convert. ONE predicate, read by the tray's offers and by Settings' Roth row, so the gear never opens a tray row the
+ *  tray does not draw (the review's C1). */
+export function rothDoorOpen(draft: ScenarioDraft): boolean {
+  return draft.filing === 'mfj' && draftPretaxTotal(draft) > 0
+}
+
 /**
  * What the rail offers for a committed draft. `planStopYear` is the plan's stop year as the table's run carries it (the
  * date route), never re-derived (insight 132).
@@ -151,8 +158,7 @@ export function railOffers(draft: ScenarioDraft, planStopYear: number | undefine
     spending,
     deposits,
     mix: { planStockShare: householdStockWeight(draft) },
-    // The answer's own door rule (no hollow door): a Roth plan rides the joint return, and needs pre-tax money.
-    ...(draft.filing === 'mfj' && draftPretaxTotal(draft) > 0 ? { roth: { plan: draft.rothConversion } } : {}),
+    ...(rothDoorOpen(draft) ? { roth: { plan: draft.rothConversion } } : {}),
     ...(draft.enteredAccounts.length > 0 ? { order: { policy: draft.drawdownPolicy, order: draft.drawdownOrder } } : {}),
     claims,
     ...(healthcarePriced(draft) ? { aca: { planEnhanced: draft.enhancedSubsidies === true } } : {}),

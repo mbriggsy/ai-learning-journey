@@ -142,6 +142,12 @@ export function buildAccountEdit(
       const theirs = classifyLegs(form.tickerLegs)
       if (theirs.kind === 'invalid') return { ok: false, fields: { tickerMix: legsRefusal(form.tickerLegs)! } }
       if (theirs.kind === 'valid') classifications = { ...classifications, [ticker]: theirs.blend }
+      // Every leg cleared: the household's mix for this fund is gone, as a blank hand mix clears `manualBlend` (milestone 3's
+      // review, B4), never the old mix kept under boxes that show none.
+      if (theirs.kind === 'blank' && classifications[ticker] !== undefined) {
+        const { [ticker]: _gone, ...others } = classifications
+        classifications = others
+      }
     }
   }
   const next = [...d.enteredAccounts]

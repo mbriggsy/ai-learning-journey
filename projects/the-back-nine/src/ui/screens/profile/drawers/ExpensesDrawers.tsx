@@ -111,7 +111,7 @@ function LineRow({
         <WholeInput
           label={copy.budgetWindowFromLabel}
           value={Number.isFinite(item.startYear) ? item.startYear : undefined}
-          invalidMessage={copy.profileInvalidAge}
+          invalidMessage={copy.profileInvalidYearOffset}
           readOnly={readOnly}
           {...(windowError !== undefined ? { error: copy[BUDGET_ERROR_COPY[windowError.kind]] } : {})}
           onCommit={(start) => onChange({ ...item, startYear: start ?? Number.NaN })}
@@ -119,7 +119,7 @@ function LineRow({
         <WholeInput
           label={copy.budgetWindowThroughLabel}
           value={item.endYear}
-          invalidMessage={copy.profileInvalidAge}
+          invalidMessage={copy.profileInvalidYearOffset}
           readOnly={readOnly}
           onCommit={(end) => {
             // ABSENT (never an undefined-valued key) is the lifelong encoding (DND 009).
@@ -141,10 +141,15 @@ export function LivingDrawer({ model, open, readOnly, leaveAsk, onClose, onClose
   const setup = useSetupPeriod()
   // A tap on the unit, already-checked month included (the kit's ChoiceGroup reports it): the walk's explicit answer.
   const [unitTapped, setUnitTapped] = useState(false)
-  const periodNow = (approach: LivingApproach): SpendPeriodSetup | undefined =>
+  // THE RECEIPT IS THE PLAN'S SHAPE AT OPEN (milestone 3's review, X2; `drawerSave.ts`'s header): a one-figure amount with
+  // no budget governing it passed the period gate on every road that put it there, so its unit counts as answered. A plan
+  // with no figure, or one a budget governs, holds no such receipt, whatever setup's Complete said: its first one-figure
+  // amount asks for the unit until it is tapped (96,000 under the pre-checked month was $1,152,000 a year, unasked).
+  const figureCleared = seed.approach === 'one' && seed.entered !== undefined
+  const periodNow = (approach: LivingApproach): SpendPeriodSetup =>
     setup === null
-      ? undefined
-      : { periodConfirmed: setup.periodConfirmed, spendPeriodAnswered: setup.spendPeriodAnswered || unitTapped || approach === 'budget' }
+      ? { periodConfirmed: figureCleared, spendPeriodAnswered: unitTapped || approach === 'budget' }
+      : { periodConfirmed: setup.periodConfirmed && figureCleared, spendPeriodAnswered: setup.spendPeriodAnswered || unitTapped || approach === 'budget' }
   const [initial] = useState(() => (checkAtOpen === true ? openCheck(draft, ownLivingField, undefined, periodNow(seed.approach)) : undefined))
   const edit = useDrawerEdit<LivingForm, LivingField>(seed, open, initial)
   const { form, check, set } = edit
@@ -256,9 +261,11 @@ export function LivingDrawer({ model, open, readOnly, leaveAsk, onClose, onClose
                 </Button>
               </div>
             )}
-            {check.fields.lines !== undefined ? (
+            {/* The amount box is not drawn on this face, so a refusal on the spending figure (a $0 year-0 total) shows here,
+                beside the worksheet's own (milestone 3's review, X10): never a refused Save with nothing on screen. */}
+            {(check.fields.lines ?? check.fields.amount) !== undefined ? (
               <p role="alert" className="text-label text-stone-900" data-budget-refused="">
-                {check.fields.lines}
+                {check.fields.lines ?? check.fields.amount}
               </p>
             ) : null}
             <div role="status" className="flex flex-col gap-1 rounded-card bg-stone-100 p-4" data-budget-readout="">

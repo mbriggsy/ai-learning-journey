@@ -66,6 +66,75 @@ describe('the budget worksheet', () => {
   })
 })
 
+// Milestone 3's review, X2: after setup the spend period's receipt is the plan's shape at open (a one-figure amount no
+// budget governs), never setup's Complete, which passes with no figure under a governing budget.
+describe('the Living drawer’s 12× check after setup keys on the plan’s shape at open', () => {
+  function openLiving(start: ScenarioDraft) {
+    const store = profileStore(start)
+    render(<DrawerFor target={{ kind: 'living' }} model={store.model} open readOnly={false} onClose={() => {}} onClosed={() => {}} finalFocus={() => null} />)
+    return { ...store, dialog: screen.getByRole('dialog', { name: copy.profileKindLiving }) }
+  }
+  function typeAmount(dialog: HTMLElement, text: string) {
+    const box = within(dialog).getByLabelText(copy.spendLabel)
+    act(() => box.focus())
+    fireEvent.change(box, { target: { value: text } })
+    act(() => box.blur())
+  }
+  const save = (dialog: HTMLElement) => act(() => fireEvent.click(within(dialog).getByRole('button', { name: copy.profileDrawerSave })))
+
+  it('(a) no figure at open: 96,000 under the pre-checked month is refused under the amount until the unit is tapped', () => {
+    const { annualSpendingReal: _gone, ...rest } = DEV_SEEDS.retired
+    const noFigure: ScenarioDraft = { ...rest, spendEntryPeriod: 'month' }
+    expect(noFigure.budget, '[test setup] no budget governs').toBeUndefined()
+    const { model, recompute, dialog } = openLiving(noFigure)
+    typeAmount(dialog, '96,000')
+    save(dialog)
+    expect(within(dialog).getByText(copy.periodConfirmPrompt)).toBeInTheDocument()
+    expect(model.getSnapshot().draft.annualSpendingReal).toBeUndefined()
+    expect(recompute).not.toHaveBeenCalled()
+    act(() => fireEvent.click(within(dialog).getByRole('radio', { name: copy.periodMonth })))
+    save(dialog)
+    expect(model.getSnapshot().draft.annualSpendingReal).toBe(1_152_000)
+  })
+
+  it('(b) a budget plan switched to One figure: 150,000 is refused until the unit is tapped', () => {
+    const { model, dialog } = openLiving(GOVERNED)
+    act(() => fireEvent.click(within(dialog).getByRole('radio', { name: copy.profileLivingApproachOne })))
+    typeAmount(dialog, '150,000')
+    save(dialog)
+    expect(within(dialog).getByText(copy.periodConfirmPrompt)).toBeInTheDocument()
+    expect(model.getSnapshot().draft.budget).toBe(GOVERNED.budget)
+    act(() => fireEvent.click(within(dialog).getByRole('radio', { name: copy.periodYear })))
+    save(dialog)
+    expect(model.getSnapshot().draft.budget).toBeUndefined()
+    expect(model.getSnapshot().draft.annualSpendingReal).toBe(150_000)
+  })
+
+  // Milestone 3's review, X10: on the budget face the amount box is not drawn, so its refusal shows beside the worksheet.
+  it('budget face: a $0 year-0 total refuses Save with its words beside the worksheet, never with nothing on screen', () => {
+    const later = GOVERNED.budget!.map((l) => ({ ...l, startYear: Math.max(l.startYear, 1) }))
+    const zero: ScenarioDraft = { ...GOVERNED, budget: later, health: { ...GOVERNED.health, oopMedicalAnnual: 0 }, annualSpendingReal: 0 }
+    const { model, dialog } = openLiving(zero)
+    save(dialog)
+    const refusedLine = dialog.querySelector('[data-budget-refused]')
+    expect(refusedLine).toHaveTextContent(copy.errSpendZero)
+    expect(within(dialog).getAllByText(copy.errSpendZero)).toHaveLength(1)
+    expect(model.getSnapshot().draft).toBe(zero)
+  })
+
+  it('(c) a plan opened WITH a one-figure amount saves an edit with no ask (its unit was answered on the road in)', () => {
+    const start = DEV_SEEDS.retired
+    expect(start.annualSpendingReal, '[test setup] a one-figure amount').toBeDefined()
+    expect(start.budget, '[test setup] no budget governs').toBeUndefined()
+    const { model, dialog } = openLiving(start)
+    typeAmount(dialog, '96,000')
+    save(dialog)
+    expect(within(dialog).queryByText(copy.periodConfirmPrompt)).toBeNull()
+    const entered = model.getSnapshot().draft
+    expect(entered.spendEntryPeriod === 'month' ? entered.annualSpendingReal! / 12 : entered.annualSpendingReal).toBe(96_000)
+  })
+})
+
 describe('the survivor’s share', () => {
   it('a blank share and one over 100% refuse under its field, in the panel’s own words', () => {
     const { model } = profileStore(DEV_SEEDS.retired)

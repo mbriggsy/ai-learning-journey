@@ -6,6 +6,7 @@ import { copy, slots } from '../../../copy'
 import { heroLead } from '../../../dateHero'
 import { blueprintView, legendFor, type BlueprintInput, type BlueprintTile, type BlueprintView } from '../blueprintView'
 import { expensesView, incomeView, savingsView } from '../profileView'
+import { tablePerson } from '../../../workbench/tableRun'
 
 /**
  * Profile → Blueprint's composer (Act 6 · RC15; plan RC15's test scenarios): every tile names its category in words; no
@@ -224,6 +225,16 @@ describe('Goals', () => {
     expect(tiles.find((t) => t.id === 'medicare-1')!.value).toBe(copy.blueprintMedicareRetired)
   })
 
+  it('answerShown: true where a drawn tile prints the answer’s sentence (the crowned date, the no-date words); false while pending, on another tab, or with the stops hidden (the review’s E3)', () => {
+    const settled = { tab: 'goals' as const, answer: dateAnswer(working, track(4)) }
+    expect(blueprintView(input(working, settled)).answerShown).toBe(true)
+    expect(blueprintView(input(working, { tab: 'goals', answer: dateAnswer(working, noDate) })).answerShown, 'the no-date words are the answer too').toBe(true)
+    expect(blueprintView(input(working, { tab: 'goals' })).answerShown, 'pending: no sentence').toBe(false)
+    expect(blueprintView(input(working, { ...settled, tab: 'net-worth' })).answerShown).toBe(false)
+    expect(blueprintView(input(working, { ...settled, hidden: new Set(['retirement']) })).answerShown, 'Edit hid the stops').toBe(false)
+    expect(blueprintView(input(retired, { tab: 'goals' })).answerShown, 'a retired household’s timeline prints no answer').toBe(false)
+  })
+
   it('a fact still missing puts its tile in "Not on the timeline yet", never at a guessed year', () => {
     const { socialSecurityClaimAge: _gone, ...noClaim } = working.people[1]
     const d = { ...working, people: [working.people[0], noClaim] } as ScenarioDraft
@@ -247,6 +258,21 @@ describe('Income, Savings, Expenses', () => {
     expect(b.lanes[1]!.cells![1]!.empty).toBe(copy.blueprintNothingGoesIn)
     expect(b.lanes[2]!.cells).toBeNull()
     expect(b.lanes[2]!.shared!.label).toBe(copy.blueprintBothOfYou)
+  })
+
+  it('a working person with no deposit account: that person’s own line, door words naming this page’s Add only where it is drawn (the review’s E1)', () => {
+    const noAccounts: ScenarioDraft = { ...working, enteredAccounts: [] }
+    const cell = (readOnly: boolean) => {
+      const b = blueprintView(input(noAccounts, { tab: 'ise', readOnly })).body
+      if (b.kind !== 'ise') throw new Error('[test]')
+      return b.lanes[1]!.cells![0]!.empty
+    }
+    const possessive = tablePerson(noAccounts, 0, 0, 0).possessive
+    expect(cell(false)).toBe(slots.bpNoDepositAccount(possessive, { menu: copy.blueprintAdd, item: copy.blueprintAddAccount }))
+    expect(cell(false)).toContain(copy.blueprintAddAccount)
+    expect(cell(true), 'a read-only tab has no Add: no door words').toBe(slots.bpNoDepositAccount(possessive, null))
+    expect(cell(true)).not.toContain(copy.blueprintAddAccount)
+    expect(blueprintView(input(noAccounts, { tab: 'ise', readOnly: true })).add, '[test setup] no Add menu read-only').toBeNull()
   })
 })
 

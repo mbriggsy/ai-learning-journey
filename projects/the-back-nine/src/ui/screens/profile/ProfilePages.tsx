@@ -6,7 +6,7 @@
  * drawer's bookkeeping is `drawerHost.tsx`'s (the shell hosts the same for drawers opened from outside Profile). Every
  * Blueprint tile opens its drawer through this same host, so a tile and its Profile card open one drawer.
  */
-import { useCallback, useEffect, useMemo, useState, type RefObject } from 'react'
+import { useCallback, useEffect, useMemo, useState, type ReactNode, type RefObject } from 'react'
 import type { MemoryModel, ModelAnswer, ScenarioDraft } from '@store/memoryModel'
 import type { BandPlanClockAnchor } from '../../bandAnnotations'
 import { Blueprint } from './Blueprint'
@@ -41,6 +41,9 @@ export interface ProfilePagesProps {
   readonly answer: ModelAnswer
   readonly refiguring: boolean
   readonly anchor: BandPlanClockAnchor
+  /** The shell's StaleBanner: drawn above Blueprint while its tab prints the answer's own sentence (the Goals timeline's
+   *  crowned date or no-date words), as above every figured page (the review's E3). */
+  readonly answerBanner?: ReactNode
   /** The shell's Back ask: asked inside the open drawer (the drawer is modal). */
   readonly leaveAsk?: DrawerLeaveAsk
   /** Told whether a drawer is open (the shell then asks its Back ask inside it, never on the page beneath). */
@@ -49,7 +52,7 @@ export interface ProfilePagesProps {
 
 const NO_HIDDEN: Readonly<Record<BlueprintTab, readonly string[]>> = { 'net-worth': [], goals: [], ise: [] }
 
-export function ProfilePages({ screen, draft, model, readOnly, headingRef, agedBalancesYear, caveat, answer, refiguring, anchor, leaveAsk, onDrawerOpen }: ProfilePagesProps) {
+export function ProfilePages({ screen, draft, model, readOnly, headingRef, agedBalancesYear, caveat, answer, refiguring, anchor, answerBanner, leaveAsk, onDrawerOpen }: ProfilePagesProps) {
   const heading = useCallback(() => headingRef.current, [headingRef])
   const host = useDrawerHost(heading)
   const drawerOpen = host.isOpen
@@ -86,7 +89,9 @@ export function ProfilePages({ screen, draft, model, readOnly, headingRef, agedB
       {worth !== null ? (
         <NetWorth headingRef={headingRef} view={worth} selected={host.selected} onOpen={host.open} caveat={caveat} />
       ) : blueprint !== null ? (
-        <Blueprint
+        <>
+          {blueprint.answerShown ? answerBanner : null}
+          <Blueprint
           headingRef={headingRef}
           view={blueprint}
           selected={host.selected}
@@ -97,7 +102,8 @@ export function ProfilePages({ screen, draft, model, readOnly, headingRef, agedB
             setBpHidden((cur) => ({ ...cur, [bpTab]: hide ? [...cur[bpTab].filter((x) => x !== id), id] : cur[bpTab].filter((x) => x !== id) }))
           }
           caveat={caveat}
-        />
+          />
+        </>
       ) : view !== null ? (
         <CardsPage screen={screen} title={title} headingRef={headingRef} view={view} selected={host.selected} onOpen={host.open} />
       ) : null}

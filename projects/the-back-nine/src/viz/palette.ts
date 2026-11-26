@@ -231,6 +231,39 @@ export const RC_PAIRS: readonly RcPair[] = [
   { a: 'skyTile', b: 'green', where: 'Blueprint HSA beside Roth tiles; Medicare beside retirement', verdict: { kind: 'floor' } },
   { a: 'orange', b: 'skyTile', where: 'Blueprint pre-tax beside HSA tiles', verdict: { kind: 'floor' } },
   { a: 'skyTile', b: 'red', where: 'Blueprint Medicare beside spending tiles', verdict: { kind: 'floor' } },
+  // Analysis's Retirement Details (RC17): income sources stacked per year and ringed in its donuts, bottom-up Social
+  // Security deep indigo, other income light green, then the withdrawal stacks' own taxable blue, pre-tax orange (hatched),
+  // Roth green (dotted), HSA sky (lined); a part with nothing that year drops out, so any two can touch. The year the money
+  // ran out stands beside the last column as a red cross-hatched band with its words over it.
+  { a: 'deepIndigo', b: 'lightGreen', where: 'Social Security beside other income', verdict: { kind: 'floor' } },
+  { a: 'deepIndigo', b: 'blue', where: 'Social Security beside taxable withdrawals', verdict: { kind: 'floor' } },
+  { a: 'deepIndigo', b: 'orange', where: 'Social Security beside pre-tax withdrawals', verdict: { kind: 'floor' } },
+  { a: 'deepIndigo', b: 'green', where: 'Social Security beside Roth withdrawals', verdict: { kind: 'floor' } },
+  { a: 'deepIndigo', b: 'sky', where: 'Social Security beside HSA spending', verdict: { kind: 'floor' } },
+  { a: 'lightGreen', b: 'blue', where: 'other income beside taxable withdrawals', verdict: { kind: 'floor' } },
+  { a: 'lightGreen', b: 'green', where: 'other income beside Roth withdrawals', verdict: { kind: 'floor' } },
+  {
+    a: 'lightGreen',
+    b: 'orange',
+    where: 'other income beside pre-tax withdrawals',
+    verdict: { kind: 'cue', cue: 'pre-tax hatched in its column, slice and key square; each part named in the legend and the donuts’ key' },
+  },
+  {
+    a: 'lightGreen',
+    b: 'sky',
+    where: 'other income beside HSA spending',
+    verdict: { kind: 'cue', cue: 'HSA spending lined in its column, slice and key square; each part named in the legend and the donuts’ key' },
+  },
+  { a: 'orange', b: 'sky', where: 'pre-tax withdrawals beside HSA spending', verdict: { kind: 'floor' } },
+  { a: 'red', b: 'deepIndigo', where: 'the money-ran-out band beside Social Security', verdict: { kind: 'floor' } },
+  { a: 'red', b: 'lightGreen', where: 'the money-ran-out band beside other income', verdict: { kind: 'floor' } },
+  { a: 'red', b: 'sky', where: 'the money-ran-out band beside HSA spending', verdict: { kind: 'floor' } },
+  {
+    a: 'red',
+    b: 'green',
+    where: 'the money-ran-out band beside Roth withdrawals',
+    verdict: { kind: 'cue', cue: 'the band cross-hatched with "Money ran out this year" printed over it; Roth dotted' },
+  },
   { a: 'green', b: 'teal', where: 'series slots 1 and 11', verdict: { kind: 'apart' } },
 ]
 

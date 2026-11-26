@@ -1,0 +1,194 @@
+/**
+ * src/ui/screens/retirement/analysisRuns.ts: what Analysis's Comparisons, Savings and Retirement Details tabs share
+ * (plan docs/plans/6-rightcapital-ui-plan.md, RC17). PURE: the shell hands each tab's composer the rows it already runs
+ * (your plan's steady and rough lanes, the what-if slots: no new engine call path), and this file turns them into ready
+ * sides, years, ages and windows.
+ *
+ * THE TWO SIDES are Probability's: the alternative on the left (the what-if, a kept what-if or Recommended; green and
+ * solid) and the plan it is compared against on the right (your plan unless its picker says otherwise; blue with the
+ * second cue). With no what-if open beside your plan the alternative is absent: the tabs show your plan alone and say so,
+ * never a second line copied from the first.
+ *
+ * A LEDGER ROW IS THE END OF A SIM-YEAR (insight 134; `LedgerLoopRow`): row t is calendar year `startCalendarYear + t`,
+ * its flows happened during the year, `start` is the year's opening and `end` its close. The money-ran-out row
+ * (`ranOut`) records what the year ASKED for, forfeits its deposits, closes at zero and does not reconcile: no figure
+ * here counts its flows as paid, and the rows (and every axis) end there, which the tabs say.
+ *
+ * THE FIRST RETIRED YEAR is the run's own stop year (`TableMeta.stopYear`, which a what-if's stop-year lever moves), or
+ * row one on the all-retired route. "What a side holds as retirement begins" is that row's OPENING (`start`): what the
+ * household retires with, before the year's first withdrawal.
+ *
+ * WINDOWS (insight 175): two runs can end in different years (a run whose money runs out stops there). Each figure picks
+ * its years here and its sentence names them; nothing sums each run to its own end.
+ */
+import { totalAcrossBuckets } from '@engine/sequencing'
+import type { LedgerYearRow } from '@shared/model'
+import type { TableMeta } from '../../workbench/tableRun'
+import { copy, slots } from '../../copy'
+import type { TimeAxis } from '../../displaySettings'
+import type { RunRows } from './cashFlowsView'
+
+export type AnalysisFuture = 'steady' | 'rough'
+export type SideId = 'alternative' | 'compared'
+
+/** One side as the shell hands it over: its names and its rows in the future shown. */
+export interface RunSide {
+  readonly id: SideId
+  /** As its picker shows it; opens a sentence. */
+  readonly title: string
+  /** Inside a sentence: a built-in name in lower case, a kept what-if's as typed. */
+  readonly mid: string
+  readonly rows: RunRows
+}
+
+export interface ReadySide {
+  readonly id: SideId
+  readonly title: string
+  readonly mid: string
+  readonly rows: readonly LedgerYearRow[]
+  readonly meta: TableMeta
+  readonly updating: boolean
+}
+
+/** Everything a tab's composer reads. */
+export interface AnalysisInput {
+  readonly future: AnalysisFuture
+  /** The right side: your plan unless its picker says otherwise. Always present. */
+  readonly compared: RunSide
+  /** The left side, or null: no what-if open beside your plan. */
+  readonly alternative: RunSide | null
+  readonly timeAxis: TimeAxis
+  /** The page's one state clause (`composeVerdictStateNote`), on every chart's notes (plan 4.0's disclosure map). */
+  readonly stateClause: string | null
+  /** The rough market's words (`workbenchRoughWhat` over the committed window). */
+  readonly roughWhat: string
+  /** A read-only tab: no door that writes (plan 4.0). */
+  readonly readOnly: boolean
+}
+
+export type SidesGate =
+  | { readonly kind: 'words'; readonly words: string }
+  | { readonly kind: 'ready'; readonly sides: readonly ReadySide[]; readonly updating: boolean }
+
+/** The sides shown, alternative first: the first side's withheld words, else an error, else "working out" until every
+ *  side's rows are ready, and two sides only once both stand on one answer (Cash Flows' paired rule). */
+export function gateSides(input: Pick<AnalysisInput, 'compared' | 'alternative'>): SidesGate {
+  const all = input.alternative === null ? [input.compared] : [input.alternative, input.compared]
+  for (const s of all) if (s.rows.kind === 'withheld') return { kind: 'words', words: s.rows.words }
+  if (all.some((s) => s.rows.kind === 'error')) return { kind: 'words', words: copy.analysisRunsError }
+  const ready: ReadySide[] = []
+  for (const s of all) {
+    if (s.rows.kind !== 'ready') return { kind: 'words', words: copy.analysisRunsWaiting }
+    ready.push({ id: s.id, title: s.title, mid: s.mid, rows: s.rows.rows, meta: s.rows.meta, updating: s.rows.updating })
+  }
+  const keys = new Set(all.map((s) => (s.rows.kind === 'ready' ? s.rows.answerKey : '')))
+  if (keys.size > 1) return { kind: 'words', words: copy.analysisRunsWaiting }
+  return { kind: 'ready', sides: ready, updating: ready.some((s) => s.updating) }
+}
+
+export const yearOf = (meta: TableMeta, r: LedgerYearRow): number => meta.startCalendarYear + r.t
+
+/** The living people's ages in a row ("ages 62 and 60"). */
+export function agesIn(meta: TableMeta, r: LedgerYearRow): string {
+  const ages = meta.people.flatMap((p, i) => (r.alive[i] === false ? [] : [p.currentAge + r.t]))
+  return slots.analysisAges(ages.length > 0 ? ages : meta.people.map((p) => p.currentAge + r.t))
+}
+
+/** The first retired row's t: the run's stop year, or row one on the all-retired route. */
+export function firstRetiredT(meta: TableMeta): number {
+  if (meta.route === 'spine' || meta.stopYear === undefined) return 0
+  return Math.max(0, meta.stopYear - meta.startCalendarYear)
+}
+
+/** A row's year-end invested total: the engine's own sum (`totalAcrossBuckets`). */
+export const endTotal = (r: LedgerYearRow): number => totalAcrossBuckets(r.end)
+/** A row's opening invested total. */
+export const startTotal = (r: LedgerYearRow): number => totalAcrossBuckets(r.start)
+
+/** What a year takes from the accounts toward its need: the three draws and the HSA's spend. Never a conversion, and
+ *  never a required withdrawal moved to taxable (both move money between accounts). */
+export const withdrawn = (r: LedgerYearRow): number => r.draw.taxable + r.draw.pretax + r.draw.roth + r.hsaSpend
+
+/** The year's health premiums: the marketplace premium after its credit, the Medicare bill (its surcharge already in it,
+ *  `irmaaSurcharge` is part of `medicare`) and the entered extras. */
+export const premiumsOf = (r: LedgerYearRow): number => r.premiums.acaNet + r.premiums.medicare + r.premiums.medicareExtras
+
+/** The income a year lives on that is not a withdrawal: Social Security and other income, less the part past what the
+ *  year spends that the tool does not keep (`incomeNotKept`). */
+export const keptIncome = (r: LedgerYearRow): number =>
+  Math.max(0, r.socialSecurity + r.otherIncomeByPerson.reduce((s, o) => s + o.gross, 0) - r.incomeNotKept)
+
+/** The run's last row and whether its money ran out there. */
+export function endOf(side: ReadySide): { readonly year: number; readonly ranOut: boolean; readonly row: LedgerYearRow | undefined } {
+  const last = side.rows.at(-1)
+  return { year: side.meta.startCalendarYear + (last?.t ?? 0), ranOut: last?.ranOut === true, row: last }
+}
+
+/** The rows a figure may count as paid: every row but the money-ran-out one. */
+export const paidRows = (side: ReadySide): readonly LedgerYearRow[] => side.rows.filter((r) => !r.ranOut)
+
+/** The retired rows a figure may count as paid. */
+export const retiredPaidRows = (side: ReadySide): readonly LedgerYearRow[] => {
+  const from = firstRetiredT(side.meta)
+  return side.rows.filter((r) => !r.ranOut && r.t >= from)
+}
+
+/** The ran-out note over the sides shown: every run whose money ran out, named with its year, and, where a figure counts
+ *  only the years every side reaches, `through` (that last year, said in the note). Absent where no side ran out. */
+export function ranOutNote(sides: readonly ReadySide[], steady: boolean, through: number | null): string | undefined {
+  const out = sides.flatMap((s) => {
+    const e = endOf(s)
+    return e.ranOut ? [{ name: s.mid, year: e.year }] : []
+  })
+  if (out.length === 0) return undefined
+  return slots.analysisRanOut(out, steady, sides.length > 1 ? through : null)
+}
+
+/** The last year every side's rows reach (a run's money-ran-out row included: its close is zero, the money gone). */
+export const lastSharedYear = (sides: readonly ReadySide[]): number => Math.min(...sides.map((s) => endOf(s).year))
+
+/** The last year every side PAID (a money-ran-out row's flows are what the year asked for, so it never counts). */
+export function lastSharedPaidYear(sides: readonly ReadySide[]): number {
+  return Math.min(
+    ...sides.map((s) => {
+      const paid = paidRows(s)
+      return paid.length === 0 ? s.meta.startCalendarYear - 1 : yearOf(s.meta, paid.at(-1)!)
+    }),
+  )
+}
+
+/** The years both sides' retired rows share, from the later first retired year to the earlier last paid row: one window
+ *  for a comparison, so neither side's total differs by its years alone. Null where they share none. */
+export function sharedRetiredWindow(sides: readonly ReadySide[]): { readonly from: number; readonly through: number } | null {
+  let from = -Infinity
+  let through = Infinity
+  for (const s of sides) {
+    const rows = retiredPaidRows(s)
+    if (rows.length === 0) return null
+    from = Math.max(from, yearOf(s.meta, rows[0]!))
+    through = Math.min(through, yearOf(s.meta, rows.at(-1)!))
+  }
+  return from <= through ? { from, through } : null
+}
+
+/** A difference's direction and its figure in the delta dialect ("the same" where it prints as $0). */
+export function direction(ours: number, theirs: number, fig: (n: number) => string): { readonly fig: string; readonly dir: 'more' | 'less' | 'same' } {
+  const f = fig(ours - theirs)
+  if (f === '0') return { fig: f, dir: 'same' }
+  return { fig: f, dir: ours > theirs ? 'more' : 'less' }
+}
+
+/** A whole percent's words ("44"); one decimal under 10 ("4.2"), so a withdrawal rate keeps its tenth. */
+export const pctWords = (fraction: number): string => {
+  const p = fraction * 100
+  return p < 10 ? (Math.round(p * 10) / 10).toFixed(1) : String(Math.round(p))
+}
+
+/** The notes every tab's chart carries: which future, the essentials-only level where a run reads it, the state clause. */
+export function futureNotes(input: AnalysisInput, sides: readonly ReadySide[]): string[] {
+  return [
+    input.future === 'steady' ? copy.analysisSteadyWhat : input.roughWhat,
+    ...(sides.some((s) => s.meta.track === 'floor') ? [copy.analysisFloorTrack] : []),
+    ...(input.stateClause !== null ? [input.stateClause] : []),
+  ]
+}

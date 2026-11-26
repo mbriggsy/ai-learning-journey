@@ -1,13 +1,16 @@
 /**
  * src/ui/screens/retirement/Analysis.tsx: Retirement → Analysis, the page (plan docs/plans/6-rightcapital-ui-plan.md,
- * RC4 and RC7; ref 2.7, 2.8, 2.9). The title, the intro line (the page's answer in a plain sentence: the confidence
+ * RC4, RC7 and RC17; ref 2.7 to 2.12). The title, the intro line (the page's answer in a plain sentence: the confidence
  * statement on the retired route, the two-dates sentence on the working route, with the re-figuring line or the
- * provisional tag above it), the folder tabs (Probability, Confidence: each a route, `#/retirement/analysis/<tab>`),
+ * provisional tag above it), the folder tabs (Probability, Confidence, Comparisons, Savings, Retirement Details in
+ * RightCapital's order: each a route, `#/retirement/analysis/<tab>`),
  * "Today’s dollars" beside them, the panel with its R13 caveat last, named by the answer (`verdictDescribedBy`), and on
  * Probability the ACTION ITEMS handle centred on the panel's bottom edge, which opens the tray under the panel (RC4b,
  * `ActionItemsTray.tsx`). The handle and the tray show only over a reading (before one there is nothing to change), and
- * only on Probability (Confidence reads your plan alone: `Confidence.tsx`). The intro, the states and the caveat are one
- * page's: both tabs read them from `probabilityView.ts`.
+ * on every tab but Confidence (Confidence reads your plan alone: `Confidence.tsx`; RC17's three tabs read the two sides
+ * Probability shows, so the tray that changes the left side rides them too, as RightCapital's handle sits on every
+ * Analysis tab). The intro, the states and the caveat are one page's: every tab reads them from `probabilityView.ts`;
+ * RC17's tabs hand their panel in as `runs`, drawn over a reading.
  */
 import type { ReactNode, Ref } from 'react'
 import { Caveat, PageFrame, type PageFrameHandle } from '../../kit'
@@ -18,7 +21,7 @@ import type { ConfidenceView } from './confidenceView'
 import { ProbabilityPanel, ProbabilityWaiting, type ProbabilityPanelProps } from './Probability'
 import type { ProbabilityView } from './probabilityView'
 
-export type AnalysisTab = 'probability' | 'confidence'
+export type AnalysisTab = 'probability' | 'confidence' | 'comparisons' | 'analysis-savings' | 'retirement-details'
 
 export interface AnalysisProps extends Omit<ProbabilityPanelProps, 'view'> {
   /** "Today's dollars" beside the folder tabs opens the Display drawer (RC18); absent, the plain words. */
@@ -35,14 +38,19 @@ export interface AnalysisProps extends Omit<ProbabilityPanelProps, 'view'> {
   /** The ACTION ITEMS handle and the tray it opens (over a reading only). */
   readonly handle?: PageFrameHandle
   readonly tray?: ReactNode
+  /** RC17's tabs: the panel the shell composed (Comparisons, Savings or Retirement Details), drawn over a reading. */
+  readonly runs?: ReactNode
 }
 
 const TABS = [
   { id: 'probability', label: copy.probabilityTab },
   { id: 'confidence', label: copy.confidenceTab },
+  { id: 'comparisons', label: copy.comparisonsTab },
+  { id: 'analysis-savings', label: copy.analysisSavingsTab },
+  { id: 'retirement-details', label: copy.retirementDetailsTab },
 ] as const
 
-export function Analysis({ view, headingRef, tab, onTab, confidence, onReconfirm, handle, tray, onDisplay, ...panel }: AnalysisProps) {
+export function Analysis({ view, headingRef, tab, onTab, confidence, onReconfirm, handle, tray, onDisplay, runs, ...panel }: AnalysisProps) {
   const intro =
     view.kind === 'reading' ? (
       <div className="flex flex-col gap-1" data-analysis-intro="">
@@ -62,7 +70,7 @@ export function Analysis({ view, headingRef, tab, onTab, confidence, onReconfirm
         ))}
       </div>
     ) : undefined
-  const handled = view.kind === 'reading' && tab === 'probability'
+  const handled = view.kind === 'reading' && tab !== 'confidence'
   const caveat = <Caveat lines={view.caveat} />
   // On Confidence the caveat closes the key-metric column (`Confidence.tsx`), inside the frame; everywhere else the panel's foot.
   const onConfidence = view.kind === 'reading' && tab === 'confidence' && confidence !== undefined
@@ -98,6 +106,8 @@ export function Analysis({ view, headingRef, tab, onTab, confidence, onReconfirm
           <ProbabilityWaiting view={view} />
         ) : onConfidence ? (
           <ConfidencePanel view={confidence} caveat={caveat} onReconfirm={onReconfirm} />
+        ) : runs !== undefined && tab !== 'probability' && tab !== 'confidence' ? (
+          runs
         ) : (
           <ProbabilityPanel view={view} {...panel} />
         )}

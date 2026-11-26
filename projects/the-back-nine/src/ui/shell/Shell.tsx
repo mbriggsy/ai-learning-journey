@@ -70,6 +70,11 @@
  * every time axis, one scale or two for Probability's balance bars) are held by IntakeApp for the session (the shell
  * unmounts across a save or a backup) and handed to every composer that draws a chart over the plan's years.
  *
+ * RETIREMENT → ANALYSIS → COMPARISONS, SAVINGS AND RETIREMENT DETAILS (RC17; `comparisonsView.ts`, `savingsView.ts`,
+ * `retirementDetailsView.ts` over `analysisRuns.ts`): the two sides Probability shows (the left what-if's slot, the right
+ * side's slot or your plan's lanes), in one named future (their own Steady or Rough select, held here with each tab's
+ * chart), from runs already made: no new engine call path. They carry the ACTION ITEMS handle and tray as Probability does.
+ *
  * THE TWO-UP AND THE PLAN LIST (RC5): Probability's right side runs on its own slot (`useSlotRun`, made once here), so any
  * two of your plan, the kept what-ifs, Recommended and the new what-if sit side by side. The pencil beside the right
  * picker opens the plan list drawer (`PlanListDrawer.tsx`); its writes go to IntakeApp's `onWriteKept`, the plan's one
@@ -142,6 +147,13 @@ import { useDrawerHost } from '../screens/profile/drawerHost'
 import { expensesView, goalsView } from '../screens/profile/profileView'
 import { snapshotView, type SteadyRows } from '../screens/dashboard/snapshotView'
 import { Analysis } from '../screens/retirement/Analysis'
+import type { AnalysisFuture, AnalysisInput, RunSide } from '../screens/retirement/analysisRuns'
+import { ComparisonsPanel } from '../screens/retirement/Comparisons'
+import { comparisonsView, type ComparisonsChart } from '../screens/retirement/comparisonsView'
+import { RetirementDetailsPanel } from '../screens/retirement/RetirementDetails'
+import { retirementDetailsView, type RetirementDetailsChart } from '../screens/retirement/retirementDetailsView'
+import { SavingsPanel } from '../screens/retirement/Savings'
+import { savingsView, type SavingsChart } from '../screens/retirement/savingsView'
 import { confidenceView } from '../screens/retirement/confidenceView'
 import { ActionItemsTray, type TrayFocus } from '../screens/retirement/ActionItemsTray'
 import { keptIdOf, landingPick, probabilityView, type LeftPick, type ProbabilityChart, type RightPick } from '../screens/retirement/probabilityView'
@@ -662,9 +674,13 @@ export default function Shell({
     () => composeAnswerNotes(snapshot, { readOnly, stalenessNote, leftOverClauseHost, agedBalancesYear, wallCalendarYear }),
     [snapshot, readOnly, stalenessNote, leftOverClauseHost, agedBalancesYear, wallCalendarYear],
   )
-  // Probability and Confidence are one page (RC7): Confidence reads the page's title, intro, states and caveat from the
-  // same composer, and its own panel from `confidenceView`.
-  const analysisTab = screen === 'probability' || screen === 'confidence' ? screen : null
+  // Analysis's tabs are one page (RC7, RC17): each reads the page's title, intro, states and caveat from the same composer,
+  // and its own panel from its own (`confidenceView`; RC17's `comparisonsView`, `savingsView`, `retirementDetailsView`).
+  const analysisTab =
+    screen === 'probability' || screen === 'confidence' || screen === 'comparisons' || screen === 'analysis-savings' || screen === 'retirement-details' ? screen : null
+  /** The Analysis tabs that carry the ACTION ITEMS handle and its tray: every one but Confidence (RC17's tabs read the left
+   *  side the tray changes, as RightCapital's handle sits on every Analysis tab). */
+  const trayTab = analysisTab !== null && analysisTab !== 'confidence'
   const prob = useMemo(
     () =>
       analysisTab !== null
@@ -785,13 +801,13 @@ export default function Shell({
   // the plan's own run carries it (insight 132), as U15's rail read them.
   const committedAnswer = snapshot.answer.kind === 'headline' || snapshot.answer.kind === 'date' ? snapshot.answer : null
   const planMeta = useMemo(() => {
-    if (screen !== 'probability') return undefined
+    if (!trayTab) return undefined
     const r = whatIfRunFor(snapshot.answer, snapshot.draft.seed, [] as readonly WhatIfLeverV6[])
     return r.kind === 'run' ? r.meta : undefined
-  }, [screen, snapshot.answer, snapshot.draft.seed])
+  }, [trayTab, snapshot.answer, snapshot.draft.seed])
   const offers = useMemo(
-    () => (screen === 'probability' && committedAnswer !== null ? railOffers(committedAnswer.draft, planMeta?.stopYear) : null),
-    [screen, committedAnswer, planMeta?.stopYear],
+    () => (trayTab && committedAnswer !== null ? railOffers(committedAnswer.draft, planMeta?.stopYear) : null),
+    [trayTab, committedAnswer, planMeta?.stopYear],
   )
   const whatIfMany = whatIf.view?.kind === 'shown' ? whatIf.view.many : undefined
   const whatIfCurrent = whatIfMany?.kind === 'ready' && !whatIfMany.updating && !snapshot.refiguring
@@ -834,6 +850,66 @@ export default function Shell({
         announce={announce}
       />
     ) : undefined
+
+  // ── Retirement → Analysis → Comparisons, Savings and Retirement Details (RC17): the two sides Probability shows, in
+  // one named future, from the runs already made (your plan's lanes, the left what-if's slot, the right side's slot): no
+  // new engine call. The future and each tab's chart are held here, so a page move keeps them. ──
+  const [analysisFuture, setAnalysisFuture] = useState<AnalysisFuture>('steady')
+  const [cmpChart, setCmpChart] = useState<ComparisonsChart>('assets')
+  const [rdChart, setRdChart] = useState<RetirementDetailsChart>('income:compared')
+  const [savChart, setSavChart] = useState<SavingsChart>('this-year:compared')
+  const runsInput = useMemo((): AnalysisInput | null => {
+    if (!trayTab || analysisTab === 'probability' || prob === null || prob.kind !== 'reading') return null
+    const start = committedAnswer?.draft.startCalendarYear ?? snapshot.draft.startCalendarYear
+    const planSide = planRows(run, results[analysisFuture], snapshot.refiguring)
+    const lower = (s: string) => s.toLowerCase()
+    // The right side as Probability resolved it (a pick that can no longer be made reads your plan).
+    const rightPlan = prob.comparedPicker.value === 'plan'
+    const rightTitle = prob.halves.compared.title
+    const compared: RunSide = {
+      id: 'compared',
+      title: rightTitle,
+      mid: rightPlan || prob.comparedPicker.value === 'recommended' ? lower(rightTitle) : rightTitle,
+      rows: rightPlan ? planSide : slotRows(right.view, analysisFuture, start, snapshot.refiguring),
+    }
+    // The left side: the what-if's own run; its empty bundle IS your plan (U14), so beside your plan there is one side,
+    // and beside a kept what-if or Recommended it is your plan's rows, named so.
+    const leftEmpty = whatIf.shown.length === 0
+    const alternative: RunSide | null = leftEmpty
+      ? rightPlan
+        ? null
+        : { id: 'alternative', title: copy.probabilityPlanTitle, mid: lower(copy.probabilityPlanTitle), rows: planSide }
+      : {
+          id: 'alternative',
+          title: prob.halves.alternative.title,
+          mid: prob.picker.value === 'new' || prob.picker.value === 'recommended' ? lower(prob.halves.alternative.title) : prob.halves.alternative.title,
+          rows: slotRows(whatIf.view, analysisFuture, start, snapshot.refiguring),
+        }
+    const years = roughWindowYears()
+    return {
+      future: analysisFuture,
+      compared,
+      alternative,
+      timeAxis: display.timeAxis,
+      stateClause: committedAnswer !== null ? composeVerdictStateNote(notes.statePricedNote, false) : null,
+      roughWhat: slots.workbenchRoughWhat(years.start, years.end, ROUGH_WINDOW_YEARS),
+      readOnly,
+    }
+  }, [trayTab, analysisTab, prob, committedAnswer, snapshot.draft.startCalendarYear, snapshot.refiguring, run, results, analysisFuture, right.view, whatIf.shown, whatIf.view, display.timeAxis, notes.statePricedNote, readOnly])
+  const runsPanel = ((): ReactNode | undefined => {
+    if (runsInput === null) return undefined
+    const future = { future: analysisFuture, onFuture: setAnalysisFuture }
+    if (screen === 'comparisons') return <ComparisonsPanel view={comparisonsView({ ...runsInput, chart: cmpChart })} onChart={setCmpChart} {...future} />
+    if (screen === 'retirement-details') return <RetirementDetailsPanel view={retirementDetailsView({ ...runsInput, chart: rdChart })} onChart={setRdChart} {...future} />
+    return (
+      <SavingsPanel
+        view={savingsView({ ...runsInput, chart: savChart, working: committedAnswer?.kind === 'date' })}
+        onChart={setSavChart}
+        onOpenWorkingCost={() => openDrawer({ kind: 'working-cost' }, null)}
+        {...future}
+      />
+    )
+  })()
 
   // ── Tax → Tax Strategies (RC8): the folder tab, the held picks, the re-pick door, Comparison's and Details' picks ──
   const [taxTab, setTaxTab] = useState<TaxTab>('strategies')
@@ -1126,6 +1202,9 @@ export default function Shell({
     screen === 'snapshot' ||
     screen === 'probability' ||
     screen === 'confidence' ||
+    screen === 'comparisons' ||
+    screen === 'analysis-savings' ||
+    screen === 'retirement-details' ||
     screen === 'cash-flows' ||
     screen === 'social-security' ||
     screen === 'stress-test' ||
@@ -1423,6 +1502,7 @@ export default function Shell({
               strategies={strategiesDoor}
               handle={{ label: copy.trayHandle, open: trayOpen, onOpenChange: setTrayOpen, controls: trayId }}
               {...(tray !== undefined ? { tray } : {})}
+              {...(runsPanel !== undefined ? { runs: runsPanel } : {})}
             />
             {planListDrawer}
           </>

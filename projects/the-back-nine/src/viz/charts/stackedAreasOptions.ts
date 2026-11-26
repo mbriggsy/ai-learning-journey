@@ -49,10 +49,14 @@ export interface PairSeries {
   readonly name: string
   readonly role: 'alternative' | 'compared'
   readonly points: readonly YearPoint[]
+  /** Printed at the line's end in place of its figure (RC17: a run whose money ran out ends at a zero close that is no
+   *  balance, so its end says so, never "~$0"). */
+  readonly endWord?: string
 }
 
 export interface PairAreasInput extends Shared {
-  readonly series: readonly [PairSeries, PairSeries]
+  /** Two sides, or one (RC17's Comparisons with no what-if open: your plan alone, never a copied second line). */
+  readonly series: readonly [PairSeries, PairSeries] | readonly [PairSeries]
 }
 
 export type StackSource = 'taxable' | 'pretax' | 'roth' | 'hsa'
@@ -109,7 +113,8 @@ function frame(shared: Shared): Options {
 export function pairAreasOptions(input: PairAreasInput): Options {
   const { series, figure } = input
   const lastOf = (s: PairSeries) => s.points.at(-1)?.value ?? 0
-  const higher = lastOf(series[0]) >= lastOf(series[1]) ? series[0].id : series[1].id
+  const other = series[1]
+  const higher = other === undefined || lastOf(series[0]) >= lastOf(other) ? series[0].id : other.id
   return {
     ...frame(input),
     tooltip: {
@@ -119,7 +124,9 @@ export function pairAreasOptions(input: PairAreasInput): Options {
         return [`${hcPlain(input.axisTitle)} ${ctx.x}`, ...(ctx.points ?? []).map((p) => `${p.series.name}: ${figure(p.y)}`)].join('<br/>')
       },
     },
-    plotOptions: { area: { marker: { enabled: false }, fillOpacity: 1 } },
+    // The end figures are never deferred: a deferred label waits on the morph and stays at opacity 0 under the harnesses'
+    // pinned clock (insight 169), and a series-level `defer` is the one Highcharts reads.
+    plotOptions: { area: { marker: { enabled: false }, fillOpacity: 1, dataLabels: { defer: false } } },
     series: series.map((s): SeriesAreaOptions => {
       const last = s.points.length - 1
       const above = s.id === higher
@@ -141,7 +148,7 @@ export function pairAreasOptions(input: PairAreasInput): Options {
                   align: 'right' as const,
                   verticalAlign: above ? ('bottom' as const) : ('top' as const),
                   y: above ? -6 : 6,
-                  formatter: () => figure(p.value),
+                  formatter: () => s.endWord ?? figure(p.value),
                 },
               }
             : {}),

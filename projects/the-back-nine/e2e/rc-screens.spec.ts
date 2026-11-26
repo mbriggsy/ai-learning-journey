@@ -4700,3 +4700,195 @@ for (const size of RC12_SIZES) {
     })
   })
 }
+
+// ── RC17 · Analysis → Comparisons, Savings and Retirement Details (plan 6, RC17's Verification) ───────────────────────
+// On `retired` (the spine: your plan alone, no what-if open), `dip` (the date route; a stop-year what-if moves the first
+// retired year, so the two bars as retirement begins differ) and `dateshort` (every working year runs short): each tab in
+// ONE frame at his window down to the ACTION ITEMS handle, the R13 caveat inside it and tied to the figures; each chart's
+// words pass the Highcharts text audit; every metric names its market; Comparisons' two bars drawn in the ratio of their
+// printed figures (insight 169); on the phone no sideways scroll and the caveat reached.
+const RC17_TABS = [
+  { tab: copy.comparisonsTab, hash: 'comparisons', screen: 'comparisons' },
+  { tab: copy.analysisSavingsTab, hash: 'savings', screen: 'analysis-savings' },
+  { tab: copy.retirementDetailsTab, hash: 'retirement-details', screen: 'retirement-details' },
+] as const
+
+/** Probability (from the home), then the named Analysis tab; its chart drawn (or the words in its place) and settled. */
+async function toAnalysisTab(page: Page, seed: string, t: (typeof RC17_TABS)[number]): Promise<void> {
+  if ((await page.locator('main.result[data-shell-screen="snapshot"]').count()) > 0) await toProbability(page, seed)
+  await page.getByRole('tab', { name: t.tab, exact: true }).click()
+  await expect(page.locator(`main.result[data-shell-screen="${t.screen}"]`)).toBeAttached()
+  expect(new URL(page.url()).hash).toBe(`#/retirement/analysis/${t.hash}`)
+  await rc17Settled(page, `${seed} ${t.hash}`)
+}
+
+async function rc17Settled(page: Page, who: string): Promise<void> {
+  await expect(page.locator('[data-analysis-body] .highcharts-series-group, [data-analysis-words]').first(), `${who}: neither a chart nor its words`).toBeAttached({ timeout: 90_000 })
+  await expect(page.locator('[data-analysis-panel] [aria-busy="true"]'), `${who}: the runs never settled`).toHaveCount(0, { timeout: 90_000 })
+  await page.waitForTimeout(500)
+  await settleLayout(page)
+}
+
+/** Pick a chart from the panel's title menu. */
+async function pickRc17Chart(page: Page, label: string): Promise<void> {
+  await page.locator('[data-analysis-panel] h2 button').click()
+  await page.getByRole('menuitemradio', { name: label, exact: true }).click()
+  await rc17Settled(page, label)
+}
+
+/** One frame at his window: from the top down to the handle, the caveat inside it, nothing scrolled. */
+async function assertRc17Frame(page: Page, who: string): Promise<void> {
+  const frame = await page.evaluate(() => ({
+    scrollY: window.scrollY,
+    body: document.querySelector('[data-analysis-panel]')!.getBoundingClientRect().bottom,
+    caveat: document.querySelector('main.result [data-caveat]')!.getBoundingClientRect().bottom,
+    handle: document.querySelector('main.result [aria-controls="b9-action-items"]')!.getBoundingClientRect().bottom,
+  }))
+  console.log(`[rc17-frame] ${who}: panel ${frame.body.toFixed(1)}, caveat ${frame.caveat.toFixed(1)}, handle ${frame.handle.toFixed(1)} of ${REAL.height}`)
+  expect(frame.scrollY).toBe(0)
+  expect(frame.caveat, `${who}: the chart, its metrics and the caveat inside the first frame`).toBeLessThanOrEqual(REAL.height)
+  expect(frame.handle, `${who}: the ACTION ITEMS handle inside the first frame`).toBeLessThanOrEqual(REAL.height)
+}
+
+/** The shown chart's words: every axis tick and legend item visible, unclipped and at the floor size; no word cut. */
+async function auditRc17Text(page: Page, who: string, counts: Partial<Record<'axis-label' | 'legend-item' | 'data-label', number>>, texts: readonly string[] = []): Promise<void> {
+  const charts = await page.locator('[data-analysis-body] [data-chart]').evaluateAll((els) => els.map((el) => el.getAttribute('data-chart')!))
+  expect(charts.length, `${who}: a chart drew`).toBeGreaterThan(0)
+  const floor = await hcFloorPx(page)
+  for (const c of charts) {
+    expect(hcTextFailures(await hcAudit(page, `[data-chart="${c}"]`, '[data-analysis-body]'), floor, { texts: c === charts[0] ? texts : [], counts }), `${who} ${c}: the chart’s text`).toEqual([])
+    const cut = (await page.locator(`[data-chart="${c}"] svg text`).allTextContents()).filter((t) => t.includes('…'))
+    expect(cut, `${who} ${c}: no chart word cut short`).toEqual([])
+  }
+}
+
+const rc17Metrics = (page: Page): Promise<string[]> => page.locator('[data-analysis-metric]').allInnerTexts()
+
+/** The future select at the panel's top right. */
+async function pickRc17Future(page: Page, label: string): Promise<void> {
+  await page.locator('[data-analysis-panel]').getByRole('combobox', { name: copy.taxStratMarketLabel }).click()
+  await page.getByRole('option', { name: label, exact: true }).click()
+  await rc17Settled(page, label)
+}
+
+test.describe(`RC17 · Comparisons, Savings and Retirement Details at his window (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr, compact mode)`, () => {
+  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR, reducedMotion: 'reduce' })
+
+  test('?seed=retired: each tab in one frame to the handle; your plan alone, said so; Savings one chart; every metric names its market; the text audit', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 180_000)
+    await gotoSeedFinal(page, 'retired')
+    for (const t of RC17_TABS) {
+      await toAnalysisTab(page, 'retired', t)
+      const who = `retired ${t.hash}`
+      await assertRc17Frame(page, who)
+      await assertOneVisibleCaveat(page, REAL.height)
+      await noSidewaysScroll(page, who)
+      for (const m of await rc17Metrics(page)) expect(m, `${who}: a one-path metric names its market`).toContain('in the steady market')
+    }
+    // Comparisons: one side (no what-if open beside your plan), the line saying how to set one; the three charts.
+    await toAnalysisTab(page, 'retired', RC17_TABS[0])
+    await expect(page.locator('[data-analysis-note]').first()).toHaveText(copy.cmpNoWhatIf)
+    await expect(page.locator('[data-chart="cmp-pair"] .highcharts-series')).toHaveCount(1)
+    await auditRc17Text(page, 'retired assets', { 'axis-label': 4, 'data-label': 1 })
+    await pickRc17Chart(page, copy.cmpChartTax)
+    await auditRc17Text(page, 'retired tax', { 'axis-label': 4 })
+    await assertRc17Frame(page, 'retired tax')
+    await pickRc17Chart(page, copy.cmpChartAtRetirement)
+    await auditRc17Text(page, 'retired at retirement', { 'axis-label': 3, 'data-label': 1 })
+    // The rough market: every metric names it.
+    await pickRc17Future(page, copy.workbenchViewRough)
+    for (const m of await rc17Metrics(page)) expect(m, 'retired rough: the metric names the rough market').toContain('in the rough market')
+    await pickRc17Future(page, copy.workbenchViewSteady)
+    // Savings: an all-retired household's one chart.
+    await toAnalysisTab(page, 'retired', RC17_TABS[1])
+    // One chart: its title is a plain heading, no menu (`ChartTitle` with one item).
+    await expect(page.locator('[data-analysis-panel] h2.text-chart-title'), 'retired: Savings offers one chart').toHaveText(slots.savThisYearOf(copy.probabilityPlanTitle))
+    await expect(page.locator('[data-analysis-panel] h2 button'), 'retired: no chart menu').toHaveCount(0)
+    await expect(page.locator('[data-analysis-note]', { hasText: copy.savRetiredNote })).toHaveCount(1)
+    // Retirement Details: income sources, the withdrawal rate, spending, each audited and in frame.
+    await toAnalysisTab(page, 'retired', RC17_TABS[2])
+    await auditRc17Text(page, 'retired income', { 'axis-label': 4, 'legend-item': 2 })
+    for (const label of [slots.rdRateOf(copy.probabilityPlanTitle), slots.rdSpendingOf(copy.probabilityPlanTitle)]) {
+      await pickRc17Chart(page, label)
+      await auditRc17Text(page, `retired ${label}`, { 'axis-label': 4 })
+      await assertRc17Frame(page, `retired ${label}`)
+    }
+  })
+
+  test('?seed=dip: a stop-year what-if beside your plan; the two bars as retirement begins, each named with its own year, drawn in the ratio of their figures; each tab in one frame', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 240_000)
+    await openTrayOn(page, 'dip')
+    const stop = tray(page).locator('[data-tray-row="stop-year"] input[inputmode="numeric"]')
+    const year = Number(await stop.inputValue())
+    await stop.fill(String(year + 2))
+    await stop.press('Enter')
+    await tray(page).locator('[data-tray-refresh]').click()
+    await expect(page.locator('[data-half="alternative"] [aria-busy="true"]'), 'the stop-year run never landed').toHaveCount(0, { timeout: 120_000 })
+    await trayHandle(page).click()
+    await expect(tray(page)).toHaveCount(0)
+    for (const t of RC17_TABS) {
+      await toAnalysisTab(page, 'dip', t)
+      await assertRc17Frame(page, `dip ${t.hash}`)
+      await assertOneVisibleCaveat(page, REAL.height)
+    }
+    await toAnalysisTab(page, 'dip', RC17_TABS[0])
+    await expect(page.locator('[data-chart="cmp-pair"] .highcharts-series'), 'two sides').toHaveCount(2)
+    await auditRc17Text(page, 'dip assets', { 'axis-label': 4, 'data-label': 2, 'legend-item': 2 })
+    await pickRc17Chart(page, copy.cmpChartAtRetirement)
+    await auditRc17Text(page, 'dip at retirement', { 'axis-label': 4, 'data-label': 2 })
+    const bars = await page.evaluate(() => {
+      const c = document.querySelector('[data-chart="cmp-bars"]')!
+      const pts = [...c.querySelectorAll('.highcharts-series .highcharts-point')].map((p) => p.getBoundingClientRect().height)
+      const figs = [...c.querySelectorAll('.highcharts-data-label text')].map((t) => t.textContent ?? '')
+      const names = [...c.querySelectorAll('.highcharts-xaxis-labels text')].map((t) => t.textContent ?? '')
+      return { pts, figs, names }
+    })
+    expect(bars.pts.length, 'two bars').toBe(2)
+    expect(bars.names.join(' | '), 'each bar names its own first retired year').toContain(String(year + 2))
+    expect(bars.names.join(' | ')).toContain(String(year))
+    const dollars = bars.figs.map(wholeDollars)
+    expect(dollars.every((d) => d > 0), `the figures ${bars.figs.join(', ')}`).toBe(true)
+    expect(dollars[0], 'the later stop opens retirement with more').toBeGreaterThan(dollars[1]!)
+    expect(Math.abs(bars.pts[1]! - bars.pts[0]! * (dollars[1]! / dollars[0]!)), `the bars’ heights (${bars.pts.join(', ')}) in the ratio of ${bars.figs.join(' to ')}`).toBeLessThanOrEqual(5)
+    // Savings: a working household's four charts on each side.
+    await toAnalysisTab(page, 'dip', RC17_TABS[1])
+    await page.locator('[data-analysis-panel] h2 button').click()
+    await expect(page.getByRole('menuitemradio'), 'dip: four Savings charts on each of two sides').toHaveCount(8)
+    await page.keyboard.press('Escape')
+    await auditRc17Text(page, 'dip this year', { 'axis-label': 3 })
+  })
+
+  test('?seed=dateshort: every working year runs short, drawn below the zero line; Savings and Retirement Details in one frame and audited', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 180_000)
+    await gotoSeedFinal(page, 'dateshort')
+    await toAnalysisTab(page, 'dateshort', RC17_TABS[1])
+    await pickRc17Chart(page, slots.savLeftOverOf(copy.probabilityPlanTitle))
+    await assertRc17Frame(page, 'dateshort left over')
+    await auditRc17Text(page, 'dateshort left over', { 'axis-label': 4 })
+    const below = await page.evaluate(() => [...document.querySelectorAll('[data-chart="sav-years"] .highcharts-yaxis-labels text')].some((t) => (t.textContent ?? '').startsWith('(')))
+    expect(below, 'dateshort: the axis runs below $0 for the short years').toBe(true)
+    expect((await rc17Metrics(page))[0]).toMatch(/short in all, drawn from your savings, in the steady market\.$/)
+    await pickRc17Chart(page, slots.savPerYearOf(copy.probabilityPlanTitle))
+    await auditRc17Text(page, 'dateshort per year', { 'axis-label': 4 })
+    await toAnalysisTab(page, 'dateshort', RC17_TABS[2])
+    await assertRc17Frame(page, 'dateshort income')
+    await auditRc17Text(page, 'dateshort income', { 'axis-label': 4, 'legend-item': 2 })
+  })
+})
+
+test.describe(`RC17 · Comparisons, Savings and Retirement Details on the phone (${PHONE.width}×${PHONE.height} @ ${PHONE_DPR}dpr)`, () => {
+  test.use({ viewport: PHONE, deviceScaleFactor: PHONE_DPR, isMobile: true, hasTouch: true, reducedMotion: 'reduce' })
+
+  test('?seed=dip: each tab with no sideways scroll, the caveat reached, the text audit', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 180_000)
+    await gotoSeedFinal(page, 'dip')
+    for (const t of RC17_TABS) {
+      await toAnalysisTab(page, 'dip', t)
+      const who = `dip PHONE ${t.hash}`
+      await noSidewaysScroll(page, who)
+      await auditRc17Text(page, who, { 'axis-label': 3 })
+      await assertOneVisibleCaveat(page, null)
+      await assertCaveatReachable(page, who)
+    }
+  })
+})

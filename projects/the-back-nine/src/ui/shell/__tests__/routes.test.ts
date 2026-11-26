@@ -62,7 +62,12 @@ describe('routes — the hash', () => {
     expect(parseHash('#/retirement/analysis')).toEqual({ module: 'retirement', page: 'analysis', tab: 'probability' })
     // Confidence is its own tab since RC7; an unknown tab on the page still lands on Probability.
     expect(parseHash('#/retirement/analysis/confidence')).toEqual({ module: 'retirement', page: 'analysis', tab: 'confidence' })
-    expect(parseHash('#/retirement/analysis/comparisons')).toEqual({ module: 'retirement', page: 'analysis', tab: 'probability' })
+    // RC17: Comparisons, Savings and Retirement Details are tabs of their own, in RightCapital's order.
+    expect(parseHash('#/retirement/analysis/comparisons')).toEqual({ module: 'retirement', page: 'analysis', tab: 'comparisons' })
+    expect(parseHash('#/retirement/analysis/savings')).toEqual({ module: 'retirement', page: 'analysis', tab: 'savings' })
+    expect(parseHash('#/retirement/analysis/retirement-details')).toEqual({ module: 'retirement', page: 'analysis', tab: 'retirement-details' })
+    expect(ROUTE_ROWS.filter((r) => r.page === 'analysis').map((r) => r.tab)).toEqual(['probability', 'confidence', 'comparisons', 'savings', 'retirement-details'])
+    expect(parseHash('#/retirement/analysis/net-worth')).toEqual({ module: 'retirement', page: 'analysis', tab: 'probability' })
     // The interim What if tab left with RC4b (its levers are Probability's Action Items tray): its old address lands on Probability.
     expect(parseHash('#/retirement/analysis/what-if')).toEqual({ module: 'retirement', page: 'analysis', tab: 'probability' })
     expect(parseHash('#/retirement')).toEqual({ module: 'retirement', page: 'analysis', tab: 'probability' })

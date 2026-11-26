@@ -32,6 +32,9 @@ export interface GroupedBarsInput {
   readonly axisDollar: (dollars: number) => string
   readonly words: ChartWords
   readonly height: number
+  /** The groups' and bars' padding (RC17's spending comparison widens the gap between a group's bars, so two figures
+   *  over neighbouring bars never meet); RC8's Summary keeps the defaults. */
+  readonly padding?: { readonly group: number; readonly point: number }
 }
 
 export const GROUPED_BAR_CLASSES = { alternative: 'b9-bar-alternative', compared: 'b9-bar-compared b9-hatch' } as const
@@ -64,8 +67,8 @@ export function groupedBarsOptions(input: GroupedBarsInput): Options {
     plotOptions: {
       column: {
         borderRadius: 4,
-        pointPadding: 0.08,
-        groupPadding: 0.22,
+        pointPadding: input.padding?.point ?? 0.08,
+        groupPadding: input.padding?.group ?? 0.22,
         maxPointWidth: 96,
         dataLabels: { enabled: true, crop: false, overflow: 'allow', allowOverlap: true, useHTML: false, defer: false },
       },

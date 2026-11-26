@@ -2480,6 +2480,58 @@ export const copy = {
     'Each side’s savings when the second of you dies, or at the plan’s last year if that comes first, in the middle future, in today’s dollars.',
   probabilityTodaysDollars: 'Today’s dollars',
   probabilityOpenStrategies: 'Open the Tax Strategies page',
+  // --- Act 6 · RC17, Analysis's Comparisons, Savings and Retirement Details tabs (`comparisonsView.ts`,
+  // `savingsView.ts`, `retirementDetailsView.ts`, over `analysisRuns.ts`). Each reads one named future's ledger rows of
+  // the two sides Probability shows; every metric names its market (plan 4.0: a one-path picture is never the odds). ---
+  comparisonsTab: 'Comparisons',
+  analysisSavingsTab: 'Savings',
+  retirementDetailsTab: 'Retirement Details',
+  analysisRunsWaiting: 'Working out these plans year by year…',
+  analysisRunsError: 'These year-by-year runs couldn’t be worked out just now. Your plan and your answer are untouched.',
+  analysisSteadyWhat: 'One future: a steady market, with the middle return every year and middle lifespans. Never a forecast.',
+  analysisFloorTrack: 'Once work stops, these runs spend at the essentials-only level, the level your answer’s date is figured on.',
+  cmpChartAssets: 'Invested assets over time',
+  cmpChartTax: 'Income tax each year',
+  cmpChartAtRetirement: 'Invested assets as retirement begins',
+  cmpNoWhatIf:
+    'Nothing is set beside your plan yet, so this shows your plan alone. Change something in Action items, or pick a kept what-if on Probability, to compare it here.',
+  cmpAssetsNote: 'Invested assets are your accounts’ total at the end of each year, in today’s dollars.',
+  cmpAtRetirementNote: 'Each bar is what that side holds as its first year with no pay begins, before that year’s withdrawals.',
+  cmpTaxWorkingNote: 'In a year with pay, this counts only the income tax your savings’ own income adds; the tax on pay shows on Cash Flows.',
+  rdChartIncomeComparison: 'Income comparison',
+  rdChartSpendingComparison: 'Spending comparison',
+  rdSourceSocialSecurity: 'Social Security',
+  rdSourceOther: 'Other income',
+  rdSourceTaxable: 'From taxable',
+  rdSourcePretax: 'From pre-tax',
+  rdSourceRoth: 'From Roth',
+  rdSourceHsa: 'From the HSA',
+  rdRanOutBand: 'Money ran out this year',
+  rdRateName: 'Withdrawal rate',
+  rdRateNote:
+    'The withdrawal rate is what a year takes from your accounts toward its spending, tax and premiums, HSA spending included, over what they held as the year began. Roth conversions and required withdrawals moved to taxable are left out.',
+  rdSpendSpending: 'Spending',
+  rdSpendTax: 'Income tax',
+  rdSpendPremiums: 'Health premiums',
+  rdSpendNote:
+    'Spending is your budget, out-of-pocket medical included. Health premiums are the marketplace premium after its credit, Medicare with its surcharge, and the extras you entered. Income tax is what your savings’ income adds.',
+  rdNotKeptNote: 'Income past what a year spends, which the tool doesn’t keep, is left out.',
+  rdNotWithdrawal: 'not a withdrawal',
+  savChartThisYear: 'Deposits this year',
+  savChartPerYear: 'Deposits each year until work stops',
+  savChartShare: 'Deposits as a share of pay',
+  savChartLeftOver: 'Left over in working years',
+  savNoDeposits: 'Nothing goes into your accounts this year.',
+  savRetiredNote: 'With no one working, this tab shows this year’s deposits only.',
+  savMatchNote: 'Deposits here include any employer match.',
+  savShareName: 'Your own deposits as a share of pay',
+  savLeftOverName: 'Left over',
+  savShortName: 'Short, drawn from savings',
+  savLeftOverNote: 'A working year that runs short draws the difference from your savings.',
+  savLeftOverNoneKept: 'Your plan counts none of it as saved: it isn’t added to your accounts.',
+  savWUnasked:
+    'Not asked yet: what a year costs while either of you still works. Until you give that figure, each working year is figured as if your pay covers every cost, so nothing here can show what’s left over.',
+  savOwnUnasked: 'How much of this is your own money, beside your pay, shows once you give what a working year costs.',
   // --- Act 6 · RC18, the Display drawer's choices as the charts read them (`displaySettings.ts`) ---
   // A time axis on the calendar year ("Show years instead of ages").
   chartAxisYear: 'Year',
@@ -5151,7 +5203,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:2308` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:2351` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,
@@ -6092,4 +6144,86 @@ export const slots = {
   bpHidden: (labels: readonly string[]): string => `Hidden: ${labels.join(', ')}. Edit shows them again.`,
   confidenceRunOutWholePast: (ageA: number, ageB: number, share: string, plural: boolean): string =>
     `The charts stop at ages ${ageA} and ${ageB}: past them, fewer than half of the futures still have one of you living. Over the whole plan, ${share} ${plural ? 'run' : 'runs'} out of money.`,
+  // --- Act 6 · RC17, Analysis's Comparisons, Savings and Retirement Details tabs. A side's `title` opens a sentence as
+  // its picker shows it; `mid` is its name inside one (a built-in name in lower case, a kept what-if's as typed). Every
+  // figure arrives in the delta dialect, every share as a whole percent; each window is named in the sentence (insight
+  // 175: which years a total covers is a decision, never a silent one). ---
+  analysisAges: (ages: readonly number[]): string =>
+    ages.length === 1 ? `age ${ages[0]}` : `ages ${ages.slice(0, -1).join(', ')} and ${ages[ages.length - 1]}`,
+  analysisPercent: (pct: string): string => `${pct}%`,
+  analysisPercentPoint: (axis: string, n: number, name: string, pct: string): string => `${axis} ${n}, ${name}: ${pct}%`,
+  analysisEndWord: (year: number): string => `Money ran out in ${year}`,
+  /** Every run whose money ran out, each with its own year (the earlier first), and, where a figure counts only the
+   *  years both runs reach, the clause saying so. */
+  analysisRanOut: (runs: readonly { readonly name: string; readonly year: number }[], steady: boolean, through: number | null): string => {
+    const sorted = [...runs].sort((a, b) => a.year - b.year)
+    const head =
+      sorted.length === 2 && sorted[0]!.year === sorted[1]!.year
+        ? `In the ${steady ? 'steady' : 'rough'} market the money runs out in ${sorted[0]!.year} on both ${sorted[0]!.name} and ${sorted[1]!.name}, and their rows stop there`
+        : `In the ${steady ? 'steady' : 'rough'} market the money runs out ${sorted.map((r) => `in ${r.year} on ${r.name}`).join(' and ')}, and ${sorted.length === 1 ? 'its' : 'each one’s'} rows stop there`
+    return through === null ? `${head}.` : `${head}, so the figures here count the years through ${through}, which both reach.`
+  },
+  cmpMoreAt: (a: string, fig: string, dir: 'more' | 'less' | 'same', ages: string, year: number, b: string, steady: boolean): string =>
+    dir === 'same'
+      ? `${a} and ${b} hold about the same invested at ${ages} (${year}), in the ${steady ? 'steady' : 'rough'} market.`
+      : `${a} has ~$${fig} ${dir} invested at ${ages} (${year}) than ${b}, in the ${steady ? 'steady' : 'rough'} market.`,
+  cmpOneAt: (a: string, fig: string, ages: string, year: number, steady: boolean): string =>
+    `${a} holds ~$${fig} invested at ${ages} (${year}), in the ${steady ? 'steady' : 'rough'} market.`,
+  cmpTaxMore: (a: string, fig: string, dir: 'more' | 'less' | 'same', through: number, b: string, steady: boolean): string =>
+    dir === 'same'
+      ? `Through ${through}, ${a} and ${b} pay about the same income tax, in the ${steady ? 'steady' : 'rough'} market.`
+      : `Through ${through}, ${a} pays ~$${fig} ${dir} income tax than ${b}, in the ${steady ? 'steady' : 'rough'} market.`,
+  cmpTaxOne: (a: string, fig: string, through: number, steady: boolean): string =>
+    `Through ${through}, ${a} pays ~$${fig} in income tax, in the ${steady ? 'steady' : 'rough'} market.`,
+  cmpAtRetirement: (a: string, fig: string, dir: 'more' | 'less', b: string, steady: boolean): string =>
+    `${a} has ~$${fig} ${dir} invested as retirement begins than ${b}, in the ${steady ? 'steady' : 'rough'} market.`,
+  /** Both bars the same (insight 174: bars that all read equal look broken, so the line says nothing moved). */
+  cmpAtRetirementSame: (fig: string, steady: boolean): string =>
+    `Both begin retirement with about ~$${fig} invested, in the ${steady ? 'steady' : 'rough'} market: nothing that differs between them moves money before then.`,
+  cmpAtRetirementOne: (a: string, fig: string, steady: boolean): string =>
+    `${a} begins retirement with ~$${fig} invested, in the ${steady ? 'steady' : 'rough'} market.`,
+  cmpAtRetirementGone: (a: string, year: number, steady: boolean): string =>
+    `${a} runs out of money in ${year}, before its first year with no pay, in the ${steady ? 'steady' : 'rough'} market.`,
+  cmpBarName: (name: string, year: number, ages: string): string => `${name}, ${year} (${ages})`,
+  rdIncomeSourcesOf: (title: string): string => `Income sources of ${title}`,
+  rdRateOf: (title: string): string => `Withdrawal rate of ${title}`,
+  rdSpendingOf: (title: string): string => `Retirement spending of ${title}`,
+  rdShare: (share: string, from: number, through: number, steady: boolean): string =>
+    `From ${from} through ${through}, about ${share}% of what the retired years live on comes from Social Security and other income rather than withdrawals, in the ${steady ? 'steady' : 'rough'} market.`,
+  rdShareNone: (steady: boolean): string => `No retired year has a row in this run, in the ${steady ? 'steady' : 'rough'} market.`,
+  rdShortNone: (steady: boolean): string => `No year runs out of money in the ${steady ? 'steady' : 'rough'} market.`,
+  rdShortRanOut: (year: number, ages: string, steady: boolean): string =>
+    `In the ${steady ? 'steady' : 'rough'} market the money runs out in ${year}, at ${ages}: that year is drawn hatched, with no figure, and the rows end there.`,
+  rdRate: (first: string, from: number, high: string, highYear: number, steady: boolean): string =>
+    highYear === from
+      ? `In ${from}, its highest year, the withdrawal rate is about ${first}%, in the ${steady ? 'steady' : 'rough'} market.`
+      : `In ${from} the withdrawal rate is about ${first}%; at its highest it is about ${high}%, in ${highYear}, in the ${steady ? 'steady' : 'rough'} market.`,
+  rdSpending: (fig: string, from: number, through: number, steady: boolean): string =>
+    `From ${from} through ${through}, the retired years spend ~$${fig} in all, tax and premiums included, in the ${steady ? 'steady' : 'rough'} market.`,
+  rdIncomeComparison: (a: string, aShare: string, b: string, bShare: string, from: number, through: number, steady: boolean): string =>
+    `From ${from} through ${through}, the share of retired income that isn’t a withdrawal is about ${aShare}% on ${a} and about ${bShare}% on ${b}, in the ${steady ? 'steady' : 'rough'} market.`,
+  rdSpendingComparison: (a: string, fig: string, dir: 'more' | 'less' | 'same', b: string, from: number, through: number, steady: boolean): string =>
+    dir === 'same'
+      ? `From ${from} through ${through}, ${a} and ${b} spend about the same in all, tax and premiums included, in the ${steady ? 'steady' : 'rough'} market.`
+      : `From ${from} through ${through}, ${a} spends ~$${fig} ${dir} in all than ${b}, tax and premiums included, in the ${steady ? 'steady' : 'rough'} market.`,
+  rdWindowNote: (from: number, through: number): string => `Both are counted over the same retired years, ${from} through ${through}.`,
+  rdSlicePoint: (name: string, pct: string): string => `${name}: about ${pct}%`,
+  savThisYearOf: (title: string): string => `Deposits this year: ${title}`,
+  savPerYearOf: (title: string): string => `Deposits each year until work stops: ${title}`,
+  savShareOf: (title: string): string => `Deposits as a share of pay: ${title}`,
+  savLeftOverOf: (title: string): string => `Left over in working years: ${title}`,
+  savThisYear: (fig: string, year: number): string => `~$${fig} goes into your accounts in ${year}.`,
+  savOwnShare: (own: string, share: string, pay: string): string => `Your own deposits, ~$${own}, are about ${share}% of your pay of ~$${pay}.`,
+  savPerYear: (fig: string, from: number, through: number, steady: boolean): string =>
+    `From ${from} through ${through}, ~$${fig} goes into your accounts in all, in the ${steady ? 'steady' : 'rough'} market.`,
+  savShare: (share: string, from: number, through: number, steady: boolean): string =>
+    `From ${from} through ${through}, your own deposits come to about ${share}% of your pay, in the ${steady ? 'steady' : 'rough'} market.`,
+  savLeftOver: (fig: string, dir: 'left' | 'short' | 'even', from: number, through: number, steady: boolean): string =>
+    dir === 'even'
+      ? `From ${from} through ${through}, your working years come out about even, in the ${steady ? 'steady' : 'rough'} market.`
+      : dir === 'left'
+        ? `From ${from} through ${through}, your working years have ~$${fig} left over in all, in the ${steady ? 'steady' : 'rough'} market.`
+        : `From ${from} through ${through}, your working years run ~$${fig} short in all, drawn from your savings, in the ${steady ? 'steady' : 'rough'} market.`,
+  savLeftOverKept: (fig: string): string => `Of it, your plan adds ~$${fig} to your taxable account; the rest isn’t counted as saved.`,
+  savNoWorkingYears: (steady: boolean): string => `No working year has a row in this run, in the ${steady ? 'steady' : 'rough'} market.`,
 } as const

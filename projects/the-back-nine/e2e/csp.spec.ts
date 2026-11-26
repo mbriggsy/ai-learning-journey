@@ -230,7 +230,7 @@ test.describe('CSP — real browser enforcement', () => {
     expect(v.some((x) => /worker-src|script-src/.test(x.violatedDirective))).toBe(false)
   })
 
-  test('the shell loads under the enforced CSP: the home, Probability and its Action Items tray, Confidence, Cash Flows, Stress Test, Social Security, Health Care, Asset Allocation and Tax Allocation, Tax Strategies, Net Worth and one Profile drawer, Expenses and its Living expenses drawer, Settings and the Display drawer, and both its menus, no violation, and no request outside the build’s own files', async ({ page }) => {
+  test('the shell loads under the enforced CSP: the home, Probability and its Action Items tray, Confidence, Comparisons, Retirement Details and Savings, Cash Flows, Stress Test, Social Security, Health Care, Asset Allocation and Tax Allocation, Tax Strategies, Net Worth and one Profile drawer, Expenses and its Living expenses drawer, Settings and the Display drawer, and both its menus, no violation, and no request outside the build’s own files', async ({ page }) => {
     // Act 6 · RC2 (plan 6, section 3.1's Verification; the workbench room's arm before it, U6 to U15), re-pointed at RC4:
     // the real intake lands on the home (Dashboard → Snapshot), the shell's lazy chunk and its styles load with it on the
     // served build, Probability draws its rings and its two balance bars (Highcharts again), and every page is
@@ -305,6 +305,24 @@ test.describe('CSP — real browser enforcement', () => {
     await confFan.locator('.highcharts-legend-item', { hasText: copy.snapshotFanOuter }).click()
     await confFan.locator('.highcharts-legend-item', { hasText: copy.snapshotFanOuter }).click()
     expect(await page.evaluate(() => document.querySelectorAll('style').length), 'Confidence injected a <style> element').toBe(0)
+    // RC17's three tabs: Comparisons' overlapping areas (its chart menu, a portaled Base UI menu, opened to the bars as
+    // retirement begins), Retirement Details' year columns (the new `incomeSourcesOptions` chart, its patterns and, where the
+    // money runs out, its plot band) and Savings; each draws its chart or the words in its place, and none injects a <style>.
+    for (const [tab, hash, chart] of [
+      [copy.comparisonsTab, 'comparisons', 'cmp-pair'],
+      [copy.retirementDetailsTab, 'retirement-details', 'rd-years'],
+      [copy.analysisSavingsTab, 'savings', 'sav-bars'],
+    ] as const) {
+      await page.getByRole('tab', { name: tab, exact: true }).click()
+      expect(new URL(page.url()).hash).toBe(`#/retirement/analysis/${hash}`)
+      await expect(page.locator(`[data-chart="${chart}"] .highcharts-series-group, [data-analysis-words]`).first(), `${hash}: neither its chart nor its words`).toBeAttached({ timeout: 60_000 })
+      expect(await page.evaluate(() => document.querySelectorAll('style').length), `${hash} injected a <style> element`).toBe(0)
+    }
+    await page.getByRole('tab', { name: copy.comparisonsTab, exact: true }).click()
+    await page.locator('[data-analysis-panel="comparisons"] h2 button').click()
+    await page.getByRole('menuitemradio', { name: copy.cmpChartAtRetirement }).click()
+    await expect(page.locator('[data-chart="cmp-bars"] .highcharts-series-group, [data-analysis-words]').first(), 'the bars as retirement begins').toBeAttached({ timeout: 30_000 })
+    expect(await page.evaluate(() => document.querySelectorAll('style').length), 'the chart menu injected a <style> element').toBe(0)
     await page.getByRole('tab', { name: copy.probabilityTab }).click()
     await expect(page.locator('[data-ring-half="compared"]'), 'back on Probability').toBeVisible({ timeout: 30_000 })
     // On to Retirement → Cash Flows (RC6: the kit's DataTable, its Selects, a drill, the Accounts tab, and the CSV handed

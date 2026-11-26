@@ -9,10 +9,12 @@ import type { Options } from 'highcharts/highcharts.src'
 import { Chart } from './Chart'
 import { kindBarsOptions, type KindBarsInput } from './kindBarsOptions'
 
-export function KindBars(props: KindBarsInput & { readonly chartId: string }) {
-  const { chartId, ...input } = props
+/** `className`: the container's classes (Balance Sheet's kinds by default; Comparisons' two sides add `b9-sides`, which
+ *  inks the compared side's hatch in its own blue). */
+export function KindBars(props: KindBarsInput & { readonly chartId: string; readonly className?: string }) {
+  const { chartId, className = 'b9-kinds', ...input } = props
   const key = JSON.stringify([input.bars, input.ticks, input.words, input.height])
   const held = useRef<{ readonly key: string; readonly options: Options } | null>(null)
   if (held.current === null || held.current.key !== key) held.current = { key, options: kindBarsOptions(input) }
-  return <Chart key={key} options={held.current.options} chartId={chartId} className="b9-kinds" />
+  return <Chart key={key} options={held.current.options} chartId={chartId} className={className} />
 }

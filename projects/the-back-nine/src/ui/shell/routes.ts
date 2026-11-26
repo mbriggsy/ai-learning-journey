@@ -24,12 +24,17 @@ export type ModuleId = (typeof MODULE_ORDER)[number] | 'settings'
  *  Care are rebuilt, RC11's Stress Test is new (RightCapital's slot, between Analysis and Social Security), and RC12 adds Investment's Asset Allocation and Tax Allocation; RC13a adds Profile's Net Worth, Income, Savings and
  *  Family, and RC13b its Goals and Expenses (RightCapital's order, ref 1.2), every saved fact in a drawer of theirs: the
  *  workbench room's facts page, the last interim tab, is gone. RC18 adds Settings, the gear's page (no module word: the gear
- *  reaches it). RC15 adds Profile's Blueprint, and RC16 Dashboard's Balance Sheet. */
+ *  reaches it). RC15 adds Profile's Blueprint, and RC16 Dashboard's Balance Sheet. RC17 adds Analysis's Comparisons, Savings
+ *  and Retirement Details tabs, routes of their own like Probability's (RightCapital's order; Savings is
+ *  'analysis-savings', since Profile's Savings page is 'profile-savings'). */
 export type ScreenId =
   | 'snapshot'
   | 'balance-sheet'
   | 'probability'
   | 'confidence'
+  | 'comparisons'
+  | 'analysis-savings'
+  | 'retirement-details'
   | 'cash-flows'
   | 'social-security'
   | 'tax-strategies'
@@ -97,6 +102,18 @@ export const ROUTE_ROWS: readonly RouteRow[] = [
     tab: 'confidence',
     tabLabel: copy.confidenceTab,
     screen: 'confidence',
+    title: copy.analysisTitle,
+  },
+  // RC17: the folder tabs in RightCapital's order (Probability, Confidence, Comparisons, Savings, Retirement Details).
+  { module: 'retirement', page: 'analysis', pageLabel: copy.shellPageAnalysis, tab: 'comparisons', tabLabel: copy.comparisonsTab, screen: 'comparisons', title: copy.analysisTitle },
+  { module: 'retirement', page: 'analysis', pageLabel: copy.shellPageAnalysis, tab: 'savings', tabLabel: copy.analysisSavingsTab, screen: 'analysis-savings', title: copy.analysisTitle },
+  {
+    module: 'retirement',
+    page: 'analysis',
+    pageLabel: copy.shellPageAnalysis,
+    tab: 'retirement-details',
+    tabLabel: copy.retirementDetailsTab,
+    screen: 'retirement-details',
     title: copy.analysisTitle,
   },
   { module: 'retirement', page: 'stress-test', pageLabel: copy.shellPageStressTest, screen: 'stress-test', title: copy.shellPageStressTest },

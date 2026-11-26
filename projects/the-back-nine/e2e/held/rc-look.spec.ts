@@ -23,7 +23,8 @@ import { copy } from '../../src/ui/copy'
  * a working seed), and the Display drawer open over Analysis; since RC14 the first-run stepper: its six steps re-walked
  * from Settings over each seed, and on a fresh plan "Start a new plan", each empty step, Complete waiting on facts and Next
  * refusing with the W drawer at its field (filter `-g "the first-run stepper"`); since RC16 Balance Sheet: Current, its DETAILS
- * breakdown open and its Details tab (filter `-g "Balance Sheet, both tabs"`). Screenshots land in the repo's gitignored `temp/rc-shots/<unit>/`, named
+ * breakdown open and its Details tab (filter `-g "Balance Sheet, both tabs"`); since RC17 Analysis's Comparisons, Savings
+ * and Retirement Details, chart by chart (filter `-g "Analysis runs tabs"`). Screenshots land in the repo's gitignored `temp/rc-shots/<unit>/`, named
  * `<screen>-<seed>-<size>.png`, for Briggsy to review the output.
  *
  *     RC_UNIT=RC2 pnpm exec playwright test --config e2e/held/shots.config.ts rc-look
@@ -142,7 +143,8 @@ async function enterShell(page: Page, seed: string): Promise<void> {
 async function settleProbability(page: Page): Promise<void> {
   await expect(page.locator('[data-ring-half="compared"]')).toBeVisible({ timeout: 60_000 })
   if ((await page.locator('[data-probability="headline"]').count()) > 0) {
-    await expect(page.locator('[data-bar="compared"] .highcharts-series-group')).toBeAttached({ timeout: 60_000 })
+    // The bar, or on a $0 middle balance (`failing`) the words in its place.
+    await expect(page.locator('[data-bar="compared"] .highcharts-series-group, [data-bar-none]').first()).toBeAttached({ timeout: 60_000 })
   }
   await page.waitForTimeout(800)
 }
@@ -449,6 +451,88 @@ for (const size of SIZES) {
           await page.getByRole('tab', { name: copy.balanceSheetTabCurrent, exact: true }).click()
         }
         console.log(`[rc-look ${UNIT} balance ${seed} ${size.tag}] ${JSON.stringify(findings)}`)
+        auditAll(findings)
+      })
+    }
+  })
+}
+
+// RC17: Analysis's Comparisons, Savings and Retirement Details, each chart in its title menu. `retired` (your plan alone),
+// `dip` (a stop-year what-if beside the plan, so every comparison has two sides: its own-plan and comparison charts, the
+// what-if's own copies left out) and `failing` (the year the money runs out: Retirement Details' hatched band and
+// Comparisons' ended line). At his window every chart; on the phone each tab's first chart, whole page too. Filter with
+// `-g "Analysis runs tabs"`.
+const RC17_LOOK_TABS = [
+  { id: 'comparisons', tab: copy.comparisonsTab },
+  { id: 'savings', tab: copy.analysisSavingsTab },
+  { id: 'details', tab: copy.retirementDetailsTab },
+] as const
+
+async function settleRuns(page: Page): Promise<void> {
+  await expect(page.locator('[data-analysis-body] .highcharts-series-group, [data-analysis-words]').first()).toBeAttached({ timeout: 120_000 })
+  await expect(page.locator('[data-analysis-panel] [aria-busy="true"]')).toHaveCount(0, { timeout: 120_000 })
+  await page.waitForTimeout(500)
+}
+
+for (const size of SIZES) {
+  test.describe(`${UNIT} look, Analysis runs tabs at ${size.tag}`, () => {
+    test.use({ ...size.use, reducedMotion: 'reduce' })
+    for (const seed of ['retired', 'dip', 'failing'] as const) {
+      test(`?seed=${seed}: Comparisons, Savings and Retirement Details, chart by chart`, async ({ page }) => {
+        test.setTimeout(FINAL_TIER_MS + 360_000)
+        await enterShell(page, seed)
+        const findings: Record<string, Audit> = {}
+        await showScreen(page, PROBABILITY, size.phone)
+        if (seed === 'dip') {
+          await page.getByRole('button', { name: copy.trayHandle, exact: true }).click()
+          const tray = page.locator('#b9-action-items')
+          await expect(tray).toBeVisible()
+          const stop = tray.locator('[data-tray-row="stop-year"] input[inputmode="numeric"]')
+          await stop.fill(String(Number(await stop.inputValue()) + 2))
+          await stop.press('Enter')
+          await tray.locator('[data-tray-refresh]').click()
+          await expect(page.locator('[data-half="alternative"] [aria-busy="true"]')).toHaveCount(0, { timeout: 180_000 })
+          if (size.phone) await page.keyboard.press('Escape')
+          else await page.getByRole('button', { name: copy.trayHandle, exact: true }).click()
+          await expect(tray).toHaveCount(0)
+        }
+        for (const t of RC17_LOOK_TABS) {
+          if (seed === 'failing' && t.id === 'savings') continue
+          await page.evaluate(() => window.scrollTo(0, 0))
+          await page.getByRole('tab', { name: t.tab, exact: true }).click()
+          await settleRuns(page)
+          // One chart: its title is a plain heading (no menu).
+          const menu = (await page.locator('[data-analysis-panel] h2 button').count()) > 0
+          let labels = [await page.locator('[data-analysis-panel] h2.text-chart-title').innerText()]
+          if (menu) {
+            await page.locator('[data-analysis-panel] h2 button').click()
+            await expect(page.getByRole('menuitemradio').first()).toBeVisible()
+            labels = await page.getByRole('menuitemradio').allTextContents()
+            await page.keyboard.press('Escape')
+          }
+          const wanted = size.phone || seed === 'failing' ? labels.slice(0, 1) : seed === 'dip' ? labels.filter((l) => !l.includes(copy.probabilityPickNew)) : labels
+          for (const [i, label] of wanted.entries()) {
+            if (i > 0 || label !== labels[0]) {
+              await page.evaluate(() => window.scrollTo(0, 0))
+              await page.locator('[data-analysis-panel] h2 button').click()
+              await page.getByRole('menuitemradio', { name: label, exact: true }).click()
+              await settleRuns(page)
+            }
+            await page.evaluate(() => window.scrollTo(0, 0))
+            // The pointer off the chart, so no hover tooltip from the menu's press sits over the picture.
+            if (!size.phone) await page.mouse.move(2, 2)
+            await shot(page, findings, `${t.id}-${i + 1}`, seed, size.tag)
+            if (size.phone) await page.screenshot({ path: `${OUT}/${t.id}-${i + 1}-${seed}-${size.tag}-full.png`, fullPage: true })
+          }
+          // The menu open over the chart (its first item), at his window.
+          if (!size.phone && seed !== 'failing' && menu) {
+            await page.locator('[data-analysis-panel] h2 button').click()
+            await page.waitForTimeout(300)
+            await page.screenshot({ path: `${OUT}/${t.id}-menu-${seed}-${size.tag}.png` })
+            await page.keyboard.press('Escape')
+          }
+        }
+        console.log(`[rc-look ${UNIT} analysis-runs ${seed} ${size.tag}] ${JSON.stringify(findings)}`)
         auditAll(findings)
       })
     }

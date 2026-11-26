@@ -509,4 +509,75 @@
     fill: var(--color-stone-900);
     font-size: var(--text-label);
   }
+
+  /* ── Analysis → Comparisons, Savings and Retirement Details (RC17). The two sides' bars as retirement begins ride
+     `.b9-kinds` above, the compared plan's hatch inked in its own blue (plan 4.0's second cue). The year columns
+     (`incomeSourcesOptions.ts`): each part in its own ink with an edge of the same ink so a patterned column's outline
+     holds on the white ground (Social Security deep indigo, other income light green, taxable blue, pre-tax hatched
+     orange, Roth dotted green, HSA lined sky; a short year cross-hatched red); the year the money ran out a red
+     cross-hatched band with its words over it in dark text; the zero line a solid ink rule. The income donuts wear the
+     same parts. ── */
+  .b9-kinds.b9-sides {
+    --b9-ink-hatch: var(--highcharts-color-0);
+  }
+  .b9-years,
+  .b9-income {
+    --b9-ink-hatch: var(--highcharts-color-2);
+    --b9-ink-dots: var(--highcharts-color-1);
+    --b9-ink-lines: var(--highcharts-color-4);
+    --b9-ink-cross: var(--highcharts-color-5);
+  }
+  .b9-years .b9-hatch .highcharts-point {
+    stroke: var(--b9-ink-hatch);
+    stroke-width: 1;
+  }
+  .b9-years .b9-dots .highcharts-point {
+    stroke: var(--b9-ink-dots);
+    stroke-width: 1;
+  }
+  .b9-years .b9-lines .highcharts-point {
+    stroke: var(--b9-ink-lines);
+    stroke-width: 1;
+  }
+  .b9-years .b9-cross .highcharts-point {
+    stroke: var(--b9-ink-cross);
+    stroke-width: 1;
+  }
+  .b9-years .b9-ranout-band {
+    fill: url(#b9-cross);
+    fill-opacity: 1;
+    stroke: var(--highcharts-color-5);
+    stroke-width: 1;
+  }
+  .b9-years .highcharts-plot-band-label {
+    fill: var(--color-stone-900);
+    font-size: var(--text-label);
+    font-weight: 600;
+  }
+  .b9-years .b9-zero-line {
+    stroke: var(--color-stone-900);
+  }
+  .b9-income .highcharts-point {
+    stroke: var(--color-bg);
+    stroke-width: 2;
+  }
+  .b9-income .highcharts-point.b9-hatch {
+    fill: url(#b9-hatch);
+    stroke: var(--b9-ink-hatch);
+    stroke-width: 1.5;
+  }
+  .b9-income .highcharts-point.b9-dots {
+    fill: url(#b9-dots);
+    stroke: var(--b9-ink-dots);
+    stroke-width: 1.5;
+  }
+  .b9-income .highcharts-point.b9-lines {
+    fill: url(#b9-lines);
+    stroke: var(--b9-ink-lines);
+    stroke-width: 1.5;
+  }
+  /* The donuts' key: each part's square in the slice's own fill, its edge in the part's colour. */
+  .b9-swatch {
+    stroke-width: 1.5;
+  }
 }

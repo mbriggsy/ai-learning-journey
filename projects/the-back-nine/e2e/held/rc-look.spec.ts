@@ -1,6 +1,6 @@
 import { expect, type Page } from '@playwright/test'
 import { FINAL_TIER_MS, PHONE, PHONE_DPR, REAL, REAL_DPR, SETTLED_RESULT, gotoSeedFinal, gotoVaultFinal, settleLayout, test } from '../reviewSurface'
-import { copy } from '../../src/ui/copy'
+import { copy, slots } from '../../src/ui/copy'
 
 /**
  * e2e/held/rc-look.spec.ts: an INSTRUMENT, never a gate (Act 6's "Local look", plan docs/plans/6-rightcapital-ui-plan.md
@@ -459,8 +459,10 @@ for (const size of SIZES) {
 
 // RC17: Analysis's Comparisons, Savings and Retirement Details, each chart in its title menu. `retired` (your plan alone),
 // `dip` (a stop-year what-if beside the plan, so every comparison has two sides: its own-plan and comparison charts, the
-// what-if's own copies left out) and `failing` (the year the money runs out: Retirement Details' hatched band and
-// Comparisons' ended line). At his window every chart; on the phone each tab's first chart, whole page too. Filter with
+// what-if's own copies left out), `dateshort` (every working year short: Savings' left over under the zero line) and
+// `failing` (its money runs out in year 0: words in the charts' place). At his window every chart; on the phone each
+// tab's first chart and Comparisons' bars, whole page too. Then the money running out mid-retirement (`retired` on the
+// rough market; `offtracktypical` beside a later claim): the ended lines and the hatched band. Filter with
 // `-g "Analysis runs tabs"`.
 const RC17_LOOK_TABS = [
   { id: 'comparisons', tab: copy.comparisonsTab },
@@ -471,13 +473,41 @@ const RC17_LOOK_TABS = [
 async function settleRuns(page: Page): Promise<void> {
   await expect(page.locator('[data-analysis-body] .highcharts-series-group, [data-analysis-words]').first()).toBeAttached({ timeout: 120_000 })
   await expect(page.locator('[data-analysis-panel] [aria-busy="true"]')).toHaveCount(0, { timeout: 120_000 })
+  // The waiting words stand in the chart's place with no aria-busy: settled only once they are gone.
+  await expect(page.locator('[data-analysis-words]', { hasText: copy.analysisRunsWaiting })).toHaveCount(0, { timeout: 120_000 })
   await page.waitForTimeout(500)
+}
+
+/** Pick a chart from the panel's title menu. */
+async function pickRunsChart(page: Page, label: string): Promise<void> {
+  await page.evaluate(() => window.scrollTo(0, 0))
+  await page.locator('[data-analysis-panel] h2 button').click()
+  await page.getByRole('menuitemradio', { name: label, exact: true }).click()
+  await settleRuns(page)
+}
+
+/** The Retirement Details income chart's ran-out band: one whole column slot inside the plot, its words on ONE line. */
+async function expectOneSlotBand(page: Page, who: string): Promise<void> {
+  const band = await page.evaluate(() => {
+    const c = document.querySelector('[data-chart="rd-years"]')!
+    const b = c.querySelector('.b9-ranout-band')!.getBoundingClientRect()
+    const labelEl = c.querySelector('.highcharts-plot-band-label')!
+    const label = labelEl.getBoundingClientRect()
+    const plot = c.querySelector('.highcharts-plot-background')!.getBoundingClientRect()
+    const centres = [...new Set([...c.querySelectorAll('.highcharts-series .highcharts-point')].map((p) => p.getBoundingClientRect()).filter((r) => r.width > 0).map((r) => Math.round(r.x + r.width / 2)))].sort((p, q) => p - q)
+    const slot = centres.length > 1 ? (centres.at(-1)! - centres[0]!) / (centres.length - 1) : 0
+    return { width: b.width, right: b.right, plotRight: plot.right, slot, labelHeight: label.height, labelWidth: label.width, fontPx: Number.parseFloat(getComputedStyle(labelEl).fontSize) }
+  })
+  console.log(`[rc-look ${UNIT} band ${who}] ${JSON.stringify(band)}`)
+  expect(Math.abs(band.width - band.slot), `${who}: the band is one column slot`).toBeLessThanOrEqual(2)
+  expect(band.right, `${who}: the band inside the plot`).toBeLessThanOrEqual(band.plotRight + 1)
+  expect(band.labelHeight, `${who}: the band's words on one line`).toBeLessThan(band.fontPx * 1.8)
 }
 
 for (const size of SIZES) {
   test.describe(`${UNIT} look, Analysis runs tabs at ${size.tag}`, () => {
     test.use({ ...size.use, reducedMotion: 'reduce' })
-    for (const seed of ['retired', 'dip', 'failing'] as const) {
+    for (const seed of ['retired', 'dip', 'dateshort', 'failing'] as const) {
       test(`?seed=${seed}: Comparisons, Savings and Retirement Details, chart by chart`, async ({ page }) => {
         test.setTimeout(FINAL_TIER_MS + 360_000)
         await enterShell(page, seed)
@@ -510,7 +540,11 @@ for (const size of SIZES) {
             labels = await page.getByRole('menuitemradio').allTextContents()
             await page.keyboard.press('Escape')
           }
-          const wanted = size.phone || seed === 'failing' ? labels.slice(0, 1) : seed === 'dip' ? labels.filter((l) => !l.includes(copy.probabilityPickNew)) : labels
+          // The what-if's own copies left out on `dip` (its names run in the sentence's lower case). On the phone each tab's
+          // first chart, and Comparisons' bars too (they turn sideways with long names).
+          const isNew = (l: string) => l.toLowerCase().includes(copy.probabilityPickNew.toLowerCase())
+          const phoneWanted = t.id === 'comparisons' && seed !== 'failing' ? [labels[0]!, ...labels.filter((l) => l === copy.cmpChartAtRetirement)] : labels.slice(0, 1)
+          const wanted = size.phone ? phoneWanted : seed === 'failing' ? labels.slice(0, 1) : seed === 'dip' ? labels.filter((l) => !isNew(l)) : labels
           for (const [i, label] of wanted.entries()) {
             if (i > 0 || label !== labels[0]) {
               await page.evaluate(() => window.scrollTo(0, 0))
@@ -533,6 +567,59 @@ for (const size of SIZES) {
           }
         }
         console.log(`[rc-look ${UNIT} analysis-runs ${seed} ${size.tag}] ${JSON.stringify(findings)}`)
+        auditAll(findings)
+      })
+    }
+
+    // The money runs out mid-retirement: `retired` on the rough market (one side, its line ending in words at $0) and
+    // `offtracktypical` on the steady market with a later Social Security claim beside it (a ran-out pair). Comparisons'
+    // invested assets (each end label right of its line, a $0 end above the baseline) and Retirement Details' income
+    // columns (the hatched band one column slot wide, its words on one line).
+    for (const w of [
+      { seed: 'retired', rough: true, lever: false },
+      { seed: 'offtracktypical', rough: false, lever: true },
+    ] as const) {
+      test(`?seed=${w.seed}: the money runs out in retirement, the ended lines and the hatched band`, async ({ page }) => {
+        test.setTimeout(FINAL_TIER_MS + 360_000)
+        await enterShell(page, w.seed)
+        const findings: Record<string, Audit> = {}
+        await showScreen(page, PROBABILITY, size.phone)
+        if (w.lever) {
+          await page.getByRole('button', { name: copy.trayHandle, exact: true }).click()
+          const tray = page.locator('#b9-action-items')
+          await expect(tray).toBeVisible()
+          await page.waitForTimeout(400)
+          await tray.locator('[data-tray-row^="claim-age:"] input[type="range"]').first().focus()
+          await page.keyboard.press('ArrowRight')
+          await tray.locator('[data-tray-refresh]').click()
+          await expect(page.locator('[data-half="alternative"] [aria-busy="true"]')).toHaveCount(0, { timeout: 180_000 })
+          if (size.phone) await page.keyboard.press('Escape')
+          else await page.getByRole('button', { name: copy.trayHandle, exact: true }).click()
+          await expect(tray).toHaveCount(0)
+        }
+        await page.evaluate(() => window.scrollTo(0, 0))
+        await page.getByRole('tab', { name: copy.comparisonsTab, exact: true }).click()
+        await settleRuns(page)
+        if (w.rough) {
+          await page.locator('[data-analysis-panel]').getByRole('combobox', { name: copy.taxStratMarketLabel }).click()
+          await page.getByRole('option', { name: copy.workbenchViewRough, exact: true }).click()
+          await settleRuns(page)
+        }
+        await page.evaluate(() => window.scrollTo(0, 0))
+        if (!size.phone) await page.mouse.move(2, 2)
+        await shot(page, findings, 'runout-comparisons', w.seed, size.tag)
+        await page.getByRole('tab', { name: copy.retirementDetailsTab, exact: true }).click()
+        await settleRuns(page)
+        // The plan's own income columns (the what-if's first on a pair's menu).
+        const plan = slots.rdIncomeSourcesOf(copy.probabilityPlanTitle.toLowerCase())
+        if ((await page.locator('[data-analysis-panel] h2.text-chart-title').innerText()) !== plan) await pickRunsChart(page, plan)
+        await page.evaluate(() => window.scrollTo(0, 0))
+        if (!size.phone) await page.mouse.move(2, 2)
+        await shot(page, findings, 'runout-details', w.seed, size.tag)
+        if ((await page.locator('[data-chart="rd-years"] .b9-ranout-band').count()) > 0) await expectOneSlotBand(page, `${w.seed} ${size.tag}`)
+        else console.log(`[rc-look ${UNIT} band ${w.seed} ${size.tag}] no band: ${(await page.locator('[data-analysis-metric]').allInnerTexts()).join(' | ')}`)
+        if (size.phone) await page.screenshot({ path: `${OUT}/runout-details-${w.seed}-${size.tag}-full.png`, fullPage: true })
+        console.log(`[rc-look ${UNIT} runout ${w.seed} ${size.tag}] ${JSON.stringify(findings)}`)
         auditAll(findings)
       })
     }

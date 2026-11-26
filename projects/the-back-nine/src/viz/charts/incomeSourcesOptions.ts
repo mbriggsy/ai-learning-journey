@@ -12,7 +12,8 @@
  *
  * THE YEAR THE MONEY RAN OUT (`ranOut`): that year's row records what the year asked for, not what was paid, so it draws
  * no column. A cross-hatched band stands over the year instead, with "Money ran out this year" printed over it and no
- * dollar figure, and the axis ends there (the composer's notes say the rows end).
+ * dollar figure, and the axis ends there (`xAxis.max` at that year, so the band is one whole column slot; the composer's
+ * notes say the chart ends).
  *
  * The y axis is linear on the composer's lattice (from $0, or below it for a short year); the x axis is the first
  * person's age or the calendar year (`axisOffset`, as `stackedAreasOptions.ts`). No value is printed on a column (one per
@@ -55,6 +56,9 @@ export interface YearBarsInput {
 }
 
 export const RANOUT_BAND_CLASS = 'b9-ranout-band'
+/** The ran-out words' box in CSS px: wide enough for them on one line at the label size (a band's label otherwise wraps
+ *  to the band's own width, Highcharts' `inside` default for a band). */
+export const RANOUT_LABEL_WIDTH = 240
 
 export function yearBarsOptions(input: YearBarsInput): Options {
   const { sources, ticks, valueText, axisOffset } = input
@@ -92,13 +96,27 @@ export function yearBarsOptions(input: YearBarsInput): Options {
       title: { text: hcPlain(input.axisTitle) },
       ...(ranOutX !== undefined
         ? {
+            // The axis runs through the ran-out year, so its band is a whole column slot inside the plot (the composer's
+            // rows stop before it; left to the data, the band sat past the last column as a sliver).
+            max: ranOutX,
             plotBands: [
               {
                 from: ranOutX - 0.5,
                 to: ranOutX + 0.5,
                 className: RANOUT_BAND_CLASS,
                 zIndex: 3,
-                label: { text: hcPlain(input.ranOut!.label), align: 'right', verticalAlign: 'top', textAlign: 'right', x: 0, y: -8, useHTML: false },
+                // A NUMBER width (Highcharts appends 'px' itself): without one the label wraps to the band's own width, one
+                // word per line; with it the words print on one line over the plot's top edge, right-aligned to the band.
+                label: {
+                  text: hcPlain(input.ranOut!.label),
+                  align: 'right',
+                  verticalAlign: 'top',
+                  textAlign: 'right',
+                  x: 0,
+                  y: -8,
+                  useHTML: false,
+                  style: { width: RANOUT_LABEL_WIDTH },
+                },
               },
             ],
           }

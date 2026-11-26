@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { SeriesAreaOptions, SeriesColumnOptions, YAxisOptions } from 'highcharts/highcharts.src'
 import { niceLattice } from '../../bandData'
 import { groupedBarsOptions, GROUPED_BAR_CLASSES } from '../groupedBarsOptions'
-import { pairAreasOptions, STACK_ORDER, STACK_SOURCES, stackedAreasOptions } from '../stackedAreasOptions'
+import { endLabelReserve, pairAreasOptions, seatEndLabels, STACK_ORDER, STACK_SOURCES, stackedAreasOptions } from '../stackedAreasOptions'
 
 /**
  * Tax Strategies' chart options (Act 6 · RC8): the Summary's grouped bars and Comparison's year-by-year areas. Pure
@@ -103,26 +103,55 @@ describe('stackedAreasOptions', () => {
     expect(data[1]!.dataLabels?.enabled).toBe(true)
   })
 
-  it('the higher line’s figure sits above its last point and the lower line’s below, whichever side is higher', () => {
-    const sides = (ours: number, theirs: number) => {
-      const opts = pairAreasOptions({
-        series: [
-          { id: 'r', name: 'R', role: 'alternative', points: [{ year: 2030, value: ours }] },
-          { id: 'p', name: 'P', role: 'compared', points: [{ year: 2030, value: theirs }] },
-        ],
-        lattice,
-        axisDollar: axis,
-        figure: (d) => '~$' + d,
-        pointWords: (y, n, d) => `${y} ${n} ${d}`,
-        words,
-        height: 320,
-        axisTitle: 'Year',
-        axisOffset: 0,
-      })
-      return (opts.series as SeriesAreaOptions[]).map((s) => (s.data as { dataLabels: { verticalAlign: string } }[])[0]!.dataLabels.verticalAlign)
+  it('each end label sits to the RIGHT of its last point, centred on it, in right spacing held for the widest label; a ran-out run’s words print on their lines', () => {
+    const opts = pairAreasOptions({
+      series: [
+        { id: 'r', name: 'R', role: 'alternative', points: [{ year: 2030, value: 4_230_000 }], endWord: ['Money ran out', 'in 2030'] },
+        { id: 'p', name: 'P', role: 'compared', points: [{ year: 2030, value: 4_280_000 }] },
+      ],
+      lattice,
+      axisDollar: axis,
+      figure: (d) => '~$' + d,
+      pointWords: (y, n, d) => `${y} ${n} ${d}`,
+      words,
+      height: 320,
+      axisTitle: 'Year',
+      axisOffset: 0,
+    })
+    const labels = (opts.series as SeriesAreaOptions[]).map((s) => (s.data as { dataLabels: { align: string; verticalAlign: string; x: number; formatter: () => string } }[])[0]!.dataLabels)
+    for (const l of labels) expect([l.align, l.verticalAlign, l.x > 0]).toEqual(['left', 'middle', true])
+    expect(labels[0]!.formatter()).toBe('Money ran out<br>in 2030')
+    expect(labels[1]!.formatter()).toBe('~$4280000')
+    // The widest line ("Money ran out", 13 characters) sets the reserve; no line runs under a label.
+    expect(opts.chart?.spacingRight).toBe(endLabelReserve([{ id: 'r', name: 'R', role: 'alternative', points: [{ year: 2030, value: 0 }], endWord: ['Money ran out'] }], String))
+    expect(opts.chart?.spacingRight).toBeGreaterThan(13 * 8)
+  })
+
+  it('after each draw the end labels keep off the floor (a $0 end word above the baseline) and apart where their boxes would overlap', () => {
+    const label = (y: number) => {
+      const l = { translateX: 300, translateY: y, width: 90, height: 18, attr: (a: { x?: number; y?: number }) => {
+        if (a.y !== undefined) l.translateY = a.y
+        if (a.x !== undefined) l.translateX = a.x
+      } }
+      return l
     }
-    expect(sides(4_230_000, 4_280_000)).toEqual(['top', 'bottom'])
-    expect(sides(4_300_000, 4_280_000)).toEqual(['bottom', 'top'])
+    const chart = (ys: readonly number[]) => {
+      const ls = ys.map(label)
+      return { ls, chart: { plotHeight: 200, plotLeft: 40, chartWidth: 500, series: ls.map((l) => ({ points: [{ dataLabel: l }] })) } }
+    }
+    // A $0 end, centred on the baseline: lifted to sit above it.
+    const floor = chart([191])
+    seatEndLabels(floor.chart as never)
+    expect(floor.ls[0]!.translateY + 18).toBeLessThanOrEqual(198)
+    // Two labels 6 px apart: pushed apart, each half the overlap, so their boxes clear by 2 px.
+    const close = chart([100, 106])
+    seatEndLabels(close.chart as never)
+    expect(close.ls[1]!.translateY - (close.ls[0]!.translateY + 18)).toBeCloseTo(2, 9)
+    expect((close.ls[0]!.translateY + close.ls[1]!.translateY) / 2).toBeCloseTo(103, 9)
+    // Labels already clear: left where Highcharts put them.
+    const clear = chart([40, 120])
+    seatEndLabels(clear.chart as never)
+    expect(clear.ls.map((l) => l.translateY)).toEqual([40, 120])
   })
 
   it('the time axis (Act 6 · RC18): the points keep their calendar years; `axisOffset` puts them on the first person’s age, titled whose, and the tooltip and spoken words read that number', () => {

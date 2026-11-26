@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { SeriesColumnOptions, XAxisOptions, YAxisOptions } from 'highcharts/highcharts.src'
-import { RANOUT_BAND_CLASS, yearBarsOptions, type YearBarsInput } from '../incomeSourcesOptions'
+import { RANOUT_BAND_CLASS, RANOUT_LABEL_WIDTH, yearBarsOptions, type YearBarsInput } from '../incomeSourcesOptions'
 
 /**
  * The year columns (Act 6 · RC17): parts stacked bottom-up with their patterns, the ran-out year a cross-hatched band
@@ -45,6 +45,12 @@ describe('yearBarsOptions', () => {
     expect(band.className).toBe(RANOUT_BAND_CLASS)
     expect([band.from, band.to]).toEqual([2067.5, 2068.5])
     expect(band.label?.text).toBe('Money ran out this year')
+    // The axis runs through the ran-out year, so the band is a whole column slot inside the plot, never a sliver past it.
+    expect((o.xAxis as XAxisOptions).max).toBe(2068)
+    // A NUMBER width (Highcharts appends 'px'; a band's label otherwise wraps to the band's width, a word per line).
+    expect(band.label?.style?.width).toBe(RANOUT_LABEL_WIDTH)
+    expect(typeof band.label?.style?.width).toBe('number')
+    expect((yearBarsOptions(base).xAxis as XAxisOptions).max, 'no run-out: the axis follows the data').toBeUndefined()
   })
 
   it('the y axis stands on the composer’s ticks; a zero rule only where the axis runs below $0', () => {

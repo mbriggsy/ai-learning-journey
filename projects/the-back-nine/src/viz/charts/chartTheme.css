@@ -112,6 +112,9 @@
   .b9-pattern--cross .b9-pattern-ink {
     stroke: var(--b9-ink-cross, var(--b9-pattern-ink, var(--color-stone-600)));
   }
+  .b9-pattern--vlines .b9-pattern-ink {
+    stroke: var(--b9-ink-vlines, var(--b9-pattern-ink, var(--color-stone-600)));
+  }
   .b9-pattern--dots .b9-pattern-ink {
     fill: var(--b9-ink-dots, var(--b9-pattern-ink, var(--color-stone-600)));
     stroke: none;
@@ -138,6 +141,11 @@
   .b9-cross .highcharts-area,
   .highcharts-legend-item.b9-cross .highcharts-point {
     fill: url(#b9-cross);
+  }
+  .b9-vlines .highcharts-point,
+  .b9-vlines .highcharts-area,
+  .highcharts-legend-item.b9-vlines .highcharts-point {
+    fill: url(#b9-vlines);
   }
 
   /* ── Printed values never hide (decision 7, owed from RC1): hovering one series must not fade another's printed
@@ -513,7 +521,7 @@
   /* ── Analysis → Comparisons, Savings and Retirement Details (RC17). The two sides' bars as retirement begins ride
      `.b9-kinds` above, the compared plan's hatch inked in its own blue (plan 4.0's second cue). The year columns
      (`incomeSourcesOptions.ts`): each part in its own ink with an edge of the same ink so a patterned column's outline
-     holds on the white ground (Social Security deep indigo, other income light green, taxable blue, pre-tax hatched
+     holds on the white ground (Social Security deep indigo, other income vertically lined light green, taxable blue, pre-tax hatched
      orange, Roth dotted green, HSA lined sky; a short year cross-hatched red); the year the money ran out a red
      cross-hatched band with its words over it in dark text; the zero line a solid ink rule. The income donuts wear the
      same parts. ── */
@@ -526,6 +534,11 @@
     --b9-ink-dots: var(--highcharts-color-1);
     --b9-ink-lines: var(--highcharts-color-4);
     --b9-ink-cross: var(--highcharts-color-5);
+    --b9-ink-vlines: var(--highcharts-color-3);
+  }
+  .b9-years .b9-vlines .highcharts-point {
+    stroke: var(--b9-ink-vlines);
+    stroke-width: 1;
   }
   .b9-years .b9-hatch .highcharts-point {
     stroke: var(--b9-ink-hatch);
@@ -574,6 +587,11 @@
   .b9-income .highcharts-point.b9-lines {
     fill: url(#b9-lines);
     stroke: var(--b9-ink-lines);
+    stroke-width: 1.5;
+  }
+  .b9-income .highcharts-point.b9-vlines {
+    fill: url(#b9-vlines);
+    stroke: var(--b9-ink-vlines);
     stroke-width: 1.5;
   }
   /* The donuts' key: each part's square in the slice's own fill, its edge in the part's colour. */

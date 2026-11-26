@@ -86,6 +86,12 @@ export function RetirementDetailsPanel({
       // The key beside the donuts past the phone tier (stacked under them, the panel ran past his window's frame: RC17's look).
       <div className="flex flex-col gap-4 wide:flex-row wide:items-center wide:gap-6" data-rd-donuts="">
         <div className="grid shrink-0 grid-cols-2 gap-4">
+          {/* What the holes' share is, once over both rings, so nothing (each chart's credit, under its ring) sits between
+              a number and its words; inside the hole the words ran across the ring, and under each name they widened the
+              rings' columns until the key beside them broke (RC17's look). */}
+          <p className="col-span-2 w-0 min-w-full text-center text-label text-stone-600" data-rd-donut-words="">
+            {copy.rdNotWithdrawal}
+          </p>
           {view.donuts.map((d) => (
             <div key={d.side} className="flex min-w-0 flex-col items-center gap-2" data-rd-donut={d.side}>
               <h3 className="text-center text-body font-semibold text-stone-900">{d.title}</h3>
@@ -101,10 +107,6 @@ export function RetirementDetailsPanel({
                   centre={<span className="text-chart-title tabular-nums text-stone-900">{d.centre}</span>}
                 />
               </ChartSeat>
-              {/* What the hole's share is, under the ring (inside the hole the words ran across the ring: RC17's look). */}
-              <p className="text-center text-label text-stone-600" data-rd-donut-words="">
-                {copy.rdNotWithdrawal}
-              </p>
             </div>
           ))}
         </div>

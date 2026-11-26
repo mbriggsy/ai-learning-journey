@@ -65,11 +65,12 @@ interface Look {
 }
 
 /** The income parts, bottom-up: Social Security deep indigo (it clears the floor beside every withdrawal hue), other
- *  income light green, then the withdrawal stacks' own look (taxable solid blue, pre-tax hatched orange, Roth dotted
- *  green, HSA lined sky). */
+ *  income light green in vertical lines (so it never rests on its colour beside the solid indigo and blue; the cross is
+ *  the money-ran-out band's, in the same chart), then the withdrawal stacks' own look (taxable solid blue, pre-tax
+ *  hatched orange, Roth dotted green, HSA lined sky). */
 export const INCOME_PARTS: readonly (Look & { readonly id: string; readonly name: string; readonly read: (r: LedgerYearRow) => number })[] = [
   { id: 'social-security', name: copy.rdSourceSocialSecurity, colorIndex: 9, pattern: 'solid', read: (r) => r.socialSecurity },
-  { id: 'other', name: copy.rdSourceOther, colorIndex: 3, pattern: 'solid', read: (r) => r.otherIncomeByPerson.reduce((s, o) => s + o.gross, 0) },
+  { id: 'other', name: copy.rdSourceOther, colorIndex: 3, pattern: 'vlines', read: (r) => r.otherIncomeByPerson.reduce((s, o) => s + o.gross, 0) },
   { id: 'taxable', name: copy.rdSourceTaxable, colorIndex: 0, pattern: 'solid', read: (r) => r.draw.taxable },
   { id: 'pretax', name: copy.rdSourcePretax, colorIndex: 2, pattern: 'hatch', read: (r) => r.draw.pretax },
   { id: 'roth', name: copy.rdSourceRoth, colorIndex: 1, pattern: 'dots', read: (r) => r.draw.roth },
@@ -143,9 +144,10 @@ const KIND_LABEL: Readonly<Record<DetailsKind, (title: string) => string>> = {
   spending: slots.rdSpendingOf,
 }
 
-/** The menu over the sides shown: each side's three charts and, with two sides, the two comparisons. */
-export function detailsMenu(sides: readonly { readonly id: SideId; readonly title: string }[]): MenuItem[] {
-  const per = (kind: DetailsKind) => sides.map((s) => ({ id: `${kind}:${s.id}` as const, label: KIND_LABEL[kind](s.title) }))
+/** The menu over the sides shown: each side's three charts ("Income sources of your plan": the side's in-sentence name)
+ *  and, with two sides, the two comparisons. */
+export function detailsMenu(sides: readonly { readonly id: SideId; readonly mid: string }[]): MenuItem[] {
+  const per = (kind: DetailsKind) => sides.map((s) => ({ id: `${kind}:${s.id}` as const, label: KIND_LABEL[kind](s.mid) }))
   return sides.length > 1
     ? [...per('income'), { id: 'income-comparison', label: copy.rdChartIncomeComparison }, ...per('rate'), ...per('spending'), { id: 'spending-comparison', label: copy.rdChartSpendingComparison }]
     : [...per('income'), ...per('rate'), ...per('spending')]
@@ -239,7 +241,7 @@ export function retirementDetailsView(input: AnalysisInput & { readonly chart: R
           shares: sums.map((x) => slots.analysisPercent(pctWords(x.total > 0 ? x.parts[i]! / x.total : 0))),
         })).filter((_, i) => sums.some((x) => x.parts[i]! > 0)),
         metric: slots.rdIncomeComparison(alt.mid, pctWords(sums[0]!.share ?? 0), cmp.mid, pctWords(sums[1]!.share ?? 0), window.from, window.through, steady),
-        notes: [windowNote, copy.rdNotKeptNote, ...tail],
+        notes: [windowNote, ...(sides.some((s) => inWindow(s).some((r) => r.incomeNotKept > 0)) ? [copy.rdNotKeptShares] : []), ...tail],
         updating: gate.updating,
       }
     }
@@ -257,8 +259,9 @@ export function retirementDetailsView(input: AnalysisInput & { readonly chart: R
         name: s.title,
         role: s.id,
         values: totals[i]!,
-        // The axis dialect ("~$1.18mm"): six full figures over three groups ran into each other at his window (RC17's look).
-        figures: totals[i]!.map((v) => slots.probabilityBarFigure(formatMmDollar(Math.round(v / 10_000) * 10_000))),
+        // The axis dialect ("~$1.18mm", its own compact rounding): six full figures over three groups ran into each other at
+        // his window (RC17's look). Never pre-rounded: a part under $5,000 printed "~$0" over a bar with height.
+        figures: totals[i]!.map((v) => slots.probabilityBarFigure(formatMmDollar(v))),
         points: totals[i]!.map((v, g) => slots.taxStratBarPoint(`${s.title}, ${SPENDING_PARTS[g]!.name}`, formatDeltaDollar(v))),
       })),
       lattice,
@@ -276,7 +279,8 @@ export function retirementDetailsView(input: AnalysisInput & { readonly chart: R
   const axis = comparisonAxis(side.meta, input.timeAxis)
   const first = rows[0]
   const last = rows.at(-1)
-  if (first === undefined || last === undefined) return { ...menu, kind: 'words', words: [slots.rdShareNone(steady), short.line].join(' ') }
+  // No retired year to draw: where the money ran out first, its note alone says why; else the plain words.
+  if (first === undefined || last === undefined) return { ...menu, kind: 'words', words: endOf(side).ranOut ? short.line : slots.rdShareNone(steady) }
   const from = yearOf(side.meta, first)
   const through = yearOf(side.meta, last)
   const base = { ...menu, ...axis, kind: 'years' as const, title, ...(short.band !== undefined ? { ranOut: short.band } : {}), updating: gate.updating }
@@ -287,7 +291,8 @@ export function retirementDetailsView(input: AnalysisInput & { readonly chart: R
       return open > 0 ? [{ year: yearOf(side.meta, r), value: (withdrawn(r) / open) * 100 }] : []
     })
     const max = Math.max(0, ...pts.map((p) => p.value))
-    const lattice = niceLattice(Math.max(1, max))
+    // From 1.5: a 0.5 step, whose one-decimal labels print exactly (a 0.25 step printed 0.25 as "0.3%").
+    const lattice = niceLattice(Math.max(1.5, max))
     const ticks = buildYTicks(lattice, (n) => slots.analysisPercent(String(Math.round(n * 10) / 10))).map((t) => ({ value: t.dollars, label: t.label }))
     const high = pts.reduce((h, p) => (p.value > h.value ? p : h), pts[0] ?? { year: from, value: 0 })
     return {
@@ -317,7 +322,8 @@ export function retirementDetailsView(input: AnalysisInput & { readonly chart: R
       ticks: dollarTicks(Math.max(0, ...tops)),
       percent: false,
       metrics: [share === null ? slots.rdShareNone(steady) : slots.rdShare(pctWords(share), from, through, steady), short.line],
-      notes: [copy.rdNotKeptNote, ...tail],
+      // The columns draw every dollar paid; the share leaves out income past spending, said only where a year has some.
+      notes: [...(rows.some((r) => r.incomeNotKept > 0) ? [copy.rdNotKeptNote] : []), ...tail],
     }
   }
   const total = tops.reduce((a, b) => a + b, 0)

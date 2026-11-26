@@ -316,12 +316,15 @@ test.describe('CSP — real browser enforcement', () => {
       await page.getByRole('tab', { name: tab, exact: true }).click()
       expect(new URL(page.url()).hash).toBe(`#/retirement/analysis/${hash}`)
       await expect(page.locator(`[data-chart="${chart}"] .highcharts-series-group, [data-analysis-words]`).first(), `${hash}: neither its chart nor its words`).toBeAttached({ timeout: 60_000 })
+      // The waiting words are not the tab's picture: past them, so the chart (or its own words) is what the CSP saw drawn.
+      await expect(page.locator('[data-analysis-words]', { hasText: copy.analysisRunsWaiting }), `${hash}: still working out the plans`).toHaveCount(0, { timeout: 60_000 })
       expect(await page.evaluate(() => document.querySelectorAll('style').length), `${hash} injected a <style> element`).toBe(0)
     }
     await page.getByRole('tab', { name: copy.comparisonsTab, exact: true }).click()
     await page.locator('[data-analysis-panel="comparisons"] h2 button').click()
     await page.getByRole('menuitemradio', { name: copy.cmpChartAtRetirement }).click()
     await expect(page.locator('[data-chart="cmp-bars"] .highcharts-series-group, [data-analysis-words]').first(), 'the bars as retirement begins').toBeAttached({ timeout: 30_000 })
+    await expect(page.locator('[data-analysis-words]', { hasText: copy.analysisRunsWaiting }), 'the bars: still working out the plans').toHaveCount(0, { timeout: 30_000 })
     expect(await page.evaluate(() => document.querySelectorAll('style').length), 'the chart menu injected a <style> element').toBe(0)
     await page.getByRole('tab', { name: copy.probabilityTab }).click()
     await expect(page.locator('[data-ring-half="compared"]'), 'back on Probability').toBeVisible({ timeout: 30_000 })

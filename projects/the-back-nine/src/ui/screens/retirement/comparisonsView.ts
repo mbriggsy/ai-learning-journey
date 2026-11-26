@@ -10,10 +10,14 @@
  *   in its figure). A run whose money ran out ends at its zero close, labelled "Money ran out in <year>", never "~$0".
  *   The metric compares the two at the last year BOTH rows reach (a ran-out run's close there is zero: the money gone),
  *   naming that year and the ages in it (insight 175).
- * - income tax each year: `taxPaid`, headed "Income tax", the page's one state clause in its notes (plan 4.0); a
- *   money-ran-out row's tax is what the year asked for, so it draws no point and counts in no total. The metric totals
- *   every year through the last year BOTH sides paid, named in the sentence. Where a side has a year with pay the notes
- *   say the tax on pay is not in it (it rides `workingYear`, shown on Cash Flows).
+ * - income tax each year: `taxPaid`, headed "Income tax", the page's one state clause in its notes (plan 4.0), over the
+ *   RETIRED years only: in a working year `taxPaid` is only what savings' own income adds (the tax on pay rides the pay
+ *   check, and a state's tax on pay sits inside W), so a stop-year or deposits lever would compare unlike years. Each
+ *   line runs over its own retired years; the metric totals the retired years both sides share (`sharedRetiredWindow`),
+ *   named as the years after work stops, and words, never a total, where they share none. A money-ran-out row's tax is
+ *   what the year asked for, so it draws no point and counts in no total. Where a side works, the notes say the chart
+ *   starts when work stops, and where the two sides' working years differ, that their tax on pay differs too (shown in
+ *   Cash Flows' "Pay check's income tax" column).
  * - invested assets as retirement begins: two bars, each side's OPENING total in its own first retired year (its stop
  *   year, which a what-if can move; row one on the all-retired route), each named with its year and its ages, drawn on
  *   ONE scale (insight 169: `KindBars` keys its chart on the picture). Equal bars say nothing moved (insight 174).
@@ -38,9 +42,10 @@ import {
   firstRetiredT,
   futureNotes,
   gateSides,
-  lastSharedPaidYear,
   lastSharedYear,
   ranOutNote,
+  retiredPaidRows,
+  sharedRetiredWindow,
   startTotal,
   yearOf,
   type AnalysisInput,
@@ -91,7 +96,7 @@ const PAIR_ID: Readonly<Record<ReadySide['id'], string>> = { alternative: 'cmp-a
 const points = (side: ReadySide, rows: readonly LedgerYearRow[], read: (r: LedgerYearRow) => number): YearPoint[] =>
   rows.map((r) => ({ year: yearOf(side.meta, r), value: Math.max(0, read(r)) }))
 
-const pairOf = (side: ReadySide, pts: readonly YearPoint[], endWord?: string): PairSeries => ({
+const pairOf = (side: ReadySide, pts: readonly YearPoint[], endWord?: readonly string[]): PairSeries => ({
   id: PAIR_ID[side.id],
   name: side.title,
   role: side.id,
@@ -151,7 +156,8 @@ export function comparisonsView(input: AnalysisInput & { readonly chart: Compari
       bars,
       ticks: buildYTicks(lattice, axisDollar),
       metric,
-      notes: [...lead, copy.cmpAtRetirementNote, ...tail],
+      // Each bar already names its side's stop year, so no stop-year lever line repeats it (`stopNotes`).
+      notes: [...lead, copy.cmpAtRetirementNote, ...futureNotes(input, sides, true)],
       updating: gate.updating,
     }
   }
@@ -160,7 +166,7 @@ export function comparisonsView(input: AnalysisInput & { readonly chart: Compari
   if (input.chart === 'assets') {
     const series = sides.map((s) => {
       const e = endOf(s)
-      return pairOf(s, points(s, s.rows, endTotal), e.ranOut ? slots.analysisEndWord(e.year) : undefined)
+      return pairOf(s, points(s, s.rows, endTotal), e.ranOut ? slots.analysisEndWordLines(e.year) : undefined)
     })
     const top = Math.max(0, ...series.flatMap((p) => p.points.map((x) => x.value)))
     // Nothing invested in any year shown (a run whose money runs out in its first year): the words, never a $0 picture.
@@ -174,9 +180,15 @@ export function comparisonsView(input: AnalysisInput & { readonly chart: Compari
     }
     const cmpRow = cmp.rows.find((r) => yearOf(cmp.meta, r) === year) ?? cmp.rows.at(-1)!
     const ages = agesIn(cmp.meta, cmpRow)
+    // Your plan alone, run out at its last year: its close there is no balance, so the sentence says the money ran out,
+    // never "holds ~$0" (as its line's end says).
     const metric = single
-      ? slots.cmpOneAt(cmp.title, formatDeltaDollar(at(cmp)), ages, year, steady)
+      ? endOf(cmp).ranOut
+        ? slots.cmpOneRanOut(cmp.title, ages, year, steady)
+        : slots.cmpOneAt(cmp.title, formatDeltaDollar(at(cmp)), ages, year, steady)
       : (() => {
+          // Both run out by that year: neither holds anything, so never "about the same invested".
+          if (endOf(alt!).ranOut && endOf(cmp).ranOut && endOf(alt!).year === year && endOf(cmp).year === year) return slots.cmpBothRanOut(alt!.title, cmp.mid, ages, year, steady)
           const d = direction(at(alt!), at(cmp), formatDeltaDollar)
           return slots.cmpMoreAt(alt!.title, d.fig, d.dir, ages, year, cmp.mid, steady)
         })()
@@ -195,22 +207,34 @@ export function comparisonsView(input: AnalysisInput & { readonly chart: Compari
     }
   }
 
-  // Income tax: the rows each side paid (never the money-ran-out row's asked-for tax), totalled through the last year
-  // every side paid.
-  const series = sides.map((s) => pairOf(s, points(s, s.rows.filter((r) => !r.ranOut), (r) => r.taxPaid)))
+  // Income tax: the RETIRED years each side paid. In a working year `taxPaid` is only what savings' own income adds (the
+  // tax on pay rides the pay check, and a state's tax on pay sits inside W), so a working year would compare unlike
+  // things: each line runs over its own retired years, and the totals count the retired years both sides share.
+  const series = sides.map((s) => pairOf(s, points(s, retiredPaidRows(s), (r) => r.taxPaid)))
   const lattice = niceLattice(Math.max(1_000, ...series.flatMap((p) => p.points.map((x) => x.value))))
-  const through = lastSharedPaidYear(sides)
-  // No year paid on some side (its money ran out in its first year): the words, never an empty picture.
-  if (series.some((p) => p.points.length === 0)) return { ...menu, kind: 'words', words: ranOutNote(sides, steady, null) ?? copy.analysisRunsError }
-  const total = (s: ReadySide): number => s.rows.filter((r) => !r.ranOut && yearOf(s.meta, r) <= through).reduce((sum, r) => sum + Math.max(0, r.taxPaid), 0)
-  const metric = single
-    ? slots.cmpTaxOne(cmp.title, formatDeltaDollar(total(cmp)), through, steady)
-    : (() => {
-        const d = direction(total(alt!), total(cmp), formatDeltaDollar)
-        return slots.cmpTaxMore(alt!.title, d.fig, d.dir, through, cmp.mid, steady)
-      })()
-  const withPay = sides.some((s) => s.rows.some((r) => r.workingYear !== undefined || r.payByPerson.some((p) => p > 0)))
-  const out = ranOutNote(sides, steady, through)
+  // No retired year paid on some side (its money ran out before or in its first retired year): the words, never an
+  // empty picture.
+  if (series.some((p) => p.points.length === 0)) return { ...menu, kind: 'words', words: ranOutNote(sides, steady, null) ?? slots.rdShareNone(steady) }
+  const window = sharedRetiredWindow(sides)
+  const total = (s: ReadySide, w: { readonly from: number; readonly through: number }): number =>
+    retiredPaidRows(s)
+      .filter((r) => yearOf(s.meta, r) >= w.from && yearOf(s.meta, r) <= w.through)
+      .reduce((sum, r) => sum + Math.max(0, r.taxPaid), 0)
+  const metric =
+    window === null
+      ? slots.cmpTaxNoShared(steady)
+      : single
+        ? slots.cmpTaxOne(cmp.mid, formatDeltaDollar(total(cmp, window)), window.from, window.through, steady)
+        : (() => {
+            const d = direction(total(alt!, window), total(cmp, window), formatDeltaDollar)
+            return slots.cmpTaxMore(alt!.mid, d.fig, d.dir, window.from, window.through, cmp.mid, steady)
+          })()
+  // Where a side has working years the chart starts when work stops, said; where the two sides' working years differ (a
+  // stop-year lever, other deposits), their tax on pay differs too, said with where it shows.
+  const withPay = sides.some((s) => firstRetiredT(s.meta) > 0)
+  const payDiffers = !single && withPay && workingYearsDiffer(alt!, cmp)
+  // The ran-out note names the window's last year where a total counts one; with no shared window, no total, no clause.
+  const out = ranOutNote(sides, steady, window?.through ?? null)
   return {
     ...menu,
     ...axis,
@@ -220,7 +244,24 @@ export function comparisonsView(input: AnalysisInput & { readonly chart: Compari
     lattice,
     axisDollar: mmAxisFormatterFor(lattice.ceiling),
     metric,
-    notes: [...lead, ...(out !== undefined ? [out] : []), ...(withPay ? [copy.cmpTaxWorkingNote] : []), ...tail],
+    notes: [...lead, ...(out !== undefined ? [out] : []), ...(payDiffers ? [copy.cmpTaxPayDiffers] : withPay ? [copy.cmpTaxWorkingNote] : []), ...tail],
     updating: gate.updating,
   }
+}
+
+/** Whether two sides' working years differ: a different first retired year, or a working year whose pay or deposits
+ *  differ (then their tax on pay can differ too). */
+export function workingYearsDiffer(a: ReadySide, b: ReadySide): boolean {
+  const ta = firstRetiredT(a.meta)
+  if (ta !== firstRetiredT(b.meta) || a.meta.startCalendarYear !== b.meta.startCalendarYear) return true
+  const sum = (xs: readonly number[]) => xs.reduce((s, x) => s + x, 0)
+  const kinds = ['taxable', 'pretax', 'roth', 'hsa'] as const
+  for (let t = 0; t < ta; t++) {
+    const ra = a.rows.find((r) => r.t === t)
+    const rb = b.rows.find((r) => r.t === t)
+    if (ra === undefined || rb === undefined) return ra !== rb
+    if (Math.abs(sum(ra.payByPerson) - sum(rb.payByPerson)) > 0.5) return true
+    if (kinds.some((k) => Math.abs(ra.contribution[k] - rb.contribution[k]) > 0.5)) return true
+  }
+  return false
 }

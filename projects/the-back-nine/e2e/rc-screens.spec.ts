@@ -4725,6 +4725,8 @@ async function toAnalysisTab(page: Page, seed: string, t: (typeof RC17_TABS)[num
 async function rc17Settled(page: Page, who: string): Promise<void> {
   await expect(page.locator('[data-analysis-body] .highcharts-series-group, [data-analysis-words]').first(), `${who}: neither a chart nor its words`).toBeAttached({ timeout: 90_000 })
   await expect(page.locator('[data-analysis-panel] [aria-busy="true"]'), `${who}: the runs never settled`).toHaveCount(0, { timeout: 90_000 })
+  // The waiting words stand in the chart's place with no aria-busy: settled only once they are gone.
+  await expect(page.locator('[data-analysis-words]', { hasText: copy.analysisRunsWaiting }), `${who}: still working out the plans`).toHaveCount(0, { timeout: 90_000 })
   await page.waitForTimeout(500)
   await settleLayout(page)
 }
@@ -4783,7 +4785,13 @@ test.describe(`RC17 · Comparisons, Savings and Retirement Details at his window
       await assertRc17Frame(page, who)
       await assertOneVisibleCaveat(page, REAL.height)
       await noSidewaysScroll(page, who)
-      for (const m of await rc17Metrics(page)) expect(m, `${who}: a one-path metric names its market`).toContain('in the steady market')
+      const metrics = await rc17Metrics(page)
+      // Comparisons and Retirement Details draw a chart here (Savings may show its words): each with its key metric.
+      if (t.hash !== 'savings') {
+        await expect(page.locator('[data-analysis-body] [data-chart]').first(), `${who}: a chart`).toBeAttached()
+        expect(metrics.length, `${who}: at least one key metric beside the chart`).toBeGreaterThan(0)
+      }
+      for (const m of metrics) expect(m, `${who}: a one-path metric names its market`).toContain('in the steady market')
     }
     // Comparisons: one side (no what-if open beside your plan), the line saying how to set one; the three charts.
     await toAnalysisTab(page, 'retired', RC17_TABS[0])
@@ -4808,11 +4816,34 @@ test.describe(`RC17 · Comparisons, Savings and Retirement Details at his window
     // Retirement Details: income sources, the withdrawal rate, spending, each audited and in frame.
     await toAnalysisTab(page, 'retired', RC17_TABS[2])
     await auditRc17Text(page, 'retired income', { 'axis-label': 4, 'legend-item': 2 })
-    for (const label of [slots.rdRateOf(copy.probabilityPlanTitle), slots.rdSpendingOf(copy.probabilityPlanTitle)]) {
+    for (const label of [slots.rdRateOf(copy.probabilityPlanTitle.toLowerCase()), slots.rdSpendingOf(copy.probabilityPlanTitle.toLowerCase())]) {
       await pickRc17Chart(page, label)
       await auditRc17Text(page, `retired ${label}`, { 'axis-label': 4 })
       await assertRc17Frame(page, `retired ${label}`)
     }
+    // The rough market: the money runs out in a retired year. Its band is one whole column slot inside the plot (never a
+    // sliver past the last column) and its words print on ONE line over it (a band's label wraps to the band's own width
+    // unless given its own).
+    await pickRc17Chart(page, slots.rdIncomeSourcesOf(copy.probabilityPlanTitle.toLowerCase()))
+    await pickRc17Future(page, copy.workbenchViewRough)
+    const band = await page.evaluate(() => {
+      const c = document.querySelector('[data-chart="rd-years"]')!
+      const b = c.querySelector('.b9-ranout-band')!.getBoundingClientRect()
+      const label = c.querySelector('.highcharts-plot-band-label')!.getBoundingClientRect()
+      const plot = c.querySelector('.highcharts-plot-background')!.getBoundingClientRect()
+      const centres = [...new Set([...c.querySelectorAll('.highcharts-series .highcharts-point')].map((p) => p.getBoundingClientRect()).filter((r) => r.width > 0).map((r) => Math.round(r.x + r.width / 2)))].sort((p, q) => p - q)
+      const slot = centres.length > 1 ? (centres.at(-1)! - centres[0]!) / (centres.length - 1) : 0
+      const fontPx = Number.parseFloat(getComputedStyle(c.querySelector('.highcharts-plot-band-label')!).fontSize)
+      return { width: b.width, right: b.right, plotRight: plot.right, slot, labelHeight: label.height, labelWidth: label.width, fontPx, lastCentre: centres.at(-1)! }
+    })
+    console.log(`[rc17-band] ${JSON.stringify(band)}`)
+    expect(band.slot, 'the columns drew').toBeGreaterThan(0)
+    expect(Math.abs(band.width - band.slot), `the band (${band.width.toFixed(1)} px) is one column slot (${band.slot.toFixed(1)} px)`).toBeLessThanOrEqual(2)
+    expect(band.right, 'the band inside the plot').toBeLessThanOrEqual(band.plotRight + 1)
+    expect(band.right - band.lastCentre, 'the band stands beside the last column').toBeGreaterThan(band.slot)
+    expect(band.labelHeight, `the band's words on one line (${band.labelHeight.toFixed(1)} px tall at ${band.fontPx} px)`).toBeLessThan(band.fontPx * 1.8)
+    expect(band.labelWidth, 'the words wider than the band: never one word per line').toBeGreaterThan(band.width)
+    await pickRc17Future(page, copy.workbenchViewSteady)
   })
 
   test('?seed=dip: a stop-year what-if beside your plan; the two bars as retirement begins, each named with its own year, drawn in the ratio of their figures; each tab in one frame', async ({ page }) => {
@@ -4856,6 +4887,11 @@ test.describe(`RC17 · Comparisons, Savings and Retirement Details at his window
     await expect(page.getByRole('menuitemradio'), 'dip: four Savings charts on each of two sides').toHaveCount(8)
     await page.keyboard.press('Escape')
     await auditRc17Text(page, 'dip this year', { 'axis-label': 3 })
+    // Retirement Details' income comparison: the two rings, their caption and the key, in one frame.
+    await toAnalysisTab(page, 'dip', RC17_TABS[2])
+    await pickRc17Chart(page, copy.rdChartIncomeComparison)
+    await expect(page.locator('[data-rd-donut]')).toHaveCount(2)
+    await assertRc17Frame(page, 'dip income comparison')
   })
 
   test('?seed=dateshort: every working year runs short, drawn below the zero line; Savings and Retirement Details in one frame and audited', async ({ page }) => {
@@ -4867,7 +4903,8 @@ test.describe(`RC17 · Comparisons, Savings and Retirement Details at his window
     await auditRc17Text(page, 'dateshort left over', { 'axis-label': 4 })
     const below = await page.evaluate(() => [...document.querySelectorAll('[data-chart="sav-years"] .highcharts-yaxis-labels text')].some((t) => (t.textContent ?? '').startsWith('(')))
     expect(below, 'dateshort: the axis runs below $0 for the short years').toBe(true)
-    expect((await rc17Metrics(page))[0]).toMatch(/short in all, drawn from your savings, in the steady market\.$/)
+    // Every working year short: no left-over line, only what the short years draw from savings.
+    expect((await rc17Metrics(page))[0]).toMatch(/the working years that run short draw ~\$[\d,]+ from your savings in all, in the steady market\.$/)
     await pickRc17Chart(page, slots.savPerYearOf(copy.probabilityPlanTitle))
     await auditRc17Text(page, 'dateshort per year', { 'axis-label': 4 })
     await toAnalysisTab(page, 'dateshort', RC17_TABS[2])

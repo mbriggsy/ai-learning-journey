@@ -2031,6 +2031,14 @@ table lanes and the what-if slots.
 
 **Fit decision.** One frame at REAL per tab.
 
+**Amendment (2026-11-26, b9-6, the pilot's calls from RC17's build and review).** The tabs run in RightCapital's order
+(Probability, Confidence, Comparisons, Savings, Retirement Details), each with its own market select and the ACTION
+ITEMS handle. Comparisons' income tax counts the years after work stops only: each side's line over its own retired
+years, the total over the retired years both sides share, named in the sentence. A working year's `taxPaid` holds
+only what the portfolio's own income adds, so summing it beside a retired year let a stop-year or deposits what-if
+print the wrong direction; where the two sides' working years differ, a note points to Cash Flows' pay check column.
+Every two-run total says its window (insight 175).
+
 **Files.** `src/ui/screens/retirement/Comparisons.tsx`, `RetirementDetails.tsx`, `Savings.tsx`, their `*View.ts`
 composers, `src/viz/charts/overlapAreasOptions.ts`, `incomeSourcesOptions.ts`.
 
@@ -2288,8 +2296,11 @@ rejected or changed, with the reason:
 
 - **F2, a label built per run ("federal and North Carolina").** Changed: no tax label names a scope, and the page's
   one state clause (`composeVerdictStateNote`) says it, so there is one producer, not two. **F2, summing
-  `taxOnOutsideIncome` into a "lifetime" figure.** Rejected: the tax on pay is not a ledger field at all, so no sum is
-  lifetime on the working route; that ring sums `taxPaid` over the years after work and says so.
+  `taxOnOutsideIncome` into a "lifetime" figure.** Rejected: no sum of it is whole on the working route
+  (Pennsylvania's and an unpriced state's tax on pay sit inside W, and with no W a working row carries no
+  `workingYear` at all), so that ring sums `taxPaid` over the years after work and says so. *(Reason corrected
+  2026-11-26, b9-6, by RC17's review: the old reason, "the tax on pay is not a ledger field at all", was false;
+  `workingYear.taxOnOutsideIncome` holds the federal tax on pay and North Carolina's. The ruling stands.)*
 - **F4, `ConfidenceStatement.tsx` kept to RC8.** Rejected: once RC0 moves `ConfidenceStatementView` into
   `answerView.ts`, that type is the only thing `RecommendationSurface.tsx` imports from it, so RC4 stands.
 - **F4, "re-point the facts page's sequencing and roth doors".** Changed: the facts page has opened no sheet for those

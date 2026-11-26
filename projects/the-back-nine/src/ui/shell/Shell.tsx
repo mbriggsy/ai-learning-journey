@@ -147,7 +147,7 @@ import { useDrawerHost } from '../screens/profile/drawerHost'
 import { expensesView, goalsView } from '../screens/profile/profileView'
 import { snapshotView, type SteadyRows } from '../screens/dashboard/snapshotView'
 import { Analysis } from '../screens/retirement/Analysis'
-import type { AnalysisFuture, AnalysisInput, RunSide } from '../screens/retirement/analysisRuns'
+import { analysisSides, type AnalysisFuture, type AnalysisInput } from '../screens/retirement/analysisRuns'
 import { ComparisonsPanel } from '../screens/retirement/Comparisons'
 import { comparisonsView, type ComparisonsChart } from '../screens/retirement/comparisonsView'
 import { RetirementDetailsPanel } from '../screens/retirement/RetirementDetails'
@@ -861,30 +861,18 @@ export default function Shell({
   const runsInput = useMemo((): AnalysisInput | null => {
     if (!trayTab || analysisTab === 'probability' || prob === null || prob.kind !== 'reading') return null
     const start = committedAnswer?.draft.startCalendarYear ?? snapshot.draft.startCalendarYear
-    const planSide = planRows(run, results[analysisFuture], snapshot.refiguring)
-    const lower = (s: string) => s.toLowerCase()
-    // The right side as Probability resolved it (a pick that can no longer be made reads your plan).
-    const rightPlan = prob.comparedPicker.value === 'plan'
-    const rightTitle = prob.halves.compared.title
-    const compared: RunSide = {
-      id: 'compared',
-      title: rightTitle,
-      mid: rightPlan || prob.comparedPicker.value === 'recommended' ? lower(rightTitle) : rightTitle,
-      rows: rightPlan ? planSide : slotRows(right.view, analysisFuture, start, snapshot.refiguring),
-    }
-    // The left side: the what-if's own run; its empty bundle IS your plan (U14), so beside your plan there is one side,
-    // and beside a kept what-if or Recommended it is your plan's rows, named so.
-    const leftEmpty = whatIf.shown.length === 0
-    const alternative: RunSide | null = leftEmpty
-      ? rightPlan
-        ? null
-        : { id: 'alternative', title: copy.probabilityPlanTitle, mid: lower(copy.probabilityPlanTitle), rows: planSide }
-      : {
-          id: 'alternative',
-          title: prob.halves.alternative.title,
-          mid: prob.picker.value === 'new' || prob.picker.value === 'recommended' ? lower(prob.halves.alternative.title) : prob.halves.alternative.title,
-          rows: slotRows(whatIf.view, analysisFuture, start, snapshot.refiguring),
-        }
+    // The two sides as Probability resolved them (`analysisSides`: the left what-if's empty bundle IS your plan).
+    const { compared, alternative } = analysisSides({
+      rightPick: prob.comparedPicker.value,
+      rightTitle: prob.halves.compared.title,
+      rightRows: slotRows(right.view, analysisFuture, start, snapshot.refiguring),
+      leftPick: prob.picker.value,
+      leftTitle: prob.halves.alternative.title,
+      leftEmpty: whatIf.shown.length === 0,
+      leftRows: slotRows(whatIf.view, analysisFuture, start, snapshot.refiguring),
+      planRows: planRows(run, results[analysisFuture], snapshot.refiguring),
+      planTitle: copy.probabilityPlanTitle,
+    })
     const years = roughWindowYears()
     return {
       future: analysisFuture,

@@ -147,16 +147,6 @@ export function ranOutNote(sides: readonly ReadySide[], steady: boolean, through
 /** The last year every side's rows reach (a run's money-ran-out row included: its close is zero, the money gone). */
 export const lastSharedYear = (sides: readonly ReadySide[]): number => Math.min(...sides.map((s) => endOf(s).year))
 
-/** The last year every side PAID (a money-ran-out row's flows are what the year asked for, so it never counts). */
-export function lastSharedPaidYear(sides: readonly ReadySide[]): number {
-  return Math.min(
-    ...sides.map((s) => {
-      const paid = paidRows(s)
-      return paid.length === 0 ? s.meta.startCalendarYear - 1 : yearOf(s.meta, paid.at(-1)!)
-    }),
-  )
-}
-
 /** The years both sides' retired rows share, from the later first retired year to the earlier last paid row: one window
  *  for a comparison, so neither side's total differs by its years alone. Null where they share none. */
 export function sharedRetiredWindow(sides: readonly ReadySide[]): { readonly from: number; readonly through: number } | null {
@@ -184,11 +174,75 @@ export const pctWords = (fraction: number): string => {
   return p < 10 ? (Math.round(p * 10) / 10).toFixed(1) : String(Math.round(p))
 }
 
-/** The notes every tab's chart carries: which future, the essentials-only level where a run reads it, the state clause. */
-export function futureNotes(input: AnalysisInput, sides: readonly ReadySide[]): string[] {
+/** Whose stop year the rows run at, where the answer found no date (plan 4.0's disclosure map, Cash Flows' `stopLine`):
+ *  the tabs then run at the window's last year, which the answer never found, so a side's stop is never read as its date.
+ *  One line where every side stops in the same year; where they differ, each side's, named, a stop-year lever's own year
+ *  included unless the chart already prints each side's year (`yearsShown`). The dated route says nothing here: the
+ *  page's intro already names the date. */
+export function stopNotes(sides: readonly ReadySide[], yearsShown: boolean): string[] {
+  const noDate = (s: ReadySide) => s.meta.route === 'no-date' && s.meta.stopFrom === 'answer' && s.meta.stopYear !== undefined
+  const first = sides.find(noDate)
+  if (first === undefined) return []
+  if (new Set(sides.map((s) => s.meta.stopYear)).size === 1) return [slots.healthNoDate(first.meta.stopYear!)]
+  return sides.flatMap((s) => {
+    if (noDate(s)) return [slots.cashFlowsRunStopsNoDate(s.title, s.meta.stopYear!)]
+    if (!yearsShown && s.meta.stopFrom === 'lever' && s.meta.stopYear !== undefined) return [slots.cashFlowsRunStopsLever(s.title, s.meta.stopYear)]
+    return []
+  })
+}
+
+/** The notes every tab's chart carries: which future, the essentials-only level where a run reads it, whose stop year
+ *  the rows run at on the no-date route (`stopNotes`), the state clause. */
+export function futureNotes(input: AnalysisInput, sides: readonly ReadySide[], yearsShown = false): string[] {
   return [
     input.future === 'steady' ? copy.analysisSteadyWhat : input.roughWhat,
     ...(sides.some((s) => s.meta.track === 'floor') ? [copy.analysisFloorTrack] : []),
+    ...stopNotes(sides, yearsShown),
     ...(input.stateClause !== null ? [input.stateClause] : []),
   ]
+}
+
+/** The pickers' values and titles, and the rows each candidate side would read, as the shell holds them. */
+export interface SidePicks {
+  /** Probability's right picker, as it resolved (a pick that can no longer be made reads your plan). */
+  readonly rightPick: 'plan' | 'recommended' | `kept:${string}`
+  readonly rightTitle: string
+  /** The right side's own slot rows (read only where the right side is not your plan). */
+  readonly rightRows: RunRows
+  /** Probability's left picker. */
+  readonly leftPick: 'new' | 'recommended' | `kept:${string}`
+  readonly leftTitle: string
+  /** The left what-if holds no lever: its empty bundle IS your plan (U14). */
+  readonly leftEmpty: boolean
+  readonly leftRows: RunRows
+  /** Your plan's own lane in the future shown. */
+  readonly planRows: RunRows
+  /** Your plan's name as its picker shows it. */
+  readonly planTitle: string
+}
+
+/** The two sides as Probability shows them: the right side is the compared plan (your plan's own lane, or its slot's
+ *  rows); the left is the alternative, its own run, except that an empty what-if IS your plan, so beside your plan there
+ *  is one side (null), and beside a kept what-if or Recommended it is your plan's rows, named so. A built-in name goes
+ *  lower case inside a sentence; a kept what-if's name stays as typed. */
+export function analysisSides(p: SidePicks): Pick<AnalysisInput, 'compared' | 'alternative'> {
+  const lower = (s: string) => s.toLowerCase()
+  const rightPlan = p.rightPick === 'plan'
+  const compared: RunSide = {
+    id: 'compared',
+    title: p.rightTitle,
+    mid: rightPlan || p.rightPick === 'recommended' ? lower(p.rightTitle) : p.rightTitle,
+    rows: rightPlan ? p.planRows : p.rightRows,
+  }
+  const alternative: RunSide | null = p.leftEmpty
+    ? rightPlan
+      ? null
+      : { id: 'alternative', title: p.planTitle, mid: lower(p.planTitle), rows: p.planRows }
+    : {
+        id: 'alternative',
+        title: p.leftTitle,
+        mid: p.leftPick === 'new' || p.leftPick === 'recommended' ? lower(p.leftTitle) : p.leftTitle,
+        rows: p.leftRows,
+      }
+  return { compared, alternative }
 }

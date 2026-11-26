@@ -7,7 +7,7 @@ import { formatDeltaDollar } from '../../../money'
 import { tableRunFor, type TableMeta } from '../../../workbench/tableRun'
 import { headlineAnswer } from '../../tax/__tests__/fixtures'
 import type { RunRows } from '../cashFlowsView'
-import { endTotal, premiumsOf, startTotal, withdrawn, type AnalysisInput, type RunSide } from '../analysisRuns'
+import { analysisSides, endTotal, premiumsOf, startTotal, withdrawn, type AnalysisInput, type RunSide } from '../analysisRuns'
 import { comparisonsView, type ComparisonsChart } from '../comparisonsView'
 import { retirementDetailsView, type RetirementDetailsChart } from '../retirementDetailsView'
 import { savingsView, type SavingsChart } from '../savingsView'
@@ -75,6 +75,15 @@ function withPay(withW: boolean): LedgerYearRow[] {
   })
 }
 
+/** The income tax rows pay from sim-year `fromT` on. */
+const inWindowFrom = (rows: readonly LedgerYearRow[], fromT: number): number => rows.filter((r) => r.t >= fromT).reduce((s, r) => s + r.taxPaid, 0)
+
+/** A share as the tabs print it, worked out here: a whole percent, one decimal under 10. */
+const pct = (fraction: number): string => {
+  const p = fraction * 100
+  return p < 10 ? (Math.round(p * 10) / 10).toFixed(1) : String(Math.round(p))
+}
+
 describe('Comparisons', () => {
   const cmp = (chart: ComparisonsChart, o: Partial<AnalysisInput> = {}) => comparisonsView({ ...input(o), chart })
 
@@ -105,7 +114,7 @@ describe('Comparisons', () => {
     const assets = cmp('assets', o)
     if (assets.kind !== 'pair') throw new Error(assets.kind)
     const outYear = START + k
-    expect(assets.series[0]!.endWord).toBe(slots.analysisEndWord(outYear))
+    expect(assets.series[0]!.endWord).toEqual(slots.analysisEndWordLines(outYear))
     expect(assets.series[1]!.endWord, 'the run that lasted ends in its figure').toBeUndefined()
     expect(assets.metric, 'compared in the ran-out year, where the alternative holds nothing').toContain(`(${outYear})`)
     expect(assets.metric).toContain('less invested')
@@ -117,8 +126,47 @@ describe('Comparisons', () => {
     const through = outYear - 1
     const total = (rows: readonly LedgerYearRow[]) => rows.filter((r) => !r.ranOut && START + r.t <= through).reduce((s, r) => s + r.taxPaid, 0)
     const d = total(short) - total(RETIRED.rows)
-    expect(tax.metric).toBe(slots.cmpTaxMore('New what-if', formatDeltaDollar(d), formatDeltaDollar(d) === '0' ? 'same' : d > 0 ? 'more' : 'less', through, 'your plan', true))
+    expect(tax.metric).toBe(slots.cmpTaxMore('new what-if', formatDeltaDollar(d), formatDeltaDollar(d) === '0' ? 'same' : d > 0 ? 'more' : 'less', START, through, 'your plan', true))
     expect(tax.notes).toContain(slots.analysisRanOut([{ name: 'new what-if', year: outYear }], true, through))
+    expect(tax.notes, 'all retired: no working year to set apart').not.toContain(copy.cmpTaxWorkingNote)
+  })
+
+  it('income tax compares the years after work stops only: a stop-year lever whose working-year tax would flip the direction totals the retired years both share, named', () => {
+    // Your plan stops in START + 3 and pays a large tax on savings' income in its working years; the what-if stops in
+    // START + 5 and pays $1,000 more in each retired year. Over every row the what-if pays LESS; over the retired years
+    // both share it pays more, which is the comparison of like with like.
+    const later: TableMeta = { ...WORKING_META, stopYear: START + 5, stopFrom: 'lever' }
+    const planRows = withPay(true).map((r) => (r.t < STOP_T ? { ...r, taxPaid: r.taxPaid + 50_000 } : r))
+    const leverRows = withPay(true).map((r) => (r.t >= 5 ? { ...r, taxPaid: r.taxPaid + 1_000 } : r))
+    const v = cmp('tax', { compared: side('compared', ready(planRows, WORKING_META)), alternative: side('alternative', ready(leverRows, later)) })
+    if (v.kind !== 'pair') throw new Error(v.kind)
+    const all = (rows: readonly LedgerYearRow[]) => rows.reduce((s, r) => s + r.taxPaid, 0)
+    expect(all(leverRows) - all(planRows), '[test setup] over every row the what-if pays less').toBeLessThan(0)
+    const last = START + RETIRED.rows.at(-1)!.t
+    const inWindow = (rows: readonly LedgerYearRow[]) => rows.filter((r) => START + r.t >= START + 5).reduce((s, r) => s + r.taxPaid, 0)
+    const d = inWindow(leverRows) - inWindow(planRows)
+    expect(d).toBe(1_000 * RETIRED.rows.filter((r) => r.t >= 5).length)
+    expect(v.metric).toBe(slots.cmpTaxMore('new what-if', formatDeltaDollar(d), 'more', START + 5, last, 'your plan', true))
+    // Each line runs over its own retired years.
+    expect(v.series[0]!.points[0]!.year).toBe(START + 5)
+    expect(v.series[1]!.points[0]!.year).toBe(START + STOP_T)
+    expect(v.series[1]!.points.map((p) => p.value)).toEqual(planRows.filter((r) => r.t >= STOP_T).map((r) => r.taxPaid))
+    // Their working years differ, so the tax on pay differs too: said once, with where it shows.
+    expect(v.notes).toContain(copy.cmpTaxPayDiffers)
+    expect(v.notes).not.toContain(copy.cmpTaxWorkingNote)
+    // Your plan alone, working: the chart starts when work stops, said; its total names its own retired years.
+    const one = cmp('tax', { compared: side('compared', ready(planRows, WORKING_META)) })
+    if (one.kind !== 'pair') throw new Error(one.kind)
+    expect(one.notes).toContain(copy.cmpTaxWorkingNote)
+    expect(one.metric).toBe(slots.cmpTaxOne('your plan', formatDeltaDollar(inWindowFrom(planRows, STOP_T)), START + STOP_T, last, true))
+  })
+
+  it('income tax with no retired year both sides share: words, never a total', () => {
+    // The what-if's money runs out in START + 4, before the plan's first retired year (START + 5): no shared window.
+    const late: TableMeta = { ...WORKING_META, stopYear: START + 5 }
+    const v = cmp('tax', { compared: side('compared', ready(RETIRED.rows, late)), alternative: side('alternative', ready(ranOutAt(RETIRED.rows, 4))) })
+    if (v.kind !== 'pair') throw new Error(v.kind)
+    expect(v.metric).toBe(slots.cmpTaxNoShared(true))
   })
 
   it('as retirement begins: each bar is its side’s OPENING total in its own first retired year, on one scale; equal bars say nothing moved', () => {
@@ -135,6 +183,19 @@ describe('Comparisons', () => {
     expect(v.bars[0]!.name).toContain(`${START + 5} (`)
     expect(v.bars[1]!.name).toContain(`${START + STOP_T} (`)
     expect(v.ticks[0]!.dollars).toBe(0)
+  })
+
+  it('your plan alone, run out: the metric says the money ran out in that year, never "holds ~$0"', () => {
+    const v = cmp('assets', { compared: side('compared', ready(ranOutAt(RETIRED.rows, 12))) })
+    if (v.kind !== 'pair') throw new Error(v.kind)
+    expect(v.metric.startsWith('Your plan runs out of money at age')).toBe(true)
+    expect(v.metric.endsWith(`(${START + 12}), in the steady market.`)).toBe(true)
+    expect(v.metric).not.toContain('~$0')
+    // Both run out in that year: never "about the same invested".
+    const both = cmp('assets', { compared: side('compared', ready(ranOutAt(RETIRED.rows, 12))), alternative: side('alternative', ready(ranOutAt(RETIRED.rows, 12))) })
+    if (both.kind !== 'pair') throw new Error(both.kind)
+    expect(both.metric.startsWith('New what-if and your plan both run out of money at age')).toBe(true)
+    expect(both.metric.endsWith(`(${START + 12}), in the steady market.`)).toBe(true)
   })
 
   it('a run whose money runs out in its first year draws no $0 picture: the words say so', () => {
@@ -177,7 +238,71 @@ describe('Retirement Details', () => {
     expect(at('hsa')).toEqual(RETIRED.rows.map((r) => r.hsaSpend))
     expect(v.ranOut).toBeUndefined()
     expect(v.metrics[1]).toBe(slots.rdShortNone(true))
-    expect(v.metrics[0]).toContain('in the steady market')
+  })
+
+  it('the key metrics as their exact sentences: the share that is not a withdrawal (less the income the tool doesn’t keep), the spending in all, the withdrawal rate', () => {
+    // One row's income runs past what the year spends: the tool keeps none of that part, so the share leaves it out.
+    const k = 4
+    const gross = (r: LedgerYearRow) => r.socialSecurity + r.otherIncomeByPerson.reduce((s, o) => s + o.gross, 0)
+    expect(gross(RETIRED.rows[k]!), '[test setup] the row has income to leave out').toBeGreaterThan(6_000)
+    const rows = RETIRED.rows.map((r) => ({ ...r, incomeNotKept: r.t === k ? 6_000 : 0 }))
+    const last = START + rows.at(-1)!.t
+    const o = { compared: side('compared', ready(rows)) }
+    const income = rd('income:compared', o)
+    if (income.kind !== 'years') throw new Error(income.kind)
+    const kept = rows.reduce((s, r) => s + Math.max(0, gross(r) - r.incomeNotKept), 0)
+    const drawn = rows.reduce((s, r) => s + r.draw.taxable + r.draw.pretax + r.draw.roth + r.hsaSpend, 0)
+    expect(income.metrics[0]).toBe(slots.rdShare(pct(kept / (kept + drawn)), START, last, true))
+    expect(income.notes, 'a year with income not kept: the share says what it leaves out').toContain(copy.rdNotKeptNote)
+    const plain = rd('income:compared', { compared: side('compared', ready(rows.map((r) => ({ ...r, incomeNotKept: 0 })))) })
+    if (plain.kind !== 'years') throw new Error(plain.kind)
+    expect(plain.notes, 'no year with income not kept: no note').not.toContain(copy.rdNotKeptNote)
+    const spending = rd('spending:compared', o)
+    if (spending.kind !== 'years') throw new Error(spending.kind)
+    const all = rows.reduce((s, r) => s + (r.spending ?? 0) + r.taxPaid + r.premiums.acaNet + r.premiums.medicare + r.premiums.medicareExtras, 0)
+    expect(spending.metrics[0]).toBe(slots.rdSpending(formatDeltaDollar(all), START, last, true))
+    const rate = rd('rate:compared', o)
+    if (rate.kind !== 'years') throw new Error(rate.kind)
+    const rates = rows.map((r) => ({ year: START + r.t, f: (r.draw.taxable + r.draw.pretax + r.draw.roth + r.hsaSpend) / (r.start.taxable + r.start.pretax + r.start.roth + r.start.hsa) }))
+    const high = rates.reduce((h, x) => (x.f > h.f ? x : h), rates[0]!)
+    expect(rate.metrics[0]).toBe(slots.rdRate(pct(rates[0]!.f), START, pct(high.f), high.year, true))
+  })
+
+  it('a low withdrawal rate’s axis prints every tick exactly (a 0.25 step printed 0.25 as "0.3%")', () => {
+    const tiny = RETIRED.rows.map((r) => ({ ...r, draw: { taxable: r.draw.taxable / 20, pretax: r.draw.pretax / 20, roth: r.draw.roth / 20 }, hsaSpend: r.hsaSpend / 20 }))
+    const v = rd('rate:compared', { compared: side('compared', ready(tiny)) })
+    if (v.kind !== 'years') throw new Error(v.kind)
+    expect(Math.max(...v.sources[0]!.points.map((p) => p.value)), '[test setup] every rate under 1.25%').toBeLessThan(1.25)
+    for (const t of v.ticks) expect(t.label).toBe(`${Math.round(t.value * 10) / 10}%`)
+    expect(v.ticks.map((t) => t.value)).toEqual([0, 0.5, 1, 1.5])
+  })
+
+  it('the menu names each side inside the sentence ("Income sources of your plan")', () => {
+    const v = rd('income:compared', { alternative: side('alternative', ready(RETIRED.rows)) })
+    expect(v.charts.map((c) => c.label)).toContain(slots.rdIncomeSourcesOf('your plan'))
+    expect(v.charts.map((c) => c.label)).toContain(slots.rdRateOf('new what-if'))
+  })
+
+  it('on the no-date route the notes say the answer found no date and whose stop year the rows run at', () => {
+    const noDate: TableMeta = { ...WORKING_META, route: 'no-date', stopFrom: 'answer' }
+    const lever: TableMeta = { ...noDate, stopYear: START + 5, stopFrom: 'lever' }
+    const one = rd('income:compared', { compared: side('compared', ready(RETIRED.rows, noDate)) })
+    if (one.kind !== 'years') throw new Error(one.kind)
+    expect(one.notes).toContain(slots.healthNoDate(START + STOP_T))
+    const two = { compared: side('compared', ready(RETIRED.rows, noDate)), alternative: side('alternative', ready(RETIRED.rows, lever)) }
+    const per = rd('rate:alternative', two)
+    if (per.kind !== 'years') throw new Error(per.kind)
+    expect(per.notes).toContain(slots.cashFlowsRunStopsNoDate('Your plan', START + STOP_T))
+    expect(per.notes).toContain(slots.cashFlowsRunStopsLever('New what-if', START + 5))
+    // The bars as retirement begins print each side's year: no lever line repeats it; the no-date line stays.
+    const bars = comparisonsView({ ...input(two), chart: 'at-retirement' })
+    if (bars.kind !== 'bars') throw new Error(bars.kind)
+    expect(bars.notes).toContain(slots.cashFlowsRunStopsNoDate('Your plan', START + STOP_T))
+    expect(bars.notes.some((n) => n === slots.cashFlowsRunStopsLever('New what-if', START + 5))).toBe(false)
+    // The dated route: nothing (the page's intro names the date).
+    const dated = rd('income:compared', { compared: side('compared', ready(RETIRED.rows, WORKING_META)) })
+    if (dated.kind !== 'years') throw new Error(dated.kind)
+    expect(dated.notes.some((n) => n.includes('no date'))).toBe(false)
   })
 
   it('a short year draws the hatched band with its words and no dollar figure, and no column; the metric names the year', () => {
@@ -238,6 +363,24 @@ describe('Retirement Details', () => {
     if (d.kind !== 'donuts') throw new Error(d.kind)
     expect(d.metric).toContain(`From ${START + 5} through ${last}`)
     for (const donut of d.donuts) expect(donut.parts.reduce((s, p) => s + p.share, 0)).toBeCloseTo(1, 9)
+    // Each part's share and the hole's figure, worked out here over the shared window: Social Security and other income
+    // count only what the tool keeps of them, split in proportion.
+    const gross = (r: LedgerYearRow) => r.socialSecurity + r.otherIncomeByPerson.reduce((s, x) => s + x.gross, 0)
+    const keptShare = (r: LedgerYearRow) => (gross(r) > 0 ? Math.max(0, gross(r) - r.incomeNotKept) / gross(r) : 0)
+    const want: Record<string, number> = {
+      'social-security': inWindow.reduce((s, r) => s + r.socialSecurity * keptShare(r), 0),
+      other: inWindow.reduce((s, r) => s + r.otherIncomeByPerson.reduce((x, y) => x + y.gross, 0) * keptShare(r), 0),
+      taxable: inWindow.reduce((s, r) => s + r.draw.taxable, 0),
+      pretax: inWindow.reduce((s, r) => s + r.draw.pretax, 0),
+      roth: inWindow.reduce((s, r) => s + r.draw.roth, 0),
+      hsa: inWindow.reduce((s, r) => s + r.hsaSpend, 0),
+    }
+    const sum = Object.values(want).reduce((a, b) => a + b, 0)
+    const plan = d.donuts.find((x) => x.side === 'compared')!
+    expect(plan.parts.map((p) => p.id)).toEqual(Object.keys(want).filter((id) => want[id]! > 0))
+    for (const p of plan.parts) expect(p.share, p.id).toBeCloseTo(want[p.id]! / sum, 9)
+    expect(plan.centre).toBe(`${pct((want['social-security']! + want.other!) / sum)}%`)
+    expect(d.metric).toBe(slots.rdIncomeComparison('new what-if', pct((want['social-security']! + want.other!) / sum), 'your plan', pct((want['social-security']! + want.other!) / sum), START + 5, last, true))
   })
 })
 
@@ -257,7 +400,10 @@ describe('Savings', () => {
     const now = sav('this-year:compared', true, o)
     if (now.kind !== 'bars') throw new Error(now.kind)
     expect(now.bars.map((b) => b.value)).toEqual([rows[0]!.contribution.taxable, rows[0]!.contribution.pretax, rows[0]!.contribution.roth, rows[0]!.contribution.hsa])
-    expect(now.metrics[1]).toBe(slots.savOwnShare(formatDeltaDollar(30_000), '20', formatDeltaDollar(150_000)))
+    // Row one's deposits in all ($5,000 + $20,000 + $7,000 + $4,000), and year 0's entered pay printed exact, as Cash
+    // Flows prints it.
+    expect(now.metrics[0]).toBe(slots.savThisYear(formatDeltaDollar(36_000), START))
+    expect(now.metrics[1]).toBe(slots.savOwnShare(formatDeltaDollar(30_000), '20', '$150,000'))
     expect(now.door).toBeUndefined()
     const per = sav('per-year:compared', true, o)
     if (per.kind !== 'years') throw new Error(per.kind)
@@ -269,14 +415,22 @@ describe('Savings', () => {
     if (left.kind !== 'years') throw new Error(left.kind)
     expect(left.sources.find((s) => s.id === 'left')!.points.map((p) => p.value)).toEqual([9_000, 0, 9_000])
     expect(left.sources.find((s) => s.id === 'short')!.points.map((p) => p.value)).toEqual([-0, -6_000, -0])
-    expect(left.metrics[0]).toBe(slots.savLeftOver(formatDeltaDollar(12_000), 'left', START, START + 2, true))
+    // The left over and the short year stated apart, never netted: $9,000 + $9,000 left over, then $6,000 drawn.
+    expect(left.metrics[0]).toBe(slots.savLeftOver(formatDeltaDollar(18_000), START, START + 2, true))
     // What the run keeps of a left over is its own field (`leftOverCredit`): none here, said so.
     expect(rows.slice(0, STOP_T).every((r) => r.leftOverCredit === 0), '[test setup] the base rows credit nothing').toBe(true)
     expect(left.metrics[1]).toBe(copy.savLeftOverNoneKept)
-    const credited = rows.map((r) => (r.t < STOP_T ? { ...r, leftOverCredit: 4_000 } : r))
+    expect(left.metrics[2]).toBe(slots.savShortDrawn(formatDeltaDollar(6_000), START, START + 2, true))
+    // The engine credits only a year with money left (`workingYearCredit`), each at most its cash: $4,000 in each.
+    const credited = rows.map((r) => (r.t < STOP_T && r.workingYear!.leftOver > 0 ? { ...r, leftOverCredit: 4_000 } : r))
     const kept = sav('left-over:compared', true, { compared: side('compared', ready(credited, WORKING_META)) })
     if (kept.kind !== 'years') throw new Error(kept.kind)
-    expect(kept.metrics[1]).toBe(slots.savLeftOverKept(formatDeltaDollar(12_000)))
+    expect(kept.metrics[1]).toBe(slots.savLeftOverKept(formatDeltaDollar(8_000)))
+    // Every year short: no left-over line and no kept line, only what the short years draw.
+    const allShort = rows.map((r) => (r.t < STOP_T ? { ...r, workingYear: { ...r.workingYear!, leftOver: -2_000, shortfall: 2_000 } } : r))
+    const short = sav('left-over:compared', true, { compared: side('compared', ready(allShort, WORKING_META)) })
+    if (short.kind !== 'years') throw new Error(short.kind)
+    expect(short.metrics).toEqual([slots.savShortDrawn(formatDeltaDollar(6_000), START, START + 2, true)])
     expect(left.ticks.some((t) => t.value < 0), 'a short year runs below the zero line').toBe(true)
   })
 
@@ -291,6 +445,15 @@ describe('Savings', () => {
     expect(now.door).toBe(copy.stalenessWUnansweredCta)
   })
 
+  it('a run whose money runs out in its first year: every Savings chart says so, never a calm "nothing goes in"', () => {
+    const o = { compared: side('compared', ready(ranOutAt(withPay(true), 0), WORKING_META)) }
+    const words = slots.analysisRanOut([{ name: 'your plan', year: START }], true, null)
+    for (const chart of ['this-year:compared', 'per-year:compared', 'share:compared', 'left-over:compared'] as const) {
+      expect(sav(chart, true, o), chart).toMatchObject({ kind: 'words', words })
+    }
+    expect(sav('this-year:compared', false, { compared: side('compared', ready(ranOutAt(RETIRED.rows, 0))) })).toMatchObject({ kind: 'words', words })
+  })
+
   it('a read-only view carries no write action on any tab or chart', () => {
     const o = { readOnly: true, compared: side('compared', ready(withPay(false), WORKING_META)), alternative: side('alternative', ready(withPay(false), WORKING_META)) }
     for (const chart of ['this-year:compared', 'per-year:compared', 'share:compared', 'left-over:alternative'] as const) {
@@ -303,5 +466,35 @@ describe('Savings', () => {
   it('the year-end total the comparisons read is the engine’s own sum', () => {
     const r = RETIRED.rows[3]!
     expect(endTotal(r)).toBe(r.end.taxable + r.end.pretax + r.end.roth + r.end.hsa)
+  })
+})
+
+describe('the two sides (the shell’s mapping, `analysisSides`)', () => {
+  const PLAN = ready(RETIRED.rows, RETIRED.meta, 'plan')
+  const LEFT = ready(RETIRED.rows, RETIRED.meta, 'left')
+  const RIGHT = ready(RETIRED.rows, RETIRED.meta, 'right')
+  const base = { rightRows: RIGHT, leftRows: LEFT, planRows: PLAN, planTitle: 'Your plan', leftTitle: 'New what-if' } as const
+
+  it('your plan alone: no what-if set beside it, so one side, the plan on the right', () => {
+    const s = analysisSides({ ...base, rightPick: 'plan', rightTitle: 'Your plan', leftPick: 'new', leftEmpty: true })
+    expect(s.alternative).toBeNull()
+    expect(s.compared).toEqual({ id: 'compared', title: 'Your plan', mid: 'your plan', rows: PLAN })
+  })
+
+  it('a new what-if beside your plan: the what-if’s own rows on the green left, your plan’s lane on the right', () => {
+    const s = analysisSides({ ...base, rightPick: 'plan', rightTitle: 'Your plan', leftPick: 'new', leftEmpty: false })
+    expect(s.alternative).toEqual({ id: 'alternative', title: 'New what-if', mid: 'new what-if', rows: LEFT })
+    expect(s.compared.rows).toBe(PLAN)
+  })
+
+  it('an empty left beside a kept what-if or Recommended on the right: the left is your plan’s rows, named so; the right reads its own slot', () => {
+    for (const [rightPick, rightTitle, mid] of [
+      ['kept:k1', 'Retire at 63', 'Retire at 63'],
+      ['recommended', 'Recommended', 'recommended'],
+    ] as const) {
+      const s = analysisSides({ ...base, rightPick, rightTitle, leftPick: 'new', leftEmpty: true })
+      expect(s.alternative, rightPick).toEqual({ id: 'alternative', title: 'Your plan', mid: 'your plan', rows: PLAN })
+      expect(s.compared, rightPick).toEqual({ id: 'compared', title: rightTitle, mid, rows: RIGHT })
+    }
   })
 })

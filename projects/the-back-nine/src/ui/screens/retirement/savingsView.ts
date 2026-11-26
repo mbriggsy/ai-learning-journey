@@ -27,6 +27,7 @@ import type { YearSource } from '@viz/charts/incomeSourcesOptions'
 import type { LedgerBalances, LedgerYearRow } from '@shared/model'
 import { copy, slots } from '../../copy'
 import { formatDeltaDollar, mmAxisFormatterFor } from '../../money'
+import { formatTableDollars, tableFigure } from '../../workbench/yearTableChrome'
 import { comparisonAxis, type ComparisonAxis } from '../tax/taxRunsView'
 import { firstRetiredT, futureNotes, gateSides, paidRows, pctWords, ranOutNote, yearOf, type AnalysisInput, type ReadySide, type SideId } from './analysisRuns'
 import { cmpFigure } from './comparisonsView'
@@ -122,16 +123,24 @@ export function savingsView(input: AnalysisInput & { readonly chart: SavingsChar
   const title = charts.find((c) => c.id === chart)!.label
   const tail = futureNotes(input, [side])
   const door = input.readOnly ? {} : { door: copy.stalenessWUnansweredCta }
+  // A run whose money runs out in its first year deposits nothing (that row forfeits its deposits) and has no working
+  // year to show: every chart says why, never a calm "nothing goes in".
+  if (side.rows[0]?.ranOut === true) return { ...menu, kind: 'words', words: ranOutNote([side], steady, null)!, metrics: [], notes: tail }
 
   if (kind === 'this-year') {
     const row = side.rows[0]
     const retiredNote = input.working ? [] : [copy.savRetiredNote]
-    const total = row === undefined || row.ranOut ? 0 : depositsOf(row)
+    const total = row === undefined ? 0 : depositsOf(row)
     if (row === undefined || total <= 0) return { ...menu, kind: 'words', words: copy.savNoDeposits, metrics: [], notes: [...retiredNote, ...tail] }
     const lattice = niceLattice(total > 0 ? Math.max(...DEPOSIT_KINDS.map((k) => row.contribution[k.id])) : 1)
     const year = yearOf(side.meta, row)
     const w = row.workingYear
-    const own = w !== undefined && w.pay > 0 ? [slots.savOwnShare(formatDeltaDollar(w.ownDeposits), pctWords(w.ownDeposits / w.pay), formatDeltaDollar(w.pay))] : []
+    // The pay as Cash Flows prints it (`tableFigure`): year 0's entered pay exact, a later year's with "~".
+    const pay = w === undefined ? null : tableFigure(w.pay, { sign: '', entered: true, t: row.t })
+    const own =
+      w !== undefined && w.pay > 0 && pay !== null
+        ? [slots.savOwnShare(formatDeltaDollar(w.ownDeposits), pctWords(w.ownDeposits / w.pay), `${pay.approx ? '~' : ''}$${formatTableDollars(w.pay)}`)]
+        : []
     // A working year with no pay check (no W): the household's own share waits on the figure, said with its door.
     const unasked = input.working && w === undefined && row.payByPerson.some((p) => p > 0)
     return {
@@ -191,7 +200,8 @@ export function savingsView(input: AnalysisInput & { readonly chart: SavingsChar
 
   if (kind === 'share') {
     const pts = rows.flatMap((r) => (r.workingYear!.pay > 0 ? [{ year: yearOf(side.meta, r), value: (r.workingYear!.ownDeposits / r.workingYear!.pay) * 100 }] : []))
-    const lattice = niceLattice(Math.max(1, ...pts.map((p) => p.value)))
+    // From 1.5: a 0.5 step, whose one-decimal labels print exactly (a 0.25 step printed 0.25 as "0.3%").
+    const lattice = niceLattice(Math.max(1.5, ...pts.map((p) => p.value)))
     const own = rows.reduce((s, r) => s + r.workingYear!.ownDeposits, 0)
     const pay = rows.reduce((s, r) => s + r.workingYear!.pay, 0)
     return {
@@ -218,11 +228,17 @@ export function savingsView(input: AnalysisInput & { readonly chart: SavingsChar
     const v = k * lattice.step
     ticks.push({ value: v, label: v < 0 ? `(${fmt(-v)})` : fmt(v) })
   }
-  const net = rows.reduce((s, r) => s + r.workingYear!.leftOver, 0)
-  const fig = formatDeltaDollar(net)
-  // What the run keeps of a left over (`leftOverCredit`, landed in taxable): said, so a left over is never read as saved.
+  // The left over and the short years stated apart, never netted: the engine credits only a year with money left
+  // (`workingYearCredit`), so a net would set a kept figure beside a smaller "in all" and under-state what was drawn.
+  const leftFig = formatDeltaDollar(rows.reduce((s, r) => s + Math.max(0, r.workingYear!.leftOver), 0))
+  const shortFig = formatDeltaDollar(rows.reduce((s, r) => s + Math.max(0, r.workingYear!.shortfall), 0))
+  // What the run keeps of a left over (`leftOverCredit`, landed in taxable; each year's at most its cash): said, so a
+  // left over is never read as saved.
   const kept = rows.reduce((s, r) => s + r.leftOverCredit, 0)
-  const keptLine = up > 0 ? [kept > 0 ? slots.savLeftOverKept(formatDeltaDollar(kept)) : copy.savLeftOverNoneKept] : []
+  const leftLines =
+    leftFig === '0' ? [] : [slots.savLeftOver(leftFig, from, through, steady), kept > 0 ? slots.savLeftOverKept(formatDeltaDollar(kept)) : copy.savLeftOverNoneKept]
+  const shortLines = shortFig === '0' ? [] : [slots.savShortDrawn(shortFig, from, through, steady)]
+  const lines = leftLines.length + shortLines.length === 0 ? [slots.savEven(from, through, steady)] : [...leftLines, ...shortLines]
   return {
     ...base,
     sources: [
@@ -231,7 +247,7 @@ export function savingsView(input: AnalysisInput & { readonly chart: SavingsChar
     ].filter((s) => s.points.some((p) => p.value !== 0)) as YearSource[],
     ticks,
     percent: false,
-    metrics: [slots.savLeftOver(fig, fig === '0' ? 'even' : net > 0 ? 'left' : 'short', from, through, steady), ...keptLine],
+    metrics: lines,
     notes: [copy.savLeftOverNote, ...outNotes, ...tail],
   }
 }

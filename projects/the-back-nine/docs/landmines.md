@@ -390,6 +390,9 @@ tests
 
 ## The fit gate and e2e
 
+- **(b9-4, 11-26; moved from TODO by b9-5) The look instrument's Settings block fails on a seed with no date** (its locator
+  waits for the fan chart; the page itself is right). Look at Settings on `retired` or `datecoststale`.
+
 - **(b9-2, 11-25) A second Vite server on this project breaks the fit harness's:** a `pnpm dev --port 5199` left from
   a real-app check shared `node_modules/.vite/deps` with the harness's server on 4190, and a 30-arm run failed 27 with
   `ERR_CONNECTION_REFUSED` at 4190 and "Execution context was destroyed" (the two optimizing deps over each other);

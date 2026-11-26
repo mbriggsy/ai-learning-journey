@@ -22,7 +22,8 @@ import { copy } from '../../src/ui/copy'
  * stale and kept (opened from the standing line); since RC18 Settings, each folder tab (and the W row's drawer over it on
  * a working seed), and the Display drawer open over Analysis; since RC14 the first-run stepper: its six steps re-walked
  * from Settings over each seed, and on a fresh plan "Start a new plan", each empty step, Complete waiting on facts and Next
- * refusing with the W drawer at its field (filter `-g "the first-run stepper"`). Screenshots land in the repo's gitignored `temp/rc-shots/<unit>/`, named
+ * refusing with the W drawer at its field (filter `-g "the first-run stepper"`); since RC16 Balance Sheet: Current, its DETAILS
+ * breakdown open and its Details tab (filter `-g "Balance Sheet, both tabs"`). Screenshots land in the repo's gitignored `temp/rc-shots/<unit>/`, named
  * `<screen>-<seed>-<size>.png`, for Briggsy to review the output.
  *
  *     RC_UNIT=RC2 pnpm exec playwright test --config e2e/held/shots.config.ts rc-look
@@ -33,6 +34,7 @@ const OUT = `temp/rc-shots/${UNIT}` // resolved from the run's working directory
 const SEEDS = (process.env.RC_SEEDS ?? 'retired,date').split(',')
 const ALL_SCREENS = [
   { id: 'snapshot', screen: 'snapshot', module: copy.shellModuleDashboard, page: copy.shellPageSnapshot },
+  { id: 'balance-sheet', screen: 'balance-sheet', module: copy.shellModuleDashboard, page: copy.shellPageBalanceSheet },
   { id: 'probability', screen: 'probability', module: copy.shellModuleRetirement, page: copy.shellPageAnalysis },
   { id: 'health-care', screen: 'health-care', module: copy.shellModuleRetirement, page: copy.shellPageHealthCare },
   { id: 'cash-flows', screen: 'cash-flows', module: copy.shellModuleRetirement, page: copy.shellPageCashFlows },
@@ -170,7 +172,14 @@ async function showScreen(page: Page, target: (typeof SCREENS)[number], phone: b
   if (target.screen === 'health-care') await settleHealth(page)
   if (target.screen === 'stress-test') await settleStress(page)
   if (target.screen === 'asset-allocation' || target.screen === 'tax-allocation') await settleRings(page)
+  if (target.screen === 'balance-sheet') await settleBalance(page)
   await settleLayout(page)
+}
+
+/** Balance Sheet's columns drawn (the charts' lazy chunk), or the page's own words (no accounts, or every one at $0). */
+async function settleBalance(page: Page): Promise<void> {
+  await expect(page.locator('[data-chart="balance-kinds"] .highcharts-series-group, [data-balance-page], [data-balance-zero], [data-balance-tab="details"]').first()).toBeAttached({ timeout: 60_000 })
+  await page.waitForTimeout(600)
 }
 
 /** Stress Test's bars landed (a working plan's final-tier runs take a while), or the page's own words. */
@@ -397,6 +406,50 @@ for (const size of SIZES) {
           expect.soft(a.overlaps, `${id}: overlapping controls`).toEqual([])
           expect.soft(a.tiny, `${id}: text under 12 px`).toEqual([])
         }
+      })
+    }
+  })
+}
+
+// RC16: Dashboard → Balance Sheet on each seed (and `buckets`, the household with three kinds held and one at $0): Current,
+// the DETAILS breakdown open under the panel (on the phone, its sheet), and the Details tab (whole page too). Filter with
+// `-g "Balance Sheet, both tabs"`.
+for (const size of SIZES) {
+  test.describe(`${UNIT} look, Balance Sheet, both tabs at ${size.tag}`, () => {
+    test.use({ ...size.use, reducedMotion: 'reduce' })
+    for (const seed of [...SEEDS, 'buckets']) {
+      test(`?seed=${seed}: Balance Sheet — Current, the DETAILS breakdown, Details`, async ({ page }) => {
+        test.setTimeout(FINAL_TIER_MS + 120_000)
+        await enterShell(page, seed)
+        const findings: Record<string, Audit> = {}
+        await showScreen(page, screenById('balance-sheet'), size.phone)
+        await page.evaluate(() => window.scrollTo(0, 0))
+        await shot(page, findings, 'balance-current', seed, size.tag)
+        await page.screenshot({ path: `${OUT}/balance-current-${seed}-${size.tag}-full.png`, fullPage: true })
+        const handle = page.getByRole('button', { name: copy.balanceSheetHandle, exact: true })
+        if ((await handle.count()) > 0) {
+          await handle.click()
+          await expect(page.locator('[data-balance-breakdown]')).toBeVisible()
+          await page.waitForTimeout(400)
+          // At a laptop width the breakdown grows the page under the panel, below the first frame (`shot` settles back to
+          // the top): the whole-page shot shows it whole, under the chart.
+          await shot(page, findings, 'balance-breakdown', seed, size.tag)
+          if (!size.phone) await page.screenshot({ path: `${OUT}/balance-breakdown-${seed}-${size.tag}-full.png`, fullPage: true })
+          if (size.phone) await page.keyboard.press('Escape')
+          else await handle.click()
+          await expect(page.locator('[data-balance-breakdown]')).toBeHidden()
+        }
+        const details = page.getByRole('tab', { name: copy.balanceSheetTabDetails, exact: true })
+        if ((await details.count()) > 0) {
+          await details.click()
+          await expect(page.locator('[data-balance-tab="details"]')).toBeAttached()
+          await page.evaluate(() => window.scrollTo(0, 0))
+          await shot(page, findings, 'balance-details', seed, size.tag)
+          await page.screenshot({ path: `${OUT}/balance-details-${seed}-${size.tag}-full.png`, fullPage: true })
+          await page.getByRole('tab', { name: copy.balanceSheetTabCurrent, exact: true }).click()
+        }
+        console.log(`[rc-look ${UNIT} balance ${seed} ${size.tag}] ${JSON.stringify(findings)}`)
+        auditAll(findings)
       })
     }
   })

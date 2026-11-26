@@ -231,15 +231,26 @@ const dollars = (v: number): string => `$${formatEnteredDollar(v)}`
 const roundedBalance = (accounts: readonly SourceAccount[]): number =>
   accounts.reduce((s, a) => s + (Number.isFinite(a.valueToday) ? Math.round(a.valueToday) : 0), 0)
 
-function investedView(draft: MemoryModelSnapshot['draft'], agedBalancesYear: number | undefined): InvestedView {
+export type InvestedKindId = 'taxable' | 'pretax' | 'roth' | 'hsa'
+
+/** The entered balances by kind (taxable, pre-tax, Roth, HSA, in that order) and their total: the ONE split Snapshot's
+ *  Invested accounts card and Dashboard → Balance Sheet (RC16) both print, so the two can never disagree. */
+export function investedKinds(draft: MemoryModelSnapshot['draft']): {
+  readonly kinds: readonly { readonly id: InvestedKindId; readonly label: string; readonly value: number }[]
+  readonly total: number
+} {
   const src = accountSources(draft)
   const kinds = [
-    { label: copy.snapshotInvestedTaxable, value: roundedBalance(src.taxable) },
-    { label: copy.snapshotInvestedPretax, value: roundedBalance(src.pretax) },
-    { label: copy.snapshotInvestedRoth, value: roundedBalance(src.roth) },
-    { label: copy.snapshotInvestedHsa, value: roundedBalance(src.hsa) },
+    { id: 'taxable' as const, label: copy.snapshotInvestedTaxable, value: roundedBalance(src.taxable) },
+    { id: 'pretax' as const, label: copy.snapshotInvestedPretax, value: roundedBalance(src.pretax) },
+    { id: 'roth' as const, label: copy.snapshotInvestedRoth, value: roundedBalance(src.roth) },
+    { id: 'hsa' as const, label: copy.snapshotInvestedHsa, value: roundedBalance(src.hsa) },
   ]
-  const total = kinds.reduce((s, k) => s + k.value, 0)
+  return { kinds, total: kinds.reduce((s, k) => s + k.value, 0) }
+}
+
+function investedView(draft: MemoryModelSnapshot['draft'], agedBalancesYear: number | undefined): InvestedView {
+  const { kinds, total } = investedKinds(draft)
   return {
     title: copy.snapshotInvestedTitle,
     rows: kinds.map((k) => ({ label: k.label, value: dollars(k.value) })),

@@ -24,9 +24,10 @@ export type ModuleId = (typeof MODULE_ORDER)[number] | 'settings'
  *  Care are rebuilt, RC11's Stress Test is new (RightCapital's slot, between Analysis and Social Security), and RC12 adds Investment's Asset Allocation and Tax Allocation; RC13a adds Profile's Net Worth, Income, Savings and
  *  Family, and RC13b its Goals and Expenses (RightCapital's order, ref 1.2), every saved fact in a drawer of theirs: the
  *  workbench room's facts page, the last interim tab, is gone. RC18 adds Settings, the gear's page (no module word: the gear
- *  reaches it). RC15 adds Profile's Blueprint. */
+ *  reaches it). RC15 adds Profile's Blueprint, and RC16 Dashboard's Balance Sheet. */
 export type ScreenId =
   | 'snapshot'
+  | 'balance-sheet'
   | 'probability'
   | 'confidence'
   | 'cash-flows'
@@ -75,6 +76,8 @@ export const MODULE_LABELS: Readonly<Partial<Record<ModuleId, string>>> = {
 /** Every screen that exists, each module's pages in RightCapital's order (ref 1.2). */
 export const ROUTE_ROWS: readonly RouteRow[] = [
   { module: 'dashboard', page: 'snapshot', pageLabel: copy.shellPageSnapshot, screen: 'snapshot', title: copy.shellPageSnapshot },
+  // RC16: Balance Sheet beside Snapshot (its Current and Details folder tabs are the page's own state, not routes).
+  { module: 'dashboard', page: 'balance-sheet', pageLabel: copy.shellPageBalanceSheet, screen: 'balance-sheet', title: copy.shellPageBalanceSheet },
   // RC12: Investment's two pages (its Summary and Detail folder tabs are Asset Allocation's own state, not routes).
   { module: 'investment', page: 'asset-allocation', pageLabel: copy.shellPageAssetAllocation, screen: 'asset-allocation', title: copy.shellPageAssetAllocation },
   { module: 'investment', page: 'tax-allocation', pageLabel: copy.shellPageTaxAllocation, screen: 'tax-allocation', title: copy.shellPageTaxAllocation },

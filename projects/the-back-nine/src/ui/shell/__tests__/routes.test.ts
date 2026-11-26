@@ -18,7 +18,8 @@ describe('routes — no dead tabs', () => {
   it('only modules with a screen show, in RightCapital’s order; since RC12 Dashboard, Investment, Retirement, Tax and Profile', () => {
     expect(navModules().map((m) => m.id)).toEqual(['dashboard', 'investment', 'retirement', 'tax', 'profile'])
     expect(navModules().find((m) => m.id === 'investment')!.pages.map((p) => p.id)).toEqual(['asset-allocation', 'tax-allocation'])
-    expect(navModules().find((m) => m.id === 'dashboard')!.pages.map((p) => p.id)).toEqual(['snapshot'])
+    // RC16: Balance Sheet beside Snapshot, in RightCapital's order.
+    expect(navModules().find((m) => m.id === 'dashboard')!.pages.map((p) => p.id)).toEqual(['snapshot', 'balance-sheet'])
     expect(navModules().find((m) => m.id === 'retirement')!.pages.map((p) => p.id)).toEqual(['analysis', 'stress-test', 'social-security', 'health-care', 'cash-flows'])
     // Every module with a screen has its word.
     for (const m of navModules()) expect(MODULE_LABELS[m.id]).toBe(m.label)

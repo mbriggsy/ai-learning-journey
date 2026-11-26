@@ -475,4 +475,38 @@
     fill: var(--color-stone-900);
     font-size: var(--text-label);
   }
+
+  /* ── Dashboard → Balance Sheet (RC16, `kindBarsOptions.ts`): one column per kind in Tax Allocation's look (taxable solid
+     blue, pre-tax hatched orange, Roth dotted green, HSA lined sky), a patterned column drawn in its own ink with an edge
+     of the same ink so its outline holds on the white ground; each balance printed above its column in dark text, each
+     kind's name under it in body ink. ── */
+  .b9-kinds {
+    --b9-ink-hatch: var(--highcharts-color-2);
+    --b9-ink-dots: var(--highcharts-color-1);
+    --b9-ink-lines: var(--highcharts-color-4);
+  }
+  .b9-kinds .highcharts-point.b9-hatch {
+    fill: url(#b9-hatch);
+    stroke: var(--b9-ink-hatch);
+    stroke-width: 1.5;
+  }
+  .b9-kinds .highcharts-point.b9-dots {
+    fill: url(#b9-dots);
+    stroke: var(--b9-ink-dots);
+    stroke-width: 1.5;
+  }
+  .b9-kinds .highcharts-point.b9-lines {
+    fill: url(#b9-lines);
+    stroke: var(--b9-ink-lines);
+    stroke-width: 1.5;
+  }
+  .b9-kinds .highcharts-data-label text {
+    fill: var(--color-stone-900);
+    font-size: var(--text-label);
+    font-weight: 600;
+  }
+  .b9-kinds .highcharts-xaxis-labels text {
+    fill: var(--color-stone-900);
+    font-size: var(--text-label);
+  }
 }

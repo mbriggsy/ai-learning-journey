@@ -2352,6 +2352,21 @@ export const copy = {
   snapshotInvestedAsEntered: 'Balances as you entered them.',
   snapshotInvestedStopgap: 'B9 doesn’t ask about your home, debts or bank accounts yet.',
   snapshotInvestedOpen: 'See your accounts',
+  // --- Act 6 · RC16, Dashboard → Balance Sheet (plan RC16; `balanceSheetView.ts`): the invested accounts by kind. Never
+  // "net worth" or liabilities (B9 holds no home, debts or bank accounts: the stopgap line says so). Every figure is one
+  // the household entered (a fact, so no "~"); the balances' premise and stopgaps are Snapshot's and Net Worth's own. ---
+  shellPageBalanceSheet: 'Balance Sheet',
+  balanceSheetIntro: 'What your invested accounts hold, by how each kind is taxed.',
+  balanceSheetTabsLabel: 'Balance sheet views',
+  balanceSheetTabCurrent: 'Current',
+  balanceSheetTabDetails: 'Details',
+  balanceSheetHandle: 'Details',
+  balanceSheetChartTitle: 'Your invested accounts by kind',
+  balanceSheetDescription:
+    'One bar for each kind of account (taxable, pre-tax, Roth and HSA), each standing to the balance you entered. Each bar prints its figure.',
+  balanceSheetZero: 'Every account you entered holds $0, so there are no bars to draw.',
+  balanceSheetDetailsTitle: 'Your accounts by kind',
+  balanceSheetChangeAccounts: 'Add or change accounts',
   snapshotFanTitle: 'Your savings across many futures',
   snapshotFanOuter: 'Eight in ten futures',
   snapshotFanInner: 'The middle half of futures',
@@ -5136,7 +5151,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:2307` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:2308` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,
@@ -5700,6 +5715,8 @@ export const slots = {
   snapshotRingStoppedIn: (year: number): string => `if you’d stopped in ${year}`,
   /** The Invested accounts card's premise on a plan saved in an earlier year (`agedBalancesYearFor`). */
   snapshotInvestedAsEnteredIn: (year: number): string => `Balances as you entered them in ${year}; what you hold now may differ.`,
+  /** Balance Sheet's headline (RC16): the entered balances' total, a fact (no "~"); the premise line rides beside it. */
+  balanceSheetTotal: (total: string): string => `Your invested accounts total ${total}`,
   /** A projected figure on a card or in a chart's tooltip: the `~` hedge on a pre-formatted figure. */
   snapshotApprox: (figure: string): string => `~${figure}`,
   /** The withdrawal rate, one decimal, hedged. */

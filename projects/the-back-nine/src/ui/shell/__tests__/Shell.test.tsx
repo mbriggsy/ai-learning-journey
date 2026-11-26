@@ -441,6 +441,7 @@ describe('Shell — the phone menu (plan 3.1, "The phone shape")', () => {
     const links = within(sheet).getAllByRole('link').map((a) => a.textContent)
     expect(links).toEqual([
       copy.shellPageSnapshot,
+      copy.shellPageBalanceSheet,
       copy.shellPageAssetAllocation,
       copy.shellPageTaxAllocation,
       copy.shellPageAnalysis,

@@ -48,6 +48,11 @@
  * and the savings by tax treatment. The folder tab, the picker and the picked bucket are held here, so a page move keeps
  * them. The mix door opens Analysis's tray at the mix row (`tryLever`).
  *
+ * DASHBOARD → BALANCE SHEET (RC16, `BalanceSheet.tsx` over `balanceSheetView.ts`): the live draft's entered balances by
+ * kind, as Tax Allocation reads them (its premise line and stopgaps inline, so no StaleBanner; the R13 caveat in its
+ * frame). Its folder tab and its DETAILS breakdown are held here, so a page move keeps them; its one door opens Profile →
+ * Net Worth on a tab that can write.
+ *
  * PROFILE → NET WORTH, GOALS, INCOME, SAVINGS, EXPENSES AND FAMILY (RC13a, RC13b; `ProfilePages.tsx` over
  * `profileView.ts`): the household's facts as cards, each opening a drawer that edits a buffered copy and writes the store
  * once, on a Save that passes every check the walk's Continue runs (`drawerSave.ts`). Every saved fact has its one drawer
@@ -130,6 +135,8 @@ import { AssetAllocation } from '../screens/investment/AssetAllocation'
 import { TaxAllocation } from '../screens/investment/TaxAllocation'
 import { assetAllocationView, taxAllocationView, type AssetTab, type MixScope, type TaxBucketId } from '../screens/investment/investmentView'
 import { Snapshot, type SnapshotDoors } from '../screens/dashboard/Snapshot'
+import { BalanceSheet } from '../screens/dashboard/BalanceSheet'
+import { balanceSheetView, type BalanceTab } from '../screens/dashboard/balanceSheetView'
 import { isProfileScreen, ProfilePages } from '../screens/profile/ProfilePages'
 import { useDrawerHost } from '../screens/profile/drawerHost'
 import { expensesView, goalsView } from '../screens/profile/profileView'
@@ -1101,6 +1108,15 @@ export default function Shell({
     [screen, draft, taxPick, agedBalancesYear],
   )
 
+  // ── Dashboard → Balance Sheet (RC16): the live draft's entered balances by kind; the folder tab and the DETAILS
+  // breakdown's open state held here, so a page move keeps them.
+  const [balanceTab, setBalanceTab] = useState<BalanceTab>('current')
+  const [balanceDetailsOpen, setBalanceDetailsOpen] = useState(false)
+  const balancePage = useMemo(
+    () => (screen === 'balance-sheet' ? balanceSheetView(draft, agedBalancesYear, readOnly) : null),
+    [screen, draft, agedBalancesYear, readOnly],
+  )
+
   // ── The StaleBanner (RC4): the old answer page's staleness note, aged-balances line and standing line ──────────────
   // Every page that prints figures run from the saved balances and pay carries the lines that say those figures may read
   // better than they are (the stale pay check, the aged balances, the staleness note): Social Security and Stress Test
@@ -1118,7 +1134,12 @@ export default function Shell({
   // Net Worth prints the invested accounts' total (RC13a), so it carries the caveat in its frame, as the Investment pages do;
   // Blueprint too (RC15: its Net Worth headline, and the work-optional date on its Goals timeline).
   const inFrameCaveat =
-    figured || screen === 'asset-allocation' || screen === 'tax-allocation' || screen === 'profile-net-worth' || screen === 'profile-blueprint'
+    figured ||
+    screen === 'balance-sheet' ||
+    screen === 'asset-allocation' ||
+    screen === 'tax-allocation' ||
+    screen === 'profile-net-worth' ||
+    screen === 'profile-blueprint'
   // A Profile drawer is open: the shell's Back ask is asked inside it (`ProfileDrawer.tsx`), never on the page beneath.
   const [profileDrawerOpen, setProfileDrawerOpen] = useState(false)
   // Cash Flows too, aged line and door included: its row-one line (`workbenchAged`) names the build year and claims nothing
@@ -1475,6 +1496,20 @@ export default function Shell({
               onScope={setAssetScope}
               onTryMix={() => tryLever('mix')}
               caveat={CASH_FLOWS_CAVEAT}
+            />
+          </>
+        ) : balancePage !== null ? (
+          <>
+            {leave}
+            <BalanceSheet
+              headingRef={headingRef}
+              view={balancePage}
+              tab={balanceTab}
+              onTab={setBalanceTab}
+              detailsOpen={balanceDetailsOpen}
+              onDetailsOpen={setBalanceDetailsOpen}
+              caveat={CASH_FLOWS_CAVEAT}
+              accounts={doorTo('profile-net-worth')}
             />
           </>
         ) : taxAllocPage !== null ? (

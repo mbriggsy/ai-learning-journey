@@ -575,7 +575,9 @@ function mixWords(d: ScenarioDraft, a: EnteredAccount): string {
 }
 
 export function netWorthView(d: ScenarioDraft, agedBalancesYear: number | undefined, readOnly: boolean): NetWorthView {
-  const total = d.enteredAccounts.reduce((s, a) => s + (Number.isFinite(a.valueToday) ? a.valueToday : 0), 0)
+  // Each account rounded to the dollar first, then summed: the rule Snapshot's card, Tax Allocation and Balance Sheet
+  // print by (`investedKinds`), so the four totals agree to the dollar, cents or not.
+  const total = d.enteredAccounts.reduce((s, a) => s + (Number.isFinite(a.valueToday) ? Math.round(a.valueToday) : 0), 0)
   const rows = d.enteredAccounts.map((a, index) => ({
     id: `account-${index}`,
     name: accountCardName(d, a),

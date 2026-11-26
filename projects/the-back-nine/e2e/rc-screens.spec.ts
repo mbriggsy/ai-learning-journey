@@ -4516,3 +4516,187 @@ for (const size of RC12_SIZES) {
     }
   })
 }
+
+// ── RC16 · Dashboard → Balance Sheet (plan 6, RC16; its Verification and Test scenarios) ─────────────────────────────
+// On `buckets` (pre-tax, taxable and Roth held, no HSA: one kind at $0): at his window, Current holds the headline and its
+// premise, the chart, the stopgap lines, the R13 caveat and the DETAILS handle in ONE frame (plan RC16's Verification);
+// the DRAWN columns stand to their printed figures on the one axis from $0 (insight 169: options are not the picture),
+// each to within 2 px of its share of the plot and every pair in the ratio of its figures within 5 px; every kind named
+// on the axis and its figure printed (the text and marks audits); no liability or net worth word anywhere on the page;
+// Details lists the accounts by kind; the handle opens the breakdown, whose total is the headline's; the door opens
+// Profile → Net Worth. On the phone the bars run SIDEWAYS (the chart is under `SIDEWAYS_MAX_WIDTH`): the drawn WIDTHS
+// stand to the figures under the same 2 px and 5 px laws, no two chart texts meet, a resize to 720 px brings the columns
+// back on the same chart and a resize back brings the rows back; no sideways scroll, the audits, the caveat reached.
+
+const BALANCE_PAGE = { screen: 'balance-sheet', module: copy.shellModuleDashboard, page: copy.shellPageBalanceSheet } as const
+const BALANCE_CHART = '[data-chart="balance-kinds"]'
+const KIND_NAMES = [copy.snapshotInvestedTaxable, copy.snapshotInvestedPretax, copy.snapshotInvestedRoth, copy.snapshotInvestedHsa] as const
+/** A printed whole-dollar figure ("$450,000") in dollars. */
+const wholeDollars = (t: string) => Number(t.replace(/[^0-9]/g, ''))
+
+async function enterBalance(page: Page, seed: string, phone: boolean): Promise<void> {
+  await gotoSeedFinal(page, seed)
+  await expect(page.locator('main.result[data-shell-screen="snapshot"]'), 'the seed never landed on Snapshot').toBeAttached({ timeout: 30_000 })
+  await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
+  if (phone) {
+    await page.getByRole('button', { name: copy.shellMenuOpen, exact: true }).click()
+    await page.getByRole('dialog', { name: copy.shellMenuTitle }).getByRole('link', { name: BALANCE_PAGE.page, exact: true }).click()
+    await expect(page.locator(`main.result[data-shell-screen="${BALANCE_PAGE.screen}"]`)).toBeAttached()
+  } else await showPage(page, BALANCE_PAGE)
+  await expect(page.locator(`${BALANCE_CHART} .highcharts-series-group`), 'the balance chart never drew').toBeAttached({ timeout: 60_000 })
+  await page.waitForTimeout(300)
+  await settleLayout(page)
+}
+
+/** Each bar's drawn length and the figure printed at its end (matched by position), the plot's length along the value axis
+ *  and its top tick, and which way the bars run. Columns (his window): the drawn HEIGHTS, figures matched by x-centre,
+ *  the top tick the highest. Sideways (a chart under `SIDEWAYS_MAX_WIDTH`, the phone): the drawn WIDTHS, figures matched
+ *  by y-centre, the top tick the rightmost. Sideways is read from the picture, never the options: every bar starts at the
+ *  same left edge (columns stand a pitch apart). */
+async function balanceColumns(page: Page) {
+  return page.evaluate((sel) => {
+    const c = document.querySelector(sel)!
+    const rects = [...c.querySelectorAll('.highcharts-point.b9-kind-bar')].map((el) => ({ el, b: el.getBoundingClientRect() }))
+    const lefts = rects.map((r) => r.b.left)
+    const sideways = rects.length > 1 && Math.max(...lefts) - Math.min(...lefts) < 2
+    const labels = [...c.querySelectorAll('.highcharts-data-label text')].map((t) => {
+      const b = t.getBoundingClientRect()
+      return { text: (t.textContent ?? '').trim(), x: b.left + b.width / 2, y: b.top + b.height / 2 }
+    })
+    const ticks = [...c.querySelectorAll('.highcharts-yaxis-labels text')].map((t) => {
+      const b = t.getBoundingClientRect()
+      return { text: (t.textContent ?? '').trim(), x: b.left + b.width / 2, y: b.top }
+    })
+    const top = (sideways ? ticks.sort((a, b) => b.x - a.x) : ticks.sort((a, b) => a.y - b.y))[0]?.text ?? ''
+    const plotBox = c.querySelector('.highcharts-plot-background')!.getBoundingClientRect()
+    const plot = sideways ? plotBox.width : plotBox.height
+    const bars = rects.map(({ el, b }) => {
+      const id = /b9-kind-bar--([a-z]+)/.exec(el.getAttribute('class') ?? '')?.[1] ?? '?'
+      const figure = sideways
+        ? labels.filter((l) => Math.abs(l.y - (b.top + b.height / 2)) < Math.max(b.height, 8) / 2 + 1)
+        : labels.filter((l) => Math.abs(l.x - (b.left + b.width / 2)) < Math.max(b.width, 8) / 2 + 1)
+      return { id, size: sideways ? b.width : b.height, figure: figure.map((l) => l.text).join(' | ') }
+    })
+    return { sideways, plot, top, bars }
+  }, BALANCE_CHART)
+}
+
+/** The drawn bars stand to their printed figures: each to its share of the plot on the axis from $0 to the top tick, and
+ *  every pair of held kinds in the ratio of its figures (insight 169's check, as RC4b's balance bars are pinned); the bars
+ *  run the way the chart's width says (sideways under `SIDEWAYS_MAX_WIDTH`, the phone; columns at his window). */
+async function assertBalanceHeights(page: Page, who: string, sideways: boolean): Promise<void> {
+  const { sideways: drawn, plot, top, bars } = await balanceColumns(page)
+  const way = sideways ? 'row' : 'column'
+  expect(drawn, `${who}: the bars run ${sideways ? 'sideways (one row per kind)' : 'upright (one column per kind)'}`).toBe(sideways)
+  expect(bars.map((b) => b.id), `${who}: one ${way} per kind, in order`).toEqual(['taxable', 'pretax', 'roth', 'hsa'])
+  const ceiling = figureDollars(top)
+  expect(ceiling, `${who}: the top tick "${top}" is a figure`).toBeGreaterThan(0)
+  for (const b of bars) {
+    expect(b.figure, `${who}: the ${b.id} ${way} prints one whole-dollar figure`).toMatch(/^\$[\d,]+$/)
+    const want = (plot * wholeDollars(b.figure)) / ceiling
+    expect(Math.abs(b.size - want), `${who}: the ${b.id} ${way} is ${b.size.toFixed(1)}px for ${b.figure} (${want.toFixed(1)}px on the axis to ${top})`).toBeLessThanOrEqual(2)
+  }
+  const held = bars.filter((b) => wholeDollars(b.figure) > 0)
+  expect(held.length, `${who}: at least two held kinds to compare`).toBeGreaterThanOrEqual(2)
+  const tall = held.reduce((a, b) => (b.size > a.size ? b : a))
+  for (const b of held) {
+    const want = tall.size * (wholeDollars(b.figure) / wholeDollars(tall.figure))
+    expect(Math.abs(b.size - want), `${who}: the ${b.id} ${way} (${b.size.toFixed(1)}px) against the ${tall.id} (${tall.size.toFixed(1)}px) in the ratio of ${b.figure} to ${tall.figure}`).toBeLessThanOrEqual(5)
+  }
+}
+
+async function auditBalanceText(page: Page, who: string): Promise<void> {
+  const floor = await hcFloorPx(page)
+  const { bars, sideways } = await balanceColumns(page)
+  const figures = bars.map((b) => b.figure)
+  // Sideways the value axis keeps $0, the ceiling and (where the intervals divide evenly) the middle tick: two at least.
+  expect(hcTextFailures(await hcAudit(page, BALANCE_CHART, '[data-balance-tab]'), floor, { texts: [...KIND_NAMES, ...figures], counts: { 'data-label': 4, 'axis-label': 4 + (sideways ? 2 : 3) } }), `${who}: the chart’s text`).toEqual([])
+  const cut = (await page.locator(`${BALANCE_CHART} svg text`).allTextContents()).filter((t) => t.includes('…'))
+  expect(cut, `${who}: no chart word cut short`).toEqual([])
+  expect(hcMarkFailures(await hcMarks(page, BALANCE_CHART, '[data-balance-tab]')), `${who}: the figures over no column or other figure`).toEqual([])
+  await assertChartTextApart(page, BALANCE_CHART, who)
+}
+
+async function assertNoNetWorth(page: Page, who: string): Promise<void> {
+  const words = (await page.locator('main.result').innerText()).replace(/\s+/g, ' ')
+  expect(/net worth|liabilit/i.test(words), `${who}: no net worth and no liabilities on the page`).toBe(false)
+}
+
+for (const size of RC12_SIZES) {
+  test.describe(`RC16 · Balance Sheet ${size.title}`, () => {
+    test.use(size.use)
+    test(`?seed=buckets: Current${size.phone ? '' : ' in one frame to the DETAILS handle'}; the columns stand to their printed figures; every kind named; no net worth; Details by kind; the breakdown's total; the caveat reached`, async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 90_000)
+      const who = `buckets ${size.phone ? 'PHONE' : 'REAL'}`
+      await enterBalance(page, 'buckets', size.phone)
+      await expect(page.getByRole('heading', { level: 1, name: copy.shellPageBalanceSheet })).toBeVisible()
+      const headline = (await page.locator('[data-balance-headline] > span').first().innerText()).trim()
+      expect(headline, `${who}: the headline`).toMatch(/^Your invested accounts total \$[\d,]+$/)
+      await expect(page.locator('[data-balance-as-entered]')).toHaveText(copy.snapshotInvestedAsEntered)
+      await expect(page.locator('[data-balance-tab="current"] [data-balance-note]').first()).toHaveText(copy.snapshotInvestedStopgap)
+      if (!size.phone) {
+        const frame = await page.evaluate(() => ({
+          scrollY: window.scrollY,
+          chart: document.querySelector('[data-balance-chart]')!.getBoundingClientRect().bottom,
+          notes: document.querySelector('[data-balance-notes]')!.getBoundingClientRect().bottom,
+          caveat: document.querySelector('main.result [data-caveat]')!.getBoundingClientRect().bottom,
+          handle: document.querySelector('main.result [aria-controls="b9-balance-details"]')!.getBoundingClientRect().bottom,
+        }))
+        console.log(`[rc16-frame] buckets: chart ${frame.chart.toFixed(1)}, notes ${frame.notes.toFixed(1)}, caveat ${frame.caveat.toFixed(1)}, handle ${frame.handle.toFixed(1)} of ${REAL.height}`)
+        expect(frame.scrollY).toBe(0)
+        expect(frame.caveat, `${who}: the headline, the chart, its notes and the caveat inside the first frame`).toBeLessThanOrEqual(REAL.height)
+        expect(frame.handle, `${who}: the DETAILS handle inside the first frame`).toBeLessThanOrEqual(REAL.height)
+      }
+      await auditBalanceText(page, who)
+      await assertBalanceHeights(page, who, size.phone)
+      if (size.phone) {
+        // A resize across the sideways width re-lays the SAME chart (the phone tier holds, so no new chart is built): wider
+        // than `SIDEWAYS_MAX_WIDTH` the columns come back standing to their figures, and back at the phone the rows do,
+        // the figures apart each way (insight 169: a live chart once kept its old picture on update).
+        const phoneSize = page.viewportSize()!
+        await page.setViewportSize({ width: 720, height: phoneSize.height })
+        await expect.poll(async () => (await balanceColumns(page)).sideways, { message: `${who} at 720px: the columns came back` }).toBe(false)
+        await settleLayout(page)
+        await assertBalanceHeights(page, `${who} at 720px`, false)
+        await auditBalanceText(page, `${who} at 720px`)
+        await page.setViewportSize(phoneSize)
+        await expect.poll(async () => (await balanceColumns(page)).sideways, { message: `${who} back at ${phoneSize.width}px: the rows came back` }).toBe(true)
+        await settleLayout(page)
+        await assertBalanceHeights(page, `${who} back at ${phoneSize.width}px`, true)
+        await auditBalanceText(page, `${who} back at ${phoneSize.width}px`)
+      }
+      const sum = (await balanceColumns(page)).bars.reduce((s, b) => s + wholeDollars(b.figure), 0)
+      expect(sum, `${who}: the columns add to the headline's total`).toBe(wholeDollars(headline))
+      await assertNoNetWorth(page, `${who} Current`)
+      await assertOneVisibleCaveat(page, size.phone ? null : REAL.height)
+      await assertCaveatReachable(page, `${who} Current`)
+      await noSidewaysScroll(page, `${who} Current`)
+      // The DETAILS handle opens the breakdown under the panel (on the phone, its sheet): each kind, and the headline's total.
+      await page.evaluate(() => window.scrollTo(0, 0))
+      await page.getByRole('button', { name: copy.balanceSheetHandle, exact: true }).click()
+      const breakdown = page.locator('[data-balance-breakdown]')
+      await expect(breakdown, `${who}: the breakdown opened`).toBeVisible()
+      for (const n of KIND_NAMES) await expect(breakdown.getByText(n, { exact: true })).toBeVisible()
+      await expect(breakdown.locator('dd').last()).toHaveText(headline.replace(/^.* (\$[\d,]+)$/, '$1'))
+      if (size.phone) await page.keyboard.press('Escape')
+      else await page.getByRole('button', { name: copy.balanceSheetHandle, exact: true }).click()
+      await expect(breakdown).toBeHidden()
+      // Details: the accounts by kind, each kind's total over its accounts; the premise and the stopgaps under them.
+      await page.getByRole('tab', { name: copy.balanceSheetTabDetails, exact: true }).click()
+      await expect(page.locator('[data-balance-tab="details"]')).toBeAttached()
+      await settleLayout(page)
+      const groups = await page.locator('[data-balance-group]').evaluateAll((els) => els.map((el) => el.getAttribute('data-balance-group')))
+      expect(groups, `${who}: the held kinds, in order`).toEqual(['taxable', 'pretax', 'roth'])
+      expect(await page.locator('[data-balance-account]').count(), `${who}: accounts listed`).toBeGreaterThanOrEqual(3)
+      await expect(page.locator('[data-balance-tab="details"] [data-balance-note]').first()).toHaveText(copy.snapshotInvestedAsEntered)
+      await assertNoNetWorth(page, `${who} Details`)
+      await assertOneVisibleCaveat(page, null)
+      await assertCaveatReachable(page, `${who} Details`)
+      await noSidewaysScroll(page, `${who} Details`)
+      // The one door goes where accounts are added and changed: Profile → Net Worth.
+      await page.evaluate(() => window.scrollTo(0, 0))
+      await page.getByRole('link', { name: copy.balanceSheetChangeAccounts, exact: true }).click()
+      await expect(page.locator('main.result[data-shell-screen="profile-net-worth"]'), `${who}: the door opened Profile → Net Worth`).toBeAttached()
+    })
+  })
+}

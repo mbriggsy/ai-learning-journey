@@ -1,12 +1,11 @@
 import type { ReactNode } from 'react'
 import type { NoteParts } from './noteParts'
-import './styles/noteParts.css'
 
 /**
  * A standing note drawn as a BLOCK (council `wf_22858e04-f7a`, U11 walk 6; the parts are `noteParts.ts`'s): a wrapper
  * `div.note-parts` holding the opening as a `<p>`, then ONE of two lists, never both.
  * - W's stale line: a `<dl>` with one `div>dt+dd` per segment — each label on its own line, a size step above the note
- *   in the body face (`noteParts.css`; never color) — and, on the Result, the door as the last dt/dd: its lead, its cost
+ *   in the text's own face (`theme.css`'s note-parts rules since Act 6 · RC21; never color) — and, on the Result, the door as the last dt/dd: its lead, its cost
  *   `<ul>`, its tail, then the host's `button` as a block. Where the line carries a closing paragraph (the survivor part,
  *   the walk-8 form spec's U4), it follows the segments' `<dl>` as `p.note-parts__closing`, and the door, where there is
  *   one, follows it in a `<dl>` of its own.

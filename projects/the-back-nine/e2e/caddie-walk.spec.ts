@@ -1,214 +1,49 @@
 import { expect, type CDPSession, type Page } from '@playwright/test'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
-import {
-  test,
-  pinPlantDay,
-  pinnedYear,
-  REAL,
-  REAL_DPR,
-  PHONE,
-  PHONE_DPR,
-  FINAL_TIER_MS,
-  SETTLED_RESULT,
-  advanceIntakeTo,
-  armRefiguringWatch,
-  expectRefiguringSeen,
-  gotoSeedFinal,
-  rewalkSeedTo,
-  settleLayout,
-} from './reviewSurface'
-/* The no-anchor arm's handle reads the CATALOG, never a re-typed sentence (this import is the
- * precedent the fit specs cite). A hardcoded literal here is a second copy of the product's words: U17 §S6
- * reworded this exact string, and a literal would have re-broken the only walk that reaches the
- * face — the same blind spot `c55913b0` had just repaired. */
-import { copy, slots, workingCostExtras, type TypedBelowAmount } from '../src/ui/copy'
-import type { WorkingYearLeftOverKind } from '../src/shared/model'
+import { test, pinPlantDay, REAL, REAL_DPR, PHONE, PHONE_DPR, FINAL_TIER_MS, SETTLED_RESULT, gotoSeedFinal, settleLayout } from './reviewSurface'
+// Every word the walk presses or waits on is the CATALOG's, never re-typed here: a literal is a second copy of the
+// product's words, and a re-word would silently break the walk that reads it.
+import { copy } from '../src/ui/copy'
+import { ROUTE_ROWS, routeHash, routeOf } from '../src/ui/shell/routes'
 
 /**
- * The Caddie's WALK (own harness: playwright.caddie.config.ts, `pnpm caddie:walk`) — captures
- * the cold-read bundle the reader panel consumes (.claude/skills/caddie/SKILL.md). NOT a gate:
- * the few assertions here are presence companions so a broken surface fails the walk RED
- * instead of bundling a blank page (the insight-029 vacuity discipline).
+ * The Caddie's WALK (own harness: playwright.caddie.config.ts, `pnpm caddie:walk`) — captures the cold-read bundle the
+ * reader panel consumes (.claude/skills/caddie/SKILL.md). NOT a gate: the few assertions here are presence companions,
+ * so a broken surface fails the walk RED instead of bundling a blank page (the insight-029 vacuity discipline).
  *
- * Bundle law (from the verified research, 2026-07-09):
- *  - Words are captured VERBATIM from the DOM (`copy.txt`/`dialog.txt`) — a reader never OCRs
- *    the product's sentences off pixels.
- *  - The above-fold frame ships at CSS scale (REAL's 1440px long edge — under the ~2576px model
- *    ingestion cap, so it is never silently downscaled); text-critical regions additionally
- *    ship as DEVICE-scale crops (small text survives).
- *  - Color-vision arms use Chrome's own emulation (CDP setEmulatedVisionDeficiency), the same
- *    transform DevTools applies — a screening flag for the readers, never a color verdict.
- *  - Capture order matters: fold/aria/copy first (no visual side effects), then the above-fold
- *    + CVD shots (same pinned scroll), then fullpage (and the full scroll under each CVD arm,
- *    `cvd-<arm>-fullpage.png`, since U11 walk 7's R8 (b)) + element crops LAST (they may scroll).
+ * Act 6 · RC21 re-pointed the walk at the RightCapital clone's screens. The old walk drove the answer page's quiet doors,
+ * the assumptions panel, the lever sheets, the GoalPicker and the old intake's steps, all gone (RC4 to RC19); its
+ * witness walks (`intake:fork`, `paycheck`, `leftover`, `kept`, `typedbelow`, `typedmoved`) and their per-witness word
+ * assertions left with those surfaces. Their laws live in the gates now: the pay check's standing line and its gate in
+ * e2e/rc-screens.spec.ts (the "pay check" arms), the W drawer's faces in its RC13b and RC14 arms, the stepper in its
+ * RC14 arms. The git history (this file before RC21) holds the old walks.
  *
- * Increment 2 (2026-07-10, the tape's first two lessons):
- *  - RUN-STAMPED bundle dirs — temp/caddie/<run>/<target>/<viewport>/<state>/; a re-walk
- *    lands in a fresh dir instead of overwriting files under a mid-read reader panel.
- *  - The DOOR WALK — every `.result-quiet-row` door is opened and captured (Briggsy's real
- *    U12 read free-walked the doors and found a real finding on a sheet the walk never
- *    captured — the withdrawal-order chart speaking years against the fan's ages).
- *  - VAULT targets — `vault:<key>` drives the U13 decrypt-on-return arc (unlock → the
- *    re-entry gate → affirm → the echoed verdict), the only live route to the staleness
- *    surfaces; `vault:stale` additionally walks the update route's first frame.
+ * Bundle law (from the verified research, 2026-07-09), unchanged:
+ *  - Words are captured VERBATIM from the DOM (`copy.txt`/`dialog.txt`) — a reader never OCRs the product's sentences.
+ *  - The above-fold frame ships at CSS scale (REAL's 1440px long edge, under the ~2576px model ingestion cap); text-
+ *    critical regions additionally ship as DEVICE-scale crops (small text survives).
+ *  - Colour-vision arms use Chrome's own emulation (CDP setEmulatedVisionDeficiency) — a screening flag for the
+ *    readers, never a colour verdict; every chart on a state is cropped under each arm (`cvd-<arm>-<chart>.png`).
+ *  - Capture order matters: fold/aria/copy first (no visual side effects), then the above-fold + CVD shots (same pinned
+ *    scroll), then fullpage (and the full scroll under each CVD arm) + element crops LAST (they may scroll).
+ *  - Run-stamped bundle dirs: temp/caddie/<run>/<target>/<viewport>/<state>/, so a re-walk never overwrites a bundle a
+ *    reader panel is mid-read on.
  *
- * Increment 3 (2026-07-10, the seed:date card's honest coverage refusal):
- *  - The LEVER-PREVIEW DRIVE — a door whose sheet carries a what-if lever (the policy/regime
- *    radios, the Roth plan fields) gets ONE preview driven and the TwoFutures chart captured
- *    as `door-N-<slug>-preview` (the rule-36 one-dialect check was un-verifiable while the
- *    sheets bundled only their pre-commit input state). PREVIEW-ONLY: nothing is Applied —
- *    the walk never mutates the scenario later states capture. A driven preview whose chart
- *    never arrives FAILS the walk red (insight-029 vacuity discipline).
- *  - The SR-ONLY channel annotation — `sr-only.txt` lists every visually-hidden text node,
- *    because `copy.txt` (innerText) INCLUDES clipped sr-only nodes: the "doubled wordmark"
- *    finding was the persistent sr-only h1 beside the visible wordmark, a channel artifact
- *    a reader should check against before flagging a rendered duplication.
- *  - `vault:datestale` (the aged SPLIT-date plant) rides the existing vault grammar — the
- *    floor's ARRIVED arm + the re-derived anchored hero; `seed:datesplit` covers the floor's
- *    fresh ANCHORED arm (card #4's blocked-unreachable ruling was half-wrong: the anchor is
- *    computed for every live household, so the fresh split renders the anchored floor line).
- *
- * Increment 4 (2026-07-12, the Medicare-extras pre-walk's coverage demands):
- *  - CVD CHART crops — the viewport-scoped cvd-*.png arms captured above-fold only, so the
- *    odds ladder and every sheet's TwoFutures chart never landed in a color-vision frame;
- *    each chart now ships a device-scale crop under each arm (`cvd-<arm>-<chart>.png`).
- *  - `intake:fork` — the guided-intake walk to the Medicare-extras payment fork (blank →
- *    R19-blocked → mixed-provenance) + the spend step en route; the fork is intake-only, so
- *    seed/vault targets structurally cannot reach it.
- *  - `vault:datestale` joins the DOOR walk — the aged date household's lever previews were
- *    an uncaptured landmine (stale-timeline inheritance unverified).
- *
- * Increment 5 (2026-07-16, the state-carrying seed increment's cold-read faces):
- *  - `vault:statestale` — the aged-STATE-profile plant (a fresh-vintage NC save whose OWN state profile
- *    drifted one rate-step back) joins the DOOR walk: the affirm lands the NC-clause hero (borderline at
- *    the time; on-track since the 2026-08-02 rate pin), and the Assumptions door opens the panel on the
- *    ANSWERED retirement-state seat (the priced/answered picker-row face). It also rides the UPDATE-route
- *    arm — the stateTaxMoved household's "update them" exit is the same walk-through as `vault:stale`.
- *  - The CVD SELECTED-PICKER face — `intake:fork` picks NC, then captures the answered state
- *    picker as a device-scale crop AND under each CVD arm (captureCvdRegion): the priced-state
- *    read law is that the active segment survives WITHOUT hue (weight+fill+ring, .segment-active).
- *  - `seed:nc|pa|fl|elsewhere|datenc` ride the existing `walkSeed` grammar (landing + door walk;
- *    the Assumptions-door capture IS each seed's priced/answered panel-row face).
- *
- * Increment 6 (2026-07-22, the recommend-second SOLVE arc's cold-read faces):
- *  - `solve:<seed>` — the U16 recommend-second walk: the settled landing → the invited affordance
- *    (`.result-recommend-invite`) → the GoalPicker (goal chosen by its rendered LABEL, never an index —
- *    SOLVE_GOAL below) → the PENDING breathe (captured immediately; the working tell is the only thing
- *    changing on screen) → the COMMITTED frame, at FULL worker precision (16k paths on the worker pool —
- *    the committed body is POLLED, never slept on; `test.setTimeout(SOLVE_TEST_MS)` for solve targets). Two
- *    shipped worlds: `solve:nc` commits a pay-less-tax RECOMMENDED lockup with the chart OMITTED by ruling
- *    (it was the state-certification HOLD until 2026-08-02), `solve:surplus` the over-funded RECOMMENDED
- *    lockup (delta hero + the RecommendationViz two-arm chart, its own `svg.rv`) — each whole walk ~40 s
- *    per viewport since the pool (measured 2026-10-03, dev server, his laptop).
- *  - The STALE demotion (`solve:nc` only): a fingerprint-changing control-door edit (the withdrawal-order
- *    sheet, applied off the committed `proportional`) demotes the committed rec → the stale CARD — a calm
- *    heading + body + its IN-CARD re-open control, in one frame (`stale`, F-B: the promise and its action
- *    in ONE home; the door-row invite is retired for this channel). The base's drawdownPolicy rides the
- *    solve fingerprint, so the demotion is structural even where the order is inert on a single pool.
- *  - The STEER face (`blocked{no-pretax}` — the steer-seed increment, 2026-07-23, superseding the old
- *    "no seed" note): `solve:steer` walks it — the no-pretax household (`?seed=steer`, Roth + brokerage
- *    only) lands its verdict, the invite fires, the GoalPicker confirm REFUSES at the builder with the
- *    typed reason, and the calm named-reason note is the terminal frame (no pending — nothing dispatches;
- *    the invite retires with the note). The `spine-unready` sibling stays unit-pinned only
- *    (RecommendationSurface.test) — its live face needs a facts-broken re-dispatch, not a seed.
- *
- * The METHODOLOGY frame (2026-10-20, the working-year tax row's walk):
- *  - The assumptions door also captures `door-N-<slug>-methodology`: the sheet's OWN scroller brought
- *    to the end of section a's methodology rows, plus `crop-method-last-row`. Those rows sit far below
- *    the sheet's visible box, so no frame had ever painted them — a reader judged their words from
- *    `dialog.txt` alone and never their weight on the page.
- *
- * Increment 7 (2026-10-30, the pay check's go-live — `docs/plans/features/working-year-pay-check-build-spec.md` U8):
- *  - `intake:paycheck` — the date route's two new steps, reached the only way a real household is: a
- *    seed's result → the Assumptions door → the re-walk. Three households, one face each: the stale-W
- *    witness (`datecoststale`: the W step's stale face, its blocked Continue, the figure option open, then
- *    the re-answered picture), the short witness (`dateshort`: the picture at its fullest — held-back
- *    Social Security, Medicare from savings, every later year short) and the refusal witness
- *    (`datesolo`: the picture step's calm unknown line). The existing `intake:fork` answers "Already
- *    retired" twice, so it never reaches either step.
- *  - `seed:datecoststale` rides the ordinary seed walk for the result's standing line and the panel's W
- *    row (its doors walk opens the panel); both have their own crops below.
- *
- * Increment 8 (2026-10-30, the pay check's Phase C — U10): the two unlock lines, each the gate's ONLY
- * note. `vault:wyclock` (`date` saved under the previous working-years vintage — the clock's rules line)
- * and `vault:datecoststale` (the stale-W witness planted as a vault — KTD21's "worth a look" input line)
- * ride the key-agnostic `walkVaultReturn` grammar unedited: the gate frame, then the affirmed landing.
- * Neither joins the door allowlist — their sheets are `seed:date`'s and `seed:datecoststale`'s, already
- * walked.
- *
- * Increment 9 (2026-11-05, build 2's go-live — `docs/plans/features/working-year-surplus-build-spec.md` U7,
- * U14, U9): the left-over question, in its two homes, and the two standing lines it can raise.
- *  - `intake:leftover` — the money-picture step's question below the whole picture, reached the way
- *    `intake:paycheck` reaches the picture (`date`'s result → the Assumptions door → the re-walk). Four
- *    faces, one capture each: the unanswered face (`left-over-absent`: nothing checked, the "until you pick
- *    one" line), then each reply picked in turn (`left-over-saved` / `-spent` / `-not-sure`). Every face asserts its figure
- *    line, its three radios, how many are checked, and its one line in dollars, built from the shipped slots
- *    at `date`'s hand-derived $16,985 — so a step that drew no question, or the wrong line, reds the walk.
- *    The question and its line crop at device scale; the question also crops under every CVD arm (the
- *    checked reply must survive without hue).
- *  - `seed:datesavedmoved` (the moved witness: "All of it" at $16,985, $27,537 after a raise) and
- *    `seed:datesavedstale` (W stale: the seat's waiting face) ride `walkSeed`: the Result's standing line
- *    (`paycheck-note` already crops `.cs-paycheck-note`, which carries both causes) and the doors walk, whose
- *    Assumptions door paints the panel's own left-over seat (`left-over-seat`, below the W row, CVD too).
- *    The standing line and the seat's face are asserted per witness (LEFT_OVER_WITNESSES): the line's own
- *    lead, figures and door label (each cause names its own; the other cause's lead must not speak), the
- *    seat's figure, its one line, its radios and its checked reply (the stale seat: its waiting line, no
- *    figure, no radios).
- *  - `vault:datesavedmoved` and `vault:datesavedstale` ride `walkVaultReturn` for the gate (`reentry-notes`
- *    crops it), each cause asserted as ONE gate line (its lead and figures in the same note), and — W stale —
- *    the door under the buttons (`reentry-door` crops it: heading, scope, route; council `wf_22858e04-f7a`), then the
- *    verdict's standing line as on the seed. Neither joins the door allowlist, as with
- *    `datecoststale`: their sheets are the seed targets', already walked.
- *  - The seat is a CROP target, never a PANEL_CVD_REGIONS entry: those hard-fail where the region is
- *    absent, and the doors walk runs them on every household, the spine seeds (no seat) included.
- *
- * Increment 10 (2026-11-08, build 2's U11 — the Caddie record's (d) and (p)):
- *  - `intake:kept` — U5's drafted words, each reached the way a household reaches it: `datecoststale`'s
- *    Result → its standing line's door → the panel's W row → the Keep door (`walkIntakeKept`'s docblock names
- *    the branches and their states): the row's "the figure you kept", the same row after a tap on
- *    "Each month" (walk 1: $1,008,000 a year; walk 2: the kept money converted, $7,000 a month), the kept
- *    figure's state-only, both-causes and spending sentences, the face a kept figure the spending rose past is
- *    left with ("A different figure" checked, the box filled, no door), the Result's standing line over it, and
- *    the walk's W step and its gate's message — and, since walk 2 (the U11 walk's (ad)), branch C: the gate's
- *    message over a kept figure stale on the state alone, naming the note's Keep door.
- *  - `seed:datesavedrisen` / `vault:datesavedrisen` — U11's RISEN twin of `datesavedstale` (the spending raised
- *    to $90,000 past a yes to $84,000), the only household whose stale line carries the lean ("can look better
- *    than it really is") and then the clause naming the $16,985 not added. It rides LEFT_OVER_WITNESSES like
- *    its sibling: the Result's line, the gate's line and the seat's waiting face are asserted per surface.
- *
- * Increment 11 (2026-11-08, the U11 walk's (ae), council `wf_fc80029e-d93`):
- *  - the risen family's words are Frame B: the year-level lean ("Your $84,000 figure makes any working year your
- *    pay doesn't cover look cheaper…") on the W row and the stale lines, then the clause and the most a check at
- *    the quote adds. Two new targets carry the arms `datesavedrisen` cannot: `seed:`/`vault:datesavedrisenshort`
- *    (year 0 short at the quote: a check adds none of it, and the short-year lean) and
- *    `seed:`/`vault:datesavedrisenlater` (a later working year short at the quote, named). Each rides
- *    LEFT_OVER_WITNESSES (`risenWitness`).
- *
- * Increment 12 (2026-11-09, U11 walk 6):
- *  - `intake:typedbelow` — the Tier 0 retype entry's note (a TYPED W below today's spending), shipped in walk 5's
- *    round and rendered on no seed or vault route: `datesavedrisen`'s Result → its door → the panel's W row → the
- *    old $84,000 typed back in (`walkIntakeTypedBelow`'s docblock names its three states). The kept walk's re-run
- *    watch moved to module scope (`armResultRerunWatch` / `expectResultRerun`) so both walks share it.
- *
- * Increment 13 (2026-11-14, the typed-below line's whole-window rebuild, walk 8's added targets):
- *  - `intake:typedbelow` follows the span words and goes one step further, to the walk's money-picture step
- *    (`walk-typed-below-ledger`: the seat under "All of it", its line opening with the counts sentence).
- *  - Two new dev seeds walk as `seed:` and `vault:` with no edit here: `datesavedtypedpension` (five spans) and
- *    `datesavedtypedcrowned` (a span named past the headline's date).
- *
- * Increment 14 (2026-11-20, b9-3, for walk 10's watch item W9 (5)):
- *  - `intake:typedmoved` re-walks TM (`datesavedtypedmoved`) to its money-picture step (`walk-typed-moved-ledger`: the
- *    moved note and the typed-below line under "All of it", the saved-moved step no other arm reached).
- *
- * Increment 15 (2026-11-20, W9-R7's U5):
- *  - Every settle reads `SETTLED_RESULT` (a final tier with no run on newer inputs in flight), and the panel
- *    walks' re-run watch keys on `data-answer-refiguring` alone. It lives in reviewSurface.ts
- *    (`armRefiguringWatch` / `expectRefiguringSeen`), shared with the fit gate's live arm, which proves it fires
- *    on a spine panel edit (the tier-and-words watch it replaces never could: a spine edit stays "final").
- *
- * Targets: `CADDIE_TARGETS="vault:retired,vault:stale,seed:date,intake:fork"` (comma list).
- * Back-compat: `CADDIE_SEED=budget` still works (one seed target). Default: `seed:retired`.
+ * TARGETS (`CADDIE_TARGETS="seed:retired,vault:datesavedrisen,solve:surplus,intake:new"`, a comma list; back-compat
+ * `CADDIE_SEED=budget` is one seed target; default `seed:retired`):
+ *  - `seed:<key>` — the seed's settled answer lands on the home: `landing` (Dashboard → Snapshot), then every page the
+ *    shell draws, in the route table's order (`page-<screen>`: Balance Sheet, Investment, Analysis's five tabs, Stress
+ *    Test, Social Security, Health Care, Cash Flows, Tax Strategies, Profile's pages, Settings), each reached by its
+ *    address and settled; then, where the home's StaleBanner carries a standing line with a door, that door's drawer
+ *    (`door-<slug>`), the shell's one home for a "this answer may be out of date" fix.
+ *  - `vault:<key>` — the decrypt-on-return arc: the unlock card (`unlock`), the re-entry gate where the return raises
+ *    one (`gate`), the affirmed home (`landing`) and its standing line's drawer where it has one.
+ *  - `solve:<key>` — the recommend-second arc on Tax Strategies: its first frame (`landing`), the goal picked by its
+ *    label and Find pressed (`pending`, the Calculating frame), then the Winner card and its list at full worker
+ *    precision (`committed`); a household the solve refuses ends on its own words (`after-find`).
+ *  - `intake:new` — a fresh plan: the cold start (`cold-start`), "Start a new plan" (`new-plan`, the names dialog),
+ *    then each of the first-run stepper's six steps, empty (`setup-<step>`).
  */
 
 interface Target {
@@ -216,223 +51,92 @@ interface Target {
   readonly key: string
 }
 
+/** The old walks RC21 retired, each with where its law lives now (a stale target fails loud, never silently). */
+const RETIRED_INTAKE: Readonly<Record<string, string>> = {
+  fork: 'the old walk is gone (RC14); the stepper is `intake:new`',
+  paycheck: 'the W step and money picture live in the Pre-retirement living expenses drawer (`seed:datecoststale` opens it)',
+  leftover: 'the left-over question lives in the W drawer (`seed:datesavedmoved` opens it)',
+  kept: 'the kept figure lives in the W drawer (`seed:datecoststale` opens it)',
+  typedbelow: 'the typed-below line rides the StaleBanner (`seed:datesavedtypedpension`)',
+  typedmoved: 'the moved line rides the StaleBanner (`seed:datesavedtypedmoved`)',
+}
+
 function parseTargets(): Target[] {
-  const raw =
-    process.env.CADDIE_TARGETS ??
-    (process.env.CADDIE_SEED !== undefined ? `seed:${process.env.CADDIE_SEED}` : 'seed:retired')
+  const raw = process.env.CADDIE_TARGETS ?? (process.env.CADDIE_SEED !== undefined ? `seed:${process.env.CADDIE_SEED}` : 'seed:retired')
   return raw.split(',').map((entry) => {
     const [kind, key] = entry.trim().split(':')
-    if (
-      (kind !== 'seed' && kind !== 'vault' && kind !== 'intake' && kind !== 'solve') ||
-      key === undefined ||
-      key === ''
-    ) {
-      throw new Error(
-        `bad CADDIE_TARGETS entry "${entry}" — expected seed:<key>, vault:<key>, intake:<key>, or solve:<key>`,
-      )
+    if ((kind !== 'seed' && kind !== 'vault' && kind !== 'intake' && kind !== 'solve') || key === undefined || key === '') {
+      throw new Error(`bad CADDIE_TARGETS entry "${entry}" — expected seed:<key>, vault:<key>, intake:new, or solve:<key>`)
+    }
+    if (kind === 'intake' && key !== 'new') {
+      const why = RETIRED_INTAKE[key]
+      throw new Error(why !== undefined ? `intake:${key} retired at Act 6 · RC21: ${why}` : `unknown intake walk "${key}" — intake:new is the one intake walk`)
     }
     return { kind, key }
   })
 }
 
 const TARGETS = parseTargets()
-// The run stamp is minted once in playwright.caddie.config.ts (the runner process; workers
-// inherit it) — 'adhoc' only if the spec somehow runs outside its own harness.
-const OUT_ROOT =
-  process.env.CADDIE_OUT ?? path.join('temp', 'caddie', process.env.CADDIE_RUN ?? 'adhoc')
+// The run stamp is minted once in playwright.caddie.config.ts (the runner process; workers inherit it) — 'adhoc' only
+// if the spec somehow runs outside its own harness.
+const OUT_ROOT = process.env.CADDIE_OUT ?? path.join('temp', 'caddie', process.env.CADDIE_RUN ?? 'adhoc')
 
-/** Text-critical / meaning-critical regions cropped at device scale when present. */
+/** Text-critical / meaning-critical regions cropped at device scale when present (`cvd`: also under every CVD arm). */
 const CROP_TARGETS = [
-  // Both band hosts: the spine's `.cs-band` and the DATE route's `.fod-band` (the aged date band's
-  // three-row annotation block had no plain crop until 2026-09-11 — only `.cs-band` was named).
-  { name: 'band', selector: '.cs-band, .fod-band' },
-  // The four-faces walk (2026-09-11): plain DEVICE-scale crops of the three charts whose every word
-  // lives in the HTML text layer OVER the svg (architecture §12). The per-chart CVD crops below
-  // select the bare svg under an emulation — a chart-TEXT read (the registers, a hidden interim
-  // tick, the crown's seat, the end labels) needs the HOST with its text layer and the rows it
-  // seats above / below the svg, un-emulated. `.cs-band` above already covers the band.
-  { name: 'ladder', selector: 'section.fod-ladder' },
-  { name: 'twofutures', selector: '.tf-reveal' },
-  { name: 'recviz', selector: '.rv-reveal' },
-  { name: 'disclaimer', selector: 'footer.disclaimer.disclaimer--in-frame' },
-  // `panel` BEFORE `echo`, and the methodology row LAST: `.ap-echo` and the row both live INSIDE the
-  // sheet's own scroller, so each crop scrolls it. `panel` crops whatever the scroller shows when
-  // the state is captured — the panel's top on the door state, the methodology frame on its
-  // `-methodology` state — and only then may the two inner crops move it.
-  { name: 'panel', selector: '[role="dialog"]' },
-  { name: 'echo', selector: '.ap-echo' },
-  // The pay check's W row (U8) — below every row whose edit can stale it, so only an element crop,
-  // which scrolls the sheet, paints it. On its ANSWERED face (the money picture) it is TALLER than the
-  // sheet's visible box, so it crops in segments (`captureTallSheetRegion`, `crop-w-row-<n>.png`), each
-  // also under every CVD arm: its chosen answer, Short / Left over and the fork are a read the color
-  // lane owes (b9-7 — no arm had screened the row, and the plain crop painted the landing over its top
-  // third). A face that fits the box (the stale and unknown faces carry no picture — `seed:datecoststale`'s
-  // doors walk opens the stale one) takes one `crop-w-row.png` and `cvd-<arm>-w-row.png` instead.
-  { name: 'w-row', selector: '[role="dialog"] [data-assumption-seat="working-year-cost"]', cvd: true },
-  // Build 2's left-over seat (increment 9) — its own row BELOW the W row, so after `w-row` by the same
-  // element-crops-scroll-the-sheet law, and before the methodology row, which stays last. Its radios (or, while
-  // W is stale, its waiting line) are a read the color lane owes. Presence-guarded like every crop here: the
-  // seat renders only where the question is asked, so it is absent on every spine seed's panel.
-  { name: 'left-over-seat', selector: '[role="dialog"] [data-assumption-seat="working-year-left-over"]', cvd: true },
-  // The LAST methodology row (2026-10-20 — the working-year tax row, the longest of them): far below
-  // the sheet's visible box, so only an element crop, which scrolls it into view, paints it.
-  {
-    name: 'method-last-row',
-    selector: '[role="dialog"] section[aria-labelledby="ap-methodology"] li.ap-row:last-child',
-  },
-  // U13 (increment 2): the staleness surfaces + the frames the batch asks his eye on.
-  { name: 'staleness-note', selector: '.cs-staleness-note' },
-  // The pay check's surfaces (U8): the result's standing line, the W question and the money picture.
-  { name: 'paycheck-note', selector: '.cs-paycheck-note' },
-  { name: 'w-question', selector: '.intake-shell .working-cost' },
-  { name: 'money-picture', selector: '.intake-shell .wy-ledger' },
-  // Build 2's left-over question on the walk's money-picture step (increment 9), below the whole picture.
-  // Scoped to the intake shell: the panel's seat mounts the same component (`.left-over`). The question
-  // crops under every CVD arm (the checked reply must survive without hue: never color alone); the one
-  // line in dollars below its radios also crops alone, the per-answer read.
-  { name: 'left-over-question', selector: '.intake-shell .left-over', cvd: true },
-  { name: 'left-over-line', selector: '.intake-shell .left-over .left-over__line' },
+  // The page's heading and the ring card's reading (Snapshot), Probability's rings, the Winner card (Tax Strategies).
+  { name: 'heading', selector: 'main.result h1' },
+  { name: 'ring', selector: '[data-ring-half="compared"]', cvd: true },
+  { name: 'winner', selector: '[data-winner]' },
+  // The StaleBanner (every "this answer may be out of date" line) and the pay check's standing line inside it.
+  { name: 'stale-banner', selector: '[data-stale-banner]' },
+  { name: 'paycheck-note', selector: '[data-stale-banner] .cs-paycheck-note' },
+  // The re-entry gate's notes and its door under the buttons (W stale: heading, scope, route).
   { name: 'reentry-notes', selector: '.reentry-notes' },
-  // W's door under the gate's buttons (council `wf_22858e04-f7a` (2)): its heading, scope and route, drawn only where
-  // W is stale and the tab can save — presence-guarded like every crop here.
   { name: 'reentry-door', selector: '.reentry-door' },
-  { name: 'backup-door', selector: '.result-backup-door' },
-  { name: 'hero-lead', selector: '.reveal__lead' },
-  // U16 (increment 6): the recommend-second COMMITTED text regions — the grade lockup (a RECOMMENDED
-  // beat), the HELD card, and the calm note (stale / buckets). Each renders on the committed frame ONLY,
-  // so it is absent (guarded) on landing / goalpicker / pending — no vacuous crop.
-  { name: 'rec-grade', selector: '.rec-grade' },
-  { name: 'rec-held', selector: '.rec-held' },
-  { name: 'rec-note', selector: '.rec-note' },
+  // An open drawer (the kit's dialog) and the W drawer's left-over seat (its radios are a read the colour lane owes).
+  { name: 'drawer', selector: '[role="dialog"]' },
+  { name: 'left-over-seat', selector: '[role="dialog"] [data-left-over-seat]', cvd: true },
+  // R13's caveat: the page's own in its frame, else App's trailing mount (exactly one is visible).
+  { name: 'caveat', selector: '[data-caveat]:visible' },
 ] as const
 
-/** The Chrome-native color-vision arms (CDP emulation — the same transform DevTools applies). */
+/** The Chrome-native colour-vision arms (CDP emulation — the same transform DevTools applies). */
 const CVD_ARMS = [
   ['deuteranopia', 'deuteranopia'],
   ['protanopia', 'protanopia'],
   ['grayscale', 'achromatopsia'],
 ] as const
 
-/**
- * Meaning-critical CHART regions, additionally cropped under EACH CVD arm (increment 4): the
- * viewport-scoped cvd-*.png captures above-fold only, so the odds ladder (below the fold on
- * the date route) and the lever sheets' TwoFutures charts never landed in a color-vision
- * frame at all — the CVD screener was structurally blind to exactly the surfaces where color
- * carries the most meaning. Element crops may SCROLL to their target, so these run in the
- * LAST capture stage, never before the pinned-scroll frames.
- */
-const CVD_CHART_TARGETS = [
-  { name: 'band', selector: 'svg.band-svg' },
-  { name: 'ladder', selector: 'svg.ladder-svg' },
-  { name: 'twofutures', selector: 'svg.tf' },
-  // U16 (increment 6): the RecommendationViz two-arm delta chart carries the with/without arms in color,
-  // so the CVD screener must see it. It is its OWN svg class (`svg.rv`), NOT `svg.tf`. The collapsed
-  // runner-up viz is a second in-DOM `svg.rv` skipped by the loop's visibility guard, so the visible
-  // primary lands as `cvd-<arm>-recviz` (or `-recviz-1` when the runner-up chart is also mounted).
-  { name: 'recviz', selector: 'svg.rv' },
-  // The survivor card (2026-10-14): its verdict glyph + word, the count and the muted context paragraph sit
-  // BELOW the phone's first frame, so no CVD arm ever screened them (the survivor-basis walk's CVD seat).
-  // Inside a CLOSED fold the section is hidden, so the visibility guard skips it there; the open-fold state
-  // crops it. The floor-relief card shares the class (TwoTierHeadline), so `budget` crops both (-1, -2).
-  { name: 'survivor', selector: 'section.survivor' },
-] as const
-
-/**
- * The ASSUMPTIONS panel's SELECTED-CONTROL faces that live BELOW the sheet's OWN internal scroll
- * (Card 11, 2026-08-01 — routed to the oracle, not a tone finding). `role="dialog"` sits ON the
- * scroll container itself (controlSheet.tsx:160-161 puts it on `.control-sheet`, and
- * sheetShell.css:34-35 gives that element `max-height:88dvh; overflow-y:auto` — RAISED to 94dvh
- * at the laptop tier, sheetShell.css:84+94, so 88dvh is the PHONE/base rule and never the REAL
- * arm's). BOTH the viewport-scoped `cvd-*.png` arms AND the `crop-panel` element crop therefore
- * stop at that container's visible box — the scrolled-out content is never painted into either.
- * MEASURED on the retired base at the old REAL (1536×791): the door-4 `fold.json` puts the dialog at
- * 24→767px, i.e. a 743px visible box (= 94dvh; docs/caddie/cold-read-log.md, Card 10c). The panel
- * carries 24 radio/textbox controls and only about THREE fit that box, so ~21 were captured in no
- * arm at all, normal or simulated. The unscreened set is exactly the segmented controls the
- * never-color-alone law exists for.
- *
- * A locator screenshot scrolls its target's ANCESTORS into view (the sheet's internal scroller
- * included), so each fieldset is cropped where it actually renders — the increment-5 shape
- * (captureCvdRegion), not a new mechanism.
- *
- * SCOPED to `[role="dialog"]` on purpose: `StateResidencePicker` / `MedicareExtrasFork`
- * (questions.tsx) are the SAME components the intake steps mount, so the bare `name$=` suffixes
- * increment 5 uses are not unique once a panel can open over an intake surface.
- *
- * The person forks are cropped as two SEPARATE fieldsets rather than one `medicare-extras` row:
- * the row (name + two persons + a revealed dollar field + the standing note) can exceed the
- * sheet's visible box on the phone arm, and a crop taller than its own scroll container comes
- * back clipped — which is the defect this table exists to close, not a way to close it.
- */
-const PANEL_CVD_REGIONS = [
-  {
-    name: 'state-picker',
-    selector: '[role="dialog"] fieldset.segmented:has(input[name$="-retirement-state"])',
-  },
-  {
-    name: 'medicare-extras-0',
-    selector: '[role="dialog"] fieldset.segmented:has(input[name$="-medicare-extras-0"])',
-  },
-  {
-    name: 'medicare-extras-1',
-    selector: '[role="dialog"] fieldset.segmented:has(input[name$="-medicare-extras-1"])',
-  },
-] as const
+/** Every chart on a state (each kit chart carries `data-chart="<id>"`), cropped under each CVD arm. */
+const CHART_SELECTOR = '[data-chart]'
 
 /** Regions whose boxes land in fold.json so readers know what sits above/below the fold. */
 const FOLD_TARGETS = [
+  'header.rc-root',
   'main.result',
-  '.confidence-reveal',
-  '.cs-band',
-  'footer.disclaimer.disclaimer--in-frame',
-  '.result-quiet-row',
-  '.ap-echo',
+  'main.result h1',
+  '[data-stale-banner]',
+  '[data-ring-half="compared"]',
+  '[data-calculating]',
+  '[data-winner]',
+  '[data-caveat]',
   '[role="dialog"]',
-  // U13 (increment 2): the gate's decision pair + the vault-return frame's stacking question
-  // (the filed a37b5f06 backup-door-above-disclaimer ruling — RESOLVED 2026-07-10 by the
-  // Medicare-pricing unit: the door is now DOM-ordered BELOW the disclaimer; these boxes keep the
-  // before/after on the record).
-  '.cs-staleness-note',
-  '.cs-paycheck-note',
-  // The intake frames (increment 7): where the strip, the question, the picture and Continue sit.
-  '.answer-strip',
-  '.step-heading',
-  '.working-cost',
-  '.wy-ledger',
-  // Build 2 (increment 9): the left-over question below the picture, and its panel seat below the W row.
-  '.intake-shell .left-over',
-  '[data-assumption-seat="working-year-left-over"]',
-  '.intake-nav',
   '.reentry-notes',
   '.reentry-actions',
   '.reentry-door',
-  '.result-backup-door',
-  '.result-save-slot',
-  // U16 (increment 6): where the recommend-second beat sits in the frame — the invited door, the working
-  // breathe, and the committed lockup / note (the second magic moment's fold positions for the readers).
-  '.result-recommend-invite',
-  '.recommendation-surface',
-  '.solve-pending',
-  '.rec-committed',
-  '.rec-held',
-  '.rec-note',
+  '[data-setup-nav]',
 ] as const
 
 /**
- * One state's bundle, re-captured whole ONCE when a late re-run replaces a captured element mid-capture
- * (walk 8, b9-1, 2026-11-16: under the 40-target load `intake:kept` REAL's `result-kept-stale-both` failed in the
- * CVD chart loop, "Element is not attached to the DOM": a commit landed after the settled frame and re-mounted
- * the chart; the same target passed alone). Retrying only the failed crop would mix two frames in one bundle (the
- * copy and aria from before the commit, the crop from after), so the files this call wrote are removed, the Result
- * is waited back to its settled final frame, and the whole state is captured again. The re-capture is never
- * silent: `recaptured.txt` in the state's folder and a console line say it happened, and a second detach fails
- * the walk (the config's retries-0 law: a flaky capture is seen, never retried into a different frame). What
- * commits after the settled frame is not measured here (the landmine names it).
+ * One state's bundle, re-captured whole ONCE when a late re-run replaces a captured element mid-capture (walk 8, b9-1,
+ * 2026-11-16: a commit landed after the settled frame and re-mounted a chart). Retrying only the failed crop would mix
+ * two frames in one bundle, so the files this call wrote are removed, the page is waited back to its settled final
+ * frame, and the whole state is captured again; `recaptured.txt` and a console line say it happened, and a second
+ * detach fails the walk (the config's retries-0 law: a flaky capture is seen, never retried into a different frame).
  */
 async function captureState(page: Page, dir: string): Promise<void> {
   const before = new Set(fs.existsSync(dir) ? fs.readdirSync(dir) : [])
-  // ONE color-vision session for the whole state, owned here, so a throw mid-arm can never leave the page under an
-  // arm: the re-capture's viewport.png would be taken through it.
+  // ONE colour-vision session for the whole state, owned here, so a throw mid-arm never leaves the page under an arm.
   const cdp = await page.context().newCDPSession(page)
   try {
     await captureStateOnce(page, dir, cdp)
@@ -442,7 +146,7 @@ async function captureState(page: Page, dir: string): Promise<void> {
     await cdp.send('Emulation.setEmulatedVisionDeficiency', { type: 'none' })
     for (const f of fs.readdirSync(dir)) if (!before.has(f)) fs.rmSync(path.join(dir, f), { recursive: true, force: true })
     if ((await page.locator('main.result').count()) > 0) {
-      await expect(settledResult(page), 'after a late re-run, the Result never settled again').toBeAttached({ timeout: FINAL_TIER_MS })
+      await expect(page.locator(SETTLED_RESULT), 'after a late re-run, the page never settled again').toBeAttached({ timeout: FINAL_TIER_MS })
     }
     console.log(`[caddie] re-captured ${dir} whole: a late re-run replaced an element mid-capture (${message.split('\n')[0]})`)
     await captureStateOnce(page, dir, cdp)
@@ -463,10 +167,6 @@ async function captureState(page: Page, dir: string): Promise<void> {
 
 async function captureStateOnce(page: Page, dir: string, cdp: CDPSession): Promise<void> {
   fs.mkdirSync(dir, { recursive: true })
-  // The spend lane (2026-09-26): the verdict clause's real figure lands a beat AFTER the final
-  // stamp. A reader reads the SETTLED sentence, so every capture waits the pending clause out — the
-  // pending frame's own law (it reserves the sized box) is the fit gate's job, not the walk's.
-  await expect(page.locator('.cs-magnitude[data-spend="pending"]')).toHaveCount(0, { timeout: FINAL_TIER_MS })
   await settleLayout(page)
 
   // 1) The non-visual channels first (no scroll side effects).
@@ -474,23 +174,9 @@ async function captureStateOnce(page: Page, dir: string, cdp: CDPSession): Promi
     const region = (sel: string) => {
       const el = document.querySelector(sel)
       if (el === null) return null
-      // A display:contents group (the quiet doors row) generates no box of its own — its rect reads
-      // all-zero, and a reader would place the doors at the top of the page (the 2026-09-11 walk's
-      // phone fold.json did exactly that). Report the union of its children's boxes instead — the
-      // same rule the fit gate applies to the doors row (e2e/vertical-fit.spec.ts).
-      const boxes =
-        getComputedStyle(el).display === 'contents'
-          ? Array.from(el.children)
-              .map((c) => c.getBoundingClientRect())
-              .filter((b) => b.width > 0 || b.height > 0)
-          : [el.getBoundingClientRect()]
-      if (boxes.length === 0) return null
-      return {
-        top: Math.round(Math.min(...boxes.map((b) => b.top))),
-        bottom: Math.round(Math.max(...boxes.map((b) => b.bottom))),
-        left: Math.round(Math.min(...boxes.map((b) => b.left))),
-        right: Math.round(Math.max(...boxes.map((b) => b.right))),
-      }
+      const b = el.getBoundingClientRect()
+      if (b.width === 0 && b.height === 0) return null
+      return { top: Math.round(b.top), bottom: Math.round(b.bottom), left: Math.round(b.left), right: Math.round(b.right) }
     }
     return {
       viewport: { width: window.innerWidth, height: window.innerHeight, dpr: window.devicePixelRatio },
@@ -502,10 +188,9 @@ async function captureStateOnce(page: Page, dir: string, cdp: CDPSession): Promi
 
   fs.writeFileSync(path.join(dir, 'aria.yaml'), await page.locator('body').ariaSnapshot())
   fs.writeFileSync(path.join(dir, 'copy.txt'), await page.evaluate(() => document.body.innerText))
-  // The SR-ONLY channel annotation (increment 3): innerText does NOT exclude clipped nodes,
-  // so copy.txt contains every .sr-only string mixed into the visible flow — the "doubled
-  // wordmark" false-flag was exactly this. Readers diff apparent duplications against this
-  // list before flagging them as rendered.
+  // The SR-ONLY channel annotation: innerText does NOT exclude clipped nodes, so copy.txt contains every .sr-only string
+  // mixed into the visible flow (the "doubled wordmark" false-flag was exactly this). Readers diff an apparent
+  // duplication against this list before flagging it as rendered.
   const srOnly = await page.evaluate(() =>
     Array.from(document.querySelectorAll('.sr-only'))
       .map((el) => (el as HTMLElement).innerText.trim())
@@ -522,11 +207,9 @@ async function captureStateOnce(page: Page, dir: string, cdp: CDPSession): Promi
     ].join('\n'),
   )
   const dialog = page.locator('[role="dialog"]')
-  if (await dialog.count()) {
-    fs.writeFileSync(path.join(dir, 'dialog.txt'), await dialog.first().innerText())
-  }
+  if (await dialog.count()) fs.writeFileSync(path.join(dir, 'dialog.txt'), await dialog.first().innerText())
 
-  // 2) The above-fold frame + its color-vision arms, all at the SAME pinned scroll origin.
+  // 2) The above-fold frame + its colour-vision arms, all at the SAME pinned scroll origin.
   await page.screenshot({ path: path.join(dir, 'viewport.png'), scale: 'css' })
   for (const [name, type] of CVD_ARMS) {
     await cdp.send('Emulation.setEmulatedVisionDeficiency', { type })
@@ -534,13 +217,9 @@ async function captureStateOnce(page: Page, dir: string, cdp: CDPSession): Promi
   }
   await cdp.send('Emulation.setEmulatedVisionDeficiency', { type: 'none' })
 
-  // 3) Full page, then element crops LAST — locator screenshots may scroll to their target.
+  // 3) Full page (and the full scroll under each arm, a page only: on a drawer state the full scroll is the page behind
+  //    the fixed drawer), then element crops LAST — locator screenshots may scroll to their target.
   await page.screenshot({ path: path.join(dir, 'fullpage.png'), fullPage: true, scale: 'css' })
-  // The full scroll under each arm (U11 walk 7's R8 (b)): the arms above cover one screen, so on the phone the gate's
-  // buttons and its door, the Result's verdict paragraph past the fold (its last label, cost list and door), the backup
-  // door and "Saved to this device" sat in no color-vision frame. Before the crops, which may scroll. A PAGE only: on a
-  // sheet state the full scroll is the page behind the fixed sheet, the sheet cut at one screen (the round review's
-  // L2 P3-2), and the sheet's own regions reach the arms through the `cvd` crops.
   if ((await dialog.count()) === 0) {
     for (const [name, type] of CVD_ARMS) {
       await cdp.send('Emulation.setEmulatedVisionDeficiency', { type })
@@ -549,206 +228,38 @@ async function captureStateOnce(page: Page, dir: string, cdp: CDPSession): Promi
     await cdp.send('Emulation.setEmulatedVisionDeficiency', { type: 'none' })
   }
   for (const crop of CROP_TARGETS) {
-    const { name, selector } = crop
-    const cvd = 'cvd' in crop && crop.cvd
-    const target = page.locator(selector).first()
-    // A crop needs a real BOX, not just visibility: display:contents groups (e.g.
-    // `.reveal__lead` in single column / phone) have visible children but generate no box —
-    // isVisible() passes while locator.screenshot rejects ("not visible or not an
-    // HTMLElement"). The box check subsumes "present when it matters": the same element
-    // crops fine at two-pane, where it becomes a real grid item.
-    if (
-      (await target.count()) > 0 &&
-      (await target.isVisible()) &&
-      (await target.boundingBox()) !== null
-    ) {
-      // A region taller than its sheet's visible box crops in segments; everything else (every
-      // page-level region, and a sheet row that fits) keeps the plain element crop.
-      if (!(await captureTallSheetRegion(page, target, dir, name, cvd ? cdp : null))) {
-        await target.screenshot({ path: path.join(dir, `crop-${name}.png`), scale: 'device' })
-        // `cvd` rides BOTH branches (the whole-file review, H-D9): a W row face that fits its box (the
-        // stale and unknown faces carry no money picture) reached only this branch, and the flag was
-        // read only by the segmented one — so such a face landed in no color-vision arm at all. The
-        // element crop under each arm, `cvd-<arm>-<name>.png` (the `captureCvdRegion` shape).
-        if (cvd) {
-          for (const [armName, type] of CVD_ARMS) {
-            await cdp.send('Emulation.setEmulatedVisionDeficiency', { type })
-            await target.screenshot({ path: path.join(dir, `cvd-${armName}-${name}.png`), scale: 'device' })
-          }
-          await cdp.send('Emulation.setEmulatedVisionDeficiency', { type: 'none' })
-        }
+    const target = page.locator(crop.selector).first()
+    // A crop needs a real BOX, not just presence (a display:contents group passes isVisible but cannot be shot).
+    if ((await target.count()) === 0 || !(await target.isVisible()) || (await target.boundingBox()) === null) continue
+    await target.screenshot({ path: path.join(dir, `crop-${crop.name}.png`), scale: 'device' })
+    if ('cvd' in crop && crop.cvd) {
+      for (const [armName, type] of CVD_ARMS) {
+        await cdp.send('Emulation.setEmulatedVisionDeficiency', { type })
+        await target.screenshot({ path: path.join(dir, `cvd-${armName}-${crop.name}.png`), scale: 'device' })
       }
+      await cdp.send('Emulation.setEmulatedVisionDeficiency', { type: 'none' })
     }
   }
 
-  // 4) The CVD CHART crops (increment 4) — every chart on the state, under each arm, at
-  // device scale. Runs after the pinned-scroll frames by the same scroll-side-effect law as
-  // stage 3; absence is fine (an intake step has no chart), presence captures every match
-  // (a sheet's TwoFutures beside the landing's band).
+  // 4) Every visible chart on the state under each arm, at device scale, named by its `data-chart` id.
+  const charts = page.locator(CHART_SELECTOR)
+  const ids: string[] = []
+  for (let i = 0; i < (await charts.count()); i++) ids.push((await charts.nth(i).getAttribute('data-chart')) ?? `chart-${i + 1}`)
   for (const [armName, type] of CVD_ARMS) {
     let emulating = false
-    for (const { name, selector } of CVD_CHART_TARGETS) {
-      const charts = page.locator(selector)
-      const count = await charts.count()
-      for (let i = 0; i < count; i++) {
-        const chart = charts.nth(i)
-        if (!(await chart.isVisible()) || (await chart.boundingBox()) === null) continue
-        if (!emulating) {
-          await cdp.send('Emulation.setEmulatedVisionDeficiency', { type })
-          emulating = true
-        }
-        const suffix = count > 1 ? `-${i + 1}` : ''
-        await chart.screenshot({
-          path: path.join(dir, `cvd-${armName}-${name}${suffix}.png`),
-          scale: 'device',
-        })
+    for (let i = 0; i < ids.length; i++) {
+      const chart = charts.nth(i)
+      if (!(await chart.isVisible()) || (await chart.boundingBox()) === null) continue
+      if (!emulating) {
+        await cdp.send('Emulation.setEmulatedVisionDeficiency', { type })
+        emulating = true
       }
+      const twin = ids.filter((id) => id === ids[i]).length > 1 ? `-${i + 1}` : ''
+      await chart.screenshot({ path: path.join(dir, `cvd-${armName}-${slugify(ids[i]!)}${twin}.png`), scale: 'device' })
     }
     if (emulating) await cdp.send('Emulation.setEmulatedVisionDeficiency', { type: 'none' })
   }
   await page.evaluate(() => window.scrollTo(0, 0))
-}
-
-/**
- * Capture ONE static, meaning-critical region as a device-scale crop PLUS a device-scale crop
- * under each CVD arm (increment 5 — the state-tax picker's SELECTED-segment face). captureState's
- * stage-4 CVD crops are CHART-shaped (svg selectors) and re-run on every state; the state picker
- * is a static fieldset that lives only on the intake state step, so it gets its own parallel path
- * here rather than bloating the per-state chart loop with a selector that matches nowhere else.
- * The read law this proves: the ACTIVE segment must be distinguishable in every arm WITHOUT hue
- * (weight + fill + inset ring — the old walk's `.segment-active`, gone with intake.css at Act 6 · RC19; RC21 re-points
- * this harness's targets to the stepper's picker); the CVD screener reads exactly these
- * crops. A region that never renders FAILS the walk red (insight-029 vacuity discipline).
- */
-async function captureCvdRegion(
-  page: Page,
-  dir: string,
-  selector: string,
-  baseName: string,
-): Promise<void> {
-  fs.mkdirSync(dir, { recursive: true })
-  const region = page.locator(selector).first()
-  await expect(
-    region,
-    `captureCvdRegion "${baseName}" (${selector}) never became visible — a vacuous CVD crop`,
-  ).toBeVisible()
-  expect(
-    await region.boundingBox(),
-    `captureCvdRegion "${baseName}" (${selector}) has no box`,
-  ).not.toBeNull()
-  await region.screenshot({ path: path.join(dir, `crop-${baseName}.png`), scale: 'device' })
-  const cdp = await page.context().newCDPSession(page)
-  for (const [armName, type] of CVD_ARMS) {
-    await cdp.send('Emulation.setEmulatedVisionDeficiency', { type })
-    await region.screenshot({
-      path: path.join(dir, `cvd-${armName}-${baseName}.png`),
-      scale: 'device',
-    })
-  }
-  await cdp.send('Emulation.setEmulatedVisionDeficiency', { type: 'none' })
-  await cdp.detach()
-}
-
-/**
- * Crop a region that lives INSIDE a scrolling sheet and is TALLER than the sheet's visible box, in
- * segments (2026-10-30, b9-7). A locator screenshot of such a region scrolls what it can and then
- * paints the page BEHIND the fixed sheet for the part outside the scroller's box: `crop-w-row.png`
- * showed the landing's hero and band over its top third, then the backdrop, and none of the
- * confirmed answer, Pay or the tax lines — four panel seats read them from copy.txt alone, and the
- * CVD seat could not screen the row at all. PANEL_CVD_REGIONS dodged the same limit by cropping
- * smaller pieces; the money picture alone is taller than the laptop's sheet (94dvh: 743px on the Dell's 791 window, 687px at REAL's 731), so that cannot
- * close it here.
- *
- * Each segment sets the sheet's OWN scroller (the nearest scrolling ancestor — `role="dialog"` IS
- * that element) and clips the page frame to the region ∩ the scroller's visible box, at device
- * scale: `crop-<name>-1.png`, `-2.png`, … top to bottom, overlapping by `SEGMENT_OVERLAP_PX` so a
- * line on a cut reads whole in one of them. With a session (`cdp`: `captureState`'s own, passed
- * where the crop's `cvd` flag is on), each segment is also captured under every CVD arm
- * (`cvd-<arm>-<name>-<n>.png`). The page is pinned to scroll 0 first, so a clip's viewport
- * coordinates are its page coordinates (the sheet is fixed). The scroller's own scrollTop is
- * restored afterwards, on a throw too: later crops expect the frame they were written against.
- *
- * Returns false, capturing nothing, when the region has no scrolling ancestor or fits its box —
- * the caller keeps the plain element crop (and, with `cvd`, takes that crop under every arm too).
- */
-const SEGMENT_OVERLAP_PX = 24
-
-async function captureTallSheetRegion(
-  page: Page,
-  target: ReturnType<Page['locator']>,
-  dir: string,
-  name: string,
-  cdp: CDPSession | null,
-): Promise<boolean> {
-  const fits = await target.evaluate((el) => {
-    let sc = el.parentElement
-    while (sc !== null) {
-      const oy = getComputedStyle(sc).overflowY
-      if ((oy === 'auto' || oy === 'scroll') && sc.scrollHeight > sc.clientHeight) break
-      sc = sc.parentElement
-    }
-    if (sc === null || el.getBoundingClientRect().height <= sc.clientHeight) return true
-    sc.setAttribute('data-caddie-scroller', '')
-    return false
-  })
-  if (fits) return false
-
-  await page.evaluate(() => window.scrollTo(0, 0))
-  const scroller = page.locator('[data-caddie-scroller]')
-  const startScrollTop = await scroller.evaluate((sc) => sc.scrollTop)
-  // The region's top in the scroller's CONTENT coordinates, and the box's visible height.
-  const { regionTop, regionHeight, boxHeight } = await target.evaluate((el) => {
-    const sc = el.closest('[data-caddie-scroller]')!
-    const r = el.getBoundingClientRect()
-    const s = sc.getBoundingClientRect()
-    return {
-      regionTop: r.top - (s.top + sc.clientTop) + sc.scrollTop,
-      regionHeight: r.height,
-      boxHeight: sc.clientHeight,
-    }
-  })
-  const step = boxHeight - SEGMENT_OVERLAP_PX
-  try {
-    for (let n = 1, offset = 0; offset < regionHeight; n++, offset += step) {
-      await scroller.evaluate((sc, top) => {
-        sc.scrollTop = top
-      }, regionTop + offset)
-      await settleLayout(page)
-      const clip = await target.evaluate((el) => {
-        const sc = el.closest('[data-caddie-scroller]')!
-        const r = el.getBoundingClientRect()
-        const s = sc.getBoundingClientRect()
-        const visTop = s.top + sc.clientTop
-        const top = Math.max(r.top, visTop)
-        const bottom = Math.min(r.bottom, visTop + sc.clientHeight)
-        const left = Math.max(r.left, s.left)
-        const right = Math.min(r.right, s.right)
-        return { x: left, y: top, width: right - left, height: bottom - top }
-      })
-      if (clip.height <= 0 || clip.width <= 0) break
-      await page.screenshot({ path: path.join(dir, `crop-${name}-${n}.png`), clip, scale: 'device' })
-      if (cdp !== null) {
-        for (const [armName, type] of CVD_ARMS) {
-          await cdp.send('Emulation.setEmulatedVisionDeficiency', { type })
-          await page.screenshot({ path: path.join(dir, `cvd-${armName}-${name}-${n}.png`), clip, scale: 'device' })
-        }
-        await cdp.send('Emulation.setEmulatedVisionDeficiency', { type: 'none' })
-      }
-      // A scroller clamped at its end cannot bring a later offset up; the region's bottom is in this frame.
-      const atEnd = await scroller.evaluate((sc) => sc.scrollTop + sc.clientHeight >= sc.scrollHeight - 1)
-      if (atEnd) break
-    }
-  } finally {
-    // Restored even on a throw (a late re-run's detach, `captureState`), so the re-capture's frames are the ones the
-    // walk set up. A querySelector, never the locator: a locator waits out its timeout on a scroller the re-run replaced.
-    await page.evaluate((top) => {
-      const sc = document.querySelector('[data-caddie-scroller]')
-      if (sc === null) return
-      sc.scrollTop = top
-      sc.removeAttribute('data-caddie-scroller')
-    }, startScrollTop)
-  }
-  return true
 }
 
 const slugify = (name: string): string =>
@@ -758,1380 +269,140 @@ const slugify = (name: string): string =>
     .replace(/^-+|-+$/g, '')
     .slice(0, 40)
 
-/**
- * Type a value into one of the family's masked/integer fields the way a REAL user does:
- * select-all + typed digits + blur, value asserted back (the fill() concatenation trap the
- * first live read's False-PASS Hunter caught — a mis-commit fails RED here instead of
- * bundling the wrong scenario).
- */
-async function typeFieldValue(
-  field: ReturnType<Page['locator']>,
-  digits: string,
-  expected: string,
-): Promise<void> {
-  await field.click()
-  await field.press('ControlOrMeta+a')
-  await field.pressSequentially(digits)
-  await field.blur()
-  await expect(field, 'the preview drive committed a different value than intended').toHaveValue(expected)
-}
+/** How long a page's own runs may take to land after its address is set (a working plan's Stress Test and Social
+ *  Security runs are the slowest, measured by the look instrument's waits). */
+const PAGE_RUNS_MS = 240_000
 
 /**
- * The LEVER-PREVIEW DRIVE (increment 3): a sheet that carries a what-if lever gets ONE
- * preview driven so the TwoFutures chart states bundle — the rule-36 one-dialect check was
- * honestly un-verifiable while the doors captured only their pre-commit input state.
- * PREVIEW-ONLY by construction: radios/fields change local sheet state and the preview seam;
- * nothing is Applied, so the scenario every later state captures is untouched. Returns which
- * terminal state landed, so the caller can NAME the capture (the caller then captures the
- * `-preview` state). A driven lever that reaches NEITHER terminal state FAILS red — never a
- * silent no-chart bundle (insight 029).
- *
- * ⚑ THE `no-anchor` ARM (added 2026-07-27, U17 §S6's walk — and it is why `seed:datemixed` had
- * never been cold-read by ANY oracle). `ControlPreviewReadout` is a FIVE-arm union, and one of
- * those arms renders no chart AT ALL by design: a household with no crowned FULL-LIFESTYLE date
- * lands `no-anchor` and speaks `copy.leverPreviewNoDate` instead. `datemixed` is the only face in
- * the repo that reaches it — lifestyle `no-date-in-window` by construction — so demanding a chart
- * here failed the walk red at BOTH viewports, on correct product behaviour.
- *
- * (The sentence is NOT quoted here any more. It was, and §S6's cold read then found the quoted
- * wording itself false on this face — it denied a date the same screen plots, under a term the
- * product never uses — so the string moved and a quoted copy would now be a third stale echo.
- * The handle below reads `copy.leverPreviewNoDate` directly; insight 086.)
- *
- * That is a self-reinforcing blind spot worth naming: the face was never walked because the walk
- * crashed on it, and the crash went unnoticed because the face was never walked. The chartless
- * arm is not a degraded capture — it is a REAL cold-read surface (a door that opens and calmly
- * explains why it has nothing to show), so it gets its own capture name rather than being folded
- * into `-preview` where a reader would mistake it for a screenshot that failed.
+ * Show a shell page by its address and wait it out: the page's `main.result`, the settled answer, no part of the page
+ * still busy (`aria-busy`), and every chart's series drawn. A page that never settles fails the walk red.
  */
-type PreviewDrive = 'chart' | 'no-anchor' | false
-
-async function driveLeverPreview(
-  page: Page,
-  dialog: ReturnType<Page['getByRole']>,
-  name: string,
-): Promise<PreviewDrive> {
-  /** The race every driven lever runs: the chart, or the structurally-chartless no-anchor line.
-   *  Waiting on their `.or()` keeps the insight-029 teeth — reaching NEITHER still fails red —
-   *  while refusing to call correct behaviour a failure. */
-  const settleToTerminal = async (why: string): Promise<PreviewDrive> => {
-    const chart = dialog.locator('svg.tf')
-    const noAnchor = dialog.getByText(copy.leverPreviewNoDate, { exact: false })
-    await expect(chart.or(noAnchor), why).toBeVisible({ timeout: 120_000 })
-    return (await chart.isVisible()) ? 'chart' : 'no-anchor'
-  }
-
-  // The policy/regime radio grammar (SequencingControl + HealthcareSheet): pick the first
-  // NON-current option — picking the applied one deliberately withdraws the comparison.
-  const uncheckedRadio = dialog.locator('.control-policies input[type="radio"]:not(:checked)')
-  if ((await uncheckedRadio.count()) > 0) {
-    await uncheckedRadio.first().check()
-    return settleToTerminal(
-      `door "${name}": the driven preview reached neither its TwoFutures chart nor the no-anchor line`,
+async function showPage(page: Page, hash: string, screen: string): Promise<void> {
+  await page.evaluate((h) => {
+    window.location.hash = h
+  }, hash)
+  await expect(page.locator(`main.result[data-shell-screen="${screen}"]`), `${screen}: the page never drew`).toBeAttached({ timeout: 30_000 })
+  await expect(page.locator(SETTLED_RESULT), `${screen}: the answer never settled`).toBeAttached({ timeout: FINAL_TIER_MS })
+  await expect(page.locator('main.result [aria-busy="true"]'), `${screen}: a part of the page stayed busy`).toHaveCount(0, { timeout: PAGE_RUNS_MS })
+  await expect
+    .poll(
+      () =>
+        page.evaluate(() =>
+          [...document.querySelectorAll('main.result [data-chart]')]
+            .filter((c) => c.getClientRects().length > 0)
+            .every((c) => c.querySelector('.highcharts-series-group') !== null),
+        ),
+      { message: `${screen}: a chart never drew its series`, timeout: PAGE_RUNS_MS },
     )
-  }
-  // The Roth plan grammar (RothLever): amount / start / years — a COMPLETE plan fires the
-  // preview. Values are small-but-real (a $20k, 4-year plan starting next year). U17 §S1: the
-  // start field speaks the CALENDAR YEAR now — a bare offset ('1' = year 1 AD) is a past start
-  // the write side REFUSES aloud, so the drive types the year after the page's pinned day (valid on
-  // every vault, aged or fresh, and never rots across a New Year: the gate's calendar, reviewSurface.ts).
-  const nextYear = String(pinnedYear(page) + 1)
-  const plan = dialog.locator('.control-plan input')
-  if ((await plan.count()) >= 3) {
-    await typeFieldValue(plan.nth(0), '20000', '20,000')
-    await typeFieldValue(plan.nth(1), nextYear, nextYear)
-    await typeFieldValue(plan.nth(2), '4', '4')
-    // Same race: the Roth lever shares `ControlPreviewReadout`, so it reaches `no-anchor` on the
-    // same households the sequencing sheet does.
-    return settleToTerminal(
-      `door "${name}": the driven Roth preview reached neither its TwoFutures chart nor the no-anchor line`,
-    )
-  }
-  return false // no lever on this sheet (the budget builder, the assumptions panel)
+    .toBe(true)
+  await page.waitForTimeout(600) // the charts' ~250 ms morph and the drawers' settle
 }
 
-/**
- * The DOOR WALK (increment 2 — the tape's coverage lesson): open EVERY quiet-row door on the
- * settled verdict, capture the sheet, close, next. Briggsy's real read free-walks the doors;
- * a bundle that stops at the landing pre-digests only half his walk. Close buttons are the
- * family's own: 'Close' (lever sheets + the assumptions panel) or 'Cancel' (the budget sheet).
- * Increment 3: a lever sheet additionally bundles ONE driven preview (`-preview` state).
- */
-async function walkDoors(page: Page, outDir: string, witness?: LeftOverWitness): Promise<void> {
-  // The workbench room's door (Act 5, U6) opens a page, not a sheet: it has no dialog to capture and
-  // would leave the answer, so the sheet walk skips it.
-  const doors = page.locator('.result-quiet-row button:not([data-door="workbench"])')
-  const count = await doors.count()
-  expect(count, 'no quiet-row doors on a resolved verdict — a vacuous door walk').toBeGreaterThan(0)
-  // Card 11's non-vacuity receipt — see the assertion after the loop.
-  let panelScreened = false
-  for (let i = 0; i < count; i++) {
-    const door = doors.nth(i)
-    const name = (await door.innerText()).trim()
-    // The assumptions door by its OWN stable stamp (Result.tsx:484), never by index: the
-    // `.result-recommend-invite` door (Result.tsx:444) is conditional, so door-4 is door-4 only
-    // on the plants where the solve is un-invitable. Read BEFORE the click — the row survives the
-    // open, but nothing here should depend on that.
-    const isAssumptions = (await door.getAttribute('data-door')) === 'assumptions'
-    // ⚑ THE RECOMMEND-INVITE DOOR IS NOT A LEVER SHEET, and treating it as one broke this walk on
-    // its own DEFAULT target. `driveLeverPreview` classifies a sheet STRUCTURALLY — "does it carry
-    // `.control-policies` radios" — and `GoalPicker.tsx:106` renders its goal radiogroup with that
-    // exact class, the same one `SequencingControl`/`HealthcareSheet` use. So on every target where
-    // `solveInvitable` holds, the walk opened this door, CHECKED A GOAL RADIO as a side effect, then
-    // waited 120s for a TwoFutures `svg.tf` that the GoalPicker never renders — and this door is
-    // FIRST in the doors DOM order (Result.tsx:439-452), so the walk died before reaching any other
-    // door, including the assumptions panel the Card 11 crops below live on. Measured RED at both
-    // viewports on `seed:retired`, which is the walk's DEFAULT target.
-    // This is the `datemixed` shape at a new site, and the header comment above already names it:
-    // demanding a chart from a state that renders none BY DESIGN. The solve arc is deliberately
-    // owned by the `solve:<seed>` targets (walkSolve drives the goal, the pending breathe and the
-    // committed frame at full precision); driving it from inside a door walk would dispatch a
-    // multi-minute solve and mutate the scenario every later state captures. The sheet is still
-    // CAPTURED — captureState runs before this — it simply is not DRIVEN.
-    const isRecommendInvite = await door.evaluate((el) =>
-      el.classList.contains('result-recommend-invite'),
-    )
-    await door.click()
-    const dialog = page.getByRole('dialog')
-    await expect(dialog, `door "${name}" opened no dialog`).toBeVisible()
-    // Increment 9: a left-over witness's seat face, asserted BEFORE the capture — the `left-over-seat`
-    // crop is presence-guarded, so a seat that never rendered would otherwise bundle silently without it.
-    if (isAssumptions && witness !== undefined) await assertLeftOverSeat(dialog, witness)
-    const stateDir = path.join(outDir, `door-${i + 1}-${slugify(name)}`)
-    await captureState(page, stateDir)
-    const drive = isRecommendInvite ? false : await driveLeverPreview(page, dialog, name)
-    if (drive !== false) {
-      // The chartless `no-anchor` arm gets its OWN suffix: a `-preview` capture with no chart in
-      // it reads to a card's reader as a screenshot that failed, when it is in fact the surface
-      // under review — a door that opens and calmly explains why it has nothing to compare.
-      const suffix = drive === 'chart' ? 'preview' : 'preview-no-anchor'
-      await captureState(page, path.join(outDir, `door-${i + 1}-${slugify(name)}-${suffix}`))
-    }
-    // Card 11 — the panel's below-the-internal-scroll CVD crops. LAST, by the same
-    // scroll-side-effect law as captureState's stages 3-4: a locator screenshot scrolls the
-    // sheet's own scroller, so running this before either captureState would bundle a
-    // mid-scroll "above-fold" frame. Gated on the assumptions door because captureCvdRegion
-    // hard-fails on an absent region (insight-029) — unguarded it would red doors 1-3 on
-    // correct behaviour, the `no-anchor` mistake this file already paid for once.
-    if (isAssumptions) {
-      for (const { name: regionName, selector } of PANEL_CVD_REGIONS) {
-        await captureCvdRegion(page, stateDir, selector, regionName)
-      }
-      panelScreened = true
-      // The METHODOLOGY frame (2026-10-20): the frame a reader sees on reaching the end of the
-      // methodology rows — the last row's bottom on the visible box's bottom edge, the rows before it
-      // filling the frame above. LAST, by the same scroll-side-effect law as the crops above;
-      // `settleLayout` pins only the WINDOW scroll, so the sheet's own scroll survives into the
-      // capture. Hard-asserted: the panel always renders these rows, so an empty list is a broken
-      // panel, never a state to skip (insight 029).
-      const methodRows = dialog.locator('section[aria-labelledby="ap-methodology"] li.ap-row')
-      await expect(methodRows, 'the assumptions panel rendered no methodology rows').not.toHaveCount(0)
-      await methodRows.last().evaluate((el) => el.scrollIntoView({ block: 'end' }))
-      await captureState(page, `${stateDir}-methodology`)
-    }
-    // The family-wide close, and it applies to EVERY door again as of 2026-08-02. It briefly did
-    // not: the GoalPicker rendered no visible dismiss affordance at all, so this click could never
-    // match there and hung to the timeout. That was worth a product fix rather than a harness
-    // special-case — the sheet now carries the family's quiet Close — so the assertion keeps its
-    // teeth on every door instead of exempting the one door that failed it.
-    await dialog.getByRole('button', { name: /^(Close|Cancel)$/ }).first().click()
-    await expect(dialog).toBeHidden()
-  }
-  // The receipt tests the SAME predicate the crops do, not a weaker one: it fails iff the loop
-  // never entered the branch that writes them. `hatchReachable` (Result.tsx) is satisfied
-  // by `focusKey`, and every walkDoors caller has already awaited
-  // `SETTLED_RESULT` — so a missing assumptions door means the door row
-  // changed shape under the harness, which is exactly when a silent skip would be worst.
-  expect(
-    panelScreened,
-    'the door walk never reached the assumptions door — the panel CVD crops silently wrote nothing',
-  ).toBe(true)
+/** The standing line's door, where the home's StaleBanner carries one: opens its drawer, captures it, closes it. */
+async function walkStandingDoor(page: Page, outDir: string): Promise<void> {
+  const door = page.locator('[data-stale-banner] .cs-paycheck-note button').first()
+  if ((await door.count()) === 0 || !(await door.isVisible())) return
+  const label = (await door.innerText()).trim()
+  await door.click()
+  const drawer = page.getByRole('dialog')
+  await expect(drawer, `the standing line's door ("${label}") opened no drawer`).toBeVisible({ timeout: 30_000 })
+  await page.waitForTimeout(600)
+  await captureState(page, path.join(outDir, `door-${slugify(label)}`))
+  await page.keyboard.press('Escape')
+  await expect(page.getByRole('dialog')).toHaveCount(0, { timeout: 10_000 })
 }
 
-/**
- * The U13 decrypt-on-return arc: `?vault=<key>` plants the vault + lands on the unlock screen
- * with the dev passphrase PRE-FILLED (App) → the re-entry gate (the read-back + every fired
- * staleness clock, BEFORE any verdict — the reveal is gated) → affirm → the echoed verdict.
- * `?vault=stale` is the aged plant: the elapsed line + the tax and Medicare notes, the
- * engine-pricing ledger's method line (when a reprice postdates the plant) and the
- * Medicare-spending re-confirm at the gate (the blend re-date is silent for a manual-blend
- * household — the line list is pinned in `devSeeds.test.ts`), the one-line standing echo + the
- * un-noted backup door on the verdict frame.
- */
-async function walkVaultReturn(
-  page: Page,
-  key: string,
-  outDir: string,
-  opts: { readonly doors: boolean; readonly witness?: LeftOverWitness },
-): Promise<void> {
-  await pinPlantDay(page, key)
-  await page.goto(`/?vault=${key}`)
-  const open = page.getByRole('button', { name: 'Open my plan' })
-  await expect(open, 'the vault plant did not land on the unlock screen').toBeVisible({
-    timeout: 30_000,
-  })
-  await captureState(page, path.join(outDir, 'unlock'))
-  await open.click()
-
-  await expect(
-    page.getByRole('heading', { name: 'Are these still your numbers?' }),
-    'the re-entry gate did not mount after unlock',
-  ).toBeVisible({ timeout: 30_000 })
-  // Increment 9: a left-over witness's gate line (the `reentry-notes` crop is presence-guarded).
-  if (opts.witness !== undefined) await assertGateLine(page, `vault:${key}`, opts.witness)
-  await captureState(page, path.join(outDir, 'gate'))
-
-  await page.getByRole('button', { name: /still about right/i }).click()
-  await expect(page.locator(SETTLED_RESULT)).toBeAttached({
-    timeout: 120_000,
-  })
-  if (opts.witness !== undefined) await assertStandingNote(page, `vault:${key}`, opts.witness)
-  await captureState(page, path.join(outDir, 'verdict'))
-  if (opts.doors) await walkDoors(page, outDir)
-}
-
-/** The stale gate's OTHER exit: "Something's changed — update them" → the walk-through's
- *  first frame (accounts are edited where they were entered). One capture — the batch judges
- *  the button pair's wording and where the update door drops you. */
-async function walkUpdateRoute(page: Page, key: string, outDir: string): Promise<void> {
-  await pinPlantDay(page, key)
-  await page.goto(`/?vault=${key}`)
-  const open = page.getByRole('button', { name: 'Open my plan' })
-  await expect(open).toBeVisible({ timeout: 30_000 })
-  await open.click()
-  const gateHeading = page.getByRole('heading', { name: 'Are these still your numbers?' })
-  await expect(gateHeading).toBeVisible({ timeout: 30_000 })
-  await page.getByRole('button', { name: /changed — update them/ }).click()
-  await expect(gateHeading, 'the update route did not leave the gate').toBeHidden({
-    timeout: 30_000,
-  })
-  await captureState(page, path.join(outDir, 'update-entry'))
-}
-
-/** A seed target: the settled final landing + the door walk. `seed:retired` additionally
- *  rides the proven U12 worsening arc (it is that seed's own cold-read subject). */
+/** `seed:<key>`: the home, every shell page in the route table's order, then the standing line's drawer. */
 async function walkSeed(page: Page, key: string, outDir: string): Promise<void> {
   await gotoSeedFinal(page, key)
-  const witness = LEFT_OVER_WITNESSES[key]
-  if (witness !== undefined) await assertStandingNote(page, `seed:${key}`, witness)
+  await expect(page.locator('main.result[data-shell-screen="snapshot"]'), `?seed=${key}: the answer never landed on the home`).toBeAttached()
+  await showPage(page, '#/dashboard/snapshot', 'snapshot')
   await captureState(page, path.join(outDir, 'landing'))
-  // A FOLDED survivor card (`budget` — the floor relief holds the inline slot) hides its count, its
-  // spending-basis line and its step-down behind the closed fold, so the landing bundle never shows
-  // them (the 2026-10-14 survivor-basis walk asked a question only the open fold can answer). Open
-  // it, capture, and close it again, so every door below captures the household's default frame.
-  const fold = page.locator('.survivor-fold__summary')
-  if ((await fold.count()) > 0) {
-    await fold.click()
-    await expect(page.locator('.survivor-fold')).toHaveAttribute('open', '')
-    // Park the pointer: left on the summary, the fine-pointer hover rule lifts the eyebrow + chevron to full
-    // ink, and the bundle would show a hovered frame no resting reader sees (the walk's CVD seat measured it).
-    await page.mouse.move(0, 0)
-    await captureState(page, path.join(outDir, 'survivor-open'))
-    await fold.click()
-    await expect(page.locator('.survivor-fold')).not.toHaveAttribute('open', '')
+  for (const row of ROUTE_ROWS) {
+    if (row.screen === 'snapshot') continue
+    await showPage(page, routeHash(routeOf(row)), row.screen)
+    await captureState(page, path.join(outDir, `page-${row.screen}`))
   }
-  await walkDoors(page, outDir, witness)
-  if (key === 'retired') await walkWorsening(page, outDir)
+  await showPage(page, '#/dashboard/snapshot', 'snapshot')
+  await walkStandingDoor(page, outDir)
 }
 
-/**
- * The retired-spine worsening arc (the U12 cold-read batch's core): the assumptions panel →
- * a worsening spending edit (R8's honest-worsening arm — the truer-picture line renders ONLY
- * when the displayed verdict lands BELOW the panel-open baseline) → the worsened landing.
- */
-async function walkWorsening(page: Page, outDir: string): Promise<void> {
-  await page.getByRole('button', { name: 'The assumptions behind this', exact: true }).click()
-  await expect(page.getByRole('dialog')).toBeVisible()
-  await expect(page.locator('.ap-echo__lead')).toBeVisible() // the echo's baseline reading
-
-  // The worsening edit: the retired seed enters spending MONTHLY (spendEntryPeriod:'month'),
-  // so 10,000/mo = $120k/yr against the seed's $78k baseline — the verdict must step down.
-  // Edits land as you leave each field (the panel's own contract), hence the explicit blur.
-  // NOT fill(): the masked currency input swallowed fill's select-all and CONCATENATED
-  // ("6,500" + "10000" → 650,010,000 — caught by the first live read's False-PASS Hunter,
-  // 2026-07-10), silently walking an absurd scenario. Select-all + typed digits matches a
-  // real user's keystrokes, and the value is asserted back so a mis-commit fails RED here
-  // instead of bundling the wrong scenario (the walk's own insight-033 discipline).
-  const spend = page.getByLabel('Household spending, all in')
-  await expect(spend).toBeVisible()
-  await spend.click()
-  await spend.press('ControlOrMeta+a')
-  await spend.pressSequentially('10000')
-  await spend.blur()
-  await expect(spend, 'the walk committed a different spending value than intended').toHaveValue(
-    '10,000',
-  )
-  // The truer-picture line (`.ap-echo__shift`) is the synchronization anchor: it renders only
-  // after the recompute commits a verdict below baseline — a real wait, never a sleep.
-  await expect(page.locator('.ap-echo__shift')).toBeVisible({ timeout: 120_000 })
-  await captureState(page, path.join(outDir, 'panel-worsened'))
-
-  // The worsened LANDING (panel closed): the negative-verdict frame the panel occludes — the
-  // first read's honesty lens could not verify the worsened chart isn't a red gash (rule 11),
-  // and the CVD screener's landing arm was all-positive.
-  await page.getByRole('dialog').getByRole('button', { name: 'Close' }).click()
-  await expect(page.getByRole('dialog')).toBeHidden()
-  await captureState(page, path.join(outDir, 'landing-worsened'))
+/** `vault:<key>`: the unlock card, the re-entry gate where the return raises one, the affirmed home and its door. */
+async function walkVaultReturn(page: Page, key: string, outDir: string): Promise<void> {
+  await pinPlantDay(page, key)
+  await page.goto(`/?vault=${key}`)
+  const unlock = page.getByRole('button', { name: 'Open my plan' })
+  await expect(unlock, `?vault=${key}: the plant did not land on the unlock screen`).toBeVisible({ timeout: 30_000 })
+  await captureState(page, path.join(outDir, 'unlock'))
+  await unlock.click()
+  const affirm = page.getByRole('button', { name: /still about right/i })
+  const settled = page.locator(SETTLED_RESULT)
+  await expect(affirm.or(settled), `?vault=${key}: the return reached neither the gate nor the home`).toBeAttached({ timeout: FINAL_TIER_MS })
+  if (await affirm.isVisible()) {
+    await captureState(page, path.join(outDir, 'gate'))
+    await affirm.click()
+  }
+  await expect(settled, `?vault=${key}: the home never settled`).toBeAttached({ timeout: FINAL_TIER_MS })
+  await showPage(page, '#/dashboard/snapshot', 'snapshot')
+  await captureState(page, path.join(outDir, 'landing'))
+  await walkStandingDoor(page, outDir)
 }
 
-/**
- * The solve arc's budgets — MEASURED 2026-10-03 on the worker pool (commit 225d8da4; the dev server, his
- * laptop, 12 eval workers): a whole `solve:nc` or `solve:surplus` walk is ~40 s per viewport, the solve
- * itself ~30 s of it. The lockup wait is 300 s — ~4× even the ~2× slow laptop state, and SHORT of a
- * single-thread solve on purpose (`nc` measured 725 s before the pool): a pool that silently fell back
- * to one worker reds the walk instead of passing slow, so the walk witnesses the pool too. The test
- * budget adds the landing, the picker, the captures and the stale leg.
- */
 const SOLVE_LOCKUP_MS = 300_000
 const SOLVE_TEST_MS = 480_000
 
-/**
- * The SOLVE arc's per-seed plan (increment 6): the goal each seed's WORLD solves under, read by its
- * rendered RADIO LABEL (never an nth-index — RECOMMENDATION_GOALS order is not a walk contract), plus
- * whether this seed additionally walks the post-commit STALE demotion, plus `viz` — whether its committed
- * lockup carries the two-arm RecommendationViz. nc: pay-less-tax → a RECOMMENDED lockup (since the NC
- * certification checkpoint retired, 2026-08-02 — it once committed a HOLD) with NO chart: the bars are
- * OMITTED on pay-less-tax by ruling (`recommendationView.ts`'s `viz`, 780409f7 — the recommended arm would
- * draw the SHORTER bar under a longer-is-better grammar); surplus: leave-more → the over-funded
- * delta-as-hero RECOMMENDED lockup, chart and all.
- */
-const SOLVE_GOAL: Record<
-  string,
-  { readonly label: RegExp; readonly stale: boolean; readonly viz?: boolean; readonly terminal?: 'steer' | 'goalpicker' }
-> = {
-  nc: { label: /Pay less tax/, stale: true, viz: false },
-  surplus: { label: /Leave more behind/, stale: false, viz: true },
-  // The failing-cohort increment (2026-09-11, the ranked Caddie walk's eye item): the already-short
-  // household's GoalPicker renders with its "With the basics covered" lead OMITTED (`basicsCovered`
-  // false — the 2026-09-08 gate). The walk captures the landing and the open picker and STOPS there:
-  // the terminal is the picker itself, never a pick (its confirmed pick is the typed mint-fails
-  // refusal whose sentence stays Briggsy's — not this walk's surface). `label` is unused.
-  failing: { label: /Pay less tax/, stale: false, terminal: 'goalpicker' },
-  // The steer-seed increment (2026-07-23): the no-pretax household's confirmed pick REFUSES at the
-  // builder (typed reason) — no dispatch, no pending; the calm named-reason note is the terminal.
-  steer: { label: /Leave more behind/, stale: false, terminal: 'steer' },
+/** The goal each solve household's world is read under, by its rendered label (never an index); default: Pay less tax. */
+const SOLVE_GOAL: Readonly<Record<string, string>> = {
+  surplus: copy.goalLeaveMoreLabel,
+  steer: copy.goalLeaveMoreLabel,
 }
 
-/**
- * A `solve:<seed>` target (increment 6): the recommend-second walk from the settled landing through the
- * committed frame, at FULL worker precision. Every stage synchronizes on a real selector — the
- * committed body is POLLED (SOLVE_LOCKUP_MS), never slept on; the pending breathe is the only thing
- * changing on screen meanwhile. `solve:nc` additionally walks the STALE demotion (walkSolveStale).
- */
+/** `solve:<key>`: Tax Strategies' first frame, the goal and Find, Calculating, then the Winner card (or the refusal). */
 async function walkSolve(page: Page, key: string, outDir: string): Promise<void> {
-  const plan = SOLVE_GOAL[key]
-  expect(plan, `solve:${key} has no goal mapping — add it to SOLVE_GOAL`).toBeDefined()
-
   await gotoSeedFinal(page, key)
+  await showPage(page, '#/tax/strategies', 'tax-strategies')
   await captureState(page, path.join(outDir, 'landing'))
-
-  // The invited affordance — a calm door in the quiet row (present iff the solve is invitable).
-  const invite = page.locator('.result-recommend-invite')
-  await expect(invite, `solve:${key}: the recommend-second invite never mounted`).toBeVisible()
-  await invite.click()
-
-  // The GoalPicker (the Tier-2 goal that PRECEDES the solve). Its dialog carries the copy + aria read.
-  await expect(
-    page.getByRole('heading', { name: 'What should your plan aim for?' }),
-    `solve:${key}: the GoalPicker did not open`,
-  ).toBeVisible()
-  await captureState(page, path.join(outDir, 'goalpicker'))
-
-  // The GOALPICKER terminal: the open picker IS the surface under read (the failing cohort's omitted
-  // lead). Pin the omission non-vacuously — a lead that came back would put the calm-but-wrong sentence
-  // one tap after "Already short" — then end the walk on the picker frame.
-  if (plan!.terminal === 'goalpicker') {
-    const picker = page.getByRole('dialog')
-    await expect(picker.locator('p'), `solve:${key}: the picker rendered a lead paragraph on a cohort that must get none (Card 14a's blocked-CTA reason is a <span class="control-sheet__blocked">, deliberately outside this count)`).toHaveCount(0)
-    return
+  const goal = page.getByRole('radio', { name: new RegExp(SOLVE_GOAL[key] ?? copy.goalPayLessTaxLabel) })
+  await expect(goal, `solve:${key}: Tax Strategies offers no goal to pick (a working plan shows its one line)`).toBeVisible({ timeout: 30_000 })
+  await goal.check()
+  await page.getByRole('button', { name: copy.taxStratFind, exact: true }).click()
+  const calculating = page.locator('[data-calculating]')
+  const winner = page.locator('[data-winner]')
+  // A refused Find (a household the solve cannot rank) shows its own words and no Calculating frame: give the frame a
+  // moment to appear, then read whichever face stands.
+  await calculating.or(winner).first().waitFor({ state: 'visible', timeout: 10_000 }).catch(() => {})
+  if (await calculating.isVisible()) {
+    await captureState(page, path.join(outDir, 'pending'))
+    await expect(winner, `solve:${key}: the Winner card never committed`).toBeVisible({ timeout: SOLVE_LOCKUP_MS })
   }
-
-  // Pick the goal by its rendered LABEL. NATIVE click (the sr-only radio trap the intake walk documents —
-  // layout-independent, still bubbles to React's root), asserted checked so a missed click fails RED here.
-  const dialog = page.getByRole('dialog')
-  const radio = dialog.getByRole('radio', { name: plan!.label })
-  await radio.evaluate((el) => (el as HTMLInputElement).click())
-  await expect(radio, `solve:${key}: the goal radio did not commit`).toBeChecked()
-  await dialog.getByRole('button', { name: 'See the strategy', exact: true }).click()
-
-  await expect(dialog, `solve:${key}: the GoalPicker did not close on confirm`).toBeHidden()
-
-  // The STEER terminal (the steer-seed increment): the builder REFUSES with the typed `no-pretax`
-  // reason BEFORE any dispatch — no pending breathe (nothing is working), the calm named-reason note
-  // renders immediately, and the invite door is GONE (a blocked non-goal-unset gap is not invitable —
-  // a second door would re-promise the solve the note just declined). The walk ends on the note frame.
-  if (plan!.terminal === 'steer') {
-    const note = page.locator('.rec-note--no-pretax')
-    await expect(note, `solve:${key}: the no-pretax steer note never rendered (a silent dead-end)`).toBeVisible()
-    await expect(page.locator('.solve-pending'), `solve:${key}: a steer face must never breathe`).toHaveCount(0)
-    await expect(
-      page.locator('.result-recommend-invite'),
-      `solve:${key}: the invite must retire once the steer note carries the story`,
-    ).toHaveCount(0)
-    await captureState(page, path.join(outDir, 'steer-note'))
-    return
-  }
-
-  // The PENDING breathe — the picker closes, the solve dispatches. Capture the working frame IMMEDIATELY
-  // (it holds for the full worker wait); its role=status announce rides aria.yaml / copy.txt.
-  await expect(
-    page.locator('.solve-pending'),
-    `solve:${key}: the pending breathe never mounted (a no-pretax steer would render instantly here)`,
-  ).toBeVisible()
-  await captureState(page, path.join(outDir, 'pending'))
-
-  // The COMMITTED frame — the terminal lockup (a HELD card OR the RECOMMENDED lockup). Poll patiently
-  // (SOLVE_LOCKUP_MS): a never-arriving lockup FAILS the walk red (insight-029) rather than bundling a
-  // frozen pending frame.
-  await expect(
-    page.locator('.rec-held, .rec-committed'),
-    `solve:${key}: no committed lockup after the full-precision solve (expected held / recommended)`,
-  ).toBeVisible({ timeout: SOLVE_LOCKUP_MS })
-  // A RECOMMENDED lockup on a `viz` seed carries the lazy-chunked RecommendationViz — wait for the real
-  // chart (never the Suspense placeholder) so the recviz crop + its CVD arms are non-vacuous (insight-029).
-  // The primary viz is DOM-first (the runner-up's is inside a collapsed <details>), so `.first()` is the
-  // primary. A seed whose goal OMITS the chart (pay-less-tax — the ruled omission, the primary AND the
-  // runner-up's) pins its ABSENCE: a chart there would be the inverted picture the ruling removed. The
-  // witness is the BOX, never `svg.rv`: the box renders synchronously iff the view carries a chart,
-  // while the svg waits on a lazy chunk — a count-zero read on the svg passed VACUOUSLY on PHONE with
-  // the omission planted away (2026-10-03), because the chunk had not mounted yet.
-  if ((await page.locator('.rec-committed').count()) > 0) {
-    if (plan!.viz === true) {
-      await expect(
-        page.locator('svg.rv').first(),
-        `solve:${key}: the recommended lockup never rendered its RecommendationViz chart`,
-      ).toBeVisible({ timeout: 60_000 })
-    } else {
-      await expect(
-        page.locator('.rec-viz-box'),
-        `solve:${key}: a RecommendationViz box rendered on a goal whose chart is OMITTED by ruling (recommendationView.ts viz)`,
-      ).toHaveCount(0)
-    }
-  }
-  await captureState(page, path.join(outDir, 'committed'))
-
-  if (plan!.stale) await walkSolveStale(page, outDir)
+  await page.waitForTimeout(600)
+  await captureState(page, path.join(outDir, (await winner.isVisible()) ? 'committed' : 'after-find'))
 }
 
-/**
- * The post-commit STALE demotion (increment 6, `solve:nc` only): a fingerprint-changing control-door
- * edit demotes the committed rec → `stale`. The cheapest real edit: the withdrawal-order sheet, applied
- * off the committed `proportional` (the base's drawdownPolicy rides the solve fingerprint, so the
- * demotion is structural even where the order is inert on a single pool). One capture — the stale CARD
- * (heading + body + its IN-CARD re-open control) in one frame; the walk ends here (no revert needed).
- *
- * F-B (U16 chair fix): the fit arm now asserts note+control ADJACENCY — the re-open control lives INSIDE
- * the stale card (`.rec-note--stale .rec-note__reopen`), the promise and its action in ONE home; the
- * prepended door-row invite (`.result-recommend-invite`) is RETIRED for the stale channel (asserted gone).
- */
-async function walkSolveStale(page: Page, outDir: string): Promise<void> {
-  await page.getByRole('button', { name: 'Change your withdrawal order' }).click()
-  const dialog = page.getByRole('dialog')
-  await expect(dialog, 'the withdrawal-order sheet did not open').toBeVisible()
+/** The first-run stepper's steps, in order. */
+const SETUP_STEPS = ['family', 'income', 'savings', 'net-worth', 'expenses', 'goals'] as const
 
-  // Pick a policy OTHER than the committed one (the fingerprint-changing edit). Target it by a STABLE
-  // value-based locator — NEVER a `:not(:checked)` locator: that re-resolves to a DIFFERENT radio the
-  // instant the pick flips the checked state, so the follow-up toBeChecked lands on a now-unchecked
-  // element and times out (the run1 stale-step trap). The value attribute never moves, so this locator
-  // points at the same radio before and after the NATIVE click (the sr-only radio idiom).
-  const currentPolicy = await dialog.locator('input[name="drawdown-policy"]:checked').getAttribute('value')
-  expect(currentPolicy, 'no committed withdrawal policy to change from').not.toBeNull()
-  const changedPolicy = dialog
-    .locator(`input[name="drawdown-policy"]:not([value="${currentPolicy}"])`)
-    .first()
-  await changedPolicy.evaluate((el) => (el as HTMLInputElement).click())
-  await expect(changedPolicy, 'the changed withdrawal policy did not commit').toBeChecked()
-  await dialog.getByRole('button', { name: 'Use this order' }).click()
-
-  // The demotion is synchronous on the model write (invalidateStaleSolve), but the sheet close +
-  // spine recompute settle around it — wait for BOTH the stale card AND its in-card re-open control
-  // so the captured frame is the settled staleness read, not a mid-transition flicker.
-  const staleCard = page.locator('.rec-note--stale')
-  await expect(
-    staleCard,
-    'the fingerprint-changing edit did not demote the committed rec to stale',
-  ).toBeVisible({ timeout: 120_000 })
-  // ADJACENCY (F-B): the re-open control the card promises lives INSIDE the card — the scoped locator
-  // proves it structurally (a descendant of `.rec-note--stale`), and it must be in-frame with the note.
-  await expect(
-    staleCard.locator('.rec-note__reopen'),
-    'the stale card promises a re-open — its IN-CARD control must be present, in one home with the note',
-  ).toBeVisible()
-  // The prepended door-row invite is RETIRED for the stale channel (ONE control home; no second door).
-  await expect(
-    page.locator('.result-recommend-invite'),
-    'the door-row invite must NOT re-appear in the stale state (the in-card control is its one home)',
-  ).toHaveCount(0)
-  await captureState(page, path.join(outDir, 'stale'))
-}
-
-/**
- * The PAY CHECK walk (increment 7 — `intake:paycheck`; the header names the three households). A
- * radio is picked with a NATIVE element click (`walkIntakeFork`'s idiom: the segment radios are sr-only
- * 1px boxes, and a forced Playwright click can land off-target on the phone arm).
- */
-async function walkIntakePaycheck(page: Page, outDir: string): Promise<void> {
-  const pick = async (name: string): Promise<void> => {
-    const radio = page.getByRole('radio', { name, exact: true })
-    await radio.evaluate((el) => (el as HTMLInputElement).click())
-    await expect(radio, 'the picked radio did not commit').toBeChecked()
-  }
-  const next = () => page.evaluate(() => document.querySelector<HTMLButtonElement>('.intake-nav .btn-primary')?.click())
-
-  await rewalkSeedTo(page, 'datecoststale', copy.qWorkingCostHeading, { final: true })
-  await captureState(page, path.join(outDir, 'w-step-stale'))
-  await next()
-  await expect(page.getByRole('alert')).toContainText(copy.errWorkingCostUnanswered)
-  await captureState(page, path.join(outDir, 'w-step-blocked'))
-  await pick(copy.workingCostDifferent)
-  await captureState(page, path.join(outDir, 'w-step-figure'))
-  await pick(copy.workingCostYes)
-  await next()
-  await expect(page.locator('.step-heading')).toHaveText(copy.qWorkingLedgerHeading)
-  await captureState(page, path.join(outDir, 'picture-answered'))
-
-  await rewalkSeedTo(page, 'dateshort', copy.qWorkingLedgerHeading, { final: true })
-  await captureState(page, path.join(outDir, 'picture-short'))
-  // Never color alone (R16): the bottom line's word and sign under each color-vision arm.
-  await captureCvdRegion(page, path.join(outDir, 'picture-short'), '.intake-shell .wy-row--bottom', 'bottom-line')
-
-  await rewalkSeedTo(page, 'datesolo', copy.qWorkingLedgerHeading)
-  await captureState(page, path.join(outDir, 'picture-unknown'))
-}
-
-/**
- * Increment 9's figures, never read off the product (DND 012). `date`'s year-0 left over is hand-derived in
- * `src/engine/__tests__/workingYearCredit.test.ts`: pay 150,000 − payroll 11,475 − the tax on the outside
- * income 17,540 − deposits 20,000 − W 84,000 = $16,985.00. The moved witness's live figure after its raise to
- * $165,000 comes from the build-2 record's `year0check.mts` (cited in `src/ui/devSeeds.ts`'s
- * `dateSavedMovedWitness` docblock): 165,000 − 12,622.50 − 20,840 − 20,000 − 84,000 = $27,537.50, which prints
- * $27,537 (the printed grain floors to the dollar, as `datenc`'s $1,644.95 prints $1,644 in the same test).
- * `datesavedstale`'s W figures are the seed's own inputs: the $84,000 confirmed on `date`'s draft, then its
- * spending lowered to $78,000 (the fit spec's `STALE_W_QUOTE` pair). Every figure is formatted the slots' way,
- * so every expected line is the shipped slot over them, never a re-typed sentence.
- */
-const DATE_LEFT_OVER = '16,985'
-const MOVED_LEFT_OVER_LIVE = '27,537'
-const STALE_W_CONFIRMED = '84,000'
-const STALE_W_QUOTE_NOW = '78,000'
-/** Increment 10: `datesavedrisen`'s spending, its seed's own input ($90,000; `devSeeds.ts`'s docblock), and
- *  the same $90,000 typed by `intake:kept` in `date`'s monthly unit ($7,500 a month). */
-const RISEN_W_QUOTE_NOW = '90,000'
-const RISEN_SPEND_MONTHLY = { digits: '7500', shown: '7,500' } as const
-/** Increment 11 (the U11 walk's (ae)): year 0 at the quote, hand-derived from `date`'s year-0 sum (pay 150,000 −
- *  payroll tax 11,475 − tax on outside income 17,540 − deposits 20,000 − W at the quote): $10,985 at $90,000;
- *  −$4,015 at `datesavedrisenshort`'s $105,000; $5,985 there with `datesavedrisenlater`'s $10,000 of untaxed
- *  alimony, whose end makes 2029 the short arm's −$4,015 again. */
-const RISEN_AT_QUOTE = '10,985'
-const RISEN_SHORT_QUOTE = '105,000'
-const RISEN_SHORT_BY = '4,015'
-const RISEN_LATER_AT_QUOTE = '5,985'
-const RISEN_LATER_SHORT_YEAR = 2029
-/** U11 walk 2 (b9-3): the short years at $105,000 run on — `datesavedrisenshort` every year from 2026 through 2032,
- *  `datesavedrisenlater` from 2029 through 2032 — at $4,015, then $3,652 once Sam's Medicare starts (2031), each
- *  read off the money picture at the quote (b9-2's probe, `u11-ae\probe-ledger.out.txt`). In the one amount rule (the
- *  walk-9 form council's call (1), flip (iii)) the run is two groups, each figure beside its own years ("$4,015 short in
- *  2026 through 2030 and $3,652 short in 2031 through 2032"), never the old "$3,652 to $4,015" range. */
-const RISEN_SHORT_LAST_YEAR = 2032
-const RISEN_SHORT_LEAST = '3,652'
-const RISEN_SHORT_MEDICARE_YEAR = 2031
-const risenShortRun = (firstYear: number): TypedBelowAmount => ({
-  kind: 'two',
-  groups: [
-    { figure: RISEN_SHORT_BY, firstYear, lastYear: RISEN_SHORT_MEDICARE_YEAR - 1 },
-    { figure: RISEN_SHORT_LEAST, firstYear: RISEN_SHORT_MEDICARE_YEAR, lastYear: RISEN_SHORT_LAST_YEAR },
-  ],
-})
-/** U11 walk 4 (council `wf_7fa86902-35c`): after `datesavedrisenlater`'s run, 2033 (a claim) prints left over at
- *  $105,000 and no later row is short (b9-2's probe), so the years that don't come up short resume there. */
-const RISEN_LATER_RESUMES = 2033
-
-/** U11 walk 6 (F11, R2): the gap between the held $84,000 and today's quote, the room the Result's door names —
- *  `datesavedstale`'s held figure above its $78,000 quote (84,000 − 78,000), and `datesavedrisen`'s $90,000 quote above
- *  the held figure (90,000 − 84,000), the lean's "$6,000 a year more of your pay". */
-const STALE_W_ROOM = '6,000'
-const RISEN_W_GAP = '6,000'
-
-/** The Result door's cost list on every "saved" witness waiting on W: the W help's own items (`workingCostExtras`). No
- *  witness carries a budget or a priced state, so the state-tax item rides after the local-tax one. */
-const STALE_W_EXTRAS = workingCostExtras(true)
-
-/** "This answer now" on every "saved" witness waiting on W (council `wf_7fa86902-35c`; U11 walk 5's (bl), (bh)): the
- *  label, after work the answer already uses the spending figure (it moved on every witness here; no budget, so
- *  exact), the stored figure dated, why this answer adds none of it, in the act's verb (`none`), and — where `none`
- *  does not already say it brings none back — why it counts no smaller amount either (U11 walk 6's F6; `why`). */
-const savedNow = (spending: string, none: string, why?: string): readonly string[] => [
-  copy.workingCostStaleLabelNow,
-  slots.workingCostStaleAfterWork(spending, true),
-  slots.workingCostStaleLeftOverAnswered(DATE_LEFT_OVER),
-  none,
-  ...(why === undefined ? [] : [why]),
-]
-/** The risen capped arms' "This answer now" — the spending there IS the quote (no budget), the act is "update", and
- *  the answer counts no smaller amount either. (`datesavedrisenshort`'s ends on what is true today instead: R3.) */
-const risenNow = (quoteNow: string): readonly string[] =>
-  savedNow(quoteNow, slots.workingCostStaleLeftOverNoneUpdate(DATE_LEFT_OVER, STALE_W_CONFIRMED), slots.workingCostStaleNoSmallerAmount(quoteNow))
-
-/** The gate's door (council `wf_22858e04-f7a` (2)): `section.reentry-door`, the next element sibling of the gate's
- *  buttons, drawn only where the tab can save — its heading, the scope sentence (the affirm button's description) and
- *  the route. In "update" where the spending rose past the yes, "confirm or change" where it fell. */
-const gateDoorOf = (act: 'update' | 'confirm'): GateDoorWords =>
-  act === 'update'
-    ? {
-        heading: slots.workingCostStaleDoorHeadingUpdate(STALE_W_CONFIRMED),
-        scope: slots.workingCostStaleGateScopeUpdate(STALE_W_CONFIRMED),
-        route: slots.workingCostStaleGateRoute(copy.stalenessPayCheckCtaUpdate),
-      }
-    : {
-        heading: slots.workingCostStaleDoorHeadingConfirm(STALE_W_CONFIRMED),
-        scope: slots.workingCostStaleGateScopeConfirm(STALE_W_CONFIRMED),
-        route: slots.workingCostStaleGateRoute(copy.stalenessPayCheckCta),
-      }
-
-/** A risen-family witness: W's sentence at `quoteNow` and its lean (`lean`: the left over reading high where no
- *  working year at the quote runs short, the years-cheaper one where one does), then the tail for its arm. Both walked
- *  routes can save, so the doors ride: on the Result W's block ends on its door (the heading, the press sentence and the
- *  condition, the cost list, that the tool counts them only if added, then "Yes" at today's quote: below the quote the
- *  W row offers no Keep door); on the gate the door is its own section under the buttons. The seat waits (no figure,
- *  no radios) in the act's verb ((bn)) as on every stale-W witness — on B (year 0 short at the quote) with no "until"
- *  (U11 walk 6's R3: `seatLine`). */
-/** The survivor part on W's stale line and its seat (U11 walk 8's W8-R12 (a), the walk-8 form spec's U4): every witness here
- *  descends from `stillWorking`, so the engine can draw a working year with Sam dead and Alex working from 2032, and the
- *  survivor rule counts 75 % of each figure (no budget, no medical held whole): $84,000 → $63,000. Its close is the
- *  line's first rider, so glossed (two years, the engine's look-back). W's out-of-date line and its seat name the two
- *  answers beside their figures (the walk-9 form council's call (4): `names: 'answers'`), since they compare them in
- *  dollars nowhere else. */
-function staleSurvivorWords(quote: string, chargeAtQuote: string, most: string): readonly string[] {
-  const f = { typed: STALE_W_CONFIRMED, quote, source: 'spending', names: 'answers' } as const
-  return [slots.workingCostTypedBelowSurvivorCharges(f, ['63,000', chargeAtQuote]), slots.workingCostTypedBelowSurvivorLess(f, most, 2)]
-}
-function risenWitness(
-  quoteNow: string,
-  lean: string,
-  tail: readonly string[],
-  seatLine: string = copy.workingLedgerLeftOverWaitingUpdate,
-): LeftOverWitness {
-  const head = [slots.workingCostStaleQuote(STALE_W_CONFIRMED, quoteNow), lean]
-  const gateDoor = gateDoorOf('update')
-  return {
-    note: {
-      lead: copy.stalenessPayCheckNote,
-      says: [
-        ...head,
-        ...tail,
-        gateDoor.heading,
-        slots.workingCostStaleResultDoorUpdate(copy.stalenessPayCheckCtaUpdate),
-        slots.workingCostStaleDoorIfUpdate(quoteNow, false),
-        ...STALE_W_EXTRAS,
-        copy.workingCostStaleDoorCounted,
-        slots.workingCostStaleDoorYes(quoteNow),
-      ],
-      notLead: copy.stalenessLeftOverNote,
-      door: copy.stalenessPayCheckCtaUpdate,
-    },
-    gate: {
-      lead: copy.stalenessPayCheckGateLead,
-      says: [...head, ...tail],
-      notLead: copy.stalenessLeftOverNote,
-      door: gateDoor,
-    },
-    seat: { figure: null, line: seatLine, radios: 0, checked: null },
-  }
-}
-
-/** One cause's line on a surface: its lead, every fragment that must ride in the SAME line after it, and
- *  the other cause's lead, which must not speak there (the two causes cannot both hold: a moved left over
- *  needs a fresh W, and a stale W outranks the stored answer). Each fragment is one sentence, label or list item, so
- *  it never crosses a block boundary of W's block (`NotePartsBlock`) and `textContent` reads it whole. */
-interface CauseLine {
-  readonly lead: string
-  readonly says: readonly string[]
-  readonly notLead: string
-}
-
-/** The gate's door section's words (`section.reentry-door`). */
-interface GateDoorWords {
-  readonly heading: string
-  readonly scope: string
-  readonly route: string
-}
-
-/** What a left-over witness must show (increment 9): the Result's standing line, the gate's line and the
- *  panel seat's face. Each is a presence companion for a crop that is otherwise presence-guarded. */
-interface LeftOverWitness {
-  /** The Result's one standing line (`.cs-paycheck-note`), and the label of the door it carries (each cause
-   *  names its own: `FuckOffDate`'s `STANDING_NOTE_COPY`). Both walked routes can save, so the door rides. */
-  readonly note: CauseLine & { readonly door: string }
-  /** The re-entry gate's ONE line for this cause (a `.reentry-notes` child: one cause, one line), and its door section
-   *  under the buttons (`null`: none drawn — W is fresh). */
-  readonly gate: CauseLine & { readonly door: GateDoorWords | null }
-  /** The panel seat's face: its year-0 figure line (null where it waits on a stale W and draws none), the
-   *  one line below its group (or its waiting line), how many radios it draws, and the reply shown checked. */
-  readonly seat: {
-    readonly figure: string | null
-    readonly line: string
-    readonly radios: number
-    readonly checked: string | null
-  }
-}
-
-const LEFT_OVER_WITNESSES: Readonly<Record<string, LeftOverWitness | undefined>> = {
-  // "All of it" at $16,985, $27,537 after the raise: W fresh, so the standing line is the left over's.
-  datesavedmoved: {
-    note: {
-      lead: copy.stalenessLeftOverNote,
-      says: [slots.stalenessLeftOverMoved(DATE_LEFT_OVER, MOVED_LEFT_OVER_LIVE, DATE_LEFT_OVER)],
-      notLead: copy.stalenessPayCheckNote,
-      door: copy.stalenessLeftOverCta,
-    },
-    gate: {
-      lead: copy.stalenessLeftOverNote,
-      says: [slots.stalenessLeftOverMoved(DATE_LEFT_OVER, MOVED_LEFT_OVER_LIVE, DATE_LEFT_OVER), copy.stalenessLeftOverGateDoor],
-      notLead: copy.stalenessPayCheckGateLead,
-      door: null,
-    },
-    seat: {
-      figure: slots.workingLedgerLeftOverFigure(MOVED_LEFT_OVER_LIVE),
-      line: slots.workingLedgerLeftOverRoseLine(DATE_LEFT_OVER, MOVED_LEFT_OVER_LIVE),
-      radios: 3,
-      checked: copy.workingLedgerLeftOverSaved,
-    },
-  },
-  // W stale ("All of it" stored at $16,985 before the spending moved): W's stale line speaks, its own
-  // sentence then the clause that none of the left over is added until W is confirmed or changed, and the seat waits
-  // with no figure and no radios.
-  // Council `wf_22858e04-f7a`: the line is the same on both hosts; the Result's block ends on its door (the heading, the
-  // hold sentence ending on the cost list, then the $6,000 the held figure leaves above the $78,000 quote, the press
-  // sentence, and each choice with its condition first), and the gate's door is its own section under the buttons.
-  datesavedstale: (() => {
-    const line = [
-      slots.workingCostStaleQuote(STALE_W_CONFIRMED, STALE_W_QUOTE_NOW),
-      copy.workingCostStaleEitherWayConfirm,
-      ...savedNow(STALE_W_QUOTE_NOW, slots.workingCostStaleLeftOverNoneConfirm(DATE_LEFT_OVER, STALE_W_CONFIRMED), copy.workingCostStaleNoGuess),
-    ]
-    const gateDoor = gateDoorOf('confirm')
-    return {
-      note: {
-        lead: copy.stalenessPayCheckNote,
-        says: [
-          ...line,
-          gateDoor.heading,
-          copy.workingCostStaleDoorHold,
-          ...STALE_W_EXTRAS,
-          slots.workingCostStaleDoorMore(STALE_W_CONFIRMED, STALE_W_ROOM, STALE_W_QUOTE_NOW),
-          slots.workingCostStaleResultDoorConfirm(copy.stalenessPayCheckCta),
-          // U11 walk 8's W8-R12 (c): the none choice first, then Keep for some costs within the room.
-          slots.workingCostStaleDoorYesFirst(STALE_W_QUOTE_NOW),
-          slots.workingCostStaleDoorKeepUpTo(slots.workingCostKeepYearly(STALE_W_CONFIRMED), STALE_W_ROOM),
-          slots.workingCostStaleDoorNoPlus(STALE_W_QUOTE_NOW, false),
-        ],
-        notLead: copy.stalenessLeftOverNote,
-        door: copy.stalenessPayCheckCta,
-      },
-      gate: { lead: copy.stalenessPayCheckGateLead, says: line, notLead: copy.stalenessLeftOverNote, door: gateDoor },
-      seat: { figure: null, line: copy.workingLedgerLeftOverWaitingConfirm, radios: 0, checked: null },
-    }
-  })(),
-  // Increment 10, U11's RISEN twin ("All of it" stored at $16,985, then the spending RAISED to $90,000 past the yes
-  // to $84,000); increment 11 (the U11 walk's (ae)): W's line carries the lean, the clause, then what a check at
-  // $90,000 or more adds at most ($10,985, year 0 at the quote) and what lowers it; the seat waits as on
-  // `datesavedstale`. No working year at $90,000 runs short, so the lean is the left over reading $6,000 high (U11 walk
-  // 6's R2). The ORDER is pinned in `devSeeds.test.ts` (the seed's own arm); here each must ride the one line.
-  // U11 walk 8's W8-R12 (a): on the line the gap comparison is scoped and the survivor part closes it (`staleSurvivorWords`).
-  datesavedrisen: risenWitness(RISEN_W_QUOTE_NOW, slots.workingCostStaleLeftOverInflated(STALE_W_CONFIRMED, RISEN_W_GAP, RISEN_W_QUOTE_NOW, true), [
-    copy.workingCostStaleEitherWayUpdate,
-    ...risenNow(RISEN_W_QUOTE_NOW),
-    slots.workingCostStaleLabelIf(RISEN_W_QUOTE_NOW),
-    slots.workingCostStaleLeftOverIfCapped(RISEN_AT_QUOTE, 2026, RISEN_W_QUOTE_NOW, false),
-    slots.workingCostStaleEachDollar(RISEN_W_QUOTE_NOW, RISEN_AT_QUOTE),
-    // The extra a lower figure counts: the stored $16,985 less year 0's $10,985 at the quote (U11 walk 7's R6 (a)).
-    slots.workingCostStaleLowerAddsMore(RISEN_W_QUOTE_NOW, RISEN_AT_QUOTE, '6,000', DATE_LEFT_OVER),
-    ...staleSurvivorWords(RISEN_W_QUOTE_NOW, '67,500', '4,500'),
-  ]),
-  // Increment 11, the risen twin's two other arms (`devSeeds.ts`'s docblocks carry the hand sums): at $105,000 year
-  // 0 comes up $4,015 short, so a check adds none of the $16,985 and the short-year lean rides…
-  datesavedrisenshort: risenWitness(RISEN_SHORT_QUOTE, slots.workingCostStaleLeftOverYearsCheaper(STALE_W_CONFIRMED), [
-    slots.workingCostStaleShortUntilUpdated(STALE_W_CONFIRMED),
-    ...savedNow(RISEN_SHORT_QUOTE, slots.workingCostStaleLeftOverNoneNow(DATE_LEFT_OVER, STALE_W_CONFIRMED)),
-    slots.workingCostStaleLabelIf(RISEN_SHORT_QUOTE),
-    slots.workingCostStaleLeftOverIfFirstShortRun(2026, RISEN_SHORT_LAST_YEAR, risenShortRun(2026), RISEN_SHORT_QUOTE, STALE_W_CONFIRMED, DATE_LEFT_OVER, true),
-    copy.workingCostStaleLowerCounts,
-    ...staleSurvivorWords(RISEN_SHORT_QUOTE, '78,750', '15,750'),
-  ], [
-    // W8-R10 (b): the run (scoped), the lean before the loss, what updating does, then the survivor part.
-    slots.workingLedgerLeftOverWaitingShort(RISEN_SHORT_QUOTE, 2026, RISEN_SHORT_LAST_YEAR, risenShortRun(2026), true),
-    slots.workingCostStaleSeatShortLean(STALE_W_CONFIRMED, false),
-    slots.workingLedgerLeftOverWaitingShortUpdate(RISEN_SHORT_QUOTE, 2026, false),
-    ...staleSurvivorWords(RISEN_SHORT_QUOTE, '78,750', '15,750'),
-  ].join(' ')),
-  // …and with Sam's alimony to 62, year 0 at $105,000 has $5,985 left over (the most a check adds) while 2029, the
-  // alimony ended, comes up $4,015 short — named, with the years-cheaper lean.
-  datesavedrisenlater: risenWitness(RISEN_SHORT_QUOTE, slots.workingCostStaleLeftOverYearsCheaper(STALE_W_CONFIRMED), [
-    copy.workingCostStaleEitherWayUpdate,
-    ...risenNow(RISEN_SHORT_QUOTE),
-    slots.workingCostStaleLabelIf(RISEN_SHORT_QUOTE),
-    slots.workingCostStaleLeftOverIfCapped(RISEN_LATER_AT_QUOTE, 2026, RISEN_SHORT_QUOTE, true),
-    slots.workingCostStaleLeftOverGainYears(2026, RISEN_LATER_SHORT_YEAR - 1, RISEN_LATER_RESUMES),
-    slots.workingCostStaleEachDollar(RISEN_SHORT_QUOTE, RISEN_LATER_AT_QUOTE),
-    slots.workingCostStaleShortLaterYears(RISEN_LATER_SHORT_YEAR, RISEN_SHORT_LAST_YEAR, risenShortRun(RISEN_LATER_SHORT_YEAR), STALE_W_CONFIRMED, true),
-    slots.workingCostStaleLowerCountsMore(DATE_LEFT_OVER),
-    ...staleSurvivorWords(RISEN_SHORT_QUOTE, '78,750', '15,750'),
-  ], [
-    // W8-R10 (a): the act's waiting words, then the later run at the quote and the years' lean, then the survivor part.
-    copy.workingLedgerLeftOverWaitingUpdate,
-    slots.workingCostStaleSeatLaterShort(RISEN_SHORT_QUOTE, RISEN_LATER_SHORT_YEAR, RISEN_SHORT_LAST_YEAR, risenShortRun(RISEN_LATER_SHORT_YEAR), STALE_W_CONFIRMED, true),
-    ...staleSurvivorWords(RISEN_SHORT_QUOTE, '78,750', '15,750'),
-  ].join(' ')),
-}
-
-/** The Result's ONE standing line speaks the witness's cause, in one line, behind its own door. */
-async function assertStandingNote(page: Page, who: string, witness: LeftOverWitness): Promise<void> {
-  const note = page.locator('.cs-paycheck-note')
-  await expect(note, `${who}: the Result must carry exactly one standing line`).toHaveCount(1)
-  for (const fragment of [witness.note.lead, ...witness.note.says]) {
-    await expect(note, `${who}: the standing line does not speak its cause`).toContainText(fragment)
-  }
-  await expect(note, `${who}: the standing line speaks the other cause's lead`).not.toContainText(witness.note.notLead)
-  const door = note.getByRole('button')
-  await expect(door, `${who}: the standing line must carry exactly one door`).toHaveCount(1)
-  await expect(door, `${who}: the standing line's door borrows the other cause's label`).toHaveText(witness.note.door)
-}
-
-/** The re-entry gate speaks the witness's cause in ONE line (insight 101: one cause, one line) — each note a direct
- *  child of `.reentry-notes` (a `<p>`, or W's block) — and, where W is stale, its door under the buttons. */
-async function assertGateLine(page: Page, who: string, witness: LeftOverWitness): Promise<void> {
-  const notes = page.locator('.reentry-notes > *')
-  const line = notes.filter({ hasText: witness.gate.lead })
-  await expect(line, `${who}: the gate must carry exactly one line led by its cause`).toHaveCount(1)
-  for (const fragment of witness.gate.says) {
-    await expect(line, `${who}: the gate's line does not carry its cause whole`).toContainText(fragment)
-  }
-  await expect(notes.filter({ hasText: witness.gate.notLead }), `${who}: the gate speaks the other cause`).toHaveCount(0)
-  const door = page.locator('section.reentry-door')
-  if (witness.gate.door === null) {
-    await expect(door, `${who}: W is fresh, so the gate draws no door under its buttons`).toHaveCount(0)
-    return
-  }
-  await expect(door, `${who}: the gate must draw exactly one door under its buttons`).toHaveCount(1)
-  const placed = await page.evaluate(() => {
-    const d = document.querySelector('section.reentry-door')
-    return d !== null && d.previousElementSibling?.matches('.reentry-actions') === true
-  })
-  expect(placed, `${who}: the gate's door is the next sibling after its buttons`).toBe(true)
-  await expect(door.locator('h3.reentry-door__heading')).toHaveText(witness.gate.door.heading)
-  await expect(door.locator('p')).toHaveText(`${witness.gate.door.scope} ${witness.gate.door.route}`)
-  await expect(
-    page.getByRole('button', { name: /still about right/i }),
-    `${who}: the affirm button is described by the door's scope sentence`,
-  ).toHaveAccessibleDescription(witness.gate.door.scope)
-}
-
-/** The panel's left-over seat draws the witness's face. */
-async function assertLeftOverSeat(dialog: ReturnType<Page['getByRole']>, witness: LeftOverWitness): Promise<void> {
-  const seat = dialog.locator('[data-assumption-seat="working-year-left-over"]')
-  await expect(seat, 'the assumptions panel drew no left-over seat').toHaveCount(1)
-  // The seat's name is the landing the moved line's door focuses (`AssumptionPanel`'s `initialSeat`).
-  await expect(seat.locator('.ap-row__name')).toHaveText(copy.assumptionWorkingCostLeftOverName)
-  const figure = seat.locator('.left-over__figure')
-  await expect(figure, 'the left-over seat drew the wrong number of figure lines').toHaveCount(witness.seat.figure === null ? 0 : 1)
-  if (witness.seat.figure !== null) await expect(figure).toHaveText(witness.seat.figure)
-  const line = seat.locator('.left-over__line, .left-over__waiting-text')
-  await expect(line, 'the left-over seat must draw exactly one line below its group (or its waiting line)').toHaveCount(1)
-  await expect(line).toHaveText(witness.seat.line)
-  await expect(seat.getByRole('radio'), 'the left-over seat drew the wrong number of replies').toHaveCount(witness.seat.radios)
-  await expect(seat.locator('input[type="radio"]:checked')).toHaveCount(witness.seat.checked === null ? 0 : 1)
-  if (witness.seat.checked !== null) {
-    await expect(seat.getByRole('radio', { name: witness.seat.checked, exact: true })).toBeChecked()
-  }
-}
-
-/** Each reply's label and the one line in dollars it draws on `date`'s money-picture step (R6). Keyed by
- *  the answer kind, exhaustively (insight 147): a new kind reds the type here, never a silent skip. */
-const LEFT_OVER_REPLIES: Readonly<Record<WorkingYearLeftOverKind, { readonly label: string; readonly line: string }>> = {
-  saved: { label: copy.workingLedgerLeftOverSaved, line: slots.workingLedgerLeftOverSavedLine(DATE_LEFT_OVER) },
-  spent: { label: copy.workingLedgerLeftOverSpent, line: slots.workingLedgerLeftOverSpentLine(DATE_LEFT_OVER) },
-  'not-sure': { label: copy.workingLedgerLeftOverNotSure, line: slots.workingLedgerLeftOverNotSureLine(DATE_LEFT_OVER) },
-}
-
-/**
- * The LEFT-OVER walk (increment 9 — `intake:leftover`; the header names its four faces). `date` re-walked to
- * its money-picture step draws the question unanswered; each reply is then picked with the native-click idiom
- * (`walkIntakePaycheck`'s), asserted checked, and captured. Every face asserts the figure line, the three
- * radios, the checked count, the active segment (the visible, hue-free selection) and its one line in dollars.
- */
-async function walkIntakeLeftOver(page: Page, outDir: string): Promise<void> {
-  const question = page.locator('.intake-shell .left-over')
-  const holds = async (line: string, checked: string | null): Promise<void> => {
-    await expect(question, 'the money-picture step drew no left-over question').toHaveCount(1)
-    await expect(question.locator('.left-over__figure')).toHaveCount(1)
-    await expect(question.locator('.left-over__figure')).toHaveText(slots.workingLedgerLeftOverFigure(DATE_LEFT_OVER))
-    await expect(question.getByRole('radio'), 'the left-over question drew the wrong number of replies').toHaveCount(3)
-    await expect(question.locator('input[type="radio"]:checked')).toHaveCount(checked === null ? 0 : 1)
-    await expect(question.locator('.segment-active')).toHaveCount(checked === null ? 0 : 1)
-    if (checked !== null) await expect(question.locator('.segment-active')).toHaveText(checked)
-    await expect(question.locator('.left-over__line'), 'the left-over question drew no line in dollars').toHaveCount(1)
-    await expect(question.locator('.left-over__line')).toHaveText(line)
-  }
-
-  await rewalkSeedTo(page, 'date', copy.qWorkingLedgerHeading, { final: true })
-  await holds(slots.workingLedgerLeftOverAbsentLine(DATE_LEFT_OVER), null)
-  // Below the WHOLE picture (KTD8), never inside or above it: the picture's root (`.wy-ledger`, later
-  // years included) must precede the question in document order and must not contain it.
-  const belowPicture = await question.evaluate((el) => {
-    const picture = document.querySelector('.intake-shell .wy-ledger')
-    return picture !== null && !picture.contains(el) && (picture.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0
-  })
-  expect(belowPicture, 'the left-over question must sit below the whole money picture (KTD8)').toBe(true)
-  await captureState(page, path.join(outDir, 'left-over-absent'))
-  for (const [kind, reply] of Object.entries(LEFT_OVER_REPLIES)) {
-    const radio = question.getByRole('radio', { name: reply.label, exact: true })
-    await radio.evaluate((el) => (el as HTMLInputElement).click())
-    await expect(radio, 'the picked radio did not commit').toBeChecked()
-    await holds(reply.line, reply.label)
-    await captureState(page, path.join(outDir, `left-over-${kind}`))
-  }
-}
-
-/** Increment 10's figures: `datecoststale`'s yes to $84,000, kept through the Keep door, and the same kept money
- *  shown by the MONTH after a tap on "Each month" — `writeWorkingYearCostPeriod` CONVERTS a kept figure (the U11
- *  walk's (ab); walk 1 read the re-read "$1,008,000 a year — the figure you kept"), so the box shows 7,000
- *  (84,000 ÷ 12) and the row still says the $84,000 a year kept; the tap carries the stamp (U5, R13's notes). */
-const KEPT_W = STALE_W_CONFIRMED
-const KEPT_W_MONTHLY = '7,000'
-/** The kept walk's budget: ten final-tier waits (three fresh landings; in branches A and B the settle before the
- *  re-run watch is armed, the wait for the run to show and its settled frame; in branch C, which arms no watch,
- *  the settled frame alone) at FINAL_TIER_MS each, plus three minutes for its ten captures per viewport and the
- *  two re-walks. */
-const KEPT_TEST_MS = 10 * FINAL_TIER_MS + 180_000
-
-/** The settled final Result (the kept and typed-below walks read it): `SETTLED_RESULT` with the in-frame
- *  disclaimer stamped. */
-const settledResult = (page: Page) => page.locator(`${SETTLED_RESULT}[data-inframe-disclaimer]`)
-
-/**
- * The KEPT walk (increment 10 — `intake:kept`; the header names what it is for). Every branch starts from a
- * fresh `datecoststale` landing: a yes to $84,000 stale over a FALLEN quote ($78,000), so the panel's W row
- * opens on the stale face WITH the Keep door (ruling 34: a yes at or above today's quote), and the door is
- * tapped — the shipped write, never a stamp typed into a draft.
- *  A. `panel-kept` (the row reads "the figure you kept") → `panel-kept-month` ("Each month" tapped: the kept
- *     money converts, so the box shows 7,000 and the row still reads $84,000 a year — walk 2; walk 1 read the
- *     re-read "$1,008,000 a year") → "Each year" again (the kept figure exactly, asserted)
- *     → a move to Pennsylvania: `panel-kept-stale-state` (the state-only sentence; the door shows, the quote
- *     $78,000 being below the figure) → the spending raised to $90,000: `panel-kept-stale-both` (both causes;
- *     no door) → the panel closed: `result-kept-stale-both` (the Result's standing line).
- *  B. the spending raised to $90,000 alone: `panel-kept-stale-quote` (the spending sentence and its lean; the
- *     face the review's P3 names — "A different figure" checked, the box filled, no door) → the panel closed:
- *     `result-kept-stale-quote` → the re-walk to the W step: `walk-kept-stale-quote` (the same face on the
- *     walk) → Continue: `walk-kept-stale-blocked` (the gate's message under that face: both figures and both
- *     ways out, since walk 2).
- *  C. (walk 2) a move to Pennsylvania alone → the panel closed → the re-walk to the W step, where the note's
- *     Keep door shows → Continue: `walk-kept-stale-state-blocked` (the gate names that door by its own words).
- * Every sentence asserted is the shipped slot over the seed's own figures. The spending is typed in `date`'s
- * own unit, a month ($7,500 = $90,000 a year). A panel edit re-runs the answer behind the sheet: in A and B,
- * the two branches that capture the Result, the walk sees that run start before the panel closes (the Result's
- * `data-answer-refiguring` appears), and after it, waits for the settled final frame again — so a Result capture
- * never shows the answer from before the edit. C captures no Result and arms no watch (its comment says why).
- */
-async function walkIntakeKept(page: Page, outDir: string): Promise<void> {
-  const settled = settledResult(page)
-  const pick = async (radio: ReturnType<Page['locator']>): Promise<void> => {
-    await radio.evaluate((el) => (el as HTMLInputElement).click())
-    await expect(radio, 'the picked radio did not commit').toBeChecked()
-  }
-  const openPanelAndKeep = async () => {
-    await gotoSeedFinal(page, 'datecoststale')
-    await page.getByRole('button', { name: copy.stalenessPayCheckCta }).click()
-    const dialog = page.getByRole('dialog')
-    await expect(dialog).toBeVisible()
-    const row = dialog.locator('[data-assumption-seat="working-year-cost"]')
-    const face = row.locator('.working-cost')
-    const value = row.locator('.ap-row__value')
-    await expect(face.getByRole('note')).toContainText(slots.workingCostStaleQuote(STALE_W_CONFIRMED, STALE_W_QUOTE_NOW))
-    await face.getByRole('button', { name: slots.workingCostKeepYearly(KEPT_W) }).click()
-    await expect(face.getByRole('note'), 'the keep landed: the kept figure is fresh').toHaveCount(0)
-    await expect(value).toHaveText(slots.assumptionWorkingCostKept(KEPT_W))
-    return { dialog, row, face, value }
-  }
-  // The row's top in the sheet's frame, so `viewport.png` shows the value line and the face under it (the
-  // `w-row` crop paints the whole row, in segments where it is taller than the sheet).
-  const showRow = (row: ReturnType<Page['locator']>) => row.evaluate((el) => el.scrollIntoView({ block: 'start' }))
-  const raiseSpending = async (dialog: ReturnType<Page['getByRole']>): Promise<void> => {
-    await typeFieldValue(dialog.getByLabel('Household spending, all in', { exact: true }), RISEN_SPEND_MONTHLY.digits, RISEN_SPEND_MONTHLY.shown)
-  }
-  // The review's P3 face: a kept figure the spending rose past keeps "A different figure" checked, its own
-  // figure in the box, a year as its unit, and no Keep door (a keep would carry the stamp and stay stale).
-  const keptStaleFace = async (face: ReturnType<Page['locator']>): Promise<void> => {
-    await expect(face.getByRole('radio', { name: copy.workingCostDifferent, exact: true })).toBeChecked()
-    await expect(face.getByRole('textbox', { name: copy.workingCostAmountLabel, exact: true })).toHaveValue(KEPT_W)
-    await expect(face.getByRole('radio', { name: copy.periodYear })).toBeChecked()
-    await expect(face.getByRole('button', { name: /^Keep \$/ }), 'no Keep door on a kept figure below the quote').toHaveCount(0)
-  }
-  // Armed just before the panel's LAST edit (`armRefiguringWatch`, reviewSurface.ts, says why the attribute is
-  // the signal): it records `data-answer-refiguring` appearing on the Result behind the sheet, the store's mark
-  // that a run on the edited inputs is in flight. The capture between that edit and the close can outlast the
-  // run itself, so "still re-figuring at the close" would be a race; "re-figured since the edit" is not. The
-  // watch is armed only once every earlier edit's runs have settled, so the appearance is this edit's.
-  const armRerunWatch = (): Promise<void> => armRefiguringWatch(page)
-  // Closes the panel onto the Result, waits it settled (the edit's own answer has committed, since the watch saw
-  // the run start), and reads its one standing line. That line describes the shown answer, so it reads the draft
-  // the answer was figured from (W9-R7's U3) and moves with the commit, never at the edit.
-  const closePanel = async (dialog: ReturnType<Page['getByRole']>, line: string): Promise<void> => {
-    await dialog.getByRole('button', { name: /^(Close|Cancel)$/ }).first().click()
-    await expect(dialog).toBeHidden()
-    await expect(settled).toBeAttached({ timeout: FINAL_TIER_MS })
-    const note = page.locator('.cs-paycheck-note')
-    await expect(note, 'the Result must carry exactly one standing line').toHaveCount(1)
-    await expect(note).toContainText(line)
-  }
-  // On a household with no date in the window the re-run's sweep tries every candidate year, so the settle is
-  // a final-tier budget; a watch that never saw the run start prints what it read.
-  const closeToResult = async (dialog: ReturnType<Page['getByRole']>, line: string): Promise<void> => {
-    await expectRefiguringSeen(page, 'intake:kept')
-    await closePanel(dialog, line)
-  }
-
-  // Branch A.
-  {
-    const { dialog, row, face, value } = await openPanelAndKeep()
-    await showRow(row)
-    await captureState(page, path.join(outDir, 'panel-kept'))
-    await pick(face.getByRole('radio', { name: copy.periodMonth }))
-    await expect(value, 'the unit tap converts the kept money: the row still says the $84,000 a year kept').toHaveText(slots.assumptionWorkingCostKept(KEPT_W))
-    await expect(face.getByRole('textbox', { name: copy.workingCostAmountLabel, exact: true })).toHaveValue(KEPT_W_MONTHLY)
-    await showRow(row)
-    await captureState(page, path.join(outDir, 'panel-kept-month'))
-    await pick(face.getByRole('radio', { name: copy.periodYear }))
-    await expect(value, '"Each year" again is the kept figure exactly').toHaveText(slots.assumptionWorkingCostKept(KEPT_W))
-    await pick(dialog.locator('[data-assumption-seat="retirement-state"]').getByRole('radio', { name: /Pennsylvania/ }).first())
-    await expect(face.getByRole('note')).toContainText(slots.workingCostStaleStateKept(KEPT_W))
-    await expect(face.getByRole('button', { name: slots.workingCostKeepYearly(KEPT_W) }), 'the state alone: the door shows').toHaveCount(1)
-    await showRow(row)
-    await captureState(page, path.join(outDir, 'panel-kept-stale-state'))
-    await armRerunWatch()
-    await raiseSpending(dialog)
-    // Both causes, then the lean (the U11 walk's (ac)): the spending alone sits above the kept figure.
-    const both = `${slots.workingCostStaleKeptBoth(KEPT_W, RISEN_W_QUOTE_NOW)} ${slots.workingCostStaleLeansBetter(KEPT_W)}`
-    await expect(face.getByRole('note')).toContainText(both)
-    await keptStaleFace(face)
-    await showRow(row)
-    await captureState(page, path.join(outDir, 'panel-kept-stale-both'))
-    await closeToResult(dialog, both)
-    await captureState(page, path.join(outDir, 'result-kept-stale-both'))
-  }
-
-  // Branch B.
-  {
-    const { dialog, row, face } = await openPanelAndKeep()
-    await armRerunWatch()
-    await raiseSpending(dialog)
-    const sentence = `${slots.workingCostStaleKeptQuote(KEPT_W, RISEN_W_QUOTE_NOW)} ${slots.workingCostStaleLeansBetter(KEPT_W)}`
-    await expect(face.getByRole('note')).toContainText(sentence)
-    await keptStaleFace(face)
-    await showRow(row)
-    await captureState(page, path.join(outDir, 'panel-kept-stale-quote'))
-    await closeToResult(dialog, sentence)
-    await captureState(page, path.join(outDir, 'result-kept-stale-quote'))
-    await page.locator('[data-door="assumptions"]').click()
-    await page.getByRole('button', { name: copy.assumptionRewalkCta }).click()
-    await advanceIntakeTo(page, copy.qWorkingCostHeading, 'intake:kept')
-    const step = page.locator('.intake-shell .working-cost')
-    await expect(step.getByRole('note')).toContainText(sentence)
-    await keptStaleFace(step)
-    await captureState(page, path.join(outDir, 'walk-kept-stale-quote'))
-    await page.evaluate(() => document.querySelector<HTMLButtonElement>('.intake-nav .btn-primary')?.click())
-    // The gate names both ways out with both figures (the U11 walk's (ad)), never "answer it above".
-    await expect(page.getByRole('alert')).toContainText(slots.errWorkingCostStaleBelowQuote(KEPT_W, RISEN_W_QUOTE_NOW))
-    await captureState(page, path.join(outDir, 'walk-kept-stale-blocked'))
-  }
-
-  // Branch C (walk 2, the U11 walk's (ad)): the state answer moved alone, so the kept figure is stale on the state
-  // and the note's Keep door shows; on the walk's W step the gate names that door by its own words, or a retype.
-  // No re-run watch: this branch captures no Result, so nothing here needs the edit's own answer on screen. The
-  // move to Pennsylvania does re-run the answer (`commitAssumptionEdit` re-runs every date-route edit), and the
-  // settle in `closePanel` waits that run out. (The watch this walk used before W9-R7, keyed on the tier and the
-  // hero's words, saw nothing here in 150 s at both viewports on walk 2's first run, 2026-11-09: the run leaves
-  // this household's verdict word for word and its tier at "final".)
-  {
-    const { dialog, face } = await openPanelAndKeep()
-    await pick(dialog.locator('[data-assumption-seat="retirement-state"]').getByRole('radio', { name: /Pennsylvania/ }).first())
-    const stateOnly = slots.workingCostStaleStateKept(KEPT_W)
-    await expect(face.getByRole('note')).toContainText(stateOnly)
-    await closePanel(dialog, stateOnly)
-    await page.locator('[data-door="assumptions"]').click()
-    await page.getByRole('button', { name: copy.assumptionRewalkCta }).click()
-    await advanceIntakeTo(page, copy.qWorkingCostHeading, 'intake:kept')
-    const step = page.locator('.intake-shell .working-cost')
-    await expect(step.getByRole('note')).toContainText(stateOnly)
-    await expect(step.getByRole('button', { name: slots.workingCostKeepYearly(KEPT_W) }), 'the door the gate names is drawn').toHaveCount(1)
-    await page.evaluate(() => document.querySelector<HTMLButtonElement>('.intake-nav .btn-primary')?.click())
-    await expect(page.getByRole('alert')).toContainText(slots.errWorkingCostStaleKeep(slots.workingCostKeepYearly(KEPT_W)))
-    await captureState(page, path.join(outDir, 'walk-kept-stale-state-blocked'))
-  }
-}
-
-/** The typed-below walk's budget: two fresh landings' settles, the edit's re-run and its final frame, at
- *  FINAL_TIER_MS each, plus three minutes for its four captures per viewport and the re-walk to the money picture. */
-const TYPED_BELOW_TEST_MS = 4 * FINAL_TIER_MS + 180_000
-
-/**
- * The TYPED-BELOW walk (increment 12 — `intake:typedbelow`, U11 walk 6): the note the Tier 0 retype entry's
- * prescription (1) shipped in walk 5's round (`workingYearCostTypedBelowNote`: a TYPED figure below today's
- * spending, both figures and the lean) renders on no seed or vault route, so no walk had read it. Reached the way a
- * household reaches it: `datesavedrisen`'s Result (a yes to $84,000, stale under a $90,000 spending figure, "All of
- * it" saved) → its standing line's door → the panel's W row → "No — I'll enter a different figure", "Each year"
- * tapped first (the untapped unit is a month, KTD17), and the old $84,000 typed back in.
- *  - `panel-typed-below`: the row, the note under it, and the seat below naming the typed figure and ending on the
- *    typed-below line's runs (U11 walk 7's R2; the whole-window rebuild: A's one run, a plain paragraph, closed by
- *    the survivor part, in the walk-8 form council's words);
- *  - `result-typed-below`: the Result after that edit's re-run (the re-run watch the kept walk uses) — no stale line,
- *    since a typed figure carries no stamp, but R1's typed-below line in the slot (U11 walk 6); its gate is
- *    `vault:datesavedtyped` (the same draft as a plant, walked by `walkVaultReturn` unedited);
- *  - `walk-typed-below`: the re-walk's W step, the same note on the walk's host;
- *  - `walk-typed-below-ledger`: the re-walk one step further, the money-picture step: the seat under "All of it", its
- *    line below the radios opening with the counts sentence (nothing above it there carries the lean, KTD6 host 3).
- * The stale lines' sentences asserted are the shipped slots over the seed's own figures; the typed-below line's are
- * typed by hand (the walk-8 form build's U2), so a plant in its words reds this walk too.
- */
-async function walkIntakeTypedBelow(page: Page, outDir: string): Promise<void> {
-  const note = slots.workingCostBelowSpending(STALE_W_CONFIRMED, RISEN_W_QUOTE_NOW, true)
-  await gotoSeedFinal(page, 'datesavedrisen')
-  await page.getByRole('button', { name: copy.stalenessPayCheckCtaUpdate }).click()
-  const dialog = page.getByRole('dialog')
-  await expect(dialog).toBeVisible()
-  const row = dialog.locator('[data-assumption-seat="working-year-cost"]')
-  const face = row.locator('.working-cost')
-  const different = face.getByRole('radio', { name: copy.workingCostDifferent, exact: true })
-  await different.evaluate((el) => (el as HTMLInputElement).click())
-  await expect(different, 'the different-figure radio did not commit').toBeChecked()
-  const year = face.getByRole('radio', { name: copy.periodYear })
-  await year.evaluate((el) => (el as HTMLInputElement).click())
-  await expect(year, 'the year tap did not commit').toBeChecked()
-  await armRefiguringWatch(page)
-  await typeFieldValue(face.getByRole('textbox', { name: copy.workingCostAmountLabel, exact: true }), '84000', STALE_W_CONFIRMED)
-  await expect(face.getByText(note, { exact: true }), 'the typed-below note under the row').toBeVisible()
-  // U11 walk 7's R2: the seat below names the $84,000 its $16,985 rests on and, below its radios, ends on the line's
-  // runs (the whole-window rebuild's KTD6, host 3): A's one run over the whole window, a plain paragraph in the
-  // sheet (the W row above carries the "can look better" half, so no counts sentence) — the bare lean naming the
-  // $90,000 (the walk-9 form council's call (2)), the cap sentence, this answer's $16,985, $6,000 less in savings in
-  // each working year you're both alive at the spending — then the survivor part in the same paragraph. The sheet names
-  // "this answer" (the walk-8 form council's KD9).
-  const seat = dialog.locator('[data-assumption-seat="working-year-left-over"]')
-  await expect(
-    seat.getByText(slots.workingLedgerLeftOverFigureAt(STALE_W_CONFIRMED, DATE_LEFT_OVER), { exact: true }),
-    'the seat’s figure names the typed figure',
-  ).toBeVisible()
-  await expect(seat.locator('p.left-over__at-quote'), 'the seat’s lean, its one run and its survivor part').toHaveText(
-    `${TYPED_BELOW_SHEET_LEAN} ${typedBelowOneRun('This')}`,
-  )
-  await row.evaluate((el) => el.scrollIntoView({ block: 'start' }))
-  await captureState(page, path.join(outDir, 'panel-typed-below'))
-  await expectRefiguringSeen(page, 'intake:typedbelow')
-  await dialog.getByRole('button', { name: /^(Close|Cancel)$/ }).first().click()
-  await expect(dialog).toBeHidden()
-  await expect(settledResult(page)).toBeAttached({ timeout: FINAL_TIER_MS })
-  // U11 walk 6's R1: no stale line (a typed figure carries no stamp), but its own typed-below line holds the slot, in
-  // W's plain form with the update button inline — the counts sentence, the lean, then its one run (the whole-window
-  // rebuild), then the survivor part (the survivor-path build), in the walk-9 form council's words.
-  const standing = page.locator('p.cs-paycheck-note')
-  await expect(standing, 'the typed-below line holds the standing slot, one run a plain paragraph').toHaveCount(1)
-  await expect(standing).toContainText(`${typedBelowCounts('This')} ${typedBelowLean('This')} ${typedBelowOneRun('This')}`)
-  await expect(standing.getByRole('button', { name: copy.stalenessPayCheckCtaUpdate })).toBeVisible()
-  await captureState(page, path.join(outDir, 'result-typed-below'))
-  await page.locator('[data-door="assumptions"]').click()
-  await page.getByRole('button', { name: copy.assumptionRewalkCta }).click()
-  await advanceIntakeTo(page, copy.qWorkingCostHeading, 'intake:typedbelow')
-  const step = page.locator('.intake-shell .working-cost')
-  await expect(step.getByText(note, { exact: true }), 'the same note on the walk’s W step').toBeVisible()
-  await captureState(page, path.join(outDir, 'walk-typed-below'))
-  // One step further (the whole-window rebuild's U5, walk 8's third added target): the walk's money-picture step, the
-  // seat's other home. Nothing above the seat there carries the lean (the W note lives on the W step), so under "All
-  // of it" the seat's line below the radios opens with the counts sentence in its "Your" form, then its lean (KD9), then
-  // the one run and the survivor part.
-  await advanceIntakeTo(page, copy.qWorkingLedgerHeading, 'intake:typedbelow')
-  const question = page.locator('.intake-shell .step-body .left-over')
-  await expect(question, 'the left-over question renders once, inside the step').toHaveCount(1)
-  await expect(question.getByRole('radio', { name: copy.workingLedgerLeftOverSaved, exact: true }), '“All of it” stays checked').toBeChecked()
-  await expect(question.locator('p.left-over__at-quote'), 'the step’s seat opens with the counts sentence').toHaveText(
-    `${typedBelowCounts('Your')} ${typedBelowLean('Your')} ${typedBelowOneRun('Your')}`,
-  )
-  await question.locator('.left-over__at-quote').evaluate((el) => el.scrollIntoView({ block: 'center' }))
-  await captureState(page, path.join(outDir, 'walk-typed-below-ledger'))
-}
-
-/**
- * The SAVED-MOVED money-picture step (`intake:typedmoved`, b9-3, for walk 10's watch item W9 (5), council
- * `wf_9bd3c243-4e7`): TM (`datesavedtypedmoved`: $84,000 typed under $105,000 of spending, "All of it" saved when the left
- * over was $16,985, $26,985 now) re-walked from its settled Result to the money-picture step ("Question 14"). Under the
- * reply buttons the step draws the moved note, its clause with no answer noun since U3, then the typed-below line in its
- * "Your" form: the two places walk 10 reads for "answer" taken as the couple's reply. The line's words are pinned by the
- * unit suite; this arm pins the note's clause and the counts sentence's opening, and captures the frame.
- */
-async function walkIntakeTypedMoved(page: Page, outDir: string): Promise<void> {
-  await rewalkSeedTo(page, 'datesavedtypedmoved', copy.qWorkingLedgerHeading, { final: true })
-  const question = page.locator('.intake-shell .step-body .left-over')
-  await expect(question, 'the left-over question renders once, inside the step').toHaveCount(1)
-  await expect(question.getByRole('radio', { name: copy.workingLedgerLeftOverSaved, exact: true }), '“All of it” stays checked').toBeChecked()
-  await expect(question, 'the moved note’s clause, no answer noun (U3)').toContainText(
-    'leave this as it is: each working year still adds at most the $16,985 you said goes in.',
-  )
-  // Three runs, so the seat is `NotePartsBlock`'s `div.note-parts` (one run would be a `p`): select by class alone.
-  await expect(question.locator('.left-over__at-quote'), 'the step’s seat opens with the counts sentence, in its "Your" form').toContainText(
-    'Your answer counts a working year at your own figure of $84,000 a year, below your spending of $105,000 a year.',
-  )
-  await question.locator('.left-over__at-quote').evaluate((el) => el.scrollIntoView({ block: 'center' }))
-  await captureState(page, path.join(outDir, 'walk-typed-moved-ledger'))
-}
-
-/** A's counts sentence (`datesavedtyped`: $84,000 typed under $90,000 of spending), naming the host's answer (the
- *  walk-8 form council's KD9): "This" on the Result, "Your" on the walk's step. No lean in it since the walk-9 form
- *  council's call (2). Typed by hand from the U2 probe (`probe.out.txt`, witness `a`). */
-const typedBelowCounts = (noun: 'This' | 'Your'): string =>
-  `${noun} answer counts a working year at your own figure of $84,000 a year, below your spending of $90,000 a year.`
-/** …the lean, its own sentence after the counts sentence, naming the quote in dollars (call (2)) and the host's answer… */
-const typedBelowLean = (noun: 'This' | 'Your'): string =>
-  `A working year almost always costs at least your spending of $90,000 a year, so ${noun === 'This' ? 'this' : 'your'} answer can look better than it really is.`
-/** …and in the details sheet, which has no counts sentence (the W row's note above says the "can look better" half), the
- *  bare lean. */
-const TYPED_BELOW_SHEET_LEAN = 'A working year almost always costs at least your spending of $90,000 a year.'
-/** …and the rest of A's one paragraph, typed by hand (the walk-9 form council's words,
- *  `docs/plans/features/typed-below-walk9-form-build-spec.md`): the cap sentence (KD5: year 0 at $90,000 leaves $10,985,
- *  below the stored $16,985; "At your spending" alone, the lean having said the dollars, no floor aside); its ONE run over
- *  the whole window, whose at-spending figure IS the cap, so it drops its first beat (T's twin, call (2)): this answer's
- *  $16,985, then the close carrying the survivor scope, "$6,000 less in your savings in each working year you’re both
- *  alive" (`date`'s couple — Alex 58, working; Sam 60, retired — opens the survivor-path build's gate, since the engine can
- *  draw a working year with Sam dead and Alex still working, 2032–2035), the gloss on its rider (the line's first, inside
- *  the period, no brackets); then the survivor part (KD7, opening "In a working year with only one of you alive,"): by
- *  hand (DND 012), the default 0.75 survivor ratio of each W (`src/shared/appDefaults.ts`; no budget on this seed),
- *  $84,000 × 0.75 = $63,000 at the figure and $90,000 × 0.75 = $67,500 at the spending, so at most $4,500 a year less. */
-const typedBelowOneRun = (noun: 'This' | 'Your'): string =>
-  [
-    'At your spending, your first working year would have $10,985 left over, so the answer at that spending would add at most $10,985 in any working year.',
-    `${noun} answer adds at most $16,985 a year to your savings.`,
-    'At your spending, that’s $6,000 less in your savings in each working year you’re both alive, except for any difference between the two answers in income tax and Medicare’s income surcharge, the extra Medicare premium you pay when your income two years before was high.',
-    'In a working year with only one of you alive, that year’s costs count as $63,000 at your figure of $84,000 a year and $67,500 at your spending of $90,000 a year.',
-    'At your spending, that’s at most $4,500 a year less in your savings, except for any difference between the two answers in income tax and Medicare’s income surcharge.',
-  ].join(' ')
-
-/**
- * The INTAKE walk (increment 4 — `intake:fork`): the Medicare-extras payment fork is
- * intake-ONLY — every seed/vault target bypasses the guided flow entirely, so the fork's
- * blank-start frame, its half-answer R19 block, and the mixed-provenance state (one entered
- * dollar, one adopted typical) were structurally uncapturable before this target. The drive
- * mirrors the CSP walk's proven near-Medicare household (65/63) up to the fork; the SPEND
- * step is captured en route (`spendHelp`'s first-ever walk — it carries the post-flip
- * premium-boundary sentence + the income-tax fence). Nothing past the fork is driven —
- * verdict/door/panel coverage rides the seed and vault targets.
- */
-async function walkIntakeFork(page: Page, outDir: string): Promise<void> {
+/** `intake:new`: the cold start, "Start a new plan", then each of the stepper's six steps, empty. */
+async function walkIntakeNew(page: Page, outDir: string): Promise<void> {
   await page.goto('/')
-  await page.getByRole('button', { name: 'Begin' }).click()
-
-  // Person groups locate by the STABLE class — committing a name renames the group's
-  // accessible legend mid-flow (by design), which would stale a name-based locator.
-  const you = page.locator('.person-group').first()
-  const spouse = page.locator('.person-group').nth(1)
-  // NOT check({force}) (the CSP walk's idiom): the segment radios are sr-only 1px boxes, and
-  // on the PHONE arm the forced click can land off-target ("did not change its state" —
-  // caught by this walk's own smoke run). A NATIVE element click is layout-independent,
-  // still bubbles to React's root listener, and the committed state is asserted back.
-  const pick = async (
-    scope: Page | ReturnType<Page['locator']>,
-    name: string | RegExp,
-  ): Promise<void> => {
-    const radio = scope.getByRole('radio', { name, exact: typeof name === 'string' })
-    await radio.evaluate((el) => (el as HTMLInputElement).click())
-    await expect(radio, 'the picked radio did not commit').toBeChecked()
+  await expect(page.locator('main.rc-root[data-vault-page]'), 'the cold start never drew').toBeVisible({ timeout: 30_000 })
+  await captureState(page, path.join(outDir, 'cold-start'))
+  await page.getByRole('button', { name: copy.coldStartBegin }).click()
+  const names = page.getByRole('dialog', { name: copy.setupNewPlanTitle })
+  await expect(names, '"Start a new plan" opened no names dialog').toBeVisible({ timeout: 30_000 })
+  await page.waitForTimeout(450)
+  await captureState(page, path.join(outDir, 'new-plan'))
+  await names.getByLabel(copy.setupNameYou).fill('Alex')
+  await names.getByLabel(copy.setupNameSpouse).fill('Sam')
+  await names.getByRole('button', { name: copy.setupNewPlanStart }).click()
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  for (const step of SETUP_STEPS) {
+    await expect(page.locator(`main[data-setup-step="${step}"]`), `the stepper never reached ${step}`).toBeAttached({ timeout: 30_000 })
+    await page.evaluate(() => window.scrollTo(0, 0))
+    await captureState(page, path.join(outDir, `setup-${step}`))
+    // The stepper's Next (or Complete), its nav's last button.
+    if (step !== 'goals') await page.locator('[data-setup-nav] button').last().click()
   }
-  const next = () => page.getByRole('button', { name: 'Continue' }).click()
-
-  await you.getByLabel('First name').fill('Pat')
-  await you.getByLabel('Birth year').fill('1961')
-  await pick(you, 'Male')
-  await spouse.getByLabel('First name').fill('Sam')
-  await spouse.getByLabel('Birth year').fill('1963')
-  await pick(spouse, 'Female')
-  await next()
-
-  await pick(you, 'Already retired')
-  await you.getByLabel('The age work stopped').fill('63')
-  await pick(spouse, 'Already retired')
-  await spouse.getByLabel('The age work stopped').fill('61')
-  await next()
-
-  const ssAmounts = page.getByLabel('Monthly benefit at full retirement age')
-  await ssAmounts.first().fill('2000')
-  await ssAmounts.last().fill('1500')
-  const claims = page.getByLabel('The year you’ll start Social Security')
-  await claims.first().fill('2028')
-  await claims.last().fill('2030')
-  await next()
-
-  // The RETIREMENT-STATE step (the state-tax unit) — captured blank (the lead +
-  // help + the four honest arms are the read), then NC picked so the spend step
-  // downstream carries the PRICED-state spendHelp branch into its capture.
-  // This walk's household is both-already-retired, so the ROUTE-TRUE present-tense heading
-  // renders (the Caddie chair fix, 2026-07-15).
-  await expect(page.getByRole('heading', { name: 'Where do you live in retirement?' })).toBeVisible()
-  await captureState(page, path.join(outDir, 'state-step'))
-  await pick(page, 'North Carolina')
-  // The SELECTED-picker face (increment 5): the answered picker is a walked cold-read surface of
-  // its own — the state-tax read law is that the picked segment survives WITHOUT hue (weight +
-  // fill + inset ring, the old walk's `.segment-active`, gone with intake.css at RC19; RC21 re-points
-  // these selectors to the stepper). Assert the pick committed a visually-active
-  // segment BEFORE the crop so a forced-click that missed (the sr-only 1px-box phone trap the
-  // `pick` helper guards) fails RED here, not a bundle showing no selection. The full state
-  // (copy/aria/whole-viewport CVD arms) lands the answered picker in context; captureCvdRegion
-  // adds the dedicated device-scale picker crops under every arm for the fine read.
-  const pickerSel = 'fieldset.segmented:has(input[name$="-retirement-state"])'
-  await expect(
-    page.locator(`${pickerSel} .segment-active`),
-    'the North Carolina pick did not activate a segment — the picker crop would show no selection',
-  ).toBeVisible()
-  await captureState(page, path.join(outDir, 'state-step-picked'))
-  await captureCvdRegion(page, path.join(outDir, 'state-step-picked'), pickerSel, 'state-picker')
-  await next()
-
-  // The SPEND step — captured BEFORE any entry (the help text is the read).
-  await expect(page.getByLabel('Household spending, all in')).toBeVisible()
-  await captureState(page, path.join(outDir, 'spend-step'))
-  await page.getByLabel('Household spending, all in').fill('7000')
-  await pick(page, 'Each month')
-  await next()
-
-  // ACA pair (63 < 65 ⇒ required) → out-of-pocket (optional, skipped) → IRMAA seed.
-  await page.getByLabel('Your household’s combined monthly premium').fill('950')
-  await page.getByLabel('Benchmark Silver plan, monthly (whole household)').fill('880')
-  await next()
-  await next()
-  await page.getByLabel('Income, two years back').fill('120000')
-  await page.getByLabel('Income, last year').fill('110000')
-  await next()
-
-  // THE FORK, blank-start: nothing pre-selected — an unanswered arm is never a silent $0.
-  await expect(
-    page.getByRole('heading', { name: 'Medicare, beyond Part B' }),
-    'the intake drive did not land on the payment-fork step',
-  ).toBeVisible()
-  await captureState(page, path.join(outDir, 'fork-blank'))
-
-  // The half-answer R19 block: 'entered below' with no dollar + Continue → the
-  // finish-the-answer-or-unsay-it line. Asserted so a silent advance (or a never-rendered
-  // error) fails the walk RED instead of bundling a frame identical to fork-blank
-  // (insight-029 vacuity discipline).
-  await pick(you, 'A monthly premium — entered below')
-  await pick(spouse, /Not sure — use a typical figure/)
-  await next()
-  await expect(
-    page.getByText('Enter the monthly amount — or pick one of the other choices.'),
-    'the half-answered fork did not fire its R19 block',
-  ).toBeVisible()
-  await captureState(page, path.join(outDir, 'fork-blocked'))
-
-  // Mixed provenance: Pat enters a real $180; Sam stays on the adopted typical — the state
-  // the standing disclosures must keep legible per person (spec F2). Select-all + typed
-  // digits + value asserted back (the fill() concatenation trap — the walk's own law).
-  await typeFieldValue(you.getByLabel('Monthly premium, all in'), '180', '180')
-  await captureState(page, path.join(outDir, 'fork-mixed'))
 }
 
 function hookConsole(page: Page): Array<{ type: string; text: string }> {
@@ -2141,10 +412,8 @@ function hookConsole(page: Page): Array<{ type: string; text: string }> {
   return log
 }
 
-// The phone arm carries hasTouch + isMobile so `(pointer: coarse)` matches like a REAL phone —
-// pointer-adaptive chrome (the band's enlarge affordance is fine-pointer-only, 2026-07-10)
-// otherwise captures a desktop DOM into the "phone" bundle and the readers judge a frame no
-// phone user sees.
+// The phone arm carries hasTouch + isMobile so `(pointer: coarse)` matches like a REAL phone: pointer-adaptive chrome
+// otherwise captures a desktop DOM into the "phone" bundle and the readers judge a frame no phone user sees.
 const VIEWPORTS = [
   { name: 'real', viewport: REAL, dpr: REAL_DPR, touch: false },
   { name: 'phone', viewport: PHONE, dpr: PHONE_DPR, touch: true },
@@ -2156,80 +425,15 @@ for (const target of TARGETS) {
     test.describe(`caddie walk — ${target.kind}:${target.key} at ${v.name.toUpperCase()} (${v.viewport.width}×${v.viewport.height} @ ${v.dpr}dpr)`, () => {
       test.use({ viewport: v.viewport, deviceScaleFactor: v.dpr, hasTouch: v.touch, isMobile: v.touch })
       test('walk', async ({ page }) => {
-        if (target.kind === 'solve') test.setTimeout(SOLVE_TEST_MS) // the full-precision pooled solve + the walk around it
-        // `intake:kept` waits on a final-tier budget eight times by design (KEPT_TEST_MS names them), each budgeted
-        // FINAL_TIER_MS, plus its nine captures and a re-walk.
-        if (target.kind === 'intake' && target.key === 'kept') test.setTimeout(KEPT_TEST_MS)
-        if (target.kind === 'intake' && target.key === 'typedbelow') test.setTimeout(TYPED_BELOW_TEST_MS)
+        // A seed walk visits every page (each waits out its own runs); a solve adds the full-precision pooled solve.
+        test.setTimeout(target.kind === 'solve' ? SOLVE_TEST_MS : target.kind === 'seed' ? FINAL_TIER_MS + 20 * 60_000 : FINAL_TIER_MS + 180_000)
         const consoleLog = hookConsole(page)
         const outDir = path.join(OUT_ROOT, targetSlug, v.name)
-        if (target.kind === 'vault') {
-          // Doors ride the STALE verdicts only — `vault:retired`'s verdict is the same
-          // household minus the staleness surfaces; double-walking its sheets is pure bloat.
-          // Increment 4: `datestale` JOINS the door walk — the aged DATE household's sheets
-          // are where a driven lever preview inherits (or fails to inherit) the stale
-          // timeline; that interplay was an uncaptured landmine while only the spine-stale
-          // vault opened its doors.
-          // Increment 5: `statestale` JOINS the door walk — the affirm lands the NC-clause hero
-          // (on-track since the 2026-08-02 rate pin; borderline when this increment shipped), and the Assumptions door opens the panel on the ANSWERED
-          // retirement-state seat (the priced/answered picker-row face — face #2 of the
-          // state-carrying increment, uncapturable on any non-door state).
-          // U17 §S6: `datearrived` JOINS the door walk, for increment 4's own stated reason —
-          // it is an aged DATE household, so its sheets are exactly where a driven lever preview
-          // inherits (or fails to inherit) the elapsed timeline. It is the STRONGER case than
-          // `datestale`: on the arrived plant the crowned date is BEHIND the wall clock, so any
-          // lever preview that still speaks in future tense about it is wrong in a way no
-          // already-covered face can show. Left out, the one plant this stage exists to
-          // cold-read would have been chaired on its landing alone — and the tape's costliest
-          // lesson (2026-07-10) is that he finds real defects on the surfaces the walk skipped.
-          // U17 §S6 follow-up (2026-07-30): `rec` and `recold` JOIN the door walk, closing a
-          // coverage gap the queue had recorded as CLOSED. A 2026-07-27 audit concluded "there
-          // IS no route list… only `intake` has a key whitelist" — it read the CADDIE_TARGETS
-          // env plumbing (which genuinely is key-agnostic) and generalised to this file without
-          // opening THIS line. The door walk has always been an explicit allowlist, and the two
-          // record plants were never on it, so S6 chaired Cards 6-7 on their LANDINGS alone and
-          // no oracle has ever seen the five sheets behind them. That is the same defect
-          // `ed6432cd` had already diagnosed and fixed for `datearrived` — on the same day.
-          // The record plants earn doors on the standing criterion: their sheets are where a
-          // driven lever preview meets a REMEMBERED recommendation, and `recold`'s superseded
-          // card is the only face where a lever can contradict a verdict the household was
-          // already shown. A grep that finds no list is not proof there is no list.
-          await walkVaultReturn(page, target.key, outDir, {
-            doors:
-              target.key === 'stale' ||
-              target.key === 'datestale' ||
-              target.key === 'statestale' ||
-              target.key === 'datearrived' ||
-              target.key === 'rec' ||
-              target.key === 'recold',
-            witness: LEFT_OVER_WITNESSES[target.key],
-          })
-        } else if (target.kind === 'intake') {
-          if (target.key === 'fork') await walkIntakeFork(page, outDir)
-          else if (target.key === 'paycheck') await walkIntakePaycheck(page, outDir)
-          else if (target.key === 'leftover') await walkIntakeLeftOver(page, outDir)
-          else if (target.key === 'kept') await walkIntakeKept(page, outDir)
-          else if (target.key === 'typedbelow') await walkIntakeTypedBelow(page, outDir)
-          else if (target.key === 'typedmoved') await walkIntakeTypedMoved(page, outDir)
-          else throw new Error(`unknown intake walk "${target.key}" — intake:fork, intake:paycheck, intake:leftover, intake:kept, intake:typedbelow and intake:typedmoved exist`)
-        } else if (target.kind === 'solve') {
-          await walkSolve(page, target.key, outDir)
-        } else {
-          await walkSeed(page, target.key, outDir)
-        }
+        if (target.kind === 'vault') await walkVaultReturn(page, target.key, outDir)
+        else if (target.kind === 'intake') await walkIntakeNew(page, outDir)
+        else if (target.kind === 'solve') await walkSolve(page, target.key, outDir)
+        else await walkSeed(page, target.key, outDir)
         fs.writeFileSync(path.join(outDir, 'console.json'), JSON.stringify(consoleLog, null, 2))
-        console.log(`caddie bundle → ${outDir}`)
-      })
-    })
-  }
-  if (target.kind === 'vault' && (target.key === 'stale' || target.key === 'statestale')) {
-    test.describe(`caddie walk — ${target.kind}:${target.key} UPDATE route at REAL (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr)`, () => {
-      test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
-      test('update-entry', async ({ page }) => {
-        const consoleLog = hookConsole(page)
-        const outDir = path.join(OUT_ROOT, targetSlug, 'real')
-        await walkUpdateRoute(page, target.key, outDir)
-        fs.writeFileSync(path.join(outDir, 'console-update.json'), JSON.stringify(consoleLog, null, 2))
         console.log(`caddie bundle → ${outDir}`)
       })
     })

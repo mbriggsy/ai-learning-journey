@@ -41,7 +41,6 @@ const headlineAnswer = (draft: ScenarioDraft, value = 8): ModelAnswer =>
 const snap = (draft: ScenarioDraft, answer: ModelAnswer, solve: SolveAnswer = { kind: 'idle' }): MemoryModelSnapshot => ({
   draft,
   answer,
-  displayed: null,
   solve,
   spend: { kind: 'idle' },
   refiguring: false,

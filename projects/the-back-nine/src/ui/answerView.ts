@@ -18,7 +18,7 @@
  * makes `fallback` near-unreachable on the result screen; it is the honest defensive arm, not a state
  * the finished household is expected to land in.
  */
-import type { MemoryModelSnapshot, SpendAnswer, StickyDisplay } from '@store/memoryModel'
+import type { MemoryModelSnapshot, SpendAnswer } from '@store/memoryModel'
 import { isDateRoute } from '@intake/intakeMap'
 import { workingYearFigureBesideQuote, type WorkingYearFigureBesideQuote } from '@intake/workingYearLeftOver'
 import type {
@@ -277,16 +277,8 @@ export function selectElevatedAnswer(
           kind: 'reading',
           headline,
           dollar,
-          // U12 C2 — THE RAW/STICKY SPLIT (one honest raw record, one sticky sentence): the
-          // SENTENCE (verdict word + "X of 10" + the $/mo clause) renders from the sticky DISPLAY
-          // triple memoryModel resolved inside the same commit as this answer, while the band and
-          // every drill-down (survivor readout, floor relief, scrub, AT range) keep reading the
-          // RAW `headline`/`dollar`/`result` threaded above. `snapshot.displayed` is non-null
-          // exactly on a non-indeterminate spine verdict (the Phase B commit-coherence invariant
-          // — trusted here, never re-derived); presence-keyed like its siblings so the preview
-          // harness's displayed-less fixtures stay legal (the surface then reads raw).
-          ...(snapshot.displayed ? { displayed: snapshot.displayed } : {}),
-          // The spend lane rides beside the sticky triple (its gate lives in verdictSentence.spendClauseFor).
+          // The spend lane (its gate lives in verdictSentence.spendClauseFor). Every count reads the RAW `headline` above:
+          // U12's sticky display triple left with RC21 (RC4 ruled every printed count raw).
           spend: snapshot.spend,
           ...spineBand(answer.result, answer.draft, savedAnchor), // the answered draft, as on the date route
           ...(answer.result.survivorReading ? { survivorReading: answer.result.survivorReading } : {}),
@@ -319,10 +311,9 @@ export function resolvedFocusKey(elevated: ElevatedAnswer): string | undefined {
     return `date:${track.kind}:${where}`
   }
   if (elevated.kind === 'spine' && elevated.view.kind === 'reading') {
-    // U12 C2: keyed on the RAW reading DELIBERATELY, never the sticky `displayed` triple — a held
-    // display over a moved raw (or the reverse) must not churn this key, and the surfaces' own
-    // once-per-mount announcedRef latch holds regardless (insight 047). The sticky sentence's
-    // change reaches AT through the surface's polite live region, never a focus re-fire.
+    // Keyed on the RAW reading (the only reading since RC21 deleted U12's sticky triple); the surfaces' own
+    // once-per-mount announcedRef latch holds regardless (insight 047). A sentence's change reaches AT through the
+    // surface's polite live region, never a focus re-fire.
     return `spine:${elevated.view.headline.outcomeState}:${elevated.view.headline.xOfTen.value}`
   }
   return undefined
@@ -332,9 +323,9 @@ export function resolvedFocusKey(elevated: ElevatedAnswer): string | undefined {
  * Where the R13 caveat's in-frame copy sits on the Result, decided once (the record card's seat plan,
  * `docs/plans/features/record-card-seat-build-spec.md`, KTD1). Result reads it once and drives every
  * consumer from it: the in-frame mount, and `main.result`'s `data-inframe-disclaimer`, behind which
- * app.css hides the page-trailing copy. Before this they were two expressions of one condition kept
+ * theme.css hides the page-trailing copy. Before this they were two expressions of one condition kept
  * equal by hand, and a frame where the two disagree shows the caveat twice or not at all
- * (the R13 two-mount contract: app.css's swap rule; App's trailing mount is the kit's Caveat since Act 6 · RC19).
+ * (the R13 two-mount contract: the swap rule, app.css's until Act 6 · RC21; App's trailing mount is the kit's Caveat).
  */
 export interface CaveatSeat {
   /** `'actions'`: inside the actions node, on every frame that is not computing: a resolved reading on
@@ -435,13 +426,6 @@ export type ConfidenceStatementView =
       readonly kind: 'reading'
       readonly headline: Headline
       readonly dollar: DollarAdjustment
-      /** U12 C2 — the sticky-resolved DISPLAY triple (memoryModel's hysteresis seam, threaded by
-       *  answerView from the same commit as the answer). When present, the SENTENCE — glyph +
-       *  verdict word + "X of 10" + the $/mo clause — renders from it; the band and every
-       *  drill-down (survivor, floor relief, scrub, AT range) keep reading the RAW
-       *  `headline`/`dollar` above (one honest raw record, one sticky sentence). Absent (the
-       *  preview harness, displayed-less fixtures) ⇒ the sentence reads the raw result directly. */
-      readonly displayed?: StickyDisplay
       /** The spend lane (memoryModel `SpendAnswer`) — the REAL figure for the magnitude clause. It
        *  rides the sentence only through `spendClauseFor`'s gate (shown state ≡ raw state, same
        *  direction); absent ⇒ the figure-less clause. */

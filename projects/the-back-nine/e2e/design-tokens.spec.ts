@@ -6,14 +6,12 @@ import { copy } from '../src/ui/copy'
  * Design-token REALITY proofs (real Chromium, real built dist/, real enforced CSP from
  * scripts/serve-dist-with-headers.ts — the same harness as csp.spec.ts):
  *
- *  1. Both self-hosted variable fonts actually LOAD under `font-src 'self'` — a CSP or
- *     bundling regression here would silently ship the Georgia/system fallback. Read from the
- *     font set's FontFace entries (`status === 'loaded'`), with a fake family as the control;
- *     never `document.fonts.check`, which is true for a family that does not exist (insight 116).
- *     Act 6's Figtree gets the same two arms on the cold start (its own describe below; on the kit probe page until
- *     Act 6 · RC19 deleted it).
- *  2. THE FIGURE LAW: digits in the body face render at equal advance widths under the
- *     app's inherited `font-variant-numeric: tabular-nums` (base.css), so an in-place
+ *  1. The self-hosted face, Figtree (Act 6's one face since RC21, when Fraunces and Source Sans 3 left with the old
+ *     sheets and their two arms here), actually LOADS under `font-src 'self'` — a CSP or bundling regression here would
+ *     silently ship the system fallback. Read from the font set's FontFace entries (`status === 'loaded'`), with a fake
+ *     family as the control; never `document.fonts.check`, which is true for a family that does not exist (insight 116).
+ *  2. THE FIGURE LAW: digits render at equal advance widths under the app's inherited
+ *     `font-variant-numeric: tabular-nums` (set on the root by theme.css's base layer since RC21), so an in-place
  *     recompute can never jitter a dollar figure horizontally. A font silently lacking
  *     `tnum` is a false green (back-nine-design §tabular) — this is the render-level
  *     verification that comment points at.
@@ -78,8 +76,8 @@ async function digitWidths(page: Page, family: string) {
  * Act 6 · RC1 (plan docs/plans/6-rightcapital-ui-plan.md, section 2.3): Figtree, the clone's one face, self-hosted from
  * `@fontsource-variable/figtree`. In RC1 only the kit probe page loaded it, so these arms read `kit-probe.html` on the
  * same enforced origin; since RC2 the main entry imports it too, and one arm reads it inside the shell; since RC19 (the
- * probe page deleted) the other two read the cold start, the main app's first `.rc-root` screen. Its default digits are proportional (ref 3.5), so the figure law is the tabular pair below with
- * its proportional control, exactly as for the body face above.
+ * probe page deleted) the other two read the cold start, the main app's first screen. Its default digits are proportional
+ * (ref 3.5), so the figure law is the tabular pair below with its proportional control.
  */
 test.describe('design tokens — Figtree (the cold start and the shell)', () => {
   test('Figtree loads under the enforced CSP (and the check can fail: a fake family reads unloaded)', async ({ page }) => {
@@ -115,87 +113,10 @@ test.describe('design tokens — Figtree (the cold start and the shell)', () => 
       Math.abs(w.prop1 - w.prop9),
       `proportional-nums did not change Figtree’s digit widths — tnum/pnum may be missing from the shipped file: ${JSON.stringify(w)}`,
     ).toBeGreaterThan(0.5)
-    // A kit root (the cold start's card page) inherits tabular-nums (theme.css's scoped base), so a number on a new screen
-    // is tabular by default.
-    const inherited = await page.locator('main.rc-root').evaluate((el) => getComputedStyle(el).fontVariantNumeric)
-    expect(inherited).toContain('tabular-nums')
-  })
-})
-
-test.describe('design tokens — fonts + the figure law', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('/')
-  })
-
-  test('both self-hosted variable fonts load under the enforced CSP (and the check can fail: a fake family reads unloaded)', async ({ page }) => {
-    // `document.fonts.check(...)` answers true for a family that does not exist at all (insight 116), so it proves
-    // nothing. The proof is a FontFace entry of the family whose status is 'loaded', after asking for it; the fake
-    // family is the control that shows the reading can come back false.
-    const loaded = await loadedFamilies(page, ['Fraunces Variable', 'Source Sans 3 Variable', FAKE_FAMILY])
-    expect(loaded['Fraunces Variable'], 'Fraunces Variable failed to load — display face falling back').toBe(true)
-    expect(loaded['Source Sans 3 Variable'], 'Source Sans 3 Variable failed to load — body face falling back').toBe(true)
-    expect(loaded[FAKE_FAMILY], 'a family that does not exist read as loaded — the check is deaf').toBe(false)
-  })
-
-  test('digits are tabular in the body face (and the probe can fail: proportional-nums changes widths)', async ({
-    page,
-  }) => {
-    const widths = await page.evaluate(async () => {
-      const probe = (text: string, variant: string) => {
-        const el = document.createElement('span')
-        el.textContent = text
-        el.style.fontFamily = '"Source Sans 3 Variable"'
-        el.style.fontSize = '32px'
-        el.style.fontVariantNumeric = variant
-        el.style.position = 'absolute'
-        el.style.visibility = 'hidden'
-        el.style.whiteSpace = 'pre'
-        document.body.appendChild(el)
-        return el
-      }
-      // The thinnest vs widest digit strings — the worst case for advance-width drift.
-      const tab1 = probe('1111111111', 'tabular-nums lining-nums')
-      const tab9 = probe('9999999999', 'tabular-nums lining-nums')
-      const prop1 = probe('1111111111', 'proportional-nums lining-nums')
-      const prop9 = probe('9999999999', 'proportional-nums lining-nums')
-      await document.fonts.ready
-      return {
-        tab1: tab1.getBoundingClientRect().width,
-        tab9: tab9.getBoundingClientRect().width,
-        prop1: prop1.getBoundingClientRect().width,
-        prop9: prop9.getBoundingClientRect().width,
-      }
-    })
-
-    // (2) The load-bearing contract: equal advance widths under tabular-nums.
-    expect(Math.abs(widths.tab1 - widths.tab9), `tabular widths differ: ${JSON.stringify(widths)}`).toBeLessThan(0.5)
-
-    // (3) The control arm: the feature must DO something, or (2) is vacuous.
-    expect(
-      Math.abs(widths.prop1 - widths.prop9),
-      `proportional-nums did not change digit widths — tnum/pnum features may be missing from the shipped font: ${JSON.stringify(widths)}`,
-    ).toBeGreaterThan(0.5)
-
-    // The inherited default (base.css :root) matches the tabular arm — the law holds
-    // without any per-component opt-in.
-    const inherited = await page.evaluate(() => {
-      const el = document.createElement('span')
-      el.textContent = '1111111111'
-      el.style.fontFamily = '"Source Sans 3 Variable"'
-      el.style.fontSize = '32px'
-      el.style.position = 'absolute'
-      el.style.visibility = 'hidden'
-      document.body.appendChild(el)
-      const eq = document.createElement('span')
-      eq.textContent = '9999999999'
-      eq.style.fontFamily = '"Source Sans 3 Variable"'
-      eq.style.fontSize = '32px'
-      eq.style.position = 'absolute'
-      eq.style.visibility = 'hidden'
-      document.body.appendChild(eq)
-      return Math.abs(el.getBoundingClientRect().width - eq.getBoundingClientRect().width)
-    })
-    expect(inherited, 'body-inherited font-variant-numeric is not tabular').toBeLessThan(0.5)
+    // The figure law holds without any per-component opt-in: the body itself (outside every screen's root) and a kit root
+    // (the cold start's card page) inherit tabular-nums from the root (theme.css's base layer since RC21).
+    const inherited = await page.evaluate(() => [document.body, document.querySelector('main.rc-root')!].map((el) => getComputedStyle(el).fontVariantNumeric))
+    for (const v of inherited) expect(v).toContain('tabular-nums')
   })
 })
 

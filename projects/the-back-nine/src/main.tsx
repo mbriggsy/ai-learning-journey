@@ -1,17 +1,11 @@
-// The cascade-layer order comes FIRST (Act 6, plan 6 section 2.1): every old sheet below sits in `@layer legacy`,
-// the new token sheet in `theme` / `base` / `utilities`, so the old surfaces keep their cascade untouched.
+// The cascade-layer order comes FIRST (Act 6, plan 6 section 2.1): theme, base (Tailwind's preflight), kit, charts,
+// utilities, so a later layer wins wherever it reaches whatever the specificity (the charts' sheet loads later, lazily).
 import './ui/styles/layers.css'
-// Self-hosted variable fonts (CSP: font-src 'self' — no CDN; precached for offline
-// via the woff2 glob in vite.config.ts). Fraunces opsz = words/display; Source Sans 3
-// = body/UI and every numeral (the figure law in src/ui/styles/tokens.css).
-import '@fontsource-variable/fraunces/opsz.css'
-import '@fontsource-variable/source-sans-3/index.css'
-// Act 6's one face (RC1's token sheet names it as `--font-ui`): the shell's `.rc-root` surfaces render in it since RC2.
+// Act 6's one face, self-hosted (CSP: font-src 'self', no CDN; precached for offline via the woff2 glob in vite.config.ts):
+// theme.css names it as `--font-ui` and sets it on the root. Fraunces and Source Sans 3 left with the old sheets at RC21.
 import '@fontsource-variable/figtree/index.css'
-import './ui/styles/tokens.css'
-import './ui/styles/base.css'
-import './ui/styles/app.css'
-// Act 6's token sheet (Tailwind's theme + utilities, no global preflight; the old sheets above share no token name).
+// Act 6's token sheet: Tailwind's theme, its preflight and its utilities (the old sheets, `tokens.css`, `base.css` and
+// `app.css`, left at RC21 with the legacy layer).
 import './ui/styles/theme.css'
 import { lazy, StrictMode, Suspense } from 'react'
 import { createRoot } from 'react-dom/client'

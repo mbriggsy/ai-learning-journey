@@ -1,8 +1,9 @@
 /*
  * The cascade-layer order for Act 6 (plan docs/plans/6-rightcapital-ui-plan.md, section 2.1 decision 2). Imported FIRST
- * by the entry (src/main.tsx; the kit probe's src/kit-probe.tsx too, until RC19 deleted it), so this statement fixes the order before any layer block is seen.
- * A later layer beats an earlier one whatever the specificity: every old stylesheet sits in `legacy` (each file's rules
- * wrapped in `@layer legacy`), so the new kit, chart and utility layers win where they reach, and the old surfaces
- * keep their own order inside `legacy` untouched. RC21 deletes the legacy layer.
+ * by the entry (src/main.tsx), so this statement fixes the order before any layer block is seen: the charts' sheet
+ * (`chartTheme.css`) rides a lazy chunk and would otherwise declare its layer last of all, and Tailwind's own imports in
+ * theme.css would put `utilities` before the `base` and `kit` blocks that follow them in that file.
+ * A later layer beats an earlier one whatever the specificity: the preflight (`base`) under the kit's own rules, the
+ * kit's under the charts', and the utilities over everything. The `legacy` layer that held the old sheets left at RC21.
  */
-@layer legacy, theme, base, kit, charts, utilities;
+@layer theme, base, kit, charts, utilities;

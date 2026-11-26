@@ -10,7 +10,7 @@
  * held still for as long as a harness needs to measure it. Live it lasts one run (~3 s on the spine, a
  * provisional sweep on the date route), too short to measure reliably (`docs/landmines.md`, The fit
  * gate and e2e, b9-5's "a window one run long"), so this preview is the measurement of record and
- * `e2e/vertical-fit.spec.ts`'s re-figuring arms read it.
+ * `e2e/rc-screens.spec.ts`'s re-figuring arms read it.
  *
  * Why the real app and not the heroes alone (the `U7Preview.tsx` / `DatePreview.tsx` shape the plan
  * named): the fold the spine arm proves runs from the verdict to the R13 in-frame disclaimer, and that

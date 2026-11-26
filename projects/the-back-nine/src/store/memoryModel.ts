@@ -12,11 +12,10 @@
  *      P3 controls + P4 solver reuse it as the shared-draw CRN seed — `seedA`);
  *  (c) exposes the worker-vs-main-thread capability flag (set at client
  *      construction, never inside src/engine);
- *  (d) is the recompute home — and the NAMED FUTURE owner of the rounding-
- *      hysteresis seam. Phase 2 builds NO sticky rounding: during intake the
- *      headline moves freely so sharpening is visible. The `lastDisplayed*`
- *      fields + margin gating are seated in PHASE 3 (session-only, never
- *      persisted) — declared here as a documented placeholder, unused in P2;
+ *  (d) is the recompute home. It once held a rounding-hysteresis seam (U12's sticky
+ *      display triple); Act 6 · RC4 ruled every printed count RAW and RC21 deleted
+ *      the seam, so a count is always the engine's own quantized headline
+ *      (`rawDisplayed`; insight 072 holds the seam's history);
  *  (e) holds the ONE plaintext shape — `ScenarioDraft`, the same field names as
  *      the to-be-persisted `CurrentScenario` (mapped FROM it, so a rename breaks both
  *      together). No parallel intake shape, no field-mapping layer: Save is a
@@ -66,7 +65,6 @@ import type {
   DateSearchOutcome,
   DollarAdjustment,
   EnteredAccount,
-  Headline,
   HealthIntakeV3,
   IncomeStream,
   OutcomeState,
@@ -97,7 +95,6 @@ import { shouldCommitSolve } from '@engine/solver/cancel'
 import { solverRunFingerprint, type SolverRunFingerprint } from '@engine/validation/solverRunFingerprint'
 // The display-geometry constants the sticky gates read — the engine's OWN exported values
 // (never re-typed; the same objects confidence.ts computes the emitted margins against).
-import { STATE_OPTIMISM_RANK, SURVIVAL_GRID } from '@engine/confidence'
 import { isEngineReset, type EngineClient } from './engineClient'
 
 // ---------------------------------------------------------------------------
@@ -269,8 +266,7 @@ export type ModelAnswer =
   // shown answer reads `draft`, never the live one, which an edit moves before the answer does; the
   // controls keep the live draft. Both REQUIRED, as `tier` is: a sibling field on the snapshot let a
   // test plant an answer beside a null draft, and a "fall back to the live draft" there would bring
-  // the defect back, so the compiler holds the door here. Session-only, never serialized (the
-  // `lastDisplayed` rule).
+  // the defect back, so the compiler holds the door here. Session-only, never serialized.
   | {
       readonly kind: 'headline'
       readonly result: SimulationResult
@@ -367,13 +363,6 @@ export type SpendAnswer =
 export interface MemoryModelSnapshot {
   readonly draft: ScenarioDraft
   readonly answer: ModelAnswer
-  /** U12 — the sticky-resolved DISPLAY triple for the spine hero sentence (contract (d)).
-   *  Null whenever no complete spine verdict stands (indeterminate / date route / error /
-   *  inputs-incomplete / nothing resolved). The raw result on `answer` is NEVER altered —
-   *  the band + every drill-down read it; only the sentence reads this. Written inside the
-   *  same commit as the answer, before its single notify (burned/017): no listener can
-   *  observe the answer and its displayed triple disagreeing across a frame. */
-  readonly displayed: StickyDisplay | null
   /** U15 §S5 (5) — the recommend-second solve lifecycle (tier-less; a SEPARATE channel from
    *  `answer`, which stays the spine/date first beat). `idle` until the second beat is invited. */
   readonly solve: SolveAnswer
@@ -472,130 +461,33 @@ export interface MemoryModel {
 }
 
 // ---------------------------------------------------------------------------
-// U12 — the sticky-rounding seam (contract (d), the P3 seat filled; plan
-// 3-controls.md:239 + architecture §9). The DISPLAYED spine triple holds steady
-// across a tiny edit whose new reading lands a hair past a display flip, so the
-// sentence never flickers between two honest roundings of one household.
-// Hysteresis on the DISPLAY only — the raw result is never altered.
-//
-// The headline count + verdict state gate on the survival-fraction margins
-// (`xOfTen.marginToEdge` + `stateMarginToEdge` — both are distances to their
-// FLIP EDGES, computed on the same quantized value the band compare reads).
-// The seam once held a third unit — the `buildDollar` proxy's $/month figure —
-// and was DELETED with it (the spend solve's phase C, council wf_faa1af2d-052):
-// the sentence quotes the spend lane's REAL figure now, which `spendClauseFor`
-// gates on the shown verdict being the raw one, so no surface renders a proxy
-// dollar a hold could steady.
-//
-// EPS POSTURE (a project-owned heuristic): hold a ONE-step display flip only
-// while the new reading sits within 20% of the half-flip distance of the edge
-// it crossed — SURVIVAL_GRID (0.01 of the 0.05 half-flip; on the 0.01 quantize
-// grid this means "exactly on the edge"). Anything past that, or a ≥2-step
-// move, always adopts.
-//
-// THE CONSERVATIVE-DIRECTION LAW (U12 ultramode, 8-lens convergence): every hold
-// is DIRECTION-GATED — a hold may only ever keep a display LESS optimistic than
-// the raw reading (the lower count, the lower-ranked verdict word per the
-// engine's STATE_OPTIMISM_RANK). A reading RISING onto an edge holds the
-// prior (calm, conservative); a reading FALLING onto an edge
-// always adopts the worse truth immediately (holding the rosier prior is the
-// calm-but-wrong cardinal sin — the prior comment claimed "conservative by
-// construction", which was only true for the rising direction). And the COUNT
-// may hold only under a STABLE verdict word (unchanged or itself held): a
-// state flip is a regime change, and holding the count across it composes a
-// sentence the engine can never emit ({9, borderline} — buildHeadline's
-// borderline band caps at 8).
-//
-// LIFECYCLE: session-only, captured at the resolve→verdict transition inside
-// commit(), freed across indeterminate / error / date-route / inputs-incomplete
-// commits (the seam applies only to a complete spine answer — an escape-hatch
-// edit on an indeterminate answer is defined non-sticky, plan 3-controls.md:242), re-seated
-// on re-entry by the deterministic recompute (U13's read). NEVER serialized —
-// it lives beside the epochs, structurally outside the draft (the shape tie
-// makes a draft field a compile error).
+// THE DISPLAY TRIPLE. U12 built a sticky-rounding seam here (a hysteresis hold on the displayed count and word, direction-
+// gated and pair-coupled: insight 072). Act 6 · RC4 ruled every count the clone prints RAW (an empty what-if returns the
+// plan's own bytes, so a held "Your plan" beside it would print two counts for one plan), which left the seam with no
+// printed reader, and RC21 deleted it with its tests (`resolveStickyDisplay`, `HEADLINE_STICKY_EPS`, the snapshot's
+// `displayed` and its capture in `commit`). What stays is the triple a sentence composes from, read raw.
 // ---------------------------------------------------------------------------
 
-/** The sticky-resolved spine DISPLAY triple: the count + verdict word it may hold, the dollar's
- *  direction COUPLED to the word (held exactly when the word is held — the direction is a function of
- *  the state, so the displayed (word, direction) pair is always PREV's or RAW's, both engine-emittable:
- *  insight 072's pair law; the ultramode review's F25, 2026-09-26), and the spend, a fact of the run
- *  adopted wholesale on every resolve. */
-export interface StickyDisplay {
+/** The spine DISPLAY triple a verdict sentence composes from: the count, the verdict word, the dollar's direction (a
+ *  function of the word: the engine emits them as a pair), and the entered spend the run scaled its trim from. */
+export interface DisplayTriple {
   readonly xOfTen: number
   readonly outcomeState: OutcomeState
-  /** The entered spend per month the run scaled its trim from — adopted wholesale on every
-   *  resolve (never held: it is a fact of the run, not a reading that can flicker). The spend
-   *  clause quotes it; the gate (`spendClauseFor`) refuses any FIGURE while the word is held. */
+  /** The entered spend per month the run scaled its trim from: the spend clause quotes it (`spendClauseFor`). */
   readonly spendPerMonthReal: number
   readonly direction: DollarAdjustment['direction']
 }
 
-export const HEADLINE_STICKY_EPS = SURVIVAL_GRID
-
 /**
- * THE RAW DISPLAY TRIPLE (Act 6 · RC4's ruling, 2026-11-24: RAW everywhere the clone prints a count). The triple the
- * sticky seam would adopt with no history (`resolveStickyDisplay(null, …)`), so every count the clone prints reads the
- * engine's own quantized headline: present exactly where `displayed` is (a complete, non-indeterminate spine answer),
- * null everywhere else. The sticky seam (`displayed`) keeps its tests and has no printed reader after RC4.
+ * THE RAW DISPLAY TRIPLE (Act 6 · RC4's ruling, 2026-11-24: RAW everywhere the clone prints a count): the engine's own
+ * quantized headline, present exactly on a complete, non-indeterminate spine answer, null everywhere else.
  */
-export function rawDisplayed(answer: ModelAnswer): StickyDisplay | null {
+export function rawDisplayed(answer: ModelAnswer): DisplayTriple | null {
   if (answer.kind !== 'headline' || answer.result.headline.outcomeState === 'indeterminate') return null
   // A result carries its dollar on every real run; one built without it (a test's hand-built answer) composes no sentence.
-  if (answer.result.dollar === undefined) return null
-  return resolveStickyDisplay(null, answer.result.headline, answer.result.dollar)
-}
-
-/** The pure hysteresis rule (insight 048 — the decision is an exported, planted-fail-
- *  tested seam; commit() keeps only the wiring). Given the previous displayed triple and
- *  the new raw reading, decide what the sentence shows. */
-export function resolveStickyDisplay(
-  prev: StickyDisplay | null,
-  headline: Headline,
-  dollar: DollarAdjustment,
-): StickyDisplay {
-  const rawX = headline.xOfTen.value
-  const rawState = headline.outcomeState
-  const direction = dollar.direction
-  const spendPerMonthReal = dollar.spendPerMonthReal
-  if (prev === null) {
-    return { xOfTen: rawX, outcomeState: rawState, spendPerMonthReal, direction }
-  }
-
-  // Verdict state: hold only an edge-hugging flip whose count moved at most one
-  // step (a ≥2-step count move is a real regime change — adopt even edge-close),
-  // and ONLY in the conservative direction: the held word must rank BELOW the
-  // raw one (a falling reading landing on an edge adopts the worse truth; the
-  // engine's own rank table is the one band-order source, never re-derived).
-  const stateHoldEligible =
-    rawState !== prev.outcomeState &&
-    Math.abs(rawX - prev.xOfTen) <= 1 &&
-    STATE_OPTIMISM_RANK[prev.outcomeState] < STATE_OPTIMISM_RANK[rawState] &&
-    headline.stateMarginToEdge < HEADLINE_STICKY_EPS
-
-  // Headline count: hold a one-step flip that lands within EPS of the flip edge —
-  // conservative direction only (the held count must be the LOWER one).
-  const xHoldEligible =
-    rawX !== prev.xOfTen &&
-    Math.abs(rawX - prev.xOfTen) === 1 &&
-    prev.xOfTen < rawX &&
-    headline.xOfTen.marginToEdge < HEADLINE_STICKY_EPS
-
-  // SYMMETRIC REGIME COUPLING: each unit may hold only while the other is STABLE
-  // (unchanged) or itself held — otherwise both adopt together. This makes the
-  // displayed (word, count) pair provably either PREV's pair or RAW's pair, both
-  // engine-emittable — a one-sided coupling still leaked {9, borderline} (count
-  // adopted at the 0.98 edge under a held word; caught by the property sweep).
-  const holdX = xHoldEligible && (rawState === prev.outcomeState || stateHoldEligible)
-  const holdState = stateHoldEligible && (rawX === prev.xOfTen || xHoldEligible)
-
-  return {
-    xOfTen: holdX ? prev.xOfTen : rawX,
-    outcomeState: holdState ? prev.outcomeState : rawState,
-    spendPerMonthReal,
-    // Coupled to the WORD, never adopted beside a held one: a held off-track word over a raw
-    // `on-the-line` direction composed "off-track … close to the line", a pair the engine never emits.
-    direction: holdState ? prev.direction : direction,
-  }
+  const { headline, dollar } = answer.result
+  if (dollar === undefined) return null
+  return { xOfTen: headline.xOfTen.value, outcomeState: headline.outcomeState, spendPerMonthReal: dollar.spendPerMonthReal, direction: dollar.direction }
 }
 
 const defaultMintSeed = (): number => {
@@ -677,20 +569,14 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
   let solveDispatchedEpoch = 0
   let solveCommittedEpoch = 0
 
-  // U12 — contract (d) FILLED (the P2 placeholder made real): `lastDisplayed` is
-  // the session-only sticky baseline (see the seam block above for the full
-  // rule + lifecycle), and `everResolved` gates the F9 inputs-incomplete
-  // demotion — pre-first-resolve incompleteness stays the idle home (mid-intake
-  // behavior byte-identical to P2), post-first-resolve it must never hold a
-  // stale confident verdict.
+  // U12 — `everResolved` gates the F9 inputs-incomplete demotion: pre-first-resolve incompleteness stays the idle home
+  // (mid-intake behavior byte-identical to P2), post-first-resolve it must never hold a stale confident verdict.
   let everResolved = false
-  let lastDisplayed: StickyDisplay | null = null
 
   const listeners = new Set<() => void>()
   let snapshot: MemoryModelSnapshot = {
     draft,
     answer,
-    displayed: lastDisplayed,
     solve: solveAnswer,
     spend: spendAnswer,
     refiguring,
@@ -701,7 +587,6 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
     snapshot = {
       draft,
       answer,
-      displayed: lastDisplayed,
       solve: solveAnswer,
       spend: spendAnswer,
       refiguring,
@@ -769,23 +654,12 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
     committedEpoch = epoch
     if (epoch === newestEpoch) newestSettled = true
     if (next.kind === 'headline' || next.kind === 'date') everResolved = true
-    // U12 — the sticky display resolves INSIDE the commit, before its single
-    // notify (burned/017): one snapshot carries the answer AND its displayed
-    // triple, so no listener can ever observe a one-frame mixed pair. A spine
-    // verdict advances the baseline; every other arm frees it (the seam applies
-    // only to a complete spine answer — indeterminate/error/date/incomplete all
-    // reset, and the NEXT verdict is a fresh capture, never held against a
-    // pre-gap number).
-    lastDisplayed =
-      next.kind === 'headline' && next.result.headline.outcomeState !== 'indeterminate'
-        ? resolveStickyDisplay(lastDisplayed, next.result.headline, next.result.dollar)
-        : null
     // A new answer's clause is unsized until ITS spend solve lands — the previous answer's figure
     // must never ride the new sentence (a resolve for an older commit is dropped by the epoch guard).
     spendAnswer = { kind: 'idle' }
     answer = next
-    // The flag re-derives INSIDE the commit, before its single notify (KTD4, the burned/017 rule the
-    // sticky triple follows): no listener sees the new answer beside the old flag.
+    // The flag re-derives INSIDE the commit, before its single notify (KTD4, the burned/017 rule): no listener sees the
+    // new answer beside the old flag.
     refreshRefiguring()
     notify()
   }

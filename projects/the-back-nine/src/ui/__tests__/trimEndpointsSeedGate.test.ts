@@ -1,9 +1,9 @@
 /**
  * The off-track trim clause on the Caddie walk's own worsened frame, through the REAL pipeline —
- * buildSpineParams → runEngine with the app's own options → resolveStickyDisplay → the ONE verdict
+ * buildSpineParams → runEngine with the app's own options → the raw display triple → the ONE verdict
  * composer — the gate for Card 3 of the 2026-09-11 walk (the walk's top calm-but-wrong): the
  * `retired` seed's household enters $10,000 a month over its $78,000-a-year baseline
- * (`e2e/caddie-walk.spec.ts` `walkWorsening`), the verdict steps down to a trim, and the hero's
+ * (the walk's `walkWorsening`, gone with the old answer page at Act 6), the verdict steps down to a trim, and the hero's
  * clause quotes the $10,000 they entered and NOTHING else — since 2026-09-25 (council
  * wf_8c2ece49-79a, Tier 0) the trim clause is figure-less: the engine's trim magnitude is an unsolved
  * proxy, and on this very frame its old "$2,800 instead of $10,000 — about $7,200 less" target ran
@@ -19,7 +19,6 @@ import { DEV_SEEDS } from '@ui/devSeeds'
 import { buildSpineParams } from '@intake/intakeMap'
 import { runEngine } from '@engine/engineProtocol'
 import { DOLLAR_STEP } from '@engine/confidence'
-import { resolveStickyDisplay } from '@store/memoryModel'
 import { composeVerdictReading } from '@ui/verdictSentence'
 import { slots } from '@ui/copy'
 import type { ScenarioDraft } from '@store/memoryModel'
@@ -30,7 +29,8 @@ const readingOf = (draft: ScenarioDraft) => {
   if (draft.seed === undefined) throw new Error('the dev seed carries no engine seed')
   const wire = runEngine(params, draft.seed, { bandFan: true, survivorConditioned: true, healthReadout: true })
   if (wire.kind !== 'resolved') throw new Error(`the run did not resolve: ${wire.kind}`)
-  const displayed = resolveStickyDisplay(null, wire.headline, wire.dollar)
+  // The raw triple (`rawDisplayed`'s shape: every printed count is raw since Act 6 · RC4).
+  const displayed = { xOfTen: wire.headline.xOfTen.value, outcomeState: wire.headline.outcomeState, spendPerMonthReal: wire.dollar.spendPerMonthReal, direction: wire.dollar.direction }
   const reading = composeVerdictReading(displayed)
   if (reading === null) throw new Error('indeterminate')
   return { wire, displayed, reading }

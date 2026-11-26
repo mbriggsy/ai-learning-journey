@@ -27,7 +27,7 @@
  * (the intro, the elapsed line, the notes) on the left, and on the right the read-back in a card with the decision pair
  * under it and W's door under the pair, so the pair and the door stay in the first frame at his window however many
  * notes an old vault earns (the short tier tightens the card's rows and gaps for the four-bucket read-back, the tallest;
- * `e2e/vertical-fit.spec.ts`'s unlock-line arms read it) (the notes are never trimmed to fit: content outranks layout). The class names the tests and the fit gate
+ * `e2e/rc-screens.spec.ts`'s pay check unlock arms read it) (the notes are never trimmed to fit: content outranks layout). The class names the tests and the fit gate
  * read (`reentry`, `reentry-story`, `reentry-notes`, `reentry-confirm`, `reentry-group`, `reentry-row__label`,
  * `reentry-actions`, `reentry-door`) are hooks; the look is the kit's utilities.
  */

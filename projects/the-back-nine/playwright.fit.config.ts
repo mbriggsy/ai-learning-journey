@@ -2,7 +2,7 @@ import { defineConfig } from '@playwright/test'
 
 /**
  * The real-browser VERTICAL-FIT gate (`verify:fit`) — council-mandated (2026-07-08,
- * wf_a2d93977-960): the one-frame fit law (`--laptop-fit-height`, tokens.css) is enforced by a
+ * wf_a2d93977-960): the one-frame fit law (`--laptop-fit-height`, theme.css since RC21) is enforced by a
  * REAL-BROWSER height assertion, never a token-sum (vertical fit is reflow-dominated — line wraps,
  * door wrap-count, the survivor face — which no layout-less arithmetic can see).
  *
@@ -29,7 +29,9 @@ export default defineConfig({
   // (each step at its own top, an editor naming itself and taking focus, the step nav yielding) are the first-run
   // stepper's arms in e2e/rc-screens.spec.ts.
   // Act 6's screens (e2e/rc-screens.spec.ts, from RC2): each clone unit's fit arms, on the dev-only `?seed=` routes.
-  testMatch: ['**/vertical-fit.spec.ts', '**/chart-text.spec.ts', '**/rc-screens.spec.ts'],
+  // `e2e/vertical-fit.spec.ts` left at Act 6 · RC21: its last arms (the pay check's standing line and its unlock gate)
+  // moved whole to rc-screens.spec.ts.
+  testMatch: ['**/chart-text.spec.ts', '**/rc-screens.spec.ts'],
   fullyParallel: true,
   // The date seeds are CPU-BOUND: a 16k-path final across two arms takes ~60 s alone, and the two
   // MEASURING specs render one's final 57 times (re-counted 2026-11-05 against the current specs:

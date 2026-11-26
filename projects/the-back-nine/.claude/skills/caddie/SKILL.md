@@ -67,91 +67,70 @@ the N=1 cold read judges tone, never the reverse).
 ## The Walk (capture)
 
 ```
-pnpm caddie:walk                                              # default (seed:retired, both viewports)
-CADDIE_TARGETS="vault:retired,vault:stale,seed:date" pnpm caddie:walk   # a target list
-CADDIE_SEED=budget pnpm caddie:walk                           # back-compat: one seed target
+pnpm caddie:walk                                                          # default (seed:retired, both viewports)
+CADDIE_TARGETS="seed:retired,vault:datesavedrisen,solve:surplus,intake:new" pnpm caddie:walk   # a target list
+CADDIE_SEED=budget pnpm caddie:walk                                       # back-compat: one seed target
 ```
 
 The harness (`e2e/caddie-walk.spec.ts`, own config `playwright.caddie.config.ts`, dev server on
-port 4195 — the `?seed`/`?vault` routes are DEV-only and DCE'd from dist) drives the surface to
-its settled final frame using the fit gate's proven recipe (`e2e/reviewSurface.ts`:
-`data-answer-tier="final"` → fonts.ready → finite animations done → 2×rAF → scrollTo(0,0)), plus
-one wait that recipe lacks: every capture first waits out a pending spend clause
-(`.cs-magnitude[data-spend="pending"]` gone within `FINAL_TIER_MS` — the solved figure lands a beat
-after the final stamp) and re-settles. It writes a per-state bundle to
-`temp/caddie/<run-stamp>/<target>/<viewport>/<state>/` — the
-run stamp (minted per invocation; `CADDIE_RUN=name` overrides) means a re-walk NEVER
-overwrites a bundle a reader panel is mid-read on (the first live run's filed defect).
+port 4195 — the `?seed`/`?vault` routes are DEV-only and DCE'd from dist) drives the RightCapital
+clone's screens (re-pointed at Act 6 · RC21; the old answer page, its doors, the panel and the old
+intake it walked are gone) to each settled frame using the fit gate's recipe (`e2e/reviewSurface.ts`:
+`SETTLED_RESULT` → fonts.ready → finite animations done → 2×rAF → scrollTo(0,0)), plus, per page,
+no part still busy and every chart's series drawn. It writes a per-state bundle to
+`temp/caddie/<run-stamp>/<target>/<viewport>/<state>/` — the run stamp (minted per invocation;
+`CADDIE_RUN=name` overrides) means a re-walk NEVER overwrites a bundle a reader panel is mid-read on.
 
-Walk shapes: a `seed:<key>` target captures the settled landing **then opens EVERY quiet-row
-door** and captures each sheet (the tape's first coverage lesson — his real read free-walks
-the doors); a FOLDED survivor card (`budget` — the floor relief holds the inline slot) is first
-opened, captured as a `survivor-open` state with the pointer parked, and closed again, so every
-door captures the default frame (2026-10-14, `0581e783`); a lever sheet (policy/regime radios,
-the Roth plan fields) additionally gets ONE
-preview DRIVEN and its TwoFutures chart captured as a `-preview` state (increment 3 — the
-rule-36 one-dialect check was un-verifiable on pre-commit input states; preview-only, nothing
-is Applied). A `vault:<key>` target drives the U13 decrypt-on-return arc (unlock → the
-re-entry gate → affirm → the echoed verdict, doors riding the STALE verdicts — both
-`vault:stale`, `vault:datestale`, and `vault:statestale` since increment 5, the aged
-lever-preview landmine); `vault:stale` and `vault:statestale` additionally capture the update
-route's first frame; `vault:datestale` is the aged SPLIT-DATE plant (the floor's arrived arm +
-the re-derived anchored hero); `vault:statestale` (increment 5) is the aged-STATE-profile plant
-(a fresh-vintage NC save whose own state profile drifted — the `stalenessStateTax` gate note in
-ISOLATION, then the borderline NC-clause hero; its Assumptions door is the priced/ANSWERED
-picker-row face). The state seeds (`seed:nc|pa|fl|elsewhere|datenc`, increment 5) ride the
-plain `seed:<key>` shape — each landing carries its state's verdict clause (NC bites to
-borderline / PA "usually a small piece" / FL's \$0 affirmation / the elsewhere monolith / the
-date-route NC witness). A `solve:<key>` target (increment 6 — `nc`, `surplus`, `failing`,
-`steer`; `SOLVE_GOAL` in the spec) walks the recommend-second arc from the settled landing:
-`landing` → `goalpicker` (the goal picked by its rendered label) → `pending` (the breathe) →
-`committed` (the HELD card or RECOMMENDED lockup at full worker precision, polled up to
-`SOLVE_LOCKUP_MS` 300 s inside a 480 s `SOLVE_TEST_MS`); `nc` adds the `stale` demotion, `failing`
-ends on the open `goalpicker` (nothing picked), `steer` on the `steer-note` refusal (nothing
-dispatches); any `solve:` target serializes the run (`workers: 1`, `playwright.caddie.config.ts`). An
-`intake:fork` target (increment 4) drives the GUIDED INTAKE to the Medicare-extras payment
-fork — blank-start → the half-answer R19 block → mixed provenance (one entered dollar, one
-adopted typical) — capturing the spend step en route, plus (increment 5) the retirement-state
-step: after the NC pick, the ANSWERED picker is captured as a device-scale crop AND under every
-CVD arm (`captureCvdRegion` — the read law: the active segment must survive without hue, via
-weight+fill+ring); the fork renders on no seed or vault
-route, so this is its only capturable home:
+Walk shapes:
+
+- `seed:<key>` — the settled home (`landing`, Dashboard → Snapshot), then EVERY page the shell draws,
+  in the route table's order (`page-<screen>`: Balance Sheet, Investment's two, Analysis's five tabs,
+  Stress Test, Social Security, Health Care, Cash Flows, Tax Strategies, Profile's pages, Settings),
+  each reached by its address; then, where the home's StaleBanner carries a standing line with a
+  door, that door's drawer (`door-<slug>`; on the pay check's stale and moved households, the
+  Pre-retirement living expenses drawer). The tape's first coverage lesson still binds: his real read
+  free-walks every page, so the walk captures every page, never the landing alone.
+- `vault:<key>` — the decrypt-on-return arc: the unlock card (`unlock`), the re-entry gate where the
+  return raises one (`gate`: its notes, its door under the buttons), the affirmed home (`landing`)
+  and its standing line's drawer. Every planted vault key (`src/ui/devSeeds.ts`) rides it unedited.
+- `solve:<key>` — the recommend-second arc on Tax Strategies: its first frame (`landing`), the goal
+  picked by its label (`surplus` and `steer` Leave more behind, every other Pay less tax) and Find
+  pressed (`pending`, the Calculating frame), then the Winner card and its ranked list at full
+  worker precision (`committed`, polled up to 300 s inside a 480 s test); a household the solve
+  refuses ends on its own words (`after-find`). Solve runs serialize (`workers: 1`).
+- `intake:new` — a fresh plan: the cold start (`cold-start`), "Start a new plan" (`new-plan`, the
+  names dialog), then each of the first-run stepper's six steps, empty (`setup-<step>`).
+- Retired at RC21 with the surfaces they drove: `intake:fork`, `paycheck`, `leftover`, `kept`,
+  `typedbelow`, `typedmoved` (a stale target fails loud and names where its law lives now). Their
+  per-witness word assertions are the gates' (e2e/rc-screens.spec.ts's pay check and drawer arms).
+
+Each state's bundle:
 
 - `viewport.png` — the above-fold frame at CSS scale (what he sees first; long edge < the
   ~2576px model-ingestion cap, so it is never silently downscaled)
 - `fullpage.png` — the full scroll at CSS scale
-- `crop-*.png` — DEVICE-scale (2×/3×) crops of the text-critical regions (band labels, the
-  echo, the disclaimer) — small text is read from crops, never from the full frame
+- `crop-*.png` — DEVICE-scale (2×/3×) crops of the text-critical regions when present: the page's
+  heading, Probability's plan ring, the Winner card, the StaleBanner and its standing line, the gate's
+  notes and door, an open drawer, the W drawer's left-over seat, and the visible R13 caveat — small
+  text is read from crops, never from the full frame
 - `cvd-deuteranopia.png` / `cvd-protanopia.png` / `cvd-grayscale.png` — Chrome-native CVD
   emulation (CDP `Emulation.setEmulatedVisionDeficiency`) of the above-fold frame; PLUS
-  `cvd-<arm>-fullpage.png`, the full scroll under each arm at CSS scale (U11 walk 7's R8 (b): the
-  above-fold arms are one screen, so the phone gate's buttons and door, a verdict paragraph past
-  the fold, the backup door and "Saved to this device" reached no arm; like `fullpage.png`, a tall
-  page is downscaled at ingestion, so small text is still read from the crops). Pages only: on a
-  sheet state `fullpage.png` shows the page behind the fixed sheet, the sheet cut at one screen,
-  so no `cvd-<arm>-fullpage.png` is taken there; read a sheet from its crops and `dialog.txt`; PLUS
-  `cvd-<arm>-<chart>.png` device-scale crops of every chart on the state (band / ladder /
-  TwoFutures — increment 4: the above-fold arms were structurally blind to below-fold charts;
-  `recviz`, the RecommendationViz two-arm chart — increment 6), `cvd-<arm>-survivor.png`
-  (2026-10-14, `0581e783`: the survivor card sits below the phone's first frame, so no arm had
-  screened it — a card, not a chart; skipped while its fold is closed, and on `budget` the
-  floor-relief card shares the class, so `-1` / `-2`), `cvd-<arm>-state-picker.png`
-  (increment 5: the fork walk's ANSWERED state picker under
-  every arm — a selected-control face, not a chart) and the pay check's W row in the panel:
-  `crop-w-row-<n>.png` + `cvd-<arm>-w-row-<n>.png` in segments where its answered face (the
-  money picture) is taller than the sheet (b9-7), `crop-w-row.png` + `cvd-<arm>-w-row.png` where
-  a face fits (the stale and unknown faces — the whole-file review, 2026-10-31)
+  `cvd-<arm>-fullpage.png`, the full scroll under each arm (pages only: on a drawer state the full
+  scroll is the page behind the fixed drawer, so read a drawer from its crops and `dialog.txt`);
+  PLUS `cvd-<arm>-<chart>.png`, a device-scale crop of EVERY visible chart on the state under each
+  arm, named by its `data-chart` id (an above-fold arm is structurally blind to a chart below the
+  fold), and `cvd-<arm>-ring.png` / `cvd-<arm>-left-over-seat.png` (a ring's face and a checked
+  reply must survive without hue)
 - `aria.yaml` — the ARIA snapshot (the programmatic-availability channel)
 - `copy.txt` / `dialog.txt` — the VERBATIM rendered text from the DOM (words are always read
   here, never OCR'd off pixels)
-- `sr-only.txt` — every visually-hidden text node on the state (increment 3): `copy.txt`
-  INCLUDES clipped sr-only text, so an apparent duplication there must be checked here before
-  it is flagged (the "doubled wordmark" false-flag was this channel artifact)
+- `sr-only.txt` — every visually-hidden text node on the state: `copy.txt` INCLUDES clipped
+  sr-only text, so an apparent duplication there must be checked here before it is flagged
 - `fold.json` — viewport size + key-region boxes (what is above/below the fold)
 - `console.json` — console messages seen during the walk
 
-States for an interactive surface are captured in USER order (e.g. `landing` → `panel-open` →
-`panel-worsened`), each settled before capture. A surface that cannot be rendered live
+States for an interactive surface are captured in USER order (e.g. `landing` → `pending` →
+`committed`), each settled before capture. A surface that cannot be rendered live
 (aged-vault arms, unminted seeds) is a **BLOCKED-UNREACHABLE** card — never read tone from
 source code.
 

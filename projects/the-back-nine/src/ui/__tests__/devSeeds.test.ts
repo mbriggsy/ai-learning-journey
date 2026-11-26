@@ -117,7 +117,7 @@ describe("the fit gate's calendar: the seeds' build year binds to the gate's day
         `so the gate's day (${isoOf(FIRST_UNAMBIGUOUS_SAVE_DAY)}) is no longer in SEED_BUILD_YEAR (${SEED_BUILD_YEAR}). ` +
         'Roll it as a job, never a date bump (the register\'s build-year-roll entry): SEED_BUILD_YEAR in ' +
         'src/ui/devSeeds.ts; every seed\'s birth years with it (the same people); the outcome pins the roll ' +
-        'moves; and the year literals in e2e/vertical-fit.spec.ts and e2e/caddie-walk.spec.ts.',
+        'moves; and the year literals in e2e/rc-screens.spec.ts.',
     ).toBe(SEED_BUILD_YEAR)
     expect(GATE_DAY, "the gate's day is the first unambiguous save day, read, never typed").toBe(FIRST_UNAMBIGUOUS_SAVE_DAY)
   })

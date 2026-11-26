@@ -2302,7 +2302,7 @@ export const copy = {
   workbenchLeaveGo: 'Go back',
   workbenchLeaveStay: 'Stay here',
   // --- Act 6 · RC2, the shell (plan docs/plans/6-rightcapital-ui-plan.md, section 3.1): the top bar, the pages, the
-  // phone's menu, the lock menu (the one save machine's states, `src/ui/shell/lockMenu.ts`) and the interim banner. ---
+  // phone's menu and the lock menu (the one save machine's states, `src/ui/shell/lockMenu.ts`). ---
   // `shellMark` lives in `entryCopy.ts` since Act 6 · RC19: the unlock card and the cold start (entry chunk) draw the mark.
   shellHomeLabel: 'The Back Nine: back to Snapshot',
   shellModulesLabel: 'Sections',
@@ -4088,7 +4088,7 @@ export const slots = {
    *
    *  ⚠️ DO NOT "FIX" THIS BY DROPPING THE TODAY TICK. That inverts the contradiction into the
    *  defect U13/§S0 already fixed — `bandAnnotations.ts:51-56` records it live from the first
-   *  `?vault=datestale` walk, and `e2e/vertical-fit.spec.ts:2988-2991` (the `?vault=datearrived` arm — "must still
+   *  `?vault=datestale` walk, and the fit gate's `?vault=datearrived` arm (`e2e/vertical-fit.spec.ts` then: "must still
    *  mark WALL-TIME today") forbids a band that loses its wall clock BY NAME. The tick is right; the sentence was wrong. */
   bandAgedPremiseFresh: (buildYear: number): string =>
     `This range runs from ${buildYear}, when the plan was built — the years since are modeled, not records. What you actually hold today is undetermined until you re-confirm.`,

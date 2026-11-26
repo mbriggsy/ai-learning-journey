@@ -737,7 +737,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     · **no document a friend reads** — the in-app honest-limits total is two sentences, and the app tells
     them to "validate with a professional" while handing that professional nothing readable · ✅ the solve
     lane's EDIT-TIME cancel shipped 2026-09-03 (`engineClient.ts:279 createResettableEngine` +
-    `memoryModel.ts:911-914`); what remains is the interactive tier and the MAIN-THREAD FALLBACK, which still
+    `memoryModel.ts:785-788`); what remains is the interactive tier and the MAIN-THREAD FALLBACK, which still
     freezes the tab for the whole solve and says nothing — its `reset` is a documented no-op
     (`engineClient.ts:51-63`; the old `:55` anchor named nothing about freezing).
     ⚑ **Folded 2026-09-06 from the superseded b9-3 plan (its item 8 — icons · WebKit arm · enlarged-text arm) — its 2026-09-04 re-verify clause, still live:** ✅ PWA icons DONE 2026-09-08 (his eye audits the silhouette sheet — path in the register's device entry) · ✅ WebKit e2e
@@ -760,7 +760,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     both harnesses model it with a wipe). ENLARGED TEXT: `Page.setFontSizes` re-probed 2026-09-04 against
     the repo's chromium-1223 — the param shape is `{ fontSizes: { standard: 24, fixed: 24 } }` (the flat
     form is rejected); it propagates because the type scale is rem/clamp with ZERO literal-px `font-size`
-    rules; the `newCDPSession` pattern is at `caddie-walk.spec.ts:436`, and the shipped arm's own helper is `raiseDefaultFont` (`vertical-fit.spec.ts line 480-493 at 7933cf12e`); re-run the 8 REAL+TIER one-frame
+    rules; the `newCDPSession` pattern is at `caddie-walk.spec.ts:140`, and the shipped arm's own helper is `raiseDefaultFont` (`vertical-fit.spec.ts line 480-493 at 7933cf12e`); re-run the 8 REAL+TIER one-frame
     arms (4 spine seeds × 2), not all 52; PROTECTED = `vertical-fit.spec.ts line 48-52 at 1c08f2288`.
 
 ### Tier 3 — Briggsy's call
@@ -814,7 +814,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     ⚑ **The CVD half of this cluster is PARKED, not owed — do not re-propose it.** The filed gap ("the CVD
     crops prove PRESENCE only") is real, and a `verify:cvd` pixel-regression gate was designed for it on
     2026-08-02. **Briggsy declined it on the only authority that can:** *"I'm pretty color blind and I think
-    b9 looks great."* Per `caddie/SKILL.md:249` the colour lane can only flag, never pass — his eyes own the
+    b9 looks great."* Per `caddie/SKILL.md:251` the colour lane can only flag, never pass — his eyes own the
     verdict, so that IS the pass (taste-corpus rule 40 + exemplar E14). Rule 18 still binds every NEW
     surface; this covers what he has seen. **Being colour-blind qualifies him as the oracle rather than
     disqualifying him** — he is the failure mode, not a judge of prettiness, and a simulated-CVD PNG is only

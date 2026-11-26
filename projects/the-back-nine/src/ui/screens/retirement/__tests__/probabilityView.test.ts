@@ -5,7 +5,7 @@ import { DATE_OFFSET_WINDOW_TOP } from '@engine/dateSearch'
 import { buildSpineParams } from '@intake/intakeMap'
 import { applyBundle } from '@intake/whatIf'
 import { createLaneGroup, type EngineRunRequest } from '@store/runLanes'
-import type { MemoryModelSnapshot, ModelAnswer, ScenarioDraft, StickyDisplay } from '@store/memoryModel'
+import type { MemoryModelSnapshot, ModelAnswer, ScenarioDraft } from '@store/memoryModel'
 import type { SavedRecommendationStatus } from '@store/savedRecommendation'
 import { isDepleted, type DateOffsetReading, type DateSearchOutcome, type DateTrackOutcome, type Headline, type SavedRecommendationV3, type SimulationResult } from '@shared/model'
 import { BAR_RUNG } from '@viz/curveMarks'
@@ -18,7 +18,6 @@ import { spendingBasisLine } from '../../../survivorLines'
 import { formatDeltaDollar, formatPerMonth, mmAxisFormatterFor } from '../../../money'
 import { recommendationBundle } from '../../../workbench/railChrome'
 import { createWhatIfSlot, headlineExtras, whatIfSlotView, type WhatIfReading, type WhatIfSlotLanes, type WhatIfSlotView } from '../../../workbench/whatIfRun'
-import { snapshotView } from '../../dashboard/snapshotView'
 import { landingPick, probabilityView, recommendedOffer, shareRowNotes, type HalfView, type ProbabilityInput, type ProbabilityView } from '../probabilityView'
 
 /**
@@ -52,7 +51,6 @@ const headlineAnswer = (draft: ScenarioDraft, result: SimulationResult): ModelAn
 const snap = (draft: ScenarioDraft, answer: ModelAnswer, over: Partial<MemoryModelSnapshot> = {}): MemoryModelSnapshot => ({
   draft,
   answer,
-  displayed: null,
   solve: { kind: 'idle' },
   spend: { kind: 'idle' },
   refiguring: false,
@@ -131,29 +129,6 @@ const readyView = (whatIf: WhatIfReading, plan: WhatIfReading, extras?: object):
 
 const headline = (n: number, state: Headline['outcomeState'] = 'on-track'): Headline => ({ outcomeState: state, xOfTen: { value: n, marginToEdge: 0.1 }, stateMarginToEdge: 0.1 })
 const SPEND_LEVER = [{ kind: 'spending', op: 'total', annualSpendingReal: 80_000 }] as unknown as ProbabilityInput['whatIf']['bundle']
-
-describe('RAW, everywhere the clone prints a count (RC4’s ruling): a held sticky triple never prints', () => {
-  it('one snapshot whose `displayed` holds 8 over a raw 9 prints 9 on Snapshot’s ring and every Probability count', () => {
-    const answer = headlineAnswer(RETIRED, { ...RETIRED_RUN, headline: headline(9) })
-    const held: StickyDisplay = { xOfTen: 8, outcomeState: 'on-track', spendPerMonthReal: RETIRED_RUN.dollar.spendPerMonthReal, direction: RETIRED_RUN.dollar.direction }
-    const s = snap(RETIRED, answer, { displayed: held })
-    const nine = slots.xOfTen(9)
-    const eight = slots.xOfTen(8)
-    // Snapshot's ring.
-    const home = snapshotView({ snapshot: s, wallCalendarYear: RETIRED.startCalendarYear, readOnly: false, onRetry: () => {}, steady: { kind: 'waiting' }, recommendation: { solve: s.solve, save: { kind: 'none' }, todayEpochDay: 20_000 }, timeAxis: 'ages' })
-    expect(home.ring.view.kind === 'reading' && home.ring.view.face.centre).toBe(nine)
-    // Probability: both rings (the empty what-if reads the plan), the intro sentence, the difference line.
-    const v = reads(probabilityView(input(s)))
-    expect(ringCentre(v.halves.compared)).toBe(nine)
-    expect(ringCentre(v.halves.alternative)).toBe(nine)
-    expect(v.intro.lead).toContain(nine)
-    const printed = JSON.stringify(v)
-    expect(printed).not.toContain(eight)
-    // With a lever pulled whose run reads 9 as well, the difference line speaks the raw 9 on both sides.
-    const pulled = reads(probabilityView(input(s, { whatIf: { pick: 'new', bundle: SPEND_LEVER, view: readyView({ kind: 'headline', headline: headline(9) }, { kind: 'headline', headline: headline(9) }) } })))
-    expect(pulled.metrics.difference).toBe(slots.workbenchRailEven(nine))
-  })
-})
 
 describe('Probability, the retired route (`retired`, a real engine run)', () => {
   const s = snap(RETIRED, headlineAnswer(RETIRED, RETIRED_RUN))

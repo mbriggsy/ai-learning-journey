@@ -29,7 +29,7 @@ export interface SnapshotProps {
   readonly view: SnapshotView
   readonly headingRef: Ref<HTMLHeadingElement>
   readonly doors: SnapshotDoors
-  /** The Tax Strategies page, where a recommendation is found (the interim tab until RC8). */
+  /** The Tax Strategies page, where a recommendation is found. */
   readonly strategies: { readonly href: string; readonly onOpen: () => void }
   /** Keep this recommendation (present only where the view offers it). */
   readonly onKeep?: () => void

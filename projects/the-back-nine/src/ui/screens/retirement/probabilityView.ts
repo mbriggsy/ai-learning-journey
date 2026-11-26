@@ -11,8 +11,8 @@
  * record exists to run; the rule is stated here, `recommendedOffer`, never left to a runtime null).
  *
  * RAW, EVERYWHERE A COUNT IS PRINTED (RC4's ruling, 2026-11-24): the rings, the intro sentence (`composeVerdictReading`
- * fed `rawDisplayed`, the triple the sticky seam would adopt with no history) and the difference line read the engine's
- * own quantized headline; nothing here reads `snapshot.displayed`. The difference line keys on the two PRINTED counts
+ * fed `rawDisplayed`) and the difference line read the engine's own quantized headline (the store's sticky seam, which
+ * could hold a count, left at RC21). The difference line keys on the two PRINTED counts
  * (insight 099).
  *
  * THE TWO ROUTES (plan 4.0, "The two routes"; RC4's bullets):

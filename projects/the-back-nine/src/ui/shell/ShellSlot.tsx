@@ -14,9 +14,8 @@
  * lead is printed on the failure page itself (U25's rule). Since RC4 the shell is the home, so there is no answer page
  * behind it to go back to: the failure page offers the retry (then the reload) alone.
  *
- * This file rides the intake chunk: no stylesheet import (the shell's `workbench.css` rides the lazy chunk, and a sheet
- * shared with the intake chunk would move its place in the cascade: the UI landmines). Its failure page is drawn with
- * the kit's utilities under `.rc-root`.
+ * This file rides the intake chunk and imports no stylesheet (a sheet shared with the intake chunk would move its place
+ * in the cascade: the UI landmines). Its failure page is drawn with the kit's utilities under `.rc-root`.
  */
 import { Component, lazy, Suspense, useState, type ComponentType, type ReactNode } from 'react'
 import { Button } from '../kit/Button'

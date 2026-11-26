@@ -16,7 +16,7 @@ export { GATE_DAY, NAME_CEILING, RETURN_DAY, SPENDING_CEILING_PER_MONTH } from '
 /** Briggsy's REAL laptop window — 1440×731 CSS px @ DPR 2, his Lenovo, measured in his own
  *  Chrome 2026-11-19 (the 1440×731 re-point, 2026-11-20; the Dell's 1536×791 @ 2.5 window,
  *  measured 2026-07-08, died with that laptop). It sits in the two-pane tier AND the short
- *  density tier (731 ≤ 840, tokens.css --bp-laptop-short). tokens.css `--laptop-fit-height`
+ *  density tier (731 ≤ 840, theme.css --bp-laptop-short). theme.css `--laptop-fit-height`
  *  mirrors REAL.height, and scripts/__tests__/breakpoint-mirrors.test.ts binds the two. */
 export const REAL = { width: 1440, height: 731 }
 /** The DPR his window runs at — pair with REAL wherever a context is created. */
@@ -59,8 +59,8 @@ export type LaptopSize = {
  * literal at the call site; the doors an arm sanctions, a held frame's status and a record plant's standing
  * line stay per frame, at the call site. The phone sizes carry no density tier and are not in it.
  * scripts/__tests__/breakpoint-mirrors.test.ts binds every row's density to `--bp-laptop-short` and every
- * width to the two-pane seam. Why `SHOWCASE` and `LENOVO_FULL` carry different laws is said once, in
- * e2e/vertical-fit.spec.ts's header.
+ * width to the two-pane seam. Why `SHOWCASE` and `LENOVO_FULL` carry different laws was said in the old answer page's
+ * fit arms (e2e/vertical-fit.spec.ts, deleted at Act 6 · RC21; councils wf_448928ea-280 and wf_9c0bb7ea-938).
  */
 export const LAPTOP_SIZES: { readonly [K in LaptopSizeName]: LaptopSize } = {
   REAL: { viewport: REAL, deviceScaleFactor: REAL_DPR, density: 'short', law: 'degrade' },
@@ -69,7 +69,7 @@ export const LAPTOP_SIZES: { readonly [K in LaptopSizeName]: LaptopSize } = {
   SHOWCASE: { viewport: SHOWCASE, deviceScaleFactor: 1, density: 'tall', law: 'full' },
   TALL_EDGE: { viewport: TALL_EDGE, deviceScaleFactor: REAL_DPR, density: 'tall', law: 'print' },
 }
-/** The two-pane breakpoint in REM, mirroring `--bp-laptop` in src/ui/styles/tokens.css (@media
+/** The two-pane breakpoint in REM, mirroring `--bp-laptop` in src/ui/styles/theme.css (@media
  *  cannot read a custom property, so every @media rule re-states it as a literal too).
  *  scripts/__tests__/breakpoint-mirrors.test.ts pins THIS constant and every CSS/matchMedia mirror
  *  against the token, so the seam can never drift silently. */
@@ -336,7 +336,7 @@ export async function expectRefiguringSeen(page: Page, who: string): Promise<voi
  * re-entry gate ("Are these still your numbers?") holds the recompute until the household affirms —
  * so the drive is unlock → affirm → the same `SETTLED_RESULT` gotoSeedFinal waits
  * on. NEVER drive a plant with gotoSeedFinal: `main.result` never attaches behind the gate and the
- * test dies at the tier timeout. Lives HERE (the same law as everything above): vertical-fit.spec.ts
+ * test dies at the tier timeout. Lives HERE (the same law as everything above): rc-screens.spec.ts
  * and caddie-walk.spec.ts each carry this drive inline, and a spec cannot import another spec.
  */
 export async function gotoVaultFinal(page: Page, key: string): Promise<void> {

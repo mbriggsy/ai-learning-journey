@@ -30,7 +30,6 @@ const BUILD_YEAR = DRAFT.startCalendarYear
 const snapshotWith = (answer: ModelAnswer, refiguring = false): MemoryModelSnapshot => ({
   draft: DRAFT,
   answer,
-  displayed: null,
   solve: { kind: 'idle' },
   spend: { kind: 'idle' },
   refiguring,

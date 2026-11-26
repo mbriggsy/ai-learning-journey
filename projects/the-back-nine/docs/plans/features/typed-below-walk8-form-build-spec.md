@@ -51,7 +51,7 @@ round's other walk-8 items (U3, U4). No engine output moves; `src/engine` and `i
 - **KD8. Form:** an `<ol role="list">`, one `<li>` per run (its label, then its sentences as `<p>`s); no table (a rider in
   a header is heard once), no `h3`, no motion, the same DOM at every width. Delete the coda `<dl>`
   (lines 60 to 70 of `NotePartsBlock.tsx` before U2), `.note-parts__coda` and the tabular-nums restatement (line 30 of
-  `src/ui/styles/noteParts.css` before U2; `src/ui/styles/base.css:35` is the figure law; the restatement dropped
+  `src/ui/styles/noteParts.css` before U2; `src/ui/styles/base.css line 35 at e992e9d69` is the figure law (the sheet was deleted at Act 6 · RC21); the restatement dropped
   lining-nums). Done in U2.
 - **KD9. One host-noun Record:** [N]/[n] is "Your"/"your" on the gate and the step, "This"/"this" on the answer page.
   `belowLean` reads it (today it hard-codes "this answer" under the gate's "Your answer"). The sheet's cell is "This"

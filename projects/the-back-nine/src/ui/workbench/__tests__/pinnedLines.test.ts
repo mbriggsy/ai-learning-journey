@@ -18,7 +18,6 @@ const noDate: DateTrackOutcome = { kind: 'no-date-in-window', nonMonotoneOffsets
 const snapshotOf = (answer: ModelAnswer): MemoryModelSnapshot => ({
   draft,
   answer,
-  displayed: null,
   solve: { kind: 'idle' },
   spend: { kind: 'idle' },
   refiguring: false,

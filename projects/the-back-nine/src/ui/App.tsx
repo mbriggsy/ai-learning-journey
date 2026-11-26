@@ -262,8 +262,8 @@ export function App({ seed, vaultSeed }: { seed?: string | null; vaultSeed?: str
       <UpdateToast />
       {/* R13's page-trailing caveat (Act 6 · RC19: the kit's Caveat, in place of `Disclaimer.tsx`). A figured shell page
           carries its own in-frame caveat, and its `main.result[data-inframe-disclaimer]` hides this one through
-          app.css's sibling rule, so this stays a later sibling of `main.result`, never wrapped, and carries no display
-          utility of its own (a utility would beat the legacy layer's `display: none`). No id: no answer names it. */}
+          theme.css's sibling rule, so this stays a later sibling of `main.result`, never wrapped, and carries no display
+          utility of its own (a utility would beat the kit layer's `display: none`). No id: no answer names it. */}
       <Caveat
         id={null}
         lines={[staticDisclosures.honestLimitsScope, staticDisclosures.honestLimitsValidate]}

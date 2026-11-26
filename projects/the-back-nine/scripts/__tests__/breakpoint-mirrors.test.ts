@@ -9,9 +9,9 @@ import { BP_LAPTOP_REM, BROWSER_DEFAULT_PX, FLOOR, LAPTOP_SIZES, REAL, TALL_EDGE
  * THE LAW THIS FILE ENFORCES, stated plainly (the 2026-09-10 council, wf_d2b1d05a-001, item 6):
  *
  *   This project has exactly ONE layout breakpoint — `--bp-laptop`, the two-pane seam declared in
- *   `src/ui/styles/tokens.css` — and it is written in REM, never px. `@media` cannot read a custom
- *   property, so the value is RE-TYPED as a bare literal in every `@media` rule, in the
- *   `window.matchMedia('…')` string the vertical-fit harness reads the tier from, and (resolved to
+ *   `src/ui/styles/theme.css` (in `tokens.css` until Act 6 · RC21 deleted that sheet) — and it is written in REM,
+ *   never px. `@media` cannot read a custom property, so the value is RE-TYPED as a bare literal in
+ *   every `@media` rule, in each `window.matchMedia('…')` string (`useLaptop`'s), and (resolved to
  *   pixels) in `e2e/reviewSurface.ts`'s FLOOR arm. Nothing tied those copies to the declaration, so
  *   moving the token would leave every mirror silently pointing at the OLD seam — the fit gate would
  *   then measure a viewport the CSS no longer two-panes, and stay green while proving nothing.
@@ -52,7 +52,9 @@ import { BP_LAPTOP_REM, BROWSER_DEFAULT_PX, FLOOR, LAPTOP_SIZES, REAL, TALL_EDGE
  */
 
 const ROOT = process.cwd()
-const TOKENS_PATH = join(ROOT, 'src', 'ui', 'styles', 'tokens.css')
+/** Act 6's token sheet: the seam, the short tier, the fit height, the phone tier and Tailwind's `--breakpoint-*` names all
+ *  live here since RC21 (plan 6, sections 3.1 and 7.4). */
+const THEME_PATH = join(ROOT, 'src', 'ui', 'styles', 'theme.css')
 
 /** The CSS initial `font-size` — the browser default one rem resolves to when the reader has not
  *  raised it. 16 is the spec's initial value, not a project choice, which is why it is pinned as a
@@ -146,11 +148,11 @@ function scan(absolute: string, pattern: RegExp, contextOnly: boolean): Breakpoi
 function declaredBpLaptopRem(): number {
   // Comments stripped (withoutComments, below; a hoisted declaration): a quoted old declaration in the
   // token's history must never stand in for the live one (round 2 of the re-point's review).
-  const tokens = withoutComments(readFileSync(TOKENS_PATH, 'utf-8'))
+  const tokens = withoutComments(readFileSync(THEME_PATH, 'utf-8'))
   const m = /--bp-laptop:\s*([0-9]+(?:\.[0-9]+)?)rem\s*;/.exec(tokens)
   if (m === null) {
     throw new Error(
-      `[bp-laptop] no \`--bp-laptop: <N>rem;\` declaration in ${rel(TOKENS_PATH)} — the two-pane ` +
+      `[bp-laptop] no \`--bp-laptop: <N>rem;\` declaration in ${rel(THEME_PATH)} — the two-pane ` +
         `breakpoint has no source of truth, so every literal mirror in the CSS is unanchored.`,
     )
   }
@@ -159,8 +161,6 @@ function declaredBpLaptopRem(): number {
 
 const TOKEN_REM = declaredBpLaptopRem()
 
-/** Act 6's token sheet: the phone tier and Tailwind's `--breakpoint-*` names live here (plan 6, section 3.1). */
-const THEME_PATH = join(ROOT, 'src', 'ui', 'styles', 'theme.css')
 
 /** Every `--breakpoint-<name>: <N>rem;` in theme.css, comments stripped (a quoted old value never counts). */
 function themeBreakpoints(): ReadonlyMap<string, number> {
@@ -184,7 +184,7 @@ const PHONE_REM = declaredPhoneTierRem()
 
 /** The declared tiers, by where each is declared: the ONLY widths a rem breakpoint may name. */
 const TIERS: ReadonlyMap<number, string> = new Map([
-  [TOKEN_REM, `--bp-laptop in ${rel(TOKENS_PATH)}`],
+  [TOKEN_REM, `--bp-laptop in ${rel(THEME_PATH)}`],
   [PHONE_REM, `--breakpoint-wide (the phone tier) in ${rel(THEME_PATH)}`],
 ])
 
@@ -201,8 +201,8 @@ const PX_BREAKPOINTS = SRC_FILES.flatMap((f) => scan(f, PX_BREAKPOINT_RE, true))
 const at = (b: Breakpoint) => `${b.file}:${b.line} → (${b.edge}-width: ${b.value}${b.unit}) :: ${b.text}`
 
 describe('--bp-laptop source-bind', () => {
-  it('declares the two-pane breakpoint in tokens.css', () => {
-    expect(TOKEN_REM, `[bp-laptop] ${rel(TOKENS_PATH)} must declare a positive rem breakpoint`).toBeGreaterThan(0)
+  it('declares the two-pane breakpoint in theme.css', () => {
+    expect(TOKEN_REM, `[bp-laptop] ${rel(THEME_PATH)} must declare a positive rem breakpoint`).toBeGreaterThan(0)
   })
 
   it('finds mirrors to check (the sweep is not vacuous)', () => {
@@ -211,8 +211,8 @@ describe('--bp-laptop source-bind', () => {
       `[bp-laptop] the sweep of src/**/*.{css,ts,tsx} + e2e/**/*.ts + scripts/**/*.ts found NO rem ` +
         `width breakpoint at all — the pattern or the walk broke, and every assertion below would ` +
         `pass vacuously.`,
-      // 3 at Act 6 · RC19 (the kit's phone tier, theme.css's compact variant and tokens.css's short-tier prose), after
-      // the old disclaimer's app.css rules left (9 at RC14, 11 before).
+      // 4 at Act 6 · RC21 (`useWide`'s phone tier and `useLaptop`'s seam, theme.css's compact variant and its layout
+      // statements' prose; tokens.css's short-tier prose left with that sheet), 3 at RC19, 9 at RC14, 11 before.
     ).toBeGreaterThan(2)
   })
 
@@ -268,7 +268,7 @@ describe('--bp-laptop source-bind', () => {
     expect(
       BP_LAPTOP_REM,
       `[bp-laptop] e2e/reviewSurface.ts exports BP_LAPTOP_REM=${BP_LAPTOP_REM} while ` +
-        `${rel(TOKENS_PATH)} declares ${TOKEN_REM}rem — the review harness would size its FLOOR arm ` +
+        `${rel(THEME_PATH)} declares ${TOKEN_REM}rem — the review harness would size its FLOOR arm ` +
         `at a width the CSS does not two-pane.`,
     ).toBe(TOKEN_REM)
   })
@@ -298,7 +298,7 @@ describe('--bp-laptop source-bind', () => {
 
 /*
  * THE HEIGHT MIRROR (the 1440×731 re-point plan's KTD12, 2026-11-20). The one-frame fit law is
- * STATED by `--laptop-fit-height` in tokens.css and ENFORCED by e2e/reviewSurface.ts's REAL.height:
+ * STATED by `--laptop-fit-height` in theme.css (tokens.css until RC21) and ENFORCED by e2e/reviewSurface.ts's REAL.height:
  * every fit arm asserts against REAL.height, and no CSS rule reads the token. Nothing tied the two,
  * and they drifted apart: the token read 800px while the gate enforced 791, and an earlier 768-vs-800
  * split between the stylesheets' comments hid the 2026-07-08 regression. So the token must equal
@@ -312,11 +312,11 @@ function withoutComments(css: string): string {
 }
 
 function declaredLaptopFitHeightPx(): number {
-  const tokens = withoutComments(readFileSync(TOKENS_PATH, 'utf-8'))
+  const tokens = withoutComments(readFileSync(THEME_PATH, 'utf-8'))
   const m = /--laptop-fit-height:\s*([0-9]+(?:\.[0-9]+)?)px\s*;/.exec(tokens)
   if (m === null) {
     throw new Error(
-      `[laptop-fit-height] no \`--laptop-fit-height: <N>px;\` declaration in ${rel(TOKENS_PATH)} — the ` +
+      `[laptop-fit-height] no \`--laptop-fit-height: <N>px;\` declaration in ${rel(THEME_PATH)} — the ` +
         `one-frame fit law has no statement, so the gate's REAL.height enforces a number nothing declares.`,
     )
   }
@@ -328,7 +328,7 @@ describe('--laptop-fit-height source-bind', () => {
     const tokenPx = declaredLaptopFitHeightPx()
     expect(
       tokenPx,
-      `[laptop-fit-height] ${rel(TOKENS_PATH)} declares --laptop-fit-height: ${tokenPx}px while ` +
+      `[laptop-fit-height] ${rel(THEME_PATH)} declares --laptop-fit-height: ${tokenPx}px while ` +
         `e2e/reviewSurface.ts's REAL is ${REAL.width}×${REAL.height}. The fit gate enforces REAL.height, so ` +
         `the law and its enforcement now name two frames (the 768-vs-800 and 800-vs-791 drift class). ` +
         `Move the token and REAL together, in one commit.`,
@@ -357,11 +357,11 @@ function blankComments(css: string): string {
   return css.replace(/\/\*[\s\S]*?\*\//g, (c) => c.replace(/[^\n]/g, ' '))
 }
 function declaredBpLaptopShortPx(): number {
-  const tokens = withoutComments(readFileSync(TOKENS_PATH, 'utf-8'))
+  const tokens = withoutComments(readFileSync(THEME_PATH, 'utf-8'))
   const m = /--bp-laptop-short:\s*([0-9]+(?:\.[0-9]+)?)px\s*;/.exec(tokens)
   if (m === null) {
     throw new Error(
-      `[bp-laptop-short] no \`--bp-laptop-short: <N>px;\` declaration in ${rel(TOKENS_PATH)} — the short ` +
+      `[bp-laptop-short] no \`--bp-laptop-short: <N>px;\` declaration in ${rel(THEME_PATH)} — the short ` +
         `laptop tier's boundary has no source of truth, so its re-stated literals are unanchored.`,
     )
   }
@@ -416,7 +416,7 @@ describe('the short laptop tier prelude', () => {
 
 /*
  * THE SIZE TABLE (the frames-outside plan's KTD9, 2026-11-21). The short tier's boundary lives only in
- * tokens.css, yet e2e/reviewSurface.ts's `LAPTOP_SIZES` types each laptop size's density tier, and the fit
+ * theme.css, yet e2e/reviewSurface.ts's `LAPTOP_SIZES` types each laptop size's density tier, and the fit
  * arms read the tier they assert from that table. Nothing tied the two: move the boundary and a `short` row
  * would hold a frame the CSS renders tall (or the reverse) while the gate stayed green. So every row's tier
  * is the side of `--bp-laptop-short` its height falls on, read from the token; the tall edge is the first
@@ -430,7 +430,7 @@ describe('the laptop size table', () => {
   it('the tall edge is the first height above the short tier: --bp-laptop-short + 1', () => {
     expect(
       TALL_EDGE.height,
-      `[size table] TALL_EDGE is ${TALL_EDGE.width}×${TALL_EDGE.height} while ${rel(TOKENS_PATH)} declares ` +
+      `[size table] TALL_EDGE is ${TALL_EDGE.width}×${TALL_EDGE.height} while ${rel(THEME_PATH)} declares ` +
         `--bp-laptop-short: ${boundary}px. The tall edge is the boundary plus one, the first frame the tall rhythm ` +
         `renders; move the two together.`,
     ).toBe(boundary + 1)

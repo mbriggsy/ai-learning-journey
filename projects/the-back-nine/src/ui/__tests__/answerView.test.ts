@@ -6,7 +6,7 @@ import { READING_FIXTURES, SURVIVOR_FIXTURES } from '../preview/fixtures'
 import { DATE_FIXTURES, DATE_WINDOW_TOP } from '../preview/dateFixtures'
 import { DEV_SEEDS } from '../devSeeds'
 import { workingYearFigureBesideQuote } from '@intake/workingYearLeftOver'
-import type { MemoryModelSnapshot, ModelAnswer, ScenarioDraft, StickyDisplay } from '@store/memoryModel'
+import type { MemoryModelSnapshot, ModelAnswer, ScenarioDraft } from '@store/memoryModel'
 import type { BandFan, DateBand, DateTrackOutcome, OutcomeState, SimulationResult, SurvivorReading } from '@shared/model'
 
 /**
@@ -48,14 +48,9 @@ const retiredWithAges = draft({
   ],
 })
 
-const snap = (
-  answer: ModelAnswer,
-  d: ScenarioDraft,
-  displayed: StickyDisplay | null = null, // U12 sticky triple — threaded into the SPINE reading only
-): MemoryModelSnapshot => ({
+const snap = (answer: ModelAnswer, d: ScenarioDraft): MemoryModelSnapshot => ({
   draft: d,
   answer: answer.kind === 'headline' || answer.kind === 'date' ? { ...answer, draft: d } : answer,
-  displayed,
   solve: { kind: 'idle' }, // U15 solve channel — answerView reads the first beat only
   spend: { kind: 'idle' }, // the spend lane
   refiguring: false,
@@ -366,46 +361,6 @@ describe('selectElevatedAnswer — D2 state-adaptive routing', () => {
   })
 })
 
-describe('U12 C2 — the sticky display threads into the spine view (the raw/sticky split)', () => {
-  // A displayed triple that DIVERGES from the raw on-track/8-of-10/$410-room fixture on EVERY
-  // field — the divergence IS the oracle: a builder that threaded RAW into the sentence seam (or
-  // the sticky triple into the raw fields) goes RED here, never silently green.
-  const heldDisplay: StickyDisplay = {
-    xOfTen: 7,
-    outcomeState: 'borderline',
-    spendPerMonthReal: 6_500,
-    direction: 'trim',
-  }
-
-  it('threads snapshot.displayed VERBATIM into the reading view; the raw headline/dollar/band stay untouched', () => {
-    const r = selectElevatedAnswer(snap(headlineAnswer('on-track'), retiredWithAges, heldDisplay), noop)
-    if (r.kind !== 'spine' || r.view.kind !== 'reading') throw new Error('expected a spine reading')
-    // the SENTENCE seam carries the sticky triple by reference (carried verbatim — insight 045)
-    expect(r.view.displayed).toBe(heldDisplay)
-    // ...while the RAW record is unchanged: the headline + dollar are the fixture's own objects and
-    // the band still derives from the RAW fan (planted-fail proven: threading the raw reading into
-    // `displayed` turns this red).
-    expect(r.view.headline).toBe(READING_FIXTURES['on-track'].headline)
-    expect(r.view.dollar).toBe(READING_FIXTURES['on-track'].dollar)
-    const src = READING_FIXTURES['on-track'].band!
-    expect(r.view.band?.byYear).toEqual(truncateFanAtThinCohort(src.byYear))
-  })
-
-  it('a null displayed omits the field entirely — presence-keyed like its sibling readings', () => {
-    const r = selectElevatedAnswer(snap(headlineAnswer('on-track'), retiredWithAges), noop)
-    if (r.kind !== 'spine' || r.view.kind !== 'reading') throw new Error('expected a spine reading')
-    expect(r.view.displayed).toBeUndefined()
-    expect('displayed' in r.view).toBe(false)
-  })
-
-  it('resolvedFocusKey stays keyed on the RAW reading — a held display over a moved raw never churns it (insight 047)', () => {
-    const withHeld = selectElevatedAnswer(snap(headlineAnswer('on-track'), retiredWithAges, heldDisplay), noop)
-    const withoutHeld = selectElevatedAnswer(snap(headlineAnswer('on-track'), retiredWithAges), noop)
-    expect(resolvedFocusKey(withHeld)).toBe('spine:on-track:8')
-    expect(resolvedFocusKey(withHeld)).toBe(resolvedFocusKey(withoutHeld))
-  })
-})
-
 describe('resolvedFocusKey — the one-shot landing announce', () => {
   it('is undefined while pending / error / fallback (focus left alone until the answer lands)', () => {
     expect(resolvedFocusKey({ kind: 'fallback' })).toBeUndefined()
@@ -461,7 +416,6 @@ describe('selectElevatedAnswer — W9-R7: the band reads the ANSWERED draft, nev
   const answeredAt = (answer: ModelAnswer, answered: ScenarioDraft, live: ScenarioDraft): MemoryModelSnapshot => ({
     draft: live,
     answer: answer.kind === 'headline' || answer.kind === 'date' ? { ...answer, draft: answered } : answer,
-    displayed: null,
     solve: { kind: 'idle' },
     spend: { kind: 'idle' },
     refiguring: false,

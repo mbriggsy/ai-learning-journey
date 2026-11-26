@@ -3,23 +3,21 @@
  * the build sheet docs/research/rightcapital-ui-reference.md, sections 3.1, 3.5 and 3.6).
  *
  * THE RULES THIS FILE KEEPS
- * - Tailwind comes in WITHOUT its preflight: only `theme.css` and `utilities.css`. A preflight reaching the old
- *   surfaces would restyle every frame the fit gates measure; the copy in `@layer base` below is scoped under
- *   `:where(.rc-root)`, and `.rc-root` goes on the new kit's roots and its portal host, never on the shell's outer frame
- *   (an interim tab mounts outside any `.rc-root`). RC21 drops the scope and imports the real preflight.
- * - No token name is shared with the old sheets (`tokens.css` and the rest, all in `@layer legacy`): `@theme` starts
- *   with `--*: initial`, so Tailwind's own defaults emit nothing, and every token here has a role name. A later layer's
- *   `:root` would silently re-value an old surface's variable of the same name; `src/ui/__tests__/tokens.test.ts` fails
- *   on any shared name.
- * - Utilities are generated only from the files named by `@source` (automatic detection is off): an old component's
- *   class that happens to share a utility's name (`hidden`, `table`, `sr-only`) must never pick up a utility. Each new
- *   kit or screen folder is added here when its first file lands.
+ * - Tailwind comes in whole since RC21: its theme, its preflight (in `@layer base`) and its utilities. Until then the
+ *   preflight was a copy scoped under `:where(.rc-root)`, so it never reached the old surfaces the fit gates measured;
+ *   RC21 deleted the old sheets (`tokens.css`, `base.css`, `app.css` and the rest of the `legacy` layer) with their
+ *   last readers, and the base layer below sets the page's one face, ink and figure law on the root.
+ * - `@theme` starts with `--*: initial`, so Tailwind's own defaults emit nothing and every token here has a role name
+ *   (`src/ui/__tests__/tokens.test.ts` holds it and the contrast pairs).
+ * - Utilities are generated only from the files named by `@source` (automatic detection is off), so a class word in a
+ *   doc, a test or a comment never ships a utility. Each new kit or screen folder is added here when its first file lands.
  * - Data colours never live here. The series hues are typed once in `src/viz/palette.ts` and reach the charts through
  *   the CSSOM (`src/viz/charts/seriesVars.ts`); the chrome below is RightCapital's own chrome palette (ref 3.1) under
  *   role names, with the critique's contrast fixes (plan 2.2): muted text on a stone surface is stone-600, every blue
  *   text and every solid blue panel is blue-ink, white on coral is coral-ink.
  */
 @import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/preflight.css' layer(base);
 @import 'tailwindcss/utilities.css' layer(utilities) source(none);
 
 /* Act 6 · RC19: the vault and session screens outside the kit and the screen folders (each named, never a glob over
@@ -127,15 +125,29 @@
   --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1); /* the drawer and the tray sheet: quick out, long settle */
 
   /* ── Breakpoints (plan 3.1): rem, so a raised browser font picks the tier. `wide:` is past the phone shape
-     (the phone tier, the one new tier RC2 adds); `laptop:` is `--bp-laptop`'s two-pane seam in tokens.css, where
-     the panel's 70/30 chart and key-metric split starts. scripts/__tests__/breakpoint-mirrors.test.ts reads both
-     names and holds every rem width in the tree to a declared tier. ── */
+     (the phone tier, the one new tier RC2 adds); `laptop:` is the two-pane seam, `--bp-laptop` below, where the
+     panel's 70/30 chart and key-metric split starts. scripts/__tests__/breakpoint-mirrors.test.ts reads these names
+     and holds every rem width in the tree to a declared tier. ── */
   --breakpoint-wide: 48rem;
   --breakpoint-laptop: 68rem;
+
+  /* ── The layout's three statements (in tokens.css until RC21; council 2026-06-29 and 2026-07-08). No rule reads
+     them: `@media` cannot read a custom property, so each is re-stated as a literal where it is used, and
+     scripts/__tests__/breakpoint-mirrors.test.ts binds every literal, and e2e/reviewSurface.ts's sizes, to these.
+     - `--bp-laptop`: the two-pane seam, in rem (a px seam cannot see a reader who raised the browser font). It must
+       equal `--breakpoint-laptop`.
+     - `--bp-laptop-short`: the short laptop tier's height: every short-tier rule sits inside
+       `(min-width: 68rem) and (max-height: 840px)` (the compact variant below), so the phone and every sub-68rem tier
+       keep their rhythm.
+     - `--laptop-fit-height`: his laptop window's height, 1440 by 731 CSS px at DPR 2 (his Lenovo, measured
+       2026-11-19); the fit arms enforce it through e2e/reviewSurface.ts's REAL.height. ── */
+  --bp-laptop: 68rem;
+  --bp-laptop-short: 840px;
+  --laptop-fit-height: 731px;
 }
 
 /* Compact mode (ref 3.6, plan 3.1): the shell's tighter frame at his 1440 by 731 window, on the project's ONE short
-   tier (`--bp-laptop-short` in tokens.css). The prelude is exactly that tier's; a second height is refused by
+   tier (`--bp-laptop-short` above). The prelude is exactly that tier's; a second height is refused by
    scripts/__tests__/breakpoint-mirrors.test.ts. Used as `compact:` (the page title at 32 px, the panel's padding at
    32 px, the ring at 160 px). */
 @custom-variant compact {
@@ -145,241 +157,64 @@
 }
 
 /*
- * Tailwind's preflight, copied and scoped under `:where(.rc-root)` (zero added specificity). Copied from
- * tailwindcss@4.3.5's `preflight.css`, with its `--theme()` font calls resolved to this sheet's `--font-ui` and the
- * mono stack; the `html, :host` rule lands on `.rc-root` itself. Two additions keep the browser surfaces: the
- * selection colour and the focus ring.
+ * The page's root, after the preflight (RC21: the preflight is global now, imported above into this layer). What the
+ * deleted `base.css` and the scoped copy gave every screen, kept: the one face, the kit's ink, every digit tabular (the
+ * figure law, read by e2e/design-tokens.spec.ts), light only, the blue-ink caret, selection and focus ring, balanced
+ * headings and unorphaned paragraphs (the wraps the fit arms measured), no double-tap delay on the controls, the links'
+ * underline offset and the svg cap. A before-and-after computed-style walk of 25 screens (RC21) found every other
+ * difference invisible (the screen-reader-only regions' inherited size) or meant: the page's ground is white, the
+ * screens' own, where the old body showed its cream.
  */
 @layer base {
-  :where(.rc-root, .rc-root *),
-  :where(.rc-root, .rc-root *)::after,
-  :where(.rc-root, .rc-root *)::before,
-  :where(.rc-root, .rc-root *)::backdrop,
-  :where(.rc-root, .rc-root *)::file-selector-button {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    border: 0 solid;
-  }
-
-  :where(.rc-root) {
-    line-height: 1.5;
-    -webkit-text-size-adjust: 100%;
-    tab-size: 4;
+  html {
     font-family: var(--font-ui);
-    font-feature-settings: normal;
-    font-variation-settings: normal;
-    -webkit-tap-highlight-color: transparent;
-    /* The browser surfaces (back-nine-design): light only, the kit's ink, every digit tabular. */
-    color-scheme: light;
     color: var(--color-stone-900);
     font-variant-numeric: tabular-nums;
+    color-scheme: light;
     caret-color: var(--color-blue-ink);
     scrollbar-color: var(--color-stone-300) transparent;
   }
 
-  :where(.rc-root) ::selection {
+  body {
+    background-color: var(--color-bg);
+  }
+
+  /* The app is a column, so a short page holds its space and App's trailing R13 caveat sits at the bottom (each page's
+     own root carries `flex-1`); was `app.css`'s. */
+  #root {
+    display: flex;
+    flex-direction: column;
+    min-height: 100svh;
+  }
+
+  ::selection {
     background-color: var(--color-blue-tint);
     color: var(--color-stone-900);
   }
 
-  :where(.rc-root) hr {
-    height: 0;
-    color: inherit;
-    border-top-width: 1px;
+  :is(h1, h2, h3, h4, h5, h6) {
+    text-wrap: balance;
   }
 
-  :where(.rc-root) abbr:where([title]) {
-    -webkit-text-decoration: underline dotted;
-    text-decoration: underline dotted;
+  p {
+    text-wrap: pretty;
   }
 
-  :where(.rc-root) :is(h1, h2, h3, h4, h5, h6) {
-    font-size: inherit;
-    font-weight: inherit;
+  :is(button, a, input, select, textarea, label) {
+    touch-action: manipulation;
   }
 
-  /* The legacy layer's bare element rules (`base.css`) still reach inside `.rc-root`: its `h1, h2, h3` set Fraunces, the
-     display leading, tracking and `--brand`; its `h4, h5, h6` the body face and a tight leading; `p` a reading measure;
-     `small` the muted ink. The preflight above resets heading size and weight but none of these, so a kit heading in the
-     main app rendered in the serif (the shell's phone menu, RC2). This layer beats legacy at zero specificity, so a kit
-     part's own utility still wins. The root's colour is set above (`color: var(--color-stone-900)`). RC21 deletes
-     `base.css`, and this goes with it. */
-  :where(.rc-root) :is(h1, h2, h3, h4, h5, h6) {
-    font-family: inherit;
-    font-optical-sizing: inherit;
-    line-height: inherit;
-    letter-spacing: inherit;
-    color: inherit;
+  a {
+    text-underline-offset: 0.15em;
   }
 
-  :where(.rc-root) p {
-    max-width: none;
-  }
-
-  :where(.rc-root) small {
-    color: inherit;
-  }
-
-  :where(.rc-root) a {
-    color: inherit;
-    -webkit-text-decoration: inherit;
-    text-decoration: inherit;
-  }
-
-  :where(.rc-root) :is(b, strong) {
-    font-weight: bolder;
-  }
-
-  :where(.rc-root) :is(code, kbd, samp, pre) {
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
-    font-feature-settings: normal;
-    font-variation-settings: normal;
-    font-size: 1em;
-  }
-
-  :where(.rc-root) small {
-    font-size: 80%;
-  }
-
-  :where(.rc-root) :is(sub, sup) {
-    font-size: 75%;
-    line-height: 0;
-    position: relative;
-    vertical-align: baseline;
-  }
-
-  :where(.rc-root) sub {
-    bottom: -0.25em;
-  }
-
-  :where(.rc-root) sup {
-    top: -0.5em;
-  }
-
-  :where(.rc-root) table {
-    text-indent: 0;
-    border-color: inherit;
-    border-collapse: collapse;
-  }
-
-  :where(.rc-root) :-moz-focusring:where(:not(iframe)) {
-    outline: auto;
-  }
-
-  :where(.rc-root) progress {
-    vertical-align: baseline;
-  }
-
-  :where(.rc-root) summary {
-    display: list-item;
-  }
-
-  :where(.rc-root) :is(ol, ul, menu) {
-    list-style: none;
-  }
-
-  :where(.rc-root) :is(img, svg, video, canvas, audio, iframe, embed, object) {
-    display: block;
-    vertical-align: middle;
-  }
-
-  :where(.rc-root) :is(img, video) {
+  /* The preflight caps only img and video; every kit icon and chart was built with svg capped too. */
+  svg {
     max-width: 100%;
-    height: auto;
   }
 
-  :where(.rc-root) :is(button, input, select, optgroup, textarea),
-  :where(.rc-root, .rc-root *)::file-selector-button {
-    font: inherit;
-    font-feature-settings: inherit;
-    font-variation-settings: inherit;
-    letter-spacing: inherit;
-    color: inherit;
-    border-radius: 0;
-    background-color: transparent;
-    opacity: 1;
-  }
-
-  :where(.rc-root) :where(select:is([multiple], [size])) optgroup {
-    font-weight: bolder;
-  }
-
-  :where(.rc-root) :where(select:is([multiple], [size])) optgroup option {
-    padding-inline-start: 20px;
-  }
-
-  :where(.rc-root, .rc-root *)::file-selector-button {
-    margin-inline-end: 4px;
-  }
-
-  :where(.rc-root, .rc-root *)::placeholder {
-    opacity: 1;
-  }
-
-  @supports (not (-webkit-appearance: -apple-pay-button)) or (contain-intrinsic-size: 1px) {
-    :where(.rc-root, .rc-root *)::placeholder {
-      color: color-mix(in oklab, currentcolor 50%, transparent);
-    }
-  }
-
-  :where(.rc-root) textarea {
-    resize: vertical;
-  }
-
-  :where(.rc-root, .rc-root *)::-webkit-search-decoration {
-    -webkit-appearance: none;
-  }
-
-  :where(.rc-root, .rc-root *)::-webkit-date-and-time-value {
-    min-height: 1lh;
-    text-align: inherit;
-  }
-
-  :where(.rc-root, .rc-root *)::-webkit-datetime-edit {
-    display: inline-flex;
-  }
-
-  :where(.rc-root, .rc-root *)::-webkit-datetime-edit-fields-wrapper {
-    padding: 0;
-  }
-
-  :where(.rc-root, .rc-root *)::-webkit-datetime-edit,
-  :where(.rc-root, .rc-root *)::-webkit-datetime-edit-year-field,
-  :where(.rc-root, .rc-root *)::-webkit-datetime-edit-month-field,
-  :where(.rc-root, .rc-root *)::-webkit-datetime-edit-day-field,
-  :where(.rc-root, .rc-root *)::-webkit-datetime-edit-hour-field,
-  :where(.rc-root, .rc-root *)::-webkit-datetime-edit-minute-field,
-  :where(.rc-root, .rc-root *)::-webkit-datetime-edit-second-field,
-  :where(.rc-root, .rc-root *)::-webkit-datetime-edit-millisecond-field,
-  :where(.rc-root, .rc-root *)::-webkit-datetime-edit-meridiem-field {
-    padding-block: 0;
-  }
-
-  :where(.rc-root, .rc-root *)::-webkit-calendar-picker-indicator {
-    line-height: 1;
-  }
-
-  :where(.rc-root) :-moz-ui-invalid {
-    box-shadow: none;
-  }
-
-  :where(.rc-root) :is(button, input:where([type='button'], [type='reset'], [type='submit'])),
-  :where(.rc-root, .rc-root *)::file-selector-button {
-    appearance: button;
-  }
-
-  :where(.rc-root, .rc-root *)::-webkit-inner-spin-button,
-  :where(.rc-root, .rc-root *)::-webkit-outer-spin-button {
-    height: auto;
-  }
-
-  :where(.rc-root) [hidden]:where(:not([hidden='until-found'])) {
-    display: none !important;
-  }
-
-  /* After the preflight's focus rules, so it wins: a 2 px blue-ink ring (5.89:1) on every focused control (plan 2.2). */
-  :where(.rc-root) :focus-visible {
+  /* A 2 px blue-ink ring (5.89:1) on every focused control (plan 2.2); after the preflight's focus rules, so it wins. */
+  :focus-visible {
     outline: 2px solid var(--color-blue-ink);
     outline-offset: 2px;
   }
@@ -394,20 +229,50 @@
   }
 }
 
-/* The standing line's labelled parts inside the clone (RC4: the pay check's line rides the StaleBanner). The legacy
-   note-parts rules (`noteParts.css`) lose their paragraph and label margins to the scoped preflight above and set the
-   label in the old body face beside Figtree text, so the clone restates their laws here: the label in its text's face,
-   its own line with space above, and a run's paragraphs --space-2 apart. */
+/* R13, THE TWO-MOUNT SWAP (council 2026-07-08 and 2026-09-10; was `app.css`'s): exactly ONE caveat is ever visible. A
+   figured shell page carries its own Caveat in its frame and its `main.result` stamps `data-inframe-disclaimer`, which
+   hides App.tsx's trailing mount (`.disclaimer`, a later sibling of `main.result`) at every width; a page that prints no
+   figure stamps none, so the trailing mount stays its one caveat. The trailing mount carries no display utility (a
+   utility would beat this layer). e2e/rc-screens.spec.ts's `assertOneVisibleCaveat` reads it in a real browser. */
 @layer kit {
-  .rc-root .note-parts__label {
-    margin: var(--space-3) 0 var(--space-1);
-    font-family: inherit;
+  main.result[data-inframe-disclaimer] ~ .disclaimer {
+    display: none;
   }
-  .rc-root .note-parts__run > .note-parts__para + .note-parts__para {
-    margin-block-start: var(--space-2);
+}
+
+/* A standing note drawn as a block (`NotePartsBlock`; council `wf_22858e04-f7a`, U11 walk 6): W's stale line (its
+   segments' `<dl>` and its door) and the typed-below line's runs (an `<ol>` and its closing paragraph; the walk-8 form
+   council's KD7 and KD8). Its hosts are the StaleBanner, the re-entry gate and the W drawer's left-over seat. The parts
+   are told apart by their own line, the space above, semibold and one size step: never colour, never a rule (the reader
+   is colour-blind). A label is the text's own face in full ink, one step above the host's 16 px text; a run's paragraphs stand two
+   spacing steps apart, the survivor part five off the list (a ladder told apart by space alone); the door's cost list a
+   quiet column. Was `noteParts.css` (in the legacy layer, its sizes from `tokens.css`) and the kit block that restated
+   it inside `.rc-root`; the preflight zeroes every other margin and the lists' markers. e2e/rc-screens.spec.ts's pay
+   check arms read every one of these in a real browser. */
+@layer kit {
+  .note-parts__label {
+    margin: calc(var(--spacing) * 3) 0 var(--spacing);
+    font-size: var(--text-intro);
+    line-height: var(--text-intro--line-height);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-stone-900);
   }
-  .rc-root .note-parts__closing {
-    margin: var(--space-5) 0 0;
+  .note-parts__run > .note-parts__para + .note-parts__para {
+    margin-block-start: calc(var(--spacing) * 2);
+  }
+  .note-parts__closing {
+    margin-block-start: calc(var(--spacing) * 5);
+  }
+  .note-parts__list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing);
+  }
+  /* The door's button: a block of its own under the door's sentences, at the 44 px touch floor. */
+  .note-parts__cta {
+    display: block;
+    min-height: 2.75rem;
+    text-align: start;
   }
 }
 
@@ -434,7 +299,7 @@
 }
 
 /* Act 6 · RC19: a vault card's page (`VaultPage`, `src/ui/kit/VaultCard.tsx`: unlock, the cold start, restore, recovery,
-   the error boundary, the ground under the save and backup drawers) paints the whole window `--stone-100`, so App's
+   the error boundary, the ground under the save and backup drawers) paints the whole window stone-100, so App's
    trailing R13 caveat, a sibling below it, sits on the same ground as the card. */
 @layer kit {
   #root:has(> [data-vault-page]) {

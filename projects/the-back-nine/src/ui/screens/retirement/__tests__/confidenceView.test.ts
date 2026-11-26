@@ -37,7 +37,6 @@ const headlineAnswer = (draft: ScenarioDraft, result: SimulationResult): ModelAn
 const snap = (draft: ScenarioDraft, answer: ModelAnswer): MemoryModelSnapshot => ({
   draft,
   answer,
-  displayed: null,
   solve: { kind: 'idle' },
   spend: { kind: 'idle' },
   refiguring: false,

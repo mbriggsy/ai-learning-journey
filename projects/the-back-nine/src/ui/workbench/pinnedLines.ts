@@ -1,7 +1,8 @@
 /**
- * The many-futures answer's words, the interim pages' intro line since Act 6 · RC2 (`src/ui/shell/InterimPage.tsx`'s
- * `InterimIntro` draws the box; its header holds the why): the lines for the store's current answer, and the forms the
- * box reserves room for. Moved out of the room's `PinnedAnswer.tsx` by Act 6's RC0, unchanged.
+ * The many-futures answer's words: the lines for the store's current answer (the shell's live region, Cash Flows'
+ * intro box, a page's waiting words, Tax Strategies' fallback and the shell's failure page), and the forms a host
+ * reserves room for. Moved out of the room's `PinnedAnswer.tsx` by Act 6's RC0; the interim pages' intro box that drew
+ * it left with RC13b.
  */
 import { composeDateSplit } from '../dateSplit'
 import { dateOddsText } from '../dateOdds'

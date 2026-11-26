@@ -20,7 +20,7 @@ import { defineConfig } from '@playwright/test'
  */
 export default defineConfig({
   testDir: './e2e',
-  // The vertical-fit gate, the RecommendationViz solve arm and the Caddie walk ride their OWN
+  // The fit gate, the RecommendationViz solve arm and the Caddie walk ride their OWN
   // harnesses (playwright.fit.config.ts / playwright.fit-rv.config.ts / playwright.caddie.config.ts —
   // dev servers, because their `?seed=` routes are DCE'd out of dist/). Against THIS dist harness
   // those specs would fail confusingly (no seeds) — keep each harness to its own specs. Run them via
@@ -33,7 +33,6 @@ export default defineConfig({
   // that is this denylist doing its job. (c61dea7e shipped the held instrument without the entry
   // below; this harness collected its six arms against dist/, and CI ran red for three commits.)
   testIgnore: [
-    '**/vertical-fit.spec.ts',
     '**/chart-text.spec.ts',
     '**/chart-text-rv.spec.ts',
     '**/rc-screens.spec.ts',

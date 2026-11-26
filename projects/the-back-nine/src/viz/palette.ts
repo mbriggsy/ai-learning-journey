@@ -6,15 +6,15 @@
  * ones friends bet real retirement money on — so every value here is a CORRECTNESS decision,
  * not a style preference. Claude owns all color; the reviewer never adjudicates hue.
  *
- * CANONICAL-SOURCE RULE (mirrors src/engine/constants/ + src/ui/styles/tokens.css): every
+ * CANONICAL-SOURCE RULE (mirrors src/engine/constants/ + src/ui/styles/theme.css): every
  * hex, ramp endpoint, CVD floor, and metric the viz layer uses is named HERE and imported —
  * never re-typed at a call site or in a test. The CVD self-test
  * (src/viz/__tests__/colorblind.test.tsx) and the band-math test RE-DERIVE their facts from
  * these exports (the source-bind pattern, burned docs/insights/032).
  *
  * COLOR LAW (back-nine-design §1–2):
- *   - Brand green (--brand #0b3d2e) is CHROME ONLY and lives in tokens.css — it is NEVER a
- *     data encoding. Data / series / band color draws EXCLUSIVELY from the clone's categorical
+ *   - The chrome colours are CHROME ONLY and live in theme.css (the old brand green left with tokens.css at Act 6's
+ *     RC21) — never a data encoding. Data / series / band color draws EXCLUSIVELY from the clone's categorical
  *     order and band below (`RC_SERIES`, `RC_BAND`; the Okabe–Ito set of the old charts left with
  *     them at Act 6's RC10).
  *   - Color is NEVER the only signal (WCAG 1.4.1, Level A). Every consumer pairs color with a

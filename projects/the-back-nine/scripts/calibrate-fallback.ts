@@ -16,7 +16,7 @@
  *     the refine set provably contains the true optimum on every measured cell.
  *  3. `solverCandidateCeiling` — the largest roster whose FULL-precision (16k, both seed-sets)
  *     search fits the ~20s interactive-window anchor (the shipped FuckOffDate working-sweep
- *     precedent — base.css names the ~20s breathe as the accepted working wait), from the
+ *     precedent — base.css named the ~20s breathe as the accepted working wait, then), from the
  *     measured per-candidate cost on the worst-case world.
  *
  * The BATTERY deliberately includes the measured near-tie class (the Q4d world + a dense
@@ -38,7 +38,7 @@ import { q4dNearTieWorld } from '@engine/validation/nearTieInversion'
 const TRUTH_PATHS = 16_000
 const RUNGS = [1_000, 2_000, 4_000, 8_000] as const
 const SEED_A = 0xca11b
-const INTERACTIVE_WINDOW_MS = 20_000 // the shipped ~20s working-route precedent (base.css)
+const INTERACTIVE_WINDOW_MS = 20_000 // the shipped ~20s working-route precedent (base.css, then; deleted at Act 6 · RC21)
 
 // ---- The battery ----------------------------------------------------------------------------
 

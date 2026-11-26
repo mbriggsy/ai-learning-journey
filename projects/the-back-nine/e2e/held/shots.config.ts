@@ -5,7 +5,7 @@ import fitConfig from '../../playwright.fit.config'
  * instruments of the BUILT app (solve-timing, solve-phase-profile, solve-pool, whatif-timing), which
  * `solve-timing.config.ts` owns (`testIgnore` below).
  *
- * `playwright.fit.config.ts` lists its three gate specs by name in `testMatch`, so nothing under
+ * `playwright.fit.config.ts` lists its gate specs by name in `testMatch`, so nothing under
  * `e2e/held/` is collected by `pnpm verify:fit`; the CSP harness (`playwright.config.ts`) collects
  * by DENYLIST and, since 2026-09-11, names the `held` directory at any depth (the glob is spelled in
  * the config; it cannot be spelled inside a block comment) — before that entry existed, `pnpm verify:csp`

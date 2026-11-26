@@ -23,9 +23,8 @@ import type { SpendAnswer } from '@store/memoryModel'
 import type { SpendSolveUnsizedReason } from '@engine/spendSolve'
 import { OUTCOME_PRESENTATION } from './outcomeStates'
 
-/** The displayed verdict tuple — structurally satisfied by the store's `StickyDisplay` and
- *  by a raw-result fallback assembled from `Headline` + `DollarAdjustment` (the preview
- *  harness path). */
+/** The displayed verdict tuple — structurally satisfied by the store's `DisplayTriple` (`rawDisplayed`) and
+ *  by a raw-result fallback assembled from `Headline` + `DollarAdjustment`. */
 export interface VerdictDisplay {
   readonly outcomeState: OutcomeState
   readonly xOfTen: number

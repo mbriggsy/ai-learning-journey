@@ -8,11 +8,10 @@
  *
  * THE SETTLE HOOK: the shell renders ONE `<main class="result">` on every page, carrying the committed answer's tier and
  * the store's refiguring flag (`data-answer-tier`, `data-answer-refiguring`), so every harness's `SETTLED_RESULT`
- * (`e2e/reviewSurface.ts`) settles wherever a seed lands. `main.result` is the shell's alone; the legacy layer lays out
- * `.result-page`, never `.result`, so no old rule reaches it. It is a sibling before `App.tsx`'s trailing disclaimer
- * (app.css's R13 swap reads that order): a figured page carries its own R13 caveat in its frame and stamps
- * `data-inframe-disclaimer`, which hides the trailing mount; the interim page stamps none, so the trailing mount stays
- * its one disclaimer.
+ * (`e2e/reviewSurface.ts`) settles wherever a seed lands. `main.result` is the shell's alone. It is a sibling before
+ * `App.tsx`'s trailing disclaimer (theme.css's R13 swap reads that order): a figured page carries its own R13 caveat in
+ * its frame and stamps `data-inframe-disclaimer`, which hides the trailing mount; a page that prints no figure stamps
+ * none, so the trailing mount stays its one disclaimer.
  *
  * WHAT IT MAKES ONCE (moved from the workbench room, so runs survive a page switch): Cash Flows' steady
  * and rough lanes and their runs on each FINAL committed answer (KTD9, KTD13: built from the answer's own draft,
@@ -90,15 +89,13 @@ import type { MemoryModel, MemoryModelSnapshot } from '@store/memoryModel'
 import type { KeptWhatIfV6, LedgerYearRow, RecommendationGoal, SavedRecommendationV3, SimulationResult, WhatIfLeverKind, WhatIfLeverV6 } from '@shared/model'
 import { freshStableId, idsInUse } from '@shared/stableIds'
 import type { SavedRecommendationStatus } from '@store/savedRecommendation'
-import { Button, Caveat, SubNav } from '../kit'
+import { Button, Caveat, SubNav, cn } from '../kit'
 import { copy, slots } from '../copy'
 import { appModel } from '../appModel'
 import { planClockAnchor } from '../bandAnnotations'
 import { DEFAULT_DISPLAY, type DisplaySettings } from '../displaySettings'
 import { useSaveAnnouncer, type ResultSaveProp } from '../saveAnnouncer'
 import { pinnedLines, reserveForms } from '../workbench/pinnedLines'
-// The leave ask's own look (`.workbench__ask*`), the last of the room's sheet that the shell still draws.
-import '../workbench/workbench.css'
 import { tableRunFor, type TableMeta, type TableRun, type TableView } from '../workbench/tableRun'
 import { sourceKept, useSlotRun, useWhatIf, type RailRecommendation } from '../workbench/useWhatIf'
 import { planReadingFor, whatIfRunFor, type WhatIfSlotLanes, type WhatIfSlotView } from '../workbench/whatIfRun'
@@ -292,7 +289,9 @@ const NO_LEVERS: readonly WhatIfLeverV6[] = []
 /** The ask a leave raises over work it would drop. Over an open sheet it rides its own layer above the sheet's backdrop
  *  (the sheet is modal, and an ask beneath it could be neither seen nor pressed): a scrim takes every press meant for
  *  the sheet or the page, Tab and Shift+Tab move between its two choices only, and Escape is Stay (the U8 review's C3,
- *  C7). Focus moves to its safe choice, and goes back where it was on Stay, or to the page's heading when that is gone. */
+ *  C7). Focus moves to its safe choice, and goes back where it was on Stay, or to the page's heading when that is gone.
+ *  Its look is the kit's (a hairline card, the drawers' scrim and the menus' shadow) since Act 6 · RC21 deleted
+ *  `workbench.css`, the last of the workbench room's sheet; its layers sit above every kit popup (z-50). */
 function LeaveAsk({ ask, overSheet, fallback }:{ readonly ask: ShellLeaveAsk; readonly overSheet: boolean; readonly fallback: () => HTMLElement | null }) {
   const stayRef = useRef<HTMLButtonElement>(null)
   const goRef = useRef<HTMLButtonElement>(null)
@@ -310,17 +309,20 @@ function LeaveAsk({ ask, overSheet, fallback }:{ readonly ask: ShellLeaveAsk; re
   const words = ask.lines.join(' ')
   const box = (
     <div
-      className={overSheet ? 'workbench__ask workbench__ask--over' : 'workbench__ask'}
+      className={cn(
+        'flex flex-col gap-3 rounded-card border border-stone-300 bg-bg p-4',
+        overSheet ? 'fixed top-6 left-1/2 z-[202] w-[min(32rem,calc(100vw-2rem))] -translate-x-1/2 shadow-menu' : 'mx-4 mt-4 max-w-[36rem] wide:mx-10',
+      )}
       role={overSheet ? 'alertdialog' : 'alert'}
       aria-modal={overSheet ? true : undefined}
       aria-label={overSheet ? words : undefined}
     >
       {ask.lines.map((line) => (
-        <p key={line} className="workbench__ask-text">
+        <p key={line} className="text-body text-stone-900">
           {line}
         </p>
       ))}
-      <div className="workbench__ask-actions">
+      <div className="flex flex-wrap items-center gap-4">
         {/* The kit's buttons since Act 6 · RC19 (the old `.btn-primary` / `.btn-quiet` rules left with intake.css). */}
         <Button variant="primary" ref={stayRef} onClick={stay}>
           {copy.workbenchLeaveStay}
@@ -334,7 +336,7 @@ function LeaveAsk({ ask, overSheet, fallback }:{ readonly ask: ShellLeaveAsk; re
   if (!overSheet) return box
   return (
     <div
-      className="workbench__ask-layer"
+      className="fixed inset-0 z-[201] bg-stone-900/35"
       onKeyDown={(e) => {
         if (e.key === 'Escape') {
           e.preventDefault()
@@ -1448,7 +1450,7 @@ export default function Shell({
         data-shell-screen={screen}
         data-answer-tier={answerTier}
         data-answer-refiguring={snapshot.refiguring ? true : undefined}
-        // A figured page carries its own R13 caveat inside its frame, so app.css hides App.tsx's trailing mount (plan 4.0).
+        // A figured page carries its own R13 caveat inside its frame, so theme.css hides App.tsx's trailing mount (plan 4.0).
         data-inframe-disclaimer={inFrameCaveat ? true : undefined}
       >
         <div ref={announcer.ref} className="sr-only" role="status" aria-live="polite" aria-atomic="true" />

@@ -29,7 +29,6 @@ const answer = {
 const SNAPSHOT = {
   draft,
   answer,
-  displayed: null,
   solve: { kind: 'idle' },
   spend: { kind: 'idle' },
   refiguring: false,

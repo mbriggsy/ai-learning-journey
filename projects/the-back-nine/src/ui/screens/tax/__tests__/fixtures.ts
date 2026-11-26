@@ -104,7 +104,6 @@ export const headlineAnswer = (draft: ScenarioDraft, outcomeState = 'on-track'):
 export const snap = (draft: ScenarioDraft, answer: ModelAnswer, solve: SolveAnswer = { kind: 'idle' }): MemoryModelSnapshot => ({
   draft,
   answer,
-  displayed: null,
   solve,
   spend: { kind: 'idle' },
   refiguring: false,

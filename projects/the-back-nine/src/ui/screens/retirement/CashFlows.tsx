@@ -11,6 +11,10 @@
  * neither), then the table, which scrolls sideways in its own frame with Year and Age held, then the sentences: which
  * future this is, each year's notes, what each account column holds, the notes, the stopgaps, and the R13 caveat last.
  *
+ * Maps (RC20, `Maps.tsx`) is the first folder tab, as RightCapital orders them: its title is its view select (the flow or
+ * the tiles), the future and plan selects stay where they are, it offers no download (no table: RightCapital's Maps has
+ * none), and its year scrubber and map take the table's place.
+ *
  * A drill or a breadcrumb press swaps the table in place with no motion (a table read again and again is no place for
  * it: the motion law's frequency rule), and puts focus on the panel's title, which names where the reader now is.
  * The CSV is built here from the view's own cells and handed to the browser as a file: nothing leaves the page.
@@ -22,6 +26,8 @@ import { copy } from '../../copy'
 import { DisplayDoor } from '../settings/DisplayDrawer'
 import type { TableView } from '../../workbench/tableRun'
 import type { AccountsTable, CashFlowsPick, CashFlowsTab, CashFlowsView, CfNode, CfRow, SummaryDrill } from './cashFlowsView'
+import { Maps } from './Maps'
+import type { MapsChoice } from './mapsView'
 
 /** The plan's many-futures answer over the page, with the tallest forms it can take held in a hidden copy. */
 export interface PinnedIntroWords {
@@ -64,6 +70,9 @@ export interface CashFlowsProps {
   readonly onAccounts: (table: AccountsTable) => void
   readonly onFuture: (future: TableView) => void
   readonly onPick: (pick: CashFlowsPick) => void
+  /** Maps' year scrubber (sim-year t) and its view select. */
+  readonly onMapYear: (t: number) => void
+  readonly onMapView: (choice: MapsChoice) => void
 }
 
 function PinnedIntro({ words }: { readonly words: PinnedIntroWords }) {
@@ -131,7 +140,7 @@ function downloadCsv(csv: string, name: string): void {
   setTimeout(() => URL.revokeObjectURL(url), 30_000)
 }
 
-export function CashFlows({ view, headingRef, intro, caveat, onTab, onDrill, onAccounts, onFuture, onPick, onDisplay }: CashFlowsProps) {
+export function CashFlows({ view, headingRef, intro, caveat, onTab, onDrill, onAccounts, onFuture, onPick, onMapYear, onMapView, onDisplay }: CashFlowsProps) {
   const titleId = useId()
   const titleRef = useRef<HTMLHeadingElement>(null)
   // A drill, a crumb or a table switch: focus on the panel's title, which names where the reader now is.
@@ -146,7 +155,22 @@ export function CashFlows({ view, headingRef, intro, caveat, onTab, onDrill, onA
 
   const { body } = view
   const title: ReactNode =
-    view.accountsSelect !== null ? (
+    view.mapsSelect !== null ? (
+      <div className="flex flex-col gap-1">
+        <h2 ref={titleRef} id={titleId} tabIndex={-1} className="sr-only">
+          {copy.cashFlowsTabMaps}
+        </h2>
+        {/* The flow or the tiles; a phone always shows the tiles (`Maps.tsx`), so the select is a wider window's. */}
+        <Select
+          label={view.mapsSelect.label}
+          hideLabel
+          items={view.mapsSelect.items}
+          value={view.mapsSelect.value}
+          onValueChange={onMapView}
+          className="hidden w-44 wide:flex"
+        />
+      </div>
+    ) : view.accountsSelect !== null ? (
       <div className="flex flex-col gap-1">
         <h2 ref={titleRef} id={titleId} tabIndex={-1} className="sr-only">
           {view.accountsSelect.items.find((i) => i.value === view.accountsSelect!.value)?.label}
@@ -214,6 +238,7 @@ export function CashFlows({ view, headingRef, intro, caveat, onTab, onDrill, onA
                 onValueChange={onPick}
                 className="w-64 max-w-full"
               />
+              {view.tabs.value === 'maps' ? null : (
               <Button
                 variant="secondary"
                 icon={<Download size={18} strokeWidth={1.5} aria-hidden="true" />}
@@ -228,9 +253,21 @@ export function CashFlows({ view, headingRef, intro, caveat, onTab, onDrill, onA
               >
                 {copy.cashFlowsDownload}
               </Button>
+              )}
             </div>
           </div>
-          {body.kind === 'state' ? (
+          {body.kind === 'maps' ? (
+            <>
+              {view.updating !== null ? (
+                <p className="text-label font-semibold text-stone-900" data-cash-flows-updating="">
+                  {view.updating}
+                </p>
+              ) : null}
+              <div aria-busy={body.busy || undefined} className={body.busy ? 'opacity-60' : undefined}>
+                <Maps view={body.maps} onYear={onMapYear} />
+              </div>
+            </>
+          ) : body.kind === 'state' ? (
             <div role={body.tone} className="flex min-h-40 items-center border-t-2 border-plum py-6 text-body text-stone-600" data-cash-flows-state="">
               <p>{body.words}</p>
             </div>

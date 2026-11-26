@@ -233,14 +233,15 @@ test.describe('CSP — real browser enforcement', () => {
     expect(v.some((x) => /worker-src|script-src/.test(x.violatedDirective))).toBe(false)
   })
 
-  test('the shell loads under the enforced CSP: the home, Probability and its Action Items tray, Confidence, Comparisons, Retirement Details and Savings, Cash Flows, Stress Test, Social Security, Health Care, Asset Allocation and Tax Allocation (the chart cascade), Tax Strategies, Net Worth and one Profile drawer, Expenses and its Living expenses drawer, Settings and the Display drawer, both its menus, then the save drawer, a reload, a refused and a right unlock and the re-entry gate back to the home, no violation, and no request outside the build’s own files', async ({ page }) => {
+  test('the shell loads under the enforced CSP: the home, Probability and its Action Items tray, Confidence, Comparisons, Retirement Details and Savings, Cash Flows and its Maps (the Sankey, the year scrubber, the tiles), Stress Test, Social Security, Health Care, Asset Allocation and Tax Allocation (the chart cascade), Tax Strategies, Net Worth and one Profile drawer, Expenses and its Living expenses drawer, Settings and the Display drawer, both its menus, then the save drawer, a reload, a refused and a right unlock and the re-entry gate back to the home, no violation, and no request outside the build’s own files', async ({ page }) => {
     // Act 6 · RC2 (plan 6, section 3.1's Verification; the workbench room's arm before it, U6 to U15), re-pointed at RC4:
     // the real intake lands on the home (Dashboard → Snapshot), the shell's lazy chunk and its styles load with it on the
     // served build, Probability draws its rings and its two balance bars (Highcharts again), and every page is
     // visited (the last interim tab, the facts page, left with RC13b). ANY violation reds (not a directive subset), and so does any request that leaves the build's own origin:
     // the act adds no network call. The table runs both views on the build's own engine worker, each one short run: the
     // steady view lands first, then the future select shows the rough one, each read by its own words over its own rows; a
-    // drill opens and goes back, the CSV downloads (a blob built in the page), and the Accounts tab opens. Expenses
+    // drill opens and goes back, the CSV downloads (a blob built in the page), and the Accounts tab opens; Maps (RC20) draws its
+    // Sankey (the sankey module), moves its year scrubber by the keyboard and switches to its tiles. Expenses
     // opens and closes its Living expenses drawer (RC13b, in place of the facts page's step sheet); Probability's Action Items tray (RC4b: a Base UI collapsible, its Edit drawer a
     // portaled dialog) runs one what-if through its Refresh, and its "Today's dollars" opens the Display drawer (RC18, a portaled
     // dialog with two Base UI switches); the gear opens Settings (RC18, in place of the assumption panel), whose folder tabs
@@ -402,6 +403,22 @@ test.describe('CSP — real browser enforcement', () => {
     await page.getByRole('tab', { name: copy.cashFlowsTabAccounts }).click()
     await expect(page.getByRole('combobox', { name: copy.cashFlowsAccountsLabel })).toBeVisible()
     expect(await page.evaluate(() => document.querySelectorAll('style').length), 'Cash Flows injected a <style> element').toBe(0)
+    // Cash Flows → Maps (RC20): Highcharts' sankey module under the real header (the flow drawn), the year scrubber moved
+    // by the keyboard (a fresh chart for the new year), then the Breakdown tiles; no <style> from any of it. Left on Maps,
+    // so the phone visit below reaches its tiles too.
+    await page.getByRole('tab', { name: copy.cashFlowsTabMaps }).click()
+    await expect(page.locator('[data-chart="maps-flow"] .highcharts-series-group'), 'the Sankey never drew').toBeAttached({ timeout: 60_000 })
+    await expect(page.locator('[data-chart="maps-flow"] .highcharts-node').first()).toBeAttached()
+    const scrub = page.locator('[data-maps-thumb] input')
+    const firstYear = await scrub.getAttribute('aria-valuetext')
+    await scrub.focus()
+    await page.keyboard.press('ArrowRight')
+    await expect(scrub, 'the scrubber moved a year').not.toHaveAttribute('aria-valuetext', firstYear ?? '')
+    await expect(page.locator('[data-chart="maps-flow"] .highcharts-node').first(), 'the next year’s Sankey').toBeAttached({ timeout: 30_000 })
+    await page.locator('[data-cash-flows-head]').getByRole('combobox', { name: copy.mapsViewLabel }).click()
+    await page.getByRole('option', { name: copy.mapsViewBreakdown, exact: true }).click()
+    await expect(page.locator('[data-maps-tiles]'), 'the Breakdown tiles').toBeVisible()
+    expect(await page.evaluate(() => document.querySelectorAll('style').length), 'Maps injected a <style> element').toBe(0)
 
     // Retirement → Social Security (RC9): its strategy runs on their own slots (the first run's household, 65 and 63, both
     // claiming at 67, always has a choice), the yearly pairs, the running totals with the crossing's ring (a scatter

@@ -4929,3 +4929,182 @@ test.describe(`RC17 · Comparisons, Savings and Retirement Details on the phone 
     }
   })
 })
+
+// ── RC20 · Cash Flows → Maps (plan 6, RC20's Verification) ──────────────────────────────────────────────────────────
+// On `retired` (the spine) and `dip` (a working household, its stop year marked). THE FIT (the builder's call, RC20): the
+// map's own frame at his window holds the title, the selects, the year scrubber, the year's one-path sentence and the
+// whole Sankey with every name and amount, nothing scrolled; the page's notes and the R13 caveat follow in order, as on
+// the Summary (Maps carries the same lines, which no frame can also hold), the caveat tied to the map and reached. Every
+// node prints its name and amount, each label passing the Highcharts text audit and the marks audit (a label over a bar
+// or another label fails; the pale flows are drawn under the names on purpose, RightCapital's picture, so they are not
+// marks); the labels counted against the drawn bars, so "found no labels" fails (insight 168). The scrubber's year and
+// both ages are the Summary's row for that year, at the first year and after the arrow keys move it.
+const RC20_SEEDS = ['retired', 'dip'] as const
+const MAPS_CHART = '[data-chart="maps-flow"]'
+
+/** The Summary's Year and Age cells for each row, read before Maps opens (the table's own words). */
+async function summaryYearsAndAges(page: Page): Promise<{ year: string; age: string }[]> {
+  return cfFrame(page).locator('tbody tr').evaluateAll((trs) =>
+    trs.map((tr) => {
+      const cells = [...tr.querySelectorAll('th, td')].map((c) => (c.textContent ?? '').trim())
+      return { year: cells[0] ?? '', age: cells[1] ?? '' }
+    }),
+  )
+}
+
+async function toMaps(page: Page): Promise<void> {
+  await page.getByRole('tab', { name: copy.cashFlowsTabMaps }).click()
+  await expect(page.locator('[data-maps]')).toBeAttached({ timeout: FINAL_TIER_MS })
+}
+
+/** The flow drawn for the shown year, and settled. */
+async function mapsDrawn(page: Page, who: string): Promise<void> {
+  await expect(page.locator(`${MAPS_CHART} .highcharts-node`).first(), `${who}: the Sankey never drew`).toBeAttached({ timeout: 60_000 })
+  await page.waitForTimeout(300)
+  await settleLayout(page)
+}
+
+/** Every node's name and amount printed, legible, unclipped, clear of every bar and every other name; counted. */
+async function auditMaps(page: Page, who: string): Promise<number> {
+  const nodes = await page.locator(`${MAPS_CHART} .highcharts-node`).count()
+  expect(nodes, `${who}: the year's Sankey draws its bars`).toBeGreaterThanOrEqual(3)
+  const floor = await hcFloorPx(page)
+  expect(hcTextFailures(await hcAudit(page, MAPS_CHART, '[data-analysis-seat]'), floor, { texts: [], counts: { 'data-label': nodes } }), `${who}: the map's words`).toEqual([])
+  const m = await hcMarks(page, MAPS_CHART, '[data-analysis-seat]', '.highcharts-link')
+  expect(m.marks.length, `${who}: the marks read are the bars`).toBe(nodes)
+  expect(m.labels.length, `${who}: one name and amount per bar`).toBe(nodes)
+  for (const l of m.labels) expect(l.text, `${who}: a node prints its name and amount`).toMatch(/^.+(: |[\s\u200b])~?\$[\d,]+$/)
+  expect(hcMarkFailures(m), `${who}: no name over a bar or another name`).toEqual([])
+  const cut = (await page.locator(`${MAPS_CHART} svg text`).allTextContents()).filter((t) => t.includes('…'))
+  expect(cut, `${who}: no word cut short`).toEqual([])
+  return nodes
+}
+
+/** The scrubber's spoken value and its readout name the Summary's row: its year and both ages. */
+async function assertScrubberRow(page: Page, rows: readonly { year: string; age: string }[], k: number, who: string): Promise<void> {
+  const row = rows[k]!
+  const input = page.locator('[data-maps-thumb] input')
+  await expect(input, `${who}: the slider's value text names the row's year and both ages`).toHaveAttribute('aria-valuetext', new RegExp(`^${row.year}, age ${row.age.replace(/[/]/g, '\\/')}(:|$)`))
+  const said = (await input.getAttribute('aria-valuetext')) ?? ''
+  const shown = await page.locator('[data-maps-year]:visible, [data-maps-year-phone]:visible').first().textContent()
+  expect(shown, `${who}: the readout prints what the slider says`).toBe(said)
+}
+
+test.describe(`RC20 · Cash Flows → Maps at his window (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr, compact mode)`, () => {
+  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR, reducedMotion: 'reduce' })
+  for (const seed of RC20_SEEDS) {
+    test(`?seed=${seed}: Maps — the map in one frame, every node's name and amount audited and clear of every bar, the scrubber on the Summary's rows, the caveat tied and reached, then the tiles`, async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 180_000)
+      await toCashFlows(page, seed, false)
+      const rows = await summaryYearsAndAges(page)
+      expect(rows.length, '[test setup] the Summary drew its rows').toBeGreaterThan(10)
+      await toMaps(page)
+      await mapsDrawn(page, seed)
+      // The tabs in RightCapital's order; no download (no table), the future select where it stood.
+      expect(await page.getByRole('tab').allTextContents()).toEqual([copy.cashFlowsTabMaps, copy.cashFlowsTabSummary, copy.cashFlowsTabAccounts])
+      await expect(page.getByRole('button', { name: copy.cashFlowsDownloadLabel })).toHaveCount(0)
+      await expect(cfSelect(page, copy.workbenchViewLegend)).toBeVisible()
+      await assertScrubberRow(page, rows, 0, `${seed} first year`)
+      expect((await page.locator('[data-maps-key]').textContent()) ?? '', `${seed}: the one-path sentence names its market`).toContain('in the steady market')
+      if (seed === 'dip') {
+        await expect(page.locator('[data-maps-stop]'), 'dip: the year work stops is marked on the line').toHaveCount(1)
+        await expect(page.locator('[data-maps-stop-word]')).toHaveText(copy.mapsWorkStops)
+      }
+      // THE FRAME: nothing scrolled; the title, the selects, the scrubber, the sentence and the whole map with every
+      // label inside his window.
+      const frame = await page.evaluate((sel) => {
+        const chart = document.querySelector(sel)!
+        const labels = [...chart.querySelectorAll('.highcharts-data-label')].map((l) => l.getBoundingClientRect().bottom)
+        return {
+          scrollY: window.scrollY,
+          scrubber: document.querySelector('[data-maps-scrubber]')!.getBoundingClientRect().bottom,
+          chart: chart.getBoundingClientRect().bottom,
+          labels: Math.max(...labels),
+        }
+      }, MAPS_CHART)
+      console.log(`[rc20-frame] ${seed}: ${JSON.stringify(frame)} of ${REAL.height}`)
+      expect(frame.scrollY).toBe(0)
+      expect(frame.chart, `${seed}: the whole map inside his window`).toBeLessThanOrEqual(REAL.height)
+      expect(frame.labels, `${seed}: every name and amount inside his window`).toBeLessThanOrEqual(REAL.height)
+      console.log(`[rc20-nodes] ${seed} first year: ${await auditMaps(page, `${seed} first year`)}`)
+      await assertOneVisibleCaveat(page, null)
+      await noSidewaysScroll(page, `${seed} Maps`)
+      // The keyboard: three years on, a fresh map for that year, audited again, on the Summary's row.
+      await page.locator('[data-maps-thumb] input').focus()
+      for (let i = 0; i < 3; i++) await page.keyboard.press('ArrowRight')
+      await assertScrubberRow(page, rows, 3, `${seed} three years on`)
+      await mapsDrawn(page, `${seed} three years on`)
+      await auditMaps(page, `${seed} three years on`)
+      // Past the year work stops, where the run has one (the working household's map changes shape there).
+      if ((await page.locator('[data-maps-stop]').count()) > 0) {
+        for (let i = 0; i < 6; i++) await page.keyboard.press('ArrowRight')
+        await assertScrubberRow(page, rows, 9, `${seed} nine years on`)
+        if ((await page.locator('[data-maps-words]').count()) === 0) {
+          await mapsDrawn(page, `${seed} nine years on`)
+          await auditMaps(page, `${seed} nine years on`)
+        }
+      }
+      // End: the last year.
+      await page.locator('[data-maps-thumb] input').focus()
+      await page.keyboard.press('End')
+      await assertScrubberRow(page, rows, rows.length - 1, `${seed} last year`)
+      await assertCaveatReachable(page, `${seed} Maps`)
+      // The tiles: the two totals over their groups' tiles, no sideways scroll.
+      await page.evaluate(() => window.scrollTo(0, 0))
+      await page.locator('[data-cash-flows-head]').getByRole('combobox', { name: copy.mapsViewLabel }).click()
+      await page.getByRole('option', { name: copy.mapsViewBreakdown, exact: true }).click()
+      await expect(page.locator('[data-maps-tiles], [data-maps-words]').first()).toBeVisible()
+      await page.locator('[data-maps-thumb] input').focus()
+      await page.keyboard.press('Home')
+      await expect(page.locator('[data-maps-tiles]')).toBeVisible()
+      await expect(page.locator('[data-maps-total="in"]')).toContainText(copy.mapsTotalIn)
+      await expect(page.locator('[data-maps-total="out"]')).toContainText(copy.mapsTotalOut)
+      expect(await page.locator('[data-maps-tile]').count(), `${seed}: the groups' tiles`).toBeGreaterThanOrEqual(3)
+      await noSidewaysScroll(page, `${seed} Breakdown`)
+      await assertOneVisibleCaveat(page, null)
+    })
+  }
+
+  test('?seed=retired: the rough market’s last year, where the money runs out, gets words and a mark, never a map', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 120_000)
+    await toCashFlows(page, 'retired', false)
+    await pickCf(page, copy.workbenchViewLegend, copy.workbenchViewRough)
+    await cfLanded(page)
+    const rows = await summaryYearsAndAges(page)
+    await toMaps(page)
+    await mapsDrawn(page, 'retired rough')
+    await expect(page.locator('[data-maps-key]')).toContainText('in the rough market')
+    await page.locator('[data-maps-thumb] input').focus()
+    await page.keyboard.press('End')
+    const year = Number(rows.at(-1)!.year)
+    await expect(page.locator('[data-maps-words][role="alert"]')).toHaveText(slots.mapsRanOut(year))
+    await expect(page.locator('[data-maps-end="right"]')).toContainText(copy.cashFlowsShortYear)
+    await expect(page.locator(MAPS_CHART)).toHaveCount(0)
+    await expect(page.locator('[data-cash-flows-lines]')).toContainText(slots.mapsRunsOut(year))
+    await assertOneVisibleCaveat(page, null)
+  })
+})
+
+test.describe(`RC20 · Cash Flows → Maps on the phone (${PHONE.width}×${PHONE.height} @ ${PHONE_DPR}dpr)`, () => {
+  test.use({ viewport: PHONE, deviceScaleFactor: PHONE_DPR, isMobile: true, hasTouch: true, reducedMotion: 'reduce' })
+  for (const seed of RC20_SEEDS) {
+    test(`?seed=${seed}: Maps — the tiles in place of the flow, said so; no sideways scroll; the scrubber on the Summary's rows; the caveat reached`, async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 120_000)
+      await toCashFlows(page, seed, true)
+      const rows = await summaryYearsAndAges(page)
+      await toMaps(page)
+      await expect(page.locator('[data-maps-tiles]'), `${seed}: the phone shows the tiles`).toBeVisible()
+      await expect(page.locator(MAPS_CHART)).toHaveCount(0)
+      await expect(page.locator('[data-maps-phone-note]')).toHaveText(copy.mapsPhoneTiles)
+      await expect(page.getByRole('combobox', { name: copy.mapsViewLabel }), 'no view select on the phone').toBeHidden()
+      await assertScrubberRow(page, rows, 0, `${seed} PHONE first year`)
+      await noSidewaysScroll(page, `${seed} PHONE Maps`)
+      await page.locator('[data-maps-thumb] input').focus()
+      await page.keyboard.press('ArrowRight')
+      await assertScrubberRow(page, rows, 1, `${seed} PHONE next year`)
+      await noSidewaysScroll(page, `${seed} PHONE next year`)
+      await assertOneVisibleCaveat(page, null)
+      await assertCaveatReachable(page, `${seed} PHONE Maps`)
+    })
+  }
+})

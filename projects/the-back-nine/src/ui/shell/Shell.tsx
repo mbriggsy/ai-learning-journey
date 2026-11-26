@@ -108,6 +108,7 @@ import { staticDisclosures } from '../entryCopy'
 import { canonicalIdentityToken } from '@shared/model'
 import { CashFlows, type PinnedIntroWords } from '../screens/retirement/CashFlows'
 import { cashFlowsView, planSelect, type AccountsTable, type CashFlowsPick, type CashFlowsTab, type RunRows, type SummaryDrill } from '../screens/retirement/cashFlowsView'
+import type { MapsChoice } from '../screens/retirement/mapsView'
 import type { RecommendationSaveProp } from '../recommendationSaveView'
 import { currentEpochDay } from '../scenarioFromDraft'
 import { epochDayToCalendarYear } from '@store/staleness'
@@ -718,6 +719,9 @@ export default function Shell({
   const [cfDrill, setCfDrill] = useState<SummaryDrill | null>(null)
   const [cfAccounts, setCfAccounts] = useState<AccountsTable>('end')
   const [cfPickState, setCfPick] = useState<CashFlowsPick>('plan')
+  // Maps (RC20): the chosen year (sim-year t; null is the first year) and the view, held here like the tab.
+  const [cfMapT, setCfMapT] = useState<number | null>(null)
+  const [cfMapChoice, setCfMapChoice] = useState<MapsChoice>('flow')
   const leftKept = sourceKept(whatIf.source, kept)
   const leftName =
     whatIf.mode === 'recommendation'
@@ -760,6 +764,8 @@ export default function Shell({
       tab: cfTab,
       drill: cfDrill,
       accounts: cfAccounts,
+      maps: { t: cfMapT, choice: cfMapChoice },
+      readOnly,
       future: view,
       pick: cfPick,
       offers: cfOffers,
@@ -771,7 +777,7 @@ export default function Shell({
       stateClause: cfAnswer !== null ? composeVerdictStateNote(notes.statePricedNote, false) : null,
     })
     // `cfOffers`, `leftName` and `cfKept` are derived each render from the keys listed.
-  }, [screen, cfTab, cfDrill, cfAccounts, view, cfPick, run, results, snapshot.refiguring, snapshot.draft.startCalendarYear, cfAnswer, whatIf.view, whatIf.shown, whatIf.own, whatIf.source, whatIf.mode, whatIf.changedFromKept, cfShares, cfOwn.view, kept, rightRec, wallCalendarYear, notes.statePricedNote])
+  }, [screen, cfTab, cfDrill, cfAccounts, cfMapT, cfMapChoice, readOnly, view, cfPick, run, results, snapshot.refiguring, snapshot.draft.startCalendarYear, cfAnswer, whatIf.view, whatIf.shown, whatIf.own, whatIf.source, whatIf.mode, whatIf.changedFromKept, cfShares, cfOwn.view, kept, rightRec, wallCalendarYear, notes.statePricedNote])
   const cfIntro = useMemo((): PinnedIntroWords | null => {
     if (screen !== 'cash-flows') return null
     const lines = pinnedLines(snapshot, wallCalendarYear)
@@ -1642,6 +1648,8 @@ export default function Shell({
               }}
               onDrill={setCfDrill}
               onAccounts={setCfAccounts}
+              onMapYear={setCfMapT}
+              onMapView={setCfMapChoice}
               onFuture={setView}
               onPick={setCfPick}
               onDisplay={openDisplay}

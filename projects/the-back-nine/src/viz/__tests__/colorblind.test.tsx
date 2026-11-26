@@ -262,6 +262,11 @@ describe('CVD self-test — the clone’s side-by-side pairs (RC_PAIRS)', () => 
     expect(readThemeToken('--color-coral').toLowerCase()).toBe(RC_HUES.red)
   })
 
+  it('Maps’ two greys are measured in the hex they draw: RC_HUES.stoneTax IS theme.css’s --color-stone-400, stoneGap its --color-stone-500', () => {
+    expect(readThemeToken('--color-stone-400').toLowerCase()).toBe(RC_HUES.stoneTax)
+    expect(readThemeToken('--color-stone-500').toLowerCase()).toBe(RC_HUES.stoneGap)
+  })
+
   it('the 22% bracket line is drawn in sand-ink: it clears the floor against the 24% orange where sand itself does not', () => {
     expect(weakest(RC_HUES.sandInk, RC_HUES.orange).d).toBeGreaterThanOrEqual(CVD_MIN_OKLAB)
     expect(weakest(RC_HUES.sand, RC_HUES.orange).d).toBeLessThan(CVD_MIN_OKLAB)

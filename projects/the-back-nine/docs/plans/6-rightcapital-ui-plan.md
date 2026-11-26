@@ -2097,6 +2097,26 @@ year and both ages match the row.
 **Verification.** CI fit on `retired`, `dip`: one frame at REAL; every node label passes the audit. CI CSP: the sankey
 module under the real header. Local look.
 
+**As built (2026-11-26, b9-7: the builder's calls, kept by the pilot).**
+- **Fit.** Maps is a tab of a scrolling page (RC6's fit decision), so the one frame at REAL holds the title, the
+  selects, the scrubber, the year's one-path sentence and the whole map with every label; the notes and the R13 caveat
+  follow it in order, tied and reached, as on the Summary. Every Summary honesty line rides Maps too (about 270 px at
+  1440), and no frame holds them beside a legible map: content over layout (section 4.0's 2026-11-24 amendment).
+- **Figures.** Every node is the Summary's own cell for that run, year and future (its column id and figure rule), and
+  the balance is the engine's cash assembly: in, pay + other income + Social Security + draws + HSA spend; out,
+  spending + the premiums + income tax + the pay check's income tax + payroll tax + own deposits + the kept left over +
+  income not kept. Measured across every dev seed in both futures, no year leaves a gap; the hatched gap node stays for
+  one that would. Left off in words: the employer's deposits (not household cash), Roth conversions and the RMD's move
+  to taxable (moves inside savings), IRMAA as its own node (it is inside Medicare).
+- **A ran-out year** has no map: its row holds what the year asked for, not what was paid, so it gets words and "Runs
+  out" under the scrubber's last year.
+- **Smaller calls:** Maps is first in the tab order while the Summary stays the default tab; Maps lists only single
+  runs (one map draws one run; a held pair shows your plan there); the first year is the default; the phone always
+  shows the Breakdown tiles, said in one line (a 358 px flow cannot print its names); bars are at least one label line
+  tall (`minLinkWidth`, the printed amounts carry the truth); a one-part group draws as that part; no download (no
+  table); the views are "Flow" and "Breakdown" (RightCapital's "Waterfall" names another chart type); retirement years
+  solid from a "Work stops" tick, working years dashed. *(the pilot's call, 2026-11-26, b9-7)*
+
 ### RC21: Clean-up and the act's close
 
 Section 7.4.

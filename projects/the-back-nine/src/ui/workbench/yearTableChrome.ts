@@ -457,3 +457,10 @@ export function lifespansLine(people: readonly TablePerson[]): string {
   const survivor = firstDies === a ? b : a
   return slots.workbenchLivesTwo(firstDies.mid, firstDies.you, firstDies.possessive, firstDies.lastAge, survivor.mid, survivor.lastAge)
 }
+
+/** One row's own sentences, never collapsed into a run (Act 6 · RC20: Maps shows one year, so a sentence said once on
+ *  its run's first year in the table must still show on every year of the run). */
+export function rowNotesAt(meta: TableMeta, rows: readonly LedgerYearRow[], k: number): string[] {
+  const r = rows[k]
+  return r === undefined ? [] : rowNotes(meta, r, rows[k - 1])
+}

@@ -27,7 +27,8 @@ import { copy, slots } from '../../src/ui/copy'
  * and Retirement Details, chart by chart (filter `-g "Analysis runs tabs"`); since RC19 the vault and session screens: the
  * cold start, the unlock card and a refused unlock, recovery, restore, the damaged-vault notice, the save drawer step by step,
  * the backup drawer, the re-entry gate, a second tab's view-only banner and the error boundary (filter
- * `-g "the vault and session screens"`). Screenshots land in the repo's gitignored `temp/rc-shots/<unit>/`, named
+ * `-g "the vault and session screens"`); since RC20 Cash Flows → Maps: the flow by year, the tiles and the rough market's last
+ * year (filter `-g "Cash Flows Maps"`). Screenshots land in the repo's gitignored `temp/rc-shots/<unit>/`, named
  * `<screen>-<seed>-<size>.png`, for Briggsy to review the output.
  *
  *     RC_UNIT=RC2 pnpm exec playwright test --config e2e/held/shots.config.ts rc-look
@@ -857,6 +858,68 @@ for (const size of SIZES) {
           await page.screenshot({ path: `${OUT}/cash-flows-paired-${k.seed}-${size.tag}-full.png`, fullPage: true })
         }
         console.log(`[rc-look ${UNIT} cash flows ${k.seed} ${size.tag}] ${JSON.stringify(findings)}`)
+        for (const [id, a] of Object.entries(findings)) {
+          expect.soft(a.sideways, `${id}: sideways scroll`).toBeLessThanOrEqual(0)
+          expect.soft(a.clipped, `${id}: clipped text`).toEqual([])
+          expect.soft(a.overlaps, `${id}: overlapping controls`).toEqual([])
+          expect.soft(a.tiny, `${id}: text under 12 px`).toEqual([])
+        }
+      })
+    }
+  })
+}
+
+// RC20: Cash Flows → Maps, on a retired and a working household (`retired`, `dip`): the flow (a Sankey) at the first
+// year, three years on and after work stops, the Breakdown tiles, the rough market's last year where the money runs out,
+// and the whole page once. The phone shows the tiles in the flow's place. Reduced motion (the pinned clock would freeze a
+// redraw). Filter with `-g "Cash Flows Maps"`.
+async function mapsShown(page: Page): Promise<void> {
+  await expect(page.locator('[data-chart="maps-flow"] .highcharts-node, [data-maps-tiles], [data-maps-words]').first()).toBeAttached({ timeout: 90_000 })
+  await page.waitForTimeout(400)
+}
+
+async function mapsYearKeys(page: Page, key: string, times = 1): Promise<void> {
+  await page.locator('[data-maps-thumb] input').focus()
+  for (let i = 0; i < times; i++) await page.keyboard.press(key)
+  await mapsShown(page)
+  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur())
+}
+
+for (const size of SIZES) {
+  test.describe(`${UNIT} look, Cash Flows Maps at ${size.tag}`, () => {
+    test.use({ ...size.use, reducedMotion: 'reduce' })
+    for (const seed of ['retired', 'dip'] as const) {
+      test(`?seed=${seed}: Maps — the flow by year, the tiles, the rough market's last year`, async ({ page }) => {
+        test.setTimeout(FINAL_TIER_MS + 240_000)
+        await enterShell(page, seed)
+        const findings: Record<string, Audit> = {}
+        await showScreen(page, screenById('cash-flows'), size.phone)
+        await tableLanded(page)
+        await page.getByRole('tab', { name: copy.cashFlowsTabMaps }).click()
+        await mapsShown(page)
+        const view = size.phone ? 'tiles' : 'flow'
+        await shot(page, findings, `maps-${view}`, seed, size.tag)
+        await page.screenshot({ path: `${OUT}/maps-${view}-${seed}-${size.tag}-full.png`, fullPage: true })
+        await mapsYearKeys(page, 'ArrowRight', 3)
+        await shot(page, findings, `maps-${view}-year4`, seed, size.tag)
+        if ((await page.locator('[data-maps-stop]').count()) > 0) {
+          await mapsYearKeys(page, 'ArrowRight', 6)
+          await shot(page, findings, `maps-${view}-retired-year`, seed, size.tag)
+        }
+        await mapsYearKeys(page, 'Home')
+        if (!size.phone) {
+          await page.getByRole('combobox', { name: copy.mapsViewLabel }).click()
+          await page.getByRole('option', { name: copy.mapsViewBreakdown, exact: true }).click()
+          await mapsShown(page)
+          await shot(page, findings, 'maps-tiles', seed, size.tag)
+          await page.getByRole('combobox', { name: copy.mapsViewLabel }).click()
+          await page.getByRole('option', { name: copy.mapsViewFlow, exact: true }).click()
+        }
+        await pickOn(page, copy.workbenchViewLegend, copy.workbenchViewRough)
+        await mapsShown(page)
+        await mapsYearKeys(page, 'End')
+        await shot(page, findings, `maps-rough-last`, seed, size.tag)
+        console.log(`[rc-look ${UNIT} maps ${seed} ${size.tag}] ${JSON.stringify(findings)}`)
         for (const [id, a] of Object.entries(findings)) {
           expect.soft(a.sideways, `${id}: sideways scroll`).toBeLessThanOrEqual(0)
           expect.soft(a.clipped, `${id}: clipped text`).toEqual([])

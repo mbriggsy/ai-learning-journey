@@ -1082,6 +1082,17 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     cashFlowsRunStopsDated: slots.cashFlowsRunStopsDated('Your plan', 2031),
     cashFlowsRunStopsNoDate: slots.cashFlowsRunStopsNoDate('Your plan', 2041),
     cashFlowsRunStopsLever: slots.cashFlowsRunStopsLever('Work to 63', 2033),
+    // Cash Flows → Maps (Act 6 · RC20).
+    mapsYear: slots.mapsYear(2031, '65/63', 'working'),
+    mapsKey: slots.mapsKey(2031, '~$118,402', '~$118,400', true),
+    mapsRanOut: slots.mapsRanOut(2051),
+    mapsRunsOut: slots.mapsRunsOut(2051),
+    mapsConversion: slots.mapsConversion('25,000'),
+    mapsIrmaa: slots.mapsIrmaa('6,120', '1,032'),
+    mapsChartTitle: slots.mapsChartTitle(2031, 'Your plan'),
+    mapsNodeWords: slots.mapsNodeWords('Spending', '~$84,000'),
+    mapsLinkWords: slots.mapsLinkWords('Total inflows', 'Spending', '~$84,000'),
+    mapsTotalWords: slots.mapsTotalWords('Total inflows', '~$118,402'),
     // The facts page (Act 5, U8).
     workbenchFactsEditName: slots.workbenchFactsEditName('Social Security'),
     workbenchFactDollars: slots.workbenchFactDollars('88,000'),

@@ -26,8 +26,10 @@ import { copy, slots } from '../../copy'
 import type { TableMeta, TableView } from '../../workbench/tableRun'
 import { composeYearTable, lifespansLine, payCheckNotes, tableFigure, yieldLine, type SourceKeyEntry, type TableLine } from '../../workbench/yearTableChrome'
 import { composePaired, PAIRED_COLUMNS, type PairedColumnId, type PairedFigure } from '../../workbench/railChrome'
+import { mapsView, mapsViewSelect, type MapsChoice, type MapsView } from './mapsView'
 
-export type CashFlowsTab = 'summary' | 'accounts'
+/** Maps first, as RightCapital orders them (RC20); the Summary stays the page's first view (the builder's call, RC20). */
+export type CashFlowsTab = 'maps' | 'summary' | 'accounts'
 /** The Summary's drills: RightCapital's underlined headers B9 can break down. Income tax is never one (gap 10). */
 export type SummaryDrill = 'income' | 'distribution' | 'expenses' | 'saving'
 export type AccountsTable = 'end' | 'deposits' | 'withdrawals' | 'rmd' | 'conversions'
@@ -95,6 +97,8 @@ export type CfBody =
       readonly busy: boolean
       readonly paired: boolean
     }
+  /** Maps (RC20): one year of the shown run, its scrubber and its map (`mapsView.ts`). */
+  | { readonly kind: 'maps'; readonly maps: MapsView; readonly busy: boolean }
 
 export interface CfSelect<V extends string> {
   readonly label: string
@@ -108,6 +112,8 @@ export interface CashFlowsView {
   readonly breadcrumb: readonly { readonly label: string; readonly drill: SummaryDrill | null }[] | null
   /** The Accounts tab's title is its table switcher (ref 2.16). */
   readonly accountsSelect: CfSelect<AccountsTable> | null
+  /** Maps' title is its view select: the flow or the tiles (ref 2.16's "Waterfall" and "Breakdown"). */
+  readonly mapsSelect: CfSelect<MapsChoice> | null
   readonly futureSelect: CfSelect<TableView>
   readonly planSelect: CfSelect<CashFlowsPick>
   readonly body: CfBody
@@ -131,6 +137,10 @@ export interface CashFlowsView {
 export interface CashFlowsInput {
   readonly tab: CashFlowsTab
   readonly drill: SummaryDrill | null
+  /** Maps' chosen year (sim-year t, null for the first year) and view. */
+  readonly maps: { readonly t: number | null; readonly choice: MapsChoice }
+  /** A read-only tab (plan 4.0): Maps writes nothing either way; carried to its composer. */
+  readonly readOnly: boolean
   readonly accounts: AccountsTable
   readonly future: TableView
   readonly pick: CashFlowsPick
@@ -498,13 +508,14 @@ const ACCOUNTS_ITEMS: readonly { readonly value: AccountsTable; readonly label: 
   { value: 'conversions', label: copy.cashFlowsAccountsConversions },
 ]
 
-/** The plan select's choices, and the pick it shows (a pick no longer offered reads your plan). */
-export function planSelect(offers: CashFlowsInput['offers'], pick: CashFlowsPick): CfSelect<CashFlowsPick> {
+/** The plan select's choices, and the pick it shows (a pick no longer offered reads your plan). `single`: Maps draws one
+ *  run, so it offers no "Your plan beside the what-if" (a held pair reads your plan there; the builder's call, RC20). */
+export function planSelect(offers: CashFlowsInput['offers'], pick: CashFlowsPick, single = false): CfSelect<CashFlowsPick> {
   const items: { value: CashFlowsPick; label: string }[] = [{ value: 'plan', label: copy.workbenchRailPlanLabel }]
   if (offers.working !== null) items.push({ value: 'new', label: offers.working })
   for (const k of offers.kept) items.push({ value: `kept:${k.id}`, label: k.name })
   if (offers.recommended) items.push({ value: 'recommended', label: copy.probabilityPickRecommended })
-  if (offers.paired !== null) items.push({ value: 'paired', label: copy.cashFlowsPickPaired })
+  if (offers.paired !== null && !single) items.push({ value: 'paired', label: copy.cashFlowsPickPaired })
   return { label: copy.cashFlowsPlanLabel, items, value: items.some((i) => i.value === pick) ? pick : 'plan' }
 }
 
@@ -574,7 +585,7 @@ function stopgapLines(yieldLines: readonly string[], input: CashFlowsInput): str
 
 export function cashFlowsView(input: CashFlowsInput): CashFlowsView {
   const { tab, future } = input
-  const plan = planSelect(input.offers, input.pick)
+  const plan = planSelect(input.offers, input.pick, tab === 'maps')
   const pick = plan.value
   const paired = pick === 'paired'
   const drill = tab === 'summary' && !paired ? input.drill : null
@@ -582,12 +593,14 @@ export function cashFlowsView(input: CashFlowsInput): CashFlowsView {
     tabs: {
       label: copy.cashFlowsTabsLabel,
       items: [
+        { id: 'maps' as const, label: copy.cashFlowsTabMaps },
         { id: 'summary' as const, label: copy.cashFlowsTabSummary },
         { id: 'accounts' as const, label: copy.cashFlowsTabAccounts },
       ],
       value: tab,
     },
     accountsSelect: tab === 'accounts' && !paired ? { label: copy.cashFlowsAccountsLabel, items: ACCOUNTS_ITEMS, value: input.accounts } : null,
+    mapsSelect: tab === 'maps' ? mapsViewSelect(input.maps.choice) : null,
     futureSelect: {
       label: copy.workbenchViewLegend,
       items: [
@@ -707,6 +720,28 @@ export function cashFlowsView(input: CashFlowsInput): CashFlowsView {
   if (run.kind !== 'ready') return empty(stateBody(run))
   const { rows, meta } = run
   const runName = pick === 'plan' ? copy.workbenchRailPlanLabel : (input.otherName ?? copy.workbenchRailWhatIfLabel)
+  const yieldWords = yieldLine(meta, rows)
+  const stopgaps = stopgapLines(yieldWords === null ? [] : [slots.workbenchPairYield(runName, yieldWords)], input)
+
+  // ── Maps (RC20): one year of this run. The page's own lines (which future, whose lifespans, when work stops, the
+  // aged plan, whose age is which; the stopgaps) ride as over the Summary, with the map's notes and the year's own.
+  if (tab === 'maps') {
+    const maps = mapsView({ rows, meta, future, t: input.maps.t, choice: input.maps.choice, runName, roughEndYear: input.roughYears.end, readOnly: input.readOnly })
+    return {
+      ...base,
+      breadcrumb: null,
+      body: { kind: 'maps', maps, busy: run.updating },
+      updating: run.updating ? copy.workbenchTableUpdating : null,
+      lines: [...aboutLines(meta, future, input, [stopLine(meta, runName, false)], pick === 'plan'), ...(maps.runsOut !== null ? [maps.runsOut] : [])],
+      stopgaps,
+      yearNotes: maps.yearNotes,
+      footnotes: maps.notes,
+      sourceKey: [],
+      csv: null,
+      csvName: nameFor(false),
+    }
+  }
+
   const composed = composeYearTable({ rows, meta, view: future, ...(future === 'rough' ? { roughEndYear: input.roughYears.end } : {}) })
 
   let columns: CfNode[]
@@ -728,7 +763,6 @@ export function cashFlowsView(input: CashFlowsInput): CashFlowsView {
     ...(r.steadyFrom !== undefined ? [slots.cashFlowsYearNote(r.year, r.steadyFrom)] : []),
     ...r.notes.map((n) => slots.cashFlowsYearNote(r.year, n)),
   ])
-  const yieldWords = yieldLine(meta, rows)
   const showsTotal = tab === 'accounts' && input.accounts === 'end'
   return {
     ...base,
@@ -736,7 +770,7 @@ export function cashFlowsView(input: CashFlowsInput): CashFlowsView {
     body: { kind: 'table', columns, rows: tableRows, busy: run.updating, paired: false },
     updating: run.updating ? copy.workbenchTableUpdating : null,
     lines: aboutLines(meta, future, input, [stopLine(meta, runName, false)], pick === 'plan'),
-    stopgaps: stopgapLines(yieldWords === null ? [] : [slots.workbenchPairYield(runName, yieldWords)], input),
+    stopgaps,
     yearNotes,
     footnotes: singleFootnotes(columns, meta, rows, tab === 'accounts' && input.accounts === 'deposits', showsTotal),
     sourceKey: composed.sourceKey,

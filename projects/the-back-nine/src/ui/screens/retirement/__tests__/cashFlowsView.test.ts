@@ -169,6 +169,8 @@ const ready = (rows: readonly LedgerYearRow[], meta: TableMeta = META, answerKey
 const input = (over: Partial<CashFlowsInput> = {}): CashFlowsInput => ({
   tab: 'summary',
   drill: null,
+  maps: { t: null, choice: 'flow' },
+  readOnly: false,
   accounts: 'end',
   future: 'steady',
   pick: 'plan',

@@ -598,4 +598,48 @@
   .b9-swatch {
     stroke-width: 1.5;
   }
+
+  /* ── Cash Flows → Maps (RC20, `sankeyOptions.ts`): each node's bar in its group's colour, each flow a pale tint of the
+     node it runs to (RightCapital's Sankey), never brighter on hover. Every node prints its name and amount beside its
+     bar, so the colour is never the only signal; the gap a year's figures don't explain is hatched besides. The groups'
+     pairs are rows of `palette.ts`'s RC_PAIRS (income green, taken from savings orange, the total green, Expenses red,
+     Taxes stone-400, Planned saving blue, Income not kept sand, the gap stone-500). */
+  .b9-map {
+    --b9-ink-hatch: var(--color-stone-500);
+  }
+  .b9-sankey .highcharts-point.b9-map-income,
+  .b9-sankey .highcharts-point.b9-map-total {
+    fill: var(--color-green);
+  }
+  .b9-sankey .highcharts-point.b9-map-distribution {
+    fill: var(--color-orange);
+  }
+  .b9-sankey .highcharts-point.b9-map-expenses {
+    fill: var(--color-coral);
+  }
+  .b9-sankey .highcharts-point.b9-map-taxes {
+    fill: var(--color-stone-400);
+  }
+  .b9-sankey .highcharts-point.b9-map-saving {
+    fill: var(--color-blue);
+  }
+  .b9-sankey .highcharts-point.b9-map-not-kept {
+    fill: var(--highcharts-color-10);
+  }
+  .b9-sankey .highcharts-point.b9-map-gap {
+    fill: url(#b9-hatch);
+    stroke: var(--color-stone-500);
+    stroke-width: 1;
+  }
+  .b9-sankey .highcharts-link,
+  .b9-sankey .highcharts-point-hover.highcharts-link {
+    fill-opacity: 0.16;
+  }
+  .b9-sankey .highcharts-link.b9-map-gap {
+    fill: var(--color-stone-500);
+  }
+  .b9-sankey .highcharts-data-label text {
+    font-size: var(--text-label);
+    fill: var(--color-stone-900);
+  }
 }

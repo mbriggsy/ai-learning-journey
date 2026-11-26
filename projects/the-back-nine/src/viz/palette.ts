@@ -112,6 +112,11 @@ export const RC_HUES = {
    *  which Blueprint's sky tiles draw. Not a series slot: listed so RC_PAIRS measures the hex Blueprint draws, never the
    *  series sky beside it; `colorblind.test.tsx` holds it equal to the token. */
   skyTile: '#5ebaf3',
+  /** The chrome's stone-400 (`theme.css`'s `--color-stone-400`): Cash Flows → Maps' tax grey (ref 3.1, "the Sankey's tax
+   *  grey"; decoration only, never text). Not a series slot; `colorblind.test.tsx` holds it equal to the token. */
+  stoneTax: '#a8a29e',
+  /** The chrome's stone-500 (`--color-stone-500`): Maps' "not explained" gap, drawn hatched. Not a series slot. */
+  stoneGap: '#78716c',
 } as const
 
 export type RcHue = keyof typeof RC_HUES
@@ -264,6 +269,22 @@ export const RC_PAIRS: readonly RcPair[] = [
     where: 'the money-ran-out band beside Roth withdrawals',
     verdict: { kind: 'cue', cue: 'the band cross-hatched with "Money ran out this year" printed over it; Roth dotted' },
   },
+  // Cash Flows → Maps (RC20): the year's flow and its tiles. Money in: income green, what is taken from savings orange
+  // (the stacks' green against orange row above). Money out, stacked in this order: Expenses red, Taxes stone grey,
+  // Planned saving blue, Income not kept sand; any two can touch where a group has nothing that year (red against blue
+  // is a row above). Every node and tile prints its name and amount. A gap the year's figures don't explain is stone-500,
+  // hatched, named, on either side.
+  { a: 'red', b: 'stoneTax', where: 'Maps: Expenses beside Taxes', verdict: { kind: 'floor' } },
+  { a: 'stoneTax', b: 'blue', where: 'Maps: Taxes beside Planned saving', verdict: { kind: 'floor' } },
+  { a: 'blue', b: 'sand', where: 'Maps: Planned saving beside Income not kept', verdict: { kind: 'floor' } },
+  { a: 'stoneTax', b: 'sand', where: 'Maps: Taxes beside Income not kept', verdict: { kind: 'floor' } },
+  { a: 'red', b: 'sand', where: 'Maps: Expenses beside Income not kept', verdict: { kind: 'floor' } },
+  { a: 'stoneGap', b: 'sand', where: 'Maps: the gap beside Income not kept', verdict: { kind: 'floor' } },
+  { a: 'stoneGap', b: 'stoneTax', where: 'Maps: the gap beside Taxes', verdict: { kind: 'floor' } },
+  { a: 'stoneGap', b: 'orange', where: 'Maps: the gap beside what is taken from savings', verdict: { kind: 'floor' } },
+  { a: 'stoneGap', b: 'blue', where: 'Maps: the gap beside Planned saving', verdict: { kind: 'cue', cue: 'the gap hatched and named "Not explained by the year’s figures"; every node prints its name' } },
+  { a: 'stoneGap', b: 'red', where: 'Maps: the gap beside Expenses', verdict: { kind: 'cue', cue: 'the gap hatched and named "Not explained by the year’s figures"; every node prints its name' } },
+  { a: 'stoneGap', b: 'green', where: 'Maps: the gap beside an income', verdict: { kind: 'cue', cue: 'the gap hatched and named "Not explained by the year’s figures"; every node prints its name' } },
   { a: 'green', b: 'teal', where: 'series slots 1 and 11', verdict: { kind: 'apart' } },
 ]
 

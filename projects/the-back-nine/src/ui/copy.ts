@@ -2779,6 +2779,29 @@ export const copy = {
    *  above is your plan's, never this table's run. */
   cashFlowsSteadyWhatOther:
     'One future, in a steady market: stocks and bonds each earn the same return every year. It is one future among many, never a forecast; the answer pinned here reads your plan across all of them.',
+  // --- Retirement → Cash Flows → Maps (Act 6 · RC20): one year of the shown run's rows as a flow of money in and out
+  // (RightCapital's Sankey) or as tiles (its Breakdown). Every amount is a figure the Summary prints for that year, or a
+  // sum of those, named; the employer's deposits and the moves inside savings stay off the map, said so. ---
+  cashFlowsTabMaps: 'Maps',
+  mapsViewLabel: 'Map view',
+  mapsViewFlow: 'Flow',
+  mapsViewBreakdown: 'Breakdown',
+  mapsYearLabel: 'Year shown',
+  mapsWorkStops: 'Work stops',
+  mapsTotalIn: 'Total inflows',
+  mapsTotalOut: 'Total outflows',
+  mapsGroupTaxes: 'Taxes',
+  mapsGap: 'Not explained by the year’s figures',
+  mapsGapNote:
+    'This year’s money in and money out don’t match. The difference shows as "Not explained by the year’s figures" rather than being hidden.',
+  mapsRoundingNote: 'Each figure is rounded down to the dollar, so the two totals can differ by a few dollars.',
+  mapsEmployerNote:
+    'Into savings is your own money put away. Your employer’s deposits go straight into the accounts and aren’t your cash, so the map leaves them out; the Accounts tab’s Additions to accounts shows each account’s whole deposit.',
+  mapsRmdOff: 'The part of the required withdrawal that moved to taxable stays inside your savings, so it isn’t on the map.',
+  mapsWorkingCostUnasked:
+    'Not asked yet: what a year costs while either of you still works. Until you give that figure, the tool can’t say where this year’s pay goes, so there’s no map for it.',
+  // A Sankey 390 px wide can't print its names beside its flows legibly: the phone shows the same figures as tiles.
+  mapsPhoneTiles: 'On a phone the map shows as tiles: the same figures as the flow.',
   // --- A fact's words where a Profile card or Health Care's tray prints it (Act 5, U8's facts page, which RC13b retired;
   // these outlived it). Facts read exactly (R11): no "~" and no "about" on a figure the household gave. ---
   workbenchFactsEdit: 'Edit',
@@ -5213,7 +5236,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:2357` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:2368` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,
@@ -5689,6 +5712,23 @@ export const slots = {
   cashFlowsRunStopsNoDate: (run: string, year: number): string =>
     `${run}: your answer found no date in its window, so work stops in ${year}, the window’s last year.`,
   cashFlowsRunStopsLever: (run: string, year: number): string => `${run}: work stops in ${year}, the year this what-if sets.`,
+  // --- Retirement → Cash Flows → Maps (Act 6 · RC20) ---
+  /** The chosen year and both ages ("2031, age 65/63"), with what kind of year it is where the run has working years. */
+  mapsYear: (year: number, ages: string, kind: 'working' | 'retired' | 'plain'): string =>
+    `${year}, age ${ages}${kind === 'working' ? ': a working year' : kind === 'retired' ? ': work has stopped' : ''}`,
+  /** The year's one-path sentence: the future named (plan 4.0), each total with its own mark ("~$118,402"). */
+  mapsKey: (year: number, inText: string, outText: string, steady: boolean): string =>
+    `In ${year}, in the ${steady ? 'steady' : 'rough'} market, ${inText} comes in and ${outText} goes out.`,
+  mapsRanOut: (year: number): string =>
+    `The money runs out in ${year} in this future. That year’s row holds what the year asked for, not what was paid, so it has no map; each year before it has one.`,
+  mapsRunsOut: (year: number): string => `In this future the money runs out in ${year}.`,
+  mapsConversion: (amount: string): string =>
+    `~$${amount} moved from pre-tax to Roth this year. That move stays inside your savings, so it isn’t on the map; the income tax it adds is.`,
+  mapsIrmaa: (medicare: string, surcharge: string): string => `Medicare’s ~$${medicare} includes ~$${surcharge} of Medicare’s income surcharge.`,
+  mapsChartTitle: (year: number, run: string): string => `Where the money goes in ${year}: ${run}`,
+  mapsNodeWords: (name: string, amount: string): string => `${name}: ${amount}`,
+  mapsLinkWords: (from: string, to: string, amount: string): string => `${from} to ${to}: ${amount}`,
+  mapsTotalWords: (name: string, amount: string): string => `${name} ${amount}`,
   // --- A fact as the Profile cards and Health Care's tray print it (Act 5, U8's facts page, retired by RC13b): it reads
   // exactly, as given (R11): every figure here is the household's own, pre-formatted whole dollars, never "~" or "about". ---
   /** A fact's one door, named for what it opens (its visible text is "Edit"): "Edit Social Security", "Edit medicare".

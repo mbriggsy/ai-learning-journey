@@ -4,16 +4,17 @@
  * so every chart gets styled mode, the patterns' `defs`, the credit, no HTML text, the never-hidden printed values and
  * the motion setting, installed ONCE per page load before the first chart draws.
  *
- * MODULE ORDER IS LOAD-BEARING (docs/landmines.md, UI and product): the accessibility module and highcharts-more
- * compose onto the namespace the Highcharts master fills in when it evaluates, so both are imported AFTER
- * `@highcharts/react` (imported first, they read the namespace undefined and the page dies). `vite.config.ts` keeps
- * Highcharts out of the dev pre-bundle for the same reason.
+ * MODULE ORDER IS LOAD-BEARING (docs/landmines.md, UI and product): the accessibility module, highcharts-more and
+ * the sankey module (Cash Flows → Maps, RC20) compose onto the namespace the Highcharts master fills in when it
+ * evaluates, so each is imported AFTER `@highcharts/react` (imported first, they read the namespace undefined and the
+ * page dies). `vite.config.ts` keeps Highcharts out of the dev pre-bundle for the same reason.
  *
  * Words: none here. Each chart's options builder takes its words from its screen's composer (decision 11).
  */
 import type { HTMLAttributes } from 'react'
 import { Chart as HighchartsChart, Highcharts, type ChartOptions } from '@highcharts/react'
 import 'highcharts/es-modules/masters/highcharts-more.src.js'
+import 'highcharts/es-modules/masters/modules/sankey.src.js'
 import 'highcharts/es-modules/masters/modules/accessibility.src.js'
 import { installChartDefaults } from './defaults'
 import './chartTheme.css'

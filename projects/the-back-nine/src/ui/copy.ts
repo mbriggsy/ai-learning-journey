@@ -5136,7 +5136,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:2306` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:2307` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,
@@ -5637,6 +5637,9 @@ export const slots = {
   /** The budget line's window help on the all-retired route, where year 0 is the plan's first year. */
   budgetWindowHelpRetired: (year: number): string =>
     `Counted from this plan’s first year, ${year} — year 0. Leave “through” blank for always.`,
+  /** Under a budget line's From or Through box on the all-retired route: the calendar year its count lands on, so "3"
+   *  is never left for the household to add up (the register pass of milestone 3's review). */
+  budgetWindowYearIs: (year: number): string => `That’s ${year}.`,
   /** The heirs' bracket never chosen: the shown rate is the tool's (Tax Strategies' picker, RC13b; the facts page said it). */
   taxStratHeirDefault: (pct: string): string => `${pct}% is the tool’s starting figure until you choose one.`,
   /** The tray's compared value for a figure the household entered (exact, a fact). */

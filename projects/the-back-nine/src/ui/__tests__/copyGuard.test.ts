@@ -1096,6 +1096,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     workbenchFactRoth: slots.workbenchFactRoth('40,000', 2027, false, 5),
     workbenchFactExtrasToolFigure: slots.workbenchFactExtrasToolFigure('244'),
     budgetWindowHelpRetired: slots.budgetWindowHelpRetired(2026),
+    budgetWindowYearIs: slots.budgetWindowYearIs(2029),
     taxStratHeirDefault: slots.taxStratHeirDefault('24'),
     // The lever rail (Act 5, U15).
     workbenchRailEven: slots.workbenchRailEven('about 7 of 10 odds'),

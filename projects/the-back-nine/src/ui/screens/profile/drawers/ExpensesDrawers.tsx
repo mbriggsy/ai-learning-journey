@@ -60,6 +60,7 @@ function LineRow({
   errors,
   readOnly,
   windowHelp,
+  yearOf,
   onChange,
   onRemove,
 }: {
@@ -68,11 +69,17 @@ function LineRow({
   readonly errors: readonly BudgetItemError[]
   readonly readOnly: boolean
   readonly windowHelp: string
+  /** The calendar year a count of years lands on, where year 0 has one (the all-retired route: the plan's first year);
+   *  null on the date route, whose year 0 is the first retirement year the answer finds. */
+  readonly yearOf: ((offset: number) => number) | null
   readonly onChange: (next: BudgetLineItem) => void
   readonly onRemove: () => void
 }) {
   const amountError = errors.find(isAmountError)
   const windowError = errors.find((e) => !isAmountError(e))
+  /** "That's 2028." under a From or Through box holding a count (never under a blank one). */
+  const yearLine = (offset: number | undefined) =>
+    yearOf !== null && offset !== undefined && Number.isFinite(offset) ? { description: slots.budgetWindowYearIs(yearOf(offset)) } : {}
   return (
     <li className="flex flex-col gap-4 rounded-card border border-stone-300 p-4" data-budget-line={item.id ?? n}>
       <div className="flex items-start justify-between gap-3">
@@ -114,6 +121,7 @@ function LineRow({
           value={Number.isFinite(item.startYear) ? item.startYear : undefined}
           invalidMessage={copy.profileInvalidYearOffset}
           readOnly={readOnly}
+          {...yearLine(item.startYear)}
           {...(windowError !== undefined ? { error: copy[BUDGET_ERROR_COPY[windowError.kind]] } : {})}
           onCommit={(start) => onChange({ ...item, startYear: start ?? Number.NaN })}
         />
@@ -122,6 +130,7 @@ function LineRow({
           value={item.endYear}
           invalidMessage={copy.profileInvalidYearOffset}
           readOnly={readOnly}
+          {...yearLine(item.endYear)}
           onCommit={(end) => {
             // ABSENT (never an undefined-valued key) is the lifelong encoding (DND 009).
             const { endYear: _dropped, ...rest } = item
@@ -165,6 +174,9 @@ export function LivingDrawer({ model, open, readOnly, leaveAsk, onClose, onClose
   const lineKey = (it: BudgetLineItem, i: number): string => it.id ?? `row-${i}`
   const setLines = (lines: readonly BudgetLineItem[]) => set('lines', { lines })
   const windowHelp = isDateRoute(draft) ? copy.budgetWindowHelp : slots.budgetWindowHelpRetired(draft.startCalendarYear)
+  // The all-retired route's year 0 is the plan's first year (`blueprintView.ts`'s `stopAnchor` places its lines the same
+  // way), so each box can name its calendar year; the date route's year 0 is the retirement year the answer finds.
+  const yearOf = isDateRoute(draft) ? null : (offset: number) => draft.startCalendarYear + offset
   return (
     <ProfileDrawer
       open={open}
@@ -243,6 +255,7 @@ export function LivingDrawer({ model, open, readOnly, leaveAsk, onClose, onClose
                       errors={shown}
                       readOnly={readOnly}
                       windowHelp={windowHelp}
+                      yearOf={yearOf}
                       onChange={(next) => {
                         setTouchedLines((t) => new Set([...t, key]))
                         setLines(form.lines.map((it, j) => (j === i ? next : it)))

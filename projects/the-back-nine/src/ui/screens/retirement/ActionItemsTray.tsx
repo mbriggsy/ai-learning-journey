@@ -881,7 +881,12 @@ function LineDrawer({
   }
   const [error, setError] = useState<string | undefined>(undefined)
   const nameId = useId()
-  const windowHelp = draft.people.some((p) => p.workStatus === 'working') ? copy.budgetWindowHelp : slots.budgetWindowHelpRetired(draft.startCalendarYear)
+  const anyWorking = draft.people.some((p) => p.workStatus === 'working')
+  const windowHelp = anyWorking ? copy.budgetWindowHelp : slots.budgetWindowHelpRetired(draft.startCalendarYear)
+  // Where year 0 is the plan's first year (no one working: the help names it), each box names the calendar year its count
+  // lands on, as the Living worksheet does; never under a blank box.
+  const yearLine = (offset: number | undefined) =>
+    !anyWorking && offset !== undefined ? { description: slots.budgetWindowYearIs(draft.startCalendarYear + offset) } : {}
   return (
     <Drawer
       open={open}
@@ -925,8 +930,20 @@ function LineDrawer({
           <MoneyInput label={copy.budgetAmountLabel} value={line.amount} invalidMessage={copy.errBudgetAmountNonFinite} onCommit={(v) => setLine((l) => ({ ...l, ...(v === undefined ? { amount: undefined } : { amount: v }) }))} />
           <Select<BudgetTier> label={copy.budgetTierLegend} items={TIERS} value={line.tier} onValueChange={(tier) => setLine((l) => ({ ...l, tier }))} />
           <span aria-hidden="true" className="hidden wide:block" />
-          <WholeInput label={copy.budgetWindowFromLabel} value={line.startYear} invalidMessage={copy.profileInvalidYearOffset} onCommit={(v) => setLine((l) => ({ ...l, ...(v === undefined ? { startYear: undefined } : { startYear: v }) }))} />
-          <WholeInput label={copy.budgetWindowThroughLabel} value={line.endYear} invalidMessage={copy.profileInvalidYearOffset} onCommit={(v) => setLine((l) => ({ ...l, ...(v === undefined ? { endYear: undefined } : { endYear: v }) }))} />
+          <WholeInput
+            label={copy.budgetWindowFromLabel}
+            value={line.startYear}
+            invalidMessage={copy.profileInvalidYearOffset}
+            {...yearLine(line.startYear)}
+            onCommit={(v) => setLine((l) => ({ ...l, ...(v === undefined ? { startYear: undefined } : { startYear: v }) }))}
+          />
+          <WholeInput
+            label={copy.budgetWindowThroughLabel}
+            value={line.endYear}
+            invalidMessage={copy.profileInvalidYearOffset}
+            {...yearLine(line.endYear)}
+            onCommit={(v) => setLine((l) => ({ ...l, ...(v === undefined ? { endYear: undefined } : { endYear: v }) }))}
+          />
         </DrawerFields>
         <p className={cn('text-label text-stone-600')}>{windowHelp}</p>
         {error !== undefined ? (

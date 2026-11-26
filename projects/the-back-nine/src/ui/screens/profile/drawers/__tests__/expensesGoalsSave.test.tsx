@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import '@testing-library/jest-dom/vitest'
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { applyBundle } from '@intake/whatIf'
+import { isDateRoute } from '@intake/intakeMap'
 import { workingYearCostStaleness } from '@intake/workingYearQuote'
 import type { ScenarioDraft } from '@store/memoryModel'
 import { DEV_SEEDS } from '../../../../devSeeds'
@@ -54,6 +55,27 @@ describe('the budget worksheet', () => {
     expect(blocked.saved || blocked.check.fields.lines).toBe(copy.budgetApplyBlocked)
     expect(model.getSnapshot().draft).toBe(before)
     expect(recompute).not.toHaveBeenCalled()
+  })
+
+  // The register pass of milestone 3's review: "From year 3" was left for the household to add up.
+  it('on the all-retired route each From and Through box names its calendar year (never under a blank box); the date route names none', () => {
+    const retired = DEV_SEEDS.budget
+    expect(isDateRoute(retired), '[test setup] all retired').toBe(false)
+    const start = retired.startCalendarYear
+    render(<DrawerFor target={{ kind: 'living' }} model={profileStore(retired).model} open readOnly={false} onClose={() => {}} onClosed={() => {}} finalFocus={() => null} />)
+    const row = screen.getByRole('dialog').querySelector<HTMLElement>('[data-budget-line]')!
+    const from = within(row).getByLabelText(copy.budgetWindowFromLabel)
+    const through = within(row).getByLabelText(copy.budgetWindowThroughLabel)
+    expect(from).toHaveAccessibleDescription(slots.budgetWindowYearIs(start))
+    expect(within(row).getAllByText(/^That’s \d{4}\.$/), 'a lifelong line: none under the blank Through').toHaveLength(1)
+    act(() => through.focus())
+    fireEvent.change(through, { target: { value: '3' } })
+    act(() => through.blur())
+    expect(through).toHaveAccessibleDescription(slots.budgetWindowYearIs(start + 3))
+    cleanup()
+    expect(isDateRoute(GOVERNED), '[test setup] a working household').toBe(true)
+    render(<DrawerFor target={{ kind: 'living' }} model={profileStore(GOVERNED).model} open readOnly={false} onClose={() => {}} onClosed={() => {}} finalFocus={() => null} />)
+    expect(within(screen.getByRole('dialog')).queryAllByText(/^That’s \d{4}\.$/)).toHaveLength(0)
   })
 
   it('every line removed over a governing budget is the way back to one figure: the total kept, the budget gone (never `budget: []`)', () => {

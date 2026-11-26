@@ -47,6 +47,7 @@ const ALL_SCREENS = [
   { id: 'family', screen: 'profile-family', module: copy.shellModuleProfile, page: copy.shellPageFamily },
   { id: 'goals', screen: 'profile-goals', module: copy.shellModuleProfile, page: copy.shellPageGoals },
   { id: 'expenses', screen: 'profile-expenses', module: copy.shellModuleProfile, page: copy.shellPageExpenses },
+  { id: 'blueprint', screen: 'profile-blueprint', module: copy.shellModuleProfile, page: copy.shellPageBlueprint },
   // RC18: the gear's page, reached by the gear (no module word names it).
   { id: 'settings', screen: 'settings', module: copy.shellGear, page: copy.settingsTitle },
 ] as const
@@ -1138,5 +1139,43 @@ for (const size of SIZES) {
       console.log(`[rc-look ${UNIT} stepper fresh ${size.tag}] ${JSON.stringify(findings)}`)
       auditAll(findings)
     })
+  })
+}
+
+// ── RC15 · Profile → Blueprint: each folder tab (the frame and the whole page), a tile's drawer on each, and Edit's
+//    checklist with a category hidden. Filter by this block's own words: `-g "Blueprint's folder tabs"`. ─────────────────
+const BLUEPRINT_TABS = [
+  ['net-worth', copy.shellPageNetWorth],
+  ['goals', copy.shellPageGoals],
+  ['ise', copy.blueprintTabIse],
+] as const
+
+for (const size of SIZES) {
+  test.describe(`${UNIT} look, Blueprint's folder tabs at ${size.tag}`, () => {
+    test.use({ ...size.use, reducedMotion: 'reduce' })
+    for (const seed of SEEDS) {
+      test(`?seed=${seed}: Blueprint, each folder tab (whole page too) and a tile's drawer on it, and Edit with a category hidden`, async ({ page }) => {
+        test.setTimeout(FINAL_TIER_MS + 180_000)
+        await enterShell(page, seed)
+        const findings: Record<string, Audit> = {}
+        await showScreen(page, screenById('blueprint'), size.phone)
+        for (const [id, word] of BLUEPRINT_TABS) {
+          await page.getByRole('tab', { name: word, exact: true }).click()
+          await expect(page.locator(`[data-blueprint-tab="${id}"]`)).toBeAttached()
+          await page.evaluate(() => window.scrollTo(0, 0))
+          await shot(page, findings, `blueprint-${id}`, seed, size.tag)
+          await page.screenshot({ path: `${OUT}/blueprint-${id}-${seed}-${size.tag}-full.png`, fullPage: true })
+          const first = await page.locator('main.result [data-bp-tile]').first().getAttribute('data-profile-card')
+          if (first !== null) await shootDrawer(page, findings, `blueprint-${id}`, seed, size.tag, first)
+        }
+        await page.getByRole('tab', { name: copy.shellPageNetWorth, exact: true }).click()
+        await page.getByRole('button', { name: copy.blueprintEdit, exact: true }).click()
+        await page.getByRole('checkbox', { name: copy.investBucketPretax }).click()
+        await page.evaluate(() => window.scrollTo(0, 0))
+        await shot(page, findings, 'blueprint-edit', seed, size.tag)
+        console.log(`[rc-look ${UNIT} blueprint ${seed} ${size.tag}] ${JSON.stringify(findings)}`)
+        auditAll(findings)
+      })
+    }
   })
 }

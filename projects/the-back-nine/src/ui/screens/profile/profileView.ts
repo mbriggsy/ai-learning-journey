@@ -37,7 +37,14 @@ import { tablePerson } from '../../workbench/tableRun'
 import { accountName } from '../investment/investmentView'
 import type { AccountFacet } from './drawers/accountFields'
 
-export type ProfileScreenId = 'profile-net-worth' | 'profile-goals' | 'profile-income' | 'profile-savings' | 'profile-expenses' | 'profile-family'
+export type ProfileScreenId =
+  | 'profile-net-worth'
+  | 'profile-goals'
+  | 'profile-income'
+  | 'profile-savings'
+  | 'profile-expenses'
+  | 'profile-family'
+  | 'profile-blueprint'
 
 /** What a card or an Add menu item opens. */
 export type DrawerTarget =
@@ -573,6 +580,7 @@ const PAGE_TITLE: Readonly<Record<ProfileScreenId, CopyKey>> = {
   'profile-savings': 'shellPageSavings',
   'profile-expenses': 'shellPageExpenses',
   'profile-family': 'shellPageFamily',
+  'profile-blueprint': 'shellPageBlueprint',
 }
 export const profilePageTitle = (screen: ProfileScreenId): string => copy[PAGE_TITLE[screen]]
 

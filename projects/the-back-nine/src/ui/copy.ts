@@ -3201,6 +3201,30 @@ export const copy = {
   profileMoneyPictureName: 'Your money while working',
   profileMoneyPictureNoW:
     'Not drawn yet: it needs what a year costs while either of you still works. Give that figure on the Pre-retirement living expenses card.',
+  // --- Profile → Blueprint (Act 6 · RC15; `blueprintView.ts`, `Blueprint.tsx`): the plan on one page, as tiles that each
+  // open the same drawer as their Profile card. Every figure is one the household entered (a fact, so no "~"), except
+  // the work-optional date, which is the answer's own sentence (`heroLead`). ---
+  shellPageBlueprint: 'Blueprint',
+  blueprintIntro: 'Your plan on one page: what you hold, when things happen, and the money coming in and going out. Pick a tile to change it.',
+  blueprintTabsLabel: 'Blueprint views',
+  blueprintTabIse: 'Income, Savings, Expenses',
+  blueprintLegendLabel: 'What each colour stands for',
+  blueprintEdit: 'Edit',
+  blueprintEditLegend: 'Show on this page',
+  blueprintAdd: 'Add',
+  blueprintAddIncome: 'Income',
+  blueprintAddAccount: 'Account',
+  blueprintCatSpending: 'Spending',
+  blueprintNothingGoesIn: 'Nothing goes in once work has stopped.',
+  blueprintBothOfYou: 'Both of you',
+  blueprintMedicareRetired: 'Eligible at 65',
+  blueprintMedicareWorking: 'From 65, or from when work stops if that comes later',
+  blueprintAfterHeading: 'After work stops',
+  blueprintAfterIntro:
+    'These are counted from the year work stops, which is the answer B9 finds. They take calendar years once your answer names that year.',
+  blueprintUnplacedHeading: 'Not on the timeline yet',
+  blueprintSpendingOneFigure:
+    'Your spending is one yearly figure, so it has no start or end year. A budget, line by line, on the Expenses page gives each line its own years.',
   // The Living expenses drawer: one figure, or a budget line by line (RightCapital's "Expense approach").
   profileLivingApproachLegend: 'How you give your spending',
   profileLivingApproachOne: 'One figure',
@@ -5095,7 +5119,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:2282` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:2296` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,
@@ -5986,6 +6010,25 @@ export const slots = {
   profileLeftOverIn: (year: number): string => `Left over in ${year}`,
   profileShortIn: (year: number): string => `Short in ${year}`,
   profileBudgetLineOf: (n: number): string => `Budget line ${n}`,
+  // Act 6 · RC15, Profile → Blueprint.
+  bpAge: (age: number): string => `Age ${age}`,
+  bpAgeOf: (label: string, age: number): string => `${label} ${age}`,
+  bpAges: (parts: readonly string[]): string => parts.join(' · '),
+  bpRowValue: (label: string, value: string): string => `${label}: ${value}`,
+  bpNoAccounts: (possessive: string): string => upperFirst(`no accounts are in ${possessive} name.`),
+  bpMedicareOf: (possessive: string): string => upperFirst(`${possessive} Medicare`),
+  bpClaimAt: (age: number): string => `Claiming at ${age}`,
+  /** A budget line placed on the calendar: lifelong ("from 2026 on") or with its count of years and its last year. */
+  bpLineFrom: (amount: string, fromYear: number): string => `$${amount} a year, from ${fromYear} on`,
+  bpLineSpan: (amount: string, years: number, throughYear: number): string =>
+    `$${amount} a year for ${years === 1 ? 'one year' : `${years} years`}, through ${throughYear}`,
+  /** A budget line placed by years after work stops (no calendar year: the stop year is the answer's). */
+  bpLineOnward: (amount: string): string => `$${amount} a year from then on`,
+  bpLineFor: (amount: string, years: number): string => `$${amount} a year for ${years === 1 ? 'one year' : `${years} years`}`,
+  /** A group of the timeline counted from the year work stops (year 0, the first retirement year: the budget's own frame). */
+  bpAfterStop: (years: number): string =>
+    years === 0 ? 'The first retirement year' : `${years === 1 ? 'One year' : `${years} years`} after the first retirement year`,
+  bpHidden: (labels: readonly string[]): string => `Hidden: ${labels.join(', ')}. Edit shows them again.`,
   confidenceRunOutWholePast: (ageA: number, ageB: number, share: string, plural: boolean): string =>
     `The charts stop at ages ${ageA} and ${ageB}: past them, fewer than half of the futures still have one of you living. Over the whole plan, ${share} ${plural ? 'run' : 'runs'} out of money.`,
 } as const

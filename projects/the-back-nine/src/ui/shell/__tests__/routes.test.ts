@@ -70,6 +70,10 @@ describe('routes — the hash', () => {
     expect(parseHash('#/profile/net-worth')).toEqual({ module: 'profile', page: 'net-worth' })
     expect(parseHash('#/profile/goals')).toEqual({ module: 'profile', page: 'goals' })
     expect(parseHash('#/profile/expenses')).toEqual({ module: 'profile', page: 'expenses' })
+    // Blueprint is Profile's last page (RC15); its folder tabs are the page's own state, so a tab in the address lands on it.
+    expect(parseHash('#/profile/blueprint')).toEqual({ module: 'profile', page: 'blueprint' })
+    expect(parseHash('#/profile/blueprint/goals')).toEqual({ module: 'profile', page: 'blueprint' })
+    expect(navModules().find((m) => m.id === 'profile')!.pages.map((p) => p.id)).toEqual(['net-worth', 'goals', 'income', 'savings', 'expenses', 'family', 'blueprint'])
     expect(parseHash('#/profile/facts')).toEqual({ module: 'profile', page: 'net-worth' })
     expect(parseHash('#/retirement/cash-flows/extra/parts')).toEqual({ module: 'retirement', page: 'cash-flows' })
   })

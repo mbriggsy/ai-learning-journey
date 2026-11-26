@@ -1,19 +1,31 @@
 /**
  * src/ui/screens/profile/ProfilePages.tsx: Profile's pages, in RightCapital's order (Net Worth, Goals, Income, Savings,
- * Expenses, Family; Blueprint at RC15), and the one drawer open over them (Act 6 · RC13a, RC13b). The shell mounts this
+ * Expenses, Family, Blueprint), and the one drawer open over them (Act 6 · RC13a, RC13b, RC15). The shell mounts this
  * keyed by the page, so a page change drops a drawer with it (a drawer holding changes cannot be left that way unasked:
  * its buffer holds the leave guard, and the shell's Back ask is asked inside the drawer, `ProfileDrawer.tsx`). The
- * drawer's bookkeeping is `drawerHost.tsx`'s (the shell hosts the same for drawers opened from outside Profile).
+ * drawer's bookkeeping is `drawerHost.tsx`'s (the shell hosts the same for drawers opened from outside Profile). Every
+ * Blueprint tile opens its drawer through this same host, so a tile and its Profile card open one drawer.
  */
-import { useCallback, useEffect, useMemo, type RefObject } from 'react'
-import type { MemoryModel, ScenarioDraft } from '@store/memoryModel'
+import { useCallback, useEffect, useMemo, useState, type RefObject } from 'react'
+import type { MemoryModel, ModelAnswer, ScenarioDraft } from '@store/memoryModel'
+import type { BandPlanClockAnchor } from '../../bandAnnotations'
+import { Blueprint } from './Blueprint'
+import { blueprintView, type BlueprintTab } from './blueprintView'
 import { CardsPage } from './CardsPage'
 import { NetWorth } from './NetWorth'
 import { expensesView, familyView, goalsView, incomeView, netWorthView, profilePageTitle, savingsView, type ProfileScreenId } from './profileView'
 import { useDrawerHost } from './drawerHost'
 import type { DrawerLeaveAsk } from './drawers/ProfileDrawer'
 
-export const PROFILE_SCREENS: readonly ProfileScreenId[] = ['profile-net-worth', 'profile-goals', 'profile-income', 'profile-savings', 'profile-expenses', 'profile-family']
+export const PROFILE_SCREENS: readonly ProfileScreenId[] = [
+  'profile-net-worth',
+  'profile-goals',
+  'profile-income',
+  'profile-savings',
+  'profile-expenses',
+  'profile-family',
+  'profile-blueprint',
+]
 export const isProfileScreen = (s: string): s is ProfileScreenId => (PROFILE_SCREENS as readonly string[]).includes(s)
 
 export interface ProfilePagesProps {
@@ -23,15 +35,21 @@ export interface ProfilePagesProps {
   readonly readOnly: boolean
   readonly headingRef: RefObject<HTMLHeadingElement | null>
   readonly agedBalancesYear: number | undefined
-  /** Net Worth's R13 caveat (its band prints a figure). */
+  /** Net Worth's and Blueprint's R13 caveat (each prints a figure). */
   readonly caveat: readonly string[]
+  /** Blueprint's Goals timeline: a working household's stop year is the committed answer's (`blueprintView.ts`). */
+  readonly answer: ModelAnswer
+  readonly refiguring: boolean
+  readonly anchor: BandPlanClockAnchor
   /** The shell's Back ask: asked inside the open drawer (the drawer is modal). */
   readonly leaveAsk?: DrawerLeaveAsk
   /** Told whether a drawer is open (the shell then asks its Back ask inside it, never on the page beneath). */
   readonly onDrawerOpen: (open: boolean) => void
 }
 
-export function ProfilePages({ screen, draft, model, readOnly, headingRef, agedBalancesYear, caveat, leaveAsk, onDrawerOpen }: ProfilePagesProps) {
+const NO_HIDDEN: Readonly<Record<BlueprintTab, readonly string[]>> = { 'net-worth': [], goals: [], ise: [] }
+
+export function ProfilePages({ screen, draft, model, readOnly, headingRef, agedBalancesYear, caveat, answer, refiguring, anchor, leaveAsk, onDrawerOpen }: ProfilePagesProps) {
   const heading = useCallback(() => headingRef.current, [headingRef])
   const host = useDrawerHost(heading)
   const drawerOpen = host.isOpen
@@ -39,6 +57,11 @@ export function ProfilePages({ screen, draft, model, readOnly, headingRef, agedB
     onDrawerOpen(drawerOpen)
   }, [drawerOpen, onDrawerOpen])
   useEffect(() => () => onDrawerOpen(false), [onDrawerOpen])
+
+  // Blueprint's folder tab and Edit's hidden categories: the page's own state (a page move drops them).
+  const [bpTab, setBpTab] = useState<BlueprintTab>('net-worth')
+  const [bpHidden, setBpHidden] = useState(NO_HIDDEN)
+  const hiddenSet = useMemo(() => new Set(bpHidden[bpTab]), [bpHidden, bpTab])
 
   const title = profilePageTitle(screen)
   const view = useMemo(() => {
@@ -50,11 +73,31 @@ export function ProfilePages({ screen, draft, model, readOnly, headingRef, agedB
     return null
   }, [screen, draft, readOnly])
   const worth = useMemo(() => (screen === 'profile-net-worth' ? netWorthView(draft, agedBalancesYear, readOnly) : null), [screen, draft, agedBalancesYear, readOnly])
+  const blueprint = useMemo(
+    () =>
+      screen === 'profile-blueprint'
+        ? blueprintView({ draft, tab: bpTab, readOnly, agedBalancesYear, answer, refiguring, anchor, hidden: hiddenSet })
+        : null,
+    [screen, draft, bpTab, readOnly, agedBalancesYear, answer, refiguring, anchor, hiddenSet],
+  )
 
   return (
     <>
       {worth !== null ? (
         <NetWorth headingRef={headingRef} view={worth} selected={host.selected} onOpen={host.open} caveat={caveat} />
+      ) : blueprint !== null ? (
+        <Blueprint
+          headingRef={headingRef}
+          view={blueprint}
+          selected={host.selected}
+          onOpen={host.open}
+          onTab={setBpTab}
+          hidden={hiddenSet}
+          onHidden={(id, hide) =>
+            setBpHidden((cur) => ({ ...cur, [bpTab]: hide ? [...cur[bpTab].filter((x) => x !== id), id] : cur[bpTab].filter((x) => x !== id) }))
+          }
+          caveat={caveat}
+        />
       ) : view !== null ? (
         <CardsPage screen={screen} title={title} headingRef={headingRef} view={view} selected={host.selected} onOpen={host.open} />
       ) : null}

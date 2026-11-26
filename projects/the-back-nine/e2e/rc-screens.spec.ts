@@ -3622,7 +3622,7 @@ const PROFILE = {
 } as const
 const PROFILE_SEEDS = ['budget', 'date', 'retired', 'tablewidest'] as const
 
-async function toProfile(page: Page, target: (typeof PROFILE)[keyof typeof PROFILE], phone: boolean): Promise<void> {
+async function toProfile(page: Page, target: { readonly screen: string; readonly page: string }, phone: boolean): Promise<void> {
   if (phone) {
     await page.getByRole('button', { name: copy.shellMenuOpen, exact: true }).click()
     await page.getByRole('dialog', { name: copy.shellMenuTitle }).getByRole('link', { name: target.page, exact: true }).click()
@@ -4414,5 +4414,94 @@ for (const size of RC12_SIZES) {
       expect(await picture.locator('[data-ledger-row]').count(), 'the picture drew every row').toBeGreaterThanOrEqual(8)
       await noSidewaysScroll(page, 'dateshort picture')
     })
+  })
+}
+
+// ── RC15 · Profile → Blueprint (plan 6, RC15; its Fit decision, Test scenarios and Verification) ─────────────────────────
+// - a scrolling page: at his window the first frame holds the title, its sentence and the panel's top row (the legend,
+//   the headline box, Edit and Add); no tab scrolls sideways at his window or on the phone;
+// - every tile names its category in words (the colour edge is never the only signal), and every category word is one
+//   the legend names;
+// - no joint column: Net Worth draws one column per person, and "joint" appears nowhere on the tab;
+// - each tab's first tile opens its Profile card's drawer, which names itself and takes focus (a full-screen sheet on the
+//   phone); Escape with nothing changed hands focus back to the tile;
+// - the headline names the invested accounts, never a net worth; one R13 disclaimer on every tab, in the panel (tied to
+//   the headline's figure on Net Worth);
+// - Goals: the years run in order and each prints both people's ages; on the working seed, the crowned tile's sentence
+//   names the very year it sits under (the answer's date, never a year typed here).
+const BLUEPRINT = { screen: 'profile-blueprint', page: copy.shellPageBlueprint } as const
+const BLUEPRINT_TABS = [
+  ['net-worth', copy.shellPageNetWorth],
+  ['goals', copy.shellPageGoals],
+  ['ise', copy.blueprintTabIse],
+] as const
+
+for (const size of RC12_SIZES) {
+  test.describe(`RC15 · Blueprint ${size.title}`, () => {
+    test.use(size.use)
+    for (const seed of ['budget', 'date', 'retired'] as const) {
+      test(`?seed=${seed}: each folder tab${size.phone ? '' : ', the first frame'}; every tile names its category; no joint column; a tile opens its card's drawer, named; nothing sideways; one disclaimer`, async ({ page }) => {
+        test.setTimeout(FINAL_TIER_MS + 120_000)
+        await gotoSeedFinal(page, seed)
+        await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
+        await toProfile(page, BLUEPRINT, size.phone)
+        if (!size.phone) {
+          const top = await page.evaluate(() => ({
+            scrollY: window.scrollY,
+            headline: document.querySelector('[data-bp-headline]')!.getBoundingClientRect().bottom,
+            legend: document.querySelector('[data-bp-legend]')!.getBoundingClientRect().bottom,
+          }))
+          expect(top.scrollY).toBe(0)
+          expect(top.headline, `${seed}: the headline box in the first frame`).toBeLessThanOrEqual(REAL.height)
+          expect(top.legend, `${seed}: the legend in the first frame`).toBeLessThanOrEqual(REAL.height)
+        }
+        for (const [id, word] of BLUEPRINT_TABS) {
+          const who = `${seed} ${id}`
+          await page.getByRole('tab', { name: word, exact: true }).click()
+          await expect(page.locator(`[data-blueprint-tab="${id}"]`)).toBeAttached()
+          await settleLayout(page)
+          await noSidewaysScroll(page, who)
+          // The R13 tie: Net Worth's headline figure; Goals' crowned date where one is settled; the lanes print facts only.
+          const crowned = (await page.locator('[data-bp-value][aria-describedby]').count()) > 0
+          await assertOneVisibleCaveat(page, null, id === 'net-worth' || (id === 'goals' && crowned))
+          const legend = await page.locator('[data-bp-legend] li').allInnerTexts()
+          const categories = await page.locator('main.result [data-bp-tile] [data-bp-category]').evaluateAll((els) =>
+            els.map((el) => ({ text: (el as HTMLElement).innerText.trim(), shown: (el as HTMLElement).getClientRects().length > 0 })),
+          )
+          expect(categories.length, `${who}: tiles to read`).toBeGreaterThan(0)
+          for (const c of categories) {
+            expect(c.shown, `${who}: a category word shown`).toBe(true)
+            expect(legend.map((l) => l.trim().toUpperCase()), `${who}: "${c.text}" is a legend word`).toContain(c.text.toUpperCase())
+          }
+          if (id === 'net-worth') {
+            await expect(page.locator('[data-bp-column]'), `${who}: one column per person, no joint column`).toHaveCount(2)
+            await expect(page.locator('main.result [data-screen="profile-blueprint"]')).not.toContainText(/joint/i)
+            await expect(page.locator('[data-bp-headline]')).toContainText(copy.snapshotInvestedTitle)
+            await expect(page.locator('[data-bp-headline]')).not.toContainText(/net worth/i)
+          }
+          if (id === 'goals') {
+            const groups = await page.locator('[data-bp-goals] > ol > li').evaluateAll((els) =>
+              els.map((el) => ({
+                year: Number(el.querySelector('[data-bp-year]')?.textContent),
+                ages: el.querySelector('[data-bp-ages]')?.textContent ?? '',
+                crowned: el.querySelector('[data-bp-value][aria-describedby]')?.textContent ?? null,
+              })),
+            )
+            expect(groups.length, `${who}: a timeline`).toBeGreaterThan(0)
+            const years = groups.map((g) => g.year)
+            expect(years, `${who}: the years in order`).toEqual([...years].sort((a, b) => a - b))
+            for (const g of groups) expect(g.ages.split(' · '), `${who} ${g.year}: both people's ages`).toHaveLength(2)
+            for (const g of groups.filter((x) => x.crowned !== null)) expect(g.crowned!, `${who}: the crowned date names its own year`).toContain(String(g.year))
+          }
+          const tile = page.locator('main.result [data-bp-tile]').first()
+          await tile.click()
+          await assertDrawerFits(page, who, size.phone)
+          await page.keyboard.press('Escape')
+          await expect(page.getByRole('dialog'), `${who}: Escape with nothing changed closes the drawer`).toHaveCount(0)
+          await expect(tile, `${who}: focus back on the tile`).toBeFocused()
+        }
+        await assertCaveatReachable(page, `${seed} blueprint`)
+      })
+    }
   })
 }

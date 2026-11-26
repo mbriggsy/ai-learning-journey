@@ -219,6 +219,12 @@ export const RC_PAIRS: readonly RcPair[] = [
     where: 'Asset Allocation bonds beside cash',
     verdict: { kind: 'cue', cue: 'cash dotted in its slice, its bar and its key mark; each part named with its share in the table beside the ring' },
   },
+  // Blueprint (RC15): tiles side by side, each with a 4 px edge in its category's colour AND the category word printed
+  // above its name. Net Worth's treatments take the stacks' colours (pre-tax orange, Roth green, taxable blue, HSA sky:
+  // their pairs are the rows above, but pre-tax against HSA); Goals' retirement green, Social Security blue, Medicare sky,
+  // spending red; Income, Savings, Expenses green, blue, red (all rows above but Medicare against spending).
+  { a: 'orange', b: 'sky', where: 'Blueprint pre-tax beside HSA tiles', verdict: { kind: 'floor' } },
+  { a: 'sky', b: 'red', where: 'Blueprint Medicare beside spending tiles', verdict: { kind: 'floor' } },
   { a: 'green', b: 'teal', where: 'series slots 1 and 11', verdict: { kind: 'apart' } },
 ]
 

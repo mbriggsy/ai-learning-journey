@@ -6,7 +6,7 @@ import { createRef, useSyncExternalStore } from 'react'
 import { unsavedBuffersHeld } from '@intake/unsavedBuffer'
 import type { MemoryModel } from '@store/memoryModel'
 import { DEV_SEEDS } from '../../../devSeeds'
-import { copy } from '../../../copy'
+import { copy, slots } from '../../../copy'
 import { ProfilePages } from '../ProfilePages'
 import type { ProfileScreenId } from '../profileView'
 import type { DrawerLeaveAsk } from '../drawers/ProfileDrawer'
@@ -34,6 +34,9 @@ function Host({ model, screen: s, readOnly = false, leaveAsk }: { readonly model
       headingRef={headingRef}
       agedBalancesYear={undefined}
       caveat={['Caveat.']}
+      answer={snap.answer}
+      refiguring={snap.refiguring}
+      anchor={{ startCalendarYear: snap.draft.startCalendarYear, yearsSincePlanBuilt: 0 }}
       {...(leaveAsk !== undefined ? { leaveAsk } : {})}
       onDrawerOpen={() => {}}
     />
@@ -180,5 +183,60 @@ describe('the widow’s number (R40), on the Income card that shows the stream',
     expect(pension).toHaveTextContent('Alex would keep')
     expect(pension).toHaveTextContent('50%')
     expect(pension.textContent).not.toContain('0.5')
+  })
+})
+
+describe('Blueprint (Act 6 · RC15): a tile opens its Profile card’s own drawer', () => {
+  it('Net Worth: an account tile opens the account drawer on what it holds; Escape hands focus back to the tile', async () => {
+    const { model } = profileStore(DEV_SEEDS.date)
+    render(<Host model={model} screen="profile-blueprint" />)
+    const tile = card('account-0')
+    expect(tile).toHaveTextContent(copy.investBucketPretax)
+    act(() => tile.focus())
+    fireEvent.click(tile)
+    const dialog = screen.getByRole('dialog')
+    expect(within(dialog).getByLabelText(copy.accountValueLabel)).toBeInTheDocument()
+    fireEvent.keyDown(dialog, { key: 'Escape' })
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+    await waitFor(() => expect(card('account-0')).toHaveFocus())
+  })
+
+  it('Goals: a Medicare tile opens the Medicare drawer, each person’s tile its own focus home; Income, Savings, Expenses: the Social Security tile opens the person’s Social Security drawer', () => {
+    const { model } = profileStore(DEV_SEEDS.retired)
+    render(<Host model={model} screen="profile-blueprint" />)
+    fireEvent.click(screen.getByRole('tab', { name: copy.shellPageGoals }))
+    expect(card('medicare-0')).toBeInTheDocument()
+    expect(card('medicare-1')).toBeInTheDocument()
+    fireEvent.click(card('medicare-1'))
+    expect(screen.getByRole('dialog', { name: copy.profileMedicareName })).toBeInTheDocument()
+    fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' })
+    cleanup()
+    render(<Host model={model} screen="profile-blueprint" />)
+    fireEvent.click(screen.getByRole('tab', { name: copy.blueprintTabIse }))
+    fireEvent.click(card('ss-0'))
+    expect(screen.getByRole('dialog', { name: 'Alex’s Social Security' })).toBeInTheDocument()
+  })
+
+  it('read-only: no Add menu on any tab; Edit (which writes nothing) stays', () => {
+    const { model } = profileStore(DEV_SEEDS.date)
+    render(<Host model={model} screen="profile-blueprint" readOnly />)
+    for (const tab of [copy.shellPageNetWorth, copy.shellPageGoals, copy.blueprintTabIse]) {
+      fireEvent.click(screen.getByRole('tab', { name: tab }))
+      expect(screen.queryByRole('button', { name: copy.profileAddAccount })).toBeNull()
+      expect(screen.queryByRole('button', { name: copy.blueprintAdd })).toBeNull()
+      expect(screen.getByRole('button', { name: copy.blueprintEdit })).toBeInTheDocument()
+    }
+  })
+
+  it('Edit hides a category’s tiles and says so; showing it again brings them back', () => {
+    const { model } = profileStore(DEV_SEEDS.date)
+    render(<Host model={model} screen="profile-blueprint" />)
+    expect(card('account-1')).not.toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: copy.blueprintEdit }))
+    fireEvent.click(screen.getByRole('checkbox', { name: copy.investBucketRoth }))
+    expect(document.querySelector('[data-profile-card="account-1"]')).toBeNull()
+    expect(screen.getByText(slots.bpHidden([copy.investBucketRoth]))).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('checkbox', { name: copy.investBucketRoth }))
+    expect(card('account-1')).not.toBeNull()
   })
 })

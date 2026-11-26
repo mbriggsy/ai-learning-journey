@@ -24,7 +24,7 @@ export type ModuleId = (typeof MODULE_ORDER)[number] | 'settings'
  *  Care are rebuilt, RC11's Stress Test is new (RightCapital's slot, between Analysis and Social Security), and RC12 adds Investment's Asset Allocation and Tax Allocation; RC13a adds Profile's Net Worth, Income, Savings and
  *  Family, and RC13b its Goals and Expenses (RightCapital's order, ref 1.2), every saved fact in a drawer of theirs: the
  *  workbench room's facts page, the last interim tab, is gone. RC18 adds Settings, the gear's page (no module word: the gear
- *  reaches it). */
+ *  reaches it). RC15 adds Profile's Blueprint. */
 export type ScreenId =
   | 'snapshot'
   | 'probability'
@@ -42,6 +42,7 @@ export type ScreenId =
   | 'profile-savings'
   | 'profile-expenses'
   | 'profile-family'
+  | 'profile-blueprint'
   | 'settings'
 
 export interface RouteRow {
@@ -107,6 +108,8 @@ export const ROUTE_ROWS: readonly RouteRow[] = [
   { module: 'profile', page: 'savings', pageLabel: copy.shellPageSavings, screen: 'profile-savings', title: copy.shellPageSavings },
   { module: 'profile', page: 'expenses', pageLabel: copy.shellPageExpenses, screen: 'profile-expenses', title: copy.shellPageExpenses },
   { module: 'profile', page: 'family', pageLabel: copy.shellPageFamily, screen: 'profile-family', title: copy.shellPageFamily },
+  // RC15: Blueprint, Profile's last page (RightCapital's order). Its three folder tabs are the page's own state, not routes.
+  { module: 'profile', page: 'blueprint', pageLabel: copy.shellPageBlueprint, screen: 'profile-blueprint', title: copy.shellPageBlueprint },
   // RC18: the gear's page. Its folder tabs are the page's own state, not routes (as Cash Flows' and Tax Strategies' are).
   { module: 'settings', page: 'plan', pageLabel: copy.settingsTitle, screen: 'settings', title: copy.settingsTitle },
 ]

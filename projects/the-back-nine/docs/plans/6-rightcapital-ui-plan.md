@@ -1940,6 +1940,37 @@ date, never a provisional one without its tag.
 
 **Verification.** CI fit on `budget`, `date`: first frame and no sideways scroll at REAL and PHONE. Local look.
 
+**As built** *(the pilot's call, 2026-11-25, b9-3 (Briggsy pre-approved all changes))*:
+- **The timeline's calendar.** A budget line's years count from the household's work stop (`BudgetLineItem`; the
+  engine's anchor is the latest planned retirement offset, `simulate.ts`). An all-retired household's year 0 is
+  `startCalendarYear` (the worksheet drawer's own help). A working household's year 0 is the answer's crowned date (its
+  build year plus the hero track's offset, `heroLead`'s calendar claim), read only from a SETTLED answer: the final tier,
+  not re-figuring, a date crowned. Otherwise the working person's stop and every budget line sit under "After work
+  stops", grouped by years after the first retirement year, with no calendar year. A provisional date is never printed
+  on Blueprint at all (stronger than "never without its tag"), and a no-date answer prints its own sentence on the stop
+  tile. The crowned tile's value is the answer's own sentence (`heroLead`), tied to the R13 caveat.
+- **Medicare** is a tile per person at the year they turn 65, worded as eligibility ("Eligible at 65"); for a member
+  still working, "From 65, or from when work stops if that comes later" (what the engine prices). Never an enrollment.
+- **Ages** beside each year are the engine's clock (current age plus years from `startCalendarYear`), names first
+  ("Alex 63 · Sam 65"), not RightCapital's bare "63/65".
+- **Past events stay on the timeline** (a retired person's stop, a claim already started), in their own years.
+- **A tile missing a fact** (no claim age, no birth year) sits under "Not on the timeline yet", never at a guessed year.
+- **One spending figure** (no budget) draws no spending tile; a line says why and where a budget gives each line years.
+- **Categories.** Net Worth's are the four tax treatments in the Investment pages' colours (pre-tax orange, Roth green,
+  taxable blue, HSA sky); Goals' are Retirement, Social Security, Medicare and Spending; the lanes' are Income, Savings
+  and Expenses. Two `RC_PAIRS` rows added (pre-tax beside HSA, Medicare beside spending; both clear the floor).
+- **The household's spending** (Living expenses, out-of-pocket medical, the pay check's W) is one row under both people,
+  headed "Both of you", never a Jointly Held column. A retired person's Savings cell says nothing goes in.
+- **Each tile is its Profile card**, composed from `profileView.ts`'s own views, so its target cannot drift; Goals' tiles
+  open the person, Social Security, Medicare and Living expenses drawers.
+- **Edit** is an inline checklist (no new kit part, no portal) that hides a category's tiles on the shown tab and names
+  what it hides under the headline; it writes nothing, so a read-only tab keeps it. **Add**: Net Worth's is the Add
+  account menu; Income, Savings, Expenses' offers Income and Account; Goals has none (its Profile page has none).
+- **The folder tab** is the page's own state (`ProfilePages.tsx`), not a route; `#/profile/blueprint` is the page.
+- **The R13 caveat** is in the panel on every tab (the shell stamps Blueprint as carrying it in frame), tied to Net
+  Worth's headline figure and, on Goals, to a settled crowned date.
+- **Verification** ran on `budget`, `date` and `retired` (the plan's two plus the retired spine).
+
 **Milestone 3** closes here.
 
 ### RC16: Dashboard → Balance Sheet

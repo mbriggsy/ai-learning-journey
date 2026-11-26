@@ -1104,8 +1104,10 @@ export default function Shell({
     screen === 'stress-test' ||
     screen === 'tax-strategies' ||
     screen === 'health-care'
-  // Net Worth prints the invested accounts' total (RC13a), so it carries the caveat in its frame, as the Investment pages do.
-  const inFrameCaveat = figured || screen === 'asset-allocation' || screen === 'tax-allocation' || screen === 'profile-net-worth'
+  // Net Worth prints the invested accounts' total (RC13a), so it carries the caveat in its frame, as the Investment pages do;
+  // Blueprint too (RC15: its Net Worth headline, and the work-optional date on its Goals timeline).
+  const inFrameCaveat =
+    figured || screen === 'asset-allocation' || screen === 'tax-allocation' || screen === 'profile-net-worth' || screen === 'profile-blueprint'
   // A Profile drawer is open: the shell's Back ask is asked inside it (`ProfileDrawer.tsx`), never on the page beneath.
   const [profileDrawerOpen, setProfileDrawerOpen] = useState(false)
   // Cash Flows too, aged line and door included: its row-one line (`workbenchAged`) names the build year and claims nothing
@@ -1482,6 +1484,9 @@ export default function Shell({
               headingRef={headingRef}
               agedBalancesYear={agedBalancesYear}
               caveat={CASH_FLOWS_CAVEAT}
+              answer={snapshot.answer}
+              refiguring={snapshot.refiguring}
+              anchor={anchor}
               {...(shownAsk !== undefined ? { leaveAsk: shownAsk } : {})}
               onDrawerOpen={setProfileDrawerOpen}
             />

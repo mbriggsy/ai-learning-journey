@@ -683,7 +683,9 @@ export const PERIOD_PROBE_TOUCHED: ReadonlySet<FieldPath> = new Set(['annualSpen
 /** Would the spend-period force-confirm fire on this draft in a session with no touches and no provenance? Asked through
  *  the rule's OWN predicate (`spend-period-unconfirmed`), never a re-typed copy of its ambiguity math. A draft that trips
  *  it can only have reached the plan past an explicit period answer (every road to it, the walk, the stepper and the
- *  Living drawer, gates on this rule), so it is that answer's receipt; a draft that does not trip it (a figure under the
+ *  Living drawer, gates on this rule; the two roads that write a yearly figure without asking, the worksheet's escape to
+ *  one figure and the tray's spending total, write it under "Each year", the unit it came in: milestone 3's review,
+ *  round 3), so it is that answer's receipt; a draft that does not trip it (a figure under the
  *  floor in its shown unit was never asked) proves nothing. The completed-intake disarm (`IntakeApp.tsx`) and the Living
  *  drawer's receipt (`ExpensesDrawers.tsx`, milestone 3's review, round 2) both read it; each adds its own budget
  *  clause (a governing budget asks no unit). */

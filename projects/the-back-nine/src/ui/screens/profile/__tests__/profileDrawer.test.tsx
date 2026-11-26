@@ -200,6 +200,24 @@ describe('a birth year moved (milestone 3’s review, round 2): the drawer names
     expect(model.getSnapshot().draft.people[1]).toMatchObject({ birthYear: 1960, currentAge: 66, socialSecurityClaimAge: 67 })
     expect(recompute).toHaveBeenCalledTimes(1)
   })
+
+  // Milestone 3's review, round 3: the box commits on blur, and a pointer's press on Save blurs it in that same press, so
+  // a notice drawn from the committed year alone showed under the pressed button and closed with the drawer. It stands
+  // from the typed text, before any blur; the blur then commits the year and the notice holds.
+  it('the notice stands while the year is still being typed, before the box commits', () => {
+    const { model } = profileStore(DEV_SEEDS.retired)
+    render(<Host model={model} screen="profile-family" />)
+    fireEvent.click(card('person-1'))
+    const dialog = screen.getByRole('dialog', { name: 'Sam' })
+    const box = within(dialog).getByLabelText(copy.birthYearLabel)
+    type(box, '196', true)
+    expect(within(dialog).queryByRole('status'), 'three digits are no year yet').toBeNull()
+    type(box, '1960', true)
+    expect(within(dialog).getByRole('status')).toHaveTextContent(slots.profileMoveClaimYear('Sam’s Social Security', 2027, 2028, 67))
+    expect(model.getSnapshot().draft.people[1].birthYear, 'nothing written while typing').toBe(DEV_SEEDS.retired.people[1].birthYear)
+    act(() => box.blur())
+    expect(within(dialog).getByRole('status')).toHaveTextContent(slots.profileMoveClaimYear('Sam’s Social Security', 2027, 2028, 67))
+  })
 })
 
 describe('the widow’s number (R40), on the Income card that shows the stream', () => {

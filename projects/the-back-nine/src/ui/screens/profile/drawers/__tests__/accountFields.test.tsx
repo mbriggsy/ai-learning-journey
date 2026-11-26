@@ -152,6 +152,30 @@ describe('an unknown fund’s mix cleared', () => {
     expect(res.ok && res.draft.tickerClassifications.ZZZQX).toBeUndefined()
     expect(res.ok && res.draft.enteredAccounts[0]!.ticker).toBe('ZZZQX')
   })
+
+  // Milestone 3's review, round 3: the mix is shared by every account holding the fund, and a ticker typed in another
+  // account's drawer left its boxes blank, so Save read them as cleared and deleted the first account's mix too.
+  it('a second account typing a fund the plan holds a mix for shows that mix in its boxes, and Save keeps it for both', async () => {
+    const blend = { kind: 'exact', stockPct: 60, bondPct: 30, cashPct: 10 } as const
+    const held: ScenarioDraft = {
+      ...at61,
+      enteredAccounts: [{ id: 'acct-fund', ownerIndex: 0, kind: 'roth-ira', valueToday: 100_000, ticker: 'ZZZQX' }],
+      tickerClassifications: { ...at61.tickerClassifications, ZZZQX: blend },
+    }
+    const { model, dialog } = renderDrawer({ kind: 'new-account', accountKind: 'brokerage', ownerIndex: 0 }, held)
+    type(within(dialog).getByLabelText(copy.accountValueLabel), '50,000')
+    const user = userEvent.setup()
+    await user.click(within(dialog).getByRole('combobox', { name: copy.profileMixHow }))
+    await user.click(await screen.findByRole('option', { name: copy.profileMixByTicker }))
+    type(within(dialog).getByLabelText(copy.profileTickerLabel), 'zzzqx')
+    expect(within(dialog).getByLabelText(copy.classifierStockPct)).toHaveValue('60')
+    expect(within(dialog).getByLabelText(copy.classifierBondPct)).toHaveValue('30')
+    expect(within(dialog).getByLabelText(copy.classifierCashPct)).toHaveValue('10')
+    act(() => fireEvent.click(within(dialog).getByRole('button', { name: copy.profileDrawerSave })))
+    const after = model.getSnapshot().draft
+    expect(after.enteredAccounts.map((a) => a.ticker)).toEqual(['ZZZQX', 'ZZZQX'])
+    expect(after.tickerClassifications.ZZZQX).toEqual(blend)
+  })
 })
 
 describe('the mix', () => {

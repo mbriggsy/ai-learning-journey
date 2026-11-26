@@ -36,6 +36,9 @@ interface NumberInputProps {
   readonly value: number | undefined
   /** Called with the parsed figure on blur or Enter; `undefined` when the box was cleared. */
   readonly onCommit?: (value: number | undefined) => void
+  /** Called with the raw text on every keystroke, before any commit: for a caller whose words must stand before a
+   *  pointer reaches Save (a press on Save blurs the box, committing it in the same press). Writes nothing. */
+  readonly onEdit?: (text: string) => void
   /** The words shown when the typed text is not a figure. */
   readonly invalidMessage: string
   /** The caller's refusal of the committed figure, shown under the box (the typed-text refusal wins while it shows). */
@@ -68,6 +71,7 @@ function NumberInput({
   hideLabel = false,
   value,
   onCommit,
+  onEdit,
   invalidMessage,
   error,
   description,
@@ -170,6 +174,7 @@ function NumberInput({
             setInvalid(false)
             markRefused(false)
             setEditing(true)
+            onEdit?.(e.target.value)
           }}
           onBlur={() => {
             setEditing(false)

@@ -18,7 +18,19 @@ import { copy, slots } from '../../../copy'
 import { tablePerson } from '../../../workbench/tableRun'
 import { ProfileIcon } from '../profileIcons'
 import { accountCardName, limitLines } from '../profileView'
-import { accountFormFromDraft, buildAccountEdit, deleteAccount, FACET_FIELDS, knownFund, ownAccountField, type AccountDrawerForm, type AccountFacet, type AccountField } from './accountFields'
+import {
+  accountFormFromDraft,
+  buildAccountEdit,
+  deleteAccount,
+  FACET_FIELDS,
+  knownFund,
+  ownAccountField,
+  tickerLegsFor,
+  tickerMoved,
+  type AccountDrawerForm,
+  type AccountFacet,
+  type AccountField,
+} from './accountFields'
 import { commitEdit, openCheck, saveEdit } from './drawerSave'
 import type { DrawerBodyProps } from './drawerProps'
 import { Fact } from './Fact'
@@ -224,7 +236,11 @@ export function AccountDrawer({
                 value={form.ticker === '' ? undefined : form.ticker}
                 readOnly={readOnly}
                 {...err('ticker')}
-                onCommit={(t) => set('ticker', { ticker: (t ?? '').toUpperCase() })}
+                onCommit={(t) => {
+                  const ticker = (t ?? '').toUpperCase()
+                  // A different fund brings its own mix boxes: the plan's mix for it, or blank (`tickerLegsFor`).
+                  set('ticker', tickerMoved(edit.read().ticker, ticker) ? { ticker, tickerLegs: tickerLegsFor(model.getSnapshot().draft, ticker) } : { ticker })
+                }}
               />
               </Fact>
             ) : null}

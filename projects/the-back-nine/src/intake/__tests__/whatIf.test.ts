@@ -109,11 +109,14 @@ describe('applyBundle — each arm moves only its own fields', () => {
     expect(a.draft.annualSpendingReal).toBe(dip.annualSpendingReal! - 20_000 + 5_000)
   })
 
-  it('the one-figure total moves only the total, on a draft with no budget; on a budgeted draft it is refused', () => {
+  it('the one-figure total moves only the total and its unit, on a draft with no budget; on a budgeted draft it is refused', () => {
     expect(date.budget, '[test setup] date has no budget').toBeUndefined()
-    const out = applied(date, [{ kind: 'spending', op: 'total', annualSpendingReal: 70_000 }])
-    expect(movedKeys(date, out.draft)).toEqual(['annualSpendingReal'])
-    expect(out.draft.annualSpendingReal).toBe(70_000)
+    // The tray's row is "dollars a year", so the figure lands under "Each year" (milestone 3's review, round 3): left
+    // under the default month, the Living drawer read it as the period gate's receipt.
+    const monthly: ScenarioDraft = { ...date, spendEntryPeriod: 'month' }
+    const out = applied(monthly, [{ kind: 'spending', op: 'total', annualSpendingReal: 70_000 }])
+    expect(movedKeys(monthly, out.draft)).toEqual(['annualSpendingReal', 'spendEntryPeriod'])
+    expect(out.draft).toMatchObject({ annualSpendingReal: 70_000, spendEntryPeriod: 'year' })
     expect(applyBundle(dip, [{ kind: 'spending', op: 'total', annualSpendingReal: 70_000 }])).toEqual({
       ok: false,
       refusal: { kind: 'spending-total-on-budget' },

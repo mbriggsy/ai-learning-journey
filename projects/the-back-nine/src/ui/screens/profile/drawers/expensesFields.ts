@@ -59,8 +59,11 @@ export function buildLiving(d: ScenarioDraft, seed: LivingForm, form: LivingForm
       if (outcome === 'empty') return { ok: false, fields: { lines: copy.budgetApplyEmpty } }
       if (outcome === 'blocked') return { ok: false, fields: { lines: copy.budgetApplyBlocked } }
       // The atomic reconciliation patch (the OOP figure read from the draft being written, insight 036), or back to one
-      // figure with the total kept (build-gate 2: never `budget: []`).
-      next = outcome === 'escape' ? withoutBudget(next) : withBudgetItems(next, form.lines)
+      // figure with the total kept (build-gate 2: never `budget: []`). The escape's figure is the worksheet's yearly
+      // total, so it lands under "Each year", the unit it came in: left under an untapped default month, the next open
+      // read it as the period gate's receipt and saved a figure typed there 12 times over, unasked (milestone 3's review,
+      // round 3; `periodGateTrips`).
+      next = outcome === 'escape' ? { ...withoutBudget(next), spendEntryPeriod: 'year' } : withBudgetItems(next, form.lines)
     }
   } else {
     // Back to a single number from a governing budget: the lines are let go, the total keeps its last reconciled value.

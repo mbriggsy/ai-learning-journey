@@ -37,6 +37,12 @@ export function PersonDrawer({ index, model, open, readOnly, leaveAsk, onClose, 
   const [initial] = useState(() => (checkAtOpen === true ? openCheck(model.getSnapshot().draft, ownPersonField(index)) : undefined))
   const edit = useDrawerEdit<PersonForm, PersonField>(seed, open, initial)
   const { form, check, set } = edit
+  // The birth year as typed, before its box commits (milestone 3's review, round 3): the box commits on blur, and a
+  // pointer's press on Save blurs it in that same press, so a notice drawn from the committed year alone rendered under
+  // the pressed button and closed with the drawer, never read. Drawn from the text as typed (once it is four digits),
+  // the notice stands before the pointer reaches Save. Never written: Save reads the committed form, as before.
+  const [typedBirthYear, setTypedBirthYear] = useState<number | undefined>(undefined)
+  const noticeForm = typedBirthYear === undefined ? form : { ...form, birthYear: typedBirthYear }
   const title = tablePerson(model.getSnapshot().draft, index, 0, 0).label
   return (
     <ProfileDrawer
@@ -55,7 +61,7 @@ export function PersonDrawer({ index, model, open, readOnly, leaveAsk, onClose, 
       finalFocus={finalFocus}
       {...(leaveAsk !== undefined ? { leaveAsk } : {})}
       errors={check.elsewhere}
-      note={readOnly ? [] : birthYearMoves(model.getSnapshot().draft, index, seed, form)}
+      note={readOnly ? [] : birthYearMoves(model.getSnapshot().draft, index, seed, noticeForm)}
     >
       <DrawerFields>
         <Fact stamp="person.name">
@@ -75,7 +81,11 @@ export function PersonDrawer({ index, model, open, readOnly, leaveAsk, onClose, 
           invalidMessage={copy.profileInvalidYear}
           readOnly={readOnly}
           {...(check.fields.birthYear !== undefined ? { error: check.fields.birthYear } : {})}
-          onCommit={(birthYear) => set('birthYear', { birthYear })}
+          onEdit={(text) => setTypedBirthYear(/^\s*\d{4}\s*$/.test(text) ? Number(text.trim()) : undefined)}
+          onCommit={(birthYear) => {
+            setTypedBirthYear(undefined)
+            set('birthYear', { birthYear })
+          }}
         />
         </Fact>
         <div className="flex flex-col gap-1">

@@ -168,7 +168,10 @@ const ARMS: { readonly [K in WhatIfLeverKind]: Arm<K> } = {
     const budget = w.draft.budget
     if (l.op === 'total') {
       if (budget !== undefined) return { kind: 'spending-total-on-budget' }
-      w.draft = { ...w.draft, annualSpendingReal: l.annualSpendingReal }
+      // The tray's row is "dollars a year", so the figure lands under "Each year", the unit it came in (milestone 3's
+      // review, round 3: under an untapped default month, the Living drawer's next open read it as the period gate's
+      // receipt and saved a figure typed there 12 times over; `periodGateTrips`).
+      w.draft = { ...w.draft, annualSpendingReal: l.annualSpendingReal, spendEntryPeriod: 'year' }
       return null
     }
     if (budget === undefined) return l.op === 'add' ? { kind: 'spending-no-budget' } : { kind: 'line-gone', lineId: l.op === 'remove' ? l.lineId : l.line.id }

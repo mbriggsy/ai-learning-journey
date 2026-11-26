@@ -68,6 +68,18 @@ export interface AccountDrawerForm {
 
 const normalTicker = (t: string): string => t.trim().toUpperCase()
 
+/** The mix boxes for a ticker: the plan's own mix for that fund where it holds one ("B9 uses this mix for every account
+ *  that holds this fund"), else blank. Read at open AND when the ticker box commits a different fund (milestone 3's
+ *  review, round 3): left showing the old boxes, blank boxes over a fund the plan holds a mix for read as "every leg
+ *  cleared" at Save, and the blank branch below deleted the mix every account holding that fund shares. */
+export function tickerLegsFor(d: ScenarioDraft, ticker: string): Legs {
+  const t = normalTicker(ticker)
+  return legsOf(t === '' ? undefined : d.tickerClassifications[t])
+}
+
+/** Is `next` a different fund from `was` (case and spaces aside)? */
+export const tickerMoved = (was: string, next: string): boolean => normalTicker(was) !== normalTicker(next)
+
 /** The form for the account at `index`, or a new account of `kind`. */
 export function accountFormFromDraft(d: ScenarioDraft, at: { readonly index: number } | { readonly kind: AccountKind; readonly ownerIndex?: 0 | 1 }): AccountDrawerForm {
   const a = 'index' in at ? d.enteredAccounts[at.index] : undefined
@@ -84,7 +96,7 @@ export function accountFormFromDraft(d: ScenarioDraft, at: { readonly index: num
     mixHow: a?.ticker !== undefined ? 'fund' : 'hand',
     legs: legsOf(a?.manualBlend),
     ticker,
-    tickerLegs: legsOf(ticker === '' ? undefined : d.tickerClassifications[normalTicker(ticker)]),
+    tickerLegs: tickerLegsFor(d, ticker),
   }
 }
 

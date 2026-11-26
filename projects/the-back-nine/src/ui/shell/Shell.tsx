@@ -1143,7 +1143,11 @@ export default function Shell({
     else if (door.kind === 'tray') tryLever(door.lever)
     else {
       // The heirs' bracket is set on Tax Strategies' Strategies tab, and where a Winner card shows, its picker sits
-      // behind "Pick again": the door opens both, so it lands on the control it names.
+      // behind "Pick again": the door opens both, so it lands on the control it names. A goal picked there and never
+      // found is let go, so the picker opens on the plan's own goal, the one the door's row reads (milestone 3's review,
+      // round 3: a held "Pay less tax" drew no bracket control).
+      setPickedGoal(undefined)
+      setPickedBracket(undefined)
       setTaxTab('strategies')
       if (taxPayload !== null) setRepick(true)
       onNavigate(routeOfScreen('tax-strategies'))

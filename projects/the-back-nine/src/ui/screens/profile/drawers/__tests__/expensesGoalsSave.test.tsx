@@ -150,6 +150,30 @@ describe('the Living drawer’s 12× check after setup keys on the plan at open'
     expect(model.getSnapshot().draft).toMatchObject({ annualSpendingReal: 96_000, spendEntryPeriod: 'year' })
   })
 
+  // Milestone 3's review, round 3: the two roads that write a yearly figure without asking, the worksheet's escape and the
+  // tray's spending total, wrote it under the untapped default month, so the next open read 8,000 a month or more as the
+  // receipt and saved 96,000 typed there as $1,152,000 a year. Each now writes "Each year", the unit its figure came in.
+  it('(e) after the worksheet’s escape or the tray’s total, the reopened drawer shows the figure under Each year and saves 96,000 as 96,000', () => {
+    const governed: ScenarioDraft = { ...GOVERNED, spendEntryPeriod: 'month' }
+    const escape = profileStore(governed)
+    const seed = livingFormFrom(governed)
+    expect(saveEdit(escape.model, (d) => buildLiving(d, seed, { ...seed, lines: [] }), ownLivingField).saved).toBe(true)
+    const escaped = escape.model.getSnapshot().draft
+    const totalled = applyBundle(DEV_SEEDS.retired, [{ kind: 'spending', op: 'total', annualSpendingReal: 120_000 }])
+    expect(totalled.ok, '[test setup] the tray’s total applies').toBe(true)
+    if (!totalled.ok) return
+    for (const start of [escaped, totalled.draft]) {
+      expect(start.budget, '[test setup] one figure, no budget').toBeUndefined()
+      expect(start.spendEntryPeriod).toBe('year')
+      const { model, dialog } = openLiving(start)
+      expect(within(dialog).getByRole('radio', { name: copy.periodYear })).toBeChecked()
+      typeAmount(dialog, '96,000')
+      save(dialog)
+      expect(model.getSnapshot().draft).toMatchObject({ annualSpendingReal: 96_000, spendEntryPeriod: 'year' })
+      cleanup()
+    }
+  })
+
   // Milestone 3's review, round 2: the amount's refusal belongs to the One figure face.
   it('the period prompt does not follow a switch to Budget: the worksheet never shows "tap Each month…"', () => {
     const { dialog } = openLiving(DEV_SEEDS.retired)

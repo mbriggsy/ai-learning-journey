@@ -140,6 +140,24 @@ describe('SaveFlow — the save drawer’s closes, step by step (RC19)', () => {
     expect(firstSave).not.toHaveBeenCalled()
   })
 
+  it('across the commit in flight (securing) no close is honoured: no X, Escape refused, and the commit still lands on the backup', async () => {
+    // A close mid-derive would unmount the ceremony while firstSave can still commit: a credential minted with its
+    // backup step skipped.
+    let commit: (v: unknown) => void = () => {}
+    firstSave.mockImplementation(() => new Promise((res) => (commit = res)))
+    const onCancel = vi.fn()
+    const onComplete = vi.fn()
+    render(<SaveFlow scenario={scenario()} onCancel={onCancel} onCommitted={vi.fn()} onComplete={onComplete} />)
+    await reachSecuring()
+    expect(screen.queryByRole('button', { name: copy.profileDrawerClose }), 'the X is gone while the commit runs').toBeNull()
+    escape()
+    await new Promise((r) => setTimeout(r, 50))
+    expect(onCancel).not.toHaveBeenCalled()
+    expect(onComplete).not.toHaveBeenCalled()
+    commit({ ok: true })
+    await screen.findByRole('heading', { name: copy.exportHeading })
+  })
+
   it('across the mandatory backup no close is honoured: no X, Escape refused, still the backup step', async () => {
     firstSave.mockResolvedValue({ ok: true })
     const onCancel = vi.fn()

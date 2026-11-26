@@ -90,6 +90,9 @@ async function audit(page: Page): Promise<Audit> {
     const all = [...document.body.querySelectorAll('*')].filter(shown)
     const clipped = all
       .filter((el) => {
+        // A native file input: Chromium's own style cuts the picked name inside the box with an ellipsis that no page
+        // style overrides (measured, RC19); RestoreFlow prints the name whole under the box, which this audit reads.
+        if (el.matches('input[type="file"]')) return false
         const cs = getComputedStyle(el)
         if (cs.textOverflow === 'ellipsis' || Number(cs.webkitLineClamp) > 0) return true
         const hidesX = cs.overflowX === 'hidden' || cs.overflowX === 'clip'
@@ -1428,6 +1431,12 @@ for (const size of SIZES) {
       await page.getByRole('button', { name: copy.coldStartRestoreAction }).click()
       await expect(page.getByRole('heading', { name: copy.restoreHeading })).toBeVisible({ timeout: 30_000 })
       await shot(page, findings, 'vault-restore-cold', 'fresh', size.tag)
+      // The file step with a file picked (any file passes this step; the word step reads it): the name prints whole under
+      // the box, Continue no longer withheld.
+      const picked = 'the-back-nine-backup-2026-11-26.json'
+      await page.locator('input[type="file"]').setInputFiles({ name: picked, mimeType: 'application/json', buffer: Buffer.from('{"stub":"backup"}') })
+      await expect(page.getByText(picked, { exact: true })).toBeVisible()
+      await shot(page, findings, 'vault-restore-picked', 'fresh', size.tag)
 
       // A planted vault: the unlock card (the dev plant fills the field), then a refused passphrase with its words.
       await page.goto('/?vault=retired')
@@ -1492,6 +1501,12 @@ for (const size of SIZES) {
       await drawer.getByRole('button', { name: copy.flowNext, exact: true }).click()
       await expect(drawer.getByRole('heading', { name: copy.recoveryHeading })).toBeVisible({ timeout: 30_000 })
       await shot(page, findings, 'vault-save-recovery', 'retired', size.tag)
+      // A one-word recovery word, refused with the recovery step's own words.
+      await drawer.getByLabel(copy.recoveryLabel, { exact: true }).fill('harbor')
+      await drawer.getByLabel(copy.recoveryConfirmLabel, { exact: true }).fill('harbor')
+      await drawer.getByRole('button', { name: copy.flowNext, exact: true }).click({ force: true })
+      await expect(drawer.getByRole('alert').filter({ hasText: copy.recoveryTooShort })).toBeVisible({ timeout: 30_000 })
+      await shot(page, findings, 'vault-save-recovery-refused', 'retired', size.tag)
       await drawer.getByLabel(copy.recoveryLabel, { exact: true }).fill(RC19_RECOVERY)
       await drawer.getByLabel(copy.recoveryConfirmLabel, { exact: true }).fill(RC19_RECOVERY)
       await drawer.getByRole('button', { name: copy.flowNext, exact: true }).click()

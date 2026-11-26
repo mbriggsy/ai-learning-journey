@@ -201,11 +201,11 @@ export function RecoveryFlow({
               </PassphraseField>
 
               <div className={VAULT_ACTIONS}>
-                <Button variant="neutral" onClick={onExit}>
-                  {copy.flowBack}
-                </Button>
                 <Button variant="primary" aria-disabled={word === ''} onClick={() => void handleWord()}>
                   {copy.recoverButton}
+                </Button>
+                <Button variant="neutral" onClick={onExit}>
+                  {copy.flowBack}
                 </Button>
               </div>
 
@@ -236,11 +236,11 @@ export function RecoveryFlow({
             <VaultHeading ref={errPanelHeadingRef}>{copy.recoverNewPassHeading}</VaultHeading>
             <FieldNote>{copy[remintError]}</FieldNote>
             <div className={VAULT_ACTIONS}>
-              <Button variant="neutral" onClick={() => void handleBail()}>
-                {copy.flowBack}
-              </Button>
               <Button variant="primary" onClick={() => setStep('setNew')}>
                 {copy.exportRetry}
+              </Button>
+              <Button variant="neutral" onClick={() => void handleBail()}>
+                {copy.flowBack}
               </Button>
             </div>
           </section>

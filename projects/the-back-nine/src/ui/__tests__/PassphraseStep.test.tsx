@@ -5,6 +5,7 @@ import { cleanup, render, screen, fireEvent, waitFor } from '@testing-library/re
 import { PassphraseStep } from '../PassphraseStep'
 import { copy } from '../copy'
 import type { Announcer } from '@intake/a11y'
+import { PASSPHRASE_MIN_LENGTH } from '@crypto/kdf'
 
 /**
  * The reused credential-set step — FOUR consumers (RecoveryFlow, RestoreFlow, and SaveFlow's
@@ -105,6 +106,17 @@ describe('PassphraseStep — error identification (WCAG 2.2 SC 3.3.1)', () => {
       expect(passField()).toHaveAttribute('aria-invalid', 'true')
     })
     expect(describedTexts(passField())).toEqual([copy.passphraseTooShort])
+  })
+
+  it('the recovery step’s own too-short line replaces the passphrase’s, and names the floor’s real length (RC19)', async () => {
+    render(
+      <PassphraseStep heading="Set a recovery word" intro="…" submitLabel={SUBMIT} onSubmit={vi.fn()} announcer={announcer} tooShortLine={copy.recoveryTooShort} />,
+    )
+    fireEvent.change(passField(), { target: { value: 'abc' } })
+    fireEvent.blur(passField())
+    await waitFor(() => expect(describedTexts(passField())).toEqual([copy.recoveryTooShort]))
+    // The words state the floor's length as a typed number: it must be kdf.ts's own.
+    expect(copy.recoveryTooShort).toContain(`at least ${PASSPHRASE_MIN_LENGTH} characters`)
   })
 
   it('BOTH notes at once resolve — the floor and the pairing bounce are named together', async () => {

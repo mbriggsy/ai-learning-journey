@@ -616,7 +616,8 @@ async function captureStateOnce(page: Page, dir: string, cdp: CDPSession): Promi
  * is a static fieldset that lives only on the intake state step, so it gets its own parallel path
  * here rather than bloating the per-state chart loop with a selector that matches nowhere else.
  * The read law this proves: the ACTIVE segment must be distinguishable in every arm WITHOUT hue
- * (weight + fill + inset ring — intake.css .segment-active); the CVD screener reads exactly these
+ * (weight + fill + inset ring — the old walk's `.segment-active`, gone with intake.css at Act 6 · RC19; RC21 re-points
+ * this harness's targets to the stepper's picker); the CVD screener reads exactly these
  * crops. A region that never renders FAILS the walk red (insight-029 vacuity discipline).
  */
 async function captureCvdRegion(
@@ -2075,7 +2076,8 @@ async function walkIntakeFork(page: Page, outDir: string): Promise<void> {
   await pick(page, 'North Carolina')
   // The SELECTED-picker face (increment 5): the answered picker is a walked cold-read surface of
   // its own — the state-tax read law is that the picked segment survives WITHOUT hue (weight +
-  // fill + inset ring, intake.css .segment-active). Assert the pick committed a visually-active
+  // fill + inset ring, the old walk's `.segment-active`, gone with intake.css at RC19; RC21 re-points
+  // these selectors to the stepper). Assert the pick committed a visually-active
   // segment BEFORE the crop so a forced-click that missed (the sr-only 1px-box phone trap the
   // `pick` helper guards) fails RED here, not a bundle showing no selection. The full state
   // (copy/aria/whole-viewport CVD arms) lands the answered picker in context; captureCvdRegion

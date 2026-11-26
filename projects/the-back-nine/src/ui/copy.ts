@@ -921,9 +921,12 @@ export const copy = {
   recoveryIntroSolo:
     'If your passphrase is ever lost — or someone needs to open this after you’re gone — your recovery word is the way back in, and it’s what unlocks your backup file. Pick something memorable, and keep a record of it where the person who settles your affairs could find it.',
   recoverySteer:
-    'Make it different from your passphrase, and steer clear of anything someone could look up — a birthday, an anniversary, a hometown. A few unexpected words you share holds up best, because anyone with your backup file and a good guess at your word could open your plan.',
+    'Make it different from your passphrase, and steer clear of anything someone could look up — a birthday, an anniversary, a hometown. A few unexpected words you share hold up best, because anyone with your backup file and a good guess at your word could open your plan.',
   recoveryLabel: 'Recovery word',
   recoveryConfirmLabel: 'Type it again',
+  // The recovery step's own too-short line: the shared floor (12 characters, `PASSPHRASE_MIN_LENGTH` in kdf.ts) refuses a
+  // single word, so the step labelled "Recovery word" says what the word must be instead of calling it short.
+  recoveryTooShort: 'Your recovery word needs at least 12 characters: a few unexpected words together hold up best.',
   recoveryEqualsError:
     'Your recovery word needs to be different from your passphrase — if they match, one guess opens both.',
 

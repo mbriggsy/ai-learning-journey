@@ -181,14 +181,14 @@ export function ExportConfirm({
       )}
 
       <div className={VAULT_ACTIONS}>
+        <Button variant="primary" aria-disabled={!exported} onClick={handleFinish}>
+          {copy.exportFinish}
+        </Button>
         {onCancel && (
           <Button variant="neutral" onClick={onCancel}>
             {copy.backupNotNow}
           </Button>
         )}
-        <Button variant="primary" aria-disabled={!exported} onClick={handleFinish}>
-          {copy.exportFinish}
-        </Button>
       </div>
     </section>
   )

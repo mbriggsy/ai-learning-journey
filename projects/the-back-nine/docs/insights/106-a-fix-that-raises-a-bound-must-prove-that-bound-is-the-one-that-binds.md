@@ -54,7 +54,7 @@ a no-op against this failure — while reading, to every future reader, like a c
 > `vi.mock`'d, fired concurrently → `['STUB','REAL']`. The memoized-loader shape → `['STUB','STUB']`.
 > Corroborating evidence was sitting in CI all along: run **30310885497**, the ONLY red whose inner
 > budget was smaller than the outer, printed a DOM containing "Use your recovery word" and "Open with
-> my recovery word" (`RecoveryFlow.tsx:176`/`:231`) — the real component, never the stub.
+> my recovery word" (`RecoveryFlow.tsx:178`/`:205`) — the real component, never the stub.
 >
 > **THE BITTER RIDE-ALONG, and it is this page's own lesson eating itself:** raising the inner budget
 > to 20s made it EQUAL to `testTimeout`, so the outer clock always fired first and the DOM dump was

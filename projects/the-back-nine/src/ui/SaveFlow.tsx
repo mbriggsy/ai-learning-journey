@@ -177,6 +177,7 @@ export function SaveFlow({
             secondaryIntro={copy.recoverySteer}
             fieldLabel={copy.recoveryLabel}
             confirmFieldLabel={copy.recoveryConfirmLabel}
+            tooShortLine={copy.recoveryTooShort}
             submitLabel={copy.flowNext}
             onSubmit={(checked) => void handleRecovery(checked)}
             onBack={() => {
@@ -223,11 +224,11 @@ export function SaveFlow({
             <VaultHeading ref={inlineHeadingRef}>{copy.saveHeading}</VaultHeading>
             <FieldNote>{copy[errorKey]}</FieldNote>
             <div className={VAULT_ACTIONS}>
-              <Button variant="neutral" onClick={onCancel}>
-                {copy.flowBack}
-              </Button>
               <Button variant="primary" onClick={() => setStep('passphrase')}>
                 {copy.flowNext}
+              </Button>
+              <Button variant="neutral" onClick={onCancel}>
+                {copy.flowBack}
               </Button>
             </div>
           </section>

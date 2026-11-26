@@ -254,7 +254,8 @@ test.describe('CSP — real browser enforcement', () => {
     // the accessibility module's hidden region and the credit (Confidence's fan), and the probe's cascade read (a new
     // kind of check since RC1: the colour-blind second cue on a Highcharts chart) on Tax Allocation, the first screen
     // here whose hatched series this household always draws (its one 401(k) is pre-tax, hatched in slot 2's ink), with
-    // the palette read on Asset Allocation's solid stock slice. Then RC19's own screens: the save drawer from the lock
+    // the palette read on Asset Allocation's solid stock slice, and its legend half (two patterned legend symbols and
+    // their two inks) on Retirement Details' income columns. Then RC19's own screens: the save drawer from the lock
     // menu (passphrase, recovery word, the backup, the done state), a reload to the unlock card, a refused passphrase
     // with its words, the right one, and the re-entry gate's affirm back to the home. Its control pair (a planted
     // `<style>`, blocked and applied) runs on the cold start, below. The kit's Tooltip and ScrollArea render in no screen
@@ -327,6 +328,8 @@ test.describe('CSP — real browser enforcement', () => {
     // RC17's three tabs: Comparisons' overlapping areas (its chart menu, a portaled Base UI menu, opened to the bars as
     // retirement begins), Retirement Details' year columns (the new `incomeSourcesOptions` chart, its patterns and, where the
     // money runs out, its plot band) and Savings; each draws its chart or the words in its place, and none injects a <style>.
+    const { RC_SERIES } = await import('../src/viz/palette')
+    const rgbOf = (h: string) => `rgb(${parseInt(h.slice(1, 3), 16)}, ${parseInt(h.slice(3, 5), 16)}, ${parseInt(h.slice(5, 7), 16)})`
     for (const [tab, hash, chart] of [
       [copy.comparisonsTab, 'comparisons', 'cmp-pair'],
       [copy.retirementDetailsTab, 'retirement-details', 'rd-years'],
@@ -338,6 +341,32 @@ test.describe('CSP — real browser enforcement', () => {
       // The waiting words are not the tab's picture: past them, so the chart (or its own words) is what the CSP saw drawn.
       await expect(page.locator('[data-analysis-words]', { hasText: copy.analysisRunsWaiting }), `${hash}: still working out the plans`).toHaveCount(0, { timeout: 60_000 })
       expect(await page.evaluate(() => document.querySelectorAll('style').length), `${hash} injected a <style> element`).toBe(0)
+      if (chart !== 'rd-years') continue
+      // The colour-blind cue's LEGEND half (the probe arm's, RC1 and RC3; here since RC19): this retired household's income
+      // columns always draw, six parts under a legend, each part's legend item there whatever its sums, four of them
+      // patterned (pre-tax hatched in slot 2, Roth dotted in slot 1). Each patterned symbol fills from its pattern
+      // (chartTheme.css's `.highcharts-legend-item.b9-hatch .highcharts-point`), and the two inks compute their own parts'
+      // colours, never one shared ink.
+      const legend = await page.evaluate(() => {
+        const root = document.querySelector('[data-chart="rd-years"]')
+        const fill = (sel: string) => {
+          const el = root?.querySelector(sel) ?? null
+          return el ? getComputedStyle(el).fill : 'MISSING'
+        }
+        const hatchInk = root?.querySelector('pattern#b9-hatch .b9-pattern-ink') ?? null
+        const dotsInk = root?.querySelector('pattern#b9-dots .b9-pattern-ink') ?? null
+        return {
+          hatched: fill('.highcharts-legend-item.b9-hatch .highcharts-point'),
+          dotted: fill('.highcharts-legend-item.b9-dots .highcharts-point'),
+          hatchInk: hatchInk ? getComputedStyle(hatchInk).stroke : 'MISSING',
+          dotsInk: dotsInk ? getComputedStyle(dotsInk).fill : 'MISSING',
+        }
+      })
+      expect(legend.hatched, 'the hatched part’s legend symbol lost its pattern fill (or the income columns never drew)').toBe('url("#b9-hatch")')
+      expect(legend.dotted, 'the dotted part’s legend symbol lost its pattern fill').toBe('url("#b9-dots")')
+      expect(legend.hatchInk, 'the hatch’s ink is not its part’s colour (slot 2)').toBe(rgbOf(RC_SERIES[2]))
+      expect(legend.dotsInk, 'the dots’ ink is not its part’s colour (slot 1)').toBe(rgbOf(RC_SERIES[1]))
+      expect(legend.hatchInk, 'two patterned parts in one chart share one ink').not.toBe(legend.dotsInk)
     }
     await page.getByRole('tab', { name: copy.comparisonsTab, exact: true }).click()
     await page.locator('[data-analysis-panel="comparisons"] h2 button').click()
@@ -438,8 +467,6 @@ test.describe('CSP — real browser enforcement', () => {
     await page.keyboard.press('Escape')
     // The probe's palette read (RC19): the solid stock slice (slot 6) paints palette.ts's own colour, written once through
     // the CSSOM, so neither highcharts.css nor Highcharts' default palette won.
-    const { RC_SERIES } = await import('../src/viz/palette')
-    const rgbOf = (h: string) => `rgb(${parseInt(h.slice(1, 3), 16)}, ${parseInt(h.slice(3, 5), 16)}, ${parseInt(h.slice(5, 7), 16)})`
     const palette = await page.evaluate(() => ({
       root: getComputedStyle(document.documentElement).getPropertyValue('--highcharts-color-0').trim(),
       stock: (() => {
@@ -626,6 +653,10 @@ test.describe('CSP — real browser enforcement', () => {
     await expect(saveDrawer, 'the save drawer never closed').toHaveCount(0)
     await expect(page.locator('main.result'), 'back in the shell').toHaveCount(1)
     expect(await page.evaluate(() => document.querySelectorAll('style').length), 'the save drawer injected a <style> element').toBe(0)
+
+    // The collector is an init script, so a reload empties it: every violation from the walk, the pages, the drawers and
+    // the save drawer is read here, before it.
+    expect(await violations(page), 'a violation before the reload').toEqual([])
 
     // A reload finds the vault: the unlock card. A wrong passphrase is refused with its words; the right one opens the plan
     // onto the re-entry gate, whose affirm lands on the home.

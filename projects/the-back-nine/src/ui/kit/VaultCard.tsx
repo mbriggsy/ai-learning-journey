@@ -200,12 +200,13 @@ export function PassphraseField({
 }
 
 /**
- * A step's action row: on the phone the buttons stack full width with the primary (the row's last child) on top; past
- * the phone tier they sit in a row at the right. A label wider than its box wraps and the box grows (the kit never cuts a
- * label), so no button pushes the page sideways.
+ * A step's action row, its PRIMARY FIRST in the DOM and the escape after it: on the phone the buttons stack full width
+ * in that order (the eye, Tab and a screen reader all meet the primary first); past the phone tier the row reverses at
+ * the right, so the escape sits left of the primary. A label wider than its box wraps and the box grows (the kit never
+ * cuts a label), so no button pushes the page sideways.
  */
 export const VAULT_ACTIONS = cn(
-  'flex flex-col-reverse gap-3 wide:flex-row wide:flex-wrap wide:items-center wide:justify-end',
+  'flex flex-col gap-3 wide:flex-row-reverse wide:flex-wrap wide:items-center wide:justify-start',
   '[&>*]:h-auto [&>*]:min-h-10 [&>*]:w-full [&>*]:shrink [&>*]:py-2 [&>*]:text-center [&>*]:whitespace-normal wide:[&>*]:w-auto',
 )
 

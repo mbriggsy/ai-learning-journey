@@ -45,7 +45,7 @@ import type { UnlockCopyKey } from './unlockCopy'
  * `data-testid`, so its `findBy` could never succeed and burned the entire budget instead. CI run
  * 30310885497 is the only one whose inner budget was smaller than the outer, so it is the only one
  * that printed the DOM: "Use your recovery word" / "Open with my recovery word"
- * (`RecoveryFlow.tsx:176`/`:231`). Three sibling runs read as bare timeouts and cost two wrong
+ * (`RecoveryFlow.tsx:178`/`:205`). Three sibling runs read as bare timeouts and cost two wrong
  * prescriptions, both of which raised a clock. Memoizing makes the overlap UNREPRESENTABLE rather
  * than unlikely — there is only ever one `import()` in flight per chunk.
  *

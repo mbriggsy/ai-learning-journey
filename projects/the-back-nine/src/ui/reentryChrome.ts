@@ -260,7 +260,7 @@ export function composeReentry(
   // NAMED rules line, beside its date-surface sibling. Exposure-gated upstream: the run carries W,
   // the table's one reader, so "the rules for your working years" is true of every household that hears it.
   if (report.workingYear.vintageMoved) pushHost(copy.stalenessWorkingYears)
-  // THE AGGREGATE, pushed AT MOST ONCE — `ReEntry.tsx:86-90` keys each note <p> by its own TEXT,
+  // THE AGGREGATE, pushed AT MOST ONCE — `ReEntry.tsx:110-114` keys each note <p> by its own TEXT,
   // so a second push of the same sentence would collide on the React key. One `if` over the
   // whole bucket is the structural guarantee (never a per-clock loop over `.clocks`).
   if (report.unattributed.moved) noteLines.push(copy.stalenessReferenceTables)

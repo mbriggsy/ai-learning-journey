@@ -980,7 +980,7 @@ for (const u of PAY_CHECK_UNLOCKS) {
         }
         // The rebuild's host 3 in a real browser (round 2, finding #9: jsdom loads no stylesheet): where the line speaks
         // two or more runs, the left-over seat below draws them as one block whose labels are a step above their text in
-        // the body face, at this width where the control sheet's laptop rule widens `.field-help`; and the block ends the
+        // the body face, at this laptop width (the drawer's own type; no `.field-help` rule is left); and the block ends the
         // seat (it is the seat's last child; intake.css's old trailing-margin rule keyed on a class the drawer no longer
         // draws, and left with that sheet at Act 6 · RC19). The
         // survivor part rides the seat too, its paragraph after the runs' list (KD7); the seat passes no button, so the

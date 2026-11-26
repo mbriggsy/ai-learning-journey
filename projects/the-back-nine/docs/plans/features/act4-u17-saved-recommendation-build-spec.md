@@ -75,7 +75,7 @@ refusal (`RothLever.tsx line 49 at 7f56682e9`).
 
 `Result.tsx` derives the anchor from `startCalendarYear`, which is the plan's **BUILD** year (written once
 at `memoryModel.ts:633`, never re-anchored, survives every re-save). Four separate comments already forbade
-attributing that quantity to the save (`staleness.ts:29`, `resultSave.ts:172`, `copy.ts:5132`,
+attributing that quantity to the save (`staleness.ts:29`, `resultSave.ts:172`, `copy.ts:5135`,
 `FuckOffDate.tsx line 112 at 95c715e19`) — and the band's `'saved'` label did exactly that.
 
 - **Renamed** `elapsedPlanYears` → **`yearsSincePlanBuilt`**, with zero orphans left behind, and every
@@ -154,7 +154,7 @@ Shipped 2026-07-25, commit `e4754134`, CI green by explicit run id 30136387827.
   `offsetHasPassed(year − startCalendarYear, yearsSincePlanBuilt)` (`RothLever.tsx lines 47-49 at 7f56682e9`) — one strict
   compare covers both "before the build year" and "already passed", and no second comparator was
   authored. It renders through the R19 `FieldError` grammar with the earliest startable year QUOTED
-  (`errRothStartPast`, `RothLever.tsx line 275 at 7f56682e9`, joined `SlottedErrorKey` at `copy.ts:2406`). The fresh default
+  (`errRothStartPast`, `RothLever.tsx line 275 at 7f56682e9`, joined `SlottedErrorKey` at `copy.ts:2409`). The fresh default
   start seeds the WALL year (build + clock), so an aged vault never pre-fills the exact start the write
   side refuses.
 - **"Suppress when unanchored" was satisfied STRUCTURALLY, not by a dead arm.** `savedAnchor` is REQUIRED
@@ -378,7 +378,7 @@ S3 built the whole substrate and S4 deliberately declined the copy; both created
 original thirteen lines could not name.
 
 **The copy register landed here, not in S4** (see S4 for why). It shipped as two families — the save
-GESTURE (`recommendSave*`) and the saved-record CARD (`recommendRecord*`), `copy.ts:1849-1969` — modelled on
+GESTURE (`recommendSave*`) and the saved-record CARD (`recommendRecord*`), `copy.ts:1852-1972` — modelled on
 `recommendStale{Heading,Body,ReopenCta}` and on `RecommendationSurface.tsx line 378-385 at b69c28483`'s render shape, the
 `role="status"` card with heading, body and re-open button. `recommendRecordReopenCost` names the re-open's
 cost the way the pending label does: *"This can take a few minutes."* Exactly one key in either family may
@@ -492,7 +492,7 @@ A **new, stateless** plant for the arrived household — the aged surface's cold
   defect**: the doctored build year forks the derived birth year across the RMD band edge, forcing the
   household into RMDs two years early. It is pinned as found and filed.
 - **Both seeds were walked** (`datearrived` plus the existing aged plant) in the Caddie walk, and
-  `datearrived` joined the door walk (`e2e/caddie-walk.spec.ts:2175-2200`) — without that allowlist entry the
+  `datearrived` joined the door walk (`e2e/caddie-walk.spec.ts:2177-2202`) — without that allowlist entry the
   one plant this stage exists to cold-read would have been chaired on its landing alone.
 - **The walk hard-flagged all six faces and NOTHING shipped from it** (`docs/caddie/cold-read-log.md`,
   2026-07-27) — three carrying **calm-but-wrong BLOCKERS**, the class the batched-oracle grant has never
@@ -501,9 +501,9 @@ A **new, stateless** plant for the arrived household — the aged surface's cold
   fixed 2026-07-30/31 (the Roth door calling an executed conversion a typo, `d8f35d8c`; the lever refusal
   denying a date the same screen plots, `72d638d9`; the premise line contradicting its own axis,
   `d5e7b466`; and the band flip onto the lifestyle crown, `8d4d4e58`). A fifth followed: **Cards 6–7's
-  record-card verb is closed too** — the showing-verb was replaced 2026-07-31 (`532cad82`; `copy.ts:1958`
+  record-card verb is closed too** — the showing-verb was replaced 2026-07-31 (`532cad82`; `copy.ts:1961`
   now reads "It may no longer fit the two of you.", with a standing prohibition on ever restoring it at
-  `copy.ts:1929-1936`), and the false "still matches" holds line 2026-08-03 (`bd851f24`; `copy.ts:1921`).
+  `copy.ts:1932-1939`), and the false "still matches" holds line 2026-08-03 (`bd851f24`; `copy.ts:1924`).
   Card 1's two-odds collision remains open, as does the OTHER half of Cards 6–7 — naming the strategy on
   the holds face, Briggsy's own ruling, carried in the register as "The saved-record card does not name
   the strategy".
@@ -529,7 +529,7 @@ as the council admitted it, and the reasons are the material the re-filed unit s
 
 Verified at council time: the bars carry arm **names** at their ends plus the delta hero and the
 `$0`/ceiling axis frame; each bar's own dollar value renders **only** in `ariaSummary`
-(`recommendationView.ts line 744-750 at b69c28483`, `copy.ts:5296` — the slot was renamed `recDeltaVizAria` 2026-09-08; re-anchored 2026-09-10). The
+(`recommendationView.ts line 744-750 at b69c28483`, `copy.ts:5299` — the slot was renamed `recDeltaVizAria` 2026-09-08; re-anchored 2026-09-10). The
 AT-over-sighted inversion is real and nobody disputed it.
 
 The admission was gated on a **deliberate dialect split** in `recommendationView.ts` — endpoints humane

@@ -51,6 +51,7 @@ export function PassphraseStep({
   busy = false,
   externalError = null,
   onFieldEdit,
+  tooShortLine = copy.passphraseTooShort,
 }: {
   readonly heading: string
   readonly intro: string
@@ -71,6 +72,9 @@ export function PassphraseStep({
    *  is the signal to clear it. */
   readonly externalError?: string | null
   readonly onFieldEdit?: () => void
+  /** The floor's too-short words: the passphrase's by default; the recovery step passes its own, so a field labelled
+   *  "Recovery word" is told what the word must be (the floor itself is unchanged). */
+  readonly tooShortLine?: string
 }) {
   const headingRef = useRef<HTMLHeadingElement | null>(null)
   const passId = useId()
@@ -123,7 +127,7 @@ export function PassphraseStep({
     }
     // Announce the specific blocking reason (no invisible wall on the security control).
     if (!v.ok && (v.lengthUnmet || v.scoreUnmet)) {
-      announcer.announce(v.lengthUnmet ? copy.passphraseTooShort : copy.passphraseTooWeak)
+      announcer.announce(v.lengthUnmet ? tooShortLine : copy.passphraseTooWeak)
     } else if (!passphrasesMatch(passphrase, confirm)) {
       announcer.announce(copy.passphraseMismatch)
     } else {
@@ -157,7 +161,7 @@ export function PassphraseStep({
         onBlur={() => void evaluate()}
         disabled={busy}
       >
-        {showFloor && <FieldNote id={noteId}>{verdict.lengthUnmet ? copy.passphraseTooShort : copy.passphraseTooWeak}</FieldNote>}
+        {showFloor && <FieldNote id={noteId}>{verdict.lengthUnmet ? tooShortLine : copy.passphraseTooWeak}</FieldNote>}
       </PassphraseField>
 
       <PassphraseField
@@ -185,14 +189,14 @@ export function PassphraseStep({
       {externalError && <FieldNote id={externalErrId}>{externalError}</FieldNote>}
 
       <div className={VAULT_ACTIONS}>
+        <Button variant="primary" aria-disabled={!ready || busy} onClick={() => void handleSubmit()}>
+          {submitLabel}
+        </Button>
         {onBack && (
           <Button variant="neutral" disabled={busy} onClick={onBack}>
             {copy.flowBack}
           </Button>
         )}
-        <Button variant="primary" aria-disabled={!ready || busy} onClick={() => void handleSubmit()}>
-          {submitLabel}
-        </Button>
       </div>
     </section>
   )

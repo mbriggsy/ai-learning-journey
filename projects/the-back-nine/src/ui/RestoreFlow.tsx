@@ -228,13 +228,6 @@ export function RestoreFlow({
             </div>
 
             <div className={VAULT_ACTIONS}>
-              {/* Only on the cold-entry door: a change-of-mind returns to ColdStart. The damaged
-                  mount passes no onBack — its file step is the flow's first, with nowhere to go back to. */}
-              {onBack && (
-                <Button variant="neutral" onClick={onBack}>
-                  {copy.flowBack}
-                </Button>
-              )}
               <Button
                 variant="primary"
                 aria-disabled={fileName === null || fileError !== null}
@@ -244,6 +237,13 @@ export function RestoreFlow({
               >
                 {copy.flowNext}
               </Button>
+              {/* Only on the cold-entry door: a change-of-mind returns to ColdStart. The damaged
+                  mount passes no onBack — its file step is the flow's first, with nowhere to go back to. */}
+              {onBack && (
+                <Button variant="neutral" onClick={onBack}>
+                  {copy.flowBack}
+                </Button>
+              )}
             </div>
           </section>
         )}
@@ -279,9 +279,6 @@ export function RestoreFlow({
             </PassphraseField>
 
             <div className={VAULT_ACTIONS}>
-              <Button variant="neutral" onClick={() => setStep('file')}>
-                {copy.flowBack}
-              </Button>
               <Button
                 variant="primary"
                 aria-disabled={word === ''}
@@ -290,6 +287,9 @@ export function RestoreFlow({
                 }}
               >
                 {copy.flowNext}
+              </Button>
+              <Button variant="neutral" onClick={() => setStep('file')}>
+                {copy.flowBack}
               </Button>
             </div>
 
@@ -322,9 +322,6 @@ export function RestoreFlow({
             <VaultHeading ref={headingRef}>{copy.restoreHeading}</VaultHeading>
             <FieldNote>{copy[opError]}</FieldNote>
             <div className={VAULT_ACTIONS}>
-              <Button variant="neutral" onClick={() => setStep('file')}>
-                {copy.flowBack}
-              </Button>
               {opError === 'restoreVaultExists' ? (
                 // vault-exists is NOT transient — a retry deterministically re-refuses (backup.ts:135),
                 // so the primary action matches the copy's own instruction: reload (re-probes fresh,
@@ -337,6 +334,9 @@ export function RestoreFlow({
                   {copy.exportRetry}
                 </Button>
               )}
+              <Button variant="neutral" onClick={() => setStep('file')}>
+                {copy.flowBack}
+              </Button>
             </div>
           </section>
         )}

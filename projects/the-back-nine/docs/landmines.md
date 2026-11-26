@@ -1025,7 +1025,7 @@ chair; chair from a digest script, never the raw result, and expect the window t
 - **(b9-2, 11-25) A builder's report past about 1,500 words arrives cut off** in its idle notice ("result truncated"),
   twice in three Act 6 builds; asking for the rest costs a round trip. Brief each builder to send its report in at
   most two messages of about 1,200 words. A builder's own helper subagent can also report to the orchestrator instead
-  of the builder: read it as the builder's input and wait for the builder's report.
+  of the builder: read it as the builder's input and wait for the builder's report. (b9-4, 11-26: the cut falls on the idle notice, not the message: of milestone 3's fourteen review seats and refuters, every report sent by SendMessage arrived whole, while four left as the agent's final turn arrived cut off at about 700 to 1,000 words. Brief a seat to SendMessage its report to the lead and end its turn with one line.)
 - **(b9-7, 11-24) Workflow's `scriptPath` must be a path the tool returned or a file in a folder the session can Read:** a
   copy placed beside a returned script under `~/.claude/projects/<folder>/<session>/workflows/scripts/` was refused, and so
   was the returned path itself after an overwrite; the same file in the session scratchpad ran. Iterate a review script

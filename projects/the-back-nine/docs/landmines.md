@@ -80,7 +80,7 @@ working tree untouched; `fsck` proves nothing else was hit.
   gate's own exit (`cmd > out 2>&1; rc=$?`) and commit only on 0. The same blindness: a background command ending in
   `echo` reports exit 0 whatever ran before it; read the log's own exit line.
 - **(b9-7, 11-20) `src/ui/devSeeds.ts` and `src/ui/__tests__/devSeeds.test.ts` are CRLF** (`git ls-files --eol`: `i/crlf w/crlf`),
-  while `e2e/vertical-fit.spec.ts` and the docs are LF: an edit script's anchors must match each file's own line ends, or
+  while the e2e specs and the docs are LF: an edit script's anchors must match each file's own line ends, or
   find nothing (the composites plan's U2 line said LF until `aa22ac78`). Read `git ls-files --eol <path>` before a scripted edit.
 - **(b9-5, 11-20) `TaskStop` on a background `pnpm dev` kills the `pnpm` wrapper and leaves Vite's `node` child serving the
   port** (seen on 4197: still 200 after the stop). Before reading a port as free, probe it (`curl --max-time 5`), find the
@@ -218,7 +218,7 @@ substitution
 - **(2026-09-27, b9-10)** a stray `cat > file` with no heredoc waits on stdin and hangs the whole Bash call to its timeout — nothing after it runs
 - **(2026-09-27, b9-sotd)** Windows `execSync` runs cmd.exe, which eats the `^` in `X^{commit}` — use `execFileSync('git', [...])`
 - **(2026-09-27, b9-sotd)** `git diff --check` flags a CRLF file's `\r` as trailing whitespace — confirm real spaces before touching anything
-- **(2026-09-26, b9-8)** several test files are CRLF (`ConfidenceStatement.test.tsx`, `magiLandscape.test.ts`, `magiLandscape.pbt.test.ts`, `partBTrend.test.ts`, `healthSheetChrome.test.ts`) — edit through an EOL-preserving script or the Edit tool, and check `git diff --stat` deltas
+- **(2026-09-26, b9-8)** several test files are CRLF (`magiLandscape.test.ts`, `magiLandscape.pbt.test.ts`, `partBTrend.test.ts`, `healthSheetChrome.test.ts`) — edit through an EOL-preserving script or the Edit tool, and check `git diff --stat` deltas
 - **(2026-09-25 late)** the insights' long filenames exceed the MSYS path limit: `git show HEAD:<path>` fails with "Filename too long" and a shell EOL check silently reads garbage — count with node (`git -c core.longpaths=true show`)
 - **(2026-09-23 evening)** an inline `node -e` whose script string carries backslashes is shell-mangled — a `.mjs` file, every time, even for a one-line patch
 - **(2026-09-17)** a long `node -e` followed by a heredoc in ONE Bash command truncated silently (the shell reported an unmatched quote at a line the command never had) — scripts go through the Write tool, then `node <file>`
@@ -295,12 +295,11 @@ even when one exists; the plain `/` route is the Unlock check.
   wrong file (TS1261). The table's composer is `yearTableChrome.ts` (the `*Chrome.ts` pattern) for that reason.
 - **Vite's watcher can miss a second write to a file landing milliseconds after the first:** a `sed` then a heredoc append to
   `workbench.css` served the first write only, reload after reload. `touch` the file and it serves the whole thing (b9-10).
-- **(b9-3, 2026-11-24, RC0) Windows resolves an import case-blind, so a new `disclaimer.ts` beside `Disclaimer.tsx` would capture every `./Disclaimer` import on the laptop while CI (Linux) resolves it correctly.** Never give a new module a name that differs from a sibling only in case; RC0 named it `disclaimerId.ts`.
 
 ## The unit test suite
 
 - **(moved from TODO's distill list, b9-2, 11-23) A prop added to a component's TYPE but not to its destructure silently
-  resolves to any same-named module binding** (`describedBy` in `src/intake/fields.tsx` is a module function), and a
+  resolves to any same-named module binding** (`describedBy` in the walk's `src/intake/fields.tsx`, deleted at RC14, was a module function), and a
   `(s): s is string` filter guard then hides it from tsc. Destructure first, and name new props so they cannot collide
   (the prop became `describedByIds`).
 - **(moved from TODO's distill list, b9-2, 11-23) A fake transport lane must `structuredClone` its REPLY like the real
@@ -323,6 +322,9 @@ even when one exists; the plain `/` route is the Unlock check.
   its start line (7.4 GB of 32 GB free just after, ten Claude sessions holding their MCP servers and up to ~1.2 GB of tsserver each). The
   notice says never to re-launch it unasked. Run the files the change reaches in the FOREGROUND with `--maxWorkers=2`
   (11 files, 639 tests, 220 s, fine), and let CI's `pnpm test` be the full run; say so in the commit and the close.
+- **(b9-6, 11-26) The laptop runs about 15 idle Claude sessions at once, and a background gate run was killed with
+  2.7 GB free.** Run heavy gates (the full vitest suite, `verify:fit`, `verify:csp`, a build) one at a time, in the
+  foreground, and never beside each other.
 - **(b9-8, 11-09) A `// @ts-expect-error` arm in a test still RUNS.** The directive silences tsc, not execution: put
   compile-only arms inside a function that is never called (`workingYearTaxDisclosure.test.ts`, `_compileOnly`).
 - **(b9-4, 11-09) `WorkingYearCostStaleSentence` carries `held` on its unrisen arm too** (`src/intake/workingYearQuote.ts`): any `toEqual`
@@ -378,11 +380,6 @@ even when one exists; the plain `/` route is the Unlock check.
 tests
 - **(b9-2, 11-14) The crown test runs two date searches** (~40 s in `workingYearCredit.test.ts`, timeout 240 s): run the suite pinned and alone, never raise the timeout. The crowned seed's provisional crown sits on the bar (margin 0): if walk 8 shows another offset, the test reds first; read its log before the line.
 
-- **(b9-3, 11-22) `resultDisclaimer.test.tsx` fakes a resolved answer**: it mocks `resolvedFocusKey` to a planted key over the
-  pristine idle snapshot, so `elevated` stays `fallback` and no hero renders. A test that needs a real state through `Result`
-  (the seat plan's U1 matrix: spine and date with and without a band, compute-error, fallback, computing) must plant the views
-  itself. `computing` is `Result`'s prop (IntakeApp's), never derived from the snapshot. (b9-4) U1's describe in that file does
-  it (`43d64103`): its `plant` replaces `appModel.getSnapshot` with a real answer under the real routing; reuse it.
 - **(b9-9, 11-23) jsdom delivers `popstate` a few tasks after `history.back()` / `forward()`**: an `await setTimeout(0)` after
   the call reads the phase BEFORE the event lands, and the late event then lands inside the next step (it left the room a
   test meant to stay in). Await the event itself (`backAndSettle` / `pressForward` in `src/ui/__tests__/workbenchRoom.test.tsx`).
@@ -430,62 +427,14 @@ tests
   Read a table's real margin as its narrowest width (the phone arm's `tableWidth`, or the frame squeezed in-page) against
   the frame less 15. The widest household's table: 1,143 px narrowest on Windows and 1,133 on CI's ubuntu (run
   45274348572: ubuntu reads this table NARROWER), against 1,224 under the harness (1,209 headed).
-- **(b9-1/b9-2, 11-21) A dev seed that cannot be saved renders no save box, so it is never its class's tallest frame:**
-  `deriveResultSave` returns none for a blank spouse name, and the left column loses the save slot above the caveat;
-  a widest plant must be saveable. But "none" also renders on a READ-ONLY session (its branch comes before `!ready`),
-  which mounts the in-flow View-only banner above the frame (about 85 px against the slot's 84 px reserve), so a frame
-  with no save box can be TALLER there.
 - **(b9-1, 11-23) The table's arms (`?seed=tablewidest`) assert its columns first** (since RC6, `TABLE_WIDEST_COLUMNS`
   in `e2e/rc-screens.spec.ts`): a seed whose crown drifts to today, or loses an account, would drop columns and make
   every width law vacuous. The seed was planted for the old table's boxes, so five Summary columns it never fills are
   read by `cashFlowsView.test.ts` alone; a width question about those five needs a wider plant first.
 - **(moved from TODO's distill list, b9-3, 11-23) Measure a non-vacuity control in the app's own stylesheet, never
   assume the browser default**: the fit gate's "a bare `ol` has a margin" control (the re-point's U2) redded on all
-  four arms because `src/ui/styles/base.css`'s `* { margin: 0 }` zeroes every element's margin; the marker and indent
+  four arms because the old `src/ui/styles/base.css`'s `* { margin: 0 }` zeroed every element's margin (Tailwind's preflight, global since RC21, does the same); the marker and indent
   controls held. Read the control once in place before pinning its premise.
-- **(b9-6, 11-21) `assertDensityTier` looks the survivor leading up in `SURVIVOR_LEADING`** (the frames-outside plan's
-  KTD11, `be870c9c`), one row per direction, each cell read from the frame's own echo and typical-residual markers, and
-  requires the arm's expectation to match on BOTH sides of the tier: `rows.leading`, which defaults from `rows.echo`. A new
-  arm over a FRESH `rethink` frame with the typical residual passes `leading: 'tight'` (B's entry tightens it), or it reds
-  on "the leading expectation must match the frame" even at SHOWCASE; a direction with no row reds on the direction check.
-  A table fault reds on that match line, a stylesheet fault on the ratio line: read which one a kill names (U3's F5a/F5b).
-- **(b9-7, 11-21; scope corrected b9-8) The four frame families, the widest arms and the Pennsylvania room plant read
-  their size from `LAPTOP_SIZES` and call `assertSizeTier` first** (the frames-outside plan's U4; the other fit arms,
-  `elsewhere`, `healthnc`, `?vault=stale`, `statestale`, the affordance posture, the re-figuring window and the spend
-  lane, still call `assertFrameFits` on `REAL` / `TIER` directly, so a fault planted in a `LAPTOP_SIZES` entry never
-  reaches them: count only the rewired arms in its prediction): the window and DPR the table gives, the short-tier query, and `.result`'s 32 / 40 px padding,
-  then `assertFrameAtSize`, which looks the size's law up (`full` at SHOWCASE, `degrade` elsewhere, the full-fit distance
-  printed at LENOVO_FULL, `print` throws). A new arm at a new size takes both, and its describe title from `sizeTitle`. The
-  yearly-return and record arms reach LENOVO_FULL by a RESIZE after their REAL read, so a fault planted at LENOVO_FULL kills
-  them only after their REAL half passes; the two held yearly frames and every record plant then print at the tall edge
-  (`printTallEdge`), whose bottom past the fold by under the walk's half-pixel slack prints as such, never "inside".
-- **(b9-7, 11-21; cause corrected b9-8 by the build's review) A frame SHORTER than the window reads lower at SHOWCASE
-  (1871×917) than at LENOVO_FULL (1440×900):** `.result` is `flex: 1; justify-content: center` inside `#root`'s
-  `min-height: 100svh` (`result.css`, `app.css`), so it centers a short frame, `(H − 80 − C) / 2` lower in a taller
-  window. U4's probe (record folder `b9-7-u4`) read the doors up to 8.5 px lower at SHOWCASE (`budget` 856.7 vs 848.2,
-  `health` 814.3 vs 805.8), and every pair matches that formula to 0.1 px; U4 had called it DPR, and the plan's A6 holds
-  as written (a frame taller than both reads the same). Read SHOWCASE at SHOWCASE before predicting there, or derive it
-  from the content height. And `main.result`'s box ends at the viewport (917.0)
-  whenever its content is shorter, so a fault that counts it reds only past doors + 40 px: the near miss is `failing` /
-  `failingtypical` / `offtracktypical` at 876.7 + 40 = 916.7, 0.3 px inside.
-- **(b9-8, 11-21) The full-fit walk measures content, never layout padding** (the frames-outside plan's KTD8, U2
-  `5d3c7d81`): on the full path (the quiet row not excluded) `frameReport` skips `main.result` and `#root` by identity
-  (`layoutAncestors`) and measures every element inside them, each door's own box included. So `.result`'s tall-tier
-  padding never counts, a door whose own box ends past the fold still reds, and the padding is never trimmed to fit. A
-  new wrapper between `#root` and the doors that carries block padding would count again: add it to the skip only by a
-  ruling, and prove the walk still bites with a door fault sized to the fold (U2's plant; U4's F1 is the skip removed).
-- **(b9-7, 11-21) The widest plants' printing arms keep the pending room read (KTD6)**, titled `?seed=failingwidest …` /
-  `?seed=surpluswidest …`, so a `-g "failing"` or `-g "surplus"` filter collects them: count them in a fault's prediction.
-  They assert identity, tier and the widest strings, never a fit or a leading, so a stylesheet fault reds none of them.
-  `installMeasure`, armed before navigation by `armMeasure` (the `probeComputingFrame` pattern; a check after
-  `gotoSeedFinal` misses it, since that ends in `settleLayout`), keeps the latest frame where the answer stands final with
-  no run in flight and `.cs-magnitude[data-spend="pending"]` holds the reserve, its fonts loaded and nothing that can move a
-  box animating (an opacity or color fade cannot, so the clause's own swap fade voids no frame). A's reserved figure is
-  read only while pending; a lane with no still pending frame prints UNKNOWN.
-- **(b9-5, 11-21) `SHORT_TIER_QUERY` derives its boundary from `TALL_EDGE.height - 1`:** a planted fault on the `TALL_EDGE`
-  constant moves the query too, so every arm that calls `assertSizeTier` at REAL or TIER reads "not short" and reds (U6's
-  first planting: 42 red where 28 were predicted). Plant a size's height in its `LAPTOP_SIZES` viewport entry, never the
-  shared constant.
 - **The re-entry gate is two columns at his 1440×731 window too** (68rem), and nothing pins its story column's fold, so its
   coda below the fold is a walk read, never a gate red; any fix is static (KD2's Fit). U2 pinned the story column's 20 px
   gap, not its bottom. (Moved from TODO.md's landmines block, b9-5.)
@@ -493,20 +442,9 @@ tests
   answer", never "still about right", so `gotoVaultFinal` cannot drive the read-only member; nor can two pages of one
   browser context measure a writer frame each (the second is read-only): give each load its own context, as U6's
   injected arms do.
-- **(b9-4, 11-21) A planted fault on the doors row also reds `div.result-hero`, `section.confidence` and
-  `div.confidence-reveal`** under the content walk: they carry no padding and end flush with the last door (measured at
-  SHOWCASE, `5d3c7d81`'s message), so they are content. Predict them in every door fault.
 - **(b9-3, 11-21) A scratch vitest probe's `console.log` printed nothing** in `pnpm vitest run <file>`'s output here; write a
   probe's readings to a file in the scratchpad (`appendFileSync`).
 
-- **(b9-8, 11-21; re-pointed b9-7) Four arms are HELD at REAL, and nothing forces them back** (grep `SEAT_COUNCIL`, the
-  record card's seat council since the frames-outside plan's U4): `?vault=yearsurplus`, `?vault=yearpafailing` (outside
-  on ubuntu only), `?seed=surplustypical` and `?seed=pasurplustypical` print the caveat's bottom
-  (`assertFrameFitsHoldingCaveat`) and stay green whatever it reads; the widest plants print and assert identity only.
-  The seat's ruling build swaps each back to `assertFrameAtSize` and deletes the constant. The record loop's `standing:
-  'print'` rows (`yearrec`, `recpa`, `yearparec`) turn `'assert'` only with the card seat's ruling, at REAL and LENOVO_FULL
-  alike. A `-g` filter on `playwright.fit.config.ts` also collects `e2e/chart-text.spec.ts` (`?vault=stale)` matches six of
-  its titles): count those arms in a mutant's predicted set.
 - **(b9-9, 11-21) A re-sized paragraph's number is Windows-only until a CI run that carries the change reads it:** the
   plants read Windows = ubuntu to 0.1 px at body size, yet rung 3's borrowed size put `?vault=yearpafailing` at 722.5 on
   Windows and 743 on ubuntu (run 44872977380, red): Linux's slightly wider glyph advances pushed the step-down's last two
@@ -514,20 +452,13 @@ tests
   the run that carries a size, leading or wrap change before restoring an assertion or writing "Linux" in a doc (the
   register said "Linux: rung 3's CI logs" before that run finished). The ubuntu wraps are readable without Linux: `gh run
   download <id> -n playwright-report-fit` (`playwright-report` before the 2026-11-22 split), unzip `data/*.zip` (the retry's trace), and read `screencast/`'s last frame.
-- **(b9-8, 11-21) `assertDensityTier` reads rung 3 on every arm that calls it:** it derives the frame's key from its own
-  markers (the shown direction `rethink` or `trim` on `.cs-magnitude[data-direction]`, the echo, the typical residual) and
-  requires the arm's `register` flag to match, as `echo` does. A new arm over a key frame passes `register: true` (it
-  stays true above the tier, where the read expects body); a selector entry added to the rung without the matching key
-  in the helper reds every frame it borrows on. The off-track household now has a seed (`offtracktypical`, the trim
-  clause), so `trim` is a live direction on the plant set.
 - **(b9-6, 11-20) A yearly return rides `doctorYearlyReturn` (or `doctorYearlyReturnRecord`), never `doctorStaleVault`**
   (`src/ui/devSeeds.ts`): the stale doctor throws on a priced base and strips the extras answer and its vintage (a
   pre-extras save, which adds a re-confirm line); the yearly one keeps the start year and every answer and floors the save
   at `FIRST_UNAMBIGUOUS_SAVE_DAY`, and a plant using it declares `viewDay: RETURN_DAY`. Only `retired` enters extras
   (`pa`, `nc`, `fl`, `elsewhere`, `rec`, `recold` and `failingentered` spread it; `patypical`, `failingtypical`,
   `surplustypical`, `offtracktypical` and `pafailingtypical` answer "not sure"; `failing` answers nothing, which funds and
-  shows the typical residual too): a new plant names its extras form in its key or docblock. An echo arm passes `echo: true` to `assertDensityTier`, which reds
-  when the flag does not match the frame.
+  shows the typical residual too): a new plant names its extras form in its key or docblock.
 - **(b9-5, 11-20) The gate has a calendar: every spec the fit, fit-rv or Caddie harness collects takes `test` from
   `e2e/reviewSurface.ts`, never from `@playwright/test`** (the partition test's guard reds otherwise). That `test` pins each
   page's clock to `GATE_DAY` at UTC noon and reads the page's own day back when the arm ends; a date a spec computes in Node
@@ -536,36 +467,21 @@ tests
   arm's own `page.goto('/?vault=<key>')` without it views that plant on `GATE_DAY`. A yearly return is a plant viewed at
   its declared `RETURN_DAY`, never a doctor that moves the start year (a priced base refuses one). Only `Date` is fixed:
   `performance.now`, timers and animation frames run, so every settle wait still works.
-- **(b9-5, 11-20) A before/after comparison of `verify:fit`'s printed lines meets one noisy count:** `seed=budget` at
-  1440×731 prints `counted=86` / `84` on most runs and `87` / `85` (below the fold 69 / 70) on some, in the
-  `[20px-root fit]` and `[24px-root instrument]` lines, with every position (`caveatBottom=2482`) unchanged; seen across
-  three runs of one tree, two of them clock-pinned, during the composites plan's U1. Compare those two lines by their
-  positions, and read any other moved number as a real move.
 
-- **(b9-3, 11-20) The short laptop tier's law has ONE home: `--bp-laptop-short`'s docblock in `src/ui/styles/tokens.css`.**
-  The re-point amended it from "whitespace only" to insight 082's ordered ladder (whitespace, then leading, then a type
-  register borrowed from an equal-rank subordinate in the same frame, only for a frame still outside after the first two).
-  Every short-tier block's header (`survivor.css`, `confidence.css`, `result.css`, `app.css`, `save.css`, `band.css`)
-  points there; never restate the law in a block header (seven restatements were the drift class), and change it only
-  there. The date route's own block (`fuckOffDate.css`) stays whitespace-only. A new rung lands inside
-  `(min-width: 68rem) and (max-height: 840px)` with a computed-style pin on both sides of the boundary
-  (`assertDensityTier` in `e2e/vertical-fit.spec.ts`), or the 917 SHOWCASE and the phone stop being byte-identical.
-
-- **(b9-1, 11-20) The record HOLDS arm's hero-relative twin check reads −1 px against its ±1** (the re-point's KTD9: the
-  0.8 px between the record-free twin's save button, 84.8 px, and the saved badge, 84 px; deterministic, and CI agrees).
-  Anything that changes the save slot's height on either face reds it. Re-measure that gap before touching the slot.
-
-- **(b9-5, 11-20) The hero's eyebrow slot overlays `.result`'s top padding only at the two-pane tier** (W9-R7's U4, `c644ec2f`: the re-figuring line and the provisional tag, absolute above the lead in `fuckOffDate.css` / `confidence.css`). It holds ONE line: at the short tier the padding is 32 px and the line 18.2 px with an 8 px margin, so a wrap (a longer string, CI's taller metrics) climbs above the page top. Below the two-pane tier the slot is in the flow (a raised root font would push an overlay off the page), so the phone's date hero sits lower while the slot shows: 36.4 px + a gap under the two-line re-figuring line, 32.1 px under the tag until the final. A string change in the slot, or a re-point that moves the short tier's padding, re-measures it.
 - **(b9-5, 11-20) A window one run long can't be screenshotted reliably** (the spine's re-figuring window is ~3 s; 1440's hero shot missed it while 1536's and 1280's caught it). Read live geometry with an in-page `requestAnimationFrame` recorder armed BEFORE the edit that records the rects on the first frame the element exists; a dev preview with the state forced on is the measurement of record. For the re-figuring window that preview is `?preview=refiguring&seed=<key>` (`src/ui/preview/RefiguringPreview.tsx`, U5): the real app with every run after the seed's first final held, so one edit holds the window open. Its one blind spot: two notifies in one task paint as one frame, so a store-order fault that never crosses a task is the store suite's to catch, never the page's (`e95c17db`).
+- **(b9-7, 11-26, RC21) The short laptop tier has ONE home: `--bp-laptop-short` (840px) in `src/ui/styles/theme.css`'s
+  `@theme` block and its `compact:` variant** (`tokens.css` held it until RC21). Every short-tier rule is written as
+  `compact:`; `scripts/__tests__/breakpoint-mirrors.test.ts` refuses a second height and binds every rem width in the tree
+  to a declared tier, and `--laptop-fit-height` to `REAL.height`. A new tier is a product decision, never a literal.
 - **(b9-4, 11-13) A new cause that takes another cause's slot reds THAT cause's arms, which a run of the new arm alone never
   reaches.** R1 (`3000a04c`) let the typed-below line take the Result's standing slot wherever a fresh typed W sits below the
   quote; the coordinate-tap arm (`?seed=date`, $72,000 typed under $84,000 of spending) still expected the moved line, and CI's
   whole `verify:fit` redded it at both sizes (run 43375528470) while the eight unlock arms had run green locally. Before
   committing a change to what a slot shows, grep `e2e/` for every arm that reads that slot (`.cs-paycheck-note`,
   `.reentry-notes`), and run each one whose draft reaches the new predicate, or the whole `verify:fit`.
-- **(b9-3, 11-09) The whole `e2e/` folder does not typecheck under a scratch tsconfig that adds it:** eight pre-existing
-  `Node.remove` errors in `chart-text.spec.ts` and `held/assumptions-row-look.spec.ts` (the DOM lib); filter them before
-  reading an edited spec's result (Playwright compiles with esbuild and never sees them). The scratch tsconfig must name its
+- **(b9-3, 11-09) The whole `e2e/` folder does not typecheck under a scratch tsconfig that adds it:** pre-existing errors (at filing, eight
+  `Node.remove` errors in the old `chart-text.spec.ts` and the deleted `held/assumptions-row-look.spec.ts`, the DOM lib);
+  filter them before reading an edited spec's result (Playwright compiles with esbuild and never sees them). The scratch tsconfig must name its
   `types` by absolute path (`<project>/node_modules/@types/node`, `<project>/node_modules/vite/client`) when it lives in the
   scratchpad (b9-4).
 - **(b9-5, 11-05) Never run an e2e harness while anyone edits `src`.** An HMR reload mid-wait reds arms falsely (the fit and caddie
@@ -573,10 +489,6 @@ tests
   (the fit verifier wrapped `vite.config.ts` with its own `cacheDir` in the scratchpad, so the shared `node_modules/.vite` was never
   rewritten). Every Playwright run under a config cleans the shared `test-results/`.
 
-- **(b9-2, 11-08) The fit gate's result helpers assumed a DATED reading.** `assertResolvedDate`, `assertOneVisibleDisclaimer`'s tier read
-  and `DOORS_WALK_FLOOR` all wait on a band, a ladder and `[data-twopane]`, which the no-date reading never draws; the risen
-  family crowns no date, so (ae) added `assertNoDateReading`, `assertOneVisibleDisclaimerNoDate` and
-  `NO_DATE_DOORS_WALK_FLOOR` (10; measured 14 at REAL, 12 on the phone). A new no-date arm uses those, never the dated ones.
 - **From the b9-7 close (2026-10-30), migrated by b9-8:** `e2e/` is outside `tsconfig.json`'s `include`, so `pnpm typecheck` never reads a spec — check
   one with a scratch config that extends the project's, sets `typeRoots` to the project's `node_modules/@types` and
   `node_modules`, and includes the spec by absolute path. `verify:doc-stats`'s citation arm freezes only "not `" and
@@ -587,7 +499,7 @@ tests
   must run from the repo root — from the project dir every pathspec misses and NOTHING commits (no harm, but read the sha before
   believing a commit happened). A fixture that used a date seed as "the W-free draft" carries W since U10: strip
   `workingYearCost` where an arm measures the W-free case (seven arms needed it — the floor-reach pairs in
-  `stalenessExposure.test.ts` and `reentry.test.tsx`, the methodology pair in `assumptionPanel.test.tsx`, `datemixed`'s W-absent
+  `stalenessExposure.test.ts` and `reentry.test.tsx`, the methodology pair in the old `assumptionPanel.test.tsx`, `datemixed`'s W-absent
   twin, `dip`'s floor premise — W brings `employerHsaByPerson` with it — and the stale-W witness).
 - **From the b9-5 close (2026-10-30, migrated at b9-6's):** `verify:fit`'s four-worker run can time out final-tier waits on
   this laptop under load (the `?vault=datestale` / `?vault=datearrived` returns at 90 s, reduced-motion chart text at 180 s;
@@ -600,14 +512,8 @@ tests
   (`b9-phaseb-review\b9-5-mutants\classify-reanchor.mjs <dry-run output>` — SAFE / CARRIED / FRESH), hand-check each FRESH one
   and each REVIEW line (a citation inside a modified hunk is never moved), and move the second number of a comma pair by hand
   (the tool moves only the first).
-- **`verify:fit` does NOT measure the recommendation surface** (`e2e/vertical-fit.spec.ts line 1295-1305 at 95c715e19`
-  excludes the committed + held renders — the exclusion dates from 2026-07-22, before the worker pool, when a dev-server solve ran 80–200 s+ against the then-120 s per-test budget (now 180 s, `playwright.fit.config.ts:63`); on the pool a dev-server `solve:nc` / `solve:surplus` takes ~30 s at the laptop (`e2e/caddie-walk.spec.ts line 1065-1067 at e992e9d69`), and on CI's 4-vCPU runner (pool P = 2) the RV gate's `?seed=surplus` pending-to-lockup wait — measured on the v9 build, its per-arm figures in `COMMITTED_LOCKUP_MS`'s docblock (`e2e/chart-text-rv.spec.ts line 50-53 at b69c28483`, `12e40395`) — has run with its worst arm close to this harness's 180 s per-test budget, but the fit arms still inject the committed lockup and never wait for a committed solve). So *"seat it and re-measure
-  under `verify:fit`"* is **unexecutable** for anything in `.rec-committed__rest`; it needs a MANUAL
-  measure at `REAL`, his window, 1440×731 @ 2 (1536×791 @ 2.5 until the 2026-11-20 re-point). And the *"~89px headroom"* number is the SPINE idle frame (`vertical-fit.spec.ts line 4394-4396 at 95c715e19`, measured at the Dell's 1536×791 @ 2.5), a once-measured
-  prose figure the spec never asserts — **never budget a different surface against it.** The DATE route's
-  arms assert ORDER + REACHABILITY only (spec header `vertical-fit.spec.ts line 53-54 at 1c08f2288`) — no date frame has ever been fit-measured either.
 - **(2026-09-27, b9-11)** the ONE width seam: a new `@media (min-width: …rem)` fails `breakpoint-mirrors.test.ts` unless it mirrors `--bp-laptop` (68rem) — a new tier is a product decision
-- **(2026-09-26)** the spend lane lands a beat AFTER `data-answer-tier="final"`: a capture must wait out `.cs-magnitude[data-spend="pending"]` (the Caddie walk does since `2f43761f`), while a fit arm measuring right after `final` is measuring the RESERVED pending box — both states are laws
+- **(2026-09-26)** the spend lane lands a beat AFTER `data-answer-tier="final"`: a capture must wait out Probability's `[data-metrics] [data-spend="pending"]` (`spendRead` in `e2e/rc-screens.spec.ts`; the old page's `.cs-magnitude` is gone), while an arm measuring right after `final` is measuring the RESERVED pending box — both states are laws
 - **(2026-09-23 evening)** a held look spec's style-tag lift must be REMOVED before the next dialog opens (a leaked `max-height:none` made the Roth frame an uncapped sheet no reader sees)
 - **(2026-09-14)** a SECOND config under `e2e/held/` is a second OWNER of every held spec (the shots config collects `**/*.spec.ts` there by design — it is THE held harness); a new instrument is a `.spec.ts` under it, run filtered by file name, never its own config, and never a `.look.ts` (the partition walk only sees `*.spec.ts`).
 - **(2026-09-11, evening)** `verify:fit` under self-inflicted LOAD reds arms that are green — running `verify:doc-stats` (its
@@ -626,18 +532,15 @@ in-page `button.click()` when the offset is the subject
 reports `innerHeight` 862 (870 on the first step) against a 844 `visualViewport` — pick one deliberately
 - **(2026-09-08)** WebKit has no
 `navigator.storage.persist()` — record, never assert
-- **(2026-09-08)** `<ChartReadoutRow>` renders in BOTH seats and marks `data-active` either way — seat-aware locators, never
-an OR
 - **(2026-09-08)** taps and hovers land in VIEWPORT coordinates — on a 390-tall viewport scroll the target into view first
 - **(2026-09-07/08)** `e2e/` is outside `tsconfig.json`'s include — nothing typechecks the specs,
-so every new audit field needs a non-vacuity pin (the `data-ct-priority` pin is the pattern). Ink px differ
+so every new audit field needs a non-vacuity pin. Ink px differ
 by rasterizer — 45.0 Windows / 42.0 Linux for the same glyphs (insight 118): pin structure by TEXT, floor ink
 with a cross-platform margin, never a Windows number. A synthetic tap at an element's EXACT edge dispatches
 nothing on 390@3 (insight 119) — inset 1 px. `test.fail` + a timeout = a real failure (insight 120) —
 instrument tests measure first, assert last, and load ONCE (`setRootFont20` BEFORE `gotoSeedFinal`). Local
 fit workers are capped at 30% (insight 121); `FINAL_TIER_MS` (150 s, `e2e/reviewSurface.ts`) is the one anchor
-wait — `vertical-fit.spec.ts` still re-types `90_000` in eight places (harmless at 6 workers; hoist when
-touched). `atceiling` is a DATE seed (~45 s/arm) and rides EVERY arm in the loop (six since PHONE_LS). `temp/` is
+wait. `temp/` is
 gitignored, and squeaky's step 4 deletes each closing session's own files there (and the files it only read, unless
 another session is live), so nothing irreplaceable may live there: the 24 px instrument + measurements moved to `e2e/held/`
 and the icon generator + sheets to `scripts/icons/` on 2026-09-08; screenshots are regenerable. *Reconciled 2026-11-09: this
@@ -651,13 +554,6 @@ said squeaky clears `temp/` UNCONDITIONALLY; its step 4 now deletes only the clo
   and read the count line, never the exit code.
 - **(b9-9/b9-10, 11-13) W's block has no spaces between its parts in `textContent`**: an e2e compare reads `innerText`; a unit test
   compares `notePartsText(parts)`.
-- **(b9-3, 11-22) The seat variants (`?seat=`, dev only, from the seat plan's U4 until its U9) key every rule on
-  `main.result[data-seat]` and move the caveat into a col-2 pane** (`docs/plans/features/record-card-seat-build-spec.md`,
-  KTD3, KTD4, KTD6): every `> .cs-band` child read, in CSS and in `e2e/vertical-fit.spec.ts`, stops matching under a variant,
-  so a variant arm reads the band by a descendant selector. A plain `main.result[data-seat] …` rule (0,5,1) loses to today's
-  beat and record `:has()` seat rules (the beat-plus-record tail rules in `confidence.css` reach (0,7,0)), so a variant
-  silently keeps today's rows on those frames: repeat the `:has()` chain and probe the computed row (insight 075). And a
-  `seat=` left in a harness URL measures a variant, never today.
 - **(b9-6, 2026-11-24, RC7) The harnesses' pinned page clock (`setFixedTime`) freezes Highcharts' redraw animation at its
   first frame.** A legend toggle then measures a stale plot edge and half-drawn ticks in e2e while it works in a live
   browser. Any arm or look capture that reads a chart after a redraw (a toggle, a resize, new data) runs under reduced
@@ -760,10 +656,6 @@ said squeaky clears `temp/` UNCONDITIONALLY; its step 4 now deletes only the clo
 - **(b9-6, 11-09) `pnpm doc:reanchor <base> --apply` edits `src` comments too** (370 edits in walk 4's round,
   `devSeeds.ts` and `stalenessExposure.ts` among them): run it once, last, after the sweep and the mutants, never while a
   plant is live.
-- **(b9-3, 11-09) `pnpm doc:reanchor HEAD --apply` again left two bare continuations on TODO.md's Card 13 line** (`:2200`
-  and `:2330` after `vertical-fit.spec.ts`, the aged `datestale` / `datearrived` describes, moved +4), with "0 for hand
-  review"; fixed by hand. After any re-anchor that moves `vertical-fit.spec.ts`, grep that line's bare `:N` against the
-  describes.
 - **(b9-3, 11-04) An edit after the one `pnpm doc:reanchor HEAD --apply` is not re-anchored.** A second run double-shifts
   every citation it already moved. Grep `<file>:<N>` citations past the edit's first line by hand (the fit spec had none past
   3170), or commit the late file on its own and re-anchor against the new HEAD.
@@ -1051,7 +943,6 @@ chair; chair from a digest script, never the raw result, and expect the window t
   (the refuter survivors); slicing the text from the first `[` grabs `logs: []` instead. Printed raw (400 KB for 103
   agents), with the go-live's whole diffs, it spent b9-5's window.
 
-
 - **(b9-4, 11-21) Claude Code's background-shell memory reaper can stop a long gate chain mid-run, and it leaves the
   chain's children running.** A backgrounded run of CI's list was stopped during `pnpm test` with "critically low on
   memory" while RAM was not short (measured afterwards: 11.6 GB available, the page file 118 MB used; the commit charge
@@ -1093,7 +984,9 @@ chair; chair from a digest script, never the raw result, and expect the window t
 - **(b9-4, 11-15) A helper can go idle on a progress line and never send its result.** The U4 pins helper's last word
   was "waiting on the final combined run"; no run existed, and the main loop reported it as live for about 16 hours.
   An idle row with no result is no running job: read `Get-CimInstance Win32_Process` for the command line, then run the
-  helper's gate yourself before reporting its state.
+  helper's gate yourself before reporting its state. **Seen again (b9-1, 11-25, milestone 2's review):** two refuter seats
+  backgrounded their own probes and sat idle about 50 minutes until nudged; brief a seat to probe in the foreground and
+  write its readings to a scratchpad file, and check those files at a deadline (insight 177).
 - **(b9-7, 11-13) A subagent cannot write a `.md` report file: the harness refuses it ("subagents should return
   findings as text").** All four round-review seats briefed to write `REPORT.md` sent the whole report back as their
   reply instead, 3–5K tokens each into the main window (`.mts` probes in their folders still wrote). Brief a seat to
@@ -1291,19 +1184,8 @@ refusal witness), so `gotoSeedFinal` times out on it — anchor on `main.result`
   later landmine (the pinned page clock freezes Highcharts' redraw at its first frame, *The fit gate and e2e*) draws the
   same picture. The rebuild-on-new-scale seam holds either way; settle the cause in a live browser (no pinned clock, an
   update with a new max) before writing it into another chart's design.
-- **(b9-5, 11-24) A door inside a closing `ControlSheet` that focuses something outside every sheet loses the focus**: the
-  sheet's exit hands focus back to its own opener once the exit ends (`controlSheet.tsx`'s restore spares only a
-  `.control-sheet` or `.budget-sheet`), so the assumption panel's withdrawal-order row focused the tray's row and the
-  gear button took it back. `ActionItemsTray.tsx` focuses only once no sheet has been attached for three frames.
-- **(b9-4, 11-24) The legacy layer's bare element rules reach inside `.rc-root` unless something resets them.** The
-  preflight copy in `theme.css` resets margins, padding, borders and heading size and weight, not `base.css`'s heading
-  face, leading, tracking and colour, `p`'s reading measure or `small`'s colour: the shell's phone menu drew its headings
-  in Fraunces until `theme.css`'s base layer neutralised them under `:where(.rc-root)`. A new legacy element rule needs
-  its line there too. The probe page (deleted at RC19) loaded no `base.css`, so it never showed this; `e2e/rc-screens.spec.ts` reads it in
-  the main app. And a face the main entry never imports falls back silently: Figtree reached the main app only at RC2.
 - **(b9-4, 11-24) Two `main.result` on one page make `SETTLED_RESULT` a strict-mode error in every gate.** The shell owns
-  `main.result`; the answer page's `<main>` carries `result result-page` until RC4, and the legacy layout rules key on
-  `.result-page`. A new screen never renders its own `main.result` (`e2e/rc-screens.spec.ts` counts one on every page).
+  `main.result` (`Shell.tsx`). A new screen never renders its own `main.result` (`e2e/rc-screens.spec.ts` counts one on every page).
 - **(b9-4, 11-24) Highcharts' accessibility module must be imported AFTER `@highcharts/react`** (or after `highcharts`
   itself). Imported first, it reads the namespace's `Chart`, `Series` and `Legend` before the master fills them, and the
   built page dies with "Cannot read properties of undefined (reading 'prototype')". And under `pnpm dev`, Vite's
@@ -1321,14 +1203,11 @@ refusal witness), so `gotoSeedFinal` times out on it — anchor on `main.result`
   `src/kit-probe.tsx` (deleted at RC19; `src/viz/charts/Chart.tsx` makes the same call) as a type mismatch between two copies of Highcharts' types (`highcharts.src` against `highcharts`);
   the project's pinned TypeScript 5.9 does not, and `pnpm typecheck` is the gate. Expect it to turn real on the day the
   project moves to TypeScript 6.
-- **(b9-4, 11-24) A Tailwind utility beats every old stylesheet.** The old sheets sit in `@layer legacy`, the lowest
-  layer, and Tailwind's utilities in the highest, so an old element whose class shares a utility's name (`table`,
-  `hidden`, `flex`) would silently change. `theme.css` imports the utilities with `source(none)` and lists each new
-  folder with `@source`; never switch automatic detection back on before RC21, and add each new kit or screen folder
-  to that list when its first file lands. A utility named in a probe's comment still ships to the main app's CSS.
-  Checked when the kit landed (RC2a): of the utility names the build now carries, the only one an old surface uses as a
-  class is `sr-only` (the intake's live regions and legends), and Tailwind's rule matches `base.css`'s `.sr-only` in
-  effect; re-check with a scan of the built utilities against old class names when a new kit folder is added.
+- **(b9-4, 11-24; re-read at RC21) Tailwind generates utilities only from the folders `theme.css` names.** It imports
+  the utilities with `source(none)` and lists each kit and screen folder with `@source`, so a new folder's classes ship
+  nothing until its `@source` line lands with its first file (a page then renders unstyled with no error). A class word
+  in any file inside a listed folder ships, comments included. Keep automatic detection off: it would scan docs and
+  tests too.
 - **(b9-1, 11-23) `overflow-wrap: anywhere` in a table cell lowers the cell's narrowest width to one letter**, so an
   auto-layout table squeezed toward its narrowest breaks headers mid-word ("Christop / her", "Spendin / g"); every
   width check passes it. Cash Flows' headers (the kit's `DataTable`) break between words only, and no header carries
@@ -1339,27 +1218,17 @@ refusal witness), so `gotoSeedFinal` times out on it — anchor on `main.result`
 - **(moved from TODO's distill list, b9-3, 11-23) A `<br>` inside a paragraph needs a space before it**: `textContent`
   joins "…you.<br>This answer now:" with no space, so a React key, a screen reader and every `toContainText` read a
   different string from the one the composer joined. Walk 5's `NotePartsBody` (then; the notes now draw
-  `NotePartsBlock`'s list) drew `' '` then `<br>`, the space never painted. `Disclaimer.tsx`'s footer still joins its
-  two lines with a bare `<br />` (its `textContent` reads "advice.Validate", 11-23).
-- **(b9-9, 11-23) A module shared by the intake chunk and a lazy chunk must not import a stylesheet the intake chunk already
-  loads**: Rolldown moves the sheet into a new shared chunk, which can move its place in the cascade the fit gate reads
-  (`src/ui/SaveSlot.tsx`'s import of `result.css` did, caught by reading `dist/assets`). Leave the import with its first owner
-  (`Result.tsx`) and check `dist/assets/*.css` after adding a lazy chunk. U8 crossed it on purpose (b9-2, 11-23):
-  `src/ui/editorSheets.tsx` and `StepSheet.tsx` are shared by the answer's chunk and the room's, so the sheets' rules moved
-  into the shared chunk that loads before `IntakeApp-*.css`; its adversary checked every equal-specificity pair across both
-  builds and found no rendered rule changed. Check again whenever a sheet's stylesheet gains a rule.
-- **(b9-2, 11-23) A `ControlSheet`'s body stays mounted through its exit animation, and its focus restore blurs a field
-  still inside it after the close handler has run**, so a commit-on-blur field's write lands AFTER any "the edit ended"
-  logic (no recompute, no discard). Commit the focused field first (`StepSheet.tsx`'s `commitFocused`), and treat the body as
-  ended once its ending ran.
-- **(b9-2, 11-23) A walk step hosted outside the walk has no later Continue.** The walk's Back may leave a refused value
-  because the next Continue checks it; a sheet's dismiss has no next Continue, so it restores the draft from open when the
-  step's Continue check would refuse (`StepSheet.tsx`).
+  `NotePartsBlock`'s list) drew `' '` then `<br>`, the space never painted. The kit's `Caveat` draws `' '` before each `<br />` for the same reason.
+- **(b9-9, 11-23) A module shared by the entry chunk and a lazy chunk must not import a stylesheet the entry already
+  loads**: Rolldown moves the sheet into a new shared chunk, which can move its place in the cascade (the old
+  `SaveSlot.tsx`'s import of `result.css` did, caught by reading `dist/assets`). Leave each import with its first owner
+  (today `theme.css` from `src/main.tsx`, `chartTheme.css` from the lazy chart chunk) and check `dist/assets/*.css` after
+  adding a lazy chunk.
 - **(b9-5, 11-19; moved from TODO by b9-6) Never compare drafts to find "different inputs".** Every blur commits and mints a new
   draft even when nothing changed, the first run's seed mint swaps the draft object, and `draftIdentityKey` carries fields the
   engine never reads. Key the BUILT engine input (`memoryModel.ts`'s `runKey`, W9-R7's KTD2). And an e2e wait reads
   `SETTLED_RESULT` (`e2e/reviewSurface.ts`), never a bare `data-answer-tier="final"`, which passes inside the re-figuring window.
-- **(b9-6, 11-15; b9-3, 11-16) `NotePartsBlock` draws two lists, never both**: W's stale line as the segments' `<dl>` with the door inside it, and the typed-below line's runs as an `<ol role="list">` (`role` because WebKit drops list semantics under `list-style: none`) with the survivor part as the `<p class="note-parts__closing">` after it, before the doorless button (the walk-8 form council's KD7, KD8). jsdom loads no stylesheet: the runs' spacing (`noteParts.css`) is seen only in a real browser.
+- **(b9-6, 11-15; b9-3, 11-16) `NotePartsBlock` draws two lists, never both**: W's stale line as the segments' `<dl>` with the door inside it, and the typed-below line's runs as an `<ol role="list">` (`role` because WebKit drops list semantics under `list-style: none`) with the survivor part as the `<p class="note-parts__closing">` after it, before the doorless button (the walk-8 form council's KD7, KD8). jsdom loads no stylesheet: the runs' spacing (`theme.css`'s kit layer since RC21; `noteParts.css` before) is seen only in a real browser.
 - **(b9-4, 11-05) Never call `buildDateInput` from inside the money picture's path.** On a "saved" draft `buildDateInput` now reads
   `workingYearLedgerForRun`; the picture composes from `buildDateInputBeforeLeftOver`. Any new reader inside
   `composeWorkingYearLedger` that calls `buildDateInput` recurses forever on a saved draft.
@@ -1379,11 +1248,6 @@ rasterizer SILENTLY
   the 24-character bar label (104.8 px in a 104.8 px column) broke to three lines over the delta figure on CI's ubuntu
   metrics only (run 45477118575; Windows fit it on two). Measure a re-hosted component's box at PHONE on the real
   surface, and run its spec's PHONE arm, not only REAL.
-- **(b9-6, 2026-11-24) Keep `.shell-interim` and `.shell-interim__title` in
-  `src/ui/workbench/workbench.css` until the last interim tab is rebuilt** (Health Care until RC10, Profile until
-  RC13). The third rule, `.shell-interim .result-page` (the doubled gutter above, `d01dcc7f`), went with RC8, whose
-  Tax Strategies page was its only reader. A unit that clears "workbench.css's remaining rules" deletes only the rules
-  nothing reads (grep each selector over `src` and `e2e`).
 - **(b9-6, 2026-11-26) A Highcharts plot band at a year with no point sits past the axis** (the axis ends at the last
   point plus the 1% default `maxPadding`): it draws as a sliver and an `inside` label wraps one word per line. Set
   `xAxis.max` to the band's year, and give the label a NUMBER `style.width` (Highcharts appends `px` itself; a string
@@ -1391,9 +1255,11 @@ rasterizer SILENTLY
 
 ## Research and re-verification
 
-
 - **(b9-7, 10-21) ssa.gov answers curl with 403.** Read the IRS Topic pages instead (751 payroll, 560 Additional Medicare: primary,
   and they curl fine), or LII for the statute. A grounded search alone is secondary.
+- **(Act 6, 11-24) The RightCapital research screenshots and lane reports are machine-local, never in the repo** (it is
+  public): `docs/research/rightcapital-ui-reference.md` names the folder; read them by path, and never copy a screenshot
+  or a report into the project.
 - **From the b9-3 close (2026-10-20, the ACA re-verify + (1b)'s measurement):** every ACA instrument change this pass met lives in the record's `forwardClock` ⚑ 2026-10-20 head — uscode's `versions.json` lists only the newest id and an unknown id answers HTTP 500 with a 75 B body; the GovTrack JSON API is retired (enumerate new measures from govinfo BILLSTATUS bulk listings); the govinfo PLAW not-published shell is now 44,172 B (detect it by content); archives.gov needs a cache-busting query; the Senate vote menu moved to `roll_call_lists/` — read that head before the next pass, never this line · a presented bill past its tenth day can already be law with no list showing it (S. 195 was signed 10-09 and read "unsigned" on 10-12) — read the bill's own BILLSTATUS actions · a GPO HTML bill print can render a table as "TABLE TOOL ERROR" (S. 5496) — read the XML · research agents that browse drive Playwright from the repo and leave `.playwright-mcp/` in it — sweep it after any such agent · a probe script outside the project runs under `pnpm exec tsx` from the project dir (its relative imports reach `src/`, whose `@engine/*` aliases then resolve), but only as `.mts` — a `.ts` with top-level await dies "not supported with the cjs output format" · a commit message's summed counts come from the run outputs (582 + 98 + 29 = 709 across 21 files), never a recalled figure — the ACA commit first said 680 and was corrected before the push.
 
 ## Other
@@ -1407,11 +1273,8 @@ rasterizer SILENTLY
   never inherits the trust of the correct diagnosis above it.
 - **(moved from TODO's distill list, b9-3, 11-23) An absence claim needs a whole-tree search, never one directory
   listing**: the 2026-09-06 truth pass marked `BudgetBuilder.tsx`, `BudgetLineItem.tsx`, `SequencingControl.tsx` and
-  `HealthcareSheet.tsx` "AS BUILT: never created" after an `ls src/ui`, but all four live in `src/intake/`. Run
+  `HealthcareSheet.tsx` "AS BUILT: never created" after an `ls src/ui`, but all four lived in `src/intake/` (Act 6 has since deleted them). Run
   `git ls-files | grep <Name>` before writing "never built".
-- **(2026-10-30, b9-3)** a prop added to a
-component's TYPE but not to its destructure silently resolves to any same-named module binding (`describedBy` in `fields.tsx`);
-a `(s): s is string` filter guard then hides it from tsc — destructure first, and name a new prop so it cannot collide.
 - **(2026-09-12)** a "recorded limit" arm that enumerates a set by RUNNING the code is a DND 012 brush — acceptable only when a lens independently
 re-derives the same set and the comment says so (the pbt's `[1,2] ∪ [9,12] ∪ [1001,1250]` arm)
 - **(2026-09-12)** a `;` where `&&` belonged let the close chain

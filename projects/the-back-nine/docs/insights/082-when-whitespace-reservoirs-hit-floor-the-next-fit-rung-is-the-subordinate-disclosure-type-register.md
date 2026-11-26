@@ -60,3 +60,7 @@ information about the failing regime).
 > attribution was wrong. The ladder is now the short laptop tier's written law, with one home in
 > `--bp-laptop-short`'s docblock (`src/ui/styles/tokens.css`), amended from "whitespace only" by the re-point
 > (`docs/plans/features/viewport-1440x731-repoint-build-spec.md`, KTD4).
+
+> **Out of date (corrected 2026-11-26):** Act 6 deleted the answer page whose frame this ladder fitted, its rungs and
+> every sheet the note above names (the last, `app.css` and `tokens.css`, at RC21). `--bp-laptop-short` now lives in
+> `src/ui/styles/theme.css`'s `@theme` block (the `compact:` variant), and the clone's fit law is `docs/architecture.md` §12.

@@ -101,7 +101,7 @@ Each elder is a **pole of a real project value-tension**, so the debate is genui
 | Elder | Guards | Seats when |
 |---|---|---|
 | **Design Engineer** | implementation craft: semantic HTML, design-tokens-as-SoT, CSP-clean, one unforked seam | UI / visual / layout issue |
-| **Motion Designer** | how the UI moves: calm/intentional timing + easing, honest reduced-motion, the motion@12 trap | UI / motion issue |
+| **Motion Designer** | how the UI moves: calm/intentional timing + easing, honest reduced-motion | UI / motion issue |
 | **Accessibility Auditor** | the measurable conformance conscience: WCAG 2.2 AA, screen-reader pass, color-blind-safe as a *tested* assertion | UI / a11y issue |
 | **Security Engineer** | applied crypto + threat model: at-rest exposure, entropy-vs-stretching, survivor recoverability | crypto / threat-model / at-rest issue |
 

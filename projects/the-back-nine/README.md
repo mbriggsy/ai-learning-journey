@@ -85,7 +85,7 @@ The engine and intake carry **5980 tests across 272 files**, all green, alongsid
 
 ## Stack
 
-React 19 · TypeScript 5.9 (strict-plus) · Vite 8 · Vitest 4 · `fast-check` property tests · `motion@12` · `comlink` to run the Monte Carlo engine in a Web Worker, off the main thread · `idb` for the encrypted IndexedDB vault (WebCrypto is called from the main thread — the U4 KDF-location spike in `e2e/vault.spec.ts` measures the 600k-iteration derive not blocking it in Chromium, so no crypto worker was built) · `zxcvbn-ts` for the passphrase-strength floor. Self-hosted fonts (Fraunces + Source Sans 3). pnpm. No Prettier; ESLint enforces the layer boundaries and engine purity.
+React 19 · TypeScript 5.9 (strict-plus) · Vite 8 · Vitest 4 · `fast-check` property tests · Tailwind v4, Base UI, Highcharts (styled mode), TanStack Table and lucide icons for the RightCapital-clone UI · `comlink` to run the Monte Carlo engine in a Web Worker, off the main thread · `idb` for the encrypted IndexedDB vault (WebCrypto is called from the main thread — the U4 KDF-location spike in `e2e/vault.spec.ts` measures the 600k-iteration derive not blocking it in Chromium, so no crypto worker was built) · `zxcvbn-ts` for the passphrase-strength floor. One self-hosted font (Figtree). pnpm. No Prettier; ESLint enforces the layer boundaries and engine purity.
 
 The codebase is layered with hard, lint-enforced import boundaries:
 
@@ -114,8 +114,8 @@ pnpm build          # typecheck + production build
 pnpm verify:aca     # fails if the ACA enhanced-subsidy status is stale/unconfirmed
 pnpm verify:state-tax  # fails if a priced state's {NC, PA, FL} tax record is stale/unconfirmed
 pnpm verify:csp     # real-browser CSP enforcement walk in Chromium + the three @cross-browser vault arms again under WebKit (Playwright)
-pnpm verify:fit     # real-Chromium vertical-fit + chart-text + phone intake-fold gates — the one-frame fit law + every band / ladder / TwoFutures word legible + the intake step's scroll-reset / editor-heading / nav-yield laws, on the dev server
-pnpm verify:fit:rv  # real-Chromium RecommendationViz chart-text gate — the fourth chart on its own serialized solve harness (a full-precision solve per arm — all three arms 4.9–9.1 min on CI on the worker pool, green runs 2026-10-04 → 10-16)
+pnpm verify:fit     # real-Chromium fit + chart-text gates on every clone screen (e2e/rc-screens.spec.ts, e2e/chart-text.spec.ts) — the one-frame fit law at his window, order and reach elsewhere, every chart word legible and every mark inside its frame, the stepper's step laws, on the dev server
+pnpm verify:fit:rv  # real-Chromium Tax Strategies chart-text gate after a full solve, on its own serialized harness (PHONE and REAL, a full-precision solve per arm)
 pnpm verify:doc-stats  # the doc numbers with a single home (test count, register count, insights index) + every code citation resolves + every insight carries its four sections
 ```
 

@@ -59,6 +59,11 @@ text FOLLOWING the reader's browser font (the svg era shrank phone chart text fr
 reader turned their font UP), reduced-motion identity — each with a planted CLIP and a planted shrink as
 its control.
 
+> **Out of date (corrected 2026-11-26):** Act 6 replaced these charts with Highcharts, which draws its SVG text at
+> real pixel size (no fixed viewBox), so the HTML layer, `src/viz/chartText.tsx` and its charts are deleted (the last at
+> RC10). The leaf-floor, never-hidden and follows-the-reader's-font laws carried over: `docs/architecture.md` §12 and
+> `e2e/hcTextAudit.ts`.
+
 ## Key Insight
 
 - **Measure the RENDERED size of any text that lives in a scaled coordinate system, in the real browser,

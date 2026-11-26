@@ -949,7 +949,7 @@ matter of CSS.
 | Tables | TanStack Table | headless: grouped headers, sticky Year/Age column, drill state; adds no styles |
 | Icons | lucide-react | plain SVG |
 | Font | `@fontsource-variable/figtree` | self-hosted |
-| Kept | React 19, Vite 8, `motion`, the strict CSP header, comlink, idb | unchanged |
+| Kept | React 19, Vite 8, the strict CSP header, comlink, idb | unchanged (`motion` was listed here too; Act 6 · RC21 removed it, 2026-11-26: nothing used it) |
 
 **Rejected** (each breaks `style-src 'self'` without a nonce, and B9's static build cannot mint one): shadcn on Radix
 (`react-remove-scroll` injects a `<style>`), Mantine, MUI, Ant Design; ECharts (tooltip HTML with inline `style`);

@@ -26,6 +26,10 @@ that exists only below 68rem. The measurement had compared the two-pane laptop l
 phone-tier layout. A CDP probe made it plain: 1536 matches 68rem at 16 and 20 px, not at 24;
 1280 matches only at 16.
 
+> **Out of date (corrected 2026-11-26):** `tokens.css` and the nine stylesheets are gone (Act 6; the last of them at RC21).
+> The seam `--bp-laptop` (68rem) lives in `src/ui/styles/theme.css`'s `@theme` block beside `--breakpoint-laptop`, and
+> `scripts/__tests__/breakpoint-mirrors.test.ts` binds every rem width to it; the tier law is `docs/architecture.md` §12.
+
 ## Fix
 
 The council ruled (C): the tier moved, the law did not fail. The breakpoint stays rem (its

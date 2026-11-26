@@ -2305,6 +2305,15 @@ as the odds)? Is colour the only signal anywhere? Does any old honesty line lack
   arms); `docs/landmines.md` carries what the act learned, by area.
 - Milestone 4's review and `/distill`.
 
+**Built in two parts (2026-11-26).** Part a (`d12fbe49`) did the code: the old style layer deleted (`tokens.css`,
+`base.css`, `app.css`, `noteParts.css`, `workbench.css` and the `legacy` layer), Tailwind's real preflight imported
+in `theme.css`, whose base layer now sets the one face, the ink, tabular digits and the focus ring on the root;
+`layers.css` kept, because it orders the lazy chart sheet's layer; Fraunces, Source Sans 3 and `motion` removed from
+the packages; the guards re-pointed to `theme.css`, the token-name collision test deleted; the store's sticky display
+seam deleted; all 15 arms left in `vertical-fit.spec.ts` ported whole to `rc-screens.spec.ts` (none guarded only the
+old layout) and the file deleted; the Caddie harness walking the new screens. Part b did the docs this section lists.
+Milestone 4's review and `/distill` are the act's last open item. *(the pilot's call, 2026-11-26, b9-7)*
+
 ### 7.5 Stop conditions (the pilot decides; nothing waits for Briggsy)
 
 A unit stops and the pilot rules, recording the call with the tag, when: the CSP proof reds on a library with no fix

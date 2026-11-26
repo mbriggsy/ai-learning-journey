@@ -2793,15 +2793,24 @@ export const copy = {
   mapsGroupTaxes: 'Taxes',
   mapsGap: 'Not explained by the year’s figures',
   mapsGapNote:
-    'This year’s money in and money out don’t match. The difference shows as "Not explained by the year’s figures" rather than being hidden.',
+    'This year’s money in and money out don’t match. The difference shows as “Not explained by the year’s figures” rather than being hidden.',
   mapsRoundingNote: 'Each figure is rounded down to the dollar, so the two totals can differ by a few dollars.',
   mapsEmployerNote:
     'Into savings is your own money put away. Your employer’s deposits go straight into the accounts and aren’t your cash, so the map leaves them out; the Accounts tab’s Additions to accounts shows each account’s whole deposit.',
   mapsRmdOff: 'The part of the required withdrawal that moved to taxable stays inside your savings, so it isn’t on the map.',
   mapsWorkingCostUnasked:
     'Not asked yet: what a year costs while either of you still works. Until you give that figure, the tool can’t say where this year’s pay goes, so there’s no map for it.',
-  // A Sankey 390 px wide can't print its names beside its flows legibly: the phone shows the same figures as tiles.
-  mapsPhoneTiles: 'On a phone the map shows as tiles: the same figures as the flow.',
+  // A Sankey narrower than the laptop tier can't print its names beside its flows without them meeting (the RC20 review
+  // measured collisions at 820 and 900 px): below it the same figures show as tiles.
+  mapsPhoneTiles: 'On a narrower window the map shows as tiles: the same figures as the flow.',
+  // The Summary's words where they name a table or a column, worded for Maps (one year's figures, no rows).
+  mapsKindsMissing: 'Bank accounts and inherited IRAs aren’t in these figures yet: the tool doesn’t take either kind so far.',
+  mapsPayCheckNoteFederal:
+    'In a working year, the pay check’s income tax is the federal income tax on your pay, Social Security, other income and any investment income you entered. The Income tax figure holds only what drawing on your savings adds, money moved to Roth included.',
+  mapsPayCheckNoteFederalState:
+    'In a working year, the pay check’s income tax is the federal and state income tax on your pay, Social Security, other income and any investment income you entered. The Income tax figure holds only what drawing on your savings adds, money moved to Roth included.',
+  mapsUpdating: 'Updating: these figures are from before your latest change.',
+  mapsSourcesHeading: 'What each savings source holds',
   // --- A fact's words where a Profile card or Health Care's tray prints it (Act 5, U8's facts page, which RC13b retired;
   // these outlived it). Facts read exactly (R11): no "~" and no "about" on a figure the household gave. ---
   workbenchFactsEdit: 'Edit',
@@ -5236,7 +5245,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:2368` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:2374` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,
@@ -5720,7 +5729,30 @@ export const slots = {
   mapsKey: (year: number, inText: string, outText: string, steady: boolean): string =>
     `In ${year}, in the ${steady ? 'steady' : 'rough'} market, ${inText} comes in and ${outText} goes out.`,
   mapsRanOut: (year: number): string =>
-    `The money runs out in ${year} in this future. That year’s row holds what the year asked for, not what was paid, so it has no map; each year before it has one.`,
+    `The money runs out in ${year} in this future. That year’s figures hold what the year asked for, not what was paid, so it has no map.`,
+  /** The slider's spoken value: the year, each person named with their age (one on their own after a death, in the
+   *  catalog's calm frame, `workbenchRowSurvivor`), and what kind of year it is where the run has working years. */
+  mapsYearSpoken: (
+    year: number,
+    people: readonly { readonly mid: string; readonly you: boolean; readonly age: number | null }[],
+    kind: 'working' | 'retired' | 'plain',
+  ): string => {
+    const alive = people.filter((p): p is { mid: string; you: boolean; age: number } => p.age !== null)
+    const is = (p: { mid: string; you: boolean; age: number }) => `${p.mid} ${p.you ? 'are' : 'is'} ${p.age}`
+    const who =
+      alive.length === people.length
+        ? alive.map(is).join(' and ')
+        : alive.map((p) => `${is(p)}, ${p.you ? 'on your own' : 'on their own'}`).join(' and ')
+    return `${year}: ${who}${kind === 'working' ? '; a working year.' : kind === 'retired' ? '; work has stopped.' : '.'}`
+  },
+  /** The first year's entered figures, named by year (on a later year's map "this year" would read as the year shown). */
+  mapsApproxNote: (startYear: number): string =>
+    `A figure marked ~ is worked out by the tool. ${startYear}’s pay and spending show as you entered them.`,
+  mapsStopsIn: (year: number): string => `In these figures, work stops in ${year}, the year your answer’s date gives.`,
+  mapsNoDate: (year: number): string =>
+    `Your answer found no date in its window, so these figures have work stopping in ${year}, the window’s last year.`,
+  mapsAged: (year: number): string => `The first year shown is ${year}, the year this plan was built; the years since are modeled, not records.`,
+  mapsFloorTrack: (): string => 'Once work stops, these figures show essentials-only spending: your answer’s date is figured on that level.',
   mapsRunsOut: (year: number): string => `In this future the money runs out in ${year}.`,
   mapsConversion: (amount: string): string =>
     `~$${amount} moved from pre-tax to Roth this year. That move stays inside your savings, so it isn’t on the map; the income tax it adds is.`,

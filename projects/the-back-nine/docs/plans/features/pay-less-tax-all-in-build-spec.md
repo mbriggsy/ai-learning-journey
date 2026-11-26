@@ -11,14 +11,14 @@ created: 2026-10-05
 
 *Drafted 2026-10-05 by the planning workflow `wf_23bd4439-e6d` (five readers, two independent specs, a merging chair, two source skeptics). The skeptics' 16 findings (5 wrong, 4 missing sites, 7 risky) are FOLDED below, each fix marked ⚑ SKEPTIC.*
 
-*Register: Tier 0, "Pay-less-tax ranks on income tax alone…" (`docs/backlog.md:1027`). Its ⚑ RULED block (`:1033`) is the mandate and its ⚑ MEASURED block (`:1022+`) is the method. Ruled 2026-10-05 by Briggsy: **"All-in cost"**. HEAD e3577909.*
+*Register: Tier 0, "Pay-less-tax ranks on income tax alone…" (`docs/backlog.md:1027`). Its ⚑ RULED block (`:1034`) is the mandate and its ⚑ MEASURED block (`:1022+`) is the method. Ruled 2026-10-05 by Briggsy: **"All-in cost"**. HEAD e3577909.*
 
 *How sites are marked:*
 - **(read)** = I re-read it at HEAD for this merge.
 - **(map)** = taken from the reader maps and not re-opened by me.
 - **unverified** = no one opened it.
 
-*Coupled entry:* the Tier 1 entry "The live solve ranks survival at `tieTolerance` 0…" (`backlog.md:1272-1282`, map). It stays BLOCKED and untouched. This build unblocks it on paper and does not execute it.
+*Coupled entry:* the Tier 1 entry "The live solve ranks survival at `tieTolerance` 0…" (`backlog.md:1273-1283`, map). It stays BLOCKED and untouched. This build unblocks it on paper and does not execute it.
 
 ## 0. Ruled scope, not re-opened
 
@@ -111,7 +111,7 @@ Result: the all-in vector equals the tax vector element by element, and its mean
 - **No ledger row** (`pricingVersion.ts:46-53`): no figure from a saved household's spine recompute moves. `FIRST_UNAMBIGUOUS_SAVE_DAY` stays put.
 - **No `FINGERPRINT_SCHEMA` bump and no objective tag** (`solverRunFingerprint.ts:63-65`). Either would add a false 'inputs-changed' cause, which renders "Your numbers have changed since then." (`copy.ts:1964`). Saved records must report ONE cause, 'solver-changed', which renders "The way strategies are worked out has changed since then." (the string is at `copy.ts:1967`, mapped from the cause at `savedRecordCopy.ts:19`). That sentence is true. Records persist no dollar figure (then; `model.ts:2448-2525` now: since schema version 6, 2026-11-23, the action also carries the crowned Roth conversion plan, its yearly amount included).
 - **Persisted id `'pay-less-tax'` stays.** It lives in `model.ts:273` RECOMMENDATION_GOALS, the codec needVocab gate (`:2332`) and the fingerprint canon (`solverRunFingerprint.ts:121`). Renaming it is a one-way door: memories dropped, plus a false 'inputs-changed'.
-- **v10 collision:** `council-log.md`'s 2026-10-04 *Adoption of the roster-recall fix* row and `backlog.md:1148-1157` earmark v10 for the unmerged gap-fill (`b9-v10-gapfill-wip`). Note in the register's recall entry: "v10 = the all-in objective; a revived gap-fill re-measures on all-in and takes a later version." The council rows stay as records.
+- **v10 collision:** `council-log.md`'s 2026-10-04 *Adoption of the roster-recall fix* row and `backlog.md:1149-1158` earmark v10 for the unmerged gap-fill (`b9-v10-gapfill-wip`). Note in the register's recall entry: "v10 = the all-in objective; a revived gap-fill re-measures on all-in and takes a later version." The council rows stay as records.
 
 ## 2. Every site
 
@@ -130,12 +130,12 @@ Result: the all-in vector equals the tax vector element by element, and its mean
 - `solve.ts:214-224, :385-390` (deltaSkew wording).
 - `stateTaxDisclosure.ts:152-156`: the priced-state layer reaches the hero through the tax addend; the logic is unchanged.
 - `recommendationView.ts:96` and `line 719 at b69c28483`.
-- `copy.ts:2083` comment and `:5308`.
+- `copy.ts:2083` comment and `:5317`.
 - the `recommendationView.test.ts line 596 at b69c28483` comment.
 
 The viz suppression off leave-more stays correct, because all-in is still lower-is-better.
 
-**Copy (HIS, §6):** `recDeltaPayLessTax` (`copy.ts:5555-5556`, read), `goalPayLessTaxGloss` (`:2123`), `recDiscNiit` (`:2266-2267`), `recDiscStateTax` (`:2265-2266`), the optional new `recDisc*`, and `recDeltaTypical*` (`src/ui/copy.ts:3568-3587`) only under a "$X less" hero.
+**Copy (HIS, §6):** `recDeltaPayLessTax` (`copy.ts:5564-5565`, read), `goalPayLessTaxGloss` (`:2123`), `recDiscNiit` (`:2266-2267`), `recDiscStateTax` (`:2265-2266`), the optional new `recDisc*`, and `recDeltaTypical*` (`src/ui/copy.ts:3577-3596`) only under a "$X less" hero.
 
 **Calibration:**
 - Add "an objective-statistic change" to the RE-MEASURE triggers at `fallback.ts:44, :58, :72` (map).
@@ -198,7 +198,7 @@ The viz suppression off leave-more stays correct, because all-in is still lower-
 13. D8: bump, VERSION 10 block, re-pin.
 14. Re-measure on the built objective:
     - **F2** healthnc · pay-less-tax · 160 paths (128 until 2026-10-09; the survivor-medical lean removed the flip at 128, so the arm was re-picked under this step's own rule and the assertion was not loosened) (`solvePayloadIdentity.health.test.ts:20-25`, `solvePoolIdentity.health.test.ts:13-17`, map) pins `namedDriver === 'aca-enhanced-subsidies'`. If the probe no longer flips the crown, RE-PICK the arm (another seed or the leave-more goal) so it still exercises a real flip. ⚑ Never loosen the assertion.
-    - **Funded-years footing gate** (*chair's pick: Spec 2*). Base Part B + extras accrue only in funded years, so a candidate whose failing paths deplete earlier looks cheaper. Tie tolerance 0 equalizes the survival COUNT, not depletion years; the register already saw this on `order` (`backlog.md:1077`).
+    - **Funded-years footing gate** (*chair's pick: Spec 2*). Base Part B + extras accrue only in funded years, so a candidate whose failing paths deplete earlier looks cheaper. Tie tolerance 0 equalizes the survival COUNT, not depletion years; the register already saw this on `order` (`backlog.md:1078`).
       - On `health`, `healthnc`, `order`, `borderline` and hl50, at 16k paths, split each crown/runner-up all-in delta into four parts: income tax, ACA premium, IRMAA at equal funded years, and the funded-years component.
       - ⚑ SKEPTIC: the funded-years bias is ALREADY inside today's income-tax objective and the premium addend (both accrue after the same depletion `break`, `taxOverlay.ts:2901-2926`), not only base Medicare. So compute the funded-years component across ALL three addends (re-score each at the pair's common funded-year count per path vs as-accrued), and report how much is NEW with all-in against what the tax-only objective already carried.
       - If any all-in crown or runner-up flip is DECIDED by the all-in funded-years delta (with the pre-existing tax-only share shown beside it), STOP and take the figures to Briggsy. It is new evidence that the ruled footing rewards running out (contradictions mean STOP), not a pilot re-opening.
@@ -231,7 +231,7 @@ Everything else is either byte-identical by D5, or an identity differential that
 - the four seed gates;
 - `solvePayloadIdentity.test` (the adopt path).
 
-⚑ Never cite "no dev-seed change" as clearance (`backlog.md:1085`): the roster lacks the low-spend ACA shape.
+⚑ Never cite "no dev-seed change" as clearance (`backlog.md:1086`): the roster lacks the low-spend ACA shape.
 
 ## 5. Fixtures and re-derivation (DND 012)
 

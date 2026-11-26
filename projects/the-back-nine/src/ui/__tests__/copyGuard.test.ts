@@ -1093,6 +1093,12 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     mapsNodeWords: slots.mapsNodeWords('Spending', '~$84,000'),
     mapsLinkWords: slots.mapsLinkWords('Total inflows', 'Spending', '~$84,000'),
     mapsTotalWords: slots.mapsTotalWords('Total inflows', '~$118,402'),
+    mapsYearSpoken: slots.mapsYearSpoken(2048, [{ mid: 'Alex', you: false, age: null }, { mid: 'Sam', you: false, age: 87 }], 'retired'),
+    mapsApproxNote: slots.mapsApproxNote(2026),
+    mapsStopsIn: slots.mapsStopsIn(2031),
+    mapsNoDate: slots.mapsNoDate(2041),
+    mapsAged: slots.mapsAged(2026),
+    mapsFloorTrack: slots.mapsFloorTrack(),
     // The facts page (Act 5, U8).
     workbenchFactsEditName: slots.workbenchFactsEditName('Social Security'),
     workbenchFactDollars: slots.workbenchFactDollars('88,000'),

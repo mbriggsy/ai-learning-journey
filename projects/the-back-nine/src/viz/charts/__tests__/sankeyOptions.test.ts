@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import type { SeriesSankeyOptions } from 'highcharts/highcharts.src'
-import { SANKEY_CLASS, SANKEY_LABEL_GAP, SANKEY_NODE_WIDTH, sankeyOptions, type SankeyInput } from '../sankeyOptions'
+import { SANKEY_CLASS, SANKEY_LABEL_GAP, SANKEY_NODE_PADDING, SANKEY_NODE_WIDTH, sankeyOptions, type SankeyInput } from '../sankeyOptions'
 
 /**
  * Maps' Sankey options (plan 6, RC20): pure, every word and amount the composer's; the names printed beside the bars
  * (right of them in the first two columns, left after), never deferred and never faded; each node's colour a class;
- * small bars held to the label line (`minLinkWidth`); a household's typed name escaped where the chart draws it.
+ * bars to scale with a hairline floor (`minLinkWidth`) and label-tall padding between them; a household's typed name
+ * escaped where the chart draws it.
  */
 
 const words = { title: 'Where the money goes in 2026: Your plan', description: 'In 2026, in the steady market, ~$90 comes in and ~$90 goes out.', credits: 'c', end: 'e', legend: 'l', legendItem: 'i' }
@@ -30,7 +31,7 @@ const input = (over: Partial<SankeyInput> = {}): SankeyInput => ({
   ],
   words,
   height: 250,
-  minNodePx: 21,
+  minNodePx: 1,
   ...over,
 })
 
@@ -55,12 +56,15 @@ describe('sankeyOptions', () => {
     }
   })
 
-  it('printed values never deferred, never hidden by collision handling, never faded on hover; small bars held to the label line', () => {
+  it('printed values never deferred, never hidden by collision handling, never faded on hover; bars to scale, a hairline floor, label-tall padding', () => {
     const s = seriesOf()
     const dl = s.dataLabels as { defer: boolean; allowOverlap: boolean; enabled: boolean; useHTML: boolean }
     expect(dl).toMatchObject({ defer: false, allowOverlap: true, enabled: true, useHTML: false })
     expect(s.states?.inactive?.enabled).toBe(false)
-    expect(s.minLinkWidth).toBe(21)
+    expect(s.minLinkWidth).toBe(1)
+    // A label box is about 17 px: the padding keeps two neighbours' names apart however thin their bars.
+    expect(s.nodePadding).toBe(SANKEY_NODE_PADDING)
+    expect(SANKEY_NODE_PADDING).toBeGreaterThanOrEqual(17)
     expect(s.animation).toBe(false)
   })
 

@@ -637,6 +637,7 @@ test.describe('CSP — real browser enforcement', () => {
     await menu.getByRole('link', { name: copy.shellPageCashFlows, exact: true }).click()
     await expect(menu).toHaveCount(0)
     await expect(page.locator('main.result[data-shell-screen="cash-flows"]')).toBeAttached()
+    await expect(page.locator('[data-maps-tiles]'), 'the phone reaches Maps’ tiles').toBeVisible({ timeout: 30_000 })
 
     // The way home: the wordmark goes to Snapshot (a page move, so the unkept what-if survives and nothing is asked).
     await page.getByRole('link', { name: copy.shellHomeLabel }).click()

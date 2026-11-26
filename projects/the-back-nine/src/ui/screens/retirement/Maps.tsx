@@ -5,20 +5,22 @@
  *
  * THE YEAR SCRUBBER (RightCapital's): a dashed line from the first year to the last, a hollow cap at each end with the
  * year in bold and both ages under it, a map pin on the chosen year. The years after work stops are drawn solid from a
- * tick named "Work stops" (a shape and a word, never a colour), and the readout between the two ends prints the chosen
- * year, both ages and what kind of year it is. It is a slider (Base UI's): the arrow keys move a year, Home and End go to
- * the ends, and its value text names the year and both ages.
+ * tick named "Work stops" (a shape and a word, never a colour; an already-retired household's line is solid end to
+ * end), and the readout between the two ends prints the chosen year, both ages and what kind of year it is. It is a
+ * slider (Base UI's): the arrow keys move a year, Home and End go to the ends, and its value text names the year and
+ * each person with their age.
  *
  * THE MAP: the flow (a Sankey, `@viz/charts/Sankey`, lazily loaded with the other charts) or the tiles (Breakdown: the
  * two totals as header bars over the groups' tiles, each with a 4 px bar in its group's colour and its word and amount,
- * its parts listed under it). On a phone the tiles always show (a Sankey 358 px wide cannot print its names beside its
- * flows; the builder's call, RC20), said so in one line. A year with no map (the money runs out in it, or a working year
- * whose cost isn't given) prints its words in the map's place. Nothing here moves: a new year swaps the picture.
+ * its parts listed under it). Below the laptop tier the tiles always show (a Sankey narrower than the seam prints its
+ * names over each other: the RC20 review measured it at 820 and 900 px), said so in one line. A year with no map (the
+ * money runs out in it, or a working year whose cost isn't given) prints its words in the map's place. Nothing here
+ * moves: a new year swaps the picture.
  */
-import { lazy } from 'react'
+import { lazy, useLayoutEffect, useRef, useState, type RefObject } from 'react'
 import { Slider as SliderPrimitive } from '@base-ui/react/slider'
 import { MapPin } from 'lucide-react'
-import { cn, useWide } from '../../kit'
+import { cn, useLaptop } from '../../kit'
 import { verdictDescribedBy } from '../../disclaimerId'
 import { chartWords } from '../dashboard/snapshotView'
 import { ChartSeat } from './Comparisons'
@@ -28,8 +30,8 @@ const Sankey = lazy(() => import('@viz/charts/Sankey').then((m) => ({ default: m
 
 /** The flow's height in CSS px at his window (one frame down to the caveat, the plan's RC20 fit decision) and wider. */
 export const MAP_HEIGHT = 250
-/** A bar is never drawn shorter than one label line (14 px type, 1.45 leading), so two neighbours' names never meet. */
-export const MAP_MIN_NODE_PX = 21
+/** The shortest bar: a hairline, so a tiny flow stays seen; bars are to scale and the padding keeps names apart. */
+export const MAP_MIN_NODE_PX = 1
 
 /** Each group's tile: its 4 px bar and its tint (the chart's own colours, `chartTheme.css`; RC_PAIRS rows). */
 const TILE: Readonly<Record<MapGroup, string>> = {
@@ -58,12 +60,14 @@ function YearScrubber({ scrubber, heading, keyLine, onYear }: { readonly scrubbe
   const { years, index } = scrubber
   const first = years[0]
   const last = years.at(-1)
-  if (first === undefined || last === undefined) return null
   const span = Math.max(1, years.length - 1)
   const stopPct = scrubber.stopIndex === null ? null : (scrubber.stopIndex / span) * 100
-  // The stop's word prints above the line beside its tick: to the right, or to the left where the pin stands there.
   const pinPct = (index / span) * 100
-  const stopLeft = stopPct !== null && pinPct > stopPct - 1 && pinPct < stopPct + 8
+  const word = useRef<HTMLSpanElement>(null)
+  const place = useStopWordPlace(word, stopPct, pinPct)
+  if (first === undefined || last === undefined) return null
+  // An already-retired household has no working year: its line is solid end to end.
+  const allRetired = years.every((y) => !y.working)
   return (
     <SliderPrimitive.Root
       value={index}
@@ -79,17 +83,18 @@ function YearScrubber({ scrubber, heading, keyLine, onYear }: { readonly scrubbe
     >
       <SliderPrimitive.Label className="sr-only">{scrubber.label}</SliderPrimitive.Label>
       <SliderPrimitive.Control className="relative flex h-9 w-full cursor-pointer touch-none items-end pb-1.5 select-none">
-        <SliderPrimitive.Track className="relative h-0 w-full border-t-2 border-dashed border-stone-400">
+        <SliderPrimitive.Track className={cn('relative h-0 w-full border-t-2', allRetired ? 'border-solid border-stone-500' : 'border-dashed border-stone-400')} data-maps-track={allRetired ? 'solid' : 'dashed'}>
           {stopPct !== null ? (
             <>
               {/* After work stops: solid from the tick to the end. */}
               <span aria-hidden="true" className="absolute -top-0.5 right-0 h-0.5 bg-stone-500" style={{ left: `${stopPct}%` }} data-maps-retired="" />
               <span aria-hidden="true" className="absolute -top-2 h-3.5 w-0.5 -translate-x-1/2 bg-stone-600" style={{ left: `${stopPct}%` }} data-maps-stop="" />
               <span
+                ref={word}
                 aria-hidden="true"
-                className={cn('absolute -top-6 text-axis whitespace-nowrap text-stone-600', stopLeft ? '-translate-x-full pr-2' : 'pl-2')}
-                style={{ left: `${stopPct}%` }}
-                data-maps-stop-word=""
+                className={cn('absolute -top-6 text-axis whitespace-nowrap text-stone-600', place.side === 'left' ? '-translate-x-full pr-2' : 'pl-2')}
+                style={{ left: place.px === null ? `${stopPct}%` : `${place.px}px` }}
+                data-maps-stop-word={place.side}
               >
                 {scrubber.stopMark}
               </span>
@@ -98,7 +103,7 @@ function YearScrubber({ scrubber, heading, keyLine, onYear }: { readonly scrubbe
           <span aria-hidden="true" className="absolute -top-[7px] -left-1.5 size-3 rounded-full border-2 border-stone-500 bg-bg" />
           <span aria-hidden="true" className="absolute -top-[7px] -right-1.5 size-3 rounded-full border-2 border-stone-500 bg-bg" />
           <SliderPrimitive.Thumb
-            getAriaValueText={(_formatted, value) => years[value]?.text ?? ''}
+            getAriaValueText={(_formatted, value) => years[value]?.spoken ?? ''}
             className="relative -top-px flex size-6 items-center justify-center rounded-full outline-none has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-blue-ink"
             data-maps-thumb=""
           >
@@ -137,6 +142,40 @@ function YearScrubber({ scrubber, heading, keyLine, onYear }: { readonly scrubbe
   )
 }
 
+/** Where the "Work stops" word prints above the line: right of its tick, unless the pin stands there; then left of the
+ *  tick where the word fits between the tick and the panel's left edge; else right of the pin, clear of it. Measured
+ *  in px (the word's width against the track's), so the word never crosses the panel's edge or touches the pin. */
+function useStopWordPlace(word: RefObject<HTMLSpanElement | null>, stopPct: number | null, pinPct: number): { readonly side: 'right' | 'left' | 'pin'; readonly px: number | null } {
+  const [place, setPlace] = useState<{ side: 'right' | 'left' | 'pin'; px: number | null }>({ side: 'right', px: null })
+  useLayoutEffect(() => {
+    const el = word.current
+    const track = el?.parentElement
+    if (el === null || track === null || track === undefined || stopPct === null) return
+    const measure = () => {
+      const width = track.clientWidth
+      const stopPx = (stopPct / 100) * width
+      const pinPx = (pinPct / 100) * width
+      // The word's box carries its 8 px gap on the side that faces the tick, either side.
+      const wordPx = el.offsetWidth
+      const PIN_HALF = 12
+      const GAP = 8
+      const clashRight = pinPx + PIN_HALF > stopPx && pinPx - PIN_HALF < stopPx + wordPx
+      // Left of the tick only where the word fits inside the panel and the pin stands clear of the word's text.
+      const fitsLeft = wordPx <= stopPx && pinPx - PIN_HALF >= stopPx - GAP
+      const next = !clashRight
+        ? { side: 'right' as const, px: stopPx }
+        : fitsLeft
+          ? { side: 'left' as const, px: stopPx }
+          : { side: 'pin' as const, px: Math.max(stopPx, pinPx + PIN_HALF) }
+      setPlace((p) => (p.side === next.side && p.px === next.px ? p : next))
+    }
+    measure()
+    window.addEventListener('resize', measure)
+    return () => window.removeEventListener('resize', measure)
+  }, [word, stopPct, pinPct])
+  return place
+}
+
 function Tiles({ side, total, tiles }: { readonly side: 'in' | 'out'; readonly total: string; readonly tiles: readonly MapTile[] }) {
   return (
     <section className="flex min-w-0 flex-col gap-2" aria-label={total} data-maps-side={side}>
@@ -169,19 +208,19 @@ export interface MapsProps {
 }
 
 export function Maps({ view, onYear }: MapsProps) {
-  const wide = useWide()
+  const laptop = useLaptop()
   const { body } = view
-  const flow = wide && view.viewSelect.value === 'flow'
+  const flow = laptop && view.viewSelect.value === 'flow'
   return (
     <div className="flex min-w-0 flex-col gap-3" data-maps={body.kind === 'map' ? (flow ? 'flow' : 'breakdown') : 'words'}>
       <YearScrubber scrubber={view.scrubber} heading={view.heading} keyLine={body.kind === 'map' ? body.key : null} onYear={onYear} />
-      {!wide && body.kind === 'map' ? (
+      {!laptop && body.kind === 'map' ? (
         <p className="text-label text-stone-600" data-maps-phone-note="">
           {view.phoneNote}
         </p>
       ) : null}
       {body.kind === 'words' ? (
-        <div role={body.tone} className="flex min-h-40 items-center border-t-2 border-plum py-6 text-body text-stone-900" data-maps-words="">
+        <div role={body.tone} className="flex items-center py-6 text-body text-stone-900" data-maps-words="">
           {/* The words stand for the year's map, so they name the R13 caveat as the map would (plan 4.0). */}
           <p aria-describedby={verdictDescribedBy()}>{body.words}</p>
         </div>

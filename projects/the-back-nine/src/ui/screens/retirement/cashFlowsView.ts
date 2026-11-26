@@ -530,23 +530,24 @@ const stateBody = (rows: Exclude<RunRows, { kind: 'ready' }>): CfBody =>
  *  window's last year, or a what-if's stop-year lever (named for its run, never credited to the answer's date). `named`:
  *  each run says its own (the paired view, where the two years differ). Read off the run's own meta, never the plan's,
  *  which can still be loading while a picked what-if is ready. */
-function stopLine(meta: TableMeta, run: string, named: boolean): string {
+function stopLine(meta: TableMeta, run: string, named: boolean, maps = false): string {
   if (meta.stopYear === undefined || meta.route === 'spine') return ''
   if (meta.stopFrom === 'lever') return slots.cashFlowsRunStopsLever(run, meta.stopYear)
-  if (meta.route === 'dated') return named ? slots.cashFlowsRunStopsDated(run, meta.stopYear) : slots.workbenchStopsIn(meta.stopYear)
-  return named ? slots.cashFlowsRunStopsNoDate(run, meta.stopYear) : slots.workbenchNoDate(meta.stopYear)
+  if (meta.route === 'dated') return named ? slots.cashFlowsRunStopsDated(run, meta.stopYear) : maps ? slots.mapsStopsIn(meta.stopYear) : slots.workbenchStopsIn(meta.stopYear)
+  return named ? slots.cashFlowsRunStopsNoDate(run, meta.stopYear) : maps ? slots.mapsNoDate(meta.stopYear) : slots.workbenchNoDate(meta.stopYear)
 }
 
-/** Which future, whose lifespans, when work stops (`stops`), whose age is which: the words over a table. Over a run that
- *  is not your plan, the steady sentence says the pinned answer reads your plan, not this table's run. */
-function aboutLines(meta: TableMeta, future: TableView, input: CashFlowsInput, stops: readonly string[], plansOwn: boolean, withAges = true): string[] {
+/** Which future, whose lifespans, when work stops (`stops`), whose age is which: the words over a table (or, `maps`,
+ *  over one year's map, worded for its figures). Over a run that is not your plan, the steady sentence says the pinned
+ *  answer reads your plan, not this table's run. */
+function aboutLines(meta: TableMeta, future: TableView, input: CashFlowsInput, stops: readonly string[], plansOwn: boolean, withAges = true, maps = false): string[] {
   const { start, end, years } = input.roughYears
   return [
     future === 'steady' ? (plansOwn ? copy.workbenchSteadyWhat : copy.cashFlowsSteadyWhatOther) : slots.workbenchRoughWhat(start, end, years),
     lifespansLine(meta.people),
     ...stops,
-    meta.track === 'floor' ? slots.workbenchFloorTrack() : '',
-    input.wallCalendarYear > meta.startCalendarYear ? slots.workbenchAged(meta.startCalendarYear) : '',
+    meta.track === 'floor' ? (maps ? slots.mapsFloorTrack() : slots.workbenchFloorTrack()) : '',
+    input.wallCalendarYear > meta.startCalendarYear ? (maps ? slots.mapsAged(meta.startCalendarYear) : slots.workbenchAged(meta.startCalendarYear)) : '',
     meta.people.length > 1 && withAges ? slots.cashFlowsAgesKey(meta.people.map((p) => p.label)) : '',
   ].filter((s) => s !== '')
 }
@@ -559,7 +560,8 @@ function singleFootnotes(columns: readonly CfNode[], meta: TableMeta, rows: read
   return [
     copy.workbenchApproxNote,
     ...(putIn ? [copy.workbenchMatchNote] : []),
-    ...(shown.has('tax-on-pay') ? payCheckNotes(meta.stateTaxReading) : []),
+    // Either of the pay check's two taxes brings its notes (a year can owe payroll tax and no income tax on pay).
+    ...(shown.has('tax-on-pay') || shown.has('payroll') ? payCheckNotes(meta.stateTaxReading) : []),
     ...(shown.has('rmd') ? [copy.workbenchRequiredNote] : []),
     ...(shown.has('spending') && rows.some((r) => r.spending === undefined) ? [copy.workbenchNoSpendingNote] : []),
     ...(showsTotal ? [copy.cashFlowsEndTotalNote] : []),
@@ -579,8 +581,8 @@ function fileSlug(label: string, fallback: string): string {
   return slug === '' ? fallback : slug
 }
 
-function stopgapLines(yieldLines: readonly string[], input: CashFlowsInput): string[] {
-  return [...yieldLines, ...(input.stateClause !== null ? [input.stateClause] : []), copy.workbenchKindsMissing, copy.recDiscNiit]
+function stopgapLines(yieldLines: readonly string[], input: CashFlowsInput, maps = false): string[] {
+  return [...yieldLines, ...(input.stateClause !== null ? [input.stateClause] : []), maps ? copy.mapsKindsMissing : copy.workbenchKindsMissing, copy.recDiscNiit]
 }
 
 export function cashFlowsView(input: CashFlowsInput): CashFlowsView {
@@ -721,22 +723,25 @@ export function cashFlowsView(input: CashFlowsInput): CashFlowsView {
   const { rows, meta } = run
   const runName = pick === 'plan' ? copy.workbenchRailPlanLabel : (input.otherName ?? copy.workbenchRailWhatIfLabel)
   const yieldWords = yieldLine(meta, rows)
-  const stopgaps = stopgapLines(yieldWords === null ? [] : [slots.workbenchPairYield(runName, yieldWords)], input)
+  const yields = yieldWords === null ? [] : [slots.workbenchPairYield(runName, yieldWords)]
+  const stopgaps = stopgapLines(yields, input)
 
   // ── Maps (RC20): one year of this run. The page's own lines (which future, whose lifespans, when work stops, the
-  // aged plan, whose age is which; the stopgaps) ride as over the Summary, with the map's notes and the year's own.
+  // aged plan, whose age is which; the stopgaps; what each savings source holds) ride as over the Summary, worded for
+  // a map where the Summary's name a table, with the map's notes and the year's own.
   if (tab === 'maps') {
     const maps = mapsView({ rows, meta, future, t: input.maps.t, choice: input.maps.choice, runName, roughEndYear: input.roughYears.end, readOnly: input.readOnly })
     return {
       ...base,
       breadcrumb: null,
       body: { kind: 'maps', maps, busy: run.updating },
-      updating: run.updating ? copy.workbenchTableUpdating : null,
-      lines: [...aboutLines(meta, future, input, [stopLine(meta, runName, false)], pick === 'plan'), ...(maps.runsOut !== null ? [maps.runsOut] : [])],
-      stopgaps,
+      updating: run.updating ? copy.mapsUpdating : null,
+      lines: [...aboutLines(meta, future, input, [stopLine(meta, runName, false, true)], pick === 'plan', true, true), ...(maps.runsOut !== null ? [maps.runsOut] : [])],
+      stopgaps: stopgapLines(yields, input, true),
       yearNotes: maps.yearNotes,
       footnotes: maps.notes,
-      sourceKey: [],
+      // The Summary's own key for this run and future: the map's "Taxable, taken out" says what it holds the same way.
+      sourceKey: composeYearTable({ rows, meta, view: future }).sourceKey,
       csv: null,
       csvName: nameFor(false),
     }

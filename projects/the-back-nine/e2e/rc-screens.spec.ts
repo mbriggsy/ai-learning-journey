@@ -171,7 +171,11 @@ async function assertOneVisibleCaveat(page: Page, inFrameHeight: number | null, 
   if (tie) {
     await expect(caveat, 'the caveat carries the one in-frame id').toHaveAttribute('id', IN_FRAME_DISCLAIMER_ID)
     const tied = await page.evaluate(
-      (id) => [...document.querySelectorAll('main.result [aria-describedby]')].filter((el) => (el.getAttribute('aria-describedby') ?? '').split(/\s+/).includes(id)).length,
+      // Rendered elements only: a figure hidden at this width (Maps' phone or laptop copy of a line) names nothing.
+      (id) =>
+        [...document.querySelectorAll('main.result [aria-describedby]')].filter(
+          (el) => (el.getAttribute('aria-describedby') ?? '').split(/\s+/).includes(id) && (el as HTMLElement).getClientRects().length > 0,
+        ).length,
       IN_FRAME_DISCLAIMER_ID,
     )
     expect(tied, 'the R13 tie: a figure on the page names the caveat in aria-describedby').toBeGreaterThan(0)
@@ -4980,14 +4984,102 @@ async function auditMaps(page: Page, who: string): Promise<number> {
   return nodes
 }
 
-/** The scrubber's spoken value and its readout name the Summary's row: its year and both ages. */
+/** The bars drawn to one scale (the RC20 review's F2): each label's amount is matched to the nearest bar centre in its
+ *  column; the scale k is the largest bar's height over its dollars; every bar worth 2 px or more at k is within 1 px of
+ *  its dollars times k, and the money in (column 0) and the groups (column 2) each add up to Total inflows' height
+ *  within 1 px per part, so a parent is never shorter than its parts. Returns the reading for the log. */
+async function auditMapsProportion(page: Page, who: string): Promise<string> {
+  const read = await page.evaluate((sel) => {
+    const chart = document.querySelector(sel)!
+    const bars = [...chart.querySelectorAll('.highcharts-node')].map((n) => {
+      const b = n.getBoundingClientRect()
+      return { left: b.left, right: b.right, mid: b.top + b.height / 2, h: b.height }
+    })
+    const labels = [...chart.querySelectorAll('.highcharts-data-label')]
+      .map((l) => {
+        const b = l.getBoundingClientRect()
+        return { text: l.textContent ?? '', left: b.left, right: b.right, mid: b.top + b.height / 2 }
+      })
+      .filter((l) => l.text.includes('$'))
+    return { bars, labels }
+  }, MAPS_CHART)
+  // The columns, left to right, by each bar's left edge.
+  const xs = [...new Set(read.bars.map((b) => Math.round(b.left)))].sort((a, b) => a - b)
+  const columnOf = (left: number) => xs.findIndex((x) => Math.abs(x - left) <= 1)
+  const cols = xs.map((x) => read.bars.filter((b) => Math.abs(Math.round(b.left) - x) <= 1))
+  const failures: string[] = []
+  const matched = new Map<(typeof read.bars)[number], { dollars: number; text: string; off: number }>()
+  for (const l of read.labels) {
+    // A label sits beside its own column: the column whose edge is nearest the label's facing edge.
+    let best = -1
+    let bestGap = Infinity
+    cols.forEach((col, c) => {
+      const gap = Math.min(Math.abs(l.left - col[0]!.right), Math.abs(col[0]!.left - l.right))
+      if (gap < bestGap) {
+        bestGap = gap
+        best = c
+      }
+    })
+    const bar = cols[best]!.reduce((a, b) => (Math.abs(b.mid - l.mid) < Math.abs(a.mid - l.mid) ? b : a))
+    const dollars = Number((l.text.split('$').at(-1) ?? '').replace(/[^0-9]/g, ''))
+    if (matched.has(bar)) failures.push(`two labels on one bar: "${matched.get(bar)!.text}" and "${l.text}"`)
+    matched.set(bar, { dollars, text: l.text, off: Math.abs(bar.mid - l.mid) })
+  }
+  if (matched.size !== read.bars.length) failures.push(`${read.bars.length} bars, ${matched.size} matched to a label`)
+  for (const [, m] of matched) if (m.off > 1.5) failures.push(`"${m.text}" sits ${m.off.toFixed(1)} px off its bar's centre`)
+  const all = [...matched]
+  const top = all.reduce((a, b) => (b[0].h > a[0].h ? b : a))
+  const k = top[0].h / top[1].dollars
+  let worst = 0
+  for (const [bar, m] of all) {
+    const want = m.dollars * k
+    if (want < 2) continue
+    const off = Math.abs(bar.h - want)
+    worst = Math.max(worst, off)
+    if (off > 1) failures.push(`"${m.text}" is ${bar.h.toFixed(1)} px tall; at the shared scale it is ${want.toFixed(1)} px`)
+  }
+  const total = all.find(([, m]) => m.text.startsWith(copy.mapsTotalIn))
+  if (total === undefined) failures.push('no Total inflows bar')
+  const sums: string[] = []
+  for (const c of [0, 2]) {
+    const parts = all.filter(([b]) => columnOf(b.left) === c)
+    const sum = parts.reduce((s, [b]) => s + b.h, 0)
+    sums.push(`col ${c} ${sum.toFixed(1)} px of ${parts.length}`)
+    if (total !== undefined && Math.abs(sum - total[0].h) > parts.length) failures.push(`column ${c}'s ${parts.length} parts add to ${sum.toFixed(1)} px; Total inflows is ${total[0].h.toFixed(1)} px`)
+  }
+  const reading = `k=${k.toFixed(6)} px/$, worst ${worst.toFixed(2)} px off scale, total ${total?.[0].h.toFixed(1)} px, ${sums.join(', ')}; ${failures.length} failures`
+  console.log(`[rc20-proportion] ${who}: ${reading}${failures.length > 0 ? `\n  ${failures.join('\n  ')}` : ''}`)
+  expect(failures, `${who}: the bars drawn to one scale`).toEqual([])
+  return reading
+}
+
+/** The drawn map is the chosen year's (F11): Total inflows' printed amount equals the "~$X comes in" of the sentence
+ *  React prints outside the chart for that year. */
+async function assertMapIsChosenYear(page: Page, who: string): Promise<void> {
+  const keyAmount = ((await page.locator('[data-maps-key]').textContent()) ?? '').match(/(~?\$[\d,]+) comes in/)?.[1]
+  expect(keyAmount, `${who}: the year's sentence names what comes in`).toBeDefined()
+  await expect
+    .poll(
+      async () =>
+        (await page.locator(`${MAPS_CHART} .highcharts-data-label`).allTextContents()).find((t) => t.startsWith(copy.mapsTotalIn))?.match(/~?\$[\d,]+/)?.[0],
+      { message: `${who}: the drawn Total inflows is the chosen year's`, timeout: 30_000 },
+    )
+    .toBe(keyAmount)
+}
+
+/** The scrubber's readout prints the Summary's row (its year and both ages), and its spoken value names the same year
+ *  with each living person's age, one on their own after a death (F15: never "age –/87"). */
 async function assertScrubberRow(page: Page, rows: readonly { year: string; age: string }[], k: number, who: string): Promise<void> {
   const row = rows[k]!
   const input = page.locator('[data-maps-thumb] input')
-  await expect(input, `${who}: the slider's value text names the row's year and both ages`).toHaveAttribute('aria-valuetext', new RegExp(`^${row.year}, age ${row.age.replace(/[/]/g, '\\/')}(:|$)`))
+  await expect(input, `${who}: the slider's value text names the row's year`).toHaveAttribute('aria-valuetext', new RegExp(`^${row.year}: `))
   const said = (await input.getAttribute('aria-valuetext')) ?? ''
+  const ages = row.age.split('/')
+  for (const a of ages.filter((x) => /^\d+$/.test(x))) expect(said, `${who}: the slider speaks each living person's age`).toMatch(new RegExp(`\\b(is|are) ${a}\\b`))
+  if (ages.some((x) => !/^\d+$/.test(x))) expect(said, `${who}: a survivor's year speaks its calm frame`).toMatch(/on (your|their) own/)
+  expect(said, `${who}: no dash spoken`).not.toContain('–')
   const shown = await page.locator('[data-maps-year]:visible, [data-maps-year-phone]:visible').first().textContent()
-  expect(shown, `${who}: the readout prints what the slider says`).toBe(said)
+  expect(shown, `${who}: the readout prints the row's year and both ages`).toMatch(new RegExp(`^${row.year}, age ${row.age.replace(/[/]/g, '\\/')}(:|$)`))
 }
 
 test.describe(`RC20 · Cash Flows → Maps at his window (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr, compact mode)`, () => {
@@ -5027,22 +5119,28 @@ test.describe(`RC20 · Cash Flows → Maps at his window (${REAL.width}×${REAL.
       expect(frame.chart, `${seed}: the whole map inside his window`).toBeLessThanOrEqual(REAL.height)
       expect(frame.labels, `${seed}: every name and amount inside his window`).toBeLessThanOrEqual(REAL.height)
       console.log(`[rc20-nodes] ${seed} first year: ${await auditMaps(page, `${seed} first year`)}`)
+      await assertMapIsChosenYear(page, `${seed} first year`)
+      await auditMapsProportion(page, `${seed} first year`)
       await assertOneVisibleCaveat(page, null)
       await noSidewaysScroll(page, `${seed} Maps`)
-      // The keyboard: three years on, a fresh map for that year, audited again, on the Summary's row.
+      // The keyboard: four years on (dip's busiest year), a fresh map for that year, audited again, on the Summary's row.
       await page.locator('[data-maps-thumb] input').focus()
-      for (let i = 0; i < 3; i++) await page.keyboard.press('ArrowRight')
-      await assertScrubberRow(page, rows, 3, `${seed} three years on`)
-      await mapsDrawn(page, `${seed} three years on`)
-      await auditMaps(page, `${seed} three years on`)
-      // Past the year work stops, where the run has one (the working household's map changes shape there).
-      if ((await page.locator('[data-maps-stop]').count()) > 0) {
-        for (let i = 0; i < 6; i++) await page.keyboard.press('ArrowRight')
+      for (let i = 0; i < 4; i++) await page.keyboard.press('ArrowRight')
+      await assertScrubberRow(page, rows, 4, `${seed} four years on`)
+      await mapsDrawn(page, `${seed} four years on`)
+      await assertMapIsChosenYear(page, `${seed} four years on`)
+      await auditMaps(page, `${seed} four years on`)
+      await auditMapsProportion(page, `${seed} four years on`)
+      // Past the year work stops, where the run has one (the working household's map changes shape there): dip's steady
+      // year 9 has stopped working and draws a map (a words year there fails, never skips the audit).
+      if (seed === 'dip') {
+        for (let i = 0; i < 5; i++) await page.keyboard.press('ArrowRight')
         await assertScrubberRow(page, rows, 9, `${seed} nine years on`)
-        if ((await page.locator('[data-maps-words]').count()) === 0) {
-          await mapsDrawn(page, `${seed} nine years on`)
-          await auditMaps(page, `${seed} nine years on`)
-        }
+        await expect(page.locator('[data-maps-year]'), 'dip year 9: the readout says work has stopped').toContainText('work has stopped')
+        await expect(page.locator('[data-maps-words]'), 'dip year 9 draws a map').toHaveCount(0)
+        await mapsDrawn(page, `${seed} nine years on`)
+        await assertMapIsChosenYear(page, `${seed} nine years on`)
+        await auditMaps(page, `${seed} nine years on`)
       }
       // End: the last year.
       await page.locator('[data-maps-thumb] input').focus()
@@ -5077,11 +5175,26 @@ test.describe(`RC20 · Cash Flows → Maps at his window (${REAL.width}×${REAL.
     await page.locator('[data-maps-thumb] input').focus()
     await page.keyboard.press('End')
     const year = Number(rows.at(-1)!.year)
-    await expect(page.locator('[data-maps-words][role="alert"]')).toHaveText(slots.mapsRanOut(year))
+    await expect(page.locator('[data-maps-words][role="status"]')).toHaveText(slots.mapsRanOut(year))
     await expect(page.locator('[data-maps-end="right"]')).toContainText(copy.cashFlowsShortYear)
     await expect(page.locator(MAPS_CHART)).toHaveCount(0)
     await expect(page.locator('[data-cash-flows-lines]')).toContainText(slots.mapsRunsOut(year))
     await assertOneVisibleCaveat(page, null)
+  })
+
+  // The widest spread of one year's figures (a typed pension's working year: pay near $150,000 beside parts of a few
+  // hundred dollars): every bar to one scale, every label clear. An audit only, no frame check.
+  test('?seed=datesavedtypedpension: Maps six years in — the bars drawn to one scale, every name and amount clear', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 120_000)
+    await toCashFlows(page, 'datesavedtypedpension', false)
+    await toMaps(page)
+    await mapsDrawn(page, 'datesavedtypedpension')
+    await page.locator('[data-maps-thumb] input').focus()
+    for (let i = 0; i < 5; i++) await page.keyboard.press('ArrowRight')
+    await mapsDrawn(page, 'datesavedtypedpension index 5')
+    await assertMapIsChosenYear(page, 'datesavedtypedpension index 5')
+    await auditMaps(page, 'datesavedtypedpension index 5')
+    await auditMapsProportion(page, 'datesavedtypedpension index 5')
   })
 })
 
@@ -5103,8 +5216,41 @@ test.describe(`RC20 · Cash Flows → Maps on the phone (${PHONE.width}×${PHONE
       await page.keyboard.press('ArrowRight')
       await assertScrubberRow(page, rows, 1, `${seed} PHONE next year`)
       await noSidewaysScroll(page, `${seed} PHONE next year`)
+      if (seed === 'dip') {
+        // Index 5, the pin just past the stop's tick (F14): "Work stops" stays inside the panel and clear of the pin.
+        for (let i = 0; i < 4; i++) await page.keyboard.press('ArrowRight')
+        await assertScrubberRow(page, rows, 5, `${seed} PHONE index 5`)
+        const boxes = await page.evaluate(() => {
+          const r = (sel: string) => document.querySelector(sel)!.getBoundingClientRect()
+          const w = r('[data-maps-stop-word]')
+          const pin = r('[data-maps-thumb] svg')
+          return { word: { left: w.left, right: w.right, top: w.top, bottom: w.bottom }, pin: { left: pin.left, right: pin.right, top: pin.top, bottom: pin.bottom }, panel: r('[data-maps]').left }
+        })
+        // The word's box carries an 8 px gap on its tick side; its text is what must stay inside.
+        expect(boxes.word.left, 'dip PHONE index 5: "Work stops" inside the panel').toBeGreaterThanOrEqual(boxes.panel - 0.5)
+        const meets = boxes.word.left < boxes.pin.right && boxes.pin.left < boxes.word.right && boxes.word.top < boxes.pin.bottom && boxes.pin.top < boxes.word.bottom
+        expect(meets, `dip PHONE index 5: "Work stops" clear of the pin ${JSON.stringify(boxes)}`).toBe(false)
+      }
       await assertOneVisibleCaveat(page, null)
       await assertCaveatReachable(page, `${seed} PHONE Maps`)
     })
   }
+})
+
+// Between the phone and the laptop tier (F13): a Sankey that narrow prints its names over each other (measured at 820
+// and 900 px), so below the 68rem seam the map shows as its tiles, said so, with no view select.
+test.describe('RC20 · Cash Flows → Maps between the phone and the laptop tier (900×800)', () => {
+  test.use({ viewport: { width: 900, height: 800 }, deviceScaleFactor: 1, reducedMotion: 'reduce' })
+  test('?seed=dip: Maps at 900 px — the tiles in place of the flow, said so, no view select, no sideways scroll', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 120_000)
+    await toCashFlows(page, 'dip', false)
+    await toMaps(page)
+    await expect(page.locator('[data-maps-tiles]'), 'dip 900: the tiles show').toBeVisible()
+    await expect(page.locator(MAPS_CHART)).toHaveCount(0)
+    await expect(page.locator('[data-maps-phone-note]')).toHaveText(copy.mapsPhoneTiles)
+    await expect(page.getByRole('combobox', { name: copy.mapsViewLabel }), 'dip 900: no view select below the laptop tier').toBeHidden()
+    expect(await page.locator('[data-maps-tile]').count(), 'dip 900: the groups’ tiles').toBeGreaterThanOrEqual(3)
+    await noSidewaysScroll(page, 'dip 900 Maps')
+    await assertOneVisibleCaveat(page, null)
+  })
 })

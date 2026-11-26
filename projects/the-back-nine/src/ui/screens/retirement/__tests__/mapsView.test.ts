@@ -8,7 +8,7 @@ import { DEV_SEEDS } from '../../../devSeeds'
 import { copy, slots } from '../../../copy'
 import { tableRunFor, type TableMeta, type TableView } from '../../../workbench/tableRun'
 import { formatTableDollars, payCheckNotes } from '../../../workbench/yearTableChrome'
-import { cashFlowsView, type CashFlowsInput, type SummaryDrill } from '../cashFlowsView'
+import { cashFlowsView, leavesOf, type CashFlowsInput, type SummaryDrill } from '../cashFlowsView'
 import { MAP_GAP_MIN, mapsView, type MapNode, type MapsInput, type MapsView } from '../mapsView'
 
 /**
@@ -24,7 +24,7 @@ type Run = { readonly name: string; readonly meta: TableMeta; readonly view: Tab
 
 /** Every dev seed's table runs in both futures, from the same request the page makes (`tableRunFor`; a working seed at a
  *  band four years out, its lifestyle track). */
-function seedRuns(names?: readonly string[]): Run[] {
+function seedRuns(names?: readonly string[], track: 'lifestyle' | 'floor' = 'lifestyle'): Run[] {
   const out: Run[] = []
   for (const [name, draft] of Object.entries(DEV_SEEDS)) {
     if (names !== undefined && !names.includes(name)) continue
@@ -34,7 +34,7 @@ function seedRuns(names?: readonly string[]): Run[] {
         kind: 'date',
         tier: 'final',
         draft,
-        outcome: { kind: 'dates', tier: 'final', windowTopYears: DATE_OFFSET_WINDOW_TOP, seed: 1, band: { offsetYears: 4, track: 'lifestyle' } },
+        outcome: { kind: 'dates', tier: 'final', windowTopYears: DATE_OFFSET_WINDOW_TOP, seed: 1, band: { offsetYears: 4, track } },
         inputKey: 'k',
       } as unknown as ModelAnswer)
     }
@@ -59,6 +59,26 @@ const mapOf = (v: MapsView) => {
 }
 
 const dollarsOf = (text: string): number => Number(text.replace(/[^0-9]/g, ''))
+/** A sum's words, worked out here on their own: "~" when any part carries one, the dollars grouped. */
+const sumText = (parts: readonly { text: string; dollars: number }[]): string =>
+  `${parts.some((p) => p.text.startsWith('~')) ? '~' : ''}$${parts.reduce((s, p) => s + p.dollars, 0).toLocaleString('en-US')}`
+
+/** Cash Flows on Maps for one run, as the page asks for it. */
+const mapsInput = (run: Run, over: Partial<CashFlowsInput> = {}): CashFlowsInput => ({
+  tab: 'maps',
+  drill: null,
+  maps: { t: null, choice: 'flow' },
+  readOnly: false,
+  accounts: 'end',
+  future: run.view,
+  pick: 'plan',
+  offers: { working: null, kept: [], recommended: false, paired: null },
+  plan: { kind: 'ready', rows: run.rows, meta: run.meta, updating: false, answerKey: 'k' },
+  roughYears: { start: 1966, end: 1995, years: ROUGH_WINDOW_YEARS },
+  wallCalendarYear: run.meta.startCalendarYear + 1,
+  stateClause: null,
+  ...over,
+})
 
 describe('mapsView — the balance over every dev seed, both futures', () => {
   const runs = seedRuns()
@@ -85,9 +105,85 @@ describe('mapsView — the balance over every dev seed, both futures', () => {
         for (const g of v.body.nodes.filter((n) => n.column === 2 && n.value === null && n.group !== 'gap')) {
           expect(g.dollars, `${run.name} ${g.id}`).toBe(v.body.nodes.filter((n) => n.column === 3 && n.group === g.group).reduce((s, n) => s + n.dollars, 0))
         }
+        const who = `${run.name} ${run.view} t=${r.t}`
+        const m = v.body
+        const byId = new Map(m.nodes.map((n) => [n.id, n]))
+        // F1: a flow speaks the figure it carries (its source into Total inflows, else the node it feeds), and that
+        // node's dollars are the flow's width.
+        for (const l of m.links) {
+          const from = byId.get(l.from)!
+          const to = byId.get(l.to)!
+          const carried = l.to === 'total-in' ? from : to
+          expect(l.spoken, `${who} ${l.from}→${l.to}`).toBe(slots.mapsLinkWords(from.name, to.name, carried.text))
+          expect(carried.dollars, `${who} ${l.from}→${l.to}: the width is the carried figure`).toBe(l.weight)
+        }
+        // F3: the sums' words. Each sum (the total, a group) prints the sum of its parts' printed dollars, with "~"
+        // exactly when one of its parts carries one.
+        const leavesOf = (g: string) => m.nodes.filter((n) => n.group === g && n.value !== null)
+        expect(total.text, `${who}: Total inflows' words`).toBe(sumText(m.nodes.filter((n) => n.column === 0)))
+        for (const g of m.nodes.filter((n) => n.column === 2 && n.value === null && n.group !== 'gap')) expect(g.text, `${who} ${g.id}`).toBe(sumText(leavesOf(g.group)))
+        // The tiles, the phone's only view: each tile's words are its parts' sum (or its one node's), its parts listed
+        // as the nodes print them, and the tiles add up to each side's total.
+        for (const t of [...m.inTiles, ...m.outTiles]) {
+          const parts = t.group === 'gap' ? m.nodes.filter((n) => n.group === 'gap') : leavesOf(t.group)
+          expect(t.text, `${who} tile ${t.id}`).toBe(parts.length === 1 ? parts[0]!.text : sumText(parts))
+          if (t.leaves.length > 0) expect(t.leaves.map((x) => [x.id, x.text]), `${who} tile ${t.id}'s parts`).toEqual(parts.map((n) => [n.id, n.text]))
+        }
+        expect(m.inTiles.reduce((s, t) => s + dollarsOf(t.text), 0), `${who}: the in tiles add to Total inflows`).toBe(dollarsOf(m.totalIn))
+        expect(m.outTiles.reduce((s, t) => s + dollarsOf(t.text), 0), `${who}: the out tiles add to Total outflows`).toBe(dollarsOf(m.totalOut))
+        expect(m.totalIn).toBe(total.text)
+        expect(m.totalOut, `${who}: Total outflows' words`).toBe(sumText(m.nodes.filter((n) => n.value !== null && (n.column === 3 || (n.column === 2 && n.group !== 'total')))))
+        expect(m.totalInWords).toBe(slots.mapsTotalWords(copy.mapsTotalIn, m.totalIn))
+        expect(m.totalOutWords).toBe(slots.mapsTotalWords(copy.mapsTotalOut, m.totalOut))
+        // A year that balances is called rounding only where the printed sides differ.
+        expect(v.notes.includes(copy.mapsRoundingNote), `${who}: the rounding note`).toBe(dollarsOf(m.totalIn) !== dollarsOf(m.totalOut))
       }
     }
     expect(maps, '[test setup] maps drawn').toBeGreaterThan(1000)
+  })
+
+  it('every year’s own sentences, never collapsed: a first death names the one on their own, a not-kept year says so on every year of its run, the rough view’s first steady year says so', () => {
+    let deaths = 0
+    let notKept = 0
+    let steadyFrom = 0
+    for (const run of runs) {
+      run.rows.forEach((r, k) => {
+        const v = at(run, r.t)
+        const year = run.meta.startCalendarYear + r.t
+        expect(v.yearNotes.some((n) => n.includes('The same each year through')), `${run.name} ${year}: never collapsed`).toBe(false)
+        const prev = run.rows[k - 1]
+        if (run.meta.people.length === 2 && r.alive.filter(Boolean).length === 1 && (prev === undefined ? 2 : prev.alive.filter(Boolean).length) === 2) {
+          const s = run.meta.people[r.alive.indexOf(true)]!
+          expect(v.yearNotes, `${run.name} ${year}: the first death`).toContain(slots.cashFlowsYearNote(year, slots.workbenchRowSurvivor(s.mid, s.you)))
+          deaths++
+        }
+        if (formatTableDollars(r.incomeNotKept) !== '0') {
+          const amount = formatTableDollars(r.incomeNotKept)
+          if (r.workingYear === undefined) expect(v.yearNotes, `${run.name} ${year}: not kept`).toContain(slots.cashFlowsYearNote(year, slots.workbenchRowNotKeptRetired(amount)))
+          else expect(v.yearNotes.some((n) => n.startsWith(`${year}: `) && n.includes(`~$${amount}`)), `${run.name} ${year}: the left over not kept`).toBe(true)
+          notKept++
+        }
+        if (run.view === 'rough' && r.t === ROUGH_WINDOW_YEARS) {
+          expect(v.yearNotes[0], `${run.name}: the rough view's steady-from line`).toBe(slots.cashFlowsYearNote(year, slots.workbenchRoughSteadyFrom(1995)))
+          steadyFrom++
+        }
+      })
+    }
+    expect([deaths, notKept, steadyFrom].every((n) => n > 0), `[test setup] deaths ${deaths}, not-kept years ${notKept}, steady-from ${steadyFrom}`).toBe(true)
+  })
+
+  it('no word on Maps names a table, a row or a column (the Summary’s own words stay the Summary’s)', () => {
+    const tableWords = /\b(table|rows?|columns?)\b/i
+    for (const run of runs) {
+      const v = cashFlowsView(mapsInput(run))
+      if (v.body.kind !== 'maps') throw new Error('no maps')
+      for (const line of [...v.lines, ...v.stopgaps, ...v.footnotes, ...v.sourceKey.map((e) => e.accounts)]) expect(line, `${run.name} ${run.view}`).not.toMatch(tableWords)
+      for (const r of run.rows) {
+        const y = at(run, r.t)
+        const words = [...y.notes, ...y.yearNotes, y.heading, y.phoneNote, y.body.kind === 'words' ? y.body.words : '']
+        for (const w of words) expect(w, `${run.name} ${run.view} t=${r.t}`).not.toMatch(tableWords)
+      }
+    }
   })
 
   it('a ran-out year gets words, never a map, and every other year of that run says when the money runs out', () => {
@@ -96,7 +192,7 @@ describe('mapsView — the balance over every dev seed, both futures', () => {
     expect(last.ranOut).toBe(true)
     const year = run.meta.startCalendarYear + last.t
     const v = at(run, last.t)
-    expect(v.body).toEqual({ kind: 'words', tone: 'alert', words: slots.mapsRanOut(year) })
+    expect(v.body).toEqual({ kind: 'words', tone: 'status', words: slots.mapsRanOut(year) })
     expect(at(run, run.rows[0]!.t).runsOut).toBe(slots.mapsRunsOut(year))
     expect(v.scrubber.endMark).toBe(copy.cashFlowsShortYear)
   })
@@ -104,7 +200,9 @@ describe('mapsView — the balance over every dev seed, both futures', () => {
 
 describe('mapsView — one source of truth: every leaf is the Summary’s own cell for the same run, year and future', () => {
   const DRILLS: readonly (SummaryDrill | null)[] = [null, 'income', 'distribution', 'expenses', 'saving']
-  for (const run of seedRuns(['retired', 'dip', 'tablewidest'])) {
+  // Lifestyle runs and a floor-band run (its spending after work the essentials, `meta.track === 'floor'`), and
+  // `surpluswidest` (its other income: leaf `other-0`).
+  for (const run of [...seedRuns(['retired', 'dip', 'tablewidest', 'surpluswidest']), ...seedRuns(['dip'], 'floor').map((r) => ({ ...r, name: `${r.name} floor` }))]) {
     it(`${run.name} ${run.view}: each leaf's id, field and printed words match the Summary's cell in every year`, () => {
       const input = (drill: SummaryDrill | null): CashFlowsInput => ({
         tab: 'summary',
@@ -130,6 +228,7 @@ describe('mapsView — one source of truth: every leaf is the Summary’s own ce
         })
       }
       let checked = 0
+      const ids = new Set<string>()
       for (const r of run.rows) {
         const v = at(run, r.t)
         if (v.body.kind !== 'map') continue
@@ -143,17 +242,41 @@ describe('mapsView — one source of truth: every leaf is the Summary’s own ce
           expect(leaf.value, `${run.name} t=${r.t} ${leaf.id}: the same field`).toBe(cell!.value)
           // The Summary's cell drops the "$" (table law); the map prints it after the mark.
           expect(leaf.text.replace('$', ''), `${run.name} t=${r.t} ${leaf.id}: the same printed figure`).toBe(cell!.text)
+          ids.add(leaf.id)
           checked++
         }
       }
       expect(checked, '[test setup] leaves checked').toBeGreaterThan(20)
+      if (run.name === 'surpluswidest') expect(ids.has('other-0'), '[test setup] surpluswidest reaches other income').toBe(true)
     })
   }
+
+  it('[test setup] the floor band reaches a floor-track run', () => {
+    expect(seedRuns(['dip'], 'floor').some((r) => r.meta.track === 'floor')).toBe(true)
+  })
 })
 
 describe('mapsView — the parts of a year', () => {
   const [retired] = seedRuns(['retired'])
   const dip = seedRuns(['dip'])[0]!
+
+  it('the slider speaks each person by name with their age, one on their own after a death, never a dash', () => {
+    const run = seedRuns().find((x) => x.meta.people.length === 2 && x.rows.some((r) => r.alive.filter(Boolean).length === 1))!
+    const v = at(run, null)
+    run.rows.forEach((r, k) => {
+      const spoken = v.scrubber.years[k]!.spoken
+      expect(spoken.startsWith(`${run.meta.startCalendarYear + r.t}: `)).toBe(true)
+      expect(spoken).not.toContain('–')
+      run.meta.people.forEach((p, i) => {
+        if (r.alive[i] === true) expect(spoken, `${run.name} t=${r.t}`).toContain(`${p.mid} ${p.you ? 'are' : 'is'} ${p.currentAge + r.t}`)
+        else expect(spoken, `${run.name} t=${r.t}`).not.toContain(`${p.mid} `)
+      })
+      if (r.alive.filter(Boolean).length === 1) expect(spoken).toMatch(/, on (your|their) own/)
+    })
+    // The readout still prints both ages, a dash for the one gone.
+    const gone = run.rows.findIndex((r) => r.alive.filter(Boolean).length === 1)
+    expect(v.scrubber.years[gone]!.text).toContain('–')
+  })
 
   it('the scrubber’s years and both ages are the rows’, the first year chosen by default, an asked year clamped', () => {
     const v = at(retired!, null)
@@ -176,7 +299,8 @@ describe('mapsView — the parts of a year', () => {
     const ids = m.nodes.map((n) => n.id)
     expect(ids).toContain('payroll')
     expect(ids).toContain('into-savings')
-    for (const n of payCheckNotes(dip.meta.stateTaxReading)) expect(v.notes).toContain(n)
+    for (const n of payCheckNotes(dip.meta.stateTaxReading, 'map')) expect(v.notes).toContain(n)
+    expect(v.notes[0]).toBe(slots.mapsApproxNote(dip.meta.startCalendarYear))
     expect(v.notes).toContain(copy.mapsEmployerNote)
     // Never the employer-inclusive put-ins, never income tax folded with payroll.
     expect(ids.some((id) => id.startsWith('put-in-'))).toBe(false)
@@ -229,6 +353,41 @@ describe('mapsView — the parts of a year', () => {
     expect(mapOf(at({ ...retired!, rows: [grain] }, null)).gap).toBe(false)
   })
 
+  it('a negative part (an ACA year’s income tax below zero) is never called rounding: the printed sides’ difference is drawn as the gap, the tax never clamped', () => {
+    const r0 = retired!.rows[0]!
+    // Signed, the year still balances: the tax's swing to −$800 is moved into spending. Printed unsigned, the two sides
+    // differ by twice the tax.
+    const row: LedgerYearRow = { ...r0, taxPaid: -800, spending: (r0.spending ?? 0) + r0.taxPaid + 800 }
+    const v = at({ ...retired!, rows: [row] }, null)
+    const m = mapOf(v)
+    expect(m.nodes.find((n) => n.id === 'income-tax')).toMatchObject({ dollars: 800, value: -800 })
+    expect(m.gap).toBe(true)
+    const gap = m.nodes.find((n) => n.id === 'gap')!
+    expect(Math.abs(gap.dollars - 1_600)).toBeLessThanOrEqual(m.nodes.filter((n) => n.value !== null).length)
+    expect(gap.column).toBe(0)
+    expect(v.notes).toContain(copy.mapsGapNote)
+    expect(v.notes).not.toContain(copy.mapsRoundingNote)
+  })
+
+  it('a year with payroll tax and no income tax on pay still carries the pay check’s notes, on Maps and under the Summary', () => {
+    const run = seedRuns(['dateshort']).find((x) => x.view === 'steady')!
+    const k = run.rows.findIndex((r) => r.workingYear !== undefined && formatTableDollars(r.workingYear.taxOnOutsideIncome) === '0' && formatTableDollars(r.workingYear.payrollTax) !== '0')
+    expect(k, '[test setup] dateshort has a year with payroll tax and no income tax on pay').toBeGreaterThanOrEqual(0)
+    const v = at(run, run.rows[k]!.t)
+    expect(mapOf(v).nodes.some((n) => n.id === 'payroll')).toBe(true)
+    expect(mapOf(v).nodes.some((n) => n.id === 'tax-on-pay')).toBe(false)
+    for (const n of payCheckNotes(run.meta.stateTaxReading, 'map')) expect(v.notes).toContain(n)
+    // The Summary: its pay check's notes ride a payroll column alone too (the run's every income tax on pay set to 0, so
+    // that column drops out of the whole table).
+    const noPayTax = run.rows.map((r) => (r.workingYear === undefined ? r : { ...r, workingYear: { ...r.workingYear, taxOnOutsideIncome: 0 } }))
+    const sv = cashFlowsView(mapsInput({ ...run, rows: noPayTax }, { tab: 'summary' }))
+    if (sv.body.kind !== 'table') throw new Error('no table')
+    const shown = new Set(leavesOf(sv.body.columns).map((l) => l.id))
+    expect(shown.has('payroll'), '[test setup] the Summary shows payroll').toBe(true)
+    expect(shown.has('tax-on-pay'), '[test setup] and no income tax on pay').toBe(false)
+    for (const n of payCheckNotes(run.meta.stateTaxReading)) expect(sv.footnotes).toContain(n)
+  })
+
   it('a working year with no W gets the "not asked yet" words, never a map', () => {
     const r0 = dip.rows[0]!
     const { spending: _drop, workingYear: _w, ...rest } = r0
@@ -270,7 +429,30 @@ describe('cashFlowsView — Maps as the first folder tab', () => {
     expect(v.csv).toBeNull()
     expect(v.lines[0]).toBe(copy.workbenchSteadyWhat)
     expect(v.stopgaps).toContain(copy.verdictStateUnpricedNote)
-    expect(v.footnotes[0]).toBe(copy.workbenchApproxNote)
+    expect(v.footnotes[0]).toBe(slots.mapsApproxNote(retired!.meta.startCalendarYear))
+    // Maps' wording where the Summary names a table; the Summary keeps its own.
+    expect(v.stopgaps).toContain(copy.mapsKindsMissing)
+    expect(v.stopgaps).not.toContain(copy.workbenchKindsMissing)
+    const summary = cashFlowsView(input({ tab: 'summary' }))
+    expect(summary.stopgaps).toContain(copy.workbenchKindsMissing)
+    expect(summary.footnotes[0]).toBe(copy.workbenchApproxNote)
+    // An aged plan: the first year shown, not "row one".
+    const aged = input({ wallCalendarYear: retired!.meta.startCalendarYear + 2 })
+    expect(cashFlowsView(aged).lines).toContain(slots.mapsAged(retired!.meta.startCalendarYear))
+    expect(cashFlowsView({ ...aged, tab: 'summary' }).lines).toContain(slots.workbenchAged(retired!.meta.startCalendarYear))
+  })
+
+  it('the Summary’s source key rides Maps: what each savings source holds, for the same run and future', () => {
+    const v = cashFlowsView(input())
+    expect(v.sourceKey.length).toBeGreaterThan(0)
+    expect(v.sourceKey).toEqual(cashFlowsView(input({ tab: 'summary' })).sourceKey)
+  })
+
+  it('a working run’s stop line names these figures, never a table', () => {
+    const dip = seedRuns(['dip']).find((r) => r.view === 'steady')!
+    expect(dip.meta.stopYear, '[test setup] dip stops in a year').toBeDefined()
+    const v = cashFlowsView(input({ plan: { kind: 'ready', rows: dip.rows, meta: dip.meta, updating: false, answerKey: 'k' } }))
+    expect(v.lines).toContain(dip.meta.route === 'dated' ? slots.mapsStopsIn(dip.meta.stopYear!) : slots.mapsNoDate(dip.meta.stopYear!))
   })
 
   it('offers no "Your plan beside the what-if" (one map draws one run); a held pair reads your plan', () => {
@@ -286,6 +468,6 @@ describe('cashFlowsView — Maps as the first folder tab', () => {
     expect(cashFlowsView(input({ plan: { kind: 'withheld', words: copy.workbenchWithheldNoRun } })).body).toEqual({ kind: 'state', tone: 'status', words: copy.workbenchWithheldNoRun })
     const busy = cashFlowsView(input({ plan: { kind: 'ready', rows: retired!.rows, meta: retired!.meta, updating: true, answerKey: 'k' } }))
     expect(busy.body).toMatchObject({ kind: 'maps', busy: true })
-    expect(busy.updating).toBe(copy.workbenchTableUpdating)
+    expect(busy.updating).toBe(copy.mapsUpdating)
   })
 })

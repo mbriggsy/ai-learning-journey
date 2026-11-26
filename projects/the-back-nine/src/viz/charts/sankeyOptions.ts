@@ -9,10 +9,10 @@
  * so a node is never named by its colour alone (back-nine-design's colour law); its colour and tint come from
  * `chartTheme.css` through the class the composer's group names (`b9-map-<group>`), never a hex here.
  *
- * SMALL NODES. A bar is as tall as its share of the year's money, but never shorter than `minNodePx` (Highcharts'
- * `minLinkWidth`): a part worth a few hundred dollars would otherwise be a hairline whose name, centred on it, prints
- * over its neighbours'. That floor stretches the smallest bars past their share (the picture's one distortion); the
- * printed amounts carry the truth, and every bar at its share is at least that tall on a year's map at his window.
+ * TO SCALE. Every bar is as tall as its share of the year's money, so a parent is never shorter than its parts. A
+ * part worth a few hundred dollars keeps a hairline (`minNodePx`, Highcharts' `minLinkWidth`, 1 px) so it stays seen;
+ * the space between two bars (`SANKEY_NODE_PADDING`) is a label box's height, so two neighbours' names never meet even
+ * when their bars are thin (the RC20 review's fix: a label-tall floor drew parents shorter than their parts).
  *
  * Printed values are never deferred (`defer: false` at the series level, insight 169) and nothing fades on hover (the
  * shared default's inactive state is off, and this series' own is off too). The component builds a fresh chart for each
@@ -46,15 +46,15 @@ export interface SankeyInput {
   readonly links: readonly SankeyLinkInput[]
   readonly words: ChartWords
   readonly height: number
-  /** The shortest a bar is drawn, in CSS px (a label's line, so two neighbours' names never print over each other). */
+  /** The shortest a bar is drawn, in CSS px: a hairline, so a tiny flow stays seen (the padding keeps names apart). */
   readonly minNodePx: number
 }
 
 /** A node's bar width in CSS px (RightCapital's thin bars) and the gap between a bar and its name. */
 export const SANKEY_NODE_WIDTH = 6
 export const SANKEY_LABEL_GAP = 6
-/** The space between two bars in one column. */
-export const SANKEY_NODE_PADDING = 10
+/** The space between two bars in one column: a label box is about 17 px, so neighbouring names never meet. */
+export const SANKEY_NODE_PADDING = 20
 export const SANKEY_CLASS = 'b9-sankey'
 
 /** A node's label beside its bar: right of it in the first two columns (the page's edge is on the left, and the total's
@@ -129,7 +129,8 @@ export function sankeyOptions(input: SankeyInput): Options {
     },
   }
   return {
-    chart: { type: 'sankey', height: input.height, spacing: [8, 4, 20, 4] },
+    // The top and bottom spacing keep a thin bar's centred name clear of the container's top and of the credit.
+    chart: { type: 'sankey', height: input.height, spacing: [10, 4, 28, 4] },
     title: { text: undefined },
     lang: spoken.lang,
     accessibility: {

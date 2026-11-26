@@ -638,8 +638,14 @@
   .b9-sankey .highcharts-link.b9-map-gap {
     fill: var(--color-stone-500);
   }
+  /* The name reads bolder than its amount (RightCapital's "**Name**: ~$amount"): the label's text regular, its `<b>`
+     (Highcharts' `highcharts-strong` tspan in styled mode) semibold. */
   .b9-sankey .highcharts-data-label text {
     font-size: var(--text-label);
+    font-weight: 400;
     fill: var(--color-stone-900);
+  }
+  .b9-sankey .highcharts-data-label .highcharts-strong {
+    font-weight: 600;
   }
 }

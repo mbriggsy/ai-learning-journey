@@ -160,14 +160,14 @@ export function CashFlows({ view, headingRef, intro, caveat, onTab, onDrill, onA
         <h2 ref={titleRef} id={titleId} tabIndex={-1} className="sr-only">
           {copy.cashFlowsTabMaps}
         </h2>
-        {/* The flow or the tiles; a phone always shows the tiles (`Maps.tsx`), so the select is a wider window's. */}
+        {/* The flow or the tiles; below the laptop tier the tiles always show (`Maps.tsx`), so the select is a laptop's. */}
         <Select
           label={view.mapsSelect.label}
           hideLabel
           items={view.mapsSelect.items}
           value={view.mapsSelect.value}
           onValueChange={onMapView}
-          className="hidden w-44 wide:flex"
+          className="hidden w-44 laptop:flex"
         />
       </div>
     ) : view.accountsSelect !== null ? (
@@ -311,7 +311,7 @@ export function CashFlows({ view, headingRef, intro, caveat, onTab, onDrill, onA
           {view.sourceKey.length > 0 ? (
             <section className="flex flex-col gap-1" aria-labelledby={`${titleId}-key`} data-cash-flows-key="">
               <h3 id={`${titleId}-key`} className="text-label font-semibold text-stone-900">
-                {copy.workbenchSourcesHeading}
+                {view.tabs.value === 'maps' ? copy.mapsSourcesHeading : copy.workbenchSourcesHeading}
               </h3>
               <ul className="flex flex-col gap-1 text-label text-stone-600">
                 {view.sourceKey.map((e) => (

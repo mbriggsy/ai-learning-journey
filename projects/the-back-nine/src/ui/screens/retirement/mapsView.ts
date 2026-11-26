@@ -8,8 +8,8 @@
  * ONE SOURCE OF TRUTH. Every leaf is ONE field of the year's row, printed through the Summary's own figure rule
  * (`tableFigure`, the same grain, the same "~", year 0's entered pay, other income and spending exact), under the same id
  * as the Summary's column (or drill column) that prints it, so a year's map and its table row can never disagree
- * (`mapsView.test.ts` pins every leaf against `cashFlowsView`'s cell). A group, a total and the gap are sums of the
- * printed leaves beside them, so a reader can add them up.
+ * (`mapsView.test.ts` pins every leaf against `cashFlowsView`'s cell). A group and a total are sums of the printed
+ * leaves beside them, and the gap the difference between the two printed sides, so a reader can add them up.
  *
  * THE BALANCE, as the engine's own cash assembly gives it (`simulate.ts`'s `yearCash` and `ledgerYearRow`,
  * `taxOverlay.ts`'s gross-up):
@@ -25,16 +25,17 @@
  *    `contribution` there misses by exactly the match); the employer note says where the whole deposit shows;
  *  - moves inside savings: a Roth conversion (pre-tax to Roth) and a required withdrawal's move to taxable are neither
  *    in nor out; each is said in words, and the income tax they add is on the map.
- * Where the two sides still differ by more than the grain, the difference is drawn as its own labelled node on the short
- * side ("Not explained by the year's figures") with a note, never absorbed into another figure.
+ * Where the two sides still differ by more than the grain, or the printed sides differ by more than a dollar of
+ * flooring per part (a negative part, an ACA year's income tax below zero, prints unsigned), the difference is drawn as
+ * its own labelled node on the short side ("Not explained by the year's figures") with a note, never absorbed into
+ * another figure and never called rounding.
  *
  * THE YEARS WITH NO MAP. The year the money runs out (`ranOut`) records what it asked for, not what was paid, and its
  * unmet need has no field: it gets words, never a map that balances on money nobody had (insights 175, 176), and every
  * other year of that run says the money runs out, and when. A working year with no W (`spending` absent, insight 178)
  * cannot say where its pay goes: it gets the "not asked yet" words.
  *
- * Read-only: Maps writes nothing, so its view carries no action of any kind (`readOnly` is taken, as every composer
- * takes it, and changes nothing; the test proves no write).
+ * Read-only: Maps has no action to withhold (`readOnly` is taken, as every composer takes it, and changes nothing).
  */
 import type { LedgerYearRow } from '@shared/model'
 import { ROUGH_WINDOW_YEARS } from '@engine/reference/roughSequence'
@@ -65,7 +66,8 @@ export interface MapNode {
 export interface MapLink {
   readonly from: string
   readonly to: string
-  /** The printed dollars of the node it feeds (the flow's width). */
+  /** The printed dollars of the node whose figure the flow carries (the flow's width): its source for a flow into
+   *  Total inflows, its target for every other flow. */
   readonly weight: number
   /** The group of the node the flow runs to: its tint. */
   readonly group: MapGroup
@@ -115,9 +117,10 @@ export interface ScrubberYear {
   /** "61/61", "–" for a person no longer alive. */
   readonly ages: string
   readonly working: boolean
-  readonly ranOut: boolean
-  /** The year as the slider speaks it (and the readout prints it). */
+  /** The year as the readout prints it: "2048, age –/87: work has stopped". */
   readonly text: string
+  /** The year as the slider speaks it, each person named: "2048: Sam is 87, on their own; work has stopped." */
+  readonly spoken: string
 }
 
 export interface MapsScrubber {
@@ -144,9 +147,7 @@ export interface MapsView {
   readonly yearNotes: readonly string[]
   /** Where the money runs out in this run: said on every year's map. */
   readonly runsOut: string | null
-  /** The chosen year (the slot's clamp of the asked one, or the first year). */
-  readonly t: number
-  /** Said on a phone, where the map always shows as tiles. */
+  /** Said below the laptop tier, where the map always shows as tiles. */
   readonly phoneNote: string
 }
 
@@ -246,6 +247,7 @@ const grouped = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 })
 const textOf = (dollars: number, approx: boolean): string => `${approx ? '~' : ''}$${grouped.format(dollars)}`
 
 const agesOf = (meta: TableMeta, r: LedgerYearRow): string => meta.people.map((p, i) => (r.alive[i] === true ? String(p.currentAge + r.t) : GONE)).join('/')
+const peopleOf = (meta: TableMeta, r: LedgerYearRow) => meta.people.map((p, i) => ({ mid: p.mid, you: p.you, age: r.alive[i] === true ? p.currentAge + r.t : null }))
 
 /** A year the run holds to pay: someone is paid, or the pay check rides. */
 const isWorking = (r: LedgerYearRow): boolean => r.workingYear !== undefined || r.payByPerson.some((p) => p > 0)
@@ -294,7 +296,8 @@ export function mapsView(input: MapsInput): MapsView {
   const years: ScrubberYear[] = rows.map((r) => {
     const year = meta.startCalendarYear + r.t
     const ages = agesOf(meta, r)
-    return { t: r.t, year, ages, working: isWorking(r), ranOut: r.ranOut, text: slots.mapsYear(year, ages, !working ? 'plain' : isWorking(r) ? 'working' : 'retired') }
+    const kind = !working ? 'plain' : isWorking(r) ? 'working' : 'retired'
+    return { t: r.t, year, ages, working: isWorking(r), text: slots.mapsYear(year, ages, kind), spoken: slots.mapsYearSpoken(year, peopleOf(meta, r), kind) }
   })
   const asked = input.t ?? rows[0]?.t ?? 0
   // The asked year, clamped to this run's years (a run that ends sooner than the last one shown keeps its last year).
@@ -313,7 +316,7 @@ export function mapsView(input: MapsInput): MapsView {
   }
   const r = rows[index]
   const chosen = years[index]
-  const base = { viewSelect, scrubber, heading: chosen?.text ?? '', runsOut, t: r?.t ?? asked, phoneNote: copy.mapsPhoneTiles }
+  const base = { viewSelect, scrubber, heading: chosen?.text ?? '', runsOut, phoneNote: copy.mapsPhoneTiles }
   if (r === undefined || chosen === undefined) {
     return { ...base, body: { kind: 'words', tone: 'status', words: copy.workbenchTableLoading }, notes: [], yearNotes: [] }
   }
@@ -324,7 +327,8 @@ export function mapsView(input: MapsInput): MapsView {
     ...rowNotesAt(meta, rows, index).map((n) => slots.cashFlowsYearNote(chosen.year, n)),
   ]
   const words = (tone: 'status' | 'alert', text: string): MapsView => ({ ...base, body: { kind: 'words', tone, words: text }, notes: [], yearNotes })
-  if (r.ranOut) return words('alert', slots.mapsRanOut(chosen.year))
+  // Calm words (a status, never an alert): the run's own lines already say when the money runs out.
+  if (r.ranOut) return words('status', slots.mapsRanOut(chosen.year))
   if (r.spending === undefined) return words('status', copy.mapsWorkingCostUnasked)
 
   const ins = printed(inSpecs(meta), r)
@@ -335,9 +339,13 @@ export function mapsView(input: MapsInput): MapsView {
   const approxIn = ins.some((p) => p.figure.approx)
   const approxOut = outs.some((p) => p.figure.approx)
   const gapExact = exact(ins) - exact(outs)
-  const gapDollars = Math.abs(sum(ins) - sum(outs))
-  const gap = Math.abs(gapExact) >= MAP_GAP_MIN && gapDollars > 0
-  const gapSide: 'in' | 'out' | null = !gap ? null : gapExact > 0 ? 'out' : 'in'
+  const gapPrinted = sum(ins) - sum(outs)
+  const gapDollars = Math.abs(gapPrinted)
+  // Flooring each part to the dollar moves the printed sides apart by at most a dollar a part; past that the printed
+  // figures don't add up (a negative part prints unsigned, so a year that balances on the signed fields can still miss
+  // by twice it), and the difference is drawn and said, never called rounding.
+  const gap = (Math.abs(gapExact) >= MAP_GAP_MIN || gapDollars > ins.length + outs.length) && gapDollars > 0
+  const gapSide: 'in' | 'out' | null = !gap ? null : gapPrinted > 0 ? 'out' : 'in'
   const gapNode: Omit<MapNode, 'spoken'> | null =
     gapSide === null ? null : { id: GAP_ID, name: copy.mapsGap, dollars: gapDollars, text: textOf(gapDollars, true), column: gapSide === 'in' ? 0 : 2, group: 'gap', value: null }
   const totalInDollars = sum(ins) + (gapSide === 'in' ? gapDollars : 0)
@@ -385,8 +393,9 @@ export function mapsView(input: MapsInput): MapsView {
 
   const shows = (id: string) => outs.some((p) => p.spec.id === id)
   const notes = [
-    copy.workbenchApproxNote,
-    ...(shows('tax-on-pay') ? payCheckNotes(meta.stateTaxReading) : []),
+    slots.mapsApproxNote(meta.startCalendarYear),
+    // The pay check's notes ride either of its two taxes (a year can owe payroll tax and no income tax on pay).
+    ...(shows('tax-on-pay') || shows('payroll') ? payCheckNotes(meta.stateTaxReading, 'map') : []),
     ...(shows('into-savings') ? [copy.mapsEmployerNote] : []),
     ...(shows('medicare') && tableFigure(r.premiums.irmaaSurcharge, { sign: '', entered: false, t: r.t }) !== null
       ? [slots.mapsIrmaa(formatTableDollars(r.premiums.medicare), formatTableDollars(r.premiums.irmaaSurcharge))]
@@ -403,8 +412,11 @@ export function mapsView(input: MapsInput): MapsView {
       kind: 'map',
       nodes: named,
       links: links.map((l): MapLink => {
+        const from = byId.get(l.from)
         const to = byId.get(l.to)
-        return { ...l, spoken: slots.mapsLinkWords(byId.get(l.from)?.name ?? '', to?.name ?? '', to?.text ?? '') }
+        // A flow speaks the figure it carries: a part of the money in for a flow into the total, else the node it feeds.
+        const carried = l.to === TOTAL_ID ? from : to
+        return { ...l, spoken: slots.mapsLinkWords(from?.name ?? '', to?.name ?? '', carried?.text ?? '') }
       }),
       inTiles: [...tilesOf(IN_GROUPS, ins), ...gapTile('in')],
       outTiles: [...tilesOf(OUT_GROUPS, outs), ...gapTile('out')],

@@ -900,10 +900,10 @@ for (const size of SIZES) {
         const view = size.phone ? 'tiles' : 'flow'
         await shot(page, findings, `maps-${view}`, seed, size.tag)
         await page.screenshot({ path: `${OUT}/maps-${view}-${seed}-${size.tag}-full.png`, fullPage: true })
-        await mapsYearKeys(page, 'ArrowRight', 3)
-        await shot(page, findings, `maps-${view}-year4`, seed, size.tag)
+        await mapsYearKeys(page, 'ArrowRight', 4)
+        await shot(page, findings, `maps-${view}-index4`, seed, size.tag)
         if ((await page.locator('[data-maps-stop]').count()) > 0) {
-          await mapsYearKeys(page, 'ArrowRight', 6)
+          await mapsYearKeys(page, 'ArrowRight', 5)
           await shot(page, findings, `maps-${view}-retired-year`, seed, size.tag)
         }
         await mapsYearKeys(page, 'Home')
@@ -930,6 +930,50 @@ for (const size of SIZES) {
     }
   })
 }
+
+// The RC20 review's two extra looks: the widest spread of one year's figures (`datesavedtypedpension` six years in, its
+// bars drawn to scale) at his window, and the tiles between the phone and the laptop tier (900 px wide, `dip`).
+test.describe(`${UNIT} look, Cash Flows Maps, the widest spread at 1440x731`, () => {
+  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR, reducedMotion: 'reduce' })
+  test('?seed=datesavedtypedpension: Maps six years in, at his window', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 240_000)
+    await enterShell(page, 'datesavedtypedpension')
+    const findings: Record<string, Audit> = {}
+    await showScreen(page, screenById('cash-flows'), false)
+    await tableLanded(page)
+    await page.getByRole('tab', { name: copy.cashFlowsTabMaps }).click()
+    await mapsShown(page)
+    await mapsYearKeys(page, 'ArrowRight', 5)
+    await shot(page, findings, 'maps-flow-index5', 'datesavedtypedpension', '1440x731')
+    // Its stale banner stands over the page, so the map itself gets its own shot.
+    await page.locator('[data-maps]').screenshot({ path: `${OUT}/maps-flow-index5-datesavedtypedpension-1440x731-map.png` })
+    console.log(`[rc-look ${UNIT} maps datesavedtypedpension] ${JSON.stringify(findings)}`)
+    for (const [id, a] of Object.entries(findings)) {
+      expect.soft(a.clipped, `${id}: clipped text`).toEqual([])
+      expect.soft(a.overlaps, `${id}: overlapping controls`).toEqual([])
+    }
+  })
+})
+test.describe(`${UNIT} look, Cash Flows Maps, the tiles at 900x800`, () => {
+  test.use({ viewport: { width: 900, height: 800 }, deviceScaleFactor: 2, reducedMotion: 'reduce' })
+  test('?seed=dip: Maps at 900 px, the tiles', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 240_000)
+    await enterShell(page, 'dip')
+    const findings: Record<string, Audit> = {}
+    await showScreen(page, screenById('cash-flows'), false)
+    await tableLanded(page)
+    await page.getByRole('tab', { name: copy.cashFlowsTabMaps }).click()
+    await mapsShown(page)
+    await shot(page, findings, 'maps-tiles', 'dip', '900x800')
+    await page.screenshot({ path: `${OUT}/maps-tiles-dip-900x800-full.png`, fullPage: true })
+    console.log(`[rc-look ${UNIT} maps dip 900] ${JSON.stringify(findings)}`)
+    for (const [id, a] of Object.entries(findings)) {
+      expect.soft(a.sideways, `${id}: sideways scroll`).toBeLessThanOrEqual(0)
+      expect.soft(a.clipped, `${id}: clipped text`).toEqual([])
+      expect.soft(a.overlaps, `${id}: overlapping controls`).toEqual([])
+    }
+  })
+})
 
 // RC7: Retirement → Analysis → Confidence, on a retired and a working household and the aged spine (`?vault=stale`): the
 // tab, the legend with both ranges hidden (the axis zoomed to the median), and the run-out chart (scrolled to on the

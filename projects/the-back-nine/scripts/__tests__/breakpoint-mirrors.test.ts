@@ -67,6 +67,8 @@ const CSS_INITIAL_FONT_PX = 16
 const REQUIRED_MIRROR_FILES = [
   // The shell's compact variant (`@custom-variant compact`): the 1440 by 731 frame's tighter rhythm sits on the seam.
   'src/ui/styles/theme.css',
+  // `useLaptop`'s query (Act 6 · RC20's review): Cash Flows → Maps draws its flow only at the seam, its tiles below.
+  'src/ui/kit/useLaptop.ts',
   // `app.css` left this list at RC19 with the old `.disclaimer` footer (`Disclaimer.tsx`, its last reader); the R13
   // line is the kit's `Caveat` in each page's footnote row now, laid out by the shell's own rules.
   // `budget.css` and `sheetShell.css` left this list at RC14 with the walk (the budget builder, their last importer); the

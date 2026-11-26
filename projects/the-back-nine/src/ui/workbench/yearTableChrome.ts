@@ -385,9 +385,16 @@ const PAY_CHECK_NOTES: Readonly<Record<WorkingYearStateTaxReading, readonly Copy
 }
 
 /** The pay check's notes for a run's state reading: every table that shows the pay check's income tax carries them
- *  (the year table's, and Cash Flows' one-run and paired forms). */
-export function payCheckNotes(reading: WorkingYearStateTaxReading): string[] {
-  return PAY_CHECK_NOTES[reading].map((k) => copy[k])
+ *  (the year table's, and Cash Flows' one-run and paired forms); Maps (`'map'`) names the Income tax figure, not a
+ *  column. */
+export function payCheckNotes(reading: WorkingYearStateTaxReading, where: 'table' | 'map' = 'table'): string[] {
+  return PAY_CHECK_NOTES[reading].map((k) => copy[where === 'map' ? (MAP_PAY_CHECK_NOTE[k] ?? k) : k])
+}
+
+/** Maps' wording of the two notes that name "the income tax column". */
+const MAP_PAY_CHECK_NOTE: Partial<Record<CopyKey, CopyKey>> = {
+  workbenchPayCheckNoteFederal: 'mapsPayCheckNoteFederal',
+  workbenchPayCheckNoteFederalState: 'mapsPayCheckNoteFederalState',
 }
 
 /** The table for one future's rows. */

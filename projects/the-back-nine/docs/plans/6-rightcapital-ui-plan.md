@@ -2111,11 +2111,18 @@ module under the real header. Local look.
 - **A ran-out year** has no map: its row holds what the year asked for, not what was paid, so it gets words and "Runs
   out" under the scrubber's last year.
 - **Smaller calls:** Maps is first in the tab order while the Summary stays the default tab; Maps lists only single
-  runs (one map draws one run; a held pair shows your plan there); the first year is the default; the phone always
-  shows the Breakdown tiles, said in one line (a 358 px flow cannot print its names); bars are at least one label line
-  tall (`minLinkWidth`, the printed amounts carry the truth); a one-part group draws as that part; no download (no
-  table); the views are "Flow" and "Breakdown" (RightCapital's "Waterfall" names another chart type); retirement years
-  solid from a "Work stops" tick, working years dashed. *(the pilot's call, 2026-11-26, b9-7)*
+  runs (one map draws one run; a held pair shows your plan there); the first year is the default; a one-part group
+  draws as that part; no download (no table); the views are "Flow" and "Breakdown" (RightCapital's "Waterfall" names
+  another chart type); retirement years solid from a "Work stops" tick, working years dashed. *(the pilot's call,
+  2026-11-26, b9-7)*
+- **The review's fixes.** Bars are drawn to scale with a 1 px hairline floor (`minLinkWidth`), and label-height padding
+  between bars keeps neighbouring labels apart: the old label-tall floor drew parents shorter than their parts and a
+  $150,000 pay as tall as a $407 draw; an e2e proportion guard holds every bar to one scale. The flow shows only at the
+  laptop tier (68rem); below it the Breakdown tiles show with no view select, said in one line (the flow's labels met at
+  820 and 900 px). The slider's value text names each person with their age ("2048: Sam is 87, on their own; work has
+  stopped."), never "age –/87"; the readout keeps both ages. Maps' notes and lines name "these figures" and "the first
+  year shown", never a table, row or column, and the Summary's source key rides under the map. *(the pilot's call,
+  2026-11-26, b9-7: review fix)*
 
 ### RC21: Clean-up and the act's close
 

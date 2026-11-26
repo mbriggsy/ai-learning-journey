@@ -187,6 +187,21 @@ describe('read-only and Delete', () => {
   })
 })
 
+describe('a birth year moved (milestone 3’s review, round 2): the drawer names what it would shift, and never blocks Save', () => {
+  it('Sam born 1960, not 1961: the claim year’s move named in the notice; Save writes the birth year and keeps the claim age', () => {
+    const { model, recompute } = profileStore(DEV_SEEDS.retired)
+    render(<Host model={model} screen="profile-family" />)
+    fireEvent.click(card('person-1'))
+    const dialog = screen.getByRole('dialog', { name: 'Sam' })
+    expect(within(dialog).queryByRole('status')).toBeNull()
+    type(within(dialog).getByLabelText(copy.birthYearLabel), '1960')
+    expect(within(dialog).getByRole('status')).toHaveTextContent(slots.profileMoveClaimYear('Sam’s Social Security', 2027, 2028, 67))
+    fireEvent.click(within(dialog).getByRole('button', { name: copy.profileDrawerSave }))
+    expect(model.getSnapshot().draft.people[1]).toMatchObject({ birthYear: 1960, currentAge: 66, socialSecurityClaimAge: 67 })
+    expect(recompute).toHaveBeenCalledTimes(1)
+  })
+})
+
 describe('the widow’s number (R40), on the Income card that shows the stream', () => {
   it('a pension with a survivor share reads as what the other one keeps, in words, never a raw share (Act 6 · RC14 gave it this home)', () => {
     const start = {

@@ -19,16 +19,18 @@ export interface StaleBannerStackProps {
   readonly onOpenSeat: (seat: AssumptionLandingSeat) => void
   /** The guided re-walk (the aged line's door); absent: no door. */
   readonly onReconfirm?: () => void
+  /** Drawn inside a page's panel (Blueprint's, below its folder tabs): the panel's own gutters, none of the page's. */
+  readonly inPanel?: boolean
 }
 
 /** The standing line's door: the kit's secondary button (exported so the ported tests pin the markup they read). */
 export const STANDING_DOOR_CLASSES = buttonClasses('secondary', 'sm', 'band-premise__cta ml-1 align-baseline')
 const DOOR = STANDING_DOOR_CLASSES
 
-export function StaleBannerStack({ lines, onOpenSeat, onReconfirm }: StaleBannerStackProps) {
+export function StaleBannerStack({ lines, onOpenSeat, onReconfirm, inPanel = false }: StaleBannerStackProps) {
   if (lines.length === 0) return null
   return (
-    <div className="rc-root mx-auto flex w-full max-w-[90rem] flex-col gap-2 px-4 pt-4 wide:px-10" data-stale-banner="">
+    <div className={inPanel ? 'rc-root flex w-full flex-col gap-2' : 'rc-root mx-auto flex w-full max-w-[90rem] flex-col gap-2 px-4 pt-4 wide:px-10'} data-stale-banner="">
       {lines.map((line) => {
         if (line.kind === 'standing') {
           const door =

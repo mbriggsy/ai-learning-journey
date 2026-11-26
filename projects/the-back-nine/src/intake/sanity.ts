@@ -675,3 +675,18 @@ export function validateField(
 ): readonly SanityViolation[] {
   return RULES.flatMap((rule) => rule.check(draft, touched, provenance)).filter((v) => v.field === field)
 }
+
+/** The period probe's touched set: ONLY the spend-period gate's target, so `validateDraft`'s touched-filter admits exactly
+ *  that rule's violation. */
+export const PERIOD_PROBE_TOUCHED: ReadonlySet<FieldPath> = new Set(['annualSpendingReal'])
+
+/** Would the spend-period force-confirm fire on this draft in a session with no touches and no provenance? Asked through
+ *  the rule's OWN predicate (`spend-period-unconfirmed`), never a re-typed copy of its ambiguity math. A draft that trips
+ *  it can only have reached the plan past an explicit period answer (every road to it, the walk, the stepper and the
+ *  Living drawer, gates on this rule), so it is that answer's receipt; a draft that does not trip it (a figure under the
+ *  floor in its shown unit was never asked) proves nothing. The completed-intake disarm (`IntakeApp.tsx`) and the Living
+ *  drawer's receipt (`ExpensesDrawers.tsx`, milestone 3's review, round 2) both read it; each adds its own budget
+ *  clause (a governing budget asks no unit). */
+export function periodGateTrips(draft: ScenarioDraft): boolean {
+  return validateDraft(draft, PERIOD_PROBE_TOUCHED, {}).some((v) => v.rule === 'spend-period-unconfirmed')
+}

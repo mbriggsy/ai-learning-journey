@@ -1,7 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { budgetGoverns } from '@budget/budgetModel'
 import { isDateRoute } from '@intake/intakeMap'
-import { validateDraft, type FieldPath } from '@intake/sanity'
+import { periodGateTrips } from '@intake/sanity'
 import { subscribeUnsavedBuffers, unsavedBuffersHeld } from '@intake/unsavedBuffer'
 import { isWorkingYearCostStale } from '@intake/workingYearQuote'
 import { withKeptWhatIfs } from '@intake/whatIf'
@@ -55,13 +55,6 @@ const SaveFlow = lazy(() => import('./SaveFlow').then((m) => ({ default: m.SaveF
 // The re-offer backup step (U8-tail) rides its own lazy chunk too (it pulls the export/crypto
 // graph via ExportConfirm); it only mounts from the result's backup door.
 const BackupStep = lazy(() => import('./BackupStep').then((m) => ({ default: m.BackupStep })))
-
-/** The completed-intake period probe (the F10 narrow disarm below): a synthetic touched set
- *  holding ONLY the spend-period gate's target, so `validateDraft`'s touched-filter admits
- *  exactly that rule's violation — "would the force-confirm fire on this draft in a session
- *  with no touches and no provenance?" asked through the rule's OWN predicate (sanity.ts
- *  `spend-period-unconfirmed`), never a re-typed copy of its ambiguity math. */
-const PERIOD_PROBE_TOUCHED: ReadonlySet<FieldPath> = new Set(['annualSpendingReal'])
 
 /** The shell's history entries (Act 6 · RC2; KTD31's history, one entry per page): a bare marker and the entry's place
  *  in this visit to the shell (`n`, 1 for the first page), so the wordmark goes straight back to the answer. The
@@ -600,7 +593,7 @@ export default function IntakeApp({
     const done = appModel.getSnapshot().draft
     if (
       !budgetGoverns(done.budget) &&
-      validateDraft(done, PERIOD_PROBE_TOUCHED, {}).some((v) => v.rule === 'spend-period-unconfirmed')
+      periodGateTrips(done) // the completed-intake period probe (sanity.ts; the F10 narrow disarm above)
     ) {
       setPeriodAnswerProven(true)
     }

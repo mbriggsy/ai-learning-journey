@@ -63,6 +63,9 @@ export interface ProfileDrawerProps {
   readonly leaveAsk?: DrawerLeaveAsk
   /** Refusals on no field the drawer shows (another card's fact), each a sentence. */
   readonly errors?: readonly string[]
+  /** Lines that never block Save, in the notice slot while no ask stands (the person drawer's "a birth year moved would
+   *  shift these", milestone 3's review, round 2). */
+  readonly note?: readonly string[]
   /** Save's word where it is not "Save" (the first-run stepper's names drawer: "Start"). */
   readonly saveLabel?: string
   readonly children: ReactNode
@@ -95,7 +98,7 @@ function Ask({ lines, keep, drop }: { readonly lines: readonly string[]; readonl
   )
 }
 
-export function ProfileDrawer({ open, title, icon, readOnly, isDirty, onSave, onDelete, onClose, onClosed, finalFocus, leaveAsk, errors = [], saveLabel = copy.profileDrawerSave, children }: ProfileDrawerProps) {
+export function ProfileDrawer({ open, title, icon, readOnly, isDirty, onSave, onDelete, onClose, onClosed, finalFocus, leaveAsk, errors = [], note = [], saveLabel = copy.profileDrawerSave, children }: ProfileDrawerProps) {
   const bodyRef = useRef<HTMLDivElement>(null)
   const [asking, setAsking] = useState(false)
   const [armed, setArmed] = useState(false)
@@ -140,6 +143,14 @@ export function ProfileDrawer({ open, title, icon, readOnly, isDirty, onSave, on
           },
         }}
       />
+    ) : note.length > 0 ? (
+      <div role="status" className="flex flex-col gap-2" data-profile-drawer-note="">
+        {note.map((l) => (
+          <p key={l} className="text-label text-stone-900">
+            {l}
+          </p>
+        ))}
+      </div>
     ) : null
 
   return (

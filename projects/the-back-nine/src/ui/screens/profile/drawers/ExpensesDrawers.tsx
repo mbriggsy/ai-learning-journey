@@ -21,6 +21,7 @@ import { validateBudgetItems, budgetGoverns, type BudgetItemError } from '@budge
 import { BUDGET_ERROR_COPY, budgetReadout, freshLine, isAmountError } from '@intake/budgetForm'
 import { CATEGORY_LABEL_KEYS, lineDisplayName } from '@intake/budgetLines'
 import { isDateRoute, oopHelpKeyFor, spendHelpKeyFor } from '@intake/intakeMap'
+import { periodGateTrips } from '@intake/sanity'
 import { formatMoney } from '@intake/moneyFormat'
 import { oopExceedsBudgetlessSpend } from '@intake/steps'
 import { OOP_MEDICAL_TYPICAL_HOUSEHOLD } from '@intake/referenceData'
@@ -141,11 +142,13 @@ export function LivingDrawer({ model, open, readOnly, leaveAsk, onClose, onClose
   const setup = useSetupPeriod()
   // A tap on the unit, already-checked month included (the kit's ChoiceGroup reports it): the walk's explicit answer.
   const [unitTapped, setUnitTapped] = useState(false)
-  // THE RECEIPT IS THE PLAN'S SHAPE AT OPEN (milestone 3's review, X2; `drawerSave.ts`'s header): a one-figure amount with
-  // no budget governing it passed the period gate on every road that put it there, so its unit counts as answered. A plan
-  // with no figure, or one a budget governs, holds no such receipt, whatever setup's Complete said: its first one-figure
-  // amount asks for the unit until it is tapped (96,000 under the pre-checked month was $1,152,000 a year, unasked).
-  const figureCleared = seed.approach === 'one' && seed.entered !== undefined
+  // THE RECEIPT IS THE PLAN AT OPEN (milestone 3's review, X2 and round 2; `drawerSave.ts`'s header): a one-figure amount
+  // with no budget governing it whose draft TRIPS the period gate under the bare probe (`periodGateTrips`) can only have
+  // passed that gate, so its unit counts as answered. A figure under the floor in its shown unit was never asked (6,500
+  // under the untapped month saved unasked), a plan with no figure, or one a budget governs, holds no receipt, whatever
+  // setup's Complete said: its next figure past the floor asks for the unit until it is tapped (96,000 under the
+  // pre-checked month was $1,152,000 a year, unasked).
+  const [figureCleared] = useState(() => seed.approach === 'one' && periodGateTrips(draft))
   const periodNow = (approach: LivingApproach): SpendPeriodSetup =>
     setup === null
       ? { periodConfirmed: figureCleared, spendPeriodAnswered: unitTapped || approach === 'budget' }
@@ -189,7 +192,12 @@ export function LivingDrawer({ model, open, readOnly, leaveAsk, onClose, onClose
         items={APPROACH_ITEMS}
         value={form.approach}
         disabled={readOnly}
-        onValueChange={(approach) => set('lines', { approach })}
+        onValueChange={(approach) => {
+          set('lines', { approach })
+          // The amount's refusal belongs to the face that drew it: the worksheet never shows "tap Each month…" (milestone
+          // 3's review, round 2). The next Save checks again.
+          set('amount', {})
+        }}
         {...(seed.approach === 'budget' && form.approach === 'one' ? { description: copy.budgetBackToSingleHint } : {})}
       />
       {form.approach === 'one' ? (

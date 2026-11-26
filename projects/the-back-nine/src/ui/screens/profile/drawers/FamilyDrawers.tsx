@@ -12,7 +12,7 @@ import { copy } from '../../../copy'
 import { tablePerson } from '../../../workbench/tableRun'
 import { ProfileIcon } from '../profileIcons'
 import { stateLabel } from '../profileView'
-import { buildPerson, buildState, ownNothing, ownPersonField, personFormFrom, stateFormFrom, type PersonField, type PersonForm, type StateForm } from './familyFields'
+import { birthYearMoves, buildPerson, buildState, ownNothing, ownPersonField, personFormFrom, stateFormFrom, type PersonField, type PersonForm, type StateForm } from './familyFields'
 import { openCheck, saveEdit } from './drawerSave'
 import type { DrawerBodyProps } from './drawerProps'
 import { Fact } from './Fact'
@@ -55,6 +55,7 @@ export function PersonDrawer({ index, model, open, readOnly, leaveAsk, onClose, 
       finalFocus={finalFocus}
       {...(leaveAsk !== undefined ? { leaveAsk } : {})}
       errors={check.elsewhere}
+      note={readOnly ? [] : birthYearMoves(model.getSnapshot().draft, index, seed, form)}
     >
       <DrawerFields>
         <Fact stamp="person.name">

@@ -226,7 +226,7 @@ function needUnitFraction(o: Obj, field: string, path: string): void {
 function needColaRate(o: Obj, field: string, path: string): void {
   needFinite(o, field, path)
   const n = o[field] as number
-  // Reuse the ONE shared predicate the two intake gates use (sanity.ts:578, incomeForm.ts:121)
+  // Reuse the ONE shared predicate the two intake gates use (sanity.ts:578, incomeForm.ts:124)
   // so all THREE gates run byte-identical range logic — the band's inclusivity can never silently
   // desync via a hand-copied comparison (insight 020). needFinite ran first (colaRateInRange assumes a
   // finite caller — a NaN passes every relational compare, insights 008/010).

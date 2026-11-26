@@ -318,7 +318,7 @@ describe('Next and Complete run the walk’s Continue', () => {
     const box = document.querySelector('[data-setup-missing]')
     expect(box, '[test setup] the switch leaves facts missing, so the box shows').not.toBeNull()
     expect(box, 'Complete would refuse: no "still opens"').not.toHaveTextContent(copy.setupMissingOpens)
-    expect(box).toHaveTextContent(copy.setupMissingUntil)
+    expect(box, 'nor "until these are in, your plan’s pages…" (milestone 3’s review, round 2)').not.toHaveTextContent(copy.setupMissingUntil)
     act(() => fireEvent.click(screen.getByRole('button', { name: copy.setupComplete })))
     expect(title(), 'Complete refused: back on Expenses').toBe(setupTitle('expenses'))
     await waitFor(() => expect(screen.getByRole('dialog', { name: copy.profileWorkingCostName })).toBeInTheDocument())
@@ -390,14 +390,28 @@ describe('the spending period in setup (the walk’s force-confirm, kept)', () =
     expect(model.getSnapshot().draft.annualSpendingReal).toBe(60_000)
   })
 
-  it('the stepper’s provenance (a vault or a dev seed answered it before) asks nothing', async () => {
-    const model = freshModel(DEV_SEEDS.retired)
+  it('the stepper’s provenance (a vault or a dev seed answered it before) asks nothing over a figure the gate would have asked', async () => {
+    // $78,000 shown as a year's figure: past the floor in its unit, so the road that saved it asked its unit.
+    const model = freshModel({ ...DEV_SEEDS.retired, spendEntryPeriod: 'year' })
     mount(model, { periodConfirmed: true })
     for (let i = 0; i < 4; i += 1) next()
     await open('living')
     type(copy.spendLabel, '9,000')
     await save()
-    expect(model.getSnapshot().draft.annualSpendingReal).toBe(model.getSnapshot().draft.spendEntryPeriod === 'month' ? 108_000 : 9_000)
+    expect(model.getSnapshot().draft).toMatchObject({ annualSpendingReal: 9_000, spendEntryPeriod: 'year' })
+  })
+
+  // Milestone 3's review, round 2: a figure under the floor in its shown unit was never asked, so provenance over it
+  // vouches for no unit (`periodGateTrips`).
+  it('provenance over a figure never asked (6,500 under the month): a figure past the floor is asked its unit', async () => {
+    const model = freshModel(DEV_SEEDS.retired)
+    mount(model, { periodConfirmed: true })
+    for (let i = 0; i < 4; i += 1) next()
+    await open('living')
+    type(copy.spendLabel, '9,000')
+    act(() => fireEvent.click(within(dialog()).getByRole('button', { name: copy.profileDrawerSave })))
+    expect(within(dialog()).getByRole('alert')).toHaveTextContent(copy.periodConfirmPrompt)
+    expect(model.getSnapshot().draft.annualSpendingReal, 'nothing refused reached the plan').toBe(78_000)
   })
 
   it('Next on Expenses over an unanswered ambiguous figure (a draft that came in with it, no provenance) opens Living at the figure', async () => {

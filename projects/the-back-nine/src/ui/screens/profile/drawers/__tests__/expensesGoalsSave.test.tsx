@@ -66,9 +66,10 @@ describe('the budget worksheet', () => {
   })
 })
 
-// Milestone 3's review, X2: after setup the spend period's receipt is the plan's shape at open (a one-figure amount no
-// budget governs), never setup's Complete, which passes with no figure under a governing budget.
-describe('the Living drawer’s 12× check after setup keys on the plan’s shape at open', () => {
+// Milestone 3's review, X2 and round 2: after setup the spend period's receipt is the plan at open (a one-figure amount no
+// budget governs, whose draft trips the period gate: `periodGateTrips`), never setup's Complete, which passes with no
+// figure under a governing budget.
+describe('the Living drawer’s 12× check after setup keys on the plan at open', () => {
   function openLiving(start: ScenarioDraft) {
     const store = profileStore(start)
     render(<DrawerFor target={{ kind: 'living' }} model={store.model} open readOnly={false} onClose={() => {}} onClosed={() => {}} finalFocus={() => null} />)
@@ -122,16 +123,42 @@ describe('the Living drawer’s 12× check after setup keys on the plan’s shap
     expect(model.getSnapshot().draft).toBe(zero)
   })
 
-  it('(c) a plan opened WITH a one-figure amount saves an edit with no ask (its unit was answered on the road in)', () => {
-    const start = DEV_SEEDS.retired
-    expect(start.annualSpendingReal, '[test setup] a one-figure amount').toBeDefined()
+  it('(c) a plan opened with a one-figure amount the period gate would ask about saves an edit with no ask (its unit was answered on the road in)', () => {
+    // $78,000 shown as a year's figure: at or past the $8,000 floor in its unit, so every road in asked its unit.
+    const start: ScenarioDraft = { ...DEV_SEEDS.retired, spendEntryPeriod: 'year' }
+    expect(start.annualSpendingReal, '[test setup] a one-figure amount').toBe(78_000)
     expect(start.budget, '[test setup] no budget governs').toBeUndefined()
     const { model, dialog } = openLiving(start)
     typeAmount(dialog, '96,000')
     save(dialog)
     expect(within(dialog).queryByText(copy.periodConfirmPrompt)).toBeNull()
-    const entered = model.getSnapshot().draft
-    expect(entered.spendEntryPeriod === 'month' ? entered.annualSpendingReal! / 12 : entered.annualSpendingReal).toBe(96_000)
+    expect(model.getSnapshot().draft).toMatchObject({ annualSpendingReal: 96_000, spendEntryPeriod: 'year' })
+  })
+
+  // Milestone 3's review, round 2: a figure under the floor in its shown unit was never asked, so it is no receipt.
+  it('(d) 6,500 under the untapped month (never asked): 96,000 is refused under the amount until the unit is tapped', () => {
+    const start = DEV_SEEDS.retired // $78,000 a year shown as 6,500 a month, under the floor
+    expect(start.spendEntryPeriod === 'month' && start.annualSpendingReal! / 12, '[test setup] 6,500 a month').toBe(6_500)
+    const { model, recompute, dialog } = openLiving(start)
+    typeAmount(dialog, '96,000')
+    save(dialog)
+    expect(within(dialog).getByText(copy.periodConfirmPrompt)).toBeInTheDocument()
+    expect(model.getSnapshot().draft).toBe(start)
+    expect(recompute).not.toHaveBeenCalled()
+    act(() => fireEvent.click(within(dialog).getByRole('radio', { name: copy.periodYear })))
+    save(dialog)
+    expect(model.getSnapshot().draft).toMatchObject({ annualSpendingReal: 96_000, spendEntryPeriod: 'year' })
+  })
+
+  // Milestone 3's review, round 2: the amount's refusal belongs to the One figure face.
+  it('the period prompt does not follow a switch to Budget: the worksheet never shows "tap Each month…"', () => {
+    const { dialog } = openLiving(DEV_SEEDS.retired)
+    typeAmount(dialog, '96,000')
+    save(dialog)
+    expect(within(dialog).getByText(copy.periodConfirmPrompt)).toBeInTheDocument()
+    act(() => fireEvent.click(within(dialog).getByRole('radio', { name: copy.profileLivingApproachBudget })))
+    expect(dialog.querySelector('[data-budget-worksheet]')).not.toBeNull()
+    expect(within(dialog).queryByText(copy.periodConfirmPrompt)).toBeNull()
   })
 })
 
@@ -191,6 +218,9 @@ describe('the W face in its drawer (the pay check spec’s laws)', () => {
 
   it('?seed=datecoststale: the calm stale note before any tap, no answer checked, no alert; Keep keeps the figure it names and the answer stands fresh', async () => {
     const { model, dialog } = open(DEV_SEEDS.datecoststale)
+    // The drawer's own first focus (its title, Base UI's deferred initial focus) lands before any press, as on a real
+    // page; pressed before it, the late title focus took over the Keep's and the check below read the title (order-dependent).
+    await waitFor(() => expect(document.activeElement).toBe(within(dialog).getByRole('heading', { name: copy.profileWorkingCostName })))
     const note = dialog.querySelector<HTMLElement>('[data-working-cost-note]')!
     expect(note).toHaveAttribute('role', 'note')
     expect(note).toHaveTextContent(slots.workingCostStaleQuote('84,000', '78,000'))

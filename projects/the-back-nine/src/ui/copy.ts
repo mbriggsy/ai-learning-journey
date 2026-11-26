@@ -2407,7 +2407,11 @@ export const copy = {
     'No money moves from pre-tax savings to Roth. A conversion pays some tax now so less is taxed later: try one in the action items, and apply it there if it helps.',
   settingsRothNoneLineReadOnly:
     'No money moves from pre-tax savings to Roth. A conversion pays some tax now so less is taxed later: try one in the action items.',
-  settingsRothNoneNoPretax: 'No money moves to Roth: a conversion moves pre-tax savings, and the plan holds none.',
+  // No reading yet, so no action items to try one in (milestone 3's review, round 2).
+  settingsRothNoneLineNoTray: 'No money moves from pre-tax savings to Roth. A conversion pays some tax now so less is taxed later.',
+  settingsRothNoneNoPretax: 'No money moves to Roth: a conversion moves pre-tax savings, and the plan holds no pre-tax savings today.',
+  settingsRothPlanNoPretax:
+    'Each year of the conversion, that much would go from pre-tax savings to Roth, but the plan holds no pre-tax savings today, so nothing converts until it holds some.',
   settingsRothPlanLine:
     'Each year of the conversion, that much moves from pre-tax savings to Roth. Tax Assumptions says how its tax is paid.',
   settingsSurvivorRatioDoor: 'Change it in Living expenses',
@@ -5132,7 +5136,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:2300` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:2306` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,
@@ -6001,6 +6005,17 @@ export const slots = {
     payingNow
       ? `Still need ${possessive} birth year, on Family: “paying now” starts at ${possessive} age today.`
       : `Still need ${possessive} birth year, on Family: the year it starts is read as an age from it.`,
+  // What a birth year moved would shift, named in the person drawer before Save (milestone 3's review, round 2): the
+  // typed ages stay, so their calendar years move. `thing` is the card's own name ("Sam’s pension").
+  profileMoveClaimYear: (thing: string, year: number, was: number, age: number): string =>
+    `${thing} would start in ${year} instead of ${was}, still at age ${age}. If ${was} is what you meant, change the year on Income.`,
+  profileMoveStartsLater: (thing: string, year: number): string => `${thing} would start in ${year} instead of paying now.`,
+  profileMovePaysNow: (thing: string, was: number): string => `${thing} would be paying now instead of starting in ${was}.`,
+  profileMoveEnded: (thing: string, endAge: number): string => `${thing} would have ended at age ${endAge} instead of paying now.`,
+  profileMovePaysAgain: (thing: string, endAge: number): string => `${thing} would be paying now, through age ${endAge}, instead of having ended.`,
+  // An unanswered work status, where deposits would be (milestone 3's review, round 2): never read as "stopped".
+  profileWorkUnanswered: (possessive: string): string =>
+    upperFirst(`${possessive} work status isn’t answered yet, and deposits go in only while working. Answer it on Family.`),
   profileSalaryOf: (possessive: string): string => upperFirst(`${possessive} salary`),
   profileSocialSecurityOf: (possessive: string): string => upperFirst(`${possessive} Social Security`),
   profileWorkInvestOf: (possessive: string): string => upperFirst(`${possessive} investment income while working`),

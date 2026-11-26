@@ -78,9 +78,6 @@ export interface BlueprintTile {
   readonly note?: string
   /** The answer's own work-optional date (the crown); its sentence is tied to the R13 caveat. */
   readonly crowned?: boolean
-  /** The tile prints the answer's own sentence (the crowned date, or the no-date words): the page then carries the
-   *  StaleBanner's lines, as every figured page does. */
-  readonly answers?: boolean
   readonly target: DrawerTarget
 }
 
@@ -143,8 +140,9 @@ export interface BlueprintView {
   readonly body: BlueprintBody
   /** Lines under the body (Goals' one-figure spending line). */
   readonly lines: readonly string[]
-  /** A tile on this tab, as drawn (Edit's hidden categories left out), prints the answer's own sentence: the shell
-   *  draws the StaleBanner's lines above the page then (the review's E3; `Shell.tsx`). */
+  /** The Goals tab over the answer's own sentence (the crowned date, or the no-date words), whatever Edit hides: the
+   *  spending tiles read the crowned date even with the stops hidden. The panel draws the StaleBanner's lines then (the
+   *  review's E3; milestone 3's review, round 2; `Shell.tsx`). */
   readonly answerShown: boolean
 }
 
@@ -316,14 +314,13 @@ function goalsBody(d: ScenarioDraft, stop: StopAnchor): { body: BlueprintBody; l
             value: stop.lead ?? copy.profileFindsDate,
             ...(stop.edge === true ? { note: copy.dateWindowEdgeNote } : {}),
             crowned: true,
-            ...(stop.lead !== undefined ? { answers: true } : {}),
           },
           at: { kind: 'year', year: stop.year },
           rank: 0,
         })
       } else {
         placed.push({
-          tile: { ...stopBase, value: stop.lead ?? copy.profileFindsDate, ...(stop.lead !== undefined ? { answers: true } : {}) },
+          tile: { ...stopBase, value: stop.lead ?? copy.profileFindsDate },
           at: { kind: 'after', years: 0 },
           rank: 0,
         })
@@ -436,12 +433,13 @@ function iseBody(d: ScenarioDraft, readOnly: boolean): BlueprintBody {
         label: iseLegend('savings').label,
         // A retired person's accounts take no deposits (the Savings page's own rule): the cell says so. A working person's
         // empty cell is that person's own line (the Savings page's sentence is about the household), with door words
-        // naming this page's Add menu only where it is drawn (a read-only tab has none).
-        cells: perPerson(savings, iseLegend('savings'), (i) =>
-          d.people[i]?.workStatus === 'working'
-            ? slots.bpNoDepositAccount(person(d, i).possessive, readOnly ? null : { menu: copy.blueprintAdd, item: copy.blueprintAddAccount })
-            : copy.blueprintNothingGoesIn,
-        ),
+        // naming this page's Add menu only where it is drawn (a read-only tab has none). An unanswered work status is
+        // never "work has stopped" (milestone 3's review, round 2): the cell says it is still needed, on Family.
+        cells: perPerson(savings, iseLegend('savings'), (i) => {
+          const status = d.people[i]?.workStatus
+          if (status === 'working') return slots.bpNoDepositAccount(person(d, i).possessive, readOnly ? null : { menu: copy.blueprintAdd, item: copy.blueprintAddAccount })
+          return status === 'retired' ? copy.blueprintNothingGoesIn : slots.profileWorkUnanswered(person(d, i).possessive)
+        }),
       },
       {
         id: 'expenses',
@@ -508,6 +506,7 @@ export function blueprintView(input: BlueprintInput): BlueprintView {
   let headline: string
   let notes: string[] = []
   let lines: string[] = []
+  let answerShown = false
   if (tab === 'net-worth') {
     const worth = netWorthView(d, agedBalancesYear, readOnly)
     headline = slots.profileInvestmentTotal(copy.snapshotInvestedTitle, worth.total)
@@ -515,7 +514,9 @@ export function blueprintView(input: BlueprintInput): BlueprintView {
     body = netWorthBody(d)
   } else if (tab === 'goals') {
     headline = copy.shellPageGoals
-    const goals = goalsBody(d, stopAnchor(d, answer, refiguring, anchor, dateRoute))
+    const stop = stopAnchor(d, answer, refiguring, anchor, dateRoute)
+    answerShown = stop.lead !== undefined
+    const goals = goalsBody(d, stop)
     body = goals.body
     lines = goals.lines
   } else {
@@ -543,18 +544,6 @@ export function blueprintView(input: BlueprintInput): BlueprintView {
     add: addFor(tab, d, readOnly, agedBalancesYear),
     body: shown,
     lines,
-    answerShown: bodyTiles(shown).some((t) => t.answers === true),
-  }
-}
-
-/** Every tile a body draws. */
-function bodyTiles(body: BlueprintBody): readonly BlueprintTile[] {
-  switch (body.kind) {
-    case 'net-worth':
-      return body.columns.flatMap((c) => c.tiles)
-    case 'goals':
-      return [...body.groups, ...(body.after?.groups ?? [])].flatMap((g) => g.tiles).concat(body.unplaced?.tiles ?? [])
-    case 'ise':
-      return body.lanes.flatMap((l) => [...(l.cells ?? []).flatMap((c) => c.tiles), ...(l.shared?.tiles ?? [])])
+    answerShown,
   }
 }

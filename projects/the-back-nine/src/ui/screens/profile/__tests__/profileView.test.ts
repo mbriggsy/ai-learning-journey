@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { ACCOUNT_KINDS } from '@shared/model'
+import type { ScenarioDraft } from '@store/memoryModel'
 import { workingYearCostStaleNote } from '@intake/workingYearLeftOver'
 import { workingYearCostStaleness } from '@intake/workingYearQuote'
 import { DEV_SEEDS } from '../../../devSeeds'
@@ -106,6 +107,14 @@ describe('Savings', () => {
     expect(v.cards).toEqual([])
     expect(v.add).toBeNull()
     expect(v.lines).toEqual([copy.profileSavingsNoneWorking])
+  })
+
+  // Milestone 3's review, round 2: "neither of you is working" only where both said retired.
+  it('nobody working and a work status unanswered: the line names whose status is still needed on Family, never "neither of you is working"', () => {
+    const { workStatus: _w, ...sam } = retired.people[1]
+    expect(savingsView({ ...retired, people: [retired.people[0], sam] } as ScenarioDraft, false).lines).toEqual([slots.profileWorkUnanswered('Sam’s')])
+    const { workStatus: _a, ...alex } = retired.people[0]
+    expect(savingsView({ ...retired, people: [alex, sam] } as ScenarioDraft, false).lines).toEqual([slots.profileWorkUnanswered('Alex’s and Sam’s')])
   })
 
   it('read-only: no Add menu', () => {

@@ -1133,8 +1133,9 @@ export default function Shell({
   // ── Settings (RC18): its folder tab held here, so a page move keeps it ──
   const [settingsTab, setSettingsTab] = useState<SettingsTab>('methodology')
   const settingsPage = useMemo(
-    () => (screen === 'settings' ? settingsView({ draft, tab: settingsTab, readOnly, anchor }) : null),
-    [screen, draft, settingsTab, readOnly, anchor],
+    // The tray's doors read the tray's own draft, the committed reading's (`offers` above), or none before one.
+    () => (screen === 'settings' ? settingsView({ draft, tab: settingsTab, readOnly, anchor, trayDraft: committedAnswer?.draft ?? null }) : null),
+    [screen, draft, settingsTab, readOnly, anchor, committedAnswer],
   )
   /** A row's door: its drawer over Settings, the tray at the lever's row on Probability, or Tax Strategies. */
   const onSettingsDoor = (door: SettingsDoor) => {
@@ -1305,15 +1306,17 @@ export default function Shell({
         said={planListSaid}
       />
     ) : null
-  const staleBanner = (
+  const staleBannerFor = (inPanel: boolean) => (
     <StaleBannerStack
       lines={staleLines}
       // The pay check's standing line (W stale, typed below, the left over moved, W unanswered) opens the Pre-retirement
       // living expenses drawer over this page (plan 4.0's disclosure map): both its seats' questions live there.
       onOpenSeat={() => openDrawer({ kind: 'working-cost' }, null)}
       {...(onReview !== undefined && !readOnly ? { onReconfirm: onReview } : {})}
+      inPanel={inPanel}
     />
   )
+  const staleBanner = staleBannerFor(false)
 
   return (
     <>
@@ -1506,7 +1509,7 @@ export default function Shell({
               answer={snapshot.answer}
               refiguring={snapshot.refiguring}
               anchor={anchor}
-              {...(screen === 'profile-blueprint' ? { answerBanner: staleBanner } : {})}
+              {...(screen === 'profile-blueprint' ? { answerBanner: staleBannerFor(true) } : {})}
               {...(shownAsk !== undefined ? { leaveAsk: shownAsk } : {})}
               onDrawerOpen={setProfileDrawerOpen}
             />

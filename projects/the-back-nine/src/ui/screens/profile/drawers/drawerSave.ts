@@ -17,9 +17,11 @@
  *    account's deposits over the catch-up-less limit), and is named in the drawer's own words with the fact's place;
  *    one the draft already held is left to its own card (never a drawer that can't save anything).
  * THE SPENDING PERIOD'S PROVENANCE. The one drawer that writes the spending figure and its unit, Living expenses, always
- * passes a `SpendPeriodSetup` keyed on the plan's SHAPE at open (milestone 3's review, X2): `periodConfirmed` only where
- * the drawer opened over a one-figure amount no budget governs (every road that put such a figure there passed the period
- * gate), and the spend period's disarm only where its unit was answered (a tap on it, a worksheet whose lines are
+ * passes a `SpendPeriodSetup` keyed on the plan AT OPEN (milestone 3's review, X2 and round 2): `periodConfirmed` only where
+ * the drawer opened over a one-figure amount no budget governs whose draft TRIPS the period gate under the bare probe
+ * (`periodGateTrips`, sanity.ts: every road to such a draft passed that gate; a figure under the floor in its shown unit
+ * was never asked, so 6,500 under the untapped month is no receipt for a later 96,000), and the spend period's disarm
+ * only where its unit was answered (a tap on it, a worksheet whose lines are
  * yearly, or, during setup, an earlier Save of it with its unit tapped). Setup's Complete is NOT the receipt: it passes
  * with no spending figure while a budget governs (RC14's budget disarm, `stepperView.ts`), so a household that set up
  * on a budget, or with none, and then typed 96,000 under the pre-checked month saved $1,152,000 a year unasked. The W
@@ -58,8 +60,8 @@ export interface EditCheck<K extends string> {
  *  spend-period rule can neither come in nor clear on their Save: the header). */
 const AFTER_SETUP: SpendPeriodSetup = { periodConfirmed: true, spendPeriodAnswered: true }
 
-/** THE SPEND PERIOD AS THE LIVING EXPENSES DRAWER SEES IT (the header): `periodConfirmed` the plan's shape at open (a
- *  one-figure amount, no budget; during setup ANDed with the stepper's provenance), `spendPeriodAnswered` its unit
+/** THE SPEND PERIOD AS THE LIVING EXPENSES DRAWER SEES IT (the header): `periodConfirmed` the plan at open (a one-figure
+ *  amount, no budget, its draft tripping the period gate; during setup ANDed with the stepper's provenance), `spendPeriodAnswered` its unit
  *  answered (tapped, a yearly worksheet, or an earlier Save during setup). */
 export interface SpendPeriodSetup {
   readonly periodConfirmed: boolean

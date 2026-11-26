@@ -43,14 +43,7 @@ describe('Family', () => {
     const { start, walked } = at('person')
     const seed = personFormFrom(start, 0)
     const drawer = buildPerson(start, 0, seed, { ...seed, name: 'Alexis', birthYear: 1958, sex: 'female' })
-    // ONE DELIBERATE DEPARTURE (milestone 3's review, X4): the walk kept the typed Social Security claim AGE when a known
-    // birth year moved, so the claim YEAR the household typed silently moved with it; the drawer keeps the year (the claim
-    // age shifts by the move). Every other field is the walk's.
-    const p = start.people[0]
-    expect(p.birthYear !== undefined && p.socialSecurityClaimAge !== undefined, '[test setup] a known birth year and claim age').toBe(true)
-    const keptYear = { ...walked.people[0], socialSecurityClaimAge: p.socialSecurityClaimAge! + p.birthYear! - 1958 }
-    expect(drawer.ok && drawer.draft).toEqual({ ...walked, people: [keptYear, walked.people[1]] })
-    expect(drawer.ok && drawer.draft.people[0].birthYear! + drawer.draft.people[0].socialSecurityClaimAge!).toBe(p.birthYear! + p.socialSecurityClaimAge!)
+    expect(drawer.ok && drawer.draft).toEqual(walked)
   })
 
   it('still working to retired, with the age work stopped: the work step’s writes', () => {

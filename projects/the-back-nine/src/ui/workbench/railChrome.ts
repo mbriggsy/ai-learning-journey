@@ -102,10 +102,11 @@ export interface RailOffers {
 }
 
 /** The answer's own door rule for the Roth plan (no hollow door): it rides the joint return, and needs pre-tax money to
- *  convert. ONE predicate, read by the tray's offers and by Settings' Roth row, so the gear never opens a tray row the
- *  tray does not draw (the review's C1). */
+ *  convert, or a saved plan to change or take out (milestone 3's review, round 2: a plan saved before the pre-tax money
+ *  left could otherwise never be removed). ONE predicate, read by the tray's offers and by Settings' Roth row, so the gear
+ *  never opens a tray row the tray does not draw (the review's C1). */
 export function rothDoorOpen(draft: ScenarioDraft): boolean {
-  return draft.filing === 'mfj' && draftPretaxTotal(draft) > 0
+  return draft.filing === 'mfj' && (draftPretaxTotal(draft) > 0 || draft.rothConversion !== undefined)
 }
 
 /**

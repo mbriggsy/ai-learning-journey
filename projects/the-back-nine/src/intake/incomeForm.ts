@@ -47,10 +47,13 @@ export interface IncomeFormState {
 export function incomeFormFrom(initial: IncomeStream | undefined, draft: ScenarioDraft): IncomeFormState {
   const ownerIndex = (initial?.ownerIndex as 0 | 1) ?? 0
   const currentAge = draft.people[ownerIndex]?.currentAge
+  // Paying now = started AND not past its last paying age (milestone 3's review, round 2): an ENDED stream reads "later"
+  // with its stored start, so an edit rebuilds it unchanged; read as "now" it re-anchored the start at today's age, past
+  // its end, and every Save was refused (end before start).
   const receivingNow =
     initial === undefined || currentAge === undefined
       ? undefined
-      : initial.startAge <= currentAge
+      : initial.startAge <= currentAge && (initial.endAge === undefined || initial.endAge >= currentAge)
   return {
     ownerIndex,
     type: initial?.type,

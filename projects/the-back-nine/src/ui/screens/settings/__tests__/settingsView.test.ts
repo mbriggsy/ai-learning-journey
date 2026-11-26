@@ -11,6 +11,7 @@ import { workingCostValueLine } from '@intake/assumptionLines'
 import { workingYearCostStaleness } from '@intake/workingYearQuote'
 import { draftPretaxTotal, workingYearLeftOverShownState } from '@intake/intakeMap'
 import { railOffers } from '../../../workbench/railChrome'
+import { trayView } from '../../retirement/trayView'
 import { DEV_SEEDS } from '../../../devSeeds'
 import { copy, slots } from '../../../copy'
 import { planClockAnchor } from '../../../bandAnnotations'
@@ -20,7 +21,8 @@ import { DEFAULT_HEIR_BRACKET } from '../../tax/strategiesView'
 import { SETTINGS_TABS, settingsRows, settingsView, type SettingsRow, type SettingsTab } from '../settingsView'
 
 const anchorOf = (d: ScenarioDraft) => planClockAnchor(d.startCalendarYear, d.startCalendarYear)
-const rowsOf = (d: ScenarioDraft, readOnly = false) => settingsRows(d, readOnly, anchorOf(d))
+/** A committed reading of the same draft by default (the tray reads it); `trayDraft` null is no reading yet. */
+const rowsOf = (d: ScenarioDraft, readOnly = false, trayDraft: ScenarioDraft | null = d) => settingsRows(d, readOnly, anchorOf(d), trayDraft)
 const allRows = (d: ScenarioDraft, readOnly = false): readonly SettingsRow[] => SETTINGS_TABS.flatMap((t) => rowsOf(d, readOnly)[t])
 const row = (d: ScenarioDraft, seat: AssumptionSeat): SettingsRow => {
   const r = allRows(d).find((x) => x.seat === seat)
@@ -194,6 +196,40 @@ describe('the doors: each editable row opens its one home', () => {
     expect(row(allMedicare, 'subsidy-regime').door).toBeUndefined()
   })
 
+  // Milestone 3's review, round 2: the tray draws only over a committed reading and reads that reading's draft.
+  it('no reading committed: no tray door (order, Roth, subsidy rules) and no line sending the household to try one; drawer doors stay', () => {
+    const trayLevers = (d: ScenarioDraft, t: ScenarioDraft | null) =>
+      SETTINGS_TABS.flatMap((tab) => rowsOf(d, false, t)[tab]).flatMap((r) => (r.door?.kind === 'tray' ? [r.door.lever] : []))
+    // Over a reading, the two households open all three tray doors between them (the subsidy rules need a priced pre-65 year).
+    expect(new Set([...trayLevers(RETIRED, RETIRED), ...trayLevers(DEV_SEEDS.date, DEV_SEEDS.date)]), '[test setup]').toEqual(new Set(['withdrawal-order', 'roth', 'aca-subsidy']))
+    expect(trayLevers(RETIRED, null)).toEqual([])
+    expect(trayLevers(DEV_SEEDS.date, null)).toEqual([])
+    const rows = SETTINGS_TABS.flatMap((t) => rowsOf(RETIRED, false, null)[t])
+    const at = (seat: AssumptionSeat) => rows.find((r) => r.seat === seat)!
+    expect(at('roth-conversion').lines).toEqual([copy.settingsRothNoneLineNoTray])
+    expect(copy.settingsRothNoneLineNoTray).not.toMatch(/action items/i)
+    expect(at('survivor-ratio').door).toMatchObject({ kind: 'drawer', target: { kind: 'living' } })
+  })
+
+  it('each tray door reads the tray’s draft (the committed reading’s), never the live draft an edit moved since', () => {
+    const noAccounts: ScenarioDraft = { ...RETIRED, enteredAccounts: [] }
+    expect(rowsOf(RETIRED, false, noAccounts).methodology.find((r) => r.seat === 'drawdown')!.door).toBeUndefined()
+    expect(rowsOf(noAccounts, false, RETIRED).methodology.find((r) => r.seat === 'drawdown')!.door).toMatchObject({ kind: 'tray', lever: 'withdrawal-order' })
+  })
+
+  it('a saved Roth plan with no pre-tax money left: the door and the tray’s Roth row stay (to change or take it out), and the line says nothing moves', () => {
+    const plan = { annualAmountReal: 30_000, startYearOffset: 1, years: 5 }
+    const stranded: ScenarioDraft = { ...DEV_SEEDS.steer, rothConversion: plan }
+    expect(draftPretaxTotal(stranded), '[test setup] no pre-tax money').toBe(0)
+    const r = row(stranded, 'roth-conversion')
+    expect(r.door).toMatchObject({ kind: 'tray', lever: 'roth' })
+    expect(r.lines).toEqual([copy.settingsRothPlanNoPretax])
+    const offers = railOffers(stranded, undefined)
+    expect(offers.roth).toEqual({ plan })
+    const tray = trayView({ draft: stranded, offers, pending: [], committed: [], hidden: new Set(), awaitingEmployer: new Map(), anchor: anchorOf(stranded) })
+    expect([...tray.left, ...tray.right].flatMap((g) => g.rows).find((x) => x.id === 'roth')?.control).toMatchObject({ kind: 'roth', plan })
+  })
+
   it('disclosures carry no door: they are how the plan is figured, not a choice', () => {
     for (const seat of ['market', 'longevity', 'survivor-ss', 'outlive-order', 'conversion-tax', 'working-year-tax'] as const) {
       expect(row(SAVED, seat).door, seat).toBeUndefined()
@@ -212,7 +248,7 @@ describe('read-only (plan 4.0)', () => {
   })
 
   it('its intro says it changes nothing', () => {
-    expect(settingsView({ draft: RETIRED, tab: 'methodology', readOnly: true, anchor: anchorOf(RETIRED) }).intro).toBe(copy.settingsIntroReadOnly)
-    expect(settingsView({ draft: RETIRED, tab: 'methodology', readOnly: false, anchor: anchorOf(RETIRED) }).intro).toBe(copy.settingsIntro)
+    expect(settingsView({ draft: RETIRED, tab: 'methodology', readOnly: true, anchor: anchorOf(RETIRED), trayDraft: RETIRED }).intro).toBe(copy.settingsIntroReadOnly)
+    expect(settingsView({ draft: RETIRED, tab: 'methodology', readOnly: false, anchor: anchorOf(RETIRED), trayDraft: RETIRED }).intro).toBe(copy.settingsIntro)
   })
 })

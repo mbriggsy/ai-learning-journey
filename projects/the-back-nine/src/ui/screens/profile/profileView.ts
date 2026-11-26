@@ -372,7 +372,14 @@ export function savingsView(d: ScenarioDraft, readOnly: boolean): CardsPageView 
   })
   // Door words ("Add one with Add saving") only where the Add menu is drawn (milestone 3's review, X12).
   const noAccounts = readOnly ? copy.profileSavingsNoAccountsReadOnly : copy.profileSavingsNoAccounts
-  const lines = !anyWorking ? [copy.profileSavingsNoneWorking] : cards.length === 0 ? [noAccounts] : [copy.profileSavingsLimitsNote]
+  // Nobody working: "neither of you is working" only where both said retired; an unanswered work status is still needed,
+  // on Family, never read as stopped (milestone 3's review, round 2).
+  const unanswered = BOTH.filter((i) => d.people[i]?.workStatus === undefined)
+  const lines = !anyWorking
+    ? [unanswered.length === 0 ? copy.profileSavingsNoneWorking : slots.profileWorkUnanswered(unanswered.map((i) => person(d, i).possessive).join(' and '))]
+    : cards.length === 0
+      ? [noAccounts]
+      : [copy.profileSavingsLimitsNote]
   return {
     intro: cards.length > 0 ? copy.profileSavingsIntro : copy.profileSavingsIntroNoCards,
     cards,

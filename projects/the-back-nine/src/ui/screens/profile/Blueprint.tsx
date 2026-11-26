@@ -22,7 +22,7 @@
  *
  * Fit decision (plan RC15): a scrolling page; its first frame holds the title, the intro and the panel's top row.
  */
-import { useId, useState, type Ref } from 'react'
+import { useId, useState, type ReactNode, type Ref } from 'react'
 import { ArrowDown, Crown, UserRound } from 'lucide-react'
 import { AddMenu, Button, Caveat, Checkbox, PageFrame, cn } from '../../kit'
 import { verdictDescribedBy } from '../../disclaimerId'
@@ -277,9 +277,12 @@ export interface BlueprintProps {
   readonly hidden: ReadonlySet<string>
   readonly onHidden: (id: string, hidden: boolean) => void
   readonly caveat: readonly string[]
+  /** The StaleBanner's lines while the tab prints the answer's sentence (`view.answerShown`), drawn inside the panel
+   *  below the folder tabs, so a tab switch never moves the tabs (milestone 3's review, round 2). */
+  readonly banner?: ReactNode
 }
 
-export function Blueprint({ headingRef, view, selected, onOpen, onTab, hidden, onHidden, caveat }: BlueprintProps) {
+export function Blueprint({ headingRef, view, selected, onOpen, onTab, hidden, onHidden, caveat, banner }: BlueprintProps) {
   const [editOpen, setEditOpen] = useState(false)
   const editId = useId()
   const h: TileHandlers = { selected, onOpen }
@@ -293,6 +296,7 @@ export function Blueprint({ headingRef, view, selected, onOpen, onTab, hidden, o
         caveat={<Caveat lines={caveat} />}
       >
         <div className="flex flex-col gap-8">
+          {banner}
           <div className="flex flex-col gap-6 laptop:grid laptop:grid-cols-[minmax(0,1fr)_minmax(0,auto)_minmax(0,1fr)] laptop:items-start laptop:gap-8">
             <ul aria-label={view.legendLabel} className="flex flex-col gap-2" data-bp-legend="">
               {view.legend.map((l) => (

@@ -41,8 +41,9 @@ export interface ProfilePagesProps {
   readonly answer: ModelAnswer
   readonly refiguring: boolean
   readonly anchor: BandPlanClockAnchor
-  /** The shell's StaleBanner: drawn above Blueprint while its tab prints the answer's own sentence (the Goals timeline's
-   *  crowned date or no-date words), as above every figured page (the review's E3). */
+  /** The shell's StaleBanner: drawn inside Blueprint's panel, below its folder tabs, while the Goals tab reads the
+   *  answer's own sentence (the crowned date or no-date words), as every figured page carries it (the review's E3;
+   *  milestone 3's review, round 2). */
   readonly answerBanner?: ReactNode
   /** The shell's Back ask: asked inside the open drawer (the drawer is modal). */
   readonly leaveAsk?: DrawerLeaveAsk
@@ -89,9 +90,7 @@ export function ProfilePages({ screen, draft, model, readOnly, headingRef, agedB
       {worth !== null ? (
         <NetWorth headingRef={headingRef} view={worth} selected={host.selected} onOpen={host.open} caveat={caveat} />
       ) : blueprint !== null ? (
-        <>
-          {blueprint.answerShown ? answerBanner : null}
-          <Blueprint
+        <Blueprint
           headingRef={headingRef}
           view={blueprint}
           selected={host.selected}
@@ -102,8 +101,8 @@ export function ProfilePages({ screen, draft, model, readOnly, headingRef, agedB
             setBpHidden((cur) => ({ ...cur, [bpTab]: hide ? [...cur[bpTab].filter((x) => x !== id), id] : cur[bpTab].filter((x) => x !== id) }))
           }
           caveat={caveat}
-          />
-        </>
+          {...(blueprint.answerShown && answerBanner !== undefined ? { banner: answerBanner } : {})}
+        />
       ) : view !== null ? (
         <CardsPage screen={screen} title={title} headingRef={headingRef} view={view} selected={host.selected} onOpen={host.open} />
       ) : null}

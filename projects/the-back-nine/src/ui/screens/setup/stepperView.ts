@@ -297,6 +297,8 @@ export function missingBlock(d: ScenarioDraft, completeOpens: boolean): MissingB
   // Every name, never "N more": the last screen before the answer has the room, and whose where two people owe one.
   const { stillNeeded, cannotPrice } = missingFactLines(missing, { people: d.people })
   const opens = completeOpens ? [copy.setupMissingOpens] : []
+  // "Until these are in, your plan's pages say…" only while Complete would open those pages (milestone 3's review, round 2).
+  const until = completeOpens ? [copy.setupMissingUntil] : []
   return {
     // The strip's keep-going lead ("takes shape as you go") reads wrong beside Complete; the withheld lead stands as it is.
     lead: blockedLeadFor(missing) === copy.answerWithheldLead ? copy.answerWithheldLead : copy.setupMissingLead,
@@ -306,7 +308,7 @@ export function missingBlock(d: ScenarioDraft, completeOpens: boolean): MissingB
             stillNeeded,
             copy.answerNoSynthesis,
             ...opens,
-            copy.setupMissingUntil,
+            ...until,
             ...(cannotPrice !== null ? [cannotPrice, copy.answerCannotPriceTail] : []),
           ]
         : [...(cannotPrice !== null ? [cannotPrice, copy.answerCannotPriceTail] : []), ...opens],

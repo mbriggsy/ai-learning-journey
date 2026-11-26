@@ -13,8 +13,8 @@
  * SAVE NEVER RUNS PAST A REFUSED BOX (milestone 3's review, X1): Save first blurs the focused element when it sits inside
  * the drawer (a figure typed and not yet blurred commits, the kit's fields commit on blur), then, while any box in the
  * drawer holds text its parser refused (the kit's number inputs mark it `data-typed-refused` in the blur's own task,
- * `NumberInputs.tsx`), it calls no `onSave` and the drawer stays open: that text never reached the caller, so a save
- * would keep the old figure, or none, under a refusal on screen (the tray's line drawer staged a lifelong line from a
+ * `NumberInputs.tsx`), it calls no `onSave`, moves focus to that box, and the drawer stays open: that text never reached
+ * the caller, so a save would keep the old figure, or none, under a refusal on screen (the tray's line drawer staged a lifelong line from a
  * Through year typed "2.5"). Every drawer on the kit gets this, whatever its caller checks.
  *
  * Since Act 6 · RC13a (the Profile drawers): `notice` is a slot between the band and the scrolling body that never scrolls
@@ -181,12 +181,18 @@ export function Drawer({
                 <Button
                   variant="primary"
                   disabled={saveDisabled}
-                  onClick={() => {
-                    // The header's law: commit the focused field, then never past a box holding text it could not read.
+                  onClick={(e) => {
+                    // The header's law: commit the focused field (never Save itself: a click focuses it, and blurring it
+                    // drops focus to the page), then never past a box holding text it could not read: focus moves to
+                    // that box (it scrolls into view, and keeps its mark and its words).
                     const popup = popupRef.current
                     const active = document.activeElement
-                    if (popup !== null && active instanceof HTMLElement && popup.contains(active)) active.blur()
-                    if (popup?.querySelector('[data-typed-refused]') != null) return
+                    if (popup !== null && active instanceof HTMLElement && active !== e.currentTarget && popup.contains(active)) active.blur()
+                    const refused = popup?.querySelector<HTMLElement>('[data-typed-refused]')
+                    if (refused != null) {
+                      refused.focus()
+                      return
+                    }
                     if (onSave() !== false) setOpen(false)
                   }}
                 >

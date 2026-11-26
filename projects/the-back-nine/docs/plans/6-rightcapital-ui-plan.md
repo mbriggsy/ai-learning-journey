@@ -1889,10 +1889,12 @@ open). `e2e/intake-fold.spec.ts` retires here. Local look.
   passes with no spending figure (the period rule fires only on a figure), and a budget plan passes it under
   `budgetGoverns` with its unit never answered, so after setup 96,000 typed under the pre-checked "Each month" saved
   $1,152,000 a year unasked, from a first figure or a budget switched to one. The Living drawer now keys the receipt on
-  the plan's shape at open: the unit counts as answered only where the drawer opened over a one-figure amount with no
-  budget governing (every road that put such a figure there passed the period gate; the W face's rule, `sanity.ts`'s
-  provenance note), else it asks until its unit is tapped, after setup as in setup; in setup the stepper's provenance
-  counts only on that same shape. Complete's probe skips a governing budget, so a re-walk's provenance stays honest.)*
+  the plan's shape at open: the unit counts as answered only where the drawer opened over a one-figure amount, no budget
+  governing, that trips the period gate under the bare probe (a figure of $8,000 or more in its unit, which could only
+  have been saved with its unit answered; round 2 tightened round 1's "any one-figure amount", since a figure under the
+  floor is never asked and so proves nothing, `IntakeApp.tsx`'s header law), else it asks until its unit is tapped,
+  after setup as in setup; in setup the stepper's provenance counts only on that same shape. Complete's probe skips a
+  governing budget, so a re-walk's provenance stays honest.)*
 - **Expenses' W card opens the W question alone; Goals' money picture card opens the whole drawer.** The picture and the
   left-over question read Goals' coverage and quote, so in setup they come last (the walk put the picture after every
   input).

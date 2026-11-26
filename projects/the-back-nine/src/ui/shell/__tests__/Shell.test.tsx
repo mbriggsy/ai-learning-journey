@@ -713,5 +713,11 @@ describe('Shell â€” the pages with no table speak their own words (milestone 2â€
     expect(document.querySelector('[data-bp-tile] svg.lucide-crown'), '[test setup] the crown renders').not.toBeNull()
     expect(screen.getByText(copy.stalenessHeroNote)).toBeInTheDocument()
     expect(screen.getByText(slots.staleAgedBalances(BUILD_YEAR))).toBeInTheDocument()
+    // Milestone 3's review, round 2: inside the panel, below the folder tabs, so a tab switch never moves the tabs.
+    const banner = document.querySelector('[data-stale-banner]')!
+    const tabs = screen.getByRole('tablist', { name: copy.blueprintTabsLabel })
+    expect(document.querySelector('[data-screen="profile-blueprint"]')!.contains(banner)).toBe(true)
+    expect(tabs.compareDocumentPosition(banner) & Node.DOCUMENT_POSITION_FOLLOWING, 'the banner follows the tabs').toBeTruthy()
+    expect(banner).not.toHaveClass('pt-4')
   })
 })

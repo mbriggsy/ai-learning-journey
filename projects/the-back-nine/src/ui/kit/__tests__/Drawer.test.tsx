@@ -154,4 +154,44 @@ describe('Drawer', () => {
     expect(onSave).toHaveBeenCalledTimes(1)
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
   })
+
+  // Milestone 3's review, round 2: a press focuses Save, so Save never blurs itself; a refusal sends focus to the box.
+  it('a real press on Save past a refused box: focus lands on the box, which keeps its mark and its words', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn(() => true)
+    render(
+      <Drawer {...base} saveLabel="Save" onSave={onSave}>
+        <WholeInput label="Through year" value={undefined} invalidMessage="Not a whole number." onCommit={() => {}} />
+      </Drawer>,
+    )
+    const dialog = await open(user)
+    const box = within(dialog).getByLabelText('Through year')
+    await user.click(box)
+    await user.keyboard('2.5')
+    await user.click(within(dialog).getByRole('button', { name: 'Save' })) // the press blurs the box, then focuses Save
+    expect(onSave).not.toHaveBeenCalled()
+    expect(document.activeElement).toBe(box)
+    expect(box).toHaveAttribute('data-typed-refused')
+    expect(within(dialog).getByText('Not a whole number.')).toBeInTheDocument()
+  })
+
+  it('a valid press on Save never blurs Save itself (focus stays on it while onSave runs)', async () => {
+    const user = userEvent.setup()
+    let focusedDuringSave: Element | null = null
+    const onSave = vi.fn(() => {
+      focusedDuringSave = document.activeElement
+      return false
+    })
+    render(
+      <Drawer {...base} saveLabel="Save" onSave={onSave}>
+        <p>Body words</p>
+      </Drawer>,
+    )
+    const dialog = await open(user)
+    const save = within(dialog).getByRole('button', { name: 'Save' })
+    await user.click(save)
+    expect(onSave).toHaveBeenCalledTimes(1)
+    expect(focusedDuringSave).toBe(save)
+    expect(document.activeElement).toBe(save)
+  })
 })

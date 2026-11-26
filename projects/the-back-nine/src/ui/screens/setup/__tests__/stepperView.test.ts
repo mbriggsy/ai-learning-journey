@@ -4,7 +4,7 @@ import { WORKING_COST_ANSWER_FIELD, WORKING_COST_FIELD, accountField, personFiel
 import { missingRequiredFacts } from '@intake/intakeMap'
 import type { ScenarioDraft } from '@store/memoryModel'
 import { DEV_SEEDS } from '../../../devSeeds'
-import { copy } from '../../../copy'
+import { copy, slots } from '../../../copy'
 import { readFileSync } from 'node:fs'
 import { factSteps, missingBlock, SETUP_STEPS, SETUP_STEPS_OF, setupPage, stepFields, stepOwesFacts, stepTouched, stepWalkIds, targetForField } from '../stepperView'
 
@@ -100,6 +100,14 @@ describe('the pages', () => {
     expect(cardIds(DEV_SEEDS.date, 'savings')).not.toContain('new-account-0')
   })
 
+  // Milestone 3's review, round 2: a blank work status on the stepper's Savings step is still needed, never "stopped".
+  it('the Savings step with a work status unanswered and nobody working: its line asks for the status on Family', () => {
+    const { workStatus: _w, ...sam } = DEV_SEEDS.retired.people[1]
+    const p = setupPage({ ...DEV_SEEDS.retired, people: [DEV_SEEDS.retired.people[0], sam] } as ScenarioDraft, 'savings')
+    if (p.kind !== 'cards') throw new Error('savings is a cards page')
+    expect(p.view.lines).toEqual([slots.profileWorkUnanswered('Sam’s')])
+  })
+
   it('a working household gets W (the question alone) on Expenses and the money picture on Goals; a retired one neither', () => {
     const e = setupPage(DEV_SEEDS.date, 'expenses')
     if (e.kind !== 'cards') throw new Error('expenses is a cards page')
@@ -151,10 +159,11 @@ describe('what the answer still waits for, beside Complete', () => {
     expect(lines.slice(4)).toEqual([`${copy.answerCannotPrice} ${copy.employerCoverageUnpriced}`, copy.answerCannotPriceTail])
   })
 
-  it('"Complete still opens your plan" only while Complete would (the review’s D5)', () => {
+  it('"Complete still opens your plan" and "Until these are in, your plan’s pages…" only while Complete would (the review’s D5; round 2)', () => {
     const lines = missingBlock({ ...DEV_SEEDS.retired, annualSpendingReal: undefined }, false)!.lines
     expect(lines).not.toContain(copy.setupMissingOpens)
-    expect(lines.at(-1)).toBe(copy.setupMissingUntil)
+    expect(lines).not.toContain(copy.setupMissingUntil)
+    expect(lines.at(-1)).toBe(copy.answerNoSynthesis)
   })
 })
 

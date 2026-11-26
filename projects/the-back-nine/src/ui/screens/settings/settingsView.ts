@@ -13,8 +13,11 @@
  * walk's own checks so a refused value never lands; the Action Items tray at the lever's row (the withdrawal order, the
  * Roth plan, the subsidy rules: tried beside the plan and written by Apply, U15's rule); or Tax Strategies (the heirs'
  * bracket, set beside the goal it ranks). A door shows only where its home can act (no hollow door, council 2026-07-03):
- * the tray's withdrawal order needs an account, its Roth row a married couple with pre-tax money (`rothDoorOpen`, the
- * tray's own rule), its subsidy rules a priced pre-65 year.
+ * the tray's withdrawal order needs an account, its Roth row a married couple with pre-tax money or a saved plan
+ * (`rothDoorOpen`, the tray's own rule), its subsidy rules a priced pre-65 year. THE TRAY'S DOORS READ THE TRAY'S OWN
+ * DRAFT (milestone 3's review, round 2): the tray draws only over a committed reading and reads that reading's draft
+ * (`Shell.tsx`'s `offers`), so with no reading committed no tray door draws and no line sends the household to try one,
+ * and each tray door's rule reads the committed draft, never the live one an edit may have moved since.
  *
  * READ-ONLY (plan 4.0): a read-only tab shows every value and line and no door at all.
  */
@@ -24,7 +27,7 @@ import { productionMarket } from '@engine/reference/methodology'
 import { solverAssumedHeirBracket } from '@engine/constants'
 import { budgetGoverns } from '@budget/budgetModel'
 import { methodologyArmFor, workingCostValueLine } from '@intake/assumptionLines'
-import { healthcarePriced, isDateRoute, workingYearLeftOverShownState } from '@intake/intakeMap'
+import { draftPretaxTotal, healthcarePriced, isDateRoute, workingYearLeftOverShownState } from '@intake/intakeMap'
 import { formatMoney, formatPercent } from '@intake/moneyFormat'
 import { workingYearLeftOverWaitingWords } from '@intake/workingYearLeftOver'
 import { LEFT_OVER_FACE } from '@intake/workingYearLeftOverState'
@@ -92,6 +95,8 @@ export interface SettingsInput {
   readonly readOnly: boolean
   /** The shell's one plan-clock anchor (the Roth row names the conversion's calendar year through it, U17 §S1). */
   readonly anchor: BandPlanClockAnchor
+  /** The draft the Action Items tray reads (the committed reading's), or null while no reading is committed (no tray). */
+  readonly trayDraft: ScenarioDraft | null
 }
 
 const POLICY_HELP: Readonly<Record<ScenarioDraft['drawdownPolicy'], CopyKey>> = {
@@ -125,8 +130,15 @@ function disclosureRow(d: ScenarioDraft, id: MethodologyDisclosure['id'], values
 const personName = (d: ScenarioDraft, i: 0 | 1): string => tablePerson(d, i, 0, 0).possessive
 
 /** Every tab's rows for a draft: the one composer the page and the completeness walk both read. */
-export function settingsRows(d: ScenarioDraft, readOnly: boolean, anchor: BandPlanClockAnchor): Readonly<Record<SettingsTab, readonly SettingsRow[]>> {
+export function settingsRows(
+  d: ScenarioDraft,
+  readOnly: boolean,
+  anchor: BandPlanClockAnchor,
+  trayDraft: ScenarioDraft | null,
+): Readonly<Record<SettingsTab, readonly SettingsRow[]>> {
   const door = <T extends SettingsDoor>(can: boolean, value: T): { readonly door?: T } => (!readOnly && can ? { door: value } : {})
+  /** A tray door: the tray draws (a committed reading) and its own rule, on its own draft, offers the row. */
+  const trayDoor = <T extends SettingsDoor>(rule: (t: ScenarioDraft) => boolean, value: T) => door(trayDraft !== null && rule(trayDraft), value)
   const dateRoute = isDateRoute(d)
 
   // ── Methodology: the calculation options ──
@@ -135,7 +147,7 @@ export function settingsRows(d: ScenarioDraft, readOnly: boolean, anchor: BandPl
     name: copy.assumptionDrawdownName,
     values: [policyWords(d.drawdownPolicy, d.drawdownOrder)],
     lines: [copy[POLICY_HELP[d.drawdownPolicy]]],
-    ...door(d.enteredAccounts.length > 0, {
+    ...trayDoor((t) => t.enteredAccounts.length > 0, {
       kind: 'tray',
       lever: 'withdrawal-order',
       label: d.drawdownPolicy === 'proportional' ? copy.leverSequencingCta : copy.leverSequencingEditCta,
@@ -151,18 +163,23 @@ export function settingsRows(d: ScenarioDraft, readOnly: boolean, anchor: BandPl
         ? copy.assumptionNoneApplied
         : slots.rothPlanEcho(formatMoney(roth.annualAmountReal), rothStart.year, rothStart.passed, roth.years),
     ],
-    // The none-line names the tray only where the tray draws the Roth row (`rothDoorOpen`, the tray's own rule), and
-    // "apply it there" only where the tab can apply.
+    // With no pre-tax money, the line says nothing moves (a saved plan converts nothing until there is some to move). The
+    // none-line names the tray only where the tray draws the Roth row (a committed reading, and `rothDoorOpen` on its
+    // draft), and "apply it there" only where the tab can apply.
     lines: [
-      roth !== undefined
-        ? copy.settingsRothPlanLine
-        : !rothDoorOpen(d)
-          ? copy.settingsRothNoneNoPretax
-          : readOnly
-            ? copy.settingsRothNoneLineReadOnly
-            : copy.settingsRothNoneLine,
+      draftPretaxTotal(d) <= 0
+        ? roth !== undefined
+          ? copy.settingsRothPlanNoPretax
+          : copy.settingsRothNoneNoPretax
+        : roth !== undefined
+          ? copy.settingsRothPlanLine
+          : trayDraft === null || !rothDoorOpen(trayDraft)
+            ? copy.settingsRothNoneLineNoTray
+            : readOnly
+              ? copy.settingsRothNoneLineReadOnly
+              : copy.settingsRothNoneLine,
     ],
-    ...door(rothDoorOpen(d), { kind: 'tray', lever: 'roth', label: roth === undefined ? copy.leverRothDoorCta : copy.leverRothDoorEditCta } as const),
+    ...trayDoor(rothDoorOpen, { kind: 'tray', lever: 'roth', label: roth === undefined ? copy.leverRothDoorCta : copy.leverRothDoorEditCta } as const),
   }
   const survivor: SettingsRow = {
     seat: 'survivor-ratio',
@@ -252,7 +269,7 @@ export function settingsRows(d: ScenarioDraft, readOnly: boolean, anchor: BandPl
       name: copy.assumptionRegimeName,
       values: [enhanced ? copy.leverHealthRegimeEnhanced : copy.leverHealthRegimeReverted],
       lines: [enhanced ? copy.leverHealthRegimeEnhancedHelp : copy.leverHealthRegimeRevertedHelp],
-      ...door(healthcarePriced(d), { kind: 'tray', lever: 'aca-subsidy', label: copy.settingsAcaDoor } as const),
+      ...trayDoor(healthcarePriced, { kind: 'tray', lever: 'aca-subsidy', label: copy.settingsAcaDoor } as const),
     },
     {
       seat: 'medicare-extras',
@@ -269,8 +286,8 @@ export function settingsRows(d: ScenarioDraft, readOnly: boolean, anchor: BandPl
   return { methodology, returns, tax, health, other }
 }
 
-export function settingsView({ draft, tab, readOnly, anchor }: SettingsInput): SettingsView {
-  const rows = settingsRows(draft, readOnly, anchor)[tab]
+export function settingsView({ draft, tab, readOnly, anchor, trayDraft }: SettingsInput): SettingsView {
+  const rows = settingsRows(draft, readOnly, anchor, trayDraft)[tab]
   return {
     title: copy.settingsTitle,
     intro: readOnly ? copy.settingsIntroReadOnly : copy.settingsIntro,

@@ -9,8 +9,11 @@
  */
 import { personField, type FieldPath } from '@intake/sanity'
 import { writeWorkingYearInvestment } from '@intake/steps'
-import type { RetirementState, Sex, WorkStatus } from '@shared/model'
+import type { IncomeStream, RetirementState, Sex, WorkStatus } from '@shared/model'
 import type { PersonDraft, ScenarioDraft } from '@store/memoryModel'
+import { slots } from '../../../copy'
+import { tablePerson } from '../../../workbench/tableRun'
+import { incomeCardName } from '../profileView'
 import type { FieldErrors } from './drawerSave'
 
 export interface PersonForm {
@@ -36,11 +39,9 @@ const changed = <F>(form: F, seed: F, k: keyof F): boolean => form[k] !== seed[k
  *  forced $0, never an answer), a move to retired zeroes the pay (the work step's zeroing); the stop age only for a
  *  retired person.
  *
- *  A BIRTH YEAR MOVED FROM ONE KNOWN YEAR TO ANOTHER (milestone 3's review, X4) keeps what the household told us in
- *  calendar terms: the typed Social Security claim YEAR holds (the claim age shifts by the move; `ss-claim-window` then
- *  judges the shifted age, and refuses it on its own card when it leaves 62 to 70), and an income stream already paying
- *  under the old age keeps paying now (its start age falls to the new current age where only the old age had reached
- *  it). Typed end ages are ages the household typed, and stay. */
+ *  A birth year moved rewrites `birthYear` and `currentAge` and nothing else: the claim age and every income stream's ages
+ *  are ages the household typed, and the draft does not record whether they meant the age or its calendar year. The
+ *  drawer names what the move would shift before Save instead (`birthYearMoves`, milestone 3's review, round 2). */
 export function buildPerson(
   d: ScenarioDraft,
   i: 0 | 1,
@@ -49,19 +50,8 @@ export function buildPerson(
 ): { readonly ok: true; readonly draft: ScenarioDraft } | { readonly ok: false; readonly fields: FieldErrors<PersonField> } {
   let p: PersonDraft = { ...d.people[i] }
   if (changed(form, seed, 'name')) p = { ...p, name: form.name }
-  let incomeStreams = d.incomeStreams
   if (changed(form, seed, 'birthYear')) {
-    const oldBirthYear = p.birthYear
-    const oldCurrentAge = p.currentAge
-    const newCurrentAge = form.birthYear === undefined ? undefined : d.startCalendarYear - form.birthYear
-    p = { ...p, birthYear: form.birthYear, currentAge: newCurrentAge }
-    if (oldBirthYear !== undefined && form.birthYear !== undefined) {
-      if (p.socialSecurityClaimAge !== undefined) p = { ...p, socialSecurityClaimAge: p.socialSecurityClaimAge + oldBirthYear - form.birthYear }
-      if (oldCurrentAge !== undefined && newCurrentAge !== undefined && newCurrentAge < oldCurrentAge) {
-        const payingNow = (s: (typeof incomeStreams)[number]) => s.ownerIndex === i && s.startAge <= oldCurrentAge && s.startAge > newCurrentAge
-        if (incomeStreams.some(payingNow)) incomeStreams = incomeStreams.map((s) => (payingNow(s) ? { ...s, startAge: newCurrentAge } : s))
-      }
-    }
+    p = { ...p, birthYear: form.birthYear, currentAge: form.birthYear === undefined ? undefined : d.startCalendarYear - form.birthYear }
   }
   if (changed(form, seed, 'sex')) p = { ...p, sex: form.sex }
   if (changed(form, seed, 'workStatus') && form.workStatus !== undefined) {
@@ -76,12 +66,46 @@ export function buildPerson(
   }
   const people: [PersonDraft, PersonDraft] = [d.people[0], d.people[1]]
   people[i] = p
-  let next: ScenarioDraft = { ...d, people, ...(incomeStreams !== d.incomeStreams ? { incomeStreams } : {}) }
+  let next: ScenarioDraft = { ...d, people }
   // X5: the move to working re-asks the investment income while working (the one writer, which re-zeroes a retired slot).
   if (changed(form, seed, 'workStatus') && form.workStatus === 'working' && d.health.workingYearInvestmentByPerson?.[i] !== undefined) {
     next = writeWorkingYearInvestment(next, i, undefined)
   }
   return { ok: true, draft: next }
+}
+
+/** Is a stream paying at the owner's `age`: started, and not past its last paying age (`endAge`). */
+const payingAt = (s: IncomeStream, age: number): boolean => s.startAge <= age && (s.endAge === undefined || s.endAge >= age)
+
+/** What a birth year moved from one known year to another would shift, in the household's words, before Save (milestone
+ *  3's review, round 2; the drawer's notice, never blocking): the Social Security claim's calendar year (the typed claim
+ *  AGE stays), and each of this person's income streams whose "paying now" reading flips at the new age (one that would
+ *  start later, start now, stop, or pay again). Nothing is rewritten; empty where nothing moves. */
+export function birthYearMoves(d: ScenarioDraft, i: 0 | 1, seed: PersonForm, form: PersonForm): readonly string[] {
+  const was = seed.birthYear
+  const now = form.birthYear
+  if (was === undefined || now === undefined || was === now) return []
+  const built = buildPerson(d, i, seed, form)
+  const after = built.ok ? built.draft : d // names read from the edit (a name changed in the same Save)
+  const lines: string[] = []
+  const claimAge = d.people[i].socialSecurityClaimAge
+  if (claimAge !== undefined) {
+    lines.push(slots.profileMoveClaimYear(slots.profileSocialSecurityOf(tablePerson(after, i, 0, 0).possessive), now + claimAge, was + claimAge, claimAge))
+  }
+  const oldAge = d.startCalendarYear - was
+  const newAge = d.startCalendarYear - now
+  for (const s of d.incomeStreams) {
+    if (s.ownerIndex !== i) continue
+    const before = payingAt(s, oldAge)
+    if (before === payingAt(s, newAge)) continue
+    const name = incomeCardName(after, s)
+    if (before) {
+      lines.push(s.startAge > newAge ? slots.profileMoveStartsLater(name, now + s.startAge) : slots.profileMoveEnded(name, s.endAge!))
+    } else {
+      lines.push(s.startAge > oldAge ? slots.profileMovePaysNow(name, was + s.startAge) : slots.profileMovePaysAgain(name, s.endAge!))
+    }
+  }
+  return lines
 }
 
 /** The rules' fields this drawer owns: the birth year (birth year in the future, an age past the model's table) and the

@@ -225,13 +225,15 @@ describe('Goals', () => {
     expect(tiles.find((t) => t.id === 'medicare-1')!.value).toBe(copy.blueprintMedicareRetired)
   })
 
-  it('answerShown: true where a drawn tile prints the answer’s sentence (the crowned date, the no-date words); false while pending, on another tab, or with the stops hidden (the review’s E3)', () => {
+  it('answerShown: the Goals tab over the answer’s sentence (the crowned date, the no-date words), whatever Edit hides; false while pending or on another tab (the review’s E3)', () => {
     const settled = { tab: 'goals' as const, answer: dateAnswer(working, track(4)) }
     expect(blueprintView(input(working, settled)).answerShown).toBe(true)
     expect(blueprintView(input(working, { tab: 'goals', answer: dateAnswer(working, noDate) })).answerShown, 'the no-date words are the answer too').toBe(true)
     expect(blueprintView(input(working, { tab: 'goals' })).answerShown, 'pending: no sentence').toBe(false)
     expect(blueprintView(input(working, { ...settled, tab: 'net-worth' })).answerShown).toBe(false)
-    expect(blueprintView(input(working, { ...settled, hidden: new Set(['retirement']) })).answerShown, 'Edit hid the stops').toBe(false)
+    // Milestone 3's review, round 2: with the stops hidden the spending tiles still read the crowned date.
+    expect(blueprintView(input(working, { ...settled, hidden: new Set(['retirement']) })).answerShown, 'Edit hid the stops').toBe(true)
+    expect(blueprintView(input(working, { ...settled, hidden: new Set(['retirement', 'social-security', 'medicare', 'spending']) })).answerShown, 'every category hidden').toBe(true)
     expect(blueprintView(input(retired, { tab: 'goals' })).answerShown, 'a retired household’s timeline prints no answer').toBe(false)
   })
 
@@ -258,6 +260,14 @@ describe('Income, Savings, Expenses', () => {
     expect(b.lanes[1]!.cells![1]!.empty).toBe(copy.blueprintNothingGoesIn)
     expect(b.lanes[2]!.cells).toBeNull()
     expect(b.lanes[2]!.shared!.label).toBe(copy.blueprintBothOfYou)
+  })
+
+  // Milestone 3's review, round 2: a blank work status is never "work has stopped".
+  it('an unanswered work status: the Savings cell says it is still needed on Family, never that work has stopped', () => {
+    const { workStatus: _w, ...sam } = working.people[1]
+    const b = blueprintView(input({ ...working, people: [working.people[0], sam] } as ScenarioDraft, { tab: 'ise' })).body
+    if (b.kind !== 'ise') throw new Error('[test]')
+    expect(b.lanes[1]!.cells![1]!.empty).toBe(slots.profileWorkUnanswered('Sam’s'))
   })
 
   it('a working person with no deposit account: that person’s own line, door words naming this page’s Add only where it is drawn (the review’s E1)', () => {

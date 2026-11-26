@@ -288,6 +288,19 @@ describe('the list: an edit keeps its place, Delete removes it, and the widow’
     expect(model.getSnapshot().draft.incomeStreams).toEqual([{ ...rental, annualRealToday: 20_000 }, PENSION])
     expect(deleteOtherIncome(model.getSnapshot().draft, 0).incomeStreams).toEqual([PENSION])
   })
+
+  // Milestone 3's review, round 2: an ended stream read as "paying now" re-anchored its start at today's age, past its end,
+  // and every Save was refused (end before start).
+  it('an ENDED stream reopens as "later" with its stored start, and an amount edit saves it unchanged but for the amount', () => {
+    const ended: IncomeStream = { ownerIndex: 0, type: 'rental', annualRealToday: 18_000, startAge: 55, endAge: 64, colaMode: 'real-flat', survivorPct: 0 } // Alex is 66
+    const draft = withStreams(ended)
+    const seed = otherIncomeFormFrom(draft, { index: 0 })
+    expect(seed).toMatchObject({ receivingNow: false, startAge: 55, endAge: 64 })
+    const { model } = profileStore(draft)
+    const res = saveEdit(model, (d) => buildOtherIncome(d, 0, seed, { ...seed, annualRealToday: 20_000 }), ownOtherIncomeField(0))
+    expect(res.saved).toBe(true)
+    expect(model.getSnapshot().draft.incomeStreams).toEqual([{ ...ended, annualRealToday: 20_000 }])
+  })
 })
 
 // A bridge to the compile (U2): a stream committed through the form compiles to

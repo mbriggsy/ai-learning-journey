@@ -38,6 +38,10 @@ block, NOT "Still needed"), a two-HSA draft, a MIXED draft (both blocks stay —
 wholesale would put an unentered fact under "nothing here for you to add"), and pending. Two mutants
 killed. Witnessed live: the echo now reads word for word what the strip reads.
 
+> **Out of date (corrected 2026-11-27):** the strip (`AnswerStrip.tsx`), the panel (`AssumptionPanel.tsx`) and
+> `Result.tsx` left with the walk at Act 6 · RC14 (`c43d7a50`). The shared producers this Fix reads, `blockedLeadFor`
+> and `missingFactNames`, now live in `src/intake/missingFacts.ts`; their consumers are whatever imports that file.
+
 ## Key Insight
 
 **When a fix makes a frame reachable, the review target is every consumer of that frame, not the gate

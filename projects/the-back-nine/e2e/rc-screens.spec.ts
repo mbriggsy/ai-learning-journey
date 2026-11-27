@@ -136,8 +136,9 @@ test.describe(`RC2 · the shell on the phone (${PHONE.width}×${PHONE.height} @ 
     await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
     await settleLayout(page)
     const bar = await page.locator('[data-shell-names]').evaluate((names) => {
-      const row = names.parentElement!
-      const controls = row.lastElementChild!.getBoundingClientRect()
+      // The controls are the lock's own row: since b9-12 the names sit inside the mark's group (`contents` on the
+      // phone), so the controls are no longer the last box beside them.
+      const controls = document.querySelector('header.rc-root [data-save-state]')!.parentElement!.getBoundingClientRect()
       // Lines counted on the TEXT's boxes: each name span is a flex item, so a block, and its own client rects are one box
       // however many lines it wraps to (the first version of this arm read 1 line under the broken bar).
       const lines = (s: Element) => {
@@ -984,6 +985,66 @@ test.describe(`RC4b · the Action Items tray at the laptop seam (${SEAM.width}×
       await noSidewaysScroll(page, `${seed} seam tray`)
     })
   }
+})
+
+// ── The top bar's names and Analysis's tabs past the phone tier (b9-12, 2026-11-27; the register's Tier 2 *At the 1088 px
+// laptop seam the top bar's household names break inside a word…*). With two 20-letter names the names' column shrank to
+// nothing at 768 (every word broken, the bar 771 px tall) and to 41 px at the seam; and Analysis's tabs, end-justified in a
+// list too narrow for them, overflowed its START edge, which a scroll box cannot reach, so the first tab sat clipped under
+// the "Today's dollars" line (here at 768; at 900 to 1088 under the provisional line). Each word is read through a Range;
+// each tab is hit-tested at its centre with the document alone scrolled to the tabs (insight 124).
+const WIDE_FLOOR = { width: 768, height: 731 } as const
+
+test.describe(`The top bar's names and Analysis's tabs at the wide tier's floor (${WIDE_FLOOR.width}) and the seam (${SEAM.width})`, () => {
+  test.use({ viewport: SEAM, deviceScaleFactor: REAL_DPR })
+  test('?seed=tablewidest: both names print every word whole, the controls stay in the row, every Analysis tab takes a click at its centre; no sideways scroll', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 60_000)
+    await gotoSeedFinal(page, 'tablewidest')
+    await showPage(page, ANALYSIS)
+    for (const size of [WIDE_FLOOR, SEAM]) {
+      await page.setViewportSize(size)
+      await settleLayout(page)
+      const who = `tablewidest at ${size.width}`
+      const bar = await page.locator('header.rc-root [data-shell-names]').evaluate((names) => {
+        const splits: string[] = []
+        const walk = document.createTreeWalker(names, NodeFilter.SHOW_TEXT)
+        for (let n = walk.nextNode(); n !== null; n = walk.nextNode()) {
+          for (const m of (n.textContent ?? '').matchAll(/\S+/g)) {
+            const range = document.createRange()
+            range.setStart(n, m.index!)
+            range.setEnd(n, m.index! + m[0].length)
+            if (new Set([...range.getClientRects()].filter((x) => x.width > 0).map((x) => Math.round(x.top))).size > 1) splits.push(m[0])
+          }
+        }
+        const row = names.closest('header')!.firstElementChild!
+        const controls = document.querySelector('header.rc-root [data-save-state]')!.parentElement!.getBoundingClientRect()
+        return {
+          letters: (names.textContent ?? '').length,
+          splits,
+          controlsRight: controls.right,
+          rowContentRight: row.getBoundingClientRect().right - parseFloat(getComputedStyle(row).paddingRight),
+        }
+      })
+      console.log(`[seam names ${size.width}] ${JSON.stringify(bar)}`)
+      expect(bar.letters, '[test setup] the design ceiling’s two 20-character names').toBeGreaterThanOrEqual(40)
+      expect(bar.splits, `${who}: name words broken across two lines`).toEqual([])
+      expect(bar.controlsRight, `${who}: the controls stay inside the bar's row`).toBeLessThanOrEqual(bar.rowContentRight + 0.5)
+      const tabs = await page.locator('main [role="tablist"]').evaluate((list) => {
+        const r = list.getBoundingClientRect()
+        window.scrollTo(0, Math.max(0, r.top + window.scrollY - window.innerHeight / 2))
+        return [...list.querySelectorAll('[role="tab"]')].map((tab) => {
+          const b = tab.getBoundingClientRect()
+          const hit = document.elementFromPoint(b.left + b.width / 2, b.top + b.height / 2)
+          return { label: (tab.textContent ?? '').trim(), takes: hit !== null && tab.contains(hit) }
+        })
+      })
+      console.log(`[seam tabs ${size.width}] ${JSON.stringify(tabs)}`)
+      expect(tabs.length, '[test setup] Analysis’s tabs').toBeGreaterThanOrEqual(5)
+      expect(tabs.filter((t) => !t.takes).map((t) => t.label), `${who}: tabs whose centre is covered or clipped`).toEqual([])
+      await noSidewaysScroll(page, who)
+      await page.evaluate(() => window.scrollTo(0, 0))
+    }
+  })
 })
 
 test.describe(`RC4 ported · the date route’s order contract on Probability (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr)`, () => {

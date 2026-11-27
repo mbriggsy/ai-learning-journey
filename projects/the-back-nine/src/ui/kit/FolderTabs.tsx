@@ -3,7 +3,10 @@
  * 2.0 "The folder-tab panel"), on Base UI's Tabs (shadcn's Base UI `tabs`, restyled). Inactive tabs are filled
  * `--stone-200`; the active one is white with a border on three sides that opens into the panel below. The open edge,
  * the white fill and `aria-selected` carry which tab is open (never colour alone). On the phone the tabs are a strip
- * that scrolls sideways inside itself (ref 2.21).
+ * that scrolls sideways inside itself (ref 2.21). Past the phone tier, a note and tabs too wide for one line wrap the tabs
+ * to a line of their own under the note, never squeezing them: the tabs start at the list's left and an auto margin, not
+ * `justify-end`, puts them at the right, because end-justified tabs wider than their box overflow the START edge, which a
+ * scroll box cannot reach (Analysis's first tab sat clipped under the provisional note at 900 to 1088 px; 2026-11-27).
  *
  * The panel is the white box with the 1 px `--stone-300` edge, square corners, no shadow; its padding is 48 px (32 in
  * compact mode, 16 on the phone). Only the active tab's content is passed in, so one panel is drawn.
@@ -37,11 +40,11 @@ export const PANEL_CLASSES =
 export function FolderTabs<Id extends string>({ label, items, value, onValueChange, children, note, panelClassName }: FolderTabsProps<Id>) {
   return (
     <Tabs.Root value={value} onValueChange={(next) => onValueChange(next as Id)} className="flex flex-col">
-      <div className="flex flex-col items-stretch gap-2 wide:flex-row wide:items-end wide:justify-between">
+      <div className="flex flex-col items-stretch gap-2 wide:flex-row wide:flex-wrap wide:items-end wide:justify-between">
         {note !== undefined ? <p className="pb-2 text-label text-stone-600">{note}</p> : <span aria-hidden="true" />}
         <Tabs.List
           aria-label={label}
-          className="relative z-10 -mb-px flex max-w-full gap-1 overflow-x-auto overflow-y-hidden wide:justify-end"
+          className="relative z-10 -mb-px flex max-w-full gap-1 overflow-x-auto overflow-y-hidden wide:ml-auto"
         >
           {items.map((tab) => (
             <Tabs.Tab

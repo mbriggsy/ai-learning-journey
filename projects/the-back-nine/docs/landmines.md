@@ -598,8 +598,11 @@ said squeaky clears `temp/` UNCONDITIONALLY; its step 4 now deletes only the clo
   `cashFlowsView.ts` (Vite's transform error) reloaded the page six minutes into a Tax Strategies solve. Hold edits until
   the run ends, or stop it, kill its `vite` on 4190 and run it again clean.
 - **(b9-7, 11-27) `?seed=inherited` holds Tax Strategies on both goals** (a converting winner over a non-converting
-  runner-up: the shape guard), so the withdrawal stacks never draw on it and no look or arm has seen them with the
-  inherited source. A look at those stacks needs a seed that solves to a winner.
+  runner-up: the shape guard), so the withdrawal stacks never draw on it. A look at those stacks: `?seed=surplus`, then
+  Net Worth → Add account → Inherited IRA through the drawer (b9-10: $400,000, owner born 1945, died 2024, own IRA, no
+  custodian figure, December 31 balance $420,000, left to Sam), then Tax → "Leave more behind": a winner in ~30 s, the
+  stacks under Comparison → Withdrawals. Click the drawer's labels, not the hidden radios, and type each money box with
+  a real keystroke and blur (a script's `fill` without a blur never commits it).
 
 ## The mutation harness
 

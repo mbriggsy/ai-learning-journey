@@ -25,7 +25,7 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-11-27, b9-9):** THE TURNAROUND (Briggsy, 2026-11-24; memory `project-b9-mandate-replicate-rightcapital`): the UI is a RightCapital clone; engine, store, vault and intake mapping stay; nothing waits on him. Act 6 is closed; now gap 3, the inherited IRA (`docs/plans/5-workbench-plan.md`); first run the close block's check line. Every gap 3 unit is built (U17, the pace lever, `c3d44822`). Next, gap 3's whole-file review, with an adversary and every finding verified: U10 to U13 and U17, and it must see Tax Strategies' withdrawal stacks with the inherited source on a seed that solves to a winner (the phone included); the close block's "For gap 3's review" bullet. Then `/distill` (21 owed). Then the register's Tier 2 *At the 1088 px laptop seam the top bar's household names break inside a word…*. The D7 queue and the tiered lists below are pre-turnaround.
+▶ **START HERE (2026-11-27, b9-10):** THE TURNAROUND (Briggsy, 2026-11-24; memory `project-b9-mandate-replicate-rightcapital`): the UI is a RightCapital clone; engine, store, vault and intake mapping stay; nothing waits on him. Act 6 is closed; gap 3, the inherited IRA (`docs/plans/5-workbench-plan.md`), is built and its whole-file review's round 1 is landed (eight seats, every finding checked in the source; the close block's "Gap 3's review" bullets). First run the close block's check line. Next, round 2: a full review of round 1's fix code only (the files the close block names), then round 3, the harm-class gate (only: can the inherited IRA read rosy, or refuse a case version 1 serves?), each round's findings verified in the source; the testing seat's open gaps are in the close block. Then `/distill` (24 owed). Then the register's Tier 2 *At the 1088 px laptop seam the top bar's household names break inside a word…*. The D7 queue and the tiered lists below are pre-turnaround.
 U10's Caddie card stays HARD-FLAG on its two builds (filed Tier 0). The register-wide tier sweep's readings (the
 register header's sweep paragraph) bind the next tier sweep. Next, in order:
 1. **Build 2, the surplus question.** Its plan, `docs/plans/features/working-year-surplus-build-spec.md`, is checked as a whole; its
@@ -226,17 +226,18 @@ register header's sweep paragraph) bind the next tier sweep. Next, in order:
 **Nothing parks.** Every new string is drafted and ships flagged; the saved shapes are the pilot's until Briggsy saves his first
 real plan.
 
-**SESSION 2026-11-27 (b9-9: U17, the pace lever, so every gap 3 unit is built):**
+**SESSION 2026-11-27 (b9-10: gap 3's whole-file review, round 1 landed):**
 
 State at close:
-- Commits: `c3d44822` (U17: the tray's pace group and one row per account, `paceOffers` / `paceCommit`, the exhaustive `LEVER_TARGET`, the per-account paired columns `inherited-required:<id>` / `inherited-taken:<id>` found by account id in each run's meta, Settings' one pace row with its tray door, the tray's focus ask looking past a group's own row; the plan's U17 built note, the roadmap's gap 3 U17 row, the register's parent entry open only for the review) and `09f3954d` (the kit tray's wide grid holds each column at its content's minimum: at 1088 px the names' 6rem floor broke "Withdrawal" and "conversions" inside the word and every picker ran ~25 px into the compared column; the seam arm in `e2e/rc-screens.spec.ts`, each law planted red once; the register's Tier 2 entry for the two other 1088 finds). No engine or `intakeMap` source change, so no identity run. Gates at close: `pnpm typecheck` 0, `pnpm lint` 0 on the changed files, `pnpm verify:doc-stats` OK; `src/ui`, `src/intake`, `src/shared` and the engine file green locally (3487) before the width fix, the touched files rerun after; the seam arm 3/3 locally. The eye on `?seed=inherited`: the tray at 1440×731, 1088 and 390, the paired form, Settings and its door.
-- **Check at start:** `gh run list --commit <full sha>` for `3ee355a11d046023c35e29b0d92d65e9a4384146` (suite 46019245219), `a2f256b5ce6626d08feb497cff2d17dc121e753a` (suite 46019657029), `c3d4482209c454ea32cf747a6e961f06755fde94` (suite 46024336764) and `09f3954d3d4bd58540a2ece35075d4b8dbadc138` (quick 46025979622, suite 46025979633), all in progress at close (b9-7's `85263bbe` is green). The seam arm's first Linux reading is CI's. `pnpm verify:aca` goes stale ~2026-12-12.
-- For gap 3's review: the units are U10 to U13 and U17 (`docs/plans/5-workbench-plan.md`, each unit's built note). U17's files: `src/ui/workbench/railChrome.ts`, `src/ui/workbench/tableRun.ts`, `src/ui/screens/retirement/trayView.ts`, `ActionItemsTray.tsx`, `cashFlowsView.ts`, `src/ui/screens/settings/settingsView.ts`, `src/ui/assumptionRegistry.ts`, `src/ui/kit/Tray.tsx`. Not seen by any look or arm: Tax Strategies' withdrawal stacks with the inherited source (`?seed=inherited` holds both goals; `docs/landmines.md`, the fit gate's last bullet), so the review needs a seed with an inherited IRA that solves to a winner. U17's pilot calls to judge: Settings is one row with a line per account (the plan said a row per account); the "ending in a chosen year" rule is held in the row while its year waits, as the Roth row holds its mode (the pending bundle keeps any earlier lever meanwhile); `paceOffers` drops an account the law empties in its asked year. The drawer's question words are unread by Briggsy (flagged).
+- Commits: `43e70c5c` (part 1: the drawer refuses an IRA that came through a will, an estate or a trust, the P0, a new question `named`; five drawer wordings; the tray's waiting guard, its re-seed after Apply, its passed-year refusal and column order; twin inherited names "(1 of 2)") and `3d472807` (part 2: the death-year amount netted twice, the P1 four seats found, now `max(0, figure + deathYearUntaken − taken)` with the year-after amount asked as of December 31 of the death year and a death this year's live figure added back in `openYearFigureOf`; a sampled path ending before the asked year carries the ledger unopened, the P1 two seats proved; Settings and Find's words for a household whose only pre-tax money is inherited; Tax Strategies' Details gains inherited columns and the required-withdrawals chart a note; `ledgerRowInheritedSpent`, the one helper; `validateParams`' shape checks; `idsInUse` exhaustive; false comments; four register entries). Engine identity IDENTICAL 83 of 83 keys vs `43e70c5` (part 2 is the only engine commit). Gates at close: `pnpm typecheck` 0, eslint 0 on the changed files, `pnpm verify:doc-stats` OK; the touched areas' unit files green locally; three planted faults red (the tray guard, the death-year formula, the path horizon).
+- **Check at start:** `gh run list --commit <full sha>` for `43e70c5c465593c37d37096104e50cd2eab7b5c0` and `3d472807ef2299675fb8b29e152f72f478f0150d` (both pushed at close; b9-9's four runs are all green, the 1088 seam arm's first Linux reading included). `pnpm verify:aca` goes stale ~2026-12-12.
+- **Gap 3's review (round 1):** eight seats on opus at xhigh (engine law, engine invariants, engine adversary, intake and persistence, the question tree's adversary, UI screens, U17, testing), the ledger at `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-gap3-understand\round1-findings.md` (machine-local). The look: `?seed=surplus` plus a $400,000 inherited IRA entered through the drawer (owner born 1945, died 2024, computed figure, left to Sam) solves to a winner in ~30 s; the withdrawal stacks draw the inherited source (umber zigzag, legend, note) at 1440×731 and on the phone, its year-10 spike at Alex's 74 (2034). Pilot calls judged: Settings' one row (kept), the held rule (kept, the buttons now stop on it), dropping an account the law empties in its asked year (kept: every pace takes the whole balance then). Filed, not fixed: the register's *An inherited IRA left to "someone else" stays in the leftover…* (a KTD22 design question first), *On a plan opened after it was built, a death after the build year…*, *Gap 3's review: the inherited screens' smaller leftovers*, *The kit tray's name column: a long unbroken household-typed label…*.
+- **Round 2's scope (the fix code):** `src/intake/inheritedIraQuestions.ts`, `src/intake/inheritedIra.ts` (`openYearFigureOf`), `src/engine/taxOverlay.ts` (`buildInheritedLedgers`' `rowsHorizon`, the open row's `required`), `src/engine/simulate.ts` (`inheritedIrasRefusal`'s shape checks), `src/engine/sequencing.ts` (`ledgerRowInheritedSpent`), `src/shared/stableIds.ts`, `src/ui/screens/retirement/ActionItemsTray.tsx` (`data-tray-waiting`, the two re-seeds), `trayView.ts` (`paceCommit`'s clock), `src/ui/workbench/railChrome.ts` (`pairedColumnsFor`'s order), `tableRun.ts` (`enteredAccountName`'s twins), `src/ui/screens/tax/taxRunsView.ts`, `strategiesView.ts`, `src/ui/screens/settings/settingsView.ts`, the drawer (`InheritedIraFields.tsx`, `accountFields.ts`) and the new copy. Two plan sentences now lag the code (`docs/plans/5-workbench-plan.md`): KTD25's "how much of the owner's own death-year minimum is still untaken" (the year after a death asks it as of December 31 of the death year, and what came out this year counts against it and the year's own minimum together) and U13's built note, which lists no `named` question (the estate-or-trust refusal); amend both in round 2's commit. Its open test gaps (the testing seat, each a real seam): (T1) no test reaches the state tax on an inherited withdrawal in a WORKING year (`taxOverlay.ts`'s spread into `workingYearStateCharge`): an NC-vs-FL working-year arm, expected gap 0.0399 × the withdrawal, PA equal to FL; (T3) the custodian figure's tolerance (`inheritedIra.ts`) is never tested near its edge: AE5 figures 3,460 and 3,378 refused, 3,490 served; (T4) the HSA run-out check's fixture has no paced withdrawal and no exit year: a ten-year-end fixture short by less than the paced amount (no run-out) and an exit-year arm firing $1 short; (T5) the worker round trip never carries `terminalInheritedReal`: an inherited ledger whose end falls past the horizon in both round-trip fixtures (`worker.test.ts`).
 - Carried open from b9-8's close (unchanged). Advisory from milestone 4's review (recorded, not fixed): on an aged plan Savings' "this year" lines mean the build year (O6); the RC17 composers re-type their figure and percent rules (A8); `balanceSheetView.ts:89` splits Net Worth's notes by position (D1); a phase-mismatched year left out and named can make the window's direction differ from all years' (accepted: the window and the left-out years are on the screen); Retirement Details' "spends less" over a named window can come mostly from pre-window years; no fit arm runs a view-only tab (the banner's height); `handleRecovery` in `SaveFlow.tsx` has no catch (pre-existing); the flow's labels are unaudited between 1088 and 1439 px; the 16 px root replaced the old 17-18 px body size for any state outside the builder's 25-screen walk.
 - Open, filed, unchanged by the review: RC16's retired axis "$0.25mm, $0.5mm" (the shared `mmAxisFormatterFor` dialect), no look shot with an HSA column, the Current tab and the DETAILS handle both "Details", two accounts of one owner and kind read alike; RC17's dip income comparison holds its frame by 5.9 px (725.1 of 731) and the spending comparison's caveat by 10.1 px (720.9, its handle below by section 4.0's landed rule), Savings' left-over metric can run three lines with no fit arm, two sides run out in one year print identical end words stacked; RC19's kit Tooltip and ScrollArea are drawn by no screen, the Toast shows only for a waiting service worker (no CSP visit, unshot), the view-only banner's "Reload this page" has no Reload control (insight 100), the refused unlock's "your backup is the way in" has no door (the register's ⚑ item), the damaged-vault page has no way out without a backup (a one-way door: the register's no-way-to-delete-the-vault entry); RC20's source key names pre-tax per person beside the map's one combined node, a year can show "Income not kept" while savings pay premiums and tax.
 - Open for Act 6 (unchanged): `held/solve-timing` was re-pointed by RC8 and not run; the Tier 1 *Stress Test's out-of-pocket stress, refused on a plan with no out-of-pocket figure…* stays open; Cash Flows' table carries no R13 tie (the Tier 4 leftovers entry); milestone 2's round-3 findings and milestone 3's leftovers stay in their Tier 1 entries; seven register entries naming deleted surfaces carry RC21b's "⚑ Act 6 · RC21, for re-triage" line (the next tier sweep owns them). Blueprint's square elbows are fixed (`rounded-*-card`, `af889009`).
 - Gap 3's evidence (the seat reports, the chair's synthesis `H-chair.md`, both review rounds `J-review.md` and `L-recheck.md`, the law reads `E-law.md`, the engine map `B-engine.md`) is machine-local and not backed up (insight 156): `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-gap3-understand\`. The plan carries everything a builder needs; the reports are evidence only.
-- For Briggsy: a household with an inherited IRA can now try how fast it comes out, in the Action Items tray (Strategies → "Inherited IRA pace"): only what the law requires, even amounts through the law's last year, or even amounts ending in a year it picks (a year past the law's last is refused in words). Cash Flows' "Your plan beside the what-if" then shows that account's required and taken-out columns, and Settings names each account's pace with a door to the tray. The tray's names no longer break inside a word at 1088 px. Every word ships flagged. From b9-8, still unread: the inherited-IRA drawer's questions and refusals on Net Worth. From b9-7, still unread: the phone top bar's names on their own row, Cash Flows' group names held beside Year and Age, the phone's income legend in rows. From b9-9, still unread: Retirement Details' spending comparison draws its bars sideways at his window. His inherited-IRA answers (2026-11-26) are in private memory, never the repo; they sit inside version 1's case. `temp/rc-shots/RC20/` and `RC21/` from b9-7 are still there.
+- For Briggsy (b9-10): the inherited-IRA drawer now asks whether the heir was named on the account or it came through a will, an estate or a trust, and refuses the second (it runs on other rules); it tells a child whose widowed parent made the IRA their own to answer No to "inherited it themselves"; the owner's last required withdrawal left over is asked as of December 31 of the death year. Tax Strategies' Details shows the inherited IRAs' withdrawals and balance, and its required-withdrawals chart says it counts your own. Every word ships flagged. From b9-9: a household with an inherited IRA can now try how fast it comes out, in the Action Items tray (Strategies → "Inherited IRA pace"): only what the law requires, even amounts through the law's last year, or even amounts ending in a year it picks (a year past the law's last is refused in words). Cash Flows' "Your plan beside the what-if" then shows that account's required and taken-out columns, and Settings names each account's pace with a door to the tray. The tray's names no longer break inside a word at 1088 px. Every word ships flagged. From b9-8, still unread: the inherited-IRA drawer's questions and refusals on Net Worth. From b9-7, still unread: the phone top bar's names on their own row, Cash Flows' group names held beside Year and Age, the phone's income legend in rows. From b9-9, still unread: Retirement Details' spending comparison draws its bars sideways at his window. His inherited-IRA answers (2026-11-26) are in private memory, never the repo; they sit inside version 1's case. `temp/rc-shots/RC20/` and `RC21/` from b9-7 are still there.
 
 **⚑ RULED by Briggsy 2026-11-09 (b9-8): the verb is "update" ("ok update it is")** on A, B and C; S keeps "confirm or
 change". Never re-propose "check", and never swap the verb in `WORKING_COST_ACT_COPY` on the old council's flip condition.
@@ -389,7 +390,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    eats the full premium. The token has an ACA **legislative freshness** clause and **no ACA pricing-mode
    clause**.
    ⚑ **Audit corrections 2026-08-02 — three anchors were wrong and the fix shape is NOT Part B's:**
-   (a) `healthOverlay.ts:305` is a **closing brace**, not a consumer; the real seam is `taxOverlay.ts:2666` plus `taxOverlay.ts:2822-2829`
+   (a) `healthOverlay.ts:305` is a **closing brace**, not a consumer; the real seam is `taxOverlay.ts:2670` plus `taxOverlay.ts:2826-2833`
    → `healthOverlay.ts:279`. (b) `copy.ts:1155` (`healthFactMedicare`) is a Medicare eyebrow; the strings that claim
    the coupling is priced are **`copy.ts:1114-1117`**. (c) the excess-APTC field moved to
    `aca-last-verified.json:43` (was `:21`) and `scripts/verify-aca-status.ts:40-103` declares and REQUIRES the key
@@ -398,7 +399,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    engine, which is why the oracle token can witness it. The ACA escalator lives in **intake**
    (`intakeMap.ts:446-466`), which the engine cannot import — so an `ACA_PRICING_MODE` flag bolted onto
    intakeMap would be the exact lying-mirror `oracleToken.ts:114-122` warns about. The honest fix moves the
-   schedule build to an engine-owned `buildAcaPricingSchedule` beside `partBPricingByT` (`taxOverlay.ts:2138`).
+   schedule build to an engine-owned `buildAcaPricingSchedule` beside `partBPricingByT` (`taxOverlay.ts:2142`).
    ⚑ **Re-tag: BLOCKED ON RESEARCH.** No sourced ACA cost-trend primary exists in the repo, so a solver
    block would hold for months over the whole pre-65 population.
    ⚑ **2026-08-03 double-blind — the pricing defect is REAL and confirmed; the near-term copy move as filed
@@ -416,7 +417,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    the same `escalateQuote` factor — so under the cliff a missing trend is **zero** when E=S
    (`devSeeds.ts:731-732` = 4200/4200) and **reversed (pessimistic)** when E<S, which `copy.ts:194` invites.
    It bites one-way optimistic **only over the cliff** (`healthOverlay.ts:308-312`, full enrolled premium).
-   The shipped sibling `recDiscAcaSlcsp` (`copy.ts:2270-2271`) hedges bidirectionally on this exact fact and
+   The shipped sibling `recDiscAcaSlcsp` (`copy.ts:2274-2275`) hedges bidirectionally on this exact fact and
    `medicare-pricing-build-spec.md:43` bans the false unidirectional. Draft to append to BOTH strings:
    *"One modeling choice: these prices step up with your ages, not with the way plan prices themselves climb
    — so a conversion that crosses the income line could cost more than shown."*
@@ -454,7 +455,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    (`copy.ts:1096`, `:1101, :1153, :1107, :1115, :1117` — selected by `composeRothOmissionsNote`'s 2×3 matrix, whose
    ACA-priced arm already AFFIRMS the subsidy is counted, so a trend sentence must reconcile with that
    affirmation, not append to it) + the two health-control siblings (`copy.ts:1237`, `:1243`), which CANNOT take it
-   (gated on `statePriced` alone — `copy.ts:1229-1231`). Unfiled: `shadowRateHeadroom` (`copy.ts:5053`)
+   (gated on `statePriced` alone — `copy.ts:1229-1231`). Unfiled: `shadowRateHeadroom` (`copy.ts:5069`)
    quotes cliff headroom against an SLCSP that never trends — the headroom figure inherits the held-price
    optimism; and there is NO ACA cost-trend constant at all (`health.ts` carries only `medicareCostTrend`)
    — ACA premiums are the one health channel with no trend, no clause AND no disclosure, in the
@@ -486,9 +487,9 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    `tsc` until written) · `recommendationView.ts:349-353` · the intake picker **4 → 11 vertical arms**
    against `verify:fit`. Engine cost is genuinely near-zero (`stateTax.ts:163` structural early return).
    ⚑ **The filed "every saved vault decodes Corrupt" blocker is FALSE — do not act on it, and do NOT loosen
-   the compile tie.** `_V3FieldsCover` (`model.ts:3265-3267`) covers only `keyof CurrentScenario`;
-   `checkStateTaxVintageV3` (`scenarioCodec.ts:875-880`) is hand-written and compels no `needString`. Safe
-   because `scenarioCodec.ts:1127-1128` gates `retirementState` via `needVocab(STATE_ROSTER)`, so no
+   the compile tie.** `_V3FieldsCover` (`model.ts:3269-3271`) covers only `keyof CurrentScenario`;
+   `checkStateTaxVintageV3` (`scenarioCodec.ts:878-883`) is hand-written and compels no `needString`. Safe
+   because `scenarioCodec.ts:1130-1131` gates `retirementState` via `needVocab(STATE_ROSTER)`, so no
    pre-widening vault can *be* a household in a newly-priced state. The prescribed remedy — loosening
    `stateTax.ts:429-433` — would **re-open the exact hole that tie was minted to close** (`:424-428`).
    ⚑ **His call, sharpened:** does the refusal reach the **headline + date** (`engineProtocol.ts:436`/`:484`)
@@ -548,12 +549,12 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      and the fit gate's panel arm (`vertical-fit.spec.ts line 2524-2553 at 95c715e19`) asserts only that the dialog box fits
      **and** `scrollHeight > clientHeight` — content growth makes the second assertion *more* true.
      ⚑ **The drafted HSA sentence would have DENIED the very forfeit it discloses — do not ship "stays
-     put" / "simply sits."** The balance is not parked, it is **destroyed**: `taxOverlay.ts:2993-2994` sets
-     `buckets = EMPTY_BUCKETS` (hsa: 0) → `simulate.ts:2434` `terminalHsaReal = 0` →
+     put" / "simply sits."** The balance is not parked, it is **destroyed**: `taxOverlay.ts:2997-2998` sets
+     `buckets = EMPTY_BUCKETS` (hsa: 0) → `simulate.ts:2440` `terminalHsaReal = 0` →
      `objectiveHeadline.ts:65` bequest contribution **$0**. On the exact path the sentence names, the HSA
      adds nothing to the leave-more dollar the reader sees. **The sentence must say the balance is DROPPED.**
      ⚑ **Sweep BOTH stale comments in the same commit** — `healthOverlay.ts:912-915` (which says
-     fix-or-it-re-rots) **and** `taxOverlay.ts:2976-2978`, which still calls post-65 HSA-as-ordinary-income
+     fix-or-it-re-rots) **and** `taxOverlay.ts:2980-2982`, which still calls post-65 HSA-as-ordinary-income
      *"a DISCLOSED non-feature, the survivor-SS class"* — the same false claim, in the file that **owns** the
      mechanism.
      ⚑ **The genuine ruling here is scope, not wording** (tone is Caddie-chair under the batched-oracle law):
@@ -567,7 +568,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      `:851`, footer `:857`, the disclosures map `:533-565`; the `assumption*` prefix law is
      `copy.ts:1378-1389` (keys `:1391-1619`); the panel fit arm is `vertical-fit.spec.ts line 2524-2553 at 95c715e19`;
      `sheetShell.css line 34-35 at 7933cf12e`/`line 94 at 7933cf12e`; the overlays are `src/engine/healthOverlay.ts:911-915` and
-     `src/engine/taxOverlay.ts:2975-2978` (there is no `overlays/` dir). NIIT's two homes confirmed
+     `src/engine/taxOverlay.ts:2979-2982` (there is no `overlays/` dir). NIIT's two homes confirmed
      (`recommendationView.ts:103` unconditional; `copy.ts:1236-1237`) — the scope fork is self-resolving:
      HSA + LTC only. TRAP 1 — `Row` REQUIRES a `seat` from the CLOSED 22-member `AssumptionSeat` union
      (`AssumptionPanel.tsx` (line 150 at `87e3c8070`; deleted by Act 6 · RC18), `assumptionRegistry.ts:41-56`): a leaves-out row is a hand-rolled
@@ -575,7 +576,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      TRAP 2 — a heading literally "What this leaves out" that names two items is ITSELF a completeness claim
      the constants falsify (`health.ts:72/:112/:120/:135/:319` declare four more OUT-but-disclosed facts) —
      scope the heading or name them. TRAP 3 — the HSA sentence must be true across ALL THREE zeroing
-     branches (`taxOverlay.ts:2987-3000`, `:3026-3033`, `:3190-3195`): on each, EVERY bucket is zeroed
+     branches (`taxOverlay.ts:2991-3004`, `:3034-3041`, `:3200-3205`): on each, EVERY bucket is zeroed
      because the path DEPLETED, so a bequest-framed sentence ("dropped from what's left to your heirs")
      names a state the engine cannot reach; the honest harm is that the plan is COUNTED AS HAVING RUN OUT
      while HSA dollars remain unspent (understated survival), because HSA outflow is qualified-medical-only
@@ -707,13 +708,13 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     copy" and both nearest register entries — *The aged surface — every 2026 plan changes wording on 2027-01-01, unreviewed* and *Unscored Caddie tape rows plus the four aged-surface tone calls due before 2027-01-01* — are owned **briggsy**; neither is a copy fix; the "three arms with
     corrected costs" existed NOWHERE — they are now written, with sizes, under the register's "The aged
     surface" entry. A shipped copy defect on the SAME cohort WAS pilot and is FIXED (2026-09-04: the singular arm ships at
-    `copy.ts:4960-4962` under the NUMBER AGREEMENT post-mortem at `copy.ts:4946`, covered by `copyGuard.test.ts:1078`):
+    `copy.ts:4976-4978` under the NUMBER AGREEMENT post-mortem at `copy.ts:4962`, covered by `copyGuard.test.ts:1078`):
     `rothPlanRanked` hardcoded the plural "Those years are counted from…" after a correctly-singular "for 1 year" —
     live for any at/past-RMD household on an aged vault (the 1-year clamp, `solveAnchor.ts:271-272`) — and no test
     covered `years: 1, passed: true`. (b) THE LADDER is register `L` · **pilot**, and the v2→v3 ALGORITHM IS
-    PRESCRIBED: `model.ts:2001-2003` mints synthetic entered accounts from the old aggregates "so the ladder
+    PRESCRIBED: `model.ts:2003-2005` mints synthetic entered accounts from the old aggregates "so the ladder
     stays total"; the write primitive exists (`db.ts:232 rewriteModel`, pinned `db.test.ts:180`); today's
-    ladder is decode-and-return with NO migrate step (`scenarioCodec.ts:1414-1421`, the v1/v2 arms), and a v1 vault survives
+    ladder is decode-and-return with NO migrate step (`scenarioCodec.ts:1417-1424`, the v1/v2 arms), and a v1 vault survives
     every store seam on real IndexedDB (`e2e/vaultHarness.ts:24-25`) to die only at `IntakeApp.tsx:818`.
     Two new defects ride with it: `session.ts:464-468` claims the writer and UNLOCKS before the version is
     judged (the recovery path claims unconditionally, `:539`), and `backup.ts:209-213` LANDS a legacy backup
@@ -790,9 +791,9 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     riders, the open copy obligations, the deferred richer market draw, and the `dateinvert` (c) mint —
     its own session, a size-L parameter hunt.
     ⚑ **2026-09-04:** two bullets were half-dead and are closed — the `partBTrendVintage` "no exposure gate"
-    clause was swept in `staleness.ts:747-750` but still lived verbatim at `model.ts:3208` (swept), and
+    clause was swept in `staleness.ts:747-750` but still lived verbatim at `model.ts:3212` (swept), and
     Plan 4's "the record carries `seedA`/`seedB`" (`plans/4-recommendation.md:283`) had outlived its own
-    "kill BEFORE S5 mints" deadline — the shipped `SavedRecommendationV3` (`model.ts:2634-2656`) has no seed
+    "kill BEFORE S5 mints" deadline — the shipped `SavedRecommendationV3` (`model.ts:2638-2660`) has no seed
     field (struck in the plan). ⚑ (b)'s SOURCE twin outlived that close — `heldOutSeed.ts:13-14` still said
     the U17 record stores the seed — and was swept 2026-09-25 (the register bullet is closed with it).
     ✅ **NC's RETIRED CERTIFICATION CHECKPOINT — SWEPT 2026-08-14.** Six shipped surfaces (not the
@@ -808,7 +809,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     page and the codified G.S. page both still show the struck "after 2025 — 3.99%", so they read as
     CONTRADICTING the pinned record until they recompile — **session law wins, do not "correct" the
     engine table back to a flat 3.99%.** Comment-only; typecheck · lint · 3289 tests · state-tax gate
-    all green. (`copy.ts:5345` and `caseStateCompanions.ts` were already correct — swept 2026-08-02.)
+    all green. (`copy.ts:5361` and `caseStateCompanions.ts` were already correct — swept 2026-08-02.)
     ⚑ **The CVD half of this cluster is PARKED, not owed — do not re-propose it.** The filed gap ("the CVD
     crops prove PRESENCE only") is real, and a `verify:cvd` pixel-regression gate was designed for it on
     2026-08-02. **Briggsy declined it on the only authority that can:** *"I'm pretty color blind and I think
@@ -835,7 +836,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     flag) and BOTH candidate fixes cost something — "mint through `update()`" turns a deferred false-arm
     into an immediate one; an eager mint in `createMemoryModel` breaks the WRITTEN contract #1b (mint at the
     FIRST ENGINE RUN, `plans/2-first-answer.md:57`) with no test that would catch it. His ruling, framed as
-    those two arms. Two half-swept false comments closed 2026-09-04: `model.ts:3208` and
+    those two arms. Two half-swept false comments closed 2026-09-04: `model.ts:3212` and
     `plans/4-recommendation.md:283`.
 
 ---
@@ -896,6 +897,9 @@ line keeps the facts `/distill` needs; its source line is in this file as it sto
 - *Extend 144* (b9-8, U13's drawer `3ee355a1`): a pre-filled answer seeded from a saved record vouches only for the question as it was asked then. Editing a saved inherited IRA seeds its refusal-only answers on the served side; an unkeyed "yes, every required withdrawal was taken" would have stayed checked after a death-year edit moved the question to years it never covered (rosy). Fix: each answer carries its question's key (the heir, the years its words name, the owner's four date answers), the walk counts it only under the same key, and a seed is written only for a question the stored facts' own walk asked. Witnesses in `inheritedIraQuestions.test.ts`'s last describe.
 - *New* (b9-8, U13's field walk): a made-up record for a law-gated kind must pass the law's own re-check, never the author's reading of the law. FULL's inherited IRA said a 1952 owner died in 2025 after the required beginning date; the date is April 1 of the year AFTER the applicable age (2026), so the stored facts were ones the rules refuse, and the field walk caught it only as one unstamped field. Fix: the registry test asserts `missingRequiredFacts(FULL)` names no inherited fact. Check fixtures with the producer (`inheritedFactsProblems`), not by hand.
 - *Extend 180* (b9-9, U17's look and the kit tray fix `09f3954d`): a shared grid's column floors decide where words break, and two sizes can miss it. U17's pace picker, sized to its longest choice ("Even amounts, ending in a year you pick"), widened the tray's shared `auto` control column until "Roth conversion / s" broke at 1440; capping the picker hid it at 1440 and the phone, but at 1088 (both column groups side by side) the kit's own `minmax(6rem, 1fr)` names floor under `break-words` broke "Withdrawal" and "conversions" on households with no inherited IRA, and the control cell's `min-w-0` let every picker run ~25 px into the compared column. Fix in the primitive: `minmax(min-content, 1fr)` and `min-width: auto` from `wide`. The check that sees it: read each word through a Range and flag a word whose boxes sit on two lines (no overflow or clipping audit does). Measure a new tray row at the seam, not only at the two named sizes.
+- *New* (b9-10, gap 3's review, `43e70c5c` + `3d472807`): two asked figures read at different moments cannot be netted against each other. The drawer asked the owner's death-year amount "still to come out" (net, today) and "taken out so far" (gross); the engine took the second off the first, so a $12,000 requirement read $4,000, and a make-up taken this year shrank the year's own minimum. Four of eight reviewers found it independently; every test passed because each fixture had taken = 0. Fix: ask a fixed-moment figure (December 31 of the death year) and net "taken" against the sum, or add back what the live figure already netted. Rule: every pair of asked figures the engine combines names the moment each is read, and a test runs the pair with both non-zero.
+- *New* (b9-10, gap 3's review, the engine invariants seat's probe): an engine rule judged against one horizon and applied against another fails only on the paths where they differ. `validateParams` checked the asked year against `maxHorizonYears`; the overlay built each ledger's rows against the path's own length (its last death), so on a plan aged a year one sampled path that ended in row 0 threw and the whole run came back infeasible. Every engine test ran fixed-horizon. Rule: a bound the gate checks is the bound the loop uses, and a feature with an open row past 0 gets a sampled-lifespan arm.
+- *Extend 147* (b9-10, gap 3's review): an exhaustive vocabulary leaks wherever the plan does not name the case. KTD17 listed "a trust or estate" among the refused cases, but the decision tree had no question for it, so an IRA that came through an estate ran on the heir's ten-year rule (rosy). The refusal list in the plan is a list of questions owed; check each refused case has the question that refuses it (a test per refusal reason, `InheritedRefusal` keyed).
 
 ## Driving the app
 

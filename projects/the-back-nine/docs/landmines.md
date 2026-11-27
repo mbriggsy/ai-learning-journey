@@ -640,6 +640,12 @@ said squeaky clears `temp/` UNCONDITIONALLY; its step 4 now deletes only the clo
 
 ## Citations and the doc gates
 
+- **(b9-12, 11-27) `scripts/check-citation-pairs.mjs` reads ONE code file per run, and crashes on a file no doc cites.**
+  It takes `<BASE> <code file>` and ignores any further argument, so b9-12's first run over two moved files checked only
+  the first. And where no tracked doc cites the file by line, its `git grep` exits 1 and the script throws (a Node stack,
+  `Command failed: git grep -l -E …`) instead of saying "none". Run it once per moved file; read a throw on `git grep` as
+  "nothing cites this file" only after `git grep -l -E '<file>:[0-9]'` itself finds nothing.
+
 - **(b9-9, 11-25) A builder's re-anchor is verified by rebuilding it, and the orchestrator's own doc edits ride a second
   commit.** RC9's builder applied `pnpm doc:reanchor HEAD --apply` twice and hand-restored; `verify:doc-stats` cannot see a
   double shift. To check: snapshot every changed file, `git checkout HEAD --` the citation-only docs, apply once, put every
@@ -1176,6 +1182,12 @@ chair; chair from a digest script, never the raw result, and expect the window t
 refusal witness), so `gotoSeedFinal` times out on it — anchor on `main.result`
 
 ## CI
+
+- **(b9-12, 11-27) A failed job's log through a pipe: `gh` refuses it unless told to allow escape sequences.**
+  `gh run view <run> --log-failed` printed nothing while the run's other jobs were still going, and
+  `gh api repos/{owner}/{repo}/actions/jobs/<job id>/logs > file` wrote one line, "the response contains terminal escape
+  sequences; pass --allow-escape-sequences to output it anyway". `gh api --allow-escape-sequences …/jobs/<id>/logs` writes
+  the whole log; strip the colour codes (`sed 's/\x1b\[[0-9;]*m//g'`) before grepping for `FAIL` or `AssertionError`.
 
 - **(b9-11, 11-25) `jq` is not installed in this Git Bash: filter with `gh`'s own `--jq`.** b9-11's CI wait piped
   `gh run list` into `jq`; every probe printed "jq: command not found", the loop's test read an empty count, and it spun

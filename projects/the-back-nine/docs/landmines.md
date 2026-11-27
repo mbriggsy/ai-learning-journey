@@ -1082,6 +1082,12 @@ chair; chair from a digest script, never the raw result, and expect the window t
   1.2–1.9 s (2,000) and 2.5–3.6 s (16,000); `datemixed` (offset 7, floor) 290 / 161 ms, 1,408 / 1,275 ms, sweep 19.0 s,
   behind it 0.3–1.7 s and 1.5–2.3 s. Re-time only within one session (the laptop-state swing above), and re-run it when
   the engine's per-run cost moves: `dip`'s 16,000-path median sits 3% over the plan's 2 s line.
+  **Re-timed 2026-11-27 (b9-5), after U12:** alternated in one quiet session (HEAD `ea7a85a`, the base `0b64fd4d` in a
+  `git archive` copy with a `node_modules` junction, HEAD again). `dip` 16,000-path medians 2,119 / 2,074 / 2,046 ms,
+  `datemixed` 1,329 / 1,328 / 1,338 ms: HEAD brackets the base, so the per-run cost did not move, and the final tier
+  holds (the plan's U12 "After the slice" bullet). One HEAD run alone read 3% slower than 11-23 on every figure, the
+  sweeps included: a single re-time cannot tell a code cost from the laptop's state, so alternate HEAD and a base.
+  In the copy, the spec's `git rev-parse` throws outside a repository: pin its `head` field before the run.
 - **(b9-9/b9-10, 11-13) A probe runs from the project dir** (`pnpm exec tsx --tsconfig ./tsconfig.json <probe>.mts`, absolute `file:///`
   imports of the modules) so the `@intake` / `@ui` aliases resolve; print a composer on every witness BEFORE typing a
   by-hand pin (U3's probe, `u3-probe.mts`, is the one to extend).

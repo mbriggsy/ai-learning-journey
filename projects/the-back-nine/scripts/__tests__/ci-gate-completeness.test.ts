@@ -58,6 +58,8 @@ const NON_GATE_SCRIPTS: Readonly<Record<string, string>> = {
   'test:watch': 'vitest in watch mode: the same suite `test` runs once, and it never exits',
   'doc:reanchor': 'a tool that REWRITES doc citations from a git diff: a mutation, not a check (verify:doc-stats arm 4 is the gate)',
   'caddie:walk': 'the Caddie capture harness: writes bundles for the reader panel; its expects guard the walk, not a product law (on-demand, driven by the caddie skill)',
+  'engine:identity':
+    'the per-seed identity tool: a per-commit laptop proof (about half an hour a side), its result line carried in each engine or intakeMap commit message (the Act 5 plan\'s Verification Contract), never a CI job',
 }
 
 /** The gate family by name. A script matching this can never be exempted. */

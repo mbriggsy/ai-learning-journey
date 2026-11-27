@@ -84,7 +84,7 @@ The MEASURED probe substituted its vector before `adoptObservedOutcome`. The gra
 - `selectionTieTolerance` (`heldOutSeed.ts:139`), which is vector-generic;
 - `gradeAxisFor`: the axis label is keyed by goal, and `GradeStatistic 'pay-less-tax'` keeps its name;
 - `demotionAxisCalibrated` (`gradeCalibration.ts:166`) is unchanged.
-- ⚑ SKEPTIC (missing readers; each follows through sites 1-2, named so nothing is assumed): the hero delta itself (`recommendationView.ts:634-646` `winnerDisplaysAhead` / `deltaReal`, and the zero-collapse guard at `:652`, which decide dollar vs no-dollar); `runnerUpVizFor` (`recommendationView.ts line 879-880 at b69c28483`, leave-more gated today); `namedDriverProbe` / `namedDriverProbeSteps` (`gradeCalibration.ts:402-439`), which re-rank under `rankCandidates` and drive F2's `aca-enhanced-subsidies` driver and the coin-flip hinge `recGradeNoteHingeAca` (`copy.ts:2194-2195`). That sentence will now fire on PREMIUM-driven flips, so it joins the §8 Caddie read.
+- ⚑ SKEPTIC (missing readers; each follows through sites 1-2, named so nothing is assumed): the hero delta itself (`recommendationView.ts:648-660` `winnerDisplaysAhead` / `deltaReal`, and the zero-collapse guard at `:667`, which decide dollar vs no-dollar); `runnerUpVizFor` (`recommendationView.ts line 879-880 at b69c28483`, leave-more gated today); `namedDriverProbe` / `namedDriverProbeSteps` (`gradeCalibration.ts:402-439`), which re-rank under `rankCandidates` and drive F2's `aca-enhanced-subsidies` driver and the coin-flip hinge `recGradeNoteHingeAca` (`copy.ts:2194-2195`). That sentence will now fire on PREMIUM-driven flips, so it joins the §8 Caddie read.
 
 **D5 Byte-identity when healthcare is off.**
 - The premium and Medicare yearly values start at 0 (`taxOverlay.ts:2575-2581`, map).
@@ -129,13 +129,13 @@ Result: the all-in vector equals the tax vector element by element, and its mean
 - ⚑ SKEPTIC (missing site): `src/shared/model.ts`'s docblock (pre-Phase-A wording, as of `b3284566`; as built the re-worded docblock is `model.ts:1160-1162` and the field `model.ts:1163`) documents `lifetimeMedicareCostReal` as "base Part B + the IRMAA surcharge", but `taxOverlay.ts:3046` accrues `medicareCostThisYear + medicareExtrasThisYear` (the Part D / Medigap / MA extras). Re-word it to "base Part B + IRMAA + the Part D / Medigap / MA extras (`taxOverlay.ts:3046`), an addend of the pay-less-tax all-in objective", and note at `model.ts:1126-1129` ("the P4 objective reads THESE") that pay-less-tax now ranks on tax + premium + Medicare. No type change; Phase A.
 - `solve.ts:214-224, :385-390` (deltaSkew wording).
 - `stateTaxDisclosure.ts:152-156`: the priced-state layer reaches the hero through the tax addend; the logic is unchanged.
-- `recommendationView.ts:96` and `line 719 at b69c28483`.
-- `copy.ts:2107` comment and `:5358`.
+- `recommendationView.ts:102` and `line 719 at b69c28483`.
+- `copy.ts:2107` comment and `:5379`.
 - the `recommendationView.test.ts line 596 at b69c28483` comment.
 
 The viz suppression off leave-more stays correct, because all-in is still lower-is-better.
 
-**Copy (HIS, §6):** `recDeltaPayLessTax` (`copy.ts:5605-5606`, read), `goalPayLessTaxGloss` (`:2147`), `recDiscNiit` (`:2290-2291`), `recDiscStateTax` (`:2265-2266`), the optional new `recDisc*`, and `recDeltaTypical*` (`src/ui/copy.ts:3614-3633`) only under a "$X less" hero.
+**Copy (HIS, §6):** `recDeltaPayLessTax` (`copy.ts:5626-5627`, read), `goalPayLessTaxGloss` (`:2147`), `recDiscNiit` (`:2293-2294`), `recDiscStateTax` (`:2265-2266`), the optional new `recDisc*`, and `recDeltaTypical*` (`src/ui/copy.ts:3635-3654`) only under a "$X less" hero.
 
 **Calibration:**
 - Add "an objective-statistic change" to the RE-MEASURE triggers at `fallback.ts:44, :58, :72` (map).
@@ -206,7 +206,7 @@ The viz suppression off leave-more stays correct, because all-in is still lower-
       - *Why over Spec 1's record-only:* Spec 1 records the bias but never checks whether it decides a crown. On this point calm-but-wrong is a live risk.
 15. Land Briggsy's chosen strings (§6). Then:
     - add a `SLOT_RENDER` sample for any new slot, cohort arm or `recDisc*` key (`copyGuard.test.ts:1038-1042`, the burned/070 completeness test);
-    - update the pinned DISCLOSURE_ORDER test (`recommendationView.ts:127-128`, map) if a scope disclosure is added;
+    - update the pinned DISCLOSURE_ORDER test (`recommendationView.ts:133-134`, map) if a scope disclosure is added;
     - add the `recommendationView.test` arms (§5.5).
 16. Docs (§7). Then `pnpm doc:reanchor`, grepping the dry run for "(bare, after", the tool's 5th blind class. Then doc-stats.
 17. Gates (§8). One commit containing: the engine switch, case vi, hl50, the synthetic arms, the version bump, his words and the docs. Push.
@@ -333,8 +333,8 @@ Today's objective crowns $100k. All-in crowns $84k, by about $28k.
 **Constraints the drafts meet.** This was a hand-lint against `copyGuard.ts:146-310` + `HEDGE_TOKENS` (`copy.ts` lines 2658-2872 at 1c08f2288); the suite runs on whatever he picks.
 - A hedge ("about" / "could"); `recDelta*` and `recDisc*` are require-hedge swept (`copyGuard.ts:122-126`).
 - No superlative, no clause-leading directive verb (`:262`), no "pays off" or "better off" (`:251-252`), no em-dash apposition on the figure.
-- The hero stays one line (`recommendationView.ts:168-170`) and keeps "than today’s plan" (the userBaseline seam, `copy.ts:2148-2155`).
-- The slot keeps its one-arg signature, so `recommendationView.ts:673` and `copyGuard.test.ts:899` need no wiring change.
+- The hero stays one line (`recommendationView.ts:178-180`) and keeps "than today’s plan" (the userBaseline seam, `copy.ts:2148-2155`).
+- The slot keeps its one-arg signature, so `recommendationView.ts:687` and `copyGuard.test.ts:899` need no wiring change.
 - Rejected: "health costs" and "in your pocket". Out-of-pocket and cost-sharing are not counted, and funded-year accrual makes any wealth claim an overclaim. Also do not reuse the health sheet's "Lifetime health costs" lexeme: one lexeme with two referents is the O14 class.
 
 **Hero `recDeltaPayLessTax`.** Today: "Keeps about $X more out of your lifetime tax than today’s plan."

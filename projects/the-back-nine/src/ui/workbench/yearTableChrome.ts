@@ -373,6 +373,29 @@ function sourceKey(meta: TableMeta, columns: readonly TableColumn[], rows: reado
   return entries
 }
 
+/** Each inherited IRA's year sentences, by row (the Act 5 plan's U13): what of its withdrawal the year didn't need and
+ *  moved to taxable (the required withdrawal's own sentence, `workbenchRowRmdMoved`, beside it); the law's last year for
+ *  it, when everything left in it comes out (named in words, never by colour); and a year its balance left the plan
+ *  because the heir died and it went to someone outside it. Read off the sink's own `movedToTaxable`, `last` and
+ *  `leftTheRun`, never re-derived from a death year. */
+export function inheritedYearNotes(meta: TableMeta, rows: readonly LedgerYearRow[]): ReadonlyMap<number, readonly string[]> {
+  const out = new Map<number, string[]>()
+  for (const r of rows) {
+    const notes = (r.inherited ?? []).flatMap((e, k) => {
+      const name = meta.inherited[k]?.name
+      if (name === undefined) return []
+      const moved = formatTableDollars(e.movedToTaxable)
+      return [
+        ...(moved !== '0' ? [slots.cashFlowsInheritedMovedNote(moved, name)] : []),
+        ...(e.leftTheRun > 0 ? [slots.cashFlowsInheritedLeftNote(name)] : []),
+        ...(e.last && e.leftTheRun === 0 ? [slots.cashFlowsInheritedLastNote(name)] : []),
+      ]
+    })
+    if (notes.length > 0) out.set(r.t, notes)
+  }
+  return out
+}
+
 /** What the pay check's income tax line holds, by the W step's state reading (the money picture reads the same one,
  *  `WorkingYearLedger.tsx`'s tax line): the federal tax on what comes in outside savings, plus the state's where the
  *  run charges one (NC on all of it; PA on all but pay), and, where the W step asked the household to add its state's

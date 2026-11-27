@@ -291,7 +291,7 @@ to a single commit.
   the 2026-08-02 pin**, because it promised a month tied to NC's own certification that no longer
   gates anything, and a withhold that names a date it cannot keep is exactly the promise this
   product must not make. A future state's pin event may have any timing, so the shipped slot commits
-  to none (`copy.ts:5327`).
+  to none (`copy.ts:5348`).
 - **No live household fires the withheld render today, and that is a CLEARED clause, not a
   regression.** Both blocking clauses cleared after U16 shipped: S.L. 2026-41 § 44.1(a) pinned
   `ncRateSchedule` to an enacted statutory schedule on 2026-08-02, retiring the last directional
@@ -314,7 +314,7 @@ to a single commit.
   `recHoldAcaUnverified`, `rec-relevant-primary-directional` → `recHoldPrimaryDirectional`,
   `epsilon-uncalibrated` → `recHoldEpsilon`, `state-certification-pending` → the
   `recHoldStateCert` SLOT; `recHoldGeneric` is the fail-CLOSED humane string an unclassified reason
-  lands on (`recommendationView.ts:372`, `:400`). Two further hold strings ship BESIDE the enum, not
+  lands on (`recommendationView.ts:382`, `:410`). Two further hold strings ship BESIDE the enum, not
   from it: `recHoldCoupling` (the Q5 coupling caveat) and `recHoldDemotionAxis` — the latter added
   2026-08-03 as the Tier-0 crash fix, since a well-funded household whose winner converts used to hit
   `gradeCalibration`'s plain throw and land on the generic compute-error card. It names the shape
@@ -344,7 +344,7 @@ to a single commit.
 
 - "Name the active baseline" shipped as a short STATIC label on the no-action figure —
   `copy.recommendBaselineNameplate`, "Compared with your plan today", carried on the view as
-  `baselineNameplate` (`recommendationView.ts:268`, `:703`). NO number. The A↔B residual is never
+  `baselineNameplate` (`recommendationView.ts:278`, `:717`). NO number. The A↔B residual is never
   rendered, quantified, or narrated.
 
 ### The rest of S3, and its nets
@@ -383,13 +383,13 @@ to a single commit.
   (`recDiscAllInScope` — what the all-in figure counts and that plan cost-sharing is not counted),
   rendered only on a pay-less-tax run whose BUILT overlay priced healthcare (the `healthcarePriced`
   option Result threads beside `pricedState`), ordered directly BEFORE NIIT (`DISCLOSURE_ORDER`,
-  `recommendationView.ts:129-139` — Briggsy's 2026-10-06 refinement on the pre-land Caddie read:
+  `recommendationView.ts:135-147` — Briggsy's 2026-10-06 refinement on the pre-land Caddie read:
   the counted set first, so the surtax line reads as its exception). The NIIT and state-tax
   notes were re-worded the same day (both render on both goals; their old "federal income tax" /
   "federal tax only" scopes were false once premiums joined the comparison). The compile gate
   shipped as the surface's OWN closed vocabulary,
   `RecommendationDisclosureId = 'ss-claim-fixed' | 'niit' | 'all-in-scope' | 'state-tax' |
-  'heir-bracket' | 'aca-slcsp'` (`recommendationView.ts:55-61`), NOT as seats on the draft-keyed `DRAFT_DISPOSITIONS`
+  'heir-bracket' | 'aca-slcsp'` (`recommendationView.ts:55-62`), NOT as seats on the draft-keyed `DRAFT_DISPOSITIONS`
   registry: every disclosure is a property of the RUN, not of a draft field — the SS-claim-fixed
   and NIIT notes render unconditionally, all-in-scope reads the goal and the run's built
   healthcare pricing, state-tax reads the run's own priced state
@@ -419,7 +419,7 @@ to a single commit.
 - **Dev seeds for the walk**: `?seed=surplus` is the engine-proven over-funded (surplus-regime)
   witness. `?seed=nc` DROVE the withheld render organically until 2026-08-02 and was the face the
   live smoke and the Caddie walk read; with the certification clause cleared it is now
-  `ncAffirmation` — the NC-priced household commits a REAL recommendation (`devSeeds.ts:1124`,
+  `ncAffirmation` — the NC-priced household commits a REAL recommendation (`devSeeds.ts:1187`,
   end-to-end in `solveDispatch.test.ts`). **No registered seed reaches the withheld render today**,
   so that face has no live walk route: it is exercised through the mint's `_pinningOverride` /
   `_trendOverride` seams and in `RecommendationSurface.test.tsx`, and a state whose rates go

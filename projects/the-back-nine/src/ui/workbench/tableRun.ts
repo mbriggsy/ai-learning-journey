@@ -24,10 +24,11 @@ import { sampleDeathYearOffset } from '@engine/longevity'
 import { isPricedState } from '@engine/constants/stateTax'
 import type { EngineRunRequest } from '@store/runLanes'
 import type { ModelAnswer } from '@store/memoryModel'
-import type { NamedFuture, WorkingYearStateTaxReading } from '@shared/model'
+import { kindLabel } from '@intake/accountKinds'
+import type { AccountKind, EnteredAccount, NamedFuture, WorkingYearStateTaxReading } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
 import type { LongevityPerson } from '@engine/longevity'
-import { copy } from '../copy'
+import { copy, slots } from '../copy'
 
 export type TableView = 'steady' | 'rough'
 
@@ -48,9 +49,20 @@ export interface TablePerson {
   readonly lastAge: number
 }
 
+/** One inherited IRA as its run names it (the Act 5 plan's U13), in `OverlayParams.inheritedIras`' order, which is the
+ *  order every row's `inherited` entries keep (`accountSources`' `inherited` list, `buildOverlay`). */
+export interface TableInherited {
+  /** Mid-sentence: "Alex’s IRA inherited in 2023", "your IRA inherited in 2023". */
+  readonly name: string
+  /** A column's header: the same words, the first letter capital. */
+  readonly label: string
+}
+
 /** What the composer and the heading need beside the rows, all captured from the run's own compile. */
 export interface TableMeta {
   readonly sources: AccountSources
+  /** Each inherited IRA the run carries a ledger for, named (empty where it carries none). */
+  readonly inherited: readonly TableInherited[]
   readonly track: 'full' | 'floor'
   readonly route: 'spine' | 'dated' | 'no-date'
   /** The plan's build year: row one's calendar year (t = 0). */
@@ -114,6 +126,30 @@ export function tablePerson(draft: ScenarioDraft, i: number, currentAge: number,
     : { label: copy.personSpouse, mid: 'your spouse', possessive: 'your spouse’s', pronoun: 'your spouse’s', you: false, currentAge, lastAge }
 }
 
+/** An entered account named by its owner and its kind ("your Roth IRA", "Sam’s 401(k)"). An inherited IRA is named by
+ *  the year its owner died as well ("Alex’s IRA inherited in 2023"), so two of one heir's read apart (the Act 5 plan's
+ *  U13) and each says when its ten-year clock started. Every screen that names an entered account names it here. */
+export function enteredAccountName(draft: ScenarioDraft, a: EnteredAccount): string {
+  const possessive = tablePerson(draft, a.ownerIndex, 0, 0).possessive
+  const deathYear = ACCOUNT_NAMING[a.kind] === 'death-year' ? a.inherited?.ownerDeathYear : undefined
+  return deathYear !== undefined ? slots.inheritedIraOf(possessive, deathYear) : slots.workbenchAccountOf(possessive, kindLabel(a.kind))
+}
+
+/** How each kind's account is named: by its kind's words, or by the year its owner died. Exhaustive over the kinds
+ *  (KTD20, insight 147), so a kind added later is named by a reviewed line, never by omission. */
+const ACCOUNT_NAMING: Readonly<Record<AccountKind, 'kind' | 'death-year'>> = {
+  '401k': 'kind',
+  '403b': 'kind',
+  'traditional-ira': 'kind',
+  'roth-401k': 'kind',
+  'roth-ira': 'kind',
+  brokerage: 'kind',
+  hsa: 'kind',
+  'inherited-ira': 'death-year',
+}
+
+const capFirst = (s: string): string => (s === '' ? s : s[0]!.toUpperCase() + s.slice(1))
+
 /** The committed answer's key: one per figured answer and tier. The what-if's runs (U14, `whatIfRun.ts`) key on the
  *  same string, so a plan cell and a what-if cell pair only on one answer. */
 export function answerKey(answer: Extract<ModelAnswer, { kind: 'headline' | 'date' }>): string {
@@ -163,6 +199,10 @@ export function tableRequestsOn(
   return {
     meta: {
       sources: base.sources,
+      inherited: base.sources.inherited.map((src) => {
+        const name = enteredAccountName(draft, draft.enteredAccounts[src.index]!)
+        return { name, label: capFirst(name) }
+      }),
       track: base.track,
       route: base.route,
       startCalendarYear: draft.startCalendarYear,

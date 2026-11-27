@@ -106,6 +106,13 @@ export const RC_HUES = {
   sand: '#e1bd74',
   teal: '#25a88b',
   salmon: '#e0897f',
+  /** B9's own slot 13, the inherited IRA (the Act 5 plan's U13): RightCapital draws no inherited part, so no hue of theirs
+   *  is its. Each spare one merges with taxable blue (orchid 0.068, purple 0.052, indigo 0.074 under protanopia; salmon
+   *  with Roth green at 0.026), and the inherited part sits beside taxable on every page that draws it. This dark umber
+   *  (oklch 0.44 0.12 46, 8.13:1 on white) clears every hue it sits beside by 0.149 or more, with normal vision and under
+   *  all three simulations (measured with culori 4.0.2 on 2026-11-27; the RC_PAIRS rows below). It always wears the
+   *  zigzag pattern (`patterns.ts`), never solid, so its look is one thing wherever it appears. */
+  umber: '#863806',
   /** The 22% bracket line's stroke: sand itself is 1.79:1 on white, this is 3.56:1 (plan 2.2). Not a series slot. */
   sandInk: '#a8822f',
   /** The chrome's sky (`theme.css`'s `--color-sky`, ref's `--sky`: RightCapital's stat-ring dashes and its sky tiles),
@@ -122,7 +129,7 @@ export const RC_HUES = {
 export type RcHue = keyof typeof RC_HUES
 
 /** RightCapital's categorical order (ref 3.2): index N is Highcharts' colour index N (`.highcharts-color-N`), assigned
- *  in this fixed order, never cycled. */
+ *  in this fixed order, never cycled. Slots 0 to 12 are RightCapital's; slot 13 is B9's own, the inherited IRA (U13). */
 export const RC_SERIES = [
   RC_HUES.blue,
   RC_HUES.green,
@@ -137,7 +144,11 @@ export const RC_SERIES = [
   RC_HUES.sand,
   RC_HUES.teal,
   RC_HUES.salmon,
+  RC_HUES.umber,
 ] as const
+
+/** The inherited IRA's colour slot (slot 13, `RC_HUES.umber`): every page that draws the inherited part reads this. */
+export const INHERITED_COLOR_INDEX = 13
 
 /**
  * Every pairing of two hues that sits side by side anywhere in the clone, with its verdict (plan 2.2):
@@ -285,6 +296,18 @@ export const RC_PAIRS: readonly RcPair[] = [
   { a: 'stoneGap', b: 'blue', where: 'Maps: the gap beside Planned saving', verdict: { kind: 'cue', cue: 'the gap hatched and named "Not explained by the year’s figures"; every node prints its name' } },
   { a: 'stoneGap', b: 'red', where: 'Maps: the gap beside Expenses', verdict: { kind: 'cue', cue: 'the gap hatched and named "Not explained by the year’s figures"; every node prints its name' } },
   { a: 'stoneGap', b: 'green', where: 'Maps: the gap beside an income', verdict: { kind: 'cue', cue: 'the gap hatched and named "Not explained by the year’s figures"; every node prints its name' } },
+  // The inherited IRA (U13), umber and zigzagged, its own group beside the other four wherever accounts are grouped: Tax
+  // Allocation's ring, Balance Sheet's columns and the withdrawal stacks (taxable blue, pre-tax orange, Roth green, HSA
+  // sky); Blueprint's tiles (the chrome's sky); Retirement Details' income parts (Social Security deep indigo, other
+  // income light green, the money-ran-out band red).
+  { a: 'umber', b: 'blue', where: 'the inherited IRA beside taxable', verdict: { kind: 'floor' } },
+  { a: 'umber', b: 'orange', where: 'the inherited IRA beside pre-tax', verdict: { kind: 'floor' } },
+  { a: 'umber', b: 'green', where: 'the inherited IRA beside Roth', verdict: { kind: 'floor' } },
+  { a: 'umber', b: 'sky', where: 'the inherited IRA beside HSA', verdict: { kind: 'floor' } },
+  { a: 'umber', b: 'skyTile', where: 'Blueprint: the inherited IRA tile beside HSA', verdict: { kind: 'floor' } },
+  { a: 'umber', b: 'deepIndigo', where: 'Retirement Details: inherited withdrawals beside Social Security', verdict: { kind: 'floor' } },
+  { a: 'umber', b: 'lightGreen', where: 'Retirement Details: inherited withdrawals beside other income', verdict: { kind: 'floor' } },
+  { a: 'umber', b: 'red', where: 'Retirement Details: inherited withdrawals beside the money-ran-out band', verdict: { kind: 'floor' } },
   { a: 'green', b: 'teal', where: 'series slots 1 and 11', verdict: { kind: 'apart' } },
 ]
 

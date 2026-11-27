@@ -257,9 +257,7 @@ const roundedBalance = (accounts: readonly SourceAccount[]): number =>
   accounts.reduce((s, a) => s + (Number.isFinite(a.valueToday) ? Math.round(a.valueToday) : 0), 0)
 
 /** The groupings the card splits by: the engine's own (`KIND_BUCKETS`), in its order. */
-export type InvestedKindId = Exclude<KindBucket, 'inherited'>
-/** U13 HOLD (the inherited IRA, schema version 7): this page does not draw the inherited grouping yet. U13 slice 2 gives it its look (a pattern of its own, never hatch, and a hue measured in `RC_PAIRS`) and lifts this exclusion; until then no household can hold one (no drawer offers the kind and no seed holds one), and slice 2 must land before the drawer does. (Dashboard → Balance Sheet reads this same split.) */
-const INVESTED_KINDS: readonly InvestedKindId[] = KIND_BUCKETS.filter((b): b is InvestedKindId => b !== 'inherited')
+export type InvestedKindId = KindBucket
 
 /** Each grouping's row name. Exhaustive, so a grouping added to the engine's vocabulary fails to compile here until it is
  *  named (the Act 5 plan's KTD20; the four hand-typed rows this replaced would have left its accounts out of the total). */
@@ -268,16 +266,33 @@ const INVESTED_LABEL: Readonly<Record<InvestedKindId, CopyKey>> = {
   pretax: 'snapshotInvestedPretax',
   roth: 'snapshotInvestedRoth',
   hsa: 'snapshotInvestedHsa',
+  inherited: 'snapshotInvestedInherited',
 }
 
-/** The entered balances by kind (taxable, pre-tax, Roth, HSA, in that order) and their total: the ONE split Snapshot's
+/** Which groupings print a row on every plan, and which only where the household holds one. Exhaustive (insight 147): the
+ *  four RightCapital groups always print, a $0 row included; the inherited IRA (U13), which few households hold, prints
+ *  only where one is entered, so the card never shows a $0 row for a kind most plans never have. */
+const INVESTED_SHOWN: Readonly<Record<InvestedKindId, 'always' | 'when-held'>> = {
+  taxable: 'always',
+  pretax: 'always',
+  roth: 'always',
+  hsa: 'always',
+  inherited: 'when-held',
+}
+
+/** The entered balances by kind (taxable, pre-tax, Roth, HSA, then any inherited IRA, in that order) and their total:
+ *  the ONE split Snapshot's
  *  Invested accounts card and Dashboard → Balance Sheet (RC16) both print, so the two can never disagree. */
 export function investedKinds(draft: MemoryModelSnapshot['draft']): {
   readonly kinds: readonly { readonly id: InvestedKindId; readonly label: string; readonly value: number }[]
   readonly total: number
 } {
   const src = accountSources(draft)
-  const kinds = INVESTED_KINDS.map((id) => ({ id, label: copy[INVESTED_LABEL[id]], value: roundedBalance(src[id]) }))
+  const kinds = KIND_BUCKETS.filter((id) => INVESTED_SHOWN[id] === 'always' || src[id].length > 0).map((id) => ({
+    id,
+    label: copy[INVESTED_LABEL[id]],
+    value: roundedBalance(src[id]),
+  }))
   return { kinds, total: kinds.reduce((s, k) => s + k.value, 0) }
 }
 

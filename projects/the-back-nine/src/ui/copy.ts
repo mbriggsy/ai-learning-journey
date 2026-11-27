@@ -2287,6 +2287,9 @@ export const copy = {
   // on BOTH goals. HIS words (2026-10-05): the old "This weighs your federal income tax" was already
   // false on a priced NC/PA/FL run and is false on every pay-less-tax run once premiums are in the
   // objective. "could" hedges; no bare numeral (the surtax rate is named in plain language).
+  // The held-pace note (the Act 5 plan's U13, KTD21): only on a plan with an inherited IRA; the solver keeps its pace.
+  recDiscInheritedPace:
+    'We assume each inherited IRA keeps the withdrawal pace set for it, and hold that steady while we compare.',
   recDiscNiit:
     'A federal surtax on higher investment income isn’t counted here, and it could apply.',
   // The state-tax scope note — priced only for the roster states; elsewhere the state piece is left
@@ -2382,6 +2385,7 @@ export const copy = {
   snapshotInvestedPretax: 'Pre-tax',
   snapshotInvestedRoth: 'Roth',
   snapshotInvestedHsa: 'HSA',
+  snapshotInvestedInherited: 'Inherited IRA',
   snapshotInvestedTotal: 'Total',
   snapshotInvestedAsEntered: 'Balances as you entered them.',
   snapshotInvestedStopgap: 'B9 doesn’t ask about your home, debts or bank accounts yet.',
@@ -2551,10 +2555,11 @@ export const copy = {
   rdSourcePretax: 'From pre-tax',
   rdSourceRoth: 'From Roth',
   rdSourceHsa: 'From the HSA',
+  rdSourceInherited: 'From inherited IRAs',
   rdRanOutBand: 'Money ran out this year',
   rdRateName: 'Withdrawal rate',
   rdRateNote:
-    'The withdrawal rate is what a year takes from your accounts toward its spending, tax and premiums, HSA spending included, over what they held as the year began. Roth conversions and required withdrawals moved to taxable are left out.',
+    'The withdrawal rate is what a year takes from your accounts toward its spending, tax and premiums, HSA spending included, over what they held as the year began. Roth conversions and any withdrawal moved to taxable are left out.',
   rdSpendSpending: 'Spending',
   rdSpendTax: 'Income tax',
   rdSpendPremiums: 'Health premiums',
@@ -2720,7 +2725,7 @@ export const copy = {
     'The tool leaves out the interest and dividends your taxable savings earn each year: they aren’t in any year’s income or tax here, and in real life they are taxed every year.',
   workbenchYieldAfterWork:
     'Once work stops, the tool leaves out the interest and dividends your taxable savings earn each year: they aren’t in those years’ income or tax here, and in real life they are taxed every year. While you work, the investment income you entered is counted.',
-  workbenchKindsMissing: 'Bank accounts and inherited IRAs aren’t in this table yet: the tool doesn’t take either kind so far.',
+  workbenchKindsMissing: 'Bank accounts aren’t in this table yet: the tool doesn’t take them so far.',
   workbenchColYear: 'Year',
   workbenchLinePay: 'Pay',
   workbenchLineOther: 'Other income',
@@ -2808,6 +2813,15 @@ export const copy = {
   cashFlowsAccountsConversions: 'Roth conversions',
   cashFlowsYearNotesHeading: 'Notes by year',
   cashFlowsEndTotalNote: 'Total is the tool’s own sum of the year-end balances shown beside it.',
+  // Each inherited IRA's group on Required withdrawals (the Act 5 plan's U13), under its account's name.
+  cashFlowsInheritedRequired: 'Required',
+  cashFlowsInheritedTaken: 'Taken out',
+  cashFlowsInheritedBooked: 'Already out',
+  cashFlowsInheritedMovedShort: 'Moved to taxable',
+  cashFlowsInheritedRequiredNote:
+    'An inherited IRA’s Required is the least the law says must come out of it in a year; in its last year, that is everything left. What is taken out follows the pace set for it and is never less. Any part the year doesn’t need moves to taxable.',
+  cashFlowsInheritedBookedNote:
+    'Already out is money that came out of an inherited IRA before the balance you entered for it. It counts as that year’s income, but it was no longer in the account.',
   cashFlowsPairedNote: 'Each year shows your plan’s row over the what-if’s, each named. The what-if is the one open on Analysis.',
   /** The steady sentence over a table that isn't your plan alone (a what-if's, or the paired form): the answer pinned
    *  above is your plan's, never this table's run. */
@@ -2838,7 +2852,10 @@ export const copy = {
   // measured collisions at 820 and 900 px): below it the same figures show as tiles.
   mapsPhoneTiles: 'On a narrower window the map shows as tiles: the same figures as the flow.',
   // The Summary's words where they name a table or a column, worded for Maps (one year's figures, no rows).
-  mapsKindsMissing: 'Bank accounts and inherited IRAs aren’t in these figures yet: the tool doesn’t take either kind so far.',
+  // An inherited IRA's withdrawal beyond the year's need (the Act 5 plan's U13): drawn, so the sentence says where.
+  mapsInheritedMoved:
+    'Part of an inherited IRA’s withdrawal was more than this year needed. It stays in your savings, so the map shows it going out again under Planned saving, moved to taxable.',
+  mapsKindsMissing: 'Bank accounts aren’t in these figures yet: the tool doesn’t take them so far.',
   mapsPayCheckNoteFederal:
     'In a working year, the pay check’s income tax is the federal income tax on your pay, Social Security, other income and any investment income you entered. The Income tax figure holds only what drawing on your savings adds, money moved to Roth included.',
   mapsPayCheckNoteFederalState:
@@ -3005,11 +3022,14 @@ export const copy = {
   taxStratSourcePretax: 'Pre-tax',
   taxStratSourceRoth: 'Roth',
   taxStratSourceHsa: 'HSA',
+  taxStratSourceInherited: 'Inherited IRAs',
   // Invested assets count pre-tax money at its full balance; the leave-more figure on Strategies is what heirs keep after the
   // tax on it, so a strategy that converts can hold less here and still leave more (insight 160: explain the figure).
   taxStratAssetsNote:
     'Invested assets count pre-tax savings at their full balance, before the income tax owed when the money comes out. A strategy that moves money to Roth pays that tax sooner, so it can hold less here and still leave more after tax.',
   taxStratStackOrder: 'Stacked from the bottom: taxable (solid), pre-tax (hatched), Roth (dotted), HSA (lined).',
+  taxStratStackOrderInherited:
+    'Stacked from the bottom: taxable (solid), pre-tax (hatched), Roth (dotted), HSA (lined), inherited IRAs (zigzag).',
   taxStratRunsWaiting: 'Working out both strategies year by year…',
   taxStratRunsError: 'These year-by-year runs couldn’t be worked out just now.',
   taxStratDetailsTitle: 'Details',
@@ -3229,6 +3249,7 @@ export const copy = {
   investBucketPretax: 'Pre-tax',
   investBucketRoth: 'Roth',
   investBucketHsa: 'HSA',
+  investBucketInherited: 'Inherited IRA',
   // --- Profile → Family, Income, Savings and Net Worth (Act 6 · RC13a; `profileView.ts`, the drawers in
   // `src/ui/screens/profile/drawers/`): RightCapital's card grids and right drawers over B9's own facts. A drawer's fields
   // reuse the walk's labels and help (written once, above); these are the pages', the cards' and the drawer frame's own
@@ -5286,7 +5307,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:2407` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:2414` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,
@@ -5723,7 +5744,20 @@ export const slots = {
   workbenchAged: (year: number): string => `Row one is ${year}, the year this plan was built; the years since are modeled, not records.`,
   workbenchSourcePretaxOf: (mid: string): string => `Pre-tax, ${mid}`,
   workbenchAccountOf: (possessive: string, kind: string): string => `${possessive} ${kind}`,
+  // An inherited IRA named by the year its owner died (the Act 5 plan's U13): two of one heir's read apart, and each says
+  // when its ten-year clock started (`enteredAccountName`, `tableRun.ts`).
+  inheritedIraOf: (possessive: string, deathYear: number): string => `${possessive} IRA inherited in ${deathYear}`,
   workbenchRolledIn: (year: number, accounts: string): string => `from ${year}, also ${accounts}, rolled in`,
+  // An inherited IRA's year sentences (the Act 5 plan's U13; `inheritedYearNotes`, `cashFlowsView.ts`).
+  cashFlowsInheritedLastNote: (name: string): string => `The law’s last year for ${name}: everything left in it comes out.`,
+  cashFlowsInheritedLeftNote: (name: string): string =>
+    `${upperFirst(name)} goes to someone outside this plan, so its balance leaves the plan this year.`,
+  cashFlowsInheritedMovedNote: (amount: string, name: string): string =>
+    `~$${amount} taken from ${name} was more than this year needed, so it moved to taxable.`,
+  cashFlowsInheritedAlreadyOut: (label: string): string => `${label}, already out`,
+  mapsInheritedBooked: (amount: string, name: string): string =>
+    `~$${amount} came out of ${name} before the balance you entered. It counts as this year’s income, so its tax is on the map, but the money isn’t.`,
+  cashFlowsInheritedMoved: (label: string): string => `${label}, moved to taxable`,
   workbenchRowRmdMoved: (amount: string): string =>
     `~$${amount} of the required withdrawal was more than this year needed, so it moved to taxable.`,
   workbenchRowNotKeptRetired: (amount: string): string =>

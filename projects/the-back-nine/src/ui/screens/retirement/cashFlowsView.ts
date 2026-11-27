@@ -24,7 +24,7 @@ import { ledgerRowEndTotal } from '@engine/sequencing'
 import type { LedgerYearRow } from '@shared/model'
 import { copy, slots } from '../../copy'
 import type { TableMeta, TableView } from '../../workbench/tableRun'
-import { composeYearTable, lifespansLine, payCheckNotes, tableFigure, yieldLine, type SourceKeyEntry, type TableLine } from '../../workbench/yearTableChrome'
+import { composeYearTable, inheritedYearNotes, lifespansLine, payCheckNotes, tableFigure, yieldLine, type SourceKeyEntry, type TableLine } from '../../workbench/yearTableChrome'
 import { composePaired, PAIRED_COLUMNS, type PairedColumnId, type PairedFigure } from '../../workbench/railChrome'
 import { mapsView, mapsViewSelect, type MapsChoice, type MapsView } from './mapsView'
 
@@ -280,8 +280,14 @@ function summarySpecs(meta: TableMeta, rows: readonly LedgerYearRow[]): BandSpec
               : []),
             { id: 'draw-roth', header: slots.workbenchPairTakenFrom(copy.workbenchSourceRoth), read: (r) => r.draw.roth },
             { id: 'hsa-spend', header: copy.cashFlowsColHsaSpent, read: (r) => r.hsaSpend },
+            // Each inherited IRA's own withdrawal (the Act 5 plan's U13): one column per account, never pooled (KTD22).
+            ...meta.inherited.map((inh, k): FieldSpec => ({ id: `draw-inherited-${k}`, header: slots.workbenchPairTakenFrom(inh.label), read: (r) => r.inherited?.[k]?.taken })),
             { id: 'rmd', header: copy.workbenchPairRequired, read: (r) => r.rmd, drillOnly: true },
             { id: 'rmd-to-taxable', header: copy.cashFlowsColRmdMoved, read: (r) => r.rmdToTaxable, drillOnly: true },
+            ...meta.inherited.flatMap((inh, k): FieldSpec[] => [
+              { id: `inherited-${k}-already-out`, header: slots.cashFlowsInheritedAlreadyOut(inh.label), read: (r) => r.inherited?.[k]?.booked, drillOnly: true },
+              { id: `inherited-${k}-moved`, header: slots.cashFlowsInheritedMoved(inh.label), read: (r) => r.inherited?.[k]?.movedToTaxable, drillOnly: true },
+            ]),
           ],
         },
       ],
@@ -342,8 +348,10 @@ function summarySpecs(meta: TableMeta, rows: readonly LedgerYearRow[]): BandSpec
   ]
 }
 
-/** The Accounts tab's tables: one column per bucket (the pre-tax one per person where the run keeps them apart). */
-function accountsFields(table: AccountsTable, meta: TableMeta, rows: readonly LedgerYearRow[]): FieldSpec[] {
+/** The Accounts tab's tables: one column per bucket (the pre-tax one per person where the run keeps them apart), and one
+ *  per inherited IRA, never pooled (the Act 5 plan's U13, KTD22); on Required withdrawals each inherited IRA is a group of
+ *  its own, its required amount beside what came out and what moved to taxable. */
+function accountsFields(table: AccountsTable, meta: TableMeta, rows: readonly LedgerYearRow[]): (FieldSpec | GroupSpec)[] {
   const split = rows[0]?.pretaxEndByPerson !== undefined
   const holdsBucket = (b: 'taxable' | 'roth' | 'hsa') => meta.sources[b].length > 0
   const pretaxEnd = split
@@ -362,6 +370,7 @@ function accountsFields(table: AccountsTable, meta: TableMeta, rows: readonly Le
         ...pretaxEnd,
         { id: 'roth', header: copy.workbenchSourceRoth, read: (r) => r.end.roth, balance: true, always: holdsBucket('roth') },
         { id: 'hsa', header: copy.workbenchSourceHsa, read: (r) => r.end.hsa, balance: true, always: holdsBucket('hsa') },
+        ...meta.inherited.map((inh, k): FieldSpec => ({ id: `inherited-${k}`, header: inh.label, read: (r) => r.inherited?.[k]?.end, balance: true, always: true })),
         // The engine's own year-end total (`ledgerRowEndTotal`: the four buckets plus each inherited IRA, KTD22), said
         // so under the table: the one figure here that is not a single field.
         { id: 'total', header: copy.cashFlowsColTotal, read: (r) => ledgerRowEndTotal(r), balance: true, always: true },
@@ -381,11 +390,27 @@ function accountsFields(table: AccountsTable, meta: TableMeta, rows: readonly Le
           : [{ id: 'pretax', header: copy.workbenchSourcePretax, read: (r: LedgerYearRow) => r.draw.pretax }]),
         { id: 'roth', header: copy.workbenchSourceRoth, read: (r) => r.draw.roth },
         { id: 'hsa', header: copy.cashFlowsColHsaSpent, read: (r) => r.hsaSpend },
+        ...meta.inherited.flatMap((inh, k): FieldSpec[] => [
+          { id: `inherited-${k}`, header: inh.label, read: (r) => r.inherited?.[k]?.taken },
+          { id: `inherited-${k}-already-out`, header: slots.cashFlowsInheritedAlreadyOut(inh.label), read: (r) => r.inherited?.[k]?.booked },
+        ]),
       ]
     case 'rmd':
       return [
         { id: 'rmd', header: copy.workbenchPairRequired, read: (r) => r.rmd, always: true },
         { id: 'rmd-to-taxable', header: copy.cashFlowsColRmdMoved, read: (r) => r.rmdToTaxable },
+        ...meta.inherited.map(
+          (inh, k): GroupSpec => ({
+            id: `inherited-${k}`,
+            header: inh.label,
+            fields: [
+              { id: `inherited-${k}-required`, header: copy.cashFlowsInheritedRequired, read: (r) => r.inherited?.[k]?.required, always: true },
+              { id: `inherited-${k}-taken`, header: copy.cashFlowsInheritedTaken, read: (r) => r.inherited?.[k]?.taken },
+              { id: `inherited-${k}-already-out`, header: copy.cashFlowsInheritedBooked, read: (r) => r.inherited?.[k]?.booked },
+              { id: `inherited-${k}-moved`, header: copy.cashFlowsInheritedMovedShort, read: (r) => r.inherited?.[k]?.movedToTaxable },
+            ],
+          }),
+        ),
       ]
     case 'conversions':
       return [{ id: 'conversion', header: copy.workbenchPairToRoth, read: (r) => r.conversion, always: true }]
@@ -563,6 +588,8 @@ function singleFootnotes(columns: readonly CfNode[], meta: TableMeta, rows: read
     // Either of the pay check's two taxes brings its notes (a year can owe payroll tax and no income tax on pay).
     ...(shown.has('tax-on-pay') || shown.has('payroll') ? payCheckNotes(meta.stateTaxReading) : []),
     ...(shown.has('rmd') ? [copy.workbenchRequiredNote] : []),
+    ...([...shown].some((id) => /^inherited-\d+-required$/.test(id)) ? [copy.cashFlowsInheritedRequiredNote] : []),
+    ...([...shown].some((id) => /^inherited-\d+-already-out$/.test(id)) ? [copy.cashFlowsInheritedBookedNote] : []),
     ...(shown.has('spending') && rows.some((r) => r.spending === undefined) ? [copy.workbenchNoSpendingNote] : []),
     ...(showsTotal ? [copy.cashFlowsEndTotalNote] : []),
   ]
@@ -763,13 +790,28 @@ export function cashFlowsView(input: CashFlowsInput): CashFlowsView {
     columns = shown.columns
     fields = shown.fields
   } else {
-    fields = accountsFields(input.accounts, meta, rows).filter((f) => holds(f, rows))
-    columns = [YEAR, AGE, ...fields.map(leaf)]
+    fields = []
+    columns = [YEAR, AGE]
+    for (const m of accountsFields(input.accounts, meta, rows)) {
+      if (!isGroupSpec(m)) {
+        if (holds(m, rows)) {
+          fields.push(m)
+          columns.push(leaf(m))
+        }
+        continue
+      }
+      const kept = m.fields.filter((f) => holds(f, rows))
+      if (kept.length === 0) continue
+      fields.push(...kept)
+      columns.push({ kind: 'group', id: m.id, header: m.header, columns: kept.map(leaf) })
+    }
   }
   const tableRows = singleRows(meta, rows, fields)
+  const inheritedNotes = inheritedYearNotes(meta, rows)
   const yearNotes = composed.rows.flatMap((r) => [
     ...(r.steadyFrom !== undefined ? [slots.cashFlowsYearNote(r.year, r.steadyFrom)] : []),
     ...r.notes.map((n) => slots.cashFlowsYearNote(r.year, n)),
+    ...(inheritedNotes.get(r.t) ?? []).map((n) => slots.cashFlowsYearNote(r.year, n)),
   ])
   const showsTotal = tab === 'accounts' && input.accounts === 'end'
   return {

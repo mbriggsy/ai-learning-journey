@@ -391,6 +391,17 @@ describe('Retirement Details', () => {
     expect(v.metrics[1]).toBe(slots.rdShortNone(true))
   })
 
+  it('income sources: the inherited IRAs’ part (U13) is what they paid toward each year, a withdrawal less its move to taxable, zigzagged in slot 13, and drawn only where a year holds it', () => {
+    const entry = (taken: number, moved: number) => ({ start: 100_000, booked: 0, required: 1_000, taken, aboveRequired: taken - 1_000, movedToTaxable: moved, leftTheRun: 0, end: 90_000, last: false })
+    const rows = RETIRED.rows.map((r, k) => ({ ...r, inherited: [entry(5_000 + k, k === 2 ? 1_500 : 0), entry(2_000, 0)] }))
+    const v = rd('income:compared', { compared: side('compared', ready(rows)) })
+    if (v.kind !== 'years') throw new Error(v.kind)
+    expect(v.sources.map((s) => s.id)).toEqual(['social-security', 'other', 'taxable', 'pretax', 'roth', 'hsa', 'inherited'])
+    const inherited = v.sources.find((s) => s.id === 'inherited')!
+    expect(inherited.points.map((p) => p.value)).toEqual(rows.map((_, k) => 5_000 + k + 2_000 - (k === 2 ? 1_500 : 0)))
+    expect(inherited).toMatchObject({ colorIndex: 13, pattern: 'zigzag' })
+  })
+
   it('the key metrics as their exact sentences: the share that is not a withdrawal (less the income the tool doesn’t keep), the spending in all, the withdrawal rate', () => {
     // One row's income runs past what the year spends: the tool keeps none of that part, so the share leaves it out.
     const k = 4

@@ -19,7 +19,7 @@
  */
 import type { DollarLattice } from '@viz/bandData'
 import { niceLattice } from '@viz/bandData'
-import { pricedStateForRun, spineMedicarePriced } from '@intake/intakeMap'
+import { pricedStateForRun, spineInheritedHeld, spineMedicarePriced } from '@intake/intakeMap'
 import type { MemoryModelSnapshot } from '@store/memoryModel'
 import { copy, slots } from '../../copy'
 import { formatDeltaDollar, mmAxisFormatterFor } from '../../money'
@@ -77,7 +77,7 @@ export function summaryView(snapshot: MemoryModelSnapshot): SummaryView {
   if (solve.kind !== 'committed' || solve.payload.kind !== 'recommended') return { kind: 'waiting', words: copy.taxStratWaiting, action: copy.taxStratToStrategies }
   const healthcarePriced = spineMedicarePriced(snapshot.draft)
   const pricedState = pricedStateForRun(snapshot.draft)
-  const view = recommendationView(solve, { pricedState, healthcarePriced })
+  const view = recommendationView(solve, { pricedState, healthcarePriced, inheritedHeld: spineInheritedHeld(snapshot.draft) })
   if (view.kind !== 'recommended') return { kind: 'waiting', words: copy.taxStratWaiting, action: copy.taxStratToStrategies }
   if (view.bars === undefined) return { kind: 'words', words: view.grade.heroLine }
   const { hero, average } = heroWords(view, healthcarePriced)

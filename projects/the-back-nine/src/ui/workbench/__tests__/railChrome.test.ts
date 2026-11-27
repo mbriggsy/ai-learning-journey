@@ -45,6 +45,7 @@ const META: TableMeta = {
   stateTaxReading: 'agi-derived',
   statePriced: true,
   leftOverState: 'spent',
+  inherited: [],
 }
 
 /** A row whose every money field holds its own distinct non-zero value, offset by `base` (two runs never share one). */

@@ -433,11 +433,12 @@ describe('recommendationView — the disclosures adjacent to the delta', () => {
     // Drive every applicable disclosure ON so the union is fully exercised. No ONE payload lights them
     // all — heir-bracket is leave-more only and all-in-scope is pay-less-tax-on-a-priced-run only — so
     // the union runs over a leave-more payload (+ the ACA hinge) AND a healthcare-priced pay-less-tax one.
-    const leaveMore = disclosuresFor(leaveMoreRec({ namedDriver: 'aca-enhanced-subsidies' }), undefined, true)
+    const leaveMore = disclosuresFor(leaveMoreRec({ namedDriver: 'aca-enhanced-subsidies' }), undefined, true, true)
     const payLessTax = disclosuresFor(
       { ...leaveMoreRec({ namedDriver: 'aca-enhanced-subsidies' }), goal: 'pay-less-tax', heirBracket: undefined },
       undefined,
       true,
+      false,
     )
     const seen = new Set<string>()
     for (const all of [leaveMore, payLessTax]) {
@@ -457,7 +458,7 @@ describe('recommendationView — the disclosures adjacent to the delta', () => {
   // The pinned position of the all-in scope note: directly BEFORE the NIIT note — the rule, then its
   // exception (the 2026-10-06 pre-land Caddie read; recommendationView.ts's DISCLOSURE_ORDER comment).
   it('DISCLOSURE_ORDER pins the all-in scope note directly BEFORE the NIIT note (the rule, then its exception — the 2026-10-06 Caddie read)', () => {
-    expect(DISCLOSURE_ORDER).toEqual(['ss-claim-fixed', 'all-in-scope', 'niit', 'state-tax', 'heir-bracket', 'aca-slcsp'])
+    expect(DISCLOSURE_ORDER).toEqual(['ss-claim-fixed', 'inherited-pace', 'all-in-scope', 'niit', 'state-tax', 'heir-bracket', 'aca-slcsp'])
   })
 
   it('the ALWAYS disclosures (SS-claim-held-fixed, NIIT) ride EVERY committed recommendation', () => {
@@ -474,19 +475,19 @@ describe('recommendationView — the disclosures adjacent to the delta', () => {
   // where it co-rendered with a spine that had just named their state (found live on `?seed=nc`).
   it('the state-tax scope note rides an UNPRICED household and DROPS for a priced one', () => {
     const payload = leaveMoreRec()
-    const unpriced = disclosuresFor(payload, undefined, false).find((d) => d.id === 'state-tax')
+    const unpriced = disclosuresFor(payload, undefined, false, false).find((d) => d.id === 'state-tax')
     expect(unpriced, 'off the roster the state-tax scope note ("left out of this comparison") is true and must ride').toBeDefined()
     expect(unpriced!.text).toBe(copy.recDiscStateTax)
     // Every member of the shipped roster drops it — not just the one that surfaced the defect. A new
     // PricedState cannot silently join this list: `composeRecStateTaxDisclosure`'s switch is exhaustive.
     for (const state of ['NC', 'PA', 'FL'] as const) {
       expect(
-        disclosuresFor(payload, state, false).find((d) => d.id === 'state-tax'),
+        disclosuresFor(payload, state, false, false).find((d) => d.id === 'state-tax'),
         `${state} priced ⇒ "left out of this comparison" is false and must not render`,
       ).toBeUndefined()
     }
     // NON-VACUITY: the drop is surgical — the household still reads its other disclosures.
-    const ncIds = disclosuresFor(payload, 'NC', false).map((d) => d.id)
+    const ncIds = disclosuresFor(payload, 'NC', false, false).map((d) => d.id)
     expect(ncIds, 'the drop takes the state note ONLY').toContain('ss-claim-fixed')
     expect(ncIds).toContain('niit')
   })
@@ -511,7 +512,23 @@ describe('recommendationView — the disclosures adjacent to the delta', () => {
     // pay-less-tax has no heir bracket ⇒ no heir-bracket disclosure (the leave-more-only gate). Drive
     // `disclosuresFor` directly (the pure composer) so the check needs no pay-less-tax-consistent arms.
     const payLessTax: SolveRecommendation = { ...payload, goal: 'pay-less-tax', heirBracket: undefined }
-    expect(disclosuresFor(payLessTax, undefined, true).find((d) => d.id === 'heir-bracket'), 'no heir bracket on pay-less-tax').toBeUndefined()
+    expect(disclosuresFor(payLessTax, undefined, true, false).find((d) => d.id === 'heir-bracket'), 'no heir bracket on pay-less-tax').toBeUndefined()
+  })
+
+  // The Act 5 plan's U13 (KTD21): the solver never searches an inherited IRA's pace, so a plan holding one says the
+  // comparison keeps it; a plan with none carries no such line.
+  it('the held-pace note rides only a run that carries an inherited IRA, and the view forwards the flag', () => {
+    const payload = leaveMoreRec()
+    const held = disclosuresFor(payload, undefined, false, true).find((d) => d.id === 'inherited-pace')
+    expect(held?.text).toBe(copy.recDiscInheritedPace)
+    expect(held?.disposition).toBe('disclosure')
+    expect(disclosuresFor(payload, undefined, false, false).map((d) => d.id)).not.toContain('inherited-pace')
+    const ids = disclosuresFor(payload, undefined, false, true).map((d) => d.id)
+    expect(ids.indexOf('inherited-pace'), 'beside the other held-fixed note').toBe(ids.indexOf('ss-claim-fixed') + 1)
+    const viaView = asRec(recommendationView(committed(payload), { spineConfidence: spine, inheritedHeld: true }))
+    expect(viaView.disclosures.map((d) => d.id), 'the opt reaches the builders').toContain('inherited-pace')
+    const noOpt = asRec(recommendationView(committed(payload), { spineConfidence: spine }))
+    expect(noOpt.disclosures.map((d) => d.id)).not.toContain('inherited-pace')
   })
 
   it('the ACA SLCSP caveat rides ONLY when the delta leans on ACA (the named-driver signal)', () => {

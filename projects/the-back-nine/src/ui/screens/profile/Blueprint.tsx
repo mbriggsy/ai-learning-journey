@@ -36,6 +36,7 @@ const EDGE: Readonly<Record<TileTone, string>> = {
   orange: 'border-orange',
   sky: 'border-sky',
   coral: 'border-coral',
+  umber: 'border-umber',
 }
 const FILL: Readonly<Record<TileTone, string>> = {
   green: 'bg-mint',
@@ -43,6 +44,8 @@ const FILL: Readonly<Record<TileTone, string>> = {
   orange: 'bg-sand-tint',
   sky: 'bg-stone-100',
   coral: 'bg-blush',
+  // The inherited IRA's tile: a neutral ground, its umber edge and its printed category word carrying it (U13).
+  umber: 'bg-stone-100',
 }
 const DASH: Readonly<Record<TileTone, string>> = {
   green: 'bg-green',
@@ -50,6 +53,7 @@ const DASH: Readonly<Record<TileTone, string>> = {
   orange: 'bg-orange',
   sky: 'bg-sky',
   coral: 'bg-coral',
+  umber: 'bg-umber',
 }
 
 interface TileProps {

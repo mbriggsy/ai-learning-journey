@@ -224,6 +224,7 @@ export function comparisonView(input: ComparisonInput): ComparisonView {
   const axis = comparisonAxis(baseline.meta, input.timeAxis)
 
   const out = ranOutWindow(winner, baseline, steady)
+  const inheritedPaid = (r: LedgerYearRow): number => (r.inherited ?? []).reduce((s, e) => s + e.taken - e.movedToTaxable, 0)
 
   if (chart === 'withdrawals') {
     const stack = (name: string, run: typeof winner): StackPicture => ({
@@ -233,9 +234,13 @@ export function comparisonView(input: ComparisonInput): ComparisonView {
         pretax: { name: copy.taxStratSourcePretax, points: yearPoints(run.meta, run.rows, (r) => r.draw.pretax) },
         roth: { name: copy.taxStratSourceRoth, points: yearPoints(run.meta, run.rows, (r) => r.draw.roth) },
         hsa: { name: copy.taxStratSourceHsa, points: yearPoints(run.meta, run.rows, (r) => r.hsaSpend) },
+        // The inherited IRAs' part (U13): what they paid toward the year, each one's withdrawal less the part moved to
+        // taxable, as pre-tax's draw leaves out a required withdrawal moved to taxable (`analysisRuns.withdrawn`).
+        inherited: { name: copy.taxStratSourceInherited, points: yearPoints(run.meta, run.rows, inheritedPaid) },
       },
     })
-    const tops = [winner, baseline].flatMap((run) => run.rows.map((r) => r.draw.taxable + r.draw.pretax + r.draw.roth + r.hsaSpend))
+    const tops = [winner, baseline].flatMap((run) => run.rows.map((r) => r.draw.taxable + r.draw.pretax + r.draw.roth + r.hsaSpend + inheritedPaid(r)))
+    const inheritedDrawn = [winner, baseline].some((run) => run.rows.some((r) => inheritedPaid(r) > 0))
     const lattice = niceLattice(Math.max(1, ...tops))
     return {
       kind: 'stacks',
@@ -244,7 +249,7 @@ export function comparisonView(input: ComparisonInput): ComparisonView {
       stacks: [stack(copy.recVizWithLabel, winner), stack(copy.recVizWithoutLabel, baseline)],
       lattice,
       axisDollar: mmAxisFormatterFor(lattice.ceiling),
-      notes: [copy.taxStratStackOrder, ...(out !== undefined ? [out.note(false)] : [])],
+      notes: [inheritedDrawn ? copy.taxStratStackOrderInherited : copy.taxStratStackOrder, ...(out !== undefined ? [out.note(false)] : [])],
       updating,
     }
   }

@@ -126,7 +126,7 @@ const read = (priced: boolean): ExposureRead => (priced ? 'priced' : 'unpriced')
  * silent stale on the more consequential clock. That is precisely the trade the paragraph above
  * says was rejected, and precisely insight 103's shape (a rule written to kill an over-alarm must
  * be checked in the SILENCING direction). `acaPricedForRun` already exists and is exported
- * (`intakeMap.ts:1206`) — the predicate was never the missing piece.
+ * (`intakeMap.ts:1213`) — the predicate was never the missing piece.
  *
  * THE ACTUAL FIX — AND ONE OF ITS TWO ARMS IS ALSO A TRAP (corrected 2026-08-02, the second time
  * this comment's own prescription has had to be withdrawn).

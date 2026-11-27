@@ -963,6 +963,13 @@ export function spineMedicarePriced(d: ScenarioDraft): boolean {
   return buildSpineParams(d)?.overlay?.healthcareEnabled === true
 }
 
+/** Does the SPINE run carry an inherited IRA's ledger (the Act 5 plan's U13)? Read off `buildSpineParams`' OWN overlay, the
+ *  solve's base (insight 081), never the draft's account list: the recommendation holds every such ledger's pace fixed,
+ *  and its disclosure says so exactly when the run carries one. */
+export function spineInheritedHeld(d: ScenarioDraft): boolean {
+  return (buildSpineParams(d)?.overlay?.inheritedIras?.length ?? 0) > 0
+}
+
 /** Roster-filter a BUILT overlay's `retirementState` to a PRICED code (or `undefined`). The ONE
  *  place the S5 disclosure turns a built-params field into a "priced?" answer: an absent field,
  *  `'elsewhere'`, and every recognised-but-UNBUILT roster state (SC/GA/DE) fall through to

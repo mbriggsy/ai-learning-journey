@@ -66,6 +66,7 @@
   --color-coral-ink: #c63d4b; /* Delete, and any white text on coral (5.04:1) */
   --color-orange: #f09e36;
   --color-sky: #5ebaf3; /* stat-ring dashes, insurance tiles */
+  --color-umber: #863806; /* the inherited IRA's tiles and legend dash: palette.ts's RC_HUES.umber, series slot 13 (U13) */
   --color-mint: #eef6f4;
   --color-blush: #fdeff0;
   --color-sand-tint: #fdf3e7;

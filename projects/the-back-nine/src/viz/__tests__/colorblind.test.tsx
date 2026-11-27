@@ -260,6 +260,7 @@ describe('CVD self-test — the clone’s side-by-side pairs (RC_PAIRS)', () => 
     expect(readThemeToken('--color-blue').toLowerCase()).toBe(RC_HUES.blue)
     expect(readThemeToken('--color-orange').toLowerCase()).toBe(RC_HUES.orange)
     expect(readThemeToken('--color-coral').toLowerCase()).toBe(RC_HUES.red)
+    expect(readThemeToken('--color-umber').toLowerCase(), 'the inherited IRA’s tile is its series hue (U13)').toBe(RC_HUES.umber)
   })
 
   it('Maps’ two greys are measured in the hex they draw: RC_HUES.stoneTax IS theme.css’s --color-stone-400, stoneGap its --color-stone-500', () => {

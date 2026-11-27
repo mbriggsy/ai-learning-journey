@@ -21,6 +21,7 @@
  * tooltip and the spoken words read the axis's number.
  */
 import type { Chart, Options, SeriesAreaOptions } from 'highcharts/highcharts.src'
+import { INHERITED_COLOR_INDEX } from '../palette'
 import { buildYTicks, type DollarLattice } from '../bandData'
 import { chartWordsOptions, hcPlain, type ChartWords } from './chartA11y'
 
@@ -60,18 +61,30 @@ export interface PairAreasInput extends Shared {
   readonly series: readonly [PairSeries, PairSeries] | readonly [PairSeries]
 }
 
-export type StackSource = 'taxable' | 'pretax' | 'roth' | 'hsa'
+export type StackSource = 'taxable' | 'pretax' | 'roth' | 'hsa' | 'inherited'
 
-/** Each source's colour slot and pattern (RC_PAIRS rows: blue/orange, orange/green, blue/sky, sky/green). */
+/** Each source's colour slot and pattern (RC_PAIRS rows: blue/orange, orange/green, blue/sky, sky/green, and the
+ *  inherited IRA's umber beside each, the Act 5 plan's U13). */
 export const STACK_SOURCES: Readonly<Record<StackSource, { readonly colorIndex: number; readonly className: string }>> = {
   taxable: { colorIndex: 0, className: 'b9-stack-taxable' },
   pretax: { colorIndex: 2, className: 'b9-stack-pretax b9-hatch' },
   roth: { colorIndex: 1, className: 'b9-stack-roth b9-dots' },
   hsa: { colorIndex: 4, className: 'b9-stack-hsa b9-lines' },
+  inherited: { colorIndex: INHERITED_COLOR_INDEX, className: 'b9-stack-inherited b9-zigzag' },
 }
 
 /** The stack from the bottom up. */
-export const STACK_ORDER: readonly StackSource[] = ['taxable', 'pretax', 'roth', 'hsa']
+export const STACK_ORDER: readonly StackSource[] = ['taxable', 'pretax', 'roth', 'hsa', 'inherited']
+
+/** Which sources always draw (a zero area and its legend entry included) and which only where the run draws on them: the
+ *  inherited IRA (U13), which few households hold, so the legend never names a source the plan lacks. Exhaustive. */
+export const STACK_SHOWN: Readonly<Record<StackSource, 'always' | 'when-drawn'>> = {
+  taxable: 'always',
+  pretax: 'always',
+  roth: 'always',
+  hsa: 'always',
+  inherited: 'when-drawn',
+}
 
 export interface StackedAreasInput extends Shared {
   readonly sources: Readonly<Record<StackSource, { readonly name: string; readonly points: readonly YearPoint[] }>>
@@ -220,7 +233,7 @@ export function pairAreasOptions(input: PairAreasInput): Options {
 export function stackedAreasOptions(input: StackedAreasInput): Options {
   const { sources, figure } = input
   // Highcharts stacks the FIRST series on top, so the series run top-down and the legend runs reversed (bottom-up).
-  const topDown = [...STACK_ORDER].reverse()
+  const topDown = [...STACK_ORDER].reverse().filter((src) => STACK_SHOWN[src] === 'always' || sources[src].points.some((p) => p.value > 0))
   return {
     ...frame(input),
     legend: { enabled: true, align: 'center', verticalAlign: 'bottom', reversed: true },

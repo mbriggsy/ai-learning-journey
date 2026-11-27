@@ -74,9 +74,19 @@ describe('stackedAreasOptions', () => {
     { year: 2030, value: 10_000 },
     { year: 2031, value: 20_000 },
   ]
+  const zeros = pts.map((p) => ({ ...p, value: 0 }))
+  it('the inherited IRAs (U13) draw on top of the stack, zigzagged in slot 13, only where a run draws on them', () => {
+    const base = { lattice, axisDollar: axis, figure: (d: number) => `~$${d}`, pointWords: (y: number, n: string, d: number) => `${y} ${n} ${d}`, words, height: 280, axisTitle: 'Year', axisOffset: 0 }
+    const four = { taxable: { name: 'Taxable', points: pts }, pretax: { name: 'Pre-tax', points: pts }, roth: { name: 'Roth', points: pts }, hsa: { name: 'HSA', points: pts } }
+    const held = stackedAreasOptions({ ...base, sources: { ...four, inherited: { name: 'Inherited IRAs', points: pts } } }).series as SeriesAreaOptions[]
+    expect(held[0]).toMatchObject({ id: 'stack-inherited', colorIndex: 13 })
+    expect(held[0]!.className).toContain('b9-zigzag')
+    const none = stackedAreasOptions({ ...base, sources: { ...four, inherited: { name: 'Inherited IRAs', points: zeros } } }).series as SeriesAreaOptions[]
+    expect(none.map((s) => s.id), 'no area and no legend entry for a source no year draws on').toEqual(['stack-hsa', 'stack-roth', 'stack-pretax', 'stack-taxable'])
+  })
   it('the withdrawal stack runs taxable at the bottom, then pre-tax, Roth, HSA, each with its own pattern; the legend reads bottom-up', () => {
     const opts = stackedAreasOptions({
-      sources: { taxable: { name: 'Taxable', points: pts }, pretax: { name: 'Pre-tax', points: pts }, roth: { name: 'Roth', points: pts }, hsa: { name: 'HSA', points: pts } },
+      sources: { taxable: { name: 'Taxable', points: pts }, pretax: { name: 'Pre-tax', points: pts }, roth: { name: 'Roth', points: pts }, hsa: { name: 'HSA', points: pts }, inherited: { name: 'Inherited IRAs', points: zeros } },
       lattice,
       axisDollar: axis,
       figure: (d) => `~$${d}`,
@@ -87,8 +97,9 @@ describe('stackedAreasOptions', () => {
       axisOffset: 0,
     })
     const series = opts.series as SeriesAreaOptions[]
-    // Highcharts stacks the first series on top: the series run top-down, the legend reversed.
-    expect(series.map((s) => s.id)).toEqual([...STACK_ORDER].reverse().map((s) => `stack-${s}`))
+    // Highcharts stacks the first series on top: the series run top-down, the legend reversed. The inherited IRAs draw
+    // nothing here (every point 0), so they take no area and no legend entry (U13's `STACK_SHOWN`).
+    expect(series.map((s) => s.id)).toEqual([...STACK_ORDER].reverse().filter((s) => s !== 'inherited').map((s) => `stack-${s}`))
     expect(opts.legend?.reversed).toBe(true)
     expect(STACK_SOURCES.pretax.className).toContain('b9-hatch')
     expect(STACK_SOURCES.roth.className).toContain('b9-dots')
@@ -177,7 +188,7 @@ describe('stackedAreasOptions', () => {
   it('the time axis (Act 6 · RC18): the points keep their calendar years; `axisOffset` puts them on the first person’s age, titled whose, and the tooltip and spoken words read that number', () => {
     // Alex 60 in 2026: the ages axis adds 60 − 2026, so 2030 draws at 64.
     const shared = { lattice, axisDollar: axis, figure: (d: number) => `~$${d}`, pointWords: (n: number, s: string, d: number) => `Alex’s age ${n}, ${s}: ${d}`, words, axisTitle: 'Alex’s age', axisOffset: 60 - 2026 }
-    const stack = stackedAreasOptions({ ...shared, sources: { taxable: { name: 'Taxable', points: pts }, pretax: { name: 'Pre-tax', points: pts }, roth: { name: 'Roth', points: pts }, hsa: { name: 'HSA', points: pts } }, height: 280 })
+    const stack = stackedAreasOptions({ ...shared, sources: { taxable: { name: 'Taxable', points: pts }, pretax: { name: 'Pre-tax', points: pts }, roth: { name: 'Roth', points: pts }, hsa: { name: 'HSA', points: pts }, inherited: { name: 'Inherited IRAs', points: zeros } }, height: 280 })
     for (const s of stack.series as SeriesAreaOptions[]) expect((s.data as { x: number }[]).map((d) => d.x)).toEqual([64, 65])
     expect(stack.xAxis).toMatchObject({ title: { text: 'Alex’s age' } })
     const pair = pairAreasOptions({ ...shared, series: [{ id: 'r', name: 'R', role: 'alternative', points: pts }, { id: 'p', name: 'P', role: 'compared', points: pts }], height: 320 })

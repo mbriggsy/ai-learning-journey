@@ -28,7 +28,8 @@
     font-variant-numeric: tabular-nums;
   }
 
-  /* RightCapital's categorical order has 13 slots; `highcharts.css` paints 0 to 9. */
+  /* RightCapital's categorical order has 13 slots and B9 adds a 14th, slot 13, the inherited IRA (`palette.ts`'s
+     `RC_HUES.umber`); `highcharts.css` paints 0 to 9. */
   .highcharts-color-10 {
     fill: var(--highcharts-color-10);
     stroke: var(--highcharts-color-10);
@@ -40,6 +41,10 @@
   .highcharts-color-12 {
     fill: var(--highcharts-color-12);
     stroke: var(--highcharts-color-12);
+  }
+  .highcharts-color-13 {
+    fill: var(--highcharts-color-13);
+    stroke: var(--highcharts-color-13);
   }
 
   /* Text: titles plum, labels stone-600, axis labels 12 px (ref 3.5; muted text is stone-600 per plan 2.2). */
@@ -115,12 +120,16 @@
   .b9-pattern--vlines .b9-pattern-ink {
     stroke: var(--b9-ink-vlines, var(--b9-pattern-ink, var(--color-stone-600)));
   }
+  /* The zigzag is only ever the inherited IRA's (U13), so its ink falls back to slot 13 itself: no chart sets it. */
+  .b9-pattern--zigzag .b9-pattern-ink {
+    stroke: var(--b9-ink-zigzag, var(--highcharts-color-13));
+  }
   .b9-pattern--dots .b9-pattern-ink {
     fill: var(--b9-ink-dots, var(--b9-pattern-ink, var(--color-stone-600)));
     stroke: none;
   }
 
-  /* A series given `className: 'b9-hatch'` (or dots, lines, cross) fills from its pattern, and so does its legend
+  /* A series given `className: 'b9-hatch'` (or dots, lines, cross, vlines, zigzag) fills from its pattern, and so does its legend
      symbol, so the second cue reaches the legend too. */
   .b9-hatch .highcharts-point,
   .b9-hatch .highcharts-area,
@@ -146,6 +155,11 @@
   .b9-vlines .highcharts-area,
   .highcharts-legend-item.b9-vlines .highcharts-point {
     fill: url(#b9-vlines);
+  }
+  .b9-zigzag .highcharts-point,
+  .b9-zigzag .highcharts-area,
+  .highcharts-legend-item.b9-zigzag .highcharts-point {
+    fill: url(#b9-zigzag);
   }
 
   /* ── Printed values never hide (decision 7, owed from RC1): hovering one series must not fade another's printed
@@ -342,6 +356,9 @@
   .b9-stack .b9-stack-hsa .highcharts-graph {
     stroke: var(--highcharts-color-4);
   }
+  .b9-stack .b9-stack-inherited .highcharts-graph {
+    stroke: var(--highcharts-color-13);
+  }
 
   /* ── Retirement → Social Security (RC9, `claimOptions.ts`). The yearly pairs and the Summary bars ride `.b9-bar` above
      (green solid, blue hatched with its edge, values above in stone-900). The running totals: the strategy looked at a
@@ -459,6 +476,11 @@
     stroke: var(--b9-ink-lines);
     stroke-width: 1.5;
   }
+  .b9-taxalloc .highcharts-point.b9-zigzag {
+    fill: url(#b9-zigzag);
+    stroke: var(--highcharts-color-13);
+    stroke-width: 1.5;
+  }
   .b9-taxalloc .highcharts-point.b9-donut-picked {
     stroke: var(--color-stone-900);
     stroke-width: 3;
@@ -506,6 +528,11 @@
   .b9-kinds .highcharts-point.b9-lines {
     fill: url(#b9-lines);
     stroke: var(--b9-ink-lines);
+    stroke-width: 1.5;
+  }
+  .b9-kinds .highcharts-point.b9-zigzag {
+    fill: url(#b9-zigzag);
+    stroke: var(--highcharts-color-13);
     stroke-width: 1.5;
   }
   .b9-kinds .highcharts-data-label text {
@@ -556,6 +583,10 @@
     stroke: var(--b9-ink-cross);
     stroke-width: 1;
   }
+  .b9-years .b9-zigzag .highcharts-point {
+    stroke: var(--highcharts-color-13);
+    stroke-width: 1;
+  }
   .b9-years .b9-ranout-band {
     fill: url(#b9-cross);
     fill-opacity: 1;
@@ -592,6 +623,11 @@
   .b9-income .highcharts-point.b9-vlines {
     fill: url(#b9-vlines);
     stroke: var(--b9-ink-vlines);
+    stroke-width: 1.5;
+  }
+  .b9-income .highcharts-point.b9-zigzag {
+    fill: url(#b9-zigzag);
+    stroke: var(--highcharts-color-13);
     stroke-width: 1.5;
   }
   /* The donuts' key: each part's square in the slice's own fill, its edge in the part's colour. */

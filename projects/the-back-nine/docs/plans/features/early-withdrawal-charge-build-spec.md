@@ -46,7 +46,7 @@ The engine never checks an owner's age when it draws. `allocateWithdrawal` takes
 
 The miss is rosy, so it is a cardinal-rule problem: every uncharged dollar is tax the household really owes. The register files it Tier 0 (`docs/backlog.md`, *Money taken from retirement accounts before age 59½ is never charged the 10% early-withdrawal tax…*). The reach is wider than the working years:
 
-- `healthgap`'s Sam is 40, retired, and owns the household's only Roth IRA; under the default proportional order Sam draws from it for about 20 years before 59½ (`src/ui/devSeeds.ts:1437-1443`).
+- `healthgap`'s Sam is 40, retired, and owns the household's only Roth IRA; under the default proportional order Sam draws from it for about 20 years before 59½ (`src/ui/devSeeds.ts:1500-1506`).
 - `health` and `healthnc` draw Sam's Roth at 59.
 - The date search tests stops 0–10 years out (`src/engine/dateSearch.ts:61-70`), so a household in its late 50s draws pre-tax right after a tested stop.
 - Since the pay check (2026-10-30), a short working year is paid from savings through the withdrawal order, so an under-59½ owner's pre-tax money can pay part of it, uncharged like every other draw.
@@ -523,7 +523,7 @@ These are bets made without Briggsy's confirmation. Each can be overturned at U2
 **Approach:**
 1. Freeze the tree after U6 (KTD13) and run every date seed and `healthgap`, `health` and `healthnc` with the construct supplied, bracketed between "not sure" everywhere and the exempt answers. Run each reached seed under the shipped taxable-first order as well as the default proportional one, with the charge on and off, and record how much of each move appears only under the default order.
 2. Record the date, the grade, the confidence statement and whether the crown or runner-up moves.
-3. For each pin U10 will re-check, record whether it moves: `dip`'s `nonMonotoneOffsets` (`src/ui/__tests__/devSeeds.test.ts:817-829`), `datesplit`'s crowns (`:655-722`), the crown-seat tables (`e2e/chart-text.spec.ts line 662-700 at 95c715e19`), `healthSheetSeedGate`'s MAGI and headroom figures (`src/ui/__tests__/healthSheetSeedGate.test.ts:94-144`), the `health` crowns (`src/ui/__tests__/allInWitnessHl50.test.ts`), the `healthnc` 160-path crown flip (`src/ui/__tests__/solvePayloadIdentity.health.test.ts`, `solvePoolIdentity.health.test.ts`), and the seed docblocks (`src/ui/devSeeds.ts:1510-1533`).
+3. For each pin U10 will re-check, record whether it moves: `dip`'s `nonMonotoneOffsets` (`src/ui/__tests__/devSeeds.test.ts:817-829`), `datesplit`'s crowns (`:655-722`), the crown-seat tables (`e2e/chart-text.spec.ts line 662-700 at 95c715e19`), `healthSheetSeedGate`'s MAGI and headroom figures (`src/ui/__tests__/healthSheetSeedGate.test.ts:94-144`), the `health` crowns (`src/ui/__tests__/allInWitnessHl50.test.ts`), the `healthnc` 160-path crown flip (`src/ui/__tests__/solvePayloadIdentity.health.test.ts`, `solvePoolIdentity.health.test.ts`), and the seed docblocks (`src/ui/devSeeds.ts:1573-1596`).
 4. Re-count the work (KTD13) on the same seeds as U1 and compare.
 5. Run the amendment's household and the other probe households.
 6. If the crown moves on a seed where the true best order would draw taxable first until 59½, file the age-aware order entry with that seed's numbers.

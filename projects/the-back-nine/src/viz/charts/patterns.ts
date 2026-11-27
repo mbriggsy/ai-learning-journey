@@ -5,12 +5,14 @@
  * and referenced from `chartTheme.css` (`fill: url(#b9-hatch)`) on the series and on its legend symbol.
  *
  * Each pattern is a ground tile plus its ink; both are classed, never coloured here, so `chartTheme.css` paints them:
- * each KIND's ink from its own variable (`--b9-ink-hatch`, `--b9-ink-dots`, `--b9-ink-lines`, `--b9-ink-cross`, `--b9-ink-vlines`, falling
+ * each KIND's ink from its own variable (`--b9-ink-hatch`, `--b9-ink-dots`, `--b9-ink-lines`, `--b9-ink-cross`, `--b9-ink-vlines`, `--b9-ink-zigzag`, falling
  * back to `--b9-pattern-ink`), which a chart sets on its container to the patterned series' own colour, so two patterned
  * series in one chart keep their colour difference (RC3); the ground from the chart surface. Highcharts' AST allows no `patternTransform`, so the diagonals are drawn as diagonal paths in the tile.
  * Kinds and uses (ref 3.2): `b9-hatch` (diagonal) the compared plan's bars and pre-tax; `b9-dots` Roth; `b9-lines`
  * (horizontal) HSA; `b9-cross` a shortfall, the money-ran-out band and the stress test's Combined bar; `b9-vlines`
- * (vertical) other income beside Social Security (RC17).
+ * (vertical) other income beside Social Security (RC17); `b9-zigzag` the inherited IRA, wherever it is drawn (U13: never
+ * `b9-hatch`, which pre-tax wears beside it; its rows climb and fall so they never read as a diagonal hatch, a cross or a
+ * line).
  */
 import type { ASTNode } from 'highcharts/highcharts.src'
 
@@ -21,6 +23,7 @@ export const PATTERN_IDS = {
   lines: 'b9-lines',
   cross: 'b9-cross',
   vlines: 'b9-vlines',
+  zigzag: 'b9-zigzag',
 } as const
 
 export type PatternKind = keyof typeof PATTERN_IDS
@@ -42,6 +45,9 @@ const ink = (tagName: 'path' | 'circle', attributes: ASTNode['attributes']): AST
 const RISING = `M 0 ${TILE} L ${TILE} 0 M -2 2 L 2 -2 M ${TILE - 2} ${TILE + 2} L ${TILE + 2} ${TILE - 2}`
 /** Falling diagonals, for the cross-hatch. */
 const FALLING = `M 0 0 L ${TILE} ${TILE} M -2 ${TILE - 2} L 2 ${TILE + 2} M ${TILE - 2} -2 L ${TILE + 2} 2`
+/** One row of steep zigzag per tile (the inherited IRA): peaks at x 1 and 5, valleys at 3 and 7, the row crossing each
+ *  tile edge at mid-height on a straight run, so the next tile's row carries the same line on and no corner splits. */
+const ZIGZAG = `M 0 ${TILE / 2} L 1 2 L 3 ${TILE - 2} L 5 2 L 7 ${TILE - 2} L ${TILE} ${TILE / 2}`
 
 function pattern(kind: PatternKind, inks: readonly ASTNode[]): ASTNode {
   return {
@@ -64,4 +70,5 @@ export const PATTERN_DEFS: Record<string, ASTNode> = {
   [PATTERN_IDS.lines]: pattern('lines', [ink('path', { d: `M 0 ${TILE / 2} L ${TILE} ${TILE / 2}` })]),
   [PATTERN_IDS.cross]: pattern('cross', [ink('path', { d: `${RISING} ${FALLING}` })]),
   [PATTERN_IDS.vlines]: pattern('vlines', [ink('path', { d: `M ${TILE / 2} 0 L ${TILE / 2} ${TILE}` })]),
+  [PATTERN_IDS.zigzag]: pattern('zigzag', [ink('path', { d: ZIGZAG })]),
 }

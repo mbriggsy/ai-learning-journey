@@ -25,6 +25,10 @@
  *    `contribution` there misses by exactly the match); the employer note says where the whole deposit shows;
  *  - moves inside savings: a Roth conversion (pre-tax to Roth) and a required withdrawal's move to taxable are neither
  *    in nor out; each is said in words, and the income tax they add is on the map.
+ * An inherited IRA (the Act 5 plan's U13) is drawn whole: its withdrawal (`taken`) comes in under Planned distribution, and
+ * the part the year didn't need (`movedToTaxable`, a part of `taken`) goes out under Planned saving, each one field under
+ * its Summary column's id, with a sentence; what the custodian reported before the entered balance (`booked`) is the
+ * year's income with no money moved, so it is said in words and only its tax is on the map.
  * Where the two sides still differ by more than the grain, or the printed sides differ by more than a dollar of
  * flooring per part (a negative part, an ACA year's income tax below zero, prints unsigned), the difference is drawn as
  * its own labelled node on the short side ("Not explained by the year's figures") with a note, never absorbed into
@@ -41,7 +45,7 @@ import type { LedgerYearRow } from '@shared/model'
 import { ROUGH_WINDOW_YEARS } from '@engine/reference/roughSequence'
 import { copy, slots } from '../../copy'
 import type { TableMeta, TableView } from '../../workbench/tableRun'
-import { formatTableDollars, payCheckNotes, rowNotesAt, tableFigure, type TableFigure } from '../../workbench/yearTableChrome'
+import { formatTableDollars, inheritedYearNotes, payCheckNotes, rowNotesAt, tableFigure, type TableFigure } from '../../workbench/yearTableChrome'
 
 export type MapsChoice = 'flow' | 'breakdown'
 
@@ -193,6 +197,9 @@ function inSpecs(meta: TableMeta): LeafSpec[] {
     { id: 'draw-pretax', name: slots.workbenchPairTakenFrom(copy.workbenchSourcePretax), group: 'distribution', read: (r) => r.draw.pretax },
     { id: 'draw-roth', name: slots.workbenchPairTakenFrom(copy.workbenchSourceRoth), group: 'distribution', read: (r) => r.draw.roth },
     { id: 'hsa-spend', name: copy.cashFlowsColHsaSpent, group: 'distribution', read: (r) => r.hsaSpend },
+    // Each inherited IRA's whole withdrawal (the Act 5 plan's U13), one leaf per account under its Summary column's id: the
+    // part the year didn't need goes out again under Planned saving (`outSpecs`), so the year balances on single fields.
+    ...meta.inherited.map((inh, k): LeafSpec => ({ id: `draw-inherited-${k}`, name: slots.workbenchPairTakenFrom(inh.label), group: 'distribution', read: (r) => r.inherited?.[k]?.taken })),
   ]
 }
 
@@ -213,6 +220,9 @@ function outSpecs(meta: TableMeta): LeafSpec[] {
     { id: 'payroll', name: copy.workbenchLinePayroll, group: 'taxes', read: (r) => r.workingYear?.payrollTax },
     { id: 'into-savings', name: copy.workbenchLineIntoSavings, group: 'saving', read: (r) => r.workingYear?.ownDeposits },
     { id: 'kept-in-taxable', name: copy.workbenchLineKeptInTaxable, group: 'saving', read: (r) => r.leftOverCredit },
+    // An inherited IRA's withdrawal beyond the year's need, moved to taxable (U13): its sink field is part of `taken`, so it
+    // leaves the map as saving (the Summary's distribution drill prints it under the same id).
+    ...meta.inherited.map((inh, k): LeafSpec => ({ id: `inherited-${k}-moved`, name: slots.cashFlowsInheritedMoved(inh.label), group: 'saving', read: (r) => r.inherited?.[k]?.movedToTaxable })),
     { id: 'not-kept', name: copy.cashFlowsColNotKept, group: 'not-kept', read: (r) => r.incomeNotKept },
   ]
 }
@@ -327,6 +337,7 @@ export function mapsView(input: MapsInput): MapsView {
   const yearNotes = [
     ...(input.future === 'rough' && r.t === ROUGH_WINDOW_YEARS ? [slots.cashFlowsYearNote(chosen.year, slots.workbenchRoughSteadyFrom(input.roughEndYear))] : []),
     ...rowNotesAt(meta, rows, index).map((n) => slots.cashFlowsYearNote(chosen.year, n)),
+    ...(inheritedYearNotes(meta, [r]).get(r.t) ?? []).map((n) => slots.cashFlowsYearNote(chosen.year, n)),
   ]
   const words = (tone: 'status' | 'alert', text: string): MapsView => ({ ...base, body: { kind: 'words', tone, words: text }, notes: [], yearNotes })
   // Calm words (a status, never an alert): the run's own lines already say when the money runs out.
@@ -404,6 +415,12 @@ export function mapsView(input: MapsInput): MapsView {
       : []),
     ...(tableFigure(r.conversion, { sign: '', entered: false, t: r.t }) !== null ? [slots.mapsConversion(formatTableDollars(r.conversion))] : []),
     ...(tableFigure(r.rmdToTaxable, { sign: '', entered: false, t: r.t }) !== null ? [copy.mapsRmdOff] : []),
+    ...((r.inherited ?? []).some((e) => tableFigure(e.movedToTaxable, { sign: '', entered: false, t: r.t }) !== null) ? [copy.mapsInheritedMoved] : []),
+    ...(r.inherited ?? []).flatMap((e, k) => {
+      const booked = tableFigure(e.booked, { sign: '', entered: false, t: r.t })
+      const name = meta.inherited[k]?.name
+      return booked === null || name === undefined ? [] : [slots.mapsInheritedBooked(formatTableDollars(e.booked), name)]
+    }),
     ...(gap ? [copy.mapsGapNote] : totalInDollars !== totalOutDollars ? [copy.mapsRoundingNote] : []),
   ]
   const named = nodes.map((n): MapNode => ({ ...n, spoken: slots.mapsNodeWords(n.name, n.text) }))

@@ -33,6 +33,7 @@ import { ACCOUNT_KINDS, INCOME_TYPES } from '@shared/model'
 import { budgetGoverns } from '@budget/budgetModel'
 import { formatMoney } from '@intake/moneyFormat'
 import { kindLabel } from '@intake/accountKinds'
+import { takesDeposits } from '@intake/sanity'
 import { incomeTypeLabel } from '@intake/otherIncome'
 import { isDateRoute } from '@intake/intakeMap'
 import { lineDisplayName } from '@intake/budgetLines'
@@ -58,7 +59,7 @@ export type BlueprintTab = 'net-worth' | 'goals' | 'ise'
 export const BLUEPRINT_TABS: readonly BlueprintTab[] = ['net-worth', 'goals', 'ise']
 
 /** The colour a tile's edge and the legend's dash carry (the page maps each to a theme token). */
-export type TileTone = 'green' | 'blue' | 'orange' | 'sky' | 'coral'
+export type TileTone = 'green' | 'blue' | 'orange' | 'sky' | 'coral' | 'umber'
 
 export interface LegendItem {
   readonly id: string
@@ -206,21 +207,20 @@ function ownerOf(d: ScenarioDraft, target: DrawerTarget): number | null {
 
 // ── Net Worth ────────────────────────────────────────────────────────────────────────────────────────────────────
 
-/** B9's four tax treatments, in the Investment pages' colours (pre-tax orange, Roth green, taxable blue, HSA sky). Keyed by
- *  treatment id, exhaustive (KTD20): the old lookup found the legend by its printed label with a `find(…)!`, which
- *  threw at runtime on a label it lacked. */
+/** B9's four tax treatments and the inherited IRA's own, in the Investment pages' colours (pre-tax orange, Roth green,
+ *  taxable blue, HSA sky, the inherited IRA umber, `palette.ts`'s slot 13). Keyed by treatment id, exhaustive (KTD20): the
+ *  old lookup found the legend by its printed label with a `find(…)!`, which threw at runtime on a label it lacked. */
 const TREATMENT_LEGEND: Readonly<Record<Treatment, LegendItem>> = {
   pretax: { id: 'pretax', label: copy.investBucketPretax, tone: 'orange' },
   roth: { id: 'roth', label: copy.investBucketRoth, tone: 'green' },
   taxable: { id: 'taxable', label: copy.investBucketTaxable, tone: 'blue' },
   hsa: { id: 'hsa', label: copy.investBucketHsa, tone: 'sky' },
-  // The inherited IRA's tile names its kind in words (U13); slice 2 settles its tone with the legend below.
-  inherited: { id: 'inherited', label: copy.kindInheritedIra, tone: 'coral' },
+  // U13: its own tone, never coral (Goals' spending wears it); the tile's category word names it, as on every tile.
+  inherited: { id: 'inherited', label: copy.investBucketInherited, tone: 'umber' },
 }
 /** The legend's order on the page: the table's own order, so a treatment named there is drawn (never a hand list beside
  *  it that could leave one out, KTD20). */
-// U13 HOLD (the inherited IRA, schema version 7): the legend does not list the inherited treatment yet. U13 slice 2 gives it its look (a pattern of its own, never hatch, and a hue measured in `RC_PAIRS`) and lifts this exclusion; until then no household can hold one (no drawer offers the kind and no seed holds one), and slice 2 must land before the drawer does.
-const TREATMENTS: readonly LegendItem[] = Object.values(TREATMENT_LEGEND).filter((t) => t.id !== 'inherited')
+const TREATMENTS: readonly LegendItem[] = Object.values(TREATMENT_LEGEND)
 
 function netWorthBody(d: ScenarioDraft): BlueprintBody {
   return {
@@ -472,7 +472,9 @@ function addFor(tab: BlueprintTab, d: ScenarioDraft, readOnly: boolean, agedBala
     label: copy.blueprintAdd,
     items: [
       { id: 'income', label: copy.blueprintAddIncome, items: INCOME_TYPES.map((type) => ({ id: type, label: incomeTypeLabel(type), target: { kind: 'new-income', type } as const })) },
-      { id: 'account', label: copy.blueprintAddAccount, items: ACCOUNT_KINDS.filter((k) => k !== 'inherited-ira').map((k) => ({ id: k, label: kindLabel(k), target: { kind: 'new-account', accountKind: k } as const })) }, // U13 HOLD: the inherited IRA's own entry comes with its drawer's questions
+      // This tab's accounts are Savings' (the deposits), so it offers only a kind that takes them (U10's per-page split): never
+      // the inherited IRA, which Net Worth's Add menu offers.
+      { id: 'account', label: copy.blueprintAddAccount, items: ACCOUNT_KINDS.filter(takesDeposits).map((k) => ({ id: k, label: kindLabel(k), target: { kind: 'new-account', accountKind: k } as const })) },
     ],
   }
 }

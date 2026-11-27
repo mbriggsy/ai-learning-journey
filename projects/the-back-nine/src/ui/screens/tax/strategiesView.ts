@@ -36,7 +36,7 @@
 import { solverAssumedHeirBracket } from '@engine/constants'
 import { ordinaryBracketsMFJ } from '@engine/constants/tax'
 import type { SolveArm, SolveRecommendation } from '@engine/solver/solve'
-import { isDateRoute, pricedStateForRun, spineMedicarePriced } from '@intake/intakeMap'
+import { isDateRoute, pricedStateForRun, spineInheritedHeld, spineMedicarePriced } from '@intake/intakeMap'
 import { rawDisplayed, type MemoryModelSnapshot } from '@store/memoryModel'
 import type { SavedRecommendationStatus } from '@store/savedRecommendation'
 import { RECOMMENDATION_GOALS, type RecommendationGoal, type SavedRecommendationV3 } from '@shared/model'
@@ -440,9 +440,10 @@ export function strategiesView(input: StrategiesInput): StrategiesView {
   if (isDateRoute(draft)) return { kind: 'working-route', words: copy.taxStratWorkingRoute }
   const pricedState = pricedStateForRun(draft)
   const healthcarePriced = spineMedicarePriced(draft)
+  const inheritedHeld = spineInheritedHeld(draft)
   const solve = snapshot.solve
   const planClock = planClockAnchor(draft.startCalendarYear, input.wallCalendarYear)
-  const view = recommendationView(solve, { pricedState, healthcarePriced, planClock })
+  const view = recommendationView(solve, { pricedState, healthcarePriced, inheritedHeld, planClock })
   const stateClause = composeVerdictStateNote(pricedState, false)
   const record = recordFace(input)
 

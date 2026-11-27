@@ -1059,6 +1059,69 @@ const multiBucketWitness: ScenarioDraft = {
 }
 
 /**
+ * THE TWO-INHERITED WITNESS (the Act 5 plan's U13, slice 2: the inherited-IRA screens). `multiBucketWitness`' couple
+ * with an HSA added, so every page that groups accounts draws all five groups, and two inherited traditional IRAs of
+ * ONE heir (Alex, born 1960), so the screens must tell two inherited accounts of one owner apart (by the dead owner's
+ * death year). The two cover version 1's two schedules:
+ *   - a parent born 1938 who died in 2023, long past the required beginning date: a yearly minimum every year through
+ *     2033, the law's last; asked in the plan's first year from last December 31's balance (computed, not the
+ *     custodian's figure); the pace "only what the law requires";
+ *   - an owner born 1950 who died in 2021, before the required beginning date (April 1, 2023, at 72): no yearly minimum,
+ *     everything out by 2031; the birth years exactly ten apart, so the household answered that Alex is more than ten
+ *     years younger; the pace "even amounts", so each year takes more than the law requires.
+ * Once Social Security starts, the two withdrawals run past the year's need, so part of them moves to taxable (the
+ * moved column has figures to show). Both go to Sam if Alex dies first. Made-up figures, never a real household's.
+ */
+const twoInheritedWitness: ScenarioDraft = {
+  ...multiBucketWitness,
+  enteredAccounts: [
+    ...multiBucketWitness.enteredAccounts,
+    {
+      id: 'acct-1-hsa',
+      ownerIndex: 1,
+      kind: 'hsa',
+      valueToday: 40_000,
+      manualBlend: { kind: 'exact', stockPct: 60, bondPct: 30, cashPct: 10 },
+    },
+    {
+      id: 'acct-0-inherited-ira-2023',
+      ownerIndex: 0,
+      kind: 'inherited-ira',
+      valueToday: 190_000,
+      manualBlend: { kind: 'exact', stockPct: 60, bondPct: 30, cashPct: 10 },
+      inherited: {
+        ownerBirthYear: 1938,
+        ownerDeathYear: 2023,
+        askedYear: SEED_BUILD_YEAR,
+        askedFigure: { kind: 'computed', decemberBalance: 190_000 },
+        takenInAskedYear: 0,
+        earlierWithdrawals: [],
+        leftTo: 'other-member',
+        pace: { kind: 'law-minimum' },
+      },
+    },
+    {
+      id: 'acct-0-inherited-ira-2021',
+      ownerIndex: 0,
+      kind: 'inherited-ira',
+      valueToday: 150_000,
+      manualBlend: { kind: 'exact', stockPct: 60, bondPct: 30, cashPct: 10 },
+      inherited: {
+        ownerBirthYear: 1950,
+        ownerDeathYear: 2021,
+        heirMoreThanTenYearsYounger: true,
+        askedYear: SEED_BUILD_YEAR,
+        askedFigure: { kind: 'not-asked' },
+        takenInAskedYear: 0,
+        earlierWithdrawals: [],
+        leftTo: 'other-member',
+        pace: { kind: 'even' },
+      },
+    },
+  ],
+}
+
+/**
  * THE NO-PRETAX STEER WITNESS (the steer-seed increment, 2026-07-23 — the first walkable face of
  * `blocked{no-pretax}`). `retiredOnTrack`'s 66/65 couple whose split savings hold NO pre-tax
  * dollars: Alex's Roth IRA + Sam's brokerage account (basis entered) — a REALISTIC shape (a couple
@@ -2014,6 +2077,8 @@ export const DEV_SEEDS = {
   pafailingone: paFailingOne,
   surpluswidestrelief: surplusWidestRelief,
   buckets: multiBucketWitness,
+  // The Act 5 plan's U13 (slice 2, the screens): two inherited IRAs of one heir, beside all four other groups.
+  inherited: twoInheritedWitness,
   steer: noPretaxSteer,
   nc: ncAffirmation,
   pa: paAffirmation,

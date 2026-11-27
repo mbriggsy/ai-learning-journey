@@ -54,6 +54,7 @@ import { composeRecStateTaxDisclosure } from './stateTaxDisclosure'
  *  this union is the surface's OWN compile-enforced completeness seat set (a new id fails tsc below). */
 export type RecommendationDisclosureId =
   | 'ss-claim-fixed'
+  | 'inherited-pace'
   | 'niit'
   | 'all-in-scope'
   | 'state-tax'
@@ -89,10 +90,15 @@ export interface RecommendationDisclosure {
  *  consumer here, and the pay-less-tax hero arm in `recommendedView` reads the same value. */
 const DISCLOSURE_BUILDERS: Record<
   RecommendationDisclosureId,
-  (p: SolveRecommendation, pricedState: PricedState | undefined, healthcarePriced: boolean) => RecommendationDisclosure | null
+  (p: SolveRecommendation, pricedState: PricedState | undefined, healthcarePriced: boolean, inheritedHeld: boolean) => RecommendationDisclosure | null
 > = {
   // Always: the Social Security claim ages are held FIXED (not optimized in the comparison).
   'ss-claim-fixed': () => ({ id: 'ss-claim-fixed', text: copy.recDiscSsClaimFixed, disposition: 'disclosure' }),
+  // Only on a run that carries an inherited IRA's ledger (the Act 5 plan's U13, KTD21): the solver never searches the
+  // pace in version 1, so every candidate keeps the pace set for each inherited IRA. Its head noun is the pace held
+  // (insight 140), the Social Security note's own register.
+  'inherited-pace': (_p, _pricedState, _healthcarePriced, inheritedHeld) =>
+    inheritedHeld ? { id: 'inherited-pace', text: copy.recDiscInheritedPace, disposition: 'disclosure' } : null,
   // Always: the one lever-inert omission on BOTH goals (the 3.8% NIIT surtax caveat).
   niit: () => ({ id: 'niit', text: copy.recDiscNiit, disposition: 'disclosure' }),
   // pay-less-tax on a healthcare-PRICED run ONLY (2026-10-05, HIS words): the objective counts income
@@ -128,6 +134,8 @@ const DISCLOSURE_BUILDERS: Record<
  *  test (a new id must be ordered too). */
 export const DISCLOSURE_ORDER: readonly RecommendationDisclosureId[] = [
   'ss-claim-fixed',
+  // Beside the other held-fixed note: both say what the comparison keeps as entered.
+  'inherited-pace',
   // The scope note BEFORE the NIIT note: it states what the figure counts, and the surtax line is
   // then read as the exception to it (the 2026-10-06 pre-land Caddie read — the reverse order put an
   // exclusion before the counted set it carves from).
@@ -144,13 +152,15 @@ export const DISCLOSURE_ORDER: readonly RecommendationDisclosureId[] = [
  *  optional. This whole defect existed because a value that WAS computed (`Result.tsx`'s
  *  `statePricedNote`) was simply never handed down; an optional parameter would rebuild that exact
  *  trapdoor, where forgetting to pass it silently restores the false sentence. `healthcarePriced`
- *  is REQUIRED for the same reason (the run's BUILT `overlay.healthcareEnabled`, build spec D7). */
+ *  is REQUIRED for the same reason (the run's BUILT `overlay.healthcareEnabled`, build spec D7), and so is
+ *  `inheritedHeld` (the run's BUILT `overlay.inheritedIras`, U13: a forgotten flag would drop the held-pace line). */
 export function disclosuresFor(
   payload: SolveRecommendation,
   pricedState: PricedState | undefined,
   healthcarePriced: boolean,
+  inheritedHeld: boolean,
 ): readonly RecommendationDisclosure[] {
-  return DISCLOSURE_ORDER.map((id) => DISCLOSURE_BUILDERS[id](payload, pricedState, healthcarePriced)).filter(
+  return DISCLOSURE_ORDER.map((id) => DISCLOSURE_BUILDERS[id](payload, pricedState, healthcarePriced, inheritedHeld)).filter(
     (d): d is RecommendationDisclosure => d !== null,
   )
 }
@@ -424,6 +434,10 @@ export interface RecommendationViewOpts {
    *  omitting it keeps the shipped words and claims nothing more. `RecommendationSurface.test.tsx`
    *  pins that Result passes it, so the absent arm cannot become the shipped state by omission. */
   readonly healthcarePriced?: boolean
+  /** Does THIS run's BUILT overlay carry an inherited IRA's ledger (`spineInheritedHeld(draft)`, the Act 5 plan's U13)?
+   *  It gates the held-pace disclosure. ABSENT ⇒ no such line, the `healthcarePriced` precedent; Tax Strategies and its
+   *  Summary tab pass it, and their tests pin that they do. */
+  readonly inheritedHeld?: boolean
   /** The household's plan clock (`planClockAnchor(draft.startCalendarYear, wallCalendarYear)`) — the
    *  ONE derivation, minted by the caller and passed by reference, never re-derived here (this layer
    *  reads no clock). Feeds the winning-plan card's conversion start, which must speak the CALENDAR
@@ -704,7 +718,7 @@ function recommendedView(payload: SolveRecommendation, opts: RecommendationViewO
     runnerUp: payload.runnerUp !== undefined ? { why: copy.recRunnerUpWhy } : undefined,
     skew: skewQuote(payload),
     withheldConversion: withheldConversionView(payload),
-    disclosures: disclosuresFor(payload, opts?.pricedState, healthcarePriced),
+    disclosures: disclosuresFor(payload, opts?.pricedState, healthcarePriced, opts?.inheritedHeld === true),
     // The Summary tab's two bars: ACTIVE mode only. No-change, the seed-B display inversion and a $0 collapse show no
     // bars (the inversion would paint the winner AHEAD against the ranking; a $0 collapse would draw a fabricated
     // compare). Both goals since RC8: the bars print their values and the hero's own goal words sit beside them.

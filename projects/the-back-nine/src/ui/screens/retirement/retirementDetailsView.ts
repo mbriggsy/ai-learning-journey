@@ -36,6 +36,7 @@ import type { DonutPart } from '@viz/charts/donutOptions'
 import type { GroupedBarSeries } from '@viz/charts/groupedBarsOptions'
 import type { YearSource } from '@viz/charts/incomeSourcesOptions'
 import type { PatternKind } from '@viz/charts/patterns'
+import { INHERITED_COLOR_INDEX } from '@viz/palette'
 import type { LedgerYearRow } from '@shared/model'
 import { copy, slots } from '../../copy'
 import { formatDeltaDollar, formatMmDollar, mmAxisFormatterFor } from '../../money'
@@ -74,18 +75,32 @@ interface Look {
 /** The income parts, bottom-up: Social Security deep indigo (it clears the floor beside every withdrawal hue), other
  *  income light green in vertical lines (so it never rests on its colour beside the solid indigo and blue; the cross is
  *  the money-ran-out band's, in the same chart), then the withdrawal stacks' own look (taxable solid blue, pre-tax
- *  hatched orange, Roth dotted green, HSA lined sky). */
-export const INCOME_PARTS: readonly (Look & { readonly id: string; readonly name: string; readonly read: (r: LedgerYearRow) => number })[] = [
+ *  hatched orange, Roth dotted green, HSA lined sky, the inherited IRAs zigzagged umber, the Act 5 plan's U13). The
+ *  inherited part is what the inherited IRAs paid toward the year (each one's withdrawal less the part moved to taxable,
+ *  `analysisRuns.withdrawn`'s own reading), as pre-tax's draw leaves out a required withdrawal moved to taxable. */
+/** A stacked part: its look, its words, its row reading; `whenDrawn`, a part drawn only where some year holds it (the
+ *  inherited IRAs, which few households hold: no legend entry names a source the plan lacks). */
+type Part = Look & { readonly id: string; readonly name: string; readonly read: (r: LedgerYearRow) => number; readonly whenDrawn?: true }
+
+export const INCOME_PARTS: readonly Part[] = [
   { id: 'social-security', name: copy.rdSourceSocialSecurity, colorIndex: 9, pattern: 'solid', read: (r) => r.socialSecurity },
   { id: 'other', name: copy.rdSourceOther, colorIndex: 3, pattern: 'vlines', read: (r) => r.otherIncomeByPerson.reduce((s, o) => s + o.gross, 0) },
   { id: 'taxable', name: copy.rdSourceTaxable, colorIndex: 0, pattern: 'solid', read: (r) => r.draw.taxable },
   { id: 'pretax', name: copy.rdSourcePretax, colorIndex: 2, pattern: 'hatch', read: (r) => r.draw.pretax },
   { id: 'roth', name: copy.rdSourceRoth, colorIndex: 1, pattern: 'dots', read: (r) => r.draw.roth },
   { id: 'hsa', name: copy.rdSourceHsa, colorIndex: 4, pattern: 'lines', read: (r) => r.hsaSpend },
+  {
+    id: 'inherited',
+    name: copy.rdSourceInherited,
+    colorIndex: INHERITED_COLOR_INDEX,
+    pattern: 'zigzag',
+    read: (r) => (r.inherited ?? []).reduce((s, e) => s + e.taken - e.movedToTaxable, 0),
+    whenDrawn: true,
+  },
 ]
 
 /** The spending parts, bottom-up: spending solid blue, income tax hatched orange, health premiums dotted green. */
-export const SPENDING_PARTS: readonly (Look & { readonly id: string; readonly name: string; readonly read: (r: LedgerYearRow) => number })[] = [
+export const SPENDING_PARTS: readonly Part[] = [
   { id: 'spending', name: copy.rdSpendSpending, colorIndex: 0, pattern: 'solid', read: (r) => r.spending ?? 0 },
   { id: 'tax', name: copy.rdSpendTax, colorIndex: 2, pattern: 'hatch', read: (r) => r.taxPaid },
   { id: 'premiums', name: copy.rdSpendPremiums, colorIndex: 1, pattern: 'dots', read: premiumsOf },
@@ -333,13 +348,17 @@ export function retirementDetailsView(input: AnalysisInput & { readonly chart: R
   }
 
   const parts = kind === 'income' ? INCOME_PARTS : SPENDING_PARTS
-  const sources: YearSource[] = parts.map((p) => ({
-    id: p.id,
-    name: p.name,
-    colorIndex: p.colorIndex,
-    pattern: p.pattern,
-    points: rows.map((r) => ({ year: yearOf(side.meta, r), value: Math.max(0, p.read(r)) })),
-  }))
+  const sources: YearSource[] = parts
+    .map((p) => ({
+      id: p.id,
+      name: p.name,
+      colorIndex: p.colorIndex,
+      pattern: p.pattern,
+      points: rows.map((r) => ({ year: yearOf(side.meta, r), value: Math.max(0, p.read(r)) })),
+      whenDrawn: p.whenDrawn === true,
+    }))
+    .filter((src) => !src.whenDrawn || src.points.some((pt) => pt.value > 0))
+    .map(({ whenDrawn: _w, ...src }) => src)
   const tops = rows.map((_, i) => sources.reduce((s, src) => s + src.points[i]!.value, 0))
   if (kind === 'income') {
     const share = notWithdrawalShare(rows)

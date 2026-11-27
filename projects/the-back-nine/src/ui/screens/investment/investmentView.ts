@@ -21,12 +21,12 @@
  * page draws no donut and names each such account (never a default split).
  */
 import { blendOf, blendSourceOf, KIND_BUCKETS, KIND_TO_BUCKET, type KindBucket } from '@intake/intakeMap'
-import { kindLabel } from '@intake/accountKinds'
 import { formatMoney } from '@intake/moneyFormat'
 import type { EnteredAccount, WhatIfLeverV6 } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
+import { INHERITED_COLOR_INDEX } from '@viz/palette'
 import { copy, slots } from '../../copy'
-import { tablePerson } from '../../workbench/tableRun'
+import { enteredAccountName, tablePerson } from '../../workbench/tableRun'
 
 // ── The one rounding rule ────────────────────────────────────────────────────────────────────────────────────────────
 
@@ -96,9 +96,10 @@ export function mixPercents(mix: Mix): Readonly<Record<MixPart, number>> {
 
 const cap = (s: string): string => (s === '' ? s : s[0]!.toUpperCase() + s.slice(1))
 
-/** An account named by its owner and kind ("your Roth IRA", "Sam’s 401(k)"), the year-by-year table's own naming. */
+/** An account named by its owner and kind ("your Roth IRA", "Sam’s 401(k)"; an inherited IRA by its owner's death year
+ *  too), the year-by-year table's own naming (`enteredAccountName`). */
 export function accountName(d: ScenarioDraft, a: EnteredAccount): string {
-  return slots.workbenchAccountOf(tablePerson(d, a.ownerIndex, 0, 0).possessive, kindLabel(a.kind))
+  return enteredAccountName(d, a)
 }
 
 const money = (v: number): string => slots.workbenchFactDollars(formatMoney(Math.round(v)))
@@ -106,28 +107,32 @@ const money = (v: number): string => slots.workbenchFactDollars(formatMoney(Math
 // ── The tax buckets (`KIND_TO_BUCKET`, the engine's one grouping) ───────────────────────────────────────────────────
 
 /** The engine's own grouping vocabulary and its order, never a hand-typed copy: a grouping added to `KIND_BUCKETS` reaches
- *  every part, picker and colour here, and each table below fails to compile until it is named (the Act 5 plan's KTD20). */
-export type TaxBucketId = Exclude<KindBucket, 'inherited'>
-/** U13 HOLD (the inherited IRA, schema version 7): this page does not draw the inherited grouping yet. U13 slice 2 gives it its look (a pattern of its own, never hatch, and a hue measured in `RC_PAIRS`) and lifts this exclusion; until then no household can hold one (no drawer offers the kind and no seed holds one), and slice 2 must land before the drawer does. */
-export const TAX_BUCKETS: readonly TaxBucketId[] = KIND_BUCKETS.filter((b): b is TaxBucketId => b !== 'inherited')
+ *  every part, picker and colour here, and each table below fails to compile until it is named (the Act 5 plan's KTD20).
+ *  The inherited IRA is a part of its own (U13), never inside pre-tax: every other B9 page keeps it out of pre-tax, and
+ *  two pages printing different pre-tax figures for one year would be calm-but-wrong. */
+export type TaxBucketId = KindBucket
+export const TAX_BUCKETS: readonly TaxBucketId[] = KIND_BUCKETS
 
 const BUCKET_NAME: Readonly<Record<TaxBucketId, string>> = {
   taxable: copy.investBucketTaxable,
   pretax: copy.investBucketPretax,
   roth: copy.investBucketRoth,
   hsa: copy.investBucketHsa,
+  inherited: copy.investBucketInherited,
 }
 
 /** The second cue each part carries beside its colour: a pattern of `patterns.ts`, or solid. */
-export type SwatchPattern = 'solid' | 'hatch' | 'dots' | 'lines'
+export type SwatchPattern = 'solid' | 'hatch' | 'dots' | 'lines' | 'zigzag'
 
 /** Each tax bucket's colour slot and pattern: the withdrawal stacks' own (taxable solid blue, pre-tax hatched orange, Roth
- *  dotted green, HSA lined sky; `chartTheme.css`'s `.b9-stack`), so a bucket looks the same on every page. */
+ *  dotted green, HSA lined sky, the inherited IRA zigzagged umber; `chartTheme.css`'s `.b9-stack`), so a bucket looks the
+ *  same on every page. */
 export const BUCKET_LOOK: Readonly<Record<TaxBucketId, { readonly colorIndex: number; readonly pattern: SwatchPattern }>> = {
   taxable: { colorIndex: 0, pattern: 'solid' },
   pretax: { colorIndex: 2, pattern: 'hatch' },
   roth: { colorIndex: 1, pattern: 'dots' },
   hsa: { colorIndex: 4, pattern: 'lines' },
+  inherited: { colorIndex: INHERITED_COLOR_INDEX, pattern: 'zigzag' },
 }
 
 /** Each part of the mix: RightCapital's hues (stocks indigo, bonds light green, cash orange), cash dotted (stocks and bonds
@@ -336,9 +341,9 @@ export type TaxAllocationView =
       readonly notes: readonly string[]
     }
 
-/** Each bucket that holds an account, in RightCapital's order (taxable, then the tax-deferred, then the tax-free), its
- *  entered balances summed through `KIND_TO_BUCKET` (the engine's one grouping; an inherited IRA is entered as a
- *  traditional IRA, so it is pre-tax, which it is). Each account rounds to the dollar FIRST and every sum adds the
+/** Each bucket that holds an account, in RightCapital's order (taxable, then the tax-deferred, then the tax-free), then
+ *  the inherited IRA, its own part (U13), its entered balances summed through `KIND_TO_BUCKET` (the engine's one
+ *  grouping). Each account rounds to the dollar FIRST and every sum adds the
  *  rounded figures, so the listed accounts sum to their part and the parts to the hole's total, cents or not.
  *  `agedBalancesYear`: the aged-balances clause's year (IntakeApp's `agedBalancesYearFor`), as Snapshot reads it. */
 export function taxAllocationView(d: ScenarioDraft, picked: TaxBucketId | null, agedBalancesYear: number | undefined): TaxAllocationView {

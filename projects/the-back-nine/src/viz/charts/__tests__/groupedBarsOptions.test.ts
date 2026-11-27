@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { SeriesAreaOptions, SeriesColumnOptions, YAxisOptions } from 'highcharts/highcharts.src'
 import { niceLattice } from '../../bandData'
-import { groupedBarsOptions, GROUPED_BAR_CLASSES } from '../groupedBarsOptions'
+import { groupedBarsOptions, groupedSidewaysMaxWidth, GROUPED_BAR_CLASSES } from '../groupedBarsOptions'
 import { endLabelReserve, pairAreasOptions, seatEndLabels, STACK_ORDER, STACK_SOURCES, stackedAreasOptions } from '../stackedAreasOptions'
 
 /**
@@ -45,6 +45,26 @@ describe('groupedBarsOptions', () => {
     }
     expect(opts.plotOptions?.column?.dataLabels).toMatchObject({ enabled: true, allowOverlap: true, crop: false })
     expect(opts.legend?.enabled, 'two sides: a legend beside the printed values').toBe(true)
+    expect(opts.responsive, 'RC8’s Summary keeps its columns at every width').toBeUndefined()
+  })
+
+  it('asked (RC17’s spending comparison), the bars run sideways where the chart is too narrow for every figure side by side: whole figures at the bars’ ends, room past the longest, at most three tick words across', () => {
+    const three = niceLattice(1_250_000)
+    const side = (id: string, role: 'alternative' | 'compared') => ({ id, name: id, role, values: [1_180_000, 98_000, 392_000], figures: ['~$1.18mm', '~$98k', '~$392k'], points: ['p', 'p', 'p'] })
+    const o = groupedBarsOptions({ groups: ['Spending', 'Income tax', 'Health premiums'], series: [side('a', 'alternative'), side('b', 'compared')], lattice: three, axisDollar: axis, words, height: 240, padding: { group: 0.03, point: 0.24 }, sideways: true })
+    // Six figures with their gaps over the bars' 94% share of the plot, plus the axis: the 2026-11-27 CI frame drew the
+    // chart about 500 px wide, where two neighbouring figures met; the base states what the rule's undo restores.
+    expect(groupedSidewaysMaxWidth(3, 2, 0.03)).toBe(Math.ceil((6 * 92) / 0.94) + 72)
+    expect(groupedSidewaysMaxWidth(3, 2, 0.03)).toBeGreaterThan(500)
+    expect(o.chart).toMatchObject({ inverted: false, spacingRight: 10 })
+    const rule = o.responsive?.rules?.[0]
+    expect(rule?.condition?.maxWidth).toBe(groupedSidewaysMaxWidth(3, 2, 0.03))
+    expect(rule?.chartOptions?.chart).toMatchObject({ inverted: true, spacingRight: 92 })
+    const ticks = (rule?.chartOptions?.yAxis as YAxisOptions).tickPositions!
+    expect(ticks.length).toBeLessThanOrEqual(3)
+    expect([ticks[0], ticks.at(-1)]).toEqual([0, three.ceiling])
+    // The figures stay whole and never hide: the same labels either way.
+    expect(o.plotOptions?.column?.dataLabels).toMatchObject({ enabled: true, allowOverlap: true, crop: false, overflow: 'allow' })
   })
 })
 

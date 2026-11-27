@@ -473,7 +473,7 @@ CSS gives it (the viewBox scaling that once forced every word into HTML does not
   Each was planted red once on the defect it was written for.
 - **Contain the words; never widen the room to fit them.** Where a chart cannot print every label legibly at a width,
   its words move to a view that can, and the page says so; nothing is shrunk or cut. Below the 68rem laptop tier Maps
-  shows its tiles in the flow's place, and on a phone Balance Sheet's bars run sideways (`SIDEWAYS_MAX_WIDTH`).
+  shows its tiles in the flow's place, on a phone Balance Sheet's bars run sideways (`SIDEWAYS_MAX_WIDTH`), and where the notes column leaves Retirement Details' spending comparison too narrow for its six figures its bars run sideways too (`groupedSidewaysMaxWidth`; the bar padding never moves two figures apart).
 - **Forward rule.** A new Highcharts chart draws through `Chart.tsx`, takes its words from its screen's composer, sizes
   its text through `chartTheme.css`'s tokens, keeps its printed values undeferred, and gets its required labels and
   marks into an `rc-screens.spec.ts` arm through `hcTextAudit.ts`, with a drawn-against-printed check wherever two of its

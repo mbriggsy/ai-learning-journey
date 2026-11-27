@@ -158,6 +158,7 @@ export function RetirementDetailsPanel({
           words={{ ...chartWords(view.title), description: view.metric }}
           height={height}
           padding={{ group: 0.03, point: 0.24 }}
+          sideways
         />
       </ChartSeat>
     )

@@ -11,7 +11,7 @@ import { groupedBarsOptions, type GroupedBarsInput } from './groupedBarsOptions'
 
 export function GroupedBars(props: GroupedBarsInput & { readonly chartId: string }) {
   const { chartId, ...input } = props
-  const key = JSON.stringify([input.groups, input.series, input.lattice, input.words, input.height, input.padding])
+  const key = JSON.stringify([input.groups, input.series, input.lattice, input.words, input.height, input.padding, input.sideways === true])
   const held = useRef<{ readonly key: string; readonly options: Options } | null>(null)
   if (held.current === null || held.current.key !== key) held.current = { key, options: groupedBarsOptions(input) }
   return <Chart key={key} options={held.current.options} chartId={chartId} className="b9-bar b9-grouped" />

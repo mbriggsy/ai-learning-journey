@@ -3,7 +3,7 @@ title: A guard family's trigger predicate must match the HAZARD CREATOR's domain
 date: 2026-06-10
 phase: P1 (C3 — the date-search boundary review)
 modules: [engine/simulate, engine/taxOverlay, engine/healthcareStreams]
-tags: [guards, predicates, domain-mismatch, insight-020, IRMAA, working-year-clamp, calm-but-wrong]
+tags: [guards, predicates, domain-mismatch, insight-020, IRMAA, working-year-clamp, calm-but-wrong, horizon, maxHorizonYears, sampled-lifespan, validateParams, inherited-ledger, aged-plan, infeasible-run]
 ---
 
 ## Problem
@@ -55,3 +55,14 @@ unguarded subdomain.
 - U9's two-track split, if either track gains its own working-year transform.
 - The deferred per-person-asymmetry feature (its retired-on-ACA + working-spouse
   household reads these exact predicates).
+
+## Extended (2026-11-27, gap 3's review round 1, `3d472807`): a bound the gate checks against one horizon and the loop runs against another
+
+`validateParams` checked an inherited IRA's asked year against `maxHorizonYears`. The overlay built each ledger's rows
+against the path's own length, which ends at that path's last death. On a plan aged a year, one sampled path ended in
+row 0, the ledger's rows threw, and the whole run came back infeasible. Every engine test ran a fixed horizon, where
+the two bounds are the same number, so none could see it. The engine invariants seat found it by probing a sampled
+lifespan.
+
+What it adds: a horizon is a predicate too. The gate's bound must be the bound the loop uses; a proxy that agrees with
+it on every fixed-horizon fixture covers only the overlap. A feature with a row past row 0 gets a sampled-lifespan arm.

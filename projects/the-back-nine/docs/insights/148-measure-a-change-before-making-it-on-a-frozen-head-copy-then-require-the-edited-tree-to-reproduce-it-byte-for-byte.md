@@ -3,7 +3,7 @@ title: "Measure a change BEFORE making it, on a frozen `git archive` HEAD copy t
 date: 2026-10-31
 phase: the pay check's Phase C — U10's seed measurement (b9-6), the whole-file review's fix lanes (b9-9); the A6 byte-identity proof (b9-14)
 modules: [src/ui/devSeeds.ts, src/intake/workingYearQuote.ts]
-tags: [measurement, method, frozen-copy, git-archive, byte-identity, before-after, fix-lanes, parallel-agents, merge-file, junction, pure-refactor, verbatim-copy-in-test, seeded-sweep]
+tags: [measurement, method, frozen-copy, git-archive, byte-identity, before-after, fix-lanes, parallel-agents, merge-file, junction, pure-refactor, verbatim-copy-in-test, seeded-sweep, engine-identity, live-side, tree-side, mtime, self-check]
 ---
 
 ## Problem
@@ -60,3 +60,16 @@ writes beside its spec but runs with the copy as `cwd` needs the spec path ABSOL
 - Every seed re-measure (the next build's crowns), every "byte-identical when OFF" claim, every mutant run.
 - [[083]] — the coupling this avoids; [[095]] — a probe must run the shipped decision path, which the runtime mint is.
 - [[135]] — write the prediction down before measuring; the frozen BEFORE is where it gets checked.
+
+## Extended (2026-11-27, b9-1's first full `pnpm engine:identity` run): the frozen copy has a live twin, since the tree side reads the working tree when it starts
+
+`pnpm engine:identity` freezes its base by `git archive` and records the tree side from the working tree. Each side's
+recorder reads its files when its own process starts, and the sides run one after the other, about 16 minutes each. On
+the tool's first full run, meant to prove that two records of one tree agree, U11's engine edits landed between the
+base's start (00:04) and the tree's (00:20). The run came back IDENTICAL 82 of 82, which was in fact U11's identity
+proof against pre-U11, not the tool's self-check. Nothing in the output said so. It was caught by comparing the edited
+files' mtimes against the tree record's start, and the tool's own claim needed a second tree record, made with the
+tree held still, that compared byte-equal (`cmp`) to the first.
+
+Lesson: a frozen-copy method is only as frozen as its least frozen side. Freeze the tree side too, or finish every edit
+before it starts, and check the edited files' mtimes against the record's start before saying what a run proved.

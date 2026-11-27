@@ -3,7 +3,7 @@ title: Words built for a link from "the node it feeds" are false wherever that n
 date: 2026-11-26
 phase: Act 6 RC20's whole-unit review (b9-7, Cash Flows → Maps)
 modules: [src/ui/screens/retirement/mapsView.ts, src/viz/charts/sankeyOptions.ts, src/ui/screens/retirement/__tests__/mapsView.test.ts, src/viz/charts/__tests__/sankeyOptions.test.ts]
-tags: [sankey, highcharts, accessibility, screen-reader, descriptionFormatter, link-words, aggregate-node, to-text, hover, aria-hidden, stubbed-words, options-test, deixis, reused-copy, sibling-view, calm-but-wrong, per-element-pin, every-seed]
+tags: [sankey, highcharts, accessibility, screen-reader, descriptionFormatter, link-words, aggregate-node, to-text, hover, aria-hidden, stubbed-words, options-test, deixis, reused-copy, sibling-view, calm-but-wrong, per-element-pin, every-seed, sink-field, contained-sub-flow, field-docblock, movedToTaxable, rmdToTaxable, inherited-ira, maps]
 ---
 
 ## Problem
@@ -50,3 +50,14 @@ has no table, no single pay figure and no column. When a line moves to a new vie
   for some series kinds.
 - Any per-element `aria-label` composed from a parent or neighbour (a table cell from its column total, a list item
   from its group): pin it per element over real data.
+
+## Extended (2026-11-27, b9-6's U13 Maps): a field that contains a sub-flow cannot copy the treatment of a sibling field that excludes it
+
+The plan said the inherited IRA's excess (forced out beyond the year's need and moved to taxable) "gets a words line, as
+`mapsRmdOff` does". But the two fields are built differently. `draw.pretax` leaves out `rmdToTaxable`, so the RMD excess
+is not in the pre-tax link and a words line beside the map is the whole story. The inherited `taken` includes
+`movedToTaxable`, so the same words-only treatment would have left the excess inside the inherited link with nowhere
+to go: an unexplained gap at the node it feeds. The excess is drawn out as its own leaf.
+
+What it adds: two sibling fields can carry the same idea with opposite containment. Before copying a sibling's
+treatment, read each new field's docblock for what it holds, and draw a contained sub-flow out as its own element.

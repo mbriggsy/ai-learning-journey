@@ -3,7 +3,7 @@ title: A guard put in one host misses every sibling built on the same primitive 
 date: 2026-11-26
 phase: Act 6 milestone 3's whole-file review, rounds 1 to 3 (b9-4, b9-5, 2026-11-26)
 modules: [src/ui/kit/Drawer.tsx, src/ui/kit/NumberInputs.tsx, src/ui/screens/profile/drawers/ProfileDrawer.tsx, src/ui/screens/retirement/ActionItemsTray.tsx]
-tags: [guard, primitive, kit, host, sibling, refused-text, data-typed-refused, save, blur-commit, focus, portal, calm-but-wrong, single-home]
+tags: [guard, primitive, kit, host, sibling, refused-text, data-typed-refused, save, blur-commit, focus, portal, calm-but-wrong, single-home, grid-column-floor, minmax, min-content, break-words, word-split, seam-1088, action-items-tray, Range]
 ---
 
 ## Problem
@@ -40,3 +40,17 @@ and that each caller reads its state in a way the guard's side effects reach.
 - [[144]]: a mark that vouches for a fact must live in the component that sees the fact.
 - Any kit control with a cross-cutting rule: a dialog's leave ask, a list's empty state, a number box's refusal words.
 - [[149]]: the blur-in-press order this guard depends on.
+
+## Extended (2026-11-27, b9-9's U17 look and the kit tray fix `09f3954d`): a shared grid's column floors decide where words break, and two sizes can miss it
+
+U17's pace picker, sized to its longest choice ("Even amounts, ending in a year you pick"), widened the tray's shared
+`auto` control column until "Roth conversion / s" broke at 1440. Capping the picker hid that at 1440 and on the phone,
+but at 1088, where both column groups sit side by side, the kit's own `minmax(6rem, 1fr)` names column under
+`break-words` broke "Withdrawal" and "conversions" on households with no inherited IRA at all, and the control cell's
+`min-w-0` let every picker run about 25 px into the compared column. The fix went into the primitive, as this insight
+says: `minmax(min-content, 1fr)`, and `min-width: auto` from the `wide` tier.
+
+What it adds: in a grid every row shares, one host's widest control sets every row's floor, so a fault can surface on a
+household that has none of the new rows. The check that sees it reads each word through a `Range` and flags a word whose
+boxes sit on two lines; no overflow or clip audit does. Measure a new row at the seam where the layout changes, not
+only at the two named sizes.

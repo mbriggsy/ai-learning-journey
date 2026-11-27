@@ -3,7 +3,7 @@ title: A reconciliation invariant with MANY input-writers isn't closed by fencin
 date: 2026-07-02
 phase: P3·U9b (the budget UI ultramode review)
 modules: [src/intake/questions.tsx, src/budget/budgetToSpending.ts, src/store/memoryModel.ts]
-tags: [reconciliation-invariant, second-writer, calm-but-wrong, ultramode-review, whole-file-review, insight-020-shape, build-gate-1, staleness-stamp, object-rebuild, keep-door, re-mint]
+tags: [reconciliation-invariant, second-writer, calm-but-wrong, ultramode-review, whole-file-review, insight-020-shape, build-gate-1, staleness-stamp, object-rebuild, keep-door, re-mint, many-readers, row-total, engine-helper, hand-total-scan]
 ---
 
 ## Problem
@@ -66,3 +66,17 @@ independently, `wf_a6429110-d52`). A stamp lives on the object it rides, so ever
 writer of the stamp. Audit them all, plus the door's own visibility rule (whether the door that rebuilds the object
 should be offered at all in that state). The period control's round trip ([[144]]'s 2026-11-23 extension) is the same
 hole through a different writer.
+
+## Extended (2026-11-27, b9-4's U12 slice 2): many readers of one total, the read side of the same trap
+
+U12 put a fifth holding, the inherited ledgers, into a yearly row that five UI readers totalled by hand from its four
+buckets. Every reader that keeps its own sum is a place the new holding can be left out. Both obvious homes for the new
+total were wrong: stored on every row, it changes every run's shape (the engine identity tool's table arm moves on every
+key); stored only beside the new ledger, every reader keeps a fallback sum, a second home for the same figure. It landed
+as one engine helper over the row's parts (`ledgerRowStartTotal` / `ledgerRowEndTotal`, `src/engine/sequencing.ts`), and
+the next reader is caught by a scan of the UI tree for a hand total of a row's four buckets
+(`src/ui/__tests__/inheritedRowTotals.test.ts`, a control arm per pattern). Its mutants put each of the five readers back
+to a four-bucket sum; all five were killed.
+
+Lesson: a figure many readers read needs one place that computes it and a scan that finds the next hand-rolled copy.
+The writer census above has a reader census beside it.

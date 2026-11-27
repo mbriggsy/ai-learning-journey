@@ -3,7 +3,7 @@ title: A mutant proof is only as good as its LABEL — the recorded "tier-keyed 
 date: 2026-09-10
 phase: Post-Act-4 (the gap to a friend betting real money) — the council build's adversarial review
 modules: [e2e/vertical-fit.spec.ts, src/ui/styles/app.css, docs/council-log.md, TODO.md]
-tags: [mutant-proof, mutation-testing, planted-fail, arm-topology, oracle-lens, record-truth, adversarial-review, gate-by-exit-code, equivalent-mutant, aimed-fuzz, kill-line, spy-leak, restoreAllMocks, afterEach, input-device, hit-testing, prediction-correction, shared-constant, derived-constant, kill-set-larger-than-predicted, landed-check, prefix-anchor, crlf-anchor, vitest-json-timeout, STACK_TRACE_ERROR, discriminates-by-claim, predictor-gaps, spelling-variants, range-syntax, borrowed-size-reading, witness-placement, delta-band, consistency-check, which-mutants-stay-green]
+tags: [mutant-proof, mutation-testing, planted-fail, arm-topology, oracle-lens, record-truth, adversarial-review, gate-by-exit-code, equivalent-mutant, aimed-fuzz, kill-line, spy-leak, restoreAllMocks, afterEach, input-device, hit-testing, prediction-correction, shared-constant, derived-constant, kill-set-larger-than-predicted, landed-check, prefix-anchor, crlf-anchor, vitest-json-timeout, STACK_TRACE_ERROR, discriminates-by-claim, predictor-gaps, spelling-variants, range-syntax, borrowed-size-reading, witness-placement, delta-band, consistency-check, which-mutants-stay-green, geometric-check, partial-reversal, whole-base-file-plant, line-boxes, getClientRects, flex-item, Range]
 ---
 
 ## Problem
@@ -136,3 +136,16 @@ made the raw-line plant red; the one-year slip (about $300 a year in real terms)
 
 What it adds: before trusting a consistency check, put one witness inside each band where the alternatives differ, and
 write down which plants stay green and why.
+
+## Extended (2026-11-27, b9-7's top bar names arm `85263bbe`): a partial reversal is not the named regression, and only the whole base file showed the measure was broken
+
+The arm checks that the phone top bar breaks no household name inside a word. Its first plant reversed part of the fix,
+and it went red, but on a different line: with only part of the fix undone the controls wrapped instead of the names,
+so the red proved a different failure. Planting HEAD's whole bar, the exact layout the fix replaced, redded the arm's
+own claim, and showed that the instrument itself was wrong: its line count read 1 under five wrapped lines. A flex
+item's `getClientRects()` returns one box however many lines its text wraps to; counting the distinct tops of a
+`Range`'s client rects over the text counts the lines (`e2e/rc-screens.spec.ts`).
+
+What it adds: the named regression is the base file whole, checked out from the commit before the fix, never a hand
+reversal of the part you think matters. A partial plant can red for the wrong reason and hide a measure that reads
+nothing.

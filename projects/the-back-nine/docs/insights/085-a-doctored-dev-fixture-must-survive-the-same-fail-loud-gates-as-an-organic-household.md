@@ -3,7 +3,7 @@ title: A doctored dev fixture must survive the same fail-loud gates as an organi
 date: 2026-07-16
 phase: the state-carrying seed increment (post state-tax unit)
 modules: [src/ui/devSeeds.ts, src/engine/simulate.ts, src/ui/__tests__/devSeeds.test.ts]
-tags: [dev-seeds, aged-vault, doctorStaleVault, validateParams, priced-state, R19, fail-loud, fixtures, derived-witness, age-keyed-fields, retirementAge, survivor-gate]
+tags: [dev-seeds, aged-vault, doctorStaleVault, validateParams, priced-state, R19, fail-loud, fixtures, derived-witness, age-keyed-fields, retirementAge, survivor-gate, test-fixture, law-gated-kind, required-beginning-date, producer-check, inherited-ira, factRegistry]
 ---
 
 ## Problem
@@ -69,3 +69,15 @@ was built (`wf_a95a1029-7d8`).
 The lesson: when deriving a witness from a seed, list every field whose meaning depends on age (the age a member stops
 working, birth year, claim age) and restate each one. Then confirm the witness is the household its name says, by
 reading the gate or state it is meant to land in, before relying on its result.
+
+## Extended (2026-11-27, b9-8's U13 field walk): a made-up record for a law-gated kind must pass the law's own re-check, not its author's reading of the law
+
+The workbench's `FULL` draft (`src/ui/workbench/__tests__/factDrafts.ts`) gave its inherited IRA a 1952 owner who died
+in 2025 "after the required beginning date". That date is April 1 of the year AFTER the applicable age, which for a 1952
+birth is 2026, so the stored facts were ones the rules refuse. Nothing failed loudly: the field walk caught it only as
+one field left unstamped. Fix: the registry test (`src/ui/workbench/__tests__/factRegistry.test.tsx`) asserts
+`missingRequiredFacts(FULL)` names no inherited fact.
+
+What it adds: a test fixture is a producer of state too, and where the state is gated by law, the producer's own check
+(`inheritedFactsProblems`) is the oracle for it. Check every hand-made record of a law-gated kind with that producer,
+never by reading the law yourself.

@@ -3,7 +3,7 @@ title: "A mark that vouches for a fact must live in the component that sees the 
 date: 2026-10-31
 phase: the pay check's whole-file review (Phase C, b9-9) — ruling 38; Phase B's review (b9-3) — `discardOnBack`
 modules: [src/intake/WorkingCostQuestion.tsx, src/intake/questions.tsx, src/intake/flow.tsx, src/intake/sanity.ts, src/intake/AssumptionPanel.tsx]
-tags: [state-ownership, lifecycle, provenance, disarm, touched, period-rule, gated-step, back-exit, mount, single-home, unit-tap, convert-vs-reread, keep-stamp, round-trip, reversible-control, receipt, writer-census, periodGateTrips, floor, budget-escape, tray-total]
+tags: [state-ownership, lifecycle, provenance, disarm, touched, period-rule, gated-step, back-exit, mount, single-home, unit-tap, convert-vs-reread, keep-stamp, round-trip, reversible-control, receipt, writer-census, periodGateTrips, floor, budget-escape, tray-total, seeded-answer, saved-record, question-key, edit-walk, inherited-ira, refusal-answer]
 ---
 
 ## Problem
@@ -96,3 +96,18 @@ writer of that state, not about the gate. Before trusting one, grep every writer
 seeds) and check that each one either passes the gate or writes the field in a form the gate's premise covers. A new
 writer added later breaks the receipt silently, so write the census into the receipt's docblock, where the next writer's
 author will read it (`periodGateTrips` names its two gateless roads).
+
+## Extended (2026-11-27, b9-8's U13 drawer `3ee355a1`): a pre-filled answer vouches only for the question as it was asked when it was given
+
+Editing a saved inherited IRA seeds the drawer's refusal-only answers from the stored record, so the household is not
+asked again what it already answered. An unkeyed "yes, every required withdrawal was taken" would have stayed checked
+after an edit to the death year moved the question onto years the answer never covered, and the account would have run
+as served on an answer nobody gave: rosy. The answer is a mark vouching for a fact, and the fact was the question's
+words at the time.
+
+Fix: each answer carries its question's key (the heir, the years its words name, the owner's four date answers). The
+walk counts an answer only under the same key, and a seed is written only for a question the stored facts' own walk
+asks. The witnesses are the last `describe` in `src/intake/__tests__/inheritedIraQuestions.test.ts`.
+
+What it adds: a seeded answer is a mark written by a past walk. Key it to everything that set the question's words,
+so a later edit that changes the question drops the answer instead of carrying it.

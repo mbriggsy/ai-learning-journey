@@ -3,7 +3,7 @@ title: A rendered defect is green on every check until someone looks — ten def
 date: 2026-11-25
 phase: Act 6, the RightCapital clone (RC1 to RC7, b9-4 to b9-6, 2026-11-24)
 modules: [e2e/held/rc-look.spec.ts, e2e/rc-screens.spec.ts, e2e/hcTextAudit.ts, src/viz/charts/]
-tags: [look-audit, screenshots, eye-in-the-loop, orchestrator, builder-agent, green-checks, visual-defect, calm-but-wrong, ellipsis-exemption, planted-red, highcharts, fit, phone, clone, vacuous-audit, zero-labels, presence-count, html-overlay, donut, hole, geometric-check, assertCentreInHole, hcAudit, held-instrument, rc-look, RC_ONLY, env-filter, index-lookup, by-id, screenById, wrong-screen, rename, instrument-state, known-state, call-log, progress-mark, stepper-check]
+tags: [look-audit, screenshots, eye-in-the-loop, orchestrator, builder-agent, green-checks, visual-defect, calm-but-wrong, ellipsis-exemption, planted-red, highcharts, fit, phone, clone, vacuous-audit, zero-labels, presence-count, html-overlay, donut, hole, geometric-check, assertCentreInHole, hcAudit, held-instrument, rc-look, RC_ONLY, env-filter, index-lookup, by-id, screenById, wrong-screen, rename, instrument-state, known-state, call-log, progress-mark, stepper-check, legend-paging, series-name, aligned-columns, unnamed-column, inherited-ira, svg-clip]
 ---
 
 ## Problem
@@ -107,3 +107,13 @@ machine.
 every setup step marked ✓ while the box under Complete listed that step's missing facts, and "· 5 more" hid what
 Complete still needed. Mark a step done only on its own facts and its own check (milestone 3's round 1 made the box name
 every fact; round 2 dropped a step's ✓ when its check refuses).
+
+## Extended (2026-11-27, b9-7's U13 look `5a06e5d9`): a series can break a chart through its name alone, and a column beside named groups needs a name too
+
+- **The name, not the data, broke the legend.** Highcharts' aligned legend columns all take the widest item's width.
+  Adding "From inherited IRAs" halved the phone legend's columns, so seven rows passed the share of the chart a legend
+  may take, and the legend paged ("1/2"), cutting "From Roth" in half. The text audit reads no SVG clip, so it passed.
+  A new series' name is a layout change; look at the legend at PHONE.
+- **The eye's third catch was words.** Beside two named inherited groups, the household's own unnamed "Required
+  withdrawal" column read as the year's whole required amount: it stood blank in 2026 while about $8,755 was required
+  from the inherited IRAs. Once some columns name whose money they hold, an unnamed one reads as all of it. Name it too.

@@ -3,7 +3,7 @@ title: A structural citation gate proves the cited LINE exists, not that it says
 date: 2026-09-25
 phase: post-Act-4 hardening (the 2026-09-24/25 doc audit)
 modules: [scripts/verify-doc-stats.ts, scripts/reanchor-citations.mjs, docs/**]
-tags: [doc-stats, citations, re-anchor, semantic-vs-structural, gates-that-dont-bite, doc-audit, pure-shift, wrong-before-the-edit, frozen-dated-number, then-marker, history-rewrite, range-diff-at-anchor-commit, bare-token-attribution, quoted-number, tier-reference, register-move, tierrefs, first-file-not-nearest, 60-character-reach, extraction, cross-file, edit-after-run, throwaway-base, temporary-index, skipped-reanchor, re-anchor-every-commit]
+tags: [doc-stats, citations, re-anchor, semantic-vs-structural, gates-that-dont-bite, doc-audit, pure-shift, wrong-before-the-edit, frozen-dated-number, then-marker, history-rewrite, range-diff-at-anchor-commit, bare-token-attribution, quoted-number, tier-reference, register-move, tierrefs, first-file-not-nearest, 60-character-reach, extraction, cross-file, edit-after-run, throwaway-base, temporary-index, skipped-reanchor, re-anchor-every-commit, check-reanchor-moves, attribution-unchecked, dry-run-before-apply, digits-only-diff, stale-lines-after-reanchor]
 ---
 
 ## Problem
@@ -130,3 +130,23 @@ to any bare token that sits far from it.
 **What it adds.** A re-anchor is not done until its REVIEW list is empty: resolve each line by content against the
 base, or say in the commit why it stays. And when a step is handed to a builder, the step's landmines go into the
 brief with it. A builder never reads a rule kept in a file it was not pointed at.
+
+## Extended (2026-11-27, b9-1's U11 and b9-2's U10 re-anchors): the move checker proves the move, never the attribution, and it reads only a dry run made before the apply
+
+- **A content check proves the move, never who owns the token** (b9-1, U11). On a register line, two bare tokens
+  `:113` and `:137` followed `solveAnchor.ts:109`, but `rmd.ts` was the first file named within the tool's
+  60-character reach, so `doc:reanchor` bound both to `rmd.ts` and moved them by `rmd.ts`'s shift (the first-file rule
+  above, seen again). `scripts/check-reanchor-moves.mjs` passed both as pure shifts: it checks that the cited content
+  moved with the citation in the file the tool attributed, so a wrong attribution checks clean. Hand-restored.
+- **The checker's input is a dry run made before `--apply`** (b9-2, U10). After an apply there is no dry run to check,
+  and running the tool again would shift every citation a second time (`docs/landmines.md`, *Citations and the doc
+  gates*). U10 rebuilt the dry run from the diff instead: a changed doc line whose only difference is its digits is a
+  citation move, 312 pure shifts that way.
+- **The two tools attribute a bare token differently** (b9-2). The re-anchor gives a bare token a file only within 60
+  characters; `verify:doc-stats`' citation arm attributes it at any distance. A bare token past the reach therefore stays
+  unmoved while doc-stats reads it against the shifted file, and it goes blank, as
+  `pay-less-tax-all-in-build-spec.md:103`'s `:662` did. doc-stats' STALE lines after a re-anchor are exactly those
+  tokens.
+
+**What it adds.** Dry-run, check, then apply, once. Read each bare token's owner by eye, because no tool checks the
+attribution. Read doc-stats' STALE lines after every re-anchor.

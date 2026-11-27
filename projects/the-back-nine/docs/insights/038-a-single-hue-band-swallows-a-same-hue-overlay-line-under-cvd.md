@@ -3,7 +3,7 @@ title: A single-hue band swallows a same-hue overlay line under CVD — measure 
 date: 2026-06-14
 phase: P2 (U6 — the colorblind-safe viz foundation)
 modules: [viz]
-tags: [cvd, palette, oklab, composite, color, accessibility, deuteranopia, culori, planted-fail, measure-not-prose]
+tags: [cvd, palette, oklab, composite, color, accessibility, deuteranopia, culori, planted-fail, measure-not-prose, protanopia, spare-slot, brand-palette, oklch-search, inherited-ira]
 ---
 
 ## Problem
@@ -75,3 +75,15 @@ prose-named "forbidden" pair is a compass, not a GPS (burned/051).
 - **Any "the gate can fail" fixture** (oracle holdouts, copyGuard planted strings,
   CSP control arms): assert the fixture actually trips at the threshold, and pin
   the dimension that makes it trip.
+
+## Extended (2026-11-27, b9-6's U13 screens `f2758540`): a fixed palette's spare slots are not free to take
+
+U13 needed a colour for the inherited IRA, which sits beside the taxable account on every page. Every slot RightCapital's
+palette left unused merged with taxable blue under protanopia (orchid 0.068, purple 0.052, indigo 0.074, against the
+0.10 floor), and salmon merged with Roth green (0.026). A search of oklch with culori (L 0.3 to 0.9, every hue, the 0.10
+floor against all eight hues the part touches) found a dark umber that clears every one of them, the nearest at 0.149.
+Taking the next slot would have shipped a `cue` row: a part told from its neighbour by its pattern alone.
+
+Lesson: a brand palette's spare slots were picked for the brand, not for your new part's neighbours. Measure the new part
+against the hues it actually sits beside, under each simulated deficiency, before taking the next slot, and search the
+space when no slot clears.

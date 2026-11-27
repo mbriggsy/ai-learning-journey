@@ -3,7 +3,7 @@ title: A byte-identity guard over a SUM passes any reallocation — a CRN law mu
 date: 2026-07-18
 phase: Act 4 · the U14 ultramode-review fold
 modules: [src/engine/validation/rankingStability.ts]
-tags: [crn, byte-identity, conservation, presence-companion, insight-029, perturbation, solver, producer-omission-oracle, converse-pin, multi-site-write, destination-delta, zero-delta, asset-location, working-year-credit]
+tags: [crn, byte-identity, conservation, presence-companion, insight-029, perturbation, solver, producer-omission-oracle, converse-pin, multi-site-write, destination-delta, zero-delta, asset-location, working-year-credit, growth-scale, per-ledger-arm, inherited-ledger, pooled-ratio]
 ---
 
 ## Problem
@@ -70,3 +70,15 @@ also folds into a bucket and its cost basis. A test that reads only the total st
 basis line dropped, and the miss shows up later as a quietly wrong asset location. Assert each destination's delta,
 and the zero deltas beside it (the buckets the credit must not touch). It is this insight's conservation trap at a
 write site: the total is the sum the corruption conserves.
+
+## Extended (2026-11-27, b9-3's U12 slice 1): a growth scale over a pooled total lets a new ledger's missing growth smear into its neighbours
+
+U12 added the inherited IRA's ledgers inside the plan's money. Its reconciliation arm summed the buckets and the
+inherited ledgers against `terminalReal` (relative 1e-9, real returns, two ledgers, an HSA, a pre-tax ledger per
+person) and passed a mutant in which the inherited ledger never grew. The year's growth is applied as one scale,
+`growthOnlyTotal / afterWithdrawal` (`src/engine/taxOverlay.ts`), and `afterWithdrawal` counted the ledger, so the
+ledger's missing growth smeared into the buckets and the sum held. A per-ledger arm killed it: with both market legs at
+5%, every ledger must end at exactly 1.05 times what it held after the year's withdrawals.
+
+Lesson: where growth is applied as a ratio over a pooled total, the total cannot see which holding got it. Every new
+ledger inside a conserved total needs its own growth arm, at a return chosen so the expected factor is exact.

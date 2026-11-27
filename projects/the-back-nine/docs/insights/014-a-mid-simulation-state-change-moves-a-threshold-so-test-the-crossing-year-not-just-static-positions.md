@@ -3,7 +3,7 @@ title: A threshold whose location depends on an evolving state variable needs it
 date: 2026-06-07
 phase: P1·U3
 modules: [engine/taxOverlay, engine/healthOverlay, engine/simulate]
-tags: [testing, discontinuity, survivor, aca, coverage, calm-but-wrong]
+tags: [testing, discontinuity, survivor, aca, coverage, calm-but-wrong, ten-year-rule, forced-payout, hand-fixture, quiet-field, inherited-ira]
 ---
 
 ## Problem
@@ -46,3 +46,13 @@ the age-65 ACA→Medicare gate crossing; any future regime that re-keys a thresh
 state. Process sibling: insight 005 (a review is an idea generator) — this gap was found only by a
 *holistic* whole-layer re-audit, not a diff-scoped pass; the per-milestone reviews each tested their
 new stream, and nobody re-audited the cross-product of healthcare × the survivor transition.
+
+## Extended (2026-11-27, b9-4's U12 slice 2): the crossing year moves a hand fixture's quiet fields too
+
+An inherited IRA under the ten-year rule pays out whatever is left in its last year. AE5's sink arm asserted "nothing
+moves to taxable" on every row of its hand fixture; it held for seven years and failed in 2033, the ten-year end, which
+forces out about $68,000 against a $40,000 need, so the rest moves to taxable. The engine was right and the fixture was
+wrong: its author had worked the crossing year's headline field (the payout) and carried a quiet field ("nothing moves")
+across it unexamined. A forced amount that jumps at a crossing can also cross every threshold it is compared with.
+
+Lesson: in the crossing year, re-derive every field of a hand fixture, the ones expected to stay quiet included.

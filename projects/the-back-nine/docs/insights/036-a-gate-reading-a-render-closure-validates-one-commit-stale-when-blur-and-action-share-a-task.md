@@ -3,7 +3,7 @@ title: A gate reading a render-closure snapshot validates one commit stale when 
 date: 2026-06-11
 phase: P2 (D1 — the account-level intake)
 modules: [intake, store]
-tags: [react, stale-closure, blur, validation, race, useSyncExternalStore, event-order, gesture-hold, held-display, gate-inputs, keep-door, ruling-34, calm-but-wrong, payload-vs-permission, docblock-claim, partial-hold, lost-tap]
+tags: [react, stale-closure, blur, validation, race, useSyncExternalStore, event-order, gesture-hold, held-display, gate-inputs, keep-door, ruling-34, calm-but-wrong, payload-vs-permission, docblock-claim, partial-hold, lost-tap, webkit, click-without-focus, dom-stamp, data-attribute-gate, same-task-write, action-items-tray, useHeldWords]
 ---
 
 ## Problem
@@ -80,3 +80,19 @@ off the held face and hold its figure errors until the hold lets go, gated by an
 The lesson is about the claim, not the hold. A hold covers part of a column, and its docblock reads as a guarantee
 for the whole column. When a hold covers part of a column, list every live part between the held content and the held
 control, and write the docblock as what is held plus what is not.
+
+## Extended (2026-11-27, gap 3's review round 2, `7927693f`): a gate stamped into the DOM by React is a render snapshot too, and WebKit puts the blur and the press in one task
+
+The Action Items tray's Refresh and Apply checked a `data-tray-waiting` stamp before running. React drew the stamp, so it
+was as old as the last commit. In WebKit a click never focuses the button, so the field's blur and the button's press
+run in one task: the press read the DOM before the blur's wait had rendered, and Refresh and Apply ran, or wrote the
+row's earlier lever, under a box already showing another year.
+
+The fix writes the gate in the same call that changes the state it guards: a tray-level map updated beside each row's
+`setState` (`useHeldWords`, `src/ui/screens/retirement/ActionItemsTray.tsx`), which the press reads directly. The test
+calls `blur()` and `click()` inside one `act`, so the two share a task the way they do in WebKit.
+
+What it adds: a DOM attribute React writes is a render snapshot by another name. A gate that a press reads must be
+written in the same task as the state it guards, never left for the next render to draw. And a blur-then-press test
+that lets a render run between the two events is testing Chromium's order only (insight 149 has the browser side of
+this event-order trap).

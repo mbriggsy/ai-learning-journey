@@ -3,7 +3,7 @@ title: "A partition of a closed vocabulary typed as a Set or a ternary decides e
 date: 2026-10-31
 phase: the pay check's whole-file review (Phase C, b9-9) — advisory a3, findings c6 / c7, rulings 41 and 42
 modules: [src/ui/assumptionRegistry.ts, src/intake/WorkingYearLedger.tsx]
-tags: [typescript, exhaustive, record, partition, vocabulary, set-membership, ternary, default-arm, copy-selection, compile-time, sign-partition, tie, zero, percentile, fan-place, slotOf, stop-line]
+tags: [typescript, exhaustive, record, partition, vocabulary, set-membership, ternary, default-arm, copy-selection, compile-time, sign-partition, tie, zero, percentile, fan-place, slotOf, stop-line, account-kinds, inherited-ira, type-level-test, control-arm, exported-tuple, type-checker-scan, slice-order, compiler-forced, refusal-list, questions-owed]
 ---
 
 ## Problem
@@ -66,3 +66,33 @@ place:
 **Rule:** when a comparison turns a number into words, list its members, the tie and the zero included, and put the
 tie rule in the slot function itself, never in the reader. Before believing a stop line or a printed place, read the
 numbers it was computed from.
+
+## Extended (2026-11-27, gap 3's inherited IRA, b9-1 to b9-10): four ways a growing vocabulary still leaks past the Record
+
+Gap 3 added `inherited` to the account kinds, and four lessons came out of it.
+
+- **A test that every home fails to compile when the vocabulary grows needs a control arm, and a plant that keeps the
+  tree compiling** (b9-2, U10's type-level arm in `src/shared/__tests__/accountKindHomes.test.ts`, `e786a4ba`). The
+  control proves the tree compiles clean inside the same declarations, so a program that cannot resolve a module, which
+  reds every arm, never passes as "every home failed". A `Partial<…>` or `Record<string, …>` plant on a home reds the
+  control first under `noUncheckedIndexedAccess` and proves nothing about the grown arm. The realistic regression, a
+  hand-typed union beside the vocabulary, compiles today, and the grown arm drops exactly that home (13 of 14). A closed
+  vocabulary that other code iterates needs ONE exported tuple, as `ACCOUNT_KINDS` is, or each hand-typed copy omits a
+  member silently.
+- **A scan for a choice decided by omission keys on the type checker, never on literal text** (b9-1, U10). The literal
+  `'hsa'` lives in four vocabularies here (account kinds, tax buckets, icon names, deposit families), and a grep of kind
+  literals in comparisons flagged buckets and icons beside kinds. Asking the checker whether every string-literal member
+  of a compared type is an `ACCOUNT_KINDS` member separated them exactly, and a planted bucket comparison on `'hsa'`
+  stays quiet.
+- **Exhaustive records pull every home into the commit that extends the vocabulary** (b9-5, U13's schema step
+  `d55681ab`). U13's plan split its slices by file, giving slice 2 Snapshot, Balance Sheet, Tax Allocation and
+  Blueprint's legend. But `KIND_BUCKETS` gaining `inherited` made each of those fail to compile in slice 1's schema
+  commit, and their honest look was design work still to do. The fix was a typed hold per page
+  (`Exclude<KindBucket, 'inherited'>`, since lifted) and a reorder: the screens before the drawer that makes the kind
+  reachable. Order slices by what the compiler forces and by what each commit makes reachable, never by file list, and
+  have a plan that extends a closed vocabulary list the homes its own records will force.
+- **A refusal list in a plan is a list of questions owed** (b9-10, gap 3's review). KTD17 named "a trust or estate"
+  among the refused cases, but the decision tree had no question that could reach it, so an IRA that came through an
+  estate ran on the heir's ten-year rule, which is rosy. The vocabulary leaked where the plan named the case in prose
+  and no code asked for it. Check that each refused case has the question that refuses it, with a test per refusal
+  reason keyed by `InheritedRefusal` (`src/intake/inheritedIraQuestions.ts`).

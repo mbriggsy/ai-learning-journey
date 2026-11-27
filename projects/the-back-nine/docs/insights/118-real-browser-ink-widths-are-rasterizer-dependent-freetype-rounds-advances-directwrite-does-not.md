@@ -3,7 +3,7 @@ title: Real-browser ink widths are rasterizer-dependent — FreeType rounds glyp
 date: 2026-09-05
 phase: Act 4 hardening (the chart-text gate)
 modules: [e2e/chart-text.spec.ts, src/viz/bandGeometry.ts, src/ui/__tests__/twoPaneHonestyFloor.test.ts]
-tags: [playwright, ci, fonts, freetype, directwrite, measurement, non-vacuity, cross-platform, line-wrap, zero-margin, re-hosted-component, box-width, doubled-gutter, phone, recommendation-viz, interim-tab]
+tags: [playwright, ci, fonts, freetype, directwrite, measurement, non-vacuity, cross-platform, line-wrap, zero-margin, re-hosted-component, box-width, doubled-gutter, phone, recommendation-viz, interim-tab, grouped-columns, point-padding, group-padding, sideways-bars, first-proof-is-ci]
 ---
 
 ## Problem
@@ -46,3 +46,20 @@ Two lessons on top of this insight's own. A fit with zero margin is a platform p
 platform whose glyphs run wider wraps first. And re-hosting a component changes its box, so it is a layout change for
 everything tuned inside it: measure a re-hosted component on the real surface at PHONE, the narrowest box, and on the
 CI platform's metrics, before calling the move done (`docs/landmines.md`, *UI and product*).
+
+## Extended (2026-11-27, b9-9's CI fit red `4b8031e7`): a text arm proven on Windows alone was never green on Linux, and bar padding never moves two labels apart
+
+Milestone 4's round 1 added a text-apart audit for RC17's spending comparison (T3, Retirement Details), and round 2
+recorded it "passed on Windows". It was never green on CI: FreeType's glyphs set "~$1.18mm" and "~$1.1mm" over each
+other on four pushes in a row (run 45926955673 and the three after it), found only when the fit job was read. A new text
+arm's first proof is CI's render, not the laptop's.
+
+The first fix was wrong as well. It raised the bars' point padding to 0.24 to "widen the gap", which narrowed the bars
+and moved neither figure. In a grouped column chart each label stands at the centre of its bar's slot, and neighbouring
+slots stand (1 − 2 × group padding) ÷ the series count of a group's width apart; point padding shrinks the bar inside
+its slot and is not in that sum. Only a wider group or fewer series moves the labels. The chart text law forbids
+shrinking, cutting or widening the words, so the cure was the layout: the bars run sideways
+(`groupedSidewaysMaxWidth`, `src/viz/charts/groupedBarsOptions.ts`) wherever the chart is narrower than every figure
+needs.
+
+Lesson: work out what positions a label before tuning it, and count a text arm as proven only after its first CI read.

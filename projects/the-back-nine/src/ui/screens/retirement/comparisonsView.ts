@@ -428,26 +428,26 @@ export function taxYears(a: ReadySide, b: ReadySide): TaxYear[] {
 
 const close = (x: number, y: number) => Math.abs(x - y) <= 0.5
 const sameList = (xs: readonly number[], ys: readonly number[]) => xs.length === ys.length && xs.every((x, i) => close(x, ys[i]!))
-const KINDS = ['taxable', 'pretax', 'roth', 'hsa'] as const
+/** Each person's own pre-tax deferral: pay less the pay that is taxed. */
+const deferrals = (r: LedgerYearRow): number[] => r.payByPerson.map((p, i) => p - (r.payTaxableByPerson[i] ?? 0))
 
-/** What differs between two working rows' pay checks: Social Security, and the deposits (by account, or the taxable pay
- *  they leave). Anything else (pay, other income, filing) reads as the pay check itself. */
+/** What differs between two working rows' pay checks: Social Security, and the deposits that move the tax on pay, the
+ *  household's own pre-tax deferral. Anything else (pay, other income, filing) reads as the pay check itself. */
 function payCheckDiffers(a: LedgerYearRow, b: LedgerYearRow): { readonly ss: boolean; readonly deposits: boolean } {
-  return {
-    ss: !close(a.socialSecurity, b.socialSecurity),
-    deposits: KINDS.some((k) => !close(a.contribution[k], b.contribution[k])) || !sameList(a.payTaxableByPerson, b.payTaxableByPerson),
-  }
+  return { ss: !close(a.socialSecurity, b.socialSecurity), deposits: !sameList(deferrals(a), deferrals(b)) }
 }
 
 /** Two working rows with no W on the same pay check: the same pay and taxable pay per person, the same Social Security
- *  and other income, the same deposits by account, the same filing. Then the tax on pay, which nothing prices, is the
- *  same on both. */
+ *  and other income, the same filing. Then the tax on pay, which nothing prices, is the same on both. Deposits count
+ *  only through the taxable pay they leave: an employer's match, a Roth or taxable deposit, or an HSA deposit (the
+ *  working-year base never subtracts one, the register's HSA entry) differ in the account totals (`contribution`) but
+ *  never in the pay that is taxed, so they leave the pay check, and its tax, the same (milestone 4's review, round 3:
+ *  judged by the account totals, a match lever withheld an exact total). */
 function samePayCheck(a: LedgerYearRow, b: LedgerYearRow): boolean {
   if (a.filing !== b.filing || !close(a.socialSecurity, b.socialSecurity)) return false
   if (!sameList(a.payByPerson, b.payByPerson) || !sameList(a.payTaxableByPerson, b.payTaxableByPerson)) return false
   if (!sameList(a.otherIncomeByPerson.map((o) => o.gross), b.otherIncomeByPerson.map((o) => o.gross))) return false
-  if (!sameList(a.otherIncomeByPerson.map((o) => o.taxable), b.otherIncomeByPerson.map((o) => o.taxable))) return false
-  return !KINDS.some((k) => !close(a.contribution[k], b.contribution[k]))
+  return sameList(a.otherIncomeByPerson.map((o) => o.taxable), b.otherIncomeByPerson.map((o) => o.taxable))
 }
 
 /** Where the tax on pay shows, by Cash Flows' own test for drawing its "Pay check's income tax" column (a row whose

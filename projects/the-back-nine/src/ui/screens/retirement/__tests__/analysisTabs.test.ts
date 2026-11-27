@@ -213,15 +213,25 @@ describe('Comparisons', () => {
     expect(same.metric).toBe(slots.cmpTaxMore('new what-if', formatDeltaDollar(d + 1_500), 'more', START, last, 'your plan', true))
     expect(same.notes).toContain(slots.cmpTaxWorkingCounted(`${START} through ${START + 2}`, false, 'maybe-in-w'))
     expect(same.notes).toContain(copy.cmpPayTaxUnasked)
-    // No W and a pay check that differs (a deposit, then Social Security too): the tax that difference makes sits on pay,
-    // which nothing prices, so words, never a total.
-    const depNoW = moreNoW.map((r) => (r.t === 0 ? { ...r, contribution: { ...r.contribution, pretax: r.contribution.pretax + 5_000 } } : r))
-    expect(cmp('tax', { compared: side('compared', ready(planNoW, WORKING_META)), alternative: side('alternative', ready(depNoW, WORKING_META)) })).toMatchObject({
+    // No W and an employer match that differs (milestone 4's review, round 3): the match lands in pre-tax savings but
+    // never in the pay that is taxed, so the pay check, and its tax, stay the same on both, and the total stands, exact.
+    // Each working year taxes $130,000 of the $150,000 pay (a $20,000 own deferral) on both sides.
+    const taxedPay = (rows: readonly LedgerYearRow[]) => rows.map((r) => (r.t < STOP_T ? { ...r, payTaxableByPerson: [130_000, 0] } : r))
+    const planTaxed = taxedPay(planNoW)
+    const matchNoW = taxedPay(moreNoW).map((r) => (r.t === 0 ? { ...r, contribution: { ...r.contribution, pretax: r.contribution.pretax + 5_000 } } : r))
+    const match = cmp('tax', { compared: side('compared', ready(planTaxed, WORKING_META)), alternative: side('alternative', ready(matchNoW, WORKING_META)) })
+    if (match.kind !== 'pair') throw new Error(`a match-only difference prints no total: ${match.kind}`)
+    expect(match.metric).toBe(same.metric)
+    expect(match.notes).toContain(slots.cmpTaxWorkingCounted(`${START} through ${START + 2}`, false, 'maybe-in-w'))
+    // No W and a pay check that differs (the household's own pre-tax deferral, then Social Security too): the tax that
+    // difference makes sits on pay, which nothing prices, so words, never a total.
+    const depNoW = matchNoW.map((r) => (r.t === 0 ? { ...r, payTaxableByPerson: [125_000, 0] } : r))
+    expect(cmp('tax', { compared: side('compared', ready(planTaxed, WORKING_META)), alternative: side('alternative', ready(depNoW, WORKING_META)) })).toMatchObject({
       kind: 'words',
       words: `${slots.cmpTaxUnpriced('deposits', `${START}`, true)} ${copy.cmpPayTaxUnasked}`,
     })
     const ssNoW = depNoW.map((r) => (r.t < STOP_T ? { ...r, socialSecurity: r.socialSecurity + 16_800 } : r))
-    expect(cmp('tax', { compared: side('compared', ready(planNoW, WORKING_META)), alternative: side('alternative', ready(ssNoW, WORKING_META)) })).toMatchObject({
+    expect(cmp('tax', { compared: side('compared', ready(planTaxed, WORKING_META)), alternative: side('alternative', ready(ssNoW, WORKING_META)) })).toMatchObject({
       kind: 'words',
       words: `${slots.cmpTaxUnpriced('both', `${START} through ${START + 2}`, true)} ${copy.cmpPayTaxUnasked}`,
     })
@@ -768,6 +778,28 @@ describe('the real witnesses (milestone 4’s review)', () => {
       kind: 'words',
       words: `${slots.cmpTaxUnpriced('ss', slots.analysisYears(differ), true)} ${copy.cmpPayTaxUnasked}`,
     })
+  })
+
+  it('round 3 · `date` with no W + a bigger employer match: the match never reaches the pay that is taxed, so the pay checks are the same and the exact total prints', () => {
+    const { workingYearCost: _w, ...noW } = DEV_SEEDS.date as ScenarioDraft & { workingYearCost?: unknown }
+    void _w
+    const draft = noW as ScenarioDraft
+    const plan = realRuns(draft, 9)
+    const whatIf = realRuns(draft, 9, [{ kind: 'deposits', accountId: 'acct-0-401k', annualContribution: 20_000, employerMatchAnnual: 16_000 } as unknown as WhatIfLeverV6])
+    const start = plan.meta.startCalendarYear
+    const stop = plan.meta.stopYear!
+    const working = (rows: readonly LedgerYearRow[]) => rows.filter((r) => start + r.t < stop)
+    const [P, W] = [working(plan.rows.steady), working(whatIf.rows.steady)]
+    expect(P.length, '[test setup] working years').toBeGreaterThan(0)
+    expect(W.map((r) => r.contribution.pretax), '[test setup] the match lands in pre-tax savings').not.toEqual(P.map((r) => r.contribution.pretax))
+    expect(W.map((r) => r.payTaxableByPerson), 'the premise: the engine taxes the same pay on both').toEqual(P.map((r) => r.payTaxableByPerson))
+    const v = comparisonsView({ ...realInput('steady', plan, whatIf), chart: 'tax' })
+    if (v.kind !== 'pair') throw new Error(`a match-only what-if prints no total: ${v.kind}`)
+    const through = Math.min(...[plan.rows.steady, whatIf.rows.steady].map((rows) => start + rows.filter((r) => !r.ranOut).at(-1)!.t))
+    const d = taxThrough(whatIf.rows.steady, whatIf.meta, start, through) - taxThrough(plan.rows.steady, plan.meta, start, through)
+    expect(Math.abs(d), '[test setup] the match moves the income tax').toBeGreaterThan(1_000)
+    expect(v.metric).toBe(slots.cmpTaxMore('new what-if', formatDeltaDollar(Math.abs(d)), d > 0 ? 'more' : 'less', start, through, 'your plan', true))
+    expect(v.notes).toContain(slots.cmpTaxWorkingCounted(slots.analysisYears(P.map((r) => start + r.t)), false, 'maybe-in-w'))
   })
 
   it('O3 · `date` + a what-if stopping now and spending $250,000 a year: each side has retired years but none in common, said so with the ran-out note', () => {

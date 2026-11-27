@@ -39,6 +39,8 @@ scalable — would have broken compositionality: adding a second line would sile
 the first line's survivor semantics. Flagged in the Briggsy digest (U9b's seed-a-budget
 affordance must disclose the boundary or seed with a scalable category).
 
+> **Out of date (corrected 2026-11-27):** the per-line rule is no longer spelled `sticky(category, tier)`. The current rule lives in `isSurvivorSticky` in `src/budget/budgetModel.ts`.
+
 ## Key Insight
 
 When two ratified rules collide on an input class neither considered, do not weaken

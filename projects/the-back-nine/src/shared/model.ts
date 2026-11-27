@@ -709,6 +709,19 @@ export interface BudgetLineItem {
   /** Last active year (inclusive), same offset basis. ABSENT = lifelong.
    *  Must be ≥ `startYear` when present (R19). */
   readonly endYear?: number
+  /** How often the line repeats (schema version 8, gap 4's KTD5): charged in its start year and every `everyYears`
+   *  years after, inside its window, so `annualAmountReal` is then the cost of ONE occurrence, not a year's. Counted in
+   *  the window's own frame, years since the stop (insight 167), and read through `isActiveAt` alone. A whole number
+   *  from 2 to 50 (`spendingBounds.ts`); ABSENT = every year, and 1 is refused (a second spelling of absent). Written
+   *  only when answered, never as an `undefined`-valued key. */
+  readonly everyYears?: number
+  /** How the line's dollars change (schema version 8, gap 4's KTD4): a nominal yearly increase that REPLACES general
+   *  inflation, as a fraction (0.05 = 5 %). 0 = the same dollar amount every year (a fixed-rate mortgage payment);
+   *  above 0, up to 0.15, = up by that much a year (`spendingBounds.ts`). ABSENT = with prices, today's behavior and
+   *  code path, byte-identical (insight 055). With it, `annualAmountReal` is the line's price in the plan's first year:
+   *  the engine grows it from there by sim year and divides by the one price index (KTD3), so its cost in a calendar
+   *  year is the same whatever stop is tested. Written only when answered. */
+  readonly growthRate?: number
 }
 
 /** The compiled, engine-facing budget construct (produced by `src/budget/budgetToSpending.ts`;
@@ -1974,12 +1987,15 @@ export interface ScenarioV2 {
 // ({@link CURRENT_SCHEMA_VERSION}): the `inherited-ira` account kind, the account's `inherited`
 // facts, and the `inherited-pace` lever kind. A version-6 copy refuses the new kind and lever kind
 // as damaged, and its account editor rebuilds an account from its form, dropping the nested facts
-// (§7.3's rules (a) to (c)) — it must refuse the plan. Versions 3 to 6 carry every field version 7
-// requires and never the new ones; the codec relabels 3 → 4 → 5 → 6 → 7 at decode, forever
-// (`scenarioCodec.ts`). The sub-types keep their `V3`
+// (§7.3's rules (a) to (c)) — it must refuse the plan. The schema-v8 bump (gap 4's U2) adds two
+// NESTED optional fields on a budget line, its repeat (`everyYears`) and its own rate
+// (`growthRate`), and relabels the shape 8: a version-7 copy would charge such a line every year at
+// prices, answering differently (§7.3's rule (a)) — it must refuse the plan. Versions 3 to 7 carry
+// every field version 8 requires and never the new ones; the codec relabels 3 → 4 → 5 → 6 → 7 → 8
+// at decode, forever (`scenarioCodec.ts`). The sub-types keep their `V3`
 // names (`PersonInputsV3`, `SavedRecommendationV3`, `WorkingYearCostV3`, the `*VintageV3` stamps,
 // `SCENARIO_V3_FIELDS`, the codec's `checkV3Fields`): they name this field GENERATION, which
-// versions 4 to 7 carry; a shape a later version added is named for its version
+// versions 4 to 8 carry; a shape a later version added is named for its version
 // ({@link WorkingYearLeftOverV5}, {@link KeptWhatIfV6}, {@link InheritedIraV7}). When a future field must bump the version:
 // `docs/architecture.md` §7.3.
 //
@@ -2348,7 +2364,7 @@ export type IncomeStream = {
  * The version every save writes — the ONE home of the current `schemaVersion` (the schema-v4
  * plan's KTD1). The mint (`scenarioFromDraft`), the codec's top arm and its "newer" threshold,
  * and the hydrate gate (`IntakeApp`) all read it; no production file re-types it, except the
- * codec's label-only steps (3 → 4, 4 → 5, 5 → 6 and 6 → 7), each of which names its LITERAL successor (a
+ * codec's label-only steps (3 → 4, 4 → 5, 5 → 6, 6 → 7 and 7 → 8), each of which names its LITERAL successor (a
  * step that jumps to "current" would carry an old plan past whatever step a later bump adds), and
  * their refusals of an older-labeled plan carrying a field only a later version writes. Declared here, above the type
  * it discriminates, as {@link BACKUP_FORMAT_VERSION} is: `model.ts` is the only home without an
@@ -2359,12 +2375,13 @@ export type IncomeStream = {
  * this constant after a real save — roll forward (`docs/architecture.md` §7.3). Each bump raises
  * the version-floor test in its own follow-up commit.
  */
-export const CURRENT_SCHEMA_VERSION = 7
+export const CURRENT_SCHEMA_VERSION = 8
 
 /** The current plaintext scenario: the account-level intake truth, written as
- *  {@link CURRENT_SCHEMA_VERSION} (versions 3 to 6 carry the same fields less the optional ones a
+ *  {@link CURRENT_SCHEMA_VERSION} (versions 3 to 7 carry the same fields less the optional ones a
  *  later version added — the left-over answer at 5; the ids, the kept what-ifs and the record's
- *  Roth plan at 6; the inherited-IRA kind, its facts and its pace lever at 7 — and relabel at decode).
+ *  Roth plan at 6; the inherited-IRA kind, its facts and its pace lever at 7; a budget line's repeat
+ *  and rate at 8 — and relabel at decode).
  *  See the section comment above for the label history, the define-now/write-at-U8 contract
  *  and the deliberate fidelity-over-duplication shape change vs v2. */
 export interface CurrentScenario {
@@ -3219,8 +3236,8 @@ export interface HealthcareVintageV3 {
 /** The exhaustive v3 field set — U8's `checkV3Fields` checklist (burned/063: the
  *  codec arm iterates THIS list, so a field added to the interface cannot
  *  silently skip validation — it fails the compile-time tie below first).
- *  Versions 6 and 7 carry exactly this set (version 7's new shapes are all nested: an account kind, an
- *  account's `inherited` facts and a lever kind); version 5 carries it less `keptWhatIfs`, the one top-level
+ *  Versions 6 to 8 carry exactly this set (version 7's new shapes are all nested: an account kind, an
+ *  account's `inherited` facts and a lever kind; so are version 8's, a budget line's two fields); version 5 carries it less `keptWhatIfs`, the one top-level
  *  field the schema-v6 bump added, and versions 3 and 4 less `workingYearLeftOver` too, the one the
  *  schema-v5 bump added (each step is label-only for that reason: a relabeled older plan lacks a key
  *  its type already calls optional). A new TOP-LEVEL field must join this

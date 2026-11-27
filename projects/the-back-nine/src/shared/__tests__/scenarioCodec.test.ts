@@ -246,6 +246,30 @@ const WITH_V7: CurrentScenario = {
   ],
 }
 
+/** Schema version 8 (gap 4's U2): a car repeating every five years and a fixed-dollar line on the plan, and a kept what-if
+ *  whose added line repeats and rises at its own rate and whose replacing line keeps the plan line's fixed rate. Made up;
+ *  the codec judges only the shapes. */
+const FIXED_LINE = { id: 'line-loan', category: 'housing', label: 'Mortgage', annualAmountReal: 21_584, tier: 'essentials', startYear: 0, endYear: 12, growthRate: 0 } as const
+const WITH_V8: CurrentScenario = {
+  ...WITH_V7,
+  budget: [
+    ...WITH_V7.budget!,
+    { id: 'line-car', category: 'transportation', label: 'A new car', annualAmountReal: 40_000, tier: 'essentials', startYear: 3, everyYears: 5 },
+    FIXED_LINE,
+  ],
+  keptWhatIfs: [
+    ...WITH_V7.keptWhatIfs!,
+    {
+      id: 'wi-lines',
+      name: 'A boat, a bigger payment',
+      levers: [
+        { kind: 'spending', op: 'add', line: { id: 'line-boat', category: 'travel', label: 'A boat', annualAmountReal: 15_000, tier: 'discretionary', startYear: 1, everyYears: 10, growthRate: 0.04 } },
+        { kind: 'spending', op: 'replace', line: { ...FIXED_LINE, annualAmountReal: 24_000 } },
+      ],
+    },
+  ],
+}
+
 /** Encode, surgically mutate the JSON, return the re-encoded bytes. */
 function mutated(base: Scenario | ScenarioV2 | CurrentScenario, mutate: (obj: Obj) => void): Uint8Array {
   const obj = JSON.parse(new TextDecoder().decode(encodeScenario(base))) as Obj
@@ -468,12 +492,48 @@ describe('versions 3 to 5 relabel to their successors; the ladder stays honest f
 
   // The schema-v7 bump's own literal (U13). Under a reverted constant (6) every save fails its round trip and the floor
   // test reds on its own message once the follow-up commit raises FLOOR to 7.
-  it('THE ABSOLUTE PIN AT 7: a plan labeled with the literal 7 decodes as version 7 (the schema-v7 bump’s one typed literal here — every derived pin moves with the constant, so a reverted constant reds this pin)', () => {
+  it('THE ABSOLUTE PIN AT 7: a plan labeled with the literal 7 decodes as the current version — a version-7 save opens in this build and in every later one (the schema-v7 bump’s typed literal; it stays)', () => {
     const decoded = decodeScenario(asVersion(WITH_V7, 7))
     expect(decoded.ok, 'a version-7 save must open in this build and in every later one').toBe(true)
     if (!decoded.ok) return
-    expect(decoded.scenario.schemaVersion).toBe(7)
+    expect(decoded.scenario.schemaVersion).toBe(CURRENT_SCHEMA_VERSION)
     expect(decoded.droppedAtoms).toEqual([])
+  })
+
+  // The schema-v8 bump's own literal (gap 4's U2). Under a reverted constant (7) every save fails its round trip and the
+  // floor test reds on its own message once the follow-up commit raises FLOOR to 8.
+  it('THE ABSOLUTE PIN AT 8: a plan labeled with the literal 8 decodes as version 8 (the schema-v8 bump’s one typed literal here — every derived pin moves with the constant, so a reverted constant reds this pin)', () => {
+    const decoded = decodeScenario(asVersion(WITH_V8, 8))
+    expect(decoded.ok, 'a version-8 save must open in this build and in every later one').toBe(true)
+    if (!decoded.ok) return
+    expect(decoded.scenario.schemaVersion).toBe(8)
+    expect(decoded.droppedAtoms).toEqual([])
+  })
+
+  it('a plan whose DISK label is 3 to 7 and that carries a budget line’s repeat or rate is refused as a writer bug naming the field — its version-8 twin opens, so the version clause alone refuses it (insight 152)', () => {
+    const named = (label: number, field: string) => ({
+      ok: false,
+      reason: 'corrupt',
+      detail: `${field}: a plan saved as version ${label} cannot carry it — no build that writes version ${label} writes it (writer bug)`,
+    })
+    // Lines with no id (an id is version 6's own), so at labels 3 to 5 only the 7 → 8 step can refuse.
+    for (const [field, extra] of [['everyYears', { everyYears: 5 }], ['growthRate', { growthRate: 0 }]] as const) {
+      const plan: CurrentScenario = {
+        ...CURRENT,
+        budget: [{ category: 'transportation', label: 'A new car', annualAmountReal: 40_000, tier: 'essentials', startYear: 3, ...extra }],
+      }
+      expect(decodeScenario(asVersion(plan, 8)).ok, `the version-8 twin opens (${field})`).toBe(true)
+      for (const label of [3, 4, 5, 6, 7]) expect(decodeScenario(asVersion(plan, label)), `${field}, labeled ${label}`).toEqual(named(label, `budget[0].${field}`))
+    }
+    // On a kept what-if's line alone, on a version-7 plan (kept what-ifs are version 6's own): the added line's repeat,
+    // then a replacing line's rate.
+    const lines = WITH_V8.keptWhatIfs![4]!
+    const addOnly: CurrentScenario = { ...WITH_V7, keptWhatIfs: [...WITH_V7.keptWhatIfs!, { ...lines, levers: [lines.levers[0]!] }] }
+    expect(decodeScenario(asVersion(addOnly, 8)).ok, 'the added line’s version-8 twin opens').toBe(true)
+    expect(decodeScenario(asVersion(addOnly, 7))).toEqual(named(7, 'keptWhatIfs[4].levers[0].line.everyYears'))
+    const replaceOnly: CurrentScenario = { ...WITH_V7, keptWhatIfs: [...WITH_V7.keptWhatIfs!, { ...lines, levers: [lines.levers[1]!] }] }
+    expect(decodeScenario(asVersion(replaceOnly, 8)).ok, 'the replacing line’s version-8 twin opens').toBe(true)
+    expect(decodeScenario(asVersion(replaceOnly, 7))).toEqual(named(7, 'keptWhatIfs[4].levers[0].line.growthRate'))
   })
 
   it('a plan whose DISK label is 3 to 6 and that carries an inherited IRA or its pace lever is refused as a writer bug naming the field — its version-7 twin opens, so the version clause alone refuses it (insight 152)', () => {
@@ -542,7 +602,7 @@ describe('versions 3 to 5 relabel to their successors; the ladder stays honest f
     expect(start, '[test setup] decodeScenario is in the codec').toBeGreaterThan(-1)
     const body = source.slice(start, source.indexOf('\n}\n', start))
     const steps = [...body.matchAll(/if \(version === (\d+)\) \{([\s\S]*?)\n {4}\}/g)].filter(([, , block]) => block!.includes('version ='))
-    expect(steps.map(([, n]) => Number(n)), 'the label-only steps, in ladder order').toEqual([3, 4, 5, 6])
+    expect(steps.map(([, n]) => Number(n)), 'the label-only steps, in ladder order').toEqual([3, 4, 5, 6, 7])
     for (const [, n, block] of steps) {
       const next = Number(n) + 1
       expect([...block!.matchAll(/parsed\.schemaVersion = ([^\n]+)/g)].map((m) => m[1]!.trim()), `step ${n}: the label it writes`).toEqual([String(next)])
@@ -1673,8 +1733,8 @@ describe('the current shape — the v3 field set (U8, the first v3 writer), writ
 
   it('a NON-Corrupt throw from INSIDE a validator ESCAPES decodeScenario — a programming defect is never laundered into a calm dropped atom', () => {
     // THE TWO RE-THROWS THIS COVERS, and they CHAIN, so one arm holds both:
-    //   `scenarioCodec.ts:1342`  `if (!(e instanceof Corrupt)) throw e`  (the record's try/catch)
-    //   `scenarioCodec.ts:1499`  `throw e`                              (decodeScenario's outer catch)
+    //   `scenarioCodec.ts:1370`  `if (!(e instanceof Corrupt)) throw e`  (the record's try/catch)
+    //   `scenarioCodec.ts:1576`  `throw e`                              (decodeScenario's outer catch)
     // Both were UNEXERCISED. They were filed as "correct-by-inspection but SEAM-LESS" on the
     // reasoning that decodeScenario builds its input from `JSON.parse` — data properties only,
     // no getters — and that no validator here recurses or calls a method on an unchecked value.
@@ -2051,6 +2111,50 @@ describe('schema version 7 — an inherited IRA’s facts and its pace lever (th
       levers.push({ kind: 'inherited-pace', accountId: 'acct-inherited', pace: { kind: 'even' } })
     })
     expect(detailOf(twice)).toBe('keptWhatIfs[3].levers[1]: a second inherited-pace lever on the same target (one lever per kind and target)')
+  })
+})
+
+describe('schema version 8 — a budget line’s repeat and its own rate (gap 4’s U2, KTD4, KTD5)', () => {
+  const detailOf = (bytes: Uint8Array): string => {
+    const d = decodeScenario(bytes)
+    return d.ok ? 'opened' : d.reason === 'corrupt' ? d.detail : d.reason
+  }
+  // The car line (budget[2]); the bands are typed here as literals, independent of `spendingBounds.ts` (DND 012).
+  const withCar = (mutate: (line: Obj) => void): Uint8Array => mutated(WITH_V8, (o) => mutate((o.budget as Obj[])[2]!))
+  const repeatBand = 'budget[2].everyYears: expected a repeat of 2 to 50 years (every year is written as absence)'
+  const rateBand = 'budget[2].growthRate: expected a yearly rate in [0, 0.15] (with prices is written as absence)'
+
+  it('both fields, on plan lines and on a kept what-if’s added and replacing lines, round-trip byte for byte, nothing dropped', () => {
+    const bytes = encodeScenario(WITH_V8)
+    const decoded = decodeScenario(bytes)
+    expect(decoded).toEqual({ ok: true, scenario: WITH_V8, droppedAtoms: [] })
+    if (decoded.ok) expect(Array.from(encodeScenario(decoded.scenario))).toEqual(Array.from(bytes))
+  })
+
+  it('each band’s edges open: a repeat of 2 or 50, a rate of 0 or 0.15 (the checks are not over-strict)', () => {
+    for (const everyYears of [2, 50]) expect(detailOf(withCar((l) => (l.everyYears = everyYears))), `every ${everyYears}`).toBe('opened')
+    for (const growthRate of [0, 0.15]) expect(detailOf(withCar((l) => (l.growthRate = growthRate))), `rate ${growthRate}`).toBe('opened')
+  })
+
+  it.each([
+    ['a repeat of 1 (a second spelling of every year)', (l: Obj) => (l.everyYears = 1), repeatBand],
+    ['a repeat of 51', (l: Obj) => (l.everyYears = 51), repeatBand],
+    ['a fractional repeat', (l: Obj) => (l.everyYears = 2.5), 'budget[2].everyYears: expected an integer'],
+    ['a null repeat (a NaN through JSON)', (l: Obj) => (l.everyYears = null), 'budget[2].everyYears: expected an integer'],
+    ['a rate below 0 (the rosy side)', (l: Obj) => (l.growthRate = -0.0001), rateBand],
+    ['a rate above 0.15', (l: Obj) => (l.growthRate = 0.1501), rateBand],
+    ['a null rate (a NaN through JSON)', (l: Obj) => (l.growthRate = null), 'budget[2].growthRate: expected a finite number'],
+    ['a rate as a string', (l: Obj) => (l.growthRate = '0.05'), 'budget[2].growthRate: expected a finite number'],
+  ])('refused: %s', (_name, mutate, detail) => {
+    expect(detailOf(withCar(mutate))).toBe(detail)
+  })
+
+  it('the same checks guard a kept what-if’s line', () => {
+    const lever = mutated(WITH_V8, (o) => {
+      const line = ((o.keptWhatIfs as Obj[])[4]!.levers as Obj[])[0]!.line as Obj
+      line.growthRate = 0.2
+    })
+    expect(detailOf(lever)).toBe('keptWhatIfs[4].levers[0].line.growthRate: expected a yearly rate in [0, 0.15] (with prices is written as absence)')
   })
 })
 

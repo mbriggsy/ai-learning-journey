@@ -45,8 +45,12 @@
  *   · 6 → 7 (gap 3's saved shapes: the inherited-IRA kind, its facts and its pace lever), LABEL ONLY: it
  *     refuses first a plan whose disk label is 3 to 6 and that carries any of the three (a writer bug,
  *     named), then relabels to its LITERAL successor, 7, and reads version 6 forever.
+ *   · 7 → 8 (gap 4's U2: a budget line's repeat and its own rate), LABEL ONLY: it refuses first a plan
+ *     whose disk label is 3 to 7 and that carries either field on a plan line or on a kept what-if's
+ *     added or replacing line (a writer bug, named), then relabels to its LITERAL successor, 8, and
+ *     reads version 7 forever.
  *   · {@link CURRENT_SCHEMA_VERSION} runs the field checks (`checkV3Fields` — they name the v3
- *     field GENERATION, which versions 4 to 7 carry, plus the fields versions 5, 6 and 7 added).
+ *     field GENERATION, which versions 4 to 8 carry, plus the fields versions 5 to 8 added).
  * A non-integer version, or one below 1, is corruption, not a branch.
  *
  * TOLERANT READER: unknown extra fields pass through untouched — the additive-within-
@@ -93,6 +97,7 @@ import {
   type WhatIfSpendingOp,
 } from './model'
 import { COLA_PCT_MAX, COLA_PCT_MIN, colaRateInRange } from './incomeBounds'
+import { EVERY_YEARS_MAX, EVERY_YEARS_MIN, GROWTH_RATE_MAX, GROWTH_RATE_MIN, everyYearsInRange, growthRateInRange } from './spendingBounds'
 
 /**
  * The generous real-$ magnitude ceiling for the amount fields the codec is the SOLE restore gate for
@@ -607,7 +612,13 @@ function checkIncomeStreamV3(v: unknown, peopleCount: number, path: string): voi
  *  `id` (schema version 6, optional): a non-empty string, unique among the plan's lines (checked by
  *  the caller). §7.3, from a version-5 copy's side: (a) no — the budget compile reads no id; (b) no —
  *  an unknown key nested in a line passes; (c) partly — a version-5 budget editor carries a line's
- *  unknown keys through an edit, but its Add mints a line with none. It rides the account id's bump. */
+ *  unknown keys through an edit, but its Add mints a line with none. It rides the account id's bump.
+ *  `everyYears` and `growthRate` (schema version 8, gap 4's U2, both optional): each in its band from
+ *  `spendingBounds.ts`, the restore path's only range gate on the raw value (insights 046 and 050: the compile
+ *  turns them into windows and factors the engine sees only as dollars). §7.3, from a version-7 copy's side:
+ *  (a) yes — its compile would charge the line every year at prices, so the plan must not open there; hence
+ *  the bump and the 7 → 8 step's refusal. Both run through this one check on a plan line and on a kept
+ *  lever's `line` alike. */
 function checkBudgetLineItemV3(v: unknown, path: string): void {
   needObject(v, path)
   if (v.id !== undefined) needId(v, 'id', path)
@@ -626,6 +637,23 @@ function checkBudgetLineItemV3(v: unknown, path: string): void {
     needInteger(v, 'endYear', path)
     if ((v.endYear as number) < start) {
       throw new Corrupt(`${path}.endYear: must be ≥ startYear (a reversed window has no meaning)`)
+    }
+  }
+  if (v.everyYears !== undefined) {
+    needInteger(v, 'everyYears', path)
+    if (!everyYearsInRange(v.everyYears as number)) {
+      throw new Corrupt(
+        `${path}.everyYears: expected a repeat of ${EVERY_YEARS_MIN.value} to ${EVERY_YEARS_MAX.value} years (every year is written as absence)`,
+      )
+    }
+  }
+  if (v.growthRate !== undefined) {
+    // Finite FIRST: the predicate assumes it (a NaN passes every relational compare, insights 008/010).
+    needFinite(v, 'growthRate', path)
+    if (!growthRateInRange(v.growthRate as number)) {
+      throw new Corrupt(
+        `${path}.growthRate: expected a yearly rate in [${GROWTH_RATE_MIN.value}, ${GROWTH_RATE_MAX.value}] (with prices is written as absence)`,
+      )
     }
   }
 }
@@ -1382,6 +1410,39 @@ function versionSevenFieldIn(o: Obj): string | undefined {
   return undefined
 }
 
+/** A budget line's two version-8 fields, in the order the 7 → 8 step looks for them. */
+const BUDGET_LINE_V8_FIELDS = ['everyYears', 'growthRate'] as const
+
+/** The path of the first field only version 8 writes (a budget line's `everyYears` or `growthRate`, on a plan line or
+ *  on a kept what-if's spending `add` or `replace` lever's `line`) — `undefined` when the plan carries none. Read by
+ *  the 7 → 8 step BEFORE any field is checked, so every access is guarded; the arms judge the shapes afterwards. */
+function versionEightFieldIn(o: Obj): string | undefined {
+  const fieldOn = (line: unknown, path: string): string | undefined => {
+    if (!isObj(line)) return undefined
+    const f = BUDGET_LINE_V8_FIELDS.find((name) => line[name] !== undefined)
+    return f === undefined ? undefined : `${path}.${f}`
+  }
+  if (Array.isArray(o.budget)) {
+    for (let i = 0; i < o.budget.length; i++) {
+      const hit = fieldOn(o.budget[i], `budget[${i}]`)
+      if (hit !== undefined) return hit
+    }
+  }
+  if (Array.isArray(o.keptWhatIfs)) {
+    for (let k = 0; k < o.keptWhatIfs.length; k++) {
+      const kept = o.keptWhatIfs[k]
+      if (!isObj(kept) || !Array.isArray(kept.levers)) continue
+      for (let j = 0; j < kept.levers.length; j++) {
+        const lever = kept.levers[j]
+        if (!isObj(lever) || lever.kind !== 'spending' || (lever.op !== 'add' && lever.op !== 'replace')) continue
+        const hit = fieldOn(lever.line, `keptWhatIfs[${k}].levers[${j}].line`)
+        if (hit !== undefined) return hit
+      }
+    }
+  }
+  return undefined
+}
+
 /**
  * Decode + structurally validate plaintext vault/export bytes. Never throws on bad DATA:
  * every data failure is a typed result the store maps to its calm states ("data damaged" /
@@ -1489,6 +1550,22 @@ export function decodeScenario(bytes: Uint8Array): ScenarioDecode {
       }
       parsed.schemaVersion = 7
       version = 7
+    }
+    // 7 → 8, LABEL ONLY (the schema-v8 bump, gap 4's U2): version 8 adds two OPTIONAL fields on a budget line — its
+    // repeat (`everyYears`) and its own rate (`growthRate`), on a plan line and on a kept what-if's added or replacing
+    // line — so a version-7 plan is a version-8 plan holding neither, and the step writes nothing into it. Before the
+    // relabel, a plan whose DISK label is 3 to 7 and that carries either is refused: no build writing those labels writes
+    // one, and a copy at those labels would charge the line every year at prices (§7.3's rule (a)), so such a plan is a
+    // writer bug, named. The LITERAL successor again, never `CURRENT_SCHEMA_VERSION` (the 3 → 4 note above). Read forever.
+    if (version === 7) {
+      const newer = versionEightFieldIn(parsed)
+      if (newer !== undefined) {
+        throw new Corrupt(
+          `${newer}: a plan saved as version ${onDisk} cannot carry it — no build that writes version ${onDisk} writes it (writer bug)`,
+        )
+      }
+      parsed.schemaVersion = 8
+      version = 8
     }
     if (version === CURRENT_SCHEMA_VERSION) {
       const droppedAtoms = [...stepDrops, ...checkV3Fields(parsed)]

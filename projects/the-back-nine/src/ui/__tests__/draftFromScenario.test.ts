@@ -192,6 +192,31 @@ describe('draftFromScenario — the chosenGoal field round-trips (the U15 second
   })
 })
 
+describe('draftFromScenario — a budget line’s repeat and rate round-trip (schema version 8, gap 4’s U2)', () => {
+  it('each field survives scenario → draft → scenario on a plan line and on a kept what-if’s line, and a line without them gains no key', () => {
+    const car = { id: 'line-car', category: 'transportation', label: 'A new car', annualAmountReal: 40_000, tier: 'essentials', startYear: 3, everyYears: 5 } as const
+    const fixed = { id: 'line-fixed', category: 'housing', label: 'Mortgage', annualAmountReal: 21_584, tier: 'essentials', startYear: 0, endYear: 12, growthRate: 0 } as const
+    const plain = { id: 'line-food', category: 'food', label: 'Food', annualAmountReal: 12_000, tier: 'essentials', startYear: 0 } as const
+    const boat = { id: 'line-boat', category: 'travel', label: 'A boat', annualAmountReal: 15_000, tier: 'discretionary', startYear: 1, everyYears: 10, growthRate: 0.04 } as const
+    const withLines: CurrentScenario = {
+      ...retiredV3(),
+      budget: [car, fixed, plain],
+      keptWhatIfs: [{ id: 'wi-boat', name: 'A boat', levers: [{ kind: 'spending', op: 'add', line: boat }] }],
+    }
+    const hydrated = draftFromScenario(withLines)
+    expect(hydrated.ok).toBe(true)
+    if (!hydrated.ok) return
+    expect(hydrated.draft.budget, 'the fields reach the draft').toEqual([car, fixed, plain])
+    const reencoded = scenarioFromDraft(hydrated.draft)
+    expect(reencoded.ready).toBe(true)
+    if (!reencoded.ready) return
+    expect(reencoded.scenario).toEqual(withLines)
+    // `toEqual` ignores an undefined-valued key, so absence is read by key.
+    const reLine = reencoded.scenario.budget![2]!
+    expect(Object.hasOwn(reLine, 'everyYears') || Object.hasOwn(reLine, 'growthRate'), 'a line that never had them gains no key').toBe(false)
+  })
+})
+
 describe('scenarioFromDraft — the healthcare vintage stamp (P3-U11, write-time truth)', () => {
   it('every save carries the CURRENT build vintage stamp', () => {
     const r = scenarioFromDraft(DEV_SEEDS.retired)

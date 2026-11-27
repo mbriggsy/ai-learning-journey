@@ -8,7 +8,8 @@
  * (`lockMenu.ts`), and the gear, which opens Settings (RC18; from RC4 until then it opened the assumptions in the old
  * panel); its word sits beside it on a laptop and its name is its accessible label everywhere.
  *
- * Below the 48rem phone tier the modules leave the bar for the phone menu (`PhoneMenu.tsx`). The bar's height is a floor,
+ * Below the 48rem phone tier the modules leave the bar for the phone menu (`PhoneMenu.tsx`), and the two names take a row
+ * of their own under the mark and the controls, which leave no room for a name beside them. The bar's height is a floor,
  * never a cap: two long names wrap (and break inside a word only when a word alone is wider than their room) and the bar
  * grows, so no name is ever cut and the controls at the right never leave the window.
  */
@@ -95,7 +96,7 @@ function LockMenu({ lock, onAction }: { readonly lock: LockMenuView; readonly on
 export function TopBar({ names, modules, route, onNavigate, onHome, lock, onLockAction, onGear }: TopBarProps) {
   return (
     <header className="rc-root w-full bg-bg">
-      <div className="mx-auto flex min-h-12.5 max-w-[90rem] items-stretch gap-4 px-4 wide:gap-6 wide:px-10 compact:min-h-12">
+      <div className="mx-auto flex min-h-12.5 max-w-[90rem] flex-wrap items-stretch gap-x-4 px-4 wide:flex-nowrap wide:gap-x-6 wide:px-10 compact:min-h-12">
         <a
           href="./"
           aria-label={copy.shellHomeLabel}
@@ -114,7 +115,9 @@ export function TopBar({ names, modules, route, onNavigate, onHome, lock, onLock
           </span>
         </a>
         {names.length > 0 ? (
-          <p className="flex min-w-0 flex-col justify-center text-label text-stone-600" data-shell-names="">
+          // Below the phone tier the names take their own row under the bar: the lock, the gear and the menu leave them
+          // ~31 px beside the mark at 390 (measured 2026-11-27), so any name past four letters broke inside a word.
+          <p className="order-last flex min-w-0 basis-full flex-col justify-center pb-2 text-label text-stone-600 wide:order-none wide:basis-auto wide:pb-0" data-shell-names="">
             {names.map((name, i) => (
               <span key={i} className="wrap-anywhere">
                 {name}
@@ -149,7 +152,8 @@ export function TopBar({ names, modules, route, onNavigate, onHome, lock, onLock
             })}
           </ul>
         </nav>
-        <div className="ml-auto flex shrink-0 items-center gap-2 wide:ml-2">
+        {/* On the phone the names wrap to a row of their own, so this row keeps the bar's 50 px itself. */}
+        <div className="ml-auto flex min-h-12.5 shrink-0 items-center gap-2 wide:ml-2 wide:min-h-0">
           <LockMenu lock={lock} onAction={onLockAction} />
           {onGear !== undefined ? (
             <button

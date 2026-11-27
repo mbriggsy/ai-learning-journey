@@ -126,6 +126,40 @@ test.describe(`RC2 · the shell on the phone (${PHONE.width}×${PHONE.height} @ 
       await expect(page.locator('main.result'), `${target.screen}: exactly one main.result`).toHaveCount(1)
     }
   })
+
+  // The design ceiling's names (two 20-character names, `tablewidest`): beside the mark the lock, the gear and the menu left
+  // them ~31 px, so each broke inside every word, a syllable a line, and the bar stood 487 px tall (found 2026-11-27 by
+  // U13's look). On their own row under the bar each prints whole on one line, and the controls stay in the window.
+  test('?seed=tablewidest: the two household names each print whole on one line under the bar; the controls stay in the window; no sideways scroll', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 60_000)
+    await gotoSeedFinal(page, 'tablewidest')
+    await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
+    await settleLayout(page)
+    const bar = await page.locator('[data-shell-names]').evaluate((names) => {
+      const row = names.parentElement!
+      const controls = row.lastElementChild!.getBoundingClientRect()
+      // Lines counted on the TEXT's boxes: each name span is a flex item, so a block, and its own client rects are one box
+      // however many lines it wraps to (the first version of this arm read 1 line under the broken bar).
+      const lines = (s: Element) => {
+        const r = document.createRange()
+        r.selectNodeContents(s)
+        return new Set([...r.getClientRects()].map((b) => Math.round(b.top))).size
+      }
+      return {
+        names: [...names.children].map((s) => ({ text: (s.textContent ?? '').trim(), lines: lines(s) })),
+        controlsRight: controls.right,
+        controlsBottom: controls.bottom,
+        namesTop: names.getBoundingClientRect().top,
+        window: document.documentElement.clientWidth,
+      }
+    })
+    console.log(`[rc2 phone names] ${JSON.stringify(bar)}`)
+    expect(bar.names.map((n) => n.text.length).every((l) => l >= 20), '[test setup] the design ceiling’s two 20-character names').toBe(true)
+    for (const n of bar.names) expect(n.lines, `"${n.text}" prints on one line`).toBe(1)
+    expect(bar.namesTop, 'the names sit under the controls’ row').toBeGreaterThanOrEqual(bar.controlsBottom - 0.5)
+    expect(bar.controlsRight, 'the controls stay in the window').toBeLessThanOrEqual(bar.window + 0.5)
+    await noSidewaysScroll(page, 'tablewidest PHONE top bar')
+  })
 })
 
 // ── RC3 · Dashboard → Snapshot (plan 6, RC3's Verification) ──────────────────────────────────────────────────────────

@@ -6,7 +6,7 @@
  * component's header holds the why of each arm.
  */
 import type { SlottedErrorKey, SlottedErrorParams } from '@ui/copy'
-import type { AccountKind, EnteredAccount, TickerClassification } from '@shared/model'
+import type { AccountKind, EnteredAccount, InheritedIraV7, TickerClassification } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
 import { freshStableId, idsInUse } from '@shared/stableIds'
 import { classifyLegs, legsOf } from './allocation'
@@ -23,6 +23,9 @@ export interface AccountFormState {
   manualBlend: TickerClassification | undefined
   /** The allocation reported a typed-but-not-100 split: the account must not commit. */
   allocationInvalid: boolean
+  /** An inherited IRA's facts (U13), built by the drawer's questions (`inheritedIraQuestions.ts`): carried through every
+   *  rebuild, so an edit of the balance or the mix keeps them. Read only on the `inherited-ira` kind. */
+  inherited: InheritedIraV7 | undefined
 }
 
 /** The reason an account could not be built: each arm names the fact in plain text. */
@@ -31,6 +34,8 @@ export type AccountBlock =
   | { readonly kind: 'allocation' }
   /** A deposit typed on a kind that takes none (sanity's `takesDeposits`; the Act 5 plan's KTD20). */
   | { readonly kind: 'no-deposits' }
+  /** An inherited IRA with no facts: the codec holds the kind and its facts together, so it is never written (U13). */
+  | { readonly kind: 'inherited-facts' }
   | { readonly kind: 'ceiling'; readonly messageKey: SlottedErrorKey; readonly params: SlottedErrorParams }
 
 /** The form as seeded from a committed account (or blank for a new one): ONE producer, read by the form's initial state
@@ -49,6 +54,7 @@ export function accountFormFrom(initial: EnteredAccount | undefined): AccountFor
     // a stored 60/50/10 would otherwise re-commit untouched under a screen showing 60/50/10.
     allocationInvalid:
       initial?.manualBlend !== undefined && classifyLegs(legsOf(initial.manualBlend)).kind === 'invalid',
+    inherited: initial?.inherited,
   }
 }
 
@@ -71,6 +77,7 @@ export function buildAccount(
   // to "no blend" either (that was the 2026-08-20 discard). Blank legs are not this
   // arm: they commit blend-less and the missing-fact gate names them.
   if (form.allocationInvalid) return { ok: false, block: { kind: 'allocation' } }
+  if (form.kind === 'inherited-ira' && form.inherited === undefined) return { ok: false, block: { kind: 'inherited-facts' } }
   // A kind that takes no deposits refuses one by its kind, never by a $0 ceiling's words (KTD20). Only a working owner's
   // deposit is kept below, so only theirs can be refused.
   if (ownerWorking && !takesDeposits(form.kind) && (form.annualContribution ?? 0) > 0) {
@@ -127,7 +134,8 @@ export function buildAccount(
       kind: form.kind,
       valueToday: form.valueToday,
       ...(form.kind === 'brokerage' && form.basis !== undefined ? { basis: form.basis } : {}),
-      ...(ownerWorking && form.annualContribution !== undefined
+      // A kind that takes no deposits carries none, not even a $0 one (the codec refuses the field on it, U13).
+      ...(ownerWorking && takesDeposits(form.kind) && form.annualContribution !== undefined
         ? { annualContribution: form.annualContribution }
         : {}),
       ...(ownerWorking && isEmployerPlanKind(form.kind) && form.employerMatchAnnual !== undefined
@@ -137,6 +145,7 @@ export function buildAccount(
         ? { hsaEmployerAnnual: form.hsaEmployerAnnual }
         : {}),
       ...(form.manualBlend !== undefined ? { manualBlend: form.manualBlend } : {}),
+      ...(form.kind === 'inherited-ira' && form.inherited !== undefined ? { inherited: form.inherited } : {}),
     },
   }
 }

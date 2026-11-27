@@ -136,7 +136,7 @@ export interface NetWorthView {
   readonly rows: readonly NetWorthRowView[]
   readonly empty: string | null
   readonly add: AddMenuView | null
-  /** The balances as entered (in the aged year where one is given), then the two stopgap lines, word for word. */
+  /** The balances as entered (in the aged year where one is given), then the stopgap line, word for word. */
   readonly notes: readonly string[]
 }
 
@@ -363,6 +363,8 @@ function accountAddItems(page: AccountAddPage): readonly AddItem[] {
     ...group('roth', copy.investBucketRoth, ['roth-401k', 'roth-ira']),
     ...single('brokerage', copy.investBucketTaxable),
     ...single('hsa', copy.investBucketHsa),
+    // Net Worth only: an inherited IRA takes no deposits, so Savings never offers it (U13; `offered`).
+    ...single('inherited-ira', copy.investBucketInherited),
   ]
 }
 
@@ -653,7 +655,6 @@ export function netWorthView(d: ScenarioDraft, agedBalancesYear: number | undefi
     notes: [
       agedBalancesYear === undefined ? copy.snapshotInvestedAsEntered : slots.snapshotInvestedAsEnteredIn(agedBalancesYear),
       copy.snapshotInvestedStopgap,
-      copy.profileInheritedIraStopgap,
     ],
   }
 }

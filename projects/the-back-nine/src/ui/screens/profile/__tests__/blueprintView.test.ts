@@ -96,13 +96,12 @@ describe('Net Worth', () => {
     expect(b.columns[0]!.person).toEqual({ name: 'Alex', age: slots.bpAge(working.people[0].currentAge!) })
   })
 
-  it('the headline is the invested accounts’ total, never a net worth, with the Net Worth page’s stopgap lines word for word', () => {
+  it('the headline is the invested accounts’ total, never a net worth, with the Net Worth page’s stopgap line word for word', () => {
     const v = blueprintView(input(retired))
     expect(v.headline).toBe(slots.profileInvestmentTotal(copy.snapshotInvestedTitle, '$1,120,000'))
     expect(v.headline).not.toMatch(/net worth/i)
     expect(v.headlineFigure).toBe(true)
     expect(v.notes).toContain(copy.snapshotInvestedStopgap)
-    expect(v.notes).toContain(copy.profileInheritedIraStopgap)
   })
 
   it('a person with no account says so in their column', () => {

@@ -141,10 +141,9 @@ describe('Net Worth', () => {
     expect(v.rows[0]!.mix).toMatch(/^Mix: the fund VTI \(/)
   })
 
-  it('both stopgap lines, word for word', () => {
+  it('the stopgap line, word for word (the inherited IRA’s left when its drawer landed, U13)', () => {
     const v = netWorthView(retired, undefined, false)
-    expect(v.notes).toContain('B9 doesn’t ask about your home, debts or bank accounts yet.')
-    expect(v.notes).toContain('An inherited IRA can’t be entered as its own kind yet; entered as a traditional IRA it reads too rosy.')
+    expect(v.notes.slice(1)).toEqual(['B9 doesn’t ask about your home, debts or bank accounts yet.'])
   })
 
   it('aged balances name the year they were entered', () => {
@@ -158,12 +157,12 @@ describe('Net Worth', () => {
 
   // Each page's Add menu pinned to its own kinds (the Act 5 plan's KTD20: the hand list split per page). A kind added to
   // `ACCOUNT_KINDS` reds the first pin until Net Worth decides it, and the second until Savings does: Net Worth holds
-  // every account, Savings only a kind that takes deposits (gap 3's inherited IRA will sit on the first list alone).
+  // every account, Savings only a kind that takes deposits (gap 3's inherited IRA sits on the first list alone).
   const kindsOf = (add: AddMenuView) => leaves(add).map((t) => (t.kind === 'new-account' ? t.accountKind : null))
-  it('the Add account menu offers every account kind exactly once, under the four tax treatments, but the inherited IRA (U13 hold: its own entry lands with its drawer’s questions); read-only has none', () => {
+  it('the Add account menu offers every account kind exactly once, under the four tax treatments, then the inherited IRA as its own entry (U13); read-only has none', () => {
     const add = netWorthView(retired, undefined, false).add!
-    expect(add.items.map((i) => i.label)).toEqual([copy.investBucketPretax, copy.investBucketRoth, copy.investBucketTaxable, copy.investBucketHsa])
-    expect([...kindsOf(add)].sort()).toEqual(ACCOUNT_KINDS.filter((k) => k !== 'inherited-ira').sort())
+    expect(add.items.map((i) => i.label)).toEqual([copy.investBucketPretax, copy.investBucketRoth, copy.investBucketTaxable, copy.investBucketHsa, copy.investBucketInherited])
+    expect([...kindsOf(add)].sort()).toEqual([...ACCOUNT_KINDS].sort())
     expect(netWorthView(retired, undefined, true).add).toBeNull()
   })
 

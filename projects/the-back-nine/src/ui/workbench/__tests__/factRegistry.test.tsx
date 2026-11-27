@@ -2,11 +2,12 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import '@testing-library/jest-dom/vitest'
 import { cleanup, render } from '@testing-library/react'
+import { missingRequiredFacts } from '@intake/intakeMap'
 import type { ScenarioDraft } from '@store/memoryModel'
 import { DrawerFor } from '../../screens/profile/drawerHost'
 import { expensesView, familyView, goalsView, incomeView, netWorthView, savingsView, type AddItem, type CardsPageView, type DrawerTarget } from '../../screens/profile/profileView'
 import { profileStore } from '../../screens/profile/__tests__/profileStore'
-import { ACCOUNT_FACTS, DRAFT_FACTS, elsewhereFacts, shownFacts, type FactDrawerId } from '../factRegistry'
+import { ACCOUNT_FACTS, DRAFT_FACTS, elsewhereFacts, INHERITED_FACTS, shownFacts, type FactDrawerId } from '../factRegistry'
 import { FULL, GOVERNED } from './factDrafts'
 
 /**
@@ -66,6 +67,12 @@ function stampsOf(d: ScenarioDraft): Map<string, Set<FactDrawerId>> {
 }
 
 describe('the field walk: every saved fact has a drawer home (R14, R15)', () => {
+  it('the made-up inherited IRAs are ones the rules serve, so their drawers ask what a real household’s would', () => {
+    const inherited = FULL.enteredAccounts.filter((a) => a.kind === 'inherited-ira')
+    expect(inherited.length).toBeGreaterThan(1)
+    expect(missingRequiredFacts(FULL).filter((m) => m.labelKey.startsWith('inherited'))).toEqual([])
+  })
+
   it('the made-up households open every kind of drawer, so none goes unread (non-vacuity)', () => {
     const kinds = new Set([FULL, GOVERNED].flatMap((d) => drawerTargets(d).map((t) => t.kind)))
     expect([...kinds].sort()).toEqual([...ALL_DRAWERS].sort())
@@ -91,24 +98,29 @@ describe('the field walk: every saved fact has a drawer home (R14, R15)', () => 
     }
   })
 
-  it('the facts with no drawer are exactly the tray’s four levers and Tax Strategies’ two choices, each saying why', () => {
+  it('the facts with no drawer are exactly the tray’s five levers and Tax Strategies’ two choices, each saying why', () => {
     const elsewhere = elsewhereFacts()
     expect(Object.fromEntries(elsewhere)).toEqual({
       drawdownPolicy: 'tray',
       drawdownOrder: 'tray',
       rothConversion: 'tray',
       enhancedSubsidies: 'tray',
+      'inherited.pace': 'tray',
       chosenGoal: 'tax-strategies',
       heirBracket: 'tax-strategies',
     })
     for (const key of elsewhere.keys()) {
-      const d = DRAFT_FACTS[key as keyof typeof DRAFT_FACTS]
+      const d = key.startsWith('inherited.') ? INHERITED_FACTS[key.slice('inherited.'.length) as keyof typeof INHERITED_FACTS] : DRAFT_FACTS[key as keyof typeof DRAFT_FACTS]
       expect(d.kind === 'elsewhere' && d.why.length > 20, key).toBe(true)
     }
   })
 
   it('a field argued away is never stamped, and every argued field says why in one line', () => {
-    for (const [key, d] of [...Object.entries(DRAFT_FACTS), ...Object.entries(ACCOUNT_FACTS).map(([k, v]) => [`account.${k}`, v] as const)]) {
+    for (const [key, d] of [
+      ...Object.entries(DRAFT_FACTS),
+      ...Object.entries(ACCOUNT_FACTS).map(([k, v]) => [`account.${k}`, v] as const),
+      ...Object.entries(INHERITED_FACTS).map(([k, v]) => [`inherited.${k}`, v] as const),
+    ]) {
       if (d.kind !== 'not-a-fact') continue
       expect(d.why.length, key).toBeGreaterThan(20)
       expect(d.why.includes('\n'), key).toBe(false)
@@ -117,7 +129,7 @@ describe('the field walk: every saved fact has a drawer home (R14, R15)', () => 
     // on every account and line and a kept what-if, so a drawer had each to show.
     const nonFacts = [
       'seed', 'savedAt', 'filing', 'startCalendarYear', 'savedRecommendation', 'taxVintage', 'appDefaultVersion',
-      'healthcareVintage', 'taxVintageDetail', 'dateVintage', 'stateTaxVintage', 'keptWhatIfs', 'account.id',
+      'healthcareVintage', 'taxVintageDetail', 'dateVintage', 'stateTaxVintage', 'keptWhatIfs', 'account.id', 'inherited.askedYear',
     ]
     expect(FULL.keptWhatIfs?.length, '[non-vacuity] the made-up household keeps a what-if').toBeGreaterThan(0)
     expect(GOVERNED.budget?.every((l) => l.id !== undefined), '[non-vacuity] every line carries an id').toBe(true)

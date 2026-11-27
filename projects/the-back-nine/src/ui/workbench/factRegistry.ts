@@ -10,8 +10,8 @@
  * or NOT-A-FACT, with the one-line why.
  *
  * THE GATE REACHES EVERY LEVEL (the R7 registry's GATE-SCOPE warning, answered): `keyof ScenarioDraft` sees only
- * the draft's own keys, so the four containers each get a sibling FLAT record of their own — a new field on a
- * person, the health answers, an account or an income stream fails `tsc` here until it is placed. The income
+ * the draft's own keys, so the containers each get a sibling FLAT record of their own — a new field on a person, the
+ * health answers, an account, an inherited IRA's facts (U13) or an income stream fails `tsc` here until it is placed. The income
  * stream is `{…} & IncomeTaxTreatment`, a union whose arms share only `type`, so a plain `keyof` would drop every
  * arm's own field (`executedAfter2018`, the most consequential answer in the union, among them). Its record is
  * keyed by {@link KeysOfEachArm}, a DISTRIBUTIVE keyof that takes each arm's keys in turn: an arm field added later
@@ -22,7 +22,7 @@
  * Add menus offer over made-up drafts that hold every field between them, and fails on a SHOWN field no drawer stamps,
  * or one stamped in a drawer this record does not name.
  */
-import type { EnteredAccount } from '@shared/model'
+import type { EnteredAccount, InheritedIraV7 } from '@shared/model'
 import type { IncomeStream } from '@shared/model'
 import type { HealthDraft, PersonDraft, ScenarioDraft } from '@store/memoryModel'
 import type { DrawerTarget } from '../screens/profile/profileView'
@@ -42,17 +42,13 @@ export type FactDisposition =
   /** Changed outside Profile, never in a drawer. */
   | { readonly kind: 'elsewhere'; readonly home: FactElsewhereId; readonly why: string }
   /** A container: its fields are walked by the named sibling record. */
-  | { readonly kind: 'nested'; readonly record: 'person' | 'health' | 'account' | 'income' }
+  | { readonly kind: 'nested'; readonly record: 'person' | 'health' | 'account' | 'inherited' | 'income' }
   /** Not something the household told the tool: the why. */
   | { readonly kind: 'not-a-fact'; readonly why: string }
-  /** A saved fact whose editing home a unit still being built adds: no plan can carry it until that unit lands (its why
-   *  names the unit). Never stamped; the unit replaces it with its real disposition. */
-  | { readonly kind: 'pending'; readonly unit: string; readonly why: string }
 
 const shown = (...drawers: FactDrawerId[]): FactDisposition => ({ kind: 'shown', drawers })
 const elsewhere = (home: FactElsewhereId, why: string): FactDisposition => ({ kind: 'elsewhere', home, why })
 const notAFact = (why: string): FactDisposition => ({ kind: 'not-a-fact', why })
-const pending = (unit: string, why: string): FactDisposition => ({ kind: 'pending', unit, why })
 
 /** The stamp a field carries: a top-level key bare, a container's field prefixed by its record. */
 export type FactStamp =
@@ -60,6 +56,7 @@ export type FactStamp =
   | `person.${keyof PersonDraft}`
   | `health.${keyof HealthDraft}`
   | `account.${keyof EnteredAccount}`
+  | `inherited.${keyof InheritedIraV7}`
   | `income.${IncomeFactKey}`
 
 const ACCOUNT_DRAWERS: readonly FactDrawerId[] = ['account', 'new-account']
@@ -139,10 +136,26 @@ export const ACCOUNT_FACTS: Record<keyof EnteredAccount, FactDisposition> = {
   annualContribution: shown(...ACCOUNT_DRAWERS),
   employerMatchAnnual: shown(...ACCOUNT_DRAWERS),
   hsaEmployerAnnual: shown(...ACCOUNT_DRAWERS),
-  // The inherited IRA's own facts (schema version 7). The drawer's questions (U13 slice 1) make this the nested record
-  // `INHERITED_FACTS` (by the registry's gate-scope rule, the pace `elsewhere('tray', …)`) and give the FULL draft one.
-  inherited: pending('U13 slice 1', 'An inherited IRA’s facts: no drawer asks them yet, so no account can carry them until the drawer’s questions land.'),
+  // An inherited IRA's own facts (schema version 7): walked by their own record, by the gate-scope rule.
+  inherited: { kind: 'nested', record: 'inherited' },
   ticker: shown(...ACCOUNT_DRAWERS),
+}
+
+/** An inherited IRA's facts (U13): its drawer's questions (`InheritedIraFields.tsx`) ask each one, on Net Worth's account
+ *  drawer and its Add entry; the pace is a lever. */
+export const INHERITED_FACTS: Record<keyof InheritedIraV7, FactDisposition> = {
+  ownerBirthYear: shown(...ACCOUNT_DRAWERS),
+  ownerBornFirstHalf: shown(...ACCOUNT_DRAWERS),
+  ownerDeathYear: shown(...ACCOUNT_DRAWERS),
+  ownerDiedBeforeApril1: shown(...ACCOUNT_DRAWERS),
+  heirMoreThanTenYearsYounger: shown(...ACCOUNT_DRAWERS),
+  askedYear: notAFact('The calendar year the account was entered, stamped by the tool: the year its asked figures belong to.'),
+  askedFigure: shown(...ACCOUNT_DRAWERS),
+  takenInAskedYear: shown(...ACCOUNT_DRAWERS),
+  deathYearUntaken: shown(...ACCOUNT_DRAWERS),
+  earlierWithdrawals: shown(...ACCOUNT_DRAWERS),
+  leftTo: shown(...ACCOUNT_DRAWERS),
+  pace: elsewhere('tray', 'An inherited IRA’s withdrawal pace is a lever: tried beside the plan in the Action Items tray and applied there.'),
 }
 
 /** Every key of every arm of a union (a DISTRIBUTIVE keyof): `keyof (A | B)` keeps only the keys both share. */
@@ -170,6 +183,7 @@ const RECORDS = [
   ['person.', PERSON_FACTS],
   ['health.', HEALTH_FACTS],
   ['account.', ACCOUNT_FACTS],
+  ['inherited.', INHERITED_FACTS],
   ['income.', INCOME_FACTS],
 ] as const
 

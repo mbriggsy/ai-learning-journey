@@ -70,7 +70,7 @@ describe('Balance Sheet: the honesty lines', () => {
   it('the premise and the stopgap lines are Net Worth’s own, word for word; the aged year where the plan was saved earlier', () => {
     const fresh = kindsOf(balanceSheetView(BUCKETS, undefined, false))
     expect(fresh.asEntered).toBe(copy.snapshotInvestedAsEntered)
-    expect(fresh.notes).toEqual([copy.snapshotInvestedStopgap, copy.profileInheritedIraStopgap])
+    expect(fresh.notes).toEqual([copy.snapshotInvestedStopgap])
     expect([fresh.asEntered, ...fresh.notes]).toEqual(netWorthView(BUCKETS, undefined, false).notes)
     const aged = kindsOf(balanceSheetView(BUCKETS, 2024, false))
     expect(aged.asEntered).toBe(slots.snapshotInvestedAsEnteredIn(2024))

@@ -147,6 +147,10 @@ const ALLOWED: Readonly<Record<string, { readonly reason: string; readonly count
   "src/intake/inheritedIra.ts | compare | a.kind === 'inherited-ira'": { reason: 'safe: the inherited-account guard (the kind itself, with its facts)' },
   "src/intake/intakeMap.ts | compare | a.kind !== 'inherited-ira'": { reason: 'safe: the missing-facts arm reads only inherited accounts' },
   "src/ui/screens/profile/drawers/AccountDrawer.tsx | compare | k !== 'inherited-ira'": { reason: 'safe: no ordinary account can become an inherited IRA (its kind is locked)' },
+  // The drawer's inherited-IRA arms (U13): the kind's own facts and questions, which no other kind carries.
+  "src/intake/accountForm.ts | compare | form.kind === 'inherited-ira'": { reason: 'safe: the inherited facts, carried and required on that kind alone', count: 2 },
+  "src/ui/screens/profile/drawers/accountFields.ts | compare | form.kind === 'inherited-ira'": { reason: 'safe: the inherited questions run on that kind alone' },
+  "src/ui/screens/profile/drawers/AccountDrawer.tsx | compare | kind === 'inherited-ira'": { reason: 'safe: the inherited questions, its locked kind and its heir label, on that kind alone' },
 }
 
 const keyOf = (f: Finding): string => `${f.file} | ${f.shape} | ${f.text}`

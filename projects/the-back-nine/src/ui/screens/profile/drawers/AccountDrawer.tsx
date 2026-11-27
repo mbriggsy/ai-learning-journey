@@ -3,7 +3,9 @@
  * two cards: Savings opens it on its deposits (each year while its owner still works: the deposit, an employer plan's
  * match, an HSA's employer money, and this year's legal limits, computed from the one ceiling table); Net Worth opens it
  * on what it holds (owner, kind, balance, a brokerage account's cost basis, and its mix, typed in or by the fund it holds).
- * A new account (either page's Add menu) shows both. Built by the walk's one decision tree (`accountFields.ts`); a
+ * A new account (either page's Add menu) shows both. An inherited IRA (U13) shows who inherited it, its balance and mix,
+ * and its questions (`InheritedIraFields.tsx`), with its kind locked and no deposits. Built by the walk's one decision
+ * tree (`accountFields.ts`); a
  * refusal on a field this facet doesn't show (a kind changed on Net Worth that puts the deposits over the new kind's
  * limit) is named in the drawer's line at the top. Delete (Net Worth only) removes the account.
  */
@@ -11,7 +13,8 @@ import { useId, useState } from 'react'
 import type { AccountKind } from '@shared/model'
 import { ACCOUNT_KINDS } from '@shared/model'
 import { kindLabel } from '@intake/accountKinds'
-import { isEmployerPlanKind } from '@intake/sanity'
+import { isEmployerPlanKind, takesDeposits } from '@intake/sanity'
+import { INHERITED_QUESTION_IDS, type InheritedQuestionId } from '@intake/inheritedIraQuestions'
 import type { Legs } from '@intake/allocation'
 import { DrawerFields, MoneyInput, Select, TextInput } from '../../../kit'
 import { copy, slots } from '../../../copy'
@@ -23,6 +26,8 @@ import {
   buildAccountEdit,
   deleteAccount,
   FACET_FIELDS,
+  inheritedFieldErrors,
+  inheritedWalkOf,
   knownFund,
   ownAccountField,
   tickerLegsFor,
@@ -34,12 +39,15 @@ import {
 import { commitEdit, openCheck, saveEdit } from './drawerSave'
 import type { DrawerBodyProps } from './drawerProps'
 import { Fact } from './Fact'
+import { InheritedIraFields } from './InheritedIraFields'
 import { ProfileDrawer } from './ProfileDrawer'
 import { useDrawerEdit } from './useDrawerBuffer'
 
 // An inherited IRA is never one an ordinary account can become, or the other way (U13: its kind is locked, and it is added
 // from its own Add entry), so the kind select offers it to no account.
 const KIND_ITEMS = ACCOUNT_KINDS.filter((k) => k !== 'inherited-ira').map((k) => ({ value: k, label: kindLabel(k) }))
+/** An inherited IRA's kind, shown locked. */
+const INHERITED_KIND_ITEMS = [{ value: 'inherited-ira' as const, label: kindLabel('inherited-ira') }]
 const MIX_ITEMS = [
   { value: 'hand', label: copy.profileMixByHand },
   { value: 'fund', label: copy.profileMixByTicker },
@@ -58,6 +66,8 @@ const FIELD_LABEL: Readonly<Record<AccountField, string>> = {
   deposit: copy.accountContributionLabel,
   match: copy.accountMatchLabel,
   hsaEmployer: copy.accountHsaEmployerLabel,
+  // An inherited IRA's questions show on both facets that open it, so a refusal on one is never named from the top.
+  ...(Object.fromEntries(INHERITED_QUESTION_IDS.map((id) => [id, copy.inheritedSectionHeading])) as Record<InheritedQuestionId, string>),
 }
 
 /** Three legs (stocks, bonds, cash) as typed, the walk's allocation entry's three boxes; a typed split is checked on Save.
@@ -123,8 +133,13 @@ export function AccountDrawer({
   checkAtOpen,
 }: DrawerBodyProps & { readonly at: { readonly index: number; readonly facet: Exclude<AccountFacet, 'all'> } | { readonly kind: AccountKind; readonly ownerIndex?: 0 | 1 } }) {
   const [opened] = useState(() => model.getSnapshot().draft)
+  // A new inherited IRA's figures are asked for the year it is entered (KTD25): today's, from the wall clock.
   const [seed] = useState<AccountDrawerForm>(() =>
-    accountFormFromDraft(opened, 'index' in at ? { index: at.index } : { kind: at.kind, ownerIndex: at.ownerIndex ?? firstWorking(opened) }),
+    accountFormFromDraft(
+      opened,
+      'index' in at ? { index: at.index } : { kind: at.kind, ownerIndex: at.ownerIndex ?? firstWorking(opened) },
+      new Date().getFullYear(),
+    ),
   )
   const index = 'index' in at ? at.index : ('new' as const)
   const facet: AccountFacet = 'index' in at ? at.facet : 'all'
@@ -144,6 +159,11 @@ export function AccountDrawer({
   const hidden = (Object.keys(check.fields) as AccountField[]).filter((k) => !shows(k) || (k === 'deposit' || k === 'match' || k === 'hsaEmployer' ? !ownerWorking : false))
   const errors = [...hidden.map((k) => slots.profileRefusedHidden(FIELD_LABEL[k], check.fields[k]!)), ...check.elsewhere]
   const kind = form.kind
+  const inherited = kind === 'inherited-ira'
+  // The inherited IRA's questions, walked on every render: a refusal or an impossible figure shows on its question as
+  // soon as it is answered, in the words Save refuses with; Save's own refusals (a blank answer) stand under the rest.
+  const walk = inherited ? inheritedWalkOf(opened, form) : null
+  const live = walk === null ? {} : inheritedFieldErrors(opened, form, walk)
   return (
     <ProfileDrawer
       open={open}
@@ -182,20 +202,21 @@ export function AccountDrawer({
           <DrawerFields>
             <Fact stamp="account.ownerIndex">
             <Select<'0' | '1'>
-              label={copy.profileOwnerLabel}
+              label={inherited ? copy.inheritedHeirLabel : copy.profileOwnerLabel}
               items={people}
               value={String(form.ownerIndex) as '0' | '1'}
               disabled={readOnly}
+              {...err('owner')}
               onValueChange={(v) => set('owner', { ownerIndex: Number(v) as 0 | 1 })}
             />
             </Fact>
             <Fact stamp="account.kind">
             <Select<AccountKind>
               label={copy.profileKindLabel}
-              items={KIND_ITEMS}
+              items={inherited ? INHERITED_KIND_ITEMS : KIND_ITEMS}
               value={kind ?? null}
               placeholder={copy.profileChoose}
-              disabled={readOnly}
+              disabled={readOnly || inherited}
               required
               {...err('kind')}
               onValueChange={(k) => set('kind', { kind: k })}
@@ -266,7 +287,18 @@ export function AccountDrawer({
           </DrawerFields>
         </section>
       ) : null}
-      {shows('deposit') ? (
+      {walk !== null && shows('treatment') ? (
+        <InheritedIraFields
+          draft={opened}
+          heirIndex={form.ownerIndex}
+          answers={form.inherited}
+          walk={walk}
+          readOnly={readOnly}
+          errorOf={(id) => live[id] ?? check.fields[id]}
+          onAnswers={(id, next) => set(id, { inherited: next })}
+        />
+      ) : null}
+      {shows('deposit') && (kind === undefined || takesDeposits(kind)) ? (
         <section className="flex flex-col gap-4 border-t border-stone-300 pt-6 first:border-t-0 first:pt-0" data-profile-section="deposits">
           <h3 className="text-body font-semibold text-stone-900">{copy.profileDepositsHeading}</h3>
           {!ownerWorking ? (

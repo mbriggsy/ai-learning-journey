@@ -3880,12 +3880,11 @@ for (const size of RC12_SIZES) {
           await expect(page.getByRole('dialog'), `${who}: Escape with nothing changed closes the drawer`).toHaveCount(0)
           await expect(card, `${who}: focus back on the card`).toBeFocused()
         }
-        // Net Worth's band names its total as the invested accounts, never a net worth B9 cannot know, and both stopgaps show.
+        // Net Worth's band names its total as the invested accounts, never a net worth B9 cannot know, and the stopgap shows.
         await toProfile(page, PROFILE['net-worth'], size.phone)
         await expect(page.locator('[data-networth-band]')).toContainText(copy.snapshotInvestedTitle)
         await expect(page.locator('[data-networth-band]')).not.toContainText(/net worth/i)
         await expect(page.locator('[data-networth-note]').filter({ hasText: copy.snapshotInvestedStopgap })).toHaveCount(1)
-        await expect(page.locator('[data-networth-note]').filter({ hasText: copy.profileInheritedIraStopgap })).toHaveCount(1)
         await assertCaveatReachable(page, `${seed} net-worth`)
       })
     }

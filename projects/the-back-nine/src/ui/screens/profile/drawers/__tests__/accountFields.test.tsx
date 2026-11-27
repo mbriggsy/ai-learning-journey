@@ -446,3 +446,68 @@ describe('the required choice is announced up front (the walk’s aria-required,
     expect(within(dialog).getByRole('combobox', { name: copy.profileOwnerLabel })).not.toHaveAttribute('aria-required')
   })
 })
+
+describe('the inherited IRA’s drawer (the Act 5 plan’s U13)', () => {
+  const seed = DEV_SEEDS.inherited
+  const at = seed.enteredAccounts.findIndex((a) => a.kind === 'inherited-ira')
+
+  it('editing its balance keeps every inherited fact', () => {
+    const open = accountFormFromDraft(seed, { index: at })
+    const res = buildAccountEdit(seed, at, open, { ...open, valueToday: 123_456 })
+    const account = builtAccount(res, at)
+    expect(account.valueToday).toBe(123_456)
+    expect(account.inherited).toEqual(seed.enteredAccounts[at]!.inherited)
+  })
+
+  it('a new one shows its kind locked, “Who inherited it”, its questions, and no deposit field', () => {
+    const { dialog } = renderDrawer({ kind: 'new-account', accountKind: 'inherited-ira', ownerIndex: 0 }, seed)
+    expect(within(dialog).getByRole('combobox', { name: copy.profileKindLabel })).toHaveAttribute('data-disabled')
+    expect(within(dialog).getByRole('combobox', { name: copy.inheritedHeirLabel })).toBeInTheDocument()
+    expect(within(dialog).getByRole('group', { name: copy.inheritedTreatmentLegend })).toBeInTheDocument()
+    expect(within(dialog).queryByLabelText(copy.accountContributionLabel)).toBeNull()
+    expect(dialog.querySelector('[data-profile-section="deposits"]')).toBeNull()
+  })
+
+  it('a refused answer shows its words on its question at once, and Save writes no account', async () => {
+    const { dialog, model } = renderDrawer({ kind: 'new-account', accountKind: 'inherited-ira', ownerIndex: 0 }, seed)
+    await userEvent.click(within(within(dialog).getByRole('group', { name: copy.inheritedTreatmentLegend })).getByLabelText(copy.kindRothIra))
+    expect(within(dialog).getByText(copy.inheritedRefuseRoth)).toBeInTheDocument()
+    expect(within(dialog).queryByRole('group', { name: slots.inheritedFromSpouseLegend('Alex') })).toBeNull()
+    const before = model.getSnapshot().draft
+    const form = { ...accountFormFromDraft(before, { kind: 'inherited-ira', ownerIndex: 0 }), valueToday: 50_000 }
+    const res = buildAccountEdit(before, 'new', form, { ...form, inherited: { ...form.inherited, treatment: { value: 'roth', key: '' } } })
+    expect(res).toEqual({ ok: false, fields: { treatment: copy.inheritedRefuseRoth } })
+  })
+
+  it('a Save with any answer blank is refused, naming each blank question, and writes nothing', () => {
+    const { model } = profileStore(seed)
+    const res = saveNew(model, 'inherited-ira', { valueToday: 50_000, legs: { stock: '60', bond: '40', cash: '0' } })
+    expect(res.saved).toBe(false)
+    if (res.saved) return
+    expect(res.check.fields.treatment).toBe(copy.errInheritedAnswerRequired)
+    expect(res.check.fields.leftTo).toBe(copy.errInheritedAnswerRequired)
+    expect(model.getSnapshot().draft).toBe(seed)
+  })
+
+  it('every question answered on the served side saves the account with the facts the walk built', () => {
+    const { model } = profileStore(seed)
+    const y = seed.startCalendarYear
+    const k = (value: string, key = '') => ({ value, key })
+    const res = saveNew(model, 'inherited-ira', {
+      valueToday: 80_000,
+      legs: { stock: '60', bond: '40', cash: '0' },
+      inherited: {
+        treatment: k('traditional'), fromSpouse: k('no', '0'), heldAtDeath: k('own-ira'), ownerInherited: k('no'),
+        ownerBirthYear: 1945, ownerDeathYear: 2024, disabledAtDeath: k('no', '0'), childUnder21AtDeath: k('no', '0'),
+        decemberBalance: 80_000, hasCustodianFigure: k('no'), sharedUnsplit: k('no', '2024'), takenThisYear: 0,
+        // A 2024 death after the date: 2025's minimum and the death-year deadline are asked, keyed by the owner's dates.
+        minimumsTaken: k('yes', '1945||2024||2025-2025'), deathYearTakenInTime: k('yes', '1945||2024|'), earlier: {}, leftTo: k('other-member', '0'),
+      } as never,
+    })
+    expect(res, JSON.stringify(res)).toMatchObject({ saved: true })
+    const added = model.getSnapshot().draft.enteredAccounts.at(-1)!
+    expect(added.kind).toBe('inherited-ira')
+    expect(added.inherited).toMatchObject({ ownerBirthYear: 1945, ownerDeathYear: 2024, askedYear: y, askedFigure: { kind: 'computed', decemberBalance: 80_000 }, leftTo: 'other-member', pace: { kind: 'law-minimum' } })
+    expect(added).not.toHaveProperty('annualContribution')
+  })
+})

@@ -15,17 +15,36 @@
  * `tickerClassifications` (answered once, used by every account that holds it), by the same three legs. A ticker'd
  * account keeps no hand-entered mix (the run never reads one beside a ticker). No new saved shape: both fields exist.
  *
+ * AN INHERITED IRA (U13) is the kind's own field set: who inherited it, its balance and its mix, then its questions, the
+ * one decision tree `walkInheritedQuestions` (`src/intake/inheritedIraQuestions.ts`) asks and judges; never a deposit, a
+ * match or an HSA's employer money. Its kind is locked: added only from Net Worth's own Add entry, and never one an
+ * ordinary account can become. Save builds its facts from the walk, or names the question that refuses it.
+ *
  * A Save with nothing changed writes nothing.
  */
 import { buildAccount, accountFormFrom, type AccountFormState } from '@intake/accountForm'
 import { classifyLegs, legsOf, type Legs } from '@intake/allocation'
 import { accountField, type FieldPath } from '@intake/sanity'
 import { findBlendRow, type TickerBlendRow } from '@engine/reference/tickerBlend'
-import { canonicalIdentityToken, type AccountKind, type EnteredAccount } from '@shared/model'
+import { canonicalIdentityToken, type AccountKind, type EnteredAccount, type InheritedPace } from '@shared/model'
+import {
+  INHERITED_OWNER_BORN_FROM,
+  INHERITED_QUESTION_IDS,
+  inheritedAnswersFrom,
+  walkInheritedQuestions,
+  type InheritedAnswers,
+  type InheritedContext,
+  type InheritedInvalid,
+  type InheritedQuestionId,
+  type InheritedRefusal,
+  type InheritedWalk,
+} from '@intake/inheritedIraQuestions'
+import { formatMoney } from '@intake/moneyFormat'
+import { tablePerson } from '../../../workbench/tableRun'
 import type { ScenarioDraft } from '@store/memoryModel'
 import type { FieldErrors } from './drawerSave'
 import { fieldErrorText } from '@intake/fieldErrors'
-import { copy } from '../../../copy'
+import { copy, slots } from '../../../copy'
 
 export type AccountFacet = 'deposits' | 'holdings' | 'all'
 
@@ -41,12 +60,14 @@ export type AccountField =
   | 'deposit'
   | 'match'
   | 'hsaEmployer'
+  | InheritedQuestionId
 
-/** The fields each facet shows (the rest of the record is the other card's). */
+/** The fields each facet shows (the rest of the record is the other card's). An inherited IRA's questions sit with its
+ *  holdings: it takes no deposits, so Savings never opens it. */
 export const FACET_FIELDS: Readonly<Record<AccountFacet, readonly AccountField[]>> = {
   deposits: ['deposit', 'match', 'hsaEmployer'],
-  holdings: ['owner', 'kind', 'value', 'basis', 'mixHow', 'mix', 'ticker', 'tickerMix'],
-  all: ['owner', 'kind', 'value', 'basis', 'mixHow', 'mix', 'ticker', 'tickerMix', 'deposit', 'match', 'hsaEmployer'],
+  holdings: ['owner', 'kind', 'value', 'basis', 'mixHow', 'mix', 'ticker', 'tickerMix', ...INHERITED_QUESTION_IDS],
+  all: ['owner', 'kind', 'value', 'basis', 'mixHow', 'mix', 'ticker', 'tickerMix', 'deposit', 'match', 'hsaEmployer', ...INHERITED_QUESTION_IDS],
 }
 
 export interface AccountDrawerForm {
@@ -64,6 +85,12 @@ export interface AccountDrawerForm {
   readonly ticker: string
   /** The household's mix for a fund B9 doesn't know. */
   readonly tickerLegs: Legs
+  /** An inherited IRA's answers (blank on every other kind). */
+  readonly inherited: InheritedAnswers
+  /** The calendar year an inherited IRA's figures are asked for (KTD25): a saved account's own, or the year it is entered. */
+  readonly inheritedYear: number
+  /** An inherited IRA's pace, carried unchanged (a new one: "only what the law requires", KTD21; the tray changes it). */
+  readonly inheritedPace: InheritedPace
 }
 
 const normalTicker = (t: string): string => t.trim().toUpperCase()
@@ -80,13 +107,28 @@ export function tickerLegsFor(d: ScenarioDraft, ticker: string): Legs {
 /** Is `next` a different fund from `was` (case and spaces aside)? */
 export const tickerMoved = (was: string, next: string): boolean => normalTicker(was) !== normalTicker(next)
 
-/** The form for the account at `index`, or a new account of `kind`. */
-export function accountFormFromDraft(d: ScenarioDraft, at: { readonly index: number } | { readonly kind: AccountKind; readonly ownerIndex?: 0 | 1 }): AccountDrawerForm {
+/** The year an inherited IRA's figures are asked for: a saved account keeps its own while the plan still holds that
+ *  year; a new one (or one the plan has moved past) takes the year it is entered, never before the plan's first. */
+function inheritedYearFor(d: ScenarioDraft, a: EnteredAccount | undefined, wallCalendarYear: number): number {
+  const saved = a?.inherited?.askedYear
+  return saved !== undefined && saved >= d.startCalendarYear ? saved : Math.max(wallCalendarYear, d.startCalendarYear)
+}
+
+/** The form for the account at `index`, or a new account of `kind`. `wallCalendarYear`: today's year, which a new
+ *  inherited IRA's figures are asked for (the plan's first year when not given). */
+export function accountFormFromDraft(
+  d: ScenarioDraft,
+  at: { readonly index: number } | { readonly kind: AccountKind; readonly ownerIndex?: 0 | 1 },
+  wallCalendarYear: number = d.startCalendarYear,
+): AccountDrawerForm {
   const a = 'index' in at ? d.enteredAccounts[at.index] : undefined
   const base = accountFormFrom(a)
   const ticker = a?.ticker ?? ''
+  const ownerIndex = 'index' in at ? base.ownerIndex : (at.ownerIndex ?? 0)
+  const inheritedYear = inheritedYearFor(d, a, wallCalendarYear)
+  const inheritedPace: InheritedPace = a?.inherited?.pace ?? { kind: 'law-minimum' }
   return {
-    ownerIndex: 'index' in at ? base.ownerIndex : (at.ownerIndex ?? 0),
+    ownerIndex,
     kind: 'index' in at ? base.kind : at.kind,
     valueToday: base.valueToday,
     basis: base.basis,
@@ -97,8 +139,67 @@ export function accountFormFromDraft(d: ScenarioDraft, at: { readonly index: num
     legs: legsOf(a?.manualBlend),
     ticker,
     tickerLegs: tickerLegsFor(d, ticker),
+    inherited: inheritedAnswersFrom(a?.inherited, inheritedContextOf(d, { ownerIndex, inheritedYear, inheritedPace })),
+    inheritedYear,
+    inheritedPace,
   }
 }
+
+/** What the inherited IRA's walk reads besides the answers: the heir is the account's owner, as the form holds it. */
+export function inheritedContextOf(d: ScenarioDraft, form: Pick<AccountDrawerForm, 'ownerIndex' | 'inheritedYear' | 'inheritedPace'>): InheritedContext {
+  return {
+    heirIndex: form.ownerIndex,
+    heirBirthYear: d.people[form.ownerIndex]?.birthYear,
+    couple: d.people.length > 1,
+    askedYear: form.inheritedYear,
+    startCalendarYear: d.startCalendarYear,
+    pace: form.inheritedPace,
+  }
+}
+
+/** The other member, by name: who gets the account if the heir dies first. */
+export const otherMemberLabel = (d: ScenarioDraft, heirIndex: 0 | 1): string => tablePerson(d, heirIndex === 0 ? 1 : 0, 0, 0).label
+
+/** Each refusal's words (KTD17, KTD25), from the walk's own years and figures. */
+const REFUSAL_WORDS: Readonly<Record<InheritedRefusal, (d: ScenarioDraft, heir: 0 | 1, w: InheritedWalk['words']) => string>> = {
+  roth: () => copy.inheritedRefuseRoth,
+  spouse: () => copy.inheritedRefuseSpouse,
+  'job-plan': () => copy.inheritedRefuseJobPlan,
+  successor: () => copy.inheritedRefuseSuccessor,
+  'pre-2020': () => copy.inheritedRefusePre2020,
+  'eligible-age': () => copy.inheritedRefuseEligibleAge,
+  disabled: () => copy.inheritedRefuseDisabled,
+  'child-under-21': () => copy.inheritedRefuseChild,
+  'past-end': (_d, _h, w) => slots.inheritedRefusePastEnd(w.lastYear ?? w.askedYear),
+  'death-year-unknown': () => copy.inheritedRefuseDeathYearUnknown,
+  'figure-mismatch': (d, h, w) => slots.inheritedRefuseFigureMismatch(formatMoney(w.computedFigure ?? 0), tablePerson(d, h, 0, 0).possessive),
+  shared: () => copy.inheritedRefuseShared,
+  'missed-minimum': () => copy.inheritedRefuseMissedMinimum,
+  'death-year-late': () => copy.inheritedRefuseDeathYearLate,
+  split: (d, h) => slots.inheritedRefuseSplit(otherMemberLabel(d, h)),
+}
+
+/** Each impossible figure's words. */
+const INVALID_WORDS: Readonly<Record<InheritedInvalid, (form: AccountDrawerForm, w: InheritedWalk['words']) => string>> = {
+  'birth-year-range': (_f, w) => slots.inheritedBirthYearRange(INHERITED_OWNER_BORN_FROM, w.askedYear),
+  'death-before-birth': () => copy.inheritedDiedBeforeBorn,
+  'death-after-asked': (_f, w) => slots.inheritedDiedAfterAsked(w.askedYear),
+  'pace-year': (f, w) =>
+    slots.inheritedPaceYearOutside(f.inheritedPace.kind === 'even-to-year' ? f.inheritedPace.lastYear : w.askedYear, w.askedYear, w.lastYear ?? w.askedYear),
+}
+
+/** The walk's refusal and impossible figure as words on their questions: what the drawer shows as soon as the answer is
+ *  given, and what Save refuses with. */
+export function inheritedFieldErrors(d: ScenarioDraft, form: AccountDrawerForm, walk: InheritedWalk): FieldErrors<AccountField> {
+  const out: Partial<Record<AccountField, string>> = {}
+  if (walk.refusal !== null) out[walk.refusal.at] = REFUSAL_WORDS[walk.refusal.why](d, form.ownerIndex, walk.words)
+  if (walk.invalid !== null) out[walk.invalid.at] = INVALID_WORDS[walk.invalid.why](form, walk.words)
+  return out
+}
+
+/** The inherited IRA's walk over this form. */
+export const inheritedWalkOf = (d: ScenarioDraft, form: AccountDrawerForm): InheritedWalk =>
+  walkInheritedQuestions(form.inherited, inheritedContextOf(d, form))
 
 /** The fund the bundled table knows for a typed ticker, or undefined. */
 export function knownFund(ticker: string): TickerBlendRow | undefined {
@@ -133,6 +234,23 @@ export function buildAccountEdit(
     hsaEmployerAnnual: form.hsaEmployerAnnual,
     manualBlend: hand?.kind === 'valid' ? hand.blend : undefined,
     allocationInvalid: hand?.kind === 'invalid',
+    inherited: undefined,
+  }
+  if (form.kind === 'inherited-ira') {
+    // The questions first: a refusal, an impossible figure, the heir's birth year still to enter, or a blank answer
+    // each holds the account back on its own question, before any account is built.
+    const walk = inheritedWalkOf(d, form)
+    const stopped = inheritedFieldErrors(d, form, walk)
+    if (Object.keys(stopped).length > 0) return { ok: false, fields: stopped }
+    if (walk.needsHeirBirthYear) {
+      return { ok: false, fields: { owner: slots.inheritedNeedsHeirBirthYear(tablePerson(d, form.ownerIndex, 0, 0).possessive) } }
+    }
+    if (walk.facts === null) {
+      const blank: Partial<Record<AccountField, string>> = {}
+      for (const id of walk.blank) blank[id] = copy.errInheritedAnswerRequired
+      return { ok: false, fields: blank }
+    }
+    state.inherited = walk.facts
   }
   const built = buildAccount(state, d, initial)
   if (!built.ok) {
@@ -140,6 +258,8 @@ export function buildAccountEdit(
     if (b.kind === 'missing') return { ok: false, fields: b.error === 'errAccountKindRequired' ? { kind: copy[b.error] } : { value: copy[b.error] } }
     if (b.kind === 'allocation') return { ok: false, fields: { mix: legsRefusal(form.legs) ?? copy.errClassifierSum } }
     if (b.kind === 'no-deposits') return { ok: false, fields: { deposit: copy.accountTakesNoDeposits } }
+    // Unreachable from the drawer (the walk above built the facts); named so no caller can write a factless one.
+    if (b.kind === 'inherited-facts') return { ok: false, fields: { kind: copy.errInheritedAnswerRequired } }
     const words = fieldErrorText({ messageKey: b.messageKey, params: b.params })
     if (b.messageKey === 'errAdditionsCeiling') return { ok: false, fields: { match: words } }
     return { ok: false, fields: form.kind === 'hsa' ? { deposit: words, hsaEmployer: words } : { deposit: words } }

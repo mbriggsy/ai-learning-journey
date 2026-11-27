@@ -6,6 +6,7 @@ import { budgetYearZeroFullTotal } from '@budget/budgetToSpending'
 import { medicareExtrasTypical } from '@engine/constants/health'
 import type { ScenarioDraft } from '@store/memoryModel'
 import type { BudgetLineItem } from '@shared/model'
+import { computedAskedFigure } from '@intake/inheritedIra'
 import { DEV_SEEDS } from '../../devSeeds'
 
 const base = DEV_SEEDS.date
@@ -38,6 +39,78 @@ export const FULL: ScenarioDraft = {
     { id: 'acct-ira', ownerIndex: 1, kind: 'traditional-ira', ticker: 'ZZQQX', valueToday: 150_000 },
     { id: 'acct-brokerage', ownerIndex: 1, kind: 'brokerage', manualBlend: { kind: 'exact', stockPct: 70, bondPct: 30, cashPct: 0 }, valueToday: 300_000, basis: 200_000 },
     { id: 'acct-hsa', ownerIndex: 0, kind: 'hsa', manualBlend: { kind: 'simple', choice: 'cash' }, valueToday: 20_000, annualContribution: 4_000, hsaEmployerAnnual: 1_000 },
+    // Two inherited IRAs (U13) that between them hold every inherited fact the drawer asks (the plan year is 2026).
+    // Alex's: an owner born in the first half of 1949 who died in 2020 on or after April 1 (the date was April 1, 2020),
+    // entered a year after the plan was built, so the custodian's figure, the plan year before it and both date answers.
+    {
+      id: 'acct-inherited-2020',
+      ownerIndex: 0,
+      kind: 'inherited-ira',
+      manualBlend: { kind: 'simple', choice: 'stocks' },
+      valueToday: 300_000,
+      inherited: {
+        ownerBirthYear: 1949,
+        ownerBornFirstHalf: true,
+        ownerDeathYear: 2020,
+        ownerDiedBeforeApril1: false,
+        askedYear: Y + 1,
+        askedFigure: {
+          kind: 'custodian',
+          figure: Math.round(
+            computedAskedFigure(
+              { ownerBirthYear: 1949, ownerBornFirstHalf: true, ownerDeathYear: 2020, ownerDiedBeforeApril1: false, heirBirthYear: base.people[0].birthYear! },
+              Y + 1,
+              300_000,
+            ),
+          ),
+          decemberBalance: 300_000,
+        },
+        takenInAskedYear: 0,
+        earlierWithdrawals: [{ calendarYear: Y, amount: 12_000 }],
+        leftTo: 'other-member',
+        pace: { kind: 'law-minimum' },
+      },
+    },
+    // Sam's: an owner born ten years before Sam (1952) who died in 2023, before the date (April 1, 2026, at 73), so the
+    // birthdays answer and no yearly minimum.
+    {
+      id: 'acct-inherited-2023',
+      ownerIndex: 1,
+      kind: 'inherited-ira',
+      manualBlend: { kind: 'simple', choice: 'stocks' },
+      valueToday: 100_000,
+      inherited: {
+        ownerBirthYear: 1952,
+        ownerDeathYear: 2023,
+        heirMoreThanTenYearsYounger: true,
+        askedYear: Y,
+        askedFigure: { kind: 'not-asked' },
+        takenInAskedYear: 0,
+        earlierWithdrawals: [],
+        leftTo: 'someone-else',
+        pace: { kind: 'law-minimum' },
+      },
+    },
+    // Alex's second: an owner born 1938 who died last year, long past the date, so the untaken death-year amount beside
+    // a minimum computed from the December balance.
+    {
+      id: 'acct-inherited-2025',
+      ownerIndex: 0,
+      kind: 'inherited-ira',
+      manualBlend: { kind: 'simple', choice: 'stocks' },
+      valueToday: 90_000,
+      inherited: {
+        ownerBirthYear: 1938,
+        ownerDeathYear: Y - 1,
+        askedYear: Y,
+        askedFigure: { kind: 'computed', decemberBalance: 90_000 },
+        takenInAskedYear: 0,
+        deathYearUntaken: 2_000,
+        earlierWithdrawals: [],
+        leftTo: 'other-member',
+        pace: { kind: 'law-minimum' },
+      },
+    },
   ],
   incomeStreams: [
     {

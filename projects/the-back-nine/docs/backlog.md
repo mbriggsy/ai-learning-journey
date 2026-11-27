@@ -1,6 +1,6 @@
 # The Back Nine — Open Backlog
 
-> The complete open register *(this header is GATED — `pnpm verify:doc-stats` reds when its numbers disagree with the body below or when any other doc re-types the count)*: **255 open items** (329 entries, 74 closed and kept as records; two entries are half-closed and counted open — the runner-up, and the unwitnessable household whose mechanism shipped while its sentence stays open) consolidated
+> The complete open register *(this header is GATED — `pnpm verify:doc-stats` reds when its numbers disagree with the body below or when any other doc re-types the count)*: **256 open items** (330 entries, 74 closed and kept as records; two entries are half-closed and counted open — the runner-up, and the unwitnessable household whose mechanism shipped while its sentence stays open) consolidated
 > from **136 raw obligations** (a source audit of the shipped code + a salvage sweep of the 246 KB
 > `TODO.md` archive it replaced). Every raw obligation is accounted for — the `ids` on each entry are its
 > provenance.
@@ -2261,6 +2261,16 @@ Briggsy's eye, and should not be re-filed as a copy defect without a read.
   - Never model it as a traditional IRA with a shorter clock bolted on: the conversion rule and the penalty rule differ too.
   - Never let a conversion draw on it.
   - Never default the year of death or the owner's age.
+- ⚑ **Built 2026-11-27 (gap 3, the Act 5 plan's U10 to U13):** the kind, its own ledger and producer, its screens, and its drawer on Net Worth (`src/intake/inheritedIraQuestions.ts`, `InheritedIraFields.tsx`), which asks every fact and refuses every case version 1 does not run. Still open here: the pace lever (U17), then gap 3's whole-file review, which closes this entry. The refused cases' builds are their own entry, next.
+
+### Version 1 of the inherited IRA refuses fourteen cases in words, and each refused case is a build
+
+`L` (one build per case, each sourced at the primary first) · **pilot** · filed 2026-11-27 (b9-8) when the drawer landed (the Act 5 plan's KTD17: every case outside version 1 is refused in words at intake, with its build filed)
+
+- **The gap (read).** The drawer (`walkInheritedQuestions`, `src/intake/inheritedIraQuestions.ts`) refuses the account, on the question that caused it, for: an inherited Roth; an IRA inherited from a husband or wife; money still in the owner's job's plan at the death; a successor beneficiary; a death before 2020; an heir not more than ten years younger, disabled or chronically ill, or the owner's child under 21 at the death (an eligible beneficiary); an asked year past the law's last; an untaken death-year amount whose custodian figure the household cannot give; a custodian's figure off the heir's own divisor; a shared account not split by December 31 of the year after the death; a missed yearly minimum (from 2025); a death-year amount untaken past its waiver; and an account split between the other member and someone else. A refused household cannot enter that account at all, so its plan leaves the money out: gloomy, never rosy (KTD17's direction rule).
+- **Direction.** Gloomy for every case (the balance is missing), so Tier 0's rosy test does not bite; filed here beside its parent entry.
+- **Prescription.** Each case its own build, in the order a real household is likeliest to hit it: the eligible beneficiary's life-expectancy schedule (-4(e), -5(d)); the inherited Roth (ten-year rule, no yearly minimums); the spouse's choices; the workplace plan's own method (1.408-8(d)); a death before 2020 (the old stretch schedule); the law's fallback for an unknown death-year amount (-5(c)(1), 1.408-8(e)(4)); a shared account's oldest-beneficiary divisor; a split account's two owners; the missed-minimum make-up and excise (54.4974-1). Each lifts its refusal in `walkInheritedQuestions` and its words in `copy.ts` in the same commit.
+- ⚑ NEGATIVE: never run a refused case on version 1's rule as a nearby approximation (KTD17: a household outside the case is refused, never run on a nearby rule).
 
 ### The tallest real composites break the one-frame law at his 1440×731 window: a Pennsylvania household's yearly return puts the R13 caveat below the fold, and a saved recommendation over typical Medicare extras puts the record card's standing line below it
 

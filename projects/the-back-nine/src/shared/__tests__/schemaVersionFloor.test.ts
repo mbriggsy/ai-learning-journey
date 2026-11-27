@@ -23,7 +23,7 @@ import { describe, expect, it } from 'vitest'
 import * as model from '../model'
 
 /** The highest version a real save may already carry. Raise it, in its own commit, after each bump. */
-const FLOOR = 6
+const FLOOR = 7
 
 /** Read through the module namespace, never a named import: a `git revert` of the bump that introduced the
  *  constant DELETES it, and a named import would then fail typecheck (TS2305) and red here on a matcher

@@ -36,6 +36,8 @@ ESLint-banned from importing @budget). Live-verified: 6k→30k now lands a confi
 1/10", not indeterminate. The stale `memoryModel` comment that named a phantom single `setBudget`
 writer was corrected to describe the real every-writer-reconciles-at-the-call-site contract.
 
+> **Out of date (corrected 2026-11-27):** `src/intake/questions.tsx` and its `oopStep` left with the intake walk at Act 6 · RC14 (`c43d7a50`, 2026-11-25). The same re-reconcile now lives in `writeOopMedical` in `src/intake/steps.ts`.
+
 ## Key Insight
 
 When you "close a second writer" of an invariant, first ENUMERATE every input the invariant reads

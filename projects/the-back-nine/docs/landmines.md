@@ -1116,6 +1116,7 @@ chair; chair from a digest script, never the raw result, and expect the window t
 
 ## Engine and tax math
 
+- **(b9-8, 11-27) An inherited IRA's required beginning date is April 1 of the year AFTER the applicable age** (`requiredBeginningYear`, `src/engine/rmd.ts`): a 1952 owner (73) has April 1, 2026, so a 2025 death is before it (no yearly minimum, no death-year amount). A fixture's inherited facts are checked by `inheritedFactsProblems`, never by hand; the fact registry's test guards FULL's.
 - **(b9-1, 11-15) `checkDrawn`'s `fundingNet` leaves out what an HSA pays:** the HSA's qualified spend (an owner-65+ Medicare premium, its surcharge included) is paid outside the gross-up, so two answers whose Medicare differs can show equal `fundingNet` past their shortfalls. What savings funds is `grossWithdrawal + hsaSpend` (the probe field since U1b): an identity on `fundingNet` alone holds on HSA-free households and fails on one with an HSA (`TM_NEAR_IRMAA_LINE_HSA`).
 - **(b9-4, 11-14) The typed-below survivor part's bound (once "the coda") rests on a death crediting NOTHING** (council `wf_dfb7949b-4a7`'s "U12
   landmine"). Build 2's KTD5 credits 0 in any year not everyone is alive (`workingYearCredit`'s `allAlive`,

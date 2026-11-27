@@ -47,10 +47,11 @@ import {
   incomeView,
   netWorthView,
   savingsView,
-  treatmentOf,
+  treatmentIdOf,
   type AddMenuView,
   type CardView,
   type DrawerTarget,
+  type Treatment,
 } from './profileView'
 
 export type BlueprintTab = 'net-worth' | 'goals' | 'ise'
@@ -205,14 +206,17 @@ function ownerOf(d: ScenarioDraft, target: DrawerTarget): number | null {
 
 // ── Net Worth ────────────────────────────────────────────────────────────────────────────────────────────────────
 
-/** B9's four tax treatments, in the Investment pages' colours (pre-tax orange, Roth green, taxable blue, HSA sky). */
-const TREATMENTS: readonly LegendItem[] = [
-  { id: 'pretax', label: copy.investBucketPretax, tone: 'orange' },
-  { id: 'roth', label: copy.investBucketRoth, tone: 'green' },
-  { id: 'taxable', label: copy.investBucketTaxable, tone: 'blue' },
-  { id: 'hsa', label: copy.investBucketHsa, tone: 'sky' },
-]
-const treatmentLegend = (label: string): LegendItem => TREATMENTS.find((t) => t.label === label)!
+/** B9's four tax treatments, in the Investment pages' colours (pre-tax orange, Roth green, taxable blue, HSA sky). Keyed by
+ *  treatment id, exhaustive (KTD20): the old lookup found the legend by its printed label with a `find(…)!`, which
+ *  threw at runtime on a label it lacked. */
+const TREATMENT_LEGEND: Readonly<Record<Treatment, LegendItem>> = {
+  pretax: { id: 'pretax', label: copy.investBucketPretax, tone: 'orange' },
+  roth: { id: 'roth', label: copy.investBucketRoth, tone: 'green' },
+  taxable: { id: 'taxable', label: copy.investBucketTaxable, tone: 'blue' },
+  hsa: { id: 'hsa', label: copy.investBucketHsa, tone: 'sky' },
+}
+/** The legend's order on the page. */
+const TREATMENTS: readonly LegendItem[] = [TREATMENT_LEGEND.pretax, TREATMENT_LEGEND.roth, TREATMENT_LEGEND.taxable, TREATMENT_LEGEND.hsa]
 
 function netWorthBody(d: ScenarioDraft): BlueprintBody {
   return {
@@ -221,7 +225,7 @@ function netWorthBody(d: ScenarioDraft): BlueprintBody {
       const tiles: BlueprintTile[] = []
       d.enteredAccounts.forEach((a, index) => {
         if (a.ownerIndex !== i) return
-        const legend = treatmentLegend(treatmentOf(a.kind))
+        const legend = TREATMENT_LEGEND[treatmentIdOf(a.kind)]
         tiles.push({
           id: `account-${index}`,
           legend: legend.id,

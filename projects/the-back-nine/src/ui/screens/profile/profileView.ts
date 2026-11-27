@@ -159,12 +159,35 @@ const STATE_LABEL: Readonly<Record<RetirementState, CopyKey>> = {
 }
 export const stateLabel = (s: RetirementState): string => copy[STATE_LABEL[s]]
 
+/** B9's four tax treatments, as the Investment pages name them. */
+export type Treatment = 'pretax' | 'roth' | 'taxable' | 'hsa'
+
+/** Each account kind's treatment. Exhaustive, so a new kind fails to compile here until its treatment is decided (the
+ *  Act 5 plan's KTD20, insight 147; the if-chain this replaced filed any unnamed kind as "Pre-tax"). Its own table, not
+ *  the engine's `KIND_TO_BUCKET`: gap 3's inherited IRA sits outside the engine's four buckets (KTD22). */
+const KIND_TREATMENT: Readonly<Record<AccountKind, Treatment>> = {
+  '401k': 'pretax',
+  '403b': 'pretax',
+  'traditional-ira': 'pretax',
+  'roth-401k': 'roth',
+  'roth-ira': 'roth',
+  brokerage: 'taxable',
+  hsa: 'hsa',
+}
+
+const TREATMENT_WORDS: Readonly<Record<Treatment, string>> = {
+  pretax: copy.investBucketPretax,
+  roth: copy.investBucketRoth,
+  taxable: copy.investBucketTaxable,
+  hsa: copy.investBucketHsa,
+}
+
+/** An account kind's tax treatment, by id (Blueprint keys its legend on it). */
+export const treatmentIdOf = (kind: AccountKind): Treatment => KIND_TREATMENT[kind]
+
 /** An account kind's tax treatment, in the Investment pages' words. */
 export function treatmentOf(kind: AccountKind): string {
-  if (kind === 'brokerage') return copy.investBucketTaxable
-  if (kind === 'hsa') return copy.investBucketHsa
-  if (kind === 'roth-401k' || kind === 'roth-ira') return copy.investBucketRoth
-  return copy.investBucketPretax
+  return TREATMENT_WORDS[KIND_TREATMENT[kind]]
 }
 
 /** An account's card name: its owner and kind ("Alex’s 401(k)"), the Investment pages' own naming. */

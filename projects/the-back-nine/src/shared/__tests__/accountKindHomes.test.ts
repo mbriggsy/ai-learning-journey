@@ -123,10 +123,6 @@ const ALLOWED: Readonly<Record<string, { readonly reason: string; readonly count
   // --- U10's first commit converts these (KTD20, "silent today, and wrong for a new kind") ---
   "src/intake/intakeMap.ts | compare | kind === 'brokerage'": { reason: 'U10: convert `familyOf` (a ternary that files any unnamed kind in the IRA family, sharing its deposit ceiling)' },
   "src/intake/intakeMap.ts | compare | kind === 'hsa'": { reason: 'U10: convert `familyOf` (its HSA arm; the same ternary)' },
-  "src/ui/screens/profile/profileView.ts | compare | kind === 'brokerage'": { reason: 'U10: convert `treatmentOf` (an if-chain that ends on "Pre-tax" for any unnamed kind)' },
-  "src/ui/screens/profile/profileView.ts | compare | kind === 'hsa'": { reason: 'U10: convert `treatmentOf` (its HSA arm)' },
-  "src/ui/screens/profile/profileView.ts | compare | kind === 'roth-401k'": { reason: 'U10: convert `treatmentOf` (its Roth arm)' },
-  "src/ui/screens/profile/profileView.ts | compare | kind === 'roth-ira'": { reason: 'U10: convert `treatmentOf` (its Roth arm)' },
   "src/ui/screens/profile/profileView.ts | compare | a.kind === 'brokerage'": {
     reason: 'U10: convert `limitLines` and `savingsView` (brokerage-or-not: any unnamed kind reads as having a deposit limit)',
     count: 3,

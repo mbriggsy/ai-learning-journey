@@ -2513,14 +2513,12 @@ export const copy = {
   cmpAssetsNote: 'Invested assets are your accounts’ total at the end of each year, in today’s dollars.',
   cmpAtRetirementNote: 'Each bar is what that side holds as its first year with no pay begins, before that year’s withdrawals.',
   cmpTodayNote: 'Each bar is what that side holds today, as you entered it, before this year’s withdrawals.',
-  // The tax chart (milestone 4's review, X1): in a working year `taxPaid` is only what savings' own income adds on top of
-  // pay, so a working year compares only beside a working year on the same pay check. Your plan alone shows its years
-  // after work stops; where the chart is about pay, one of the three pointers says where the tax on pay shows, gated on
-  // Cash Flows' own test for drawing that column (A4).
+  // The tax chart (milestone 4's review, X1 and round 2's R2F1): in a working year `taxPaid` is only what savings' own
+  // income adds on top of pay; the tax on pay rides the pay check (`workingYear.taxOnOutsideIncome`, priced only where
+  // W is given). Your plan alone shows its years after work stops; where the chart speaks of pay, one of the three
+  // pointers says where the tax on pay shows, gated on Cash Flows' own test for drawing that column (A4).
   cmpTaxWorkingNote: 'This chart starts when work stops.',
-  cmpTaxPayDiffers:
-    'In a working year each line holds only the income tax savings add on top of pay, so a year when their pay or deposits differ isn’t compared.',
-  cmpPayTaxShown: 'The income tax on pay shows in Cash Flows’ “Pay check’s income tax” column.',
+  cmpPayTaxShown: 'Cash Flows’ “Pay check’s income tax” column shows the income tax on pay by itself.',
   cmpPayTaxUnasked: 'The income tax on pay shows once you give what a working year costs.',
   cmpPayTaxNone: 'Cash Flows shows no income tax on pay in the working years.',
   rdChartIncomeComparison: 'Income comparison',
@@ -3672,6 +3670,10 @@ const SHORTFALL_ONE = 'That shortfall would be taken from your savings, plus any
 
 /** A run of calendar years as W's stale line names it: one year alone, or "first through last". */
 const yearSpan = (firstYear: number, lastYear: number): string => (firstYear === lastYear ? `${firstYear}` : `${firstYear} through ${lastYear}`)
+
+/** A figure's window opening a sentence: "From 2031 through 2058", or "In 2035" where it is one year (milestone 4's
+ *  review, round 2: "From 2035 through 2035"). Every from/through slot on Analysis's tabs opens with it. */
+const fromThrough = (from: number, through: number): string => (from === through ? `In ${from}` : `From ${from} through ${through}`)
 
 /** The subject of a run of two or more short working years on W's stale line and its waiting seat. Under the survivor
  *  scope (U11 walk 8's W8-R12 (a), the walk-8 form spec's U4) the years lead and the scope rides the head noun, the
@@ -5259,7 +5261,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:2394` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:2403` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,
@@ -6285,29 +6287,47 @@ export const slots = {
     const parts = runs.map(span)
     return parts.length === 1 ? parts[0]! : `${parts.slice(0, -1).join(', ')} and ${parts.at(-1)}`
   },
-  /** The years Comparisons' income tax leaves out, each group with its reason (milestone 4's review, X1): `phase`, only
-   *  one side still works; `pay`, both work on different pay or deposits. `years` arrives as `analysisYears` prints it. */
-  cmpTaxLeftOut: (groups: readonly { readonly years: string; readonly why: 'phase' | 'pay' }[]): string =>
-    groups.map((g) => `${g.years}, ${g.why === 'phase' ? 'when only one of them works' : 'when their pay or deposits differ'}`).join(', and '),
+  /** The years Comparisons' income tax leaves out (milestone 4's review, X1; round 2, R2F3): work has stopped in one
+   *  run but not yet in the other. Each group names the runs by their in-sentence names, never "them" (the two people);
+   *  `years` arrives as `analysisYears` prints it. */
+  cmpTaxLeftOut: (groups: readonly { readonly years: string; readonly stopped: string; readonly working: string }[]): string =>
+    groups.map((g) => `${g.years}, when work has stopped in ${g.stopped} but not yet in ${g.working}`).join(', and '),
   /** The income tax totals count the years both sides' tax compares, one unbroken window named here (a retired year
-   *  beside a retired year, or a working year beside a working year on the same pay check); `a` and `b` are the sides'
-   *  in-sentence names. */
+   *  beside a retired year, or a working year beside a working year, `comparisonsView`'s `taxYears`); `a` and `b` are the
+   *  sides' in-sentence names. */
   cmpTaxMore: (a: string, fig: string, dir: 'more' | 'less' | 'same', from: number, through: number, b: string, steady: boolean): string =>
     dir === 'same'
-      ? `From ${from} through ${through}, ${a} and ${b} pay about the same income tax, in the ${steady ? 'steady' : 'rough'} market.`
-      : `From ${from} through ${through}, ${a} pays ~$${fig} ${dir} income tax than ${b}, in the ${steady ? 'steady' : 'rough'} market.`,
+      ? `${fromThrough(from, through)}, ${a} and ${b} pay about the same income tax, in the ${steady ? 'steady' : 'rough'} market.`
+      : `${fromThrough(from, through)}, ${a} pays ~$${fig} ${dir} income tax than ${b}, in the ${steady ? 'steady' : 'rough'} market.`,
   cmpTaxOne: (a: string, fig: string, from: number, through: number, steady: boolean): string =>
-    `From ${from} through ${through}, ${a} pays ~$${fig} in income tax, in the ${steady ? 'steady' : 'rough'} market.`,
-  cmpTaxNoShared: (steady: boolean): string =>
-    `In the ${steady ? 'steady' : 'rough'} market the two share no year in which their income tax compares, so it isn’t totalled side by side.`,
+    `${fromThrough(from, through)}, ${a} pays ~$${fig} in income tax, in the ${steady ? 'steady' : 'rough'} market.`,
+  /** No window to total. `leftOut` (as `cmpTaxLeftOut` prints it) names the years that can't be compared; `from`, where
+   *  years before them do compare, is the first year from which the two never compare again (round 2, R2F4: "no year
+   *  compares" was false there). */
+  cmpTaxNoShared: (steady: boolean, leftOut?: string, from?: number): string =>
+    leftOut === undefined
+      ? `In the ${steady ? 'steady' : 'rough'} market the two share no year in which their income tax compares, so it isn’t totalled side by side.`
+      : from === undefined
+        ? `In the ${steady ? 'steady' : 'rough'} market the two share no year in which their income tax compares (${leftOut}), so it isn’t totalled side by side.`
+        : `In the ${steady ? 'steady' : 'rough'} market, from ${from} on the two never compare on income tax (${leftOut}), so no total is shown.`,
   /** Why the window starts where it does: the years before it that can't be compared, with their reasons. */
   cmpTaxStartsAfter: (from: number, leftOut: string): string => `The total starts in ${from}, after ${leftOut}.`,
   /** A Roth conversion before the window: a total over the window alone would leave its tax out, so none is printed. */
   cmpTaxConversionBefore: (from: number, leftOut: string, steady: boolean): string =>
     `In the ${steady ? 'steady' : 'rough'} market the two compare on income tax only from ${from}, after ${leftOut}, and a Roth conversion falls before then. So no total is shown: it would leave out that conversion’s tax.`,
-  /** Working years counted beside each other: what their lines hold. `years` arrives as `analysisYears` prints it. */
-  cmpTaxWorkingCounted: (years: string): string =>
-    `In ${years}, while both still work, each line shows only the income tax their savings add on top of pay. The tax on the pay itself is the same on both, so it doesn’t change the difference.`,
+  /** Working years counted beside each other: what their lines hold (round 2, R2F1). `priced`: what a working year costs
+   *  is given, so a year's figure is the pay check's income tax (`workingYear.taxOnOutsideIncome`) plus what savings add
+   *  (`taxPaid`); otherwise it is `taxPaid` alone, counted only on the same pay check. `years` arrives as `analysisYears`
+   *  prints it. */
+  cmpTaxWorkingCounted: (years: string, priced: boolean): string =>
+    priced
+      ? `In ${years}, before work stops in either plan, each line shows the pay check’s income tax plus the income tax savings add. Payroll tax is never in it.`
+      : `In ${years}, before work stops in either plan, each line shows only the income tax savings add on top of pay. The pay check is the same on both, so its tax doesn’t change the difference.`,
+  /** Both still work, what a working year costs isn't given, and the pay checks differ (a claim age or a deposit): the
+   *  tax that difference makes sits on pay, which nothing prices, so words, never a total (round 2, R2F1). `years`
+   *  arrives as `analysisYears` prints it. */
+  cmpTaxUnpriced: (what: 'ss' | 'deposits' | 'both' | 'pay', years: string, steady: boolean): string =>
+    `In the ${steady ? 'steady' : 'rough'} market the two differ in ${{ ss: 'Social Security', deposits: 'deposits', both: 'Social Security and deposits', pay: 'their pay check' }[what]} in ${years}, before work stops in either plan. The tool doesn’t work out the income tax on pay in those years, so no total is shown: it would leave out what that difference does to the tax.`,
   /** Your plan alone: the income tax its savings add in its working years, which its total (the years after work) leaves
    *  out. */
   cmpTaxOneWorkingSavings: (a: string, fig: string, years: string, steady: boolean): string =>
@@ -6335,14 +6355,16 @@ export const slots = {
   rdRateOf: (title: string): string => `Withdrawal rate of ${title}`,
   rdSpendingOf: (title: string): string => `Retirement spending of ${title}`,
   rdShare: (share: string, from: number, through: number, steady: boolean): string =>
-    `From ${from} through ${through}, about ${share}% of what the retired years live on comes from Social Security and other income rather than withdrawals, in the ${steady ? 'steady' : 'rough'} market.`,
+    `${fromThrough(from, through)}, about ${share}% of what the retired years live on comes from Social Security and other income rather than withdrawals, in the ${steady ? 'steady' : 'rough'} market.`,
   rdShareNone: (steady: boolean): string => `There are no retired years to show here in the ${steady ? 'steady' : 'rough'} market.`,
   /** Each side has retired years, but none in common (mirrors `cmpTaxNoShared`). */
   rdShareNoneShared: (steady: boolean): string => `In the ${steady ? 'steady' : 'rough'} market the two share no retired year, so they aren’t totalled side by side.`,
-  /** Beside the spending comparison: a side's income tax on its savings in its working years, which the shared retired
-   *  window leaves out, named where it differs between the two (milestone 4's review, X1). */
-  rdWorkingTax: (name: string, fig: string, conversion: boolean, steady: boolean): string =>
-    `In the ${steady ? 'steady' : 'rough'} market ${name} also pays ~$${fig} in income tax on its savings while still working${conversion ? ', Roth conversions included' : ''}, not counted here.`,
+  /** Beside the spending comparison, wherever either side has a paid year before the shared retired window: both sides'
+   *  earlier years are left out, said of both alike (round 2, R2F2: naming one side's working-year tax left the other's
+   *  unnamed). `paired`: Cash Flows' "Your plan beside the what-if" shows exactly these two runs, so the line points there
+   *  (its Income tax column always shows, on both rows). */
+  rdBeforeWindow: (from: number, paired: boolean): string =>
+    `Each side’s years before ${from} are left out here: spending, premiums and income tax, any Roth conversion included.${paired ? ' Cash Flows, with your plan beside the what-if, shows both sides’ income tax year by year.' : ''}`,
   rdShortNone: (steady: boolean): string => `No year runs out of money in the ${steady ? 'steady' : 'rough'} market.`,
   rdShortRanOut: (year: number, ages: string, steady: boolean): string =>
     `In the ${steady ? 'steady' : 'rough'} market the money runs out in ${year}, at ${ages}: that year is drawn hatched, with no figure, and the chart ends there.`,
@@ -6351,14 +6373,15 @@ export const slots = {
       ? `In ${from}, its highest year, the withdrawal rate is about ${first}%, in the ${steady ? 'steady' : 'rough'} market.`
       : `In ${from} the withdrawal rate is about ${first}%; at its highest it is about ${high}%, in ${highYear}, in the ${steady ? 'steady' : 'rough'} market.`,
   rdSpending: (fig: string, from: number, through: number, steady: boolean): string =>
-    `From ${from} through ${through}, the retired years spend ~$${fig} in all, tax and premiums included, in the ${steady ? 'steady' : 'rough'} market.`,
+    `${fromThrough(from, through)}, the retired years spend ~$${fig} in all, tax and premiums included, in the ${steady ? 'steady' : 'rough'} market.`,
   rdIncomeComparison: (a: string, aShare: string, b: string, bShare: string, from: number, through: number, steady: boolean): string =>
-    `From ${from} through ${through}, the share of retired income that isn’t a withdrawal is about ${aShare}% on ${a} and about ${bShare}% on ${b}, in the ${steady ? 'steady' : 'rough'} market.`,
+    `${fromThrough(from, through)}, the share of retired income that isn’t a withdrawal is about ${aShare}% on ${a} and about ${bShare}% on ${b}, in the ${steady ? 'steady' : 'rough'} market.`,
   rdSpendingComparison: (a: string, fig: string, dir: 'more' | 'less' | 'same', b: string, from: number, through: number, steady: boolean): string =>
     dir === 'same'
-      ? `From ${from} through ${through}, ${a} and ${b} spend about the same in all, tax and premiums included, in the ${steady ? 'steady' : 'rough'} market.`
-      : `From ${from} through ${through}, ${a} spends ~$${fig} ${dir} in all than ${b}, tax and premiums included, in the ${steady ? 'steady' : 'rough'} market.`,
-  rdWindowNote: (from: number, through: number): string => `Both are counted over the same retired years, ${from} through ${through}.`,
+      ? `${fromThrough(from, through)}, ${a} and ${b} spend about the same in all, tax and premiums included, in the ${steady ? 'steady' : 'rough'} market.`
+      : `${fromThrough(from, through)}, ${a} spends ~$${fig} ${dir} in all than ${b}, tax and premiums included, in the ${steady ? 'steady' : 'rough'} market.`,
+  rdWindowNote: (from: number, through: number): string =>
+    from === through ? `Both are counted over the same retired year, ${from}.` : `Both are counted over the same retired years, ${from} through ${through}.`,
   rdSlicePoint: (name: string, pct: string): string => `${name}: about ${pct}%`,
   savThisYearOf: (title: string): string => `Deposits this year: ${title}`,
   savPerYearOf: (title: string): string => `Deposits each year until work stops: ${title}`,
@@ -6368,25 +6391,25 @@ export const slots = {
   /** `pay` arrives printed as Cash Flows prints it (`tableFigure`: year 0's entered pay exact, `$110,000`). */
   savOwnShare: (own: string, share: string, pay: string): string => `Your own deposits, ~$${own}, are about ${share}% of your pay of ${pay}.`,
   savPerYear: (fig: string, from: number, through: number, steady: boolean): string =>
-    `From ${from} through ${through}, ~$${fig} goes into your accounts in all, in the ${steady ? 'steady' : 'rough'} market.`,
+    `${fromThrough(from, through)}, ~$${fig} goes into your accounts in all, in the ${steady ? 'steady' : 'rough'} market.`,
   savShare: (share: string, from: number, through: number, steady: boolean): string =>
-    `From ${from} through ${through}, your own deposits come to about ${share}% of your pay, in the ${steady ? 'steady' : 'rough'} market.`,
+    `${fromThrough(from, through)}, your own deposits come to about ${share}% of your pay, in the ${steady ? 'steady' : 'rough'} market.`,
   /** The left over and the short years stated apart, never netted (the engine credits only a year with money left,
    *  `workingYearCredit`): the years with some left, then what the plan keeps of it, then what the short years draw. */
   savLeftOver: (fig: string, from: number, through: number, steady: boolean): string =>
-    `From ${from} through ${through}, the working years with money left over have ~$${fig} left over in all, in the ${steady ? 'steady' : 'rough'} market.`,
+    `${fromThrough(from, through)}, the working years with money left over have ~$${fig} left over in all, in the ${steady ? 'steady' : 'rough'} market.`,
   savShortDrawn: (fig: string, from: number, through: number, steady: boolean): string =>
-    `From ${from} through ${through}, the working years that run short draw ~$${fig} from your savings in all, in the ${steady ? 'steady' : 'rough'} market.`,
+    `${fromThrough(from, through)}, the working years that run short draw ~$${fig} from your savings in all, in the ${steady ? 'steady' : 'rough'} market.`,
   savEven: (from: number, through: number, steady: boolean): string =>
-    `From ${from} through ${through}, your working years come out about even, in the ${steady ? 'steady' : 'rough'} market.`,
+    `${fromThrough(from, through)}, your working years come out about even, in the ${steady ? 'steady' : 'rough'} market.`,
   /** `name` is the side's in-sentence name (milestone 4's review, X3: each chart credits its own side). */
   savLeftOverKept: (name: string, fig: string): string => `Of it, ${name} adds ~$${fig} to your taxable account; the rest isn’t counted as saved.`,
   /** Where the rest prints as $0 (O5); `title` opens the sentence. */
   savLeftOverAllKept: (title: string): string => `${title} adds all of it to your taxable account.`,
   /** Nothing deposited in any working year (X5): words, never an all-$0 chart. */
   savNoDepositsYears: (from: number, through: number, steady: boolean): string =>
-    `From ${from} through ${through}, nothing goes into your accounts, in the ${steady ? 'steady' : 'rough'} market.`,
+    `${fromThrough(from, through)}, nothing goes into your accounts, in the ${steady ? 'steady' : 'rough'} market.`,
   savNoOwnDeposits: (from: number, through: number, steady: boolean): string =>
-    `From ${from} through ${through}, you put none of your pay into your accounts, in the ${steady ? 'steady' : 'rough'} market.`,
+    `${fromThrough(from, through)}, you put none of your pay into your accounts, in the ${steady ? 'steady' : 'rough'} market.`,
   savNoWorkingYears: (steady: boolean): string => `There are no working years to show here in the ${steady ? 'steady' : 'rough'} market.`,
 } as const

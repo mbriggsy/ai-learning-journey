@@ -865,8 +865,9 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
       // A→B→A revert. No engine run: it becomes the newest dispatch (so nothing built from other
       // inputs can commit after it), refreshes the shown arm's draft to the live one in place (the
       // same key, so only fields the engine never reads differ), settles at once and notifies once.
-      // It never goes through `commit`: the committed epoch, the sticky triple and the spend lane all
-      // stay (a sized spend clause still describes this very answer). The worker-side cancel fires
+      // It never goes through `commit`: the committed epoch, the shown answer (its display triple is
+      // read from it, raw) and the spend lane all stay (a sized spend clause still describes this very
+      // answer). The worker-side cancel fires
       // only on the date route and only while a run on a DIFFERENT key is in flight (the A→B→A
       // revert: the worker drops B's sweep between candidates); a spine run is not cancellable, and
       // the newest-key test in `commit` already holds it off.

@@ -13,17 +13,20 @@
  * - income tax each year: `taxPaid`, headed "Income tax", the page's one state clause in its notes (plan 4.0). In a
  *   working year `taxPaid` is only what savings' own income adds ON TOP OF PAY (the tax on pay rides the pay check, and
  *   a state's tax on pay sits inside W); in a retired year it is the tax on the year's Social Security, other income,
- *   withdrawals and any Roth conversion together. So two sides' years compare (`taxYears`, milestone 4's review, X1)
- *   where both are retired, or both work on the same pay check (pay, deposits, Social Security and other income match:
- *   then the tax on pay is the same on both, and the gap in `taxPaid` IS the whole income-tax gap). A year where only
- *   one side works, or both work on different pay or deposits, can't be compared. The total and both lines run over ONE
- *   unbroken window, the comparable years after the last year that can't be (a gap in the window would draw a line
- *   across years it never counted); the window is named, and a note says which years before it can't be compared and
- *   why. A Roth conversion before the window prints no total at all (a total would leave the conversion's tax out),
- *   unless it falls in a comparable year paying the same tax on both; no comparable year prints words, never a total.
- *   Your plan alone keeps its years after work stops, with a note naming any income tax its savings add while it still
- *   works. A money-ran-out row's tax is what the year asked for, so it draws no point and counts in no total. Where the tax on pay is spoken of, its pointer is gated on Cash Flows'
- *   own test for drawing the "Pay check's income tax" column (A4).
+ *   withdrawals and any Roth conversion together. So two sides' years compare (`taxYears`, milestone 4's review, X1 and
+ *   round 2's R2F1) where both are retired (each figure `taxPaid`), or both work: with W given, each figure is
+ *   `taxPaid + workingYear.taxOnOutsideIncome`, what the run itself charges as income tax (a claim age or a deposit moves
+ *   its own tax into the pay check's part); with no W, `taxPaid` on the same pay check only, and a pay check that differs
+ *   (Social Security, deposits) prints words, never a total, since the tax that difference makes sits on pay, which
+ *   nothing prices. A year where work has stopped in one side but not the other can't be compared. The total and both
+ *   lines run over ONE unbroken window of the same per-year figure, the comparable years after the last year that can't
+ *   be (a gap in the window would draw a line across years it never counted); the window is named, and a note says which
+ *   years before it can't be compared and why. A Roth conversion before the window prints no total at all (a total
+ *   would leave the conversion's tax out), unless it falls in a comparable year whose figures match; no window prints
+ *   words, never a total. Your plan alone keeps its years after work stops, with a note naming any income tax its savings
+ *   add while it still works. A money-ran-out row's tax is what the year asked for, so it draws no point and counts in no
+ *   total. Where the tax on pay is spoken of, its pointer is gated on Cash Flows' own test for drawing the "Pay check's
+ *   income tax" column (A4).
  * - invested assets as retirement begins: two bars, each side's OPENING total in its own first retired year (its stop
  *   year, which a what-if can move; row one on the all-retired route), each named with its year and its ages, drawn on
  *   ONE scale (insight 169: `KindBars` keys its chart on the picture). Equal bars say nothing moved (insight 174). On
@@ -281,6 +284,15 @@ export function comparisonsView(input: AnalysisInput & { readonly chart: Compari
 
   // Two sides: the years whose income tax compares (`taxYears`), as one unbroken window after the last year that doesn't.
   const years = taxYears(alt!, cmp)
+  // Both still work with no W, on different pay checks (a claim age or a deposit): the tax that difference makes sits on
+  // pay, which nothing prices, so no total anywhere (round 2, R2F1 rule c), with the premise that would price it.
+  const unpriced = years.filter((y) => y.unpriced !== undefined)
+  if (unpriced.length > 0) {
+    const ss = unpriced.some((y) => y.unpriced!.ss)
+    const deposits = unpriced.some((y) => y.unpriced!.deposits)
+    const what = ss && deposits ? 'both' : ss ? 'ss' : deposits ? 'deposits' : 'pay'
+    return { ...menu, kind: 'words', words: [slots.cmpTaxUnpriced(what, slots.analysisYears(unpriced.map((y) => y.year)), steady), copy.cmpPayTaxUnasked].join(' ') }
+  }
   let lastLeft = -1
   years.forEach((y, i) => {
     if (y.left !== undefined) lastLeft = i
@@ -288,41 +300,47 @@ export function comparisonsView(input: AnalysisInput & { readonly chart: Compari
   const counted = years.slice(lastLeft + 1)
   const left = years.filter((y) => y.left !== undefined)
   const before = years.slice(0, lastLeft + 1)
-  // The years that can't be compared, each run with its reason, in calendar order.
-  const leftOut = slots.cmpTaxLeftOut(
-    (['phase', 'pay'] as const)
-      .map((why) => ({ why, ys: left.filter((y) => y.left === why).map((y) => y.year) }))
-      .filter((g) => g.ys.length > 0)
-      .sort((p, q) => p.ys[0]! - q.ys[0]!)
-      .map((g) => ({ years: slots.analysisYears(g.ys), why: g.why })),
-  )
+  // The years that can't be compared, each run named by which side still works (R2F3), in calendar order.
+  const leftOutOf = (ys: readonly TaxYear[]): string =>
+    slots.cmpTaxLeftOut(
+      (['a', 'b'] as const)
+        .map((works) => ({ works, ys: ys.filter((y) => y.left === works).map((y) => y.year) }))
+        .filter((g) => g.ys.length > 0)
+        .sort((p, q) => p.ys[0]! - q.ys[0]!)
+        .map((g) => ({ years: slots.analysisYears(g.ys), stopped: g.works === 'a' ? cmp.mid : alt!.mid, working: g.works === 'a' ? alt!.mid : cmp.mid })),
+    )
+  const leftOut = leftOutOf(left)
   if (counted.length === 0) {
-    // No year compares: words, never a total (and the ran-out note, where a side's money ran out).
+    // No window: words, never a total (and the ran-out note, where a side's money ran out). Where years before the last
+    // left-out one do compare, the words say from when the two never compare again, never that no year compares (R2F4).
     const out = ranOutNote(sides, steady, null)
-    return { ...menu, kind: 'words', words: [slots.cmpTaxNoShared(steady), ...(out !== undefined ? [out] : [])].join(' ') }
+    const lastComparable = years.findLastIndex((y) => y.left === undefined)
+    const after = years.slice(lastComparable + 1)
+    const words =
+      years.length === 0 ? slots.cmpTaxNoShared(steady) : lastComparable < 0 ? slots.cmpTaxNoShared(steady, leftOut) : slots.cmpTaxNoShared(steady, leftOutOf(after), after[0]!.year)
+    return { ...menu, kind: 'words', words: [words, ...(out !== undefined ? [out] : [])].join(' ') }
   }
   const from = counted[0]!.year
   const through = counted.at(-1)!.year
   // A Roth conversion before the window, on either side: a total over the window would leave its tax out, so none (X1,
   // rule 2). `before` holds every shared year ahead of the window: a year that can't be compared counts with a
-  // conversion on either side; a comparable year cut off by them only where the two pay different tax in it (the same
+  // conversion on either side; a comparable year cut off by them only where the two figures differ in it (the same
   // conversion on the same pay check pays the same tax on both, so leaving it out hides no difference).
   const converts = (y: TaxYear) => y.a.conversion > 0.5 || y.b.conversion > 0.5
-  if (before.some((y) => converts(y) && (y.left !== undefined || Math.abs(y.a.taxPaid - y.b.taxPaid) > 0.5))) {
+  if (before.some((y) => converts(y) && (y.left !== undefined || Math.abs(y.fa - y.fb) > 0.5))) {
     return { ...menu, kind: 'words', words: slots.cmpTaxConversionBefore(from, leftOut, steady) }
   }
-  const series = [
-    pairOf(alt!, counted.map((y) => ({ year: y.year, value: Math.max(0, y.a.taxPaid) }))),
-    pairOf(cmp, counted.map((y) => ({ year: y.year, value: Math.max(0, y.b.taxPaid) }))),
-  ]
+  // The lines draw exactly the per-year figure the total counts.
+  const series = [pairOf(alt!, counted.map((y) => ({ year: y.year, value: y.fa }))), pairOf(cmp, counted.map((y) => ({ year: y.year, value: y.fb })))]
   const lattice = niceLattice(Math.max(1_000, ...series.flatMap((p) => p.points.map((x) => x.value))))
   const d = direction(
-    counted.reduce((s, y) => s + Math.max(0, y.a.taxPaid), 0),
-    counted.reduce((s, y) => s + Math.max(0, y.b.taxPaid), 0),
+    counted.reduce((s, y) => s + y.fa, 0),
+    counted.reduce((s, y) => s + y.fb, 0),
     formatDeltaDollar,
   )
-  const countedWorking = counted.filter((y) => y.working).map((y) => y.year)
-  const payDiffers = left.some((y) => y.left === 'pay')
+  const countedWorking = counted.filter((y) => y.working)
+  // W is the household's, so every counted working year is priced or none is.
+  const priced = countedWorking.every((y) => y.priced)
   // The ran-out note names the window's last year.
   const out = ranOutNote(sides, steady, through)
   return {
@@ -337,30 +355,44 @@ export function comparisonsView(input: AnalysisInput & { readonly chart: Compari
     notes: [
       ...(out !== undefined ? [out] : []),
       ...(left.length > 0 ? [slots.cmpTaxStartsAfter(from, leftOut)] : []),
-      ...(countedWorking.length > 0 ? [slots.cmpTaxWorkingCounted(slots.analysisYears(countedWorking))] : []),
-      ...(payDiffers ? [copy.cmpTaxPayDiffers, pointer] : []),
+      ...(countedWorking.length > 0 ? [slots.cmpTaxWorkingCounted(slots.analysisYears(countedWorking.map((y) => y.year)), priced), pointer] : []),
       ...tail,
     ],
     updating: gate.updating,
   }
 }
 
-/** One calendar year both sides paid: each side's row, whether both still work, and, where the two can't be compared on
- *  income tax, why: `phase`, only one of them works; `pay`, both work on different pay or deposits. */
+/** One calendar year both sides paid: each side's row and the figure its line draws and the total counts (`fa`, `fb`),
+ *  whether both still work, and why the year can't be counted, where it can't. */
 export interface TaxYear {
   readonly year: number
   readonly a: LedgerYearRow
   readonly b: LedgerYearRow
+  readonly fa: number
+  readonly fb: number
   readonly working: boolean
-  readonly left?: 'phase' | 'pay'
+  /** Both work and what a working year costs is given: the figure holds the pay check's income tax. */
+  readonly priced: boolean
+  /** Work has stopped in one side but not the other: left out, and which side (`a` or `b`) still works. */
+  readonly left?: 'a' | 'b'
+  /** Both work with no W, on different pay checks: what differs. The chart prints words, never a total. */
+  readonly unpriced?: { readonly ss: boolean; readonly deposits: boolean }
 }
 
-/** Every calendar year both sides paid (never a money-ran-out row), in order, each judged for whether its income tax
- *  compares (milestone 4's review, X1). A retired year's `taxPaid` is the year's whole income tax as the overlay solves
- *  it; a working year's is only what savings add on top of pay, so two working years compare only on the same pay check,
- *  where the tax on pay is the same on both. A Roth conversion never moves the pay check, so it never sets a year apart. */
+/** Every calendar year both sides paid (never a money-ran-out row), in order, each with its figure (milestone 4's review,
+ *  X1; round 2, R2F1). A retired year's `taxPaid` is the tax on all the year's income. A working year's `taxPaid` is only
+ *  what savings add on top of pay; the pay check's own income tax rides `workingYear.taxOnOutsideIncome`, priced only
+ *  where W is given. So:
+ *  - both retired: the figure is `taxPaid`;
+ *  - both work, W given: `taxPaid + taxOnOutsideIncome`, what the run itself charges as income tax that year (a claim age
+ *    or a deposit moves its own tax into the pay check's part, so leaving that part out flipped the direction);
+ *  - both work, no W: `taxPaid`, counted only on the same pay check (the tax on pay is then the same on both); any other
+ *    difference is `unpriced`: its tax sits on pay, which nothing prices;
+ *  - work stopped in one only: left out (a working year's figure beside a retired one's measures different things).
+ *  A Roth conversion never moves the pay check: its tax is in `taxPaid`, so it never sets a year apart. */
 export function taxYears(a: ReadySide, b: ReadySide): TaxYear[] {
   const bAt = new Map(paidRows(b).map((r) => [yearOf(b.meta, r), r] as const))
+  const paid = (r: LedgerYearRow) => Math.max(0, r.taxPaid)
   const out: TaxYear[] = []
   for (const ra of paidRows(a)) {
     const year = yearOf(a.meta, ra)
@@ -368,29 +400,40 @@ export function taxYears(a: ReadySide, b: ReadySide): TaxYear[] {
     if (rb === undefined) continue
     const aWorks = ra.t < firstRetiredT(a.meta)
     const bWorks = rb.t < firstRetiredT(b.meta)
-    if (aWorks !== bWorks) out.push({ year, a: ra, b: rb, working: false, left: 'phase' })
-    else if (aWorks && !samePayCheck(ra, rb)) out.push({ year, a: ra, b: rb, working: true, left: 'pay' })
-    else out.push({ year, a: ra, b: rb, working: aWorks })
+    const wa = ra.workingYear
+    const wb = rb.workingYear
+    if (aWorks !== bWorks) out.push({ year, a: ra, b: rb, fa: 0, fb: 0, working: false, priced: false, left: aWorks ? 'a' : 'b' })
+    else if (!aWorks) out.push({ year, a: ra, b: rb, fa: paid(ra), fb: paid(rb), working: false, priced: false })
+    else if (wa !== undefined && wb !== undefined)
+      out.push({ year, a: ra, b: rb, fa: paid(ra) + Math.max(0, wa.taxOnOutsideIncome), fb: paid(rb) + Math.max(0, wb.taxOnOutsideIncome), working: true, priced: true })
+    else if (wa === undefined && wb === undefined && samePayCheck(ra, rb)) out.push({ year, a: ra, b: rb, fa: paid(ra), fb: paid(rb), working: true, priced: false })
+    else out.push({ year, a: ra, b: rb, fa: paid(ra), fb: paid(rb), working: true, priced: false, unpriced: payCheckDiffers(ra, rb) })
   }
   return out
 }
 
-/** Two working rows on the same pay check: the same pay and taxable pay per person, the same Social Security and other
- *  income, the same deposits by account, the same filing, and (where a year's cost was given) the same own deposits and
- *  tax on pay. Then the base the overlay taxes savings on top of is the same on both. */
+const close = (x: number, y: number) => Math.abs(x - y) <= 0.5
+const sameList = (xs: readonly number[], ys: readonly number[]) => xs.length === ys.length && xs.every((x, i) => close(x, ys[i]!))
+const KINDS = ['taxable', 'pretax', 'roth', 'hsa'] as const
+
+/** What differs between two working rows' pay checks: Social Security, and the deposits (by account, or the taxable pay
+ *  they leave). Anything else (pay, other income, filing) reads as the pay check itself. */
+function payCheckDiffers(a: LedgerYearRow, b: LedgerYearRow): { readonly ss: boolean; readonly deposits: boolean } {
+  return {
+    ss: !close(a.socialSecurity, b.socialSecurity),
+    deposits: KINDS.some((k) => !close(a.contribution[k], b.contribution[k])) || !sameList(a.payTaxableByPerson, b.payTaxableByPerson),
+  }
+}
+
+/** Two working rows with no W on the same pay check: the same pay and taxable pay per person, the same Social Security
+ *  and other income, the same deposits by account, the same filing. Then the tax on pay, which nothing prices, is the
+ *  same on both. */
 function samePayCheck(a: LedgerYearRow, b: LedgerYearRow): boolean {
-  const close = (x: number, y: number) => Math.abs(x - y) <= 0.5
-  const sameList = (xs: readonly number[], ys: readonly number[]) => xs.length === ys.length && xs.every((x, i) => close(x, ys[i]!))
-  const kinds = ['taxable', 'pretax', 'roth', 'hsa'] as const
   if (a.filing !== b.filing || !close(a.socialSecurity, b.socialSecurity)) return false
   if (!sameList(a.payByPerson, b.payByPerson) || !sameList(a.payTaxableByPerson, b.payTaxableByPerson)) return false
   if (!sameList(a.otherIncomeByPerson.map((o) => o.gross), b.otherIncomeByPerson.map((o) => o.gross))) return false
   if (!sameList(a.otherIncomeByPerson.map((o) => o.taxable), b.otherIncomeByPerson.map((o) => o.taxable))) return false
-  if (kinds.some((k) => !close(a.contribution[k], b.contribution[k]))) return false
-  const wa = a.workingYear
-  const wb = b.workingYear
-  if (wa === undefined || wb === undefined) return wa === wb
-  return close(wa.ownDeposits, wb.ownDeposits) && close(wa.taxOnOutsideIncome, wb.taxOnOutsideIncome)
+  return !KINDS.some((k) => !close(a.contribution[k], b.contribution[k]))
 }
 
 /** Where the tax on pay shows, by Cash Flows' own test for drawing its "Pay check's income tax" column (a row whose

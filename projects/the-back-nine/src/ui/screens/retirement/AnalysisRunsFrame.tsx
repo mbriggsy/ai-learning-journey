@@ -5,8 +5,8 @@
  *
  * LAYOUT, as RightCapital draws it: the chart's own title centred, a menu of the tab's charts (`ChartTitle`); the future
  * select at the top right (Steady or Rough market, Tax Strategies' own `FutureSelect`); then the chart on the left at
- * about 70% and the key-metric column beside it (the figures in words, then the notes), stacked under it below the
- * laptop seam. Analysis's frame adds the R13 caveat and the ACTION ITEMS handle under it. A run in flight fades the chart
+ * about 60% and the key-metric column beside it (the figures in words, then the notes; `split` gives the column the
+ * wider share where the notes outrun the chart), stacked under it below the laptop seam. Analysis's frame adds the R13 caveat and the ACTION ITEMS handle under it. A run in flight fades the chart
  * under "Loading…" with its picture kept (`LoadingVeil`). Draws what it is handed and decides nothing.
  */
 import type { ReactNode } from 'react'
@@ -38,9 +38,13 @@ export interface AnalysisRunsFrameProps<Id extends string> {
   readonly metrics: readonly string[]
   readonly notes: readonly string[]
   readonly updating: boolean
+  /** The laptop split: the chart at about 60% beside the key-metric column (`chart`, the default), or the column wider
+   *  (`notes`), for a chart whose notes outrun its height and would push the caveat past his window (Retirement Details'
+   *  spending comparison: its notes set the row's height beside a 236 px chart; milestone 4's review, round 2, R2R1). */
+  readonly split?: 'chart' | 'notes'
 }
 
-export function AnalysisRunsFrame<Id extends string>({ tab, charts, chart, onChart, future, onFuture, body, words, door, metrics, notes, updating }: AnalysisRunsFrameProps<Id>) {
+export function AnalysisRunsFrame<Id extends string>({ tab, charts, chart, onChart, future, onFuture, body, words, door, metrics, notes, updating, split = 'chart' }: AnalysisRunsFrameProps<Id>) {
   const doorButton =
     door !== undefined ? (
       <div>
@@ -75,7 +79,9 @@ export function AnalysisRunsFrame<Id extends string>({ tab, charts, chart, onCha
         </div>
       ) : (
         <LoadingVeil loading={updating} label={copy.analysisRunsWaiting}>
-          <div className="flex flex-col gap-6 laptop:grid laptop:grid-cols-[3fr_2fr] laptop:items-center laptop:gap-10">
+          <div
+            className={`flex flex-col gap-6 laptop:grid laptop:items-center laptop:gap-10 ${split === 'notes' ? 'laptop:grid-cols-[2fr_3fr]' : 'laptop:grid-cols-[3fr_2fr]'}`}
+          >
             <div className="min-w-0" data-analysis-body="">
               {body}
             </div>

@@ -16,7 +16,7 @@ import { DEV_SEEDS } from '../../../devSeeds'
 import { copy } from '../../../copy'
 import { tableRunFor } from '../../../workbench/tableRun'
 import { mapsView, type MapTile } from '../mapsView'
-import { Maps } from '../Maps'
+import { Maps, stopWordPlace } from '../Maps'
 
 vi.mock('../../../kit', async (importOriginal) => ({ ...(await importOriginal<typeof import('../../../kit')>()), useLaptop: () => false }))
 
@@ -85,5 +85,37 @@ describe('Maps: a run of one year draws no slider (milestone 4’s review, M3)',
     expect(ends[0]).toHaveTextContent(String(view.scrubber.years[0]!.year))
     expect(ends[0]).toHaveTextContent(copy.cashFlowsShortYear)
     expect(container.querySelector('[data-maps-year]')).toHaveTextContent(view.heading)
+  })
+})
+
+describe('Maps: where the "Work stops" word prints (milestone 4’s review, round 2, R2R2)', () => {
+  // A 600 px track, a 90 px word (its 8 px gap in it), the pin 12 px each side of its centre.
+  const clear = (p: { side: 'right' | 'left' | 'pin'; px: number }, pin: number, word = 90) => {
+    const [lo, hi] = p.side === 'left' ? [p.px - word, p.px] : [p.px, p.px + word]
+    return lo >= 0 && hi <= 600 && (hi <= pin - 12 || lo >= pin + 12)
+  }
+  it('a late tick with the pin left of it (the default first year): left of the tick, clear of the pin, never clamped over it', () => {
+    const p = stopWordPlace(600, 560, 0, 90)
+    expect(p).toEqual({ side: 'left', px: 560 })
+    expect(clear(p, 0)).toBe(true)
+  })
+  it('the pin right of the tick, clear of the word’s text: left of the tick', () => {
+    expect(stopWordPlace(600, 300, 320, 90)).toEqual({ side: 'left', px: 300 })
+  })
+  it('the pin straddling the tick, in the word’s way on both sides of it: right of the pin where that fits', () => {
+    const p = stopWordPlace(600, 300, 295, 90)
+    expect(p).toEqual({ side: 'pin', px: 307 })
+    expect(clear(p, 295)).toBe(true)
+  })
+  it('no room right of the pin: left of the pin, its box ending at the pin’s edge', () => {
+    const p = stopWordPlace(600, 560, 540, 90)
+    expect(p).toEqual({ side: 'left', px: 528 })
+    expect(clear(p, 540)).toBe(true)
+  })
+  it('no room either side of the pin: held inside the panel, the last resort', () => {
+    const p = stopWordPlace(100, 50, 50, 90)
+    expect(p.side).toBe('pin')
+    expect(p.px).toBeGreaterThanOrEqual(0)
+    expect(p.px + 90).toBeLessThanOrEqual(100)
   })
 })

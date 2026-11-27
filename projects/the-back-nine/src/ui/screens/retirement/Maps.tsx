@@ -155,11 +155,28 @@ function YearScrubber({ scrubber, heading, keyLine, onYear }: { readonly scrubbe
   )
 }
 
-/** Where the "Work stops" word prints above the line: right of its tick, unless the pin stands there or the word would
- *  run past the panel's right edge (a late tick); then left of the tick where the word fits between the tick and the
- *  panel's left edge; else right of the pin, clear of it, held inside the right edge. Measured in px (the word's width
- *  against the track's), so the word never crosses either edge of the panel, and never touches the pin wherever the
- *  track has room for both (milestone 4's review, O12: the right edge was never checked). */
+/** Where the "Work stops" word prints above the line, in px along the track (`width`), from the tick (`stopPx`), the
+ *  pin's centre (`pinPx`, 12 px each side) and the word's box (`wordPx`, its 8 px gap on the side facing what it stands
+ *  beside). In order: right of the tick, unless the pin stands in the word's way or the word would run past the right
+ *  edge (a late tick); left of the tick, where the word fits inside the panel and the pin stands wholly left of the word
+ *  or wholly right of its text; right of the pin, clear of it, where that fits inside the right edge; left of the pin
+ *  (its box ending at the pin's edge) where that fits inside the left edge; and only as the last resort right of the
+ *  pin held inside the right edge, where the track has no room for the word clear of the pin. So the word never crosses
+ *  either edge of the panel and never touches the pin wherever there is room (milestone 4's review, O12; round 2, R2R2:
+ *  a pin left of the tick, the default year included, once forced the clamp, which could draw the word over the pin). */
+export function stopWordPlace(width: number, stopPx: number, pinPx: number, wordPx: number): { readonly side: 'right' | 'left' | 'pin'; readonly px: number } {
+  const PIN_HALF = 12
+  const GAP = 8
+  const pinClash = pinPx + PIN_HALF > stopPx && pinPx - PIN_HALF < stopPx + wordPx
+  if (!pinClash && stopPx + wordPx <= width) return { side: 'right', px: stopPx }
+  const fitsLeft = wordPx <= stopPx && (pinPx + PIN_HALF <= stopPx - wordPx || pinPx - PIN_HALF >= stopPx - GAP)
+  if (fitsLeft) return { side: 'left', px: stopPx }
+  if (pinPx + PIN_HALF + wordPx <= width) return { side: 'pin', px: pinPx + PIN_HALF }
+  if (pinPx - PIN_HALF - wordPx >= 0) return { side: 'left', px: pinPx - PIN_HALF }
+  return { side: 'pin', px: Math.max(0, Math.min(Math.max(stopPx, pinPx + PIN_HALF), width - wordPx)) }
+}
+
+/** `stopWordPlace`, measured on the page and again on every resize. */
 function useStopWordPlace(word: RefObject<HTMLSpanElement | null>, stopPct: number | null, pinPct: number): { readonly side: 'right' | 'left' | 'pin'; readonly px: number | null } {
   const [place, setPlace] = useState<{ side: 'right' | 'left' | 'pin'; px: number | null }>({ side: 'right', px: null })
   useLayoutEffect(() => {
@@ -168,21 +185,7 @@ function useStopWordPlace(word: RefObject<HTMLSpanElement | null>, stopPct: numb
     if (el === null || track === null || track === undefined || stopPct === null) return
     const measure = () => {
       const width = track.clientWidth
-      const stopPx = (stopPct / 100) * width
-      const pinPx = (pinPct / 100) * width
-      // The word's box carries its 8 px gap on the side that faces the tick, either side.
-      const wordPx = el.offsetWidth
-      const PIN_HALF = 12
-      const GAP = 8
-      const pinClash = pinPx + PIN_HALF > stopPx && pinPx - PIN_HALF < stopPx + wordPx
-      const clashRight = pinClash || stopPx + wordPx > width
-      // Left of the tick only where the word fits inside the panel and the pin stands clear of the word's text.
-      const fitsLeft = wordPx <= stopPx && pinPx - PIN_HALF >= stopPx - GAP
-      const next = !clashRight
-        ? { side: 'right' as const, px: stopPx }
-        : fitsLeft
-          ? { side: 'left' as const, px: stopPx }
-          : { side: 'pin' as const, px: Math.max(0, Math.min(Math.max(stopPx, pinPx + PIN_HALF), width - wordPx)) }
+      const next = stopWordPlace(width, (stopPct / 100) * width, (pinPct / 100) * width, el.offsetWidth)
       setPlace((p) => (p.side === next.side && p.px === next.px ? p : next))
     }
     measure()

@@ -4728,7 +4728,7 @@ async function pickRc17Chart(page: Page, label: string): Promise<void> {
 }
 
 /** One frame at his window: from the top down to the handle, the caveat inside it, nothing scrolled. */
-async function assertRc17Frame(page: Page, who: string): Promise<void> {
+async function assertRc17Frame(page: Page, who: string, opts: { readonly handleMayFollow?: boolean } = {}): Promise<void> {
   const frame = await page.evaluate(() => ({
     scrollY: window.scrollY,
     body: document.querySelector('[data-analysis-panel]')!.getBoundingClientRect().bottom,
@@ -4738,7 +4738,9 @@ async function assertRc17Frame(page: Page, who: string): Promise<void> {
   console.log(`[rc17-frame] ${who}: panel ${frame.body.toFixed(1)}, caveat ${frame.caveat.toFixed(1)}, handle ${frame.handle.toFixed(1)} of ${REAL.height}`)
   expect(frame.scrollY).toBe(0)
   expect(frame.caveat, `${who}: the chart, its metrics and the caveat inside the first frame`).toBeLessThanOrEqual(REAL.height)
-  expect(frame.handle, `${who}: the ACTION ITEMS handle inside the first frame`).toBeLessThanOrEqual(REAL.height)
+  // On a landed what-if the frame binds to the caveat and the handle may sit just below it (plan section 4.0's
+  // 2026-11-24 amendment); the caller then proves the handle reachable.
+  if (!opts.handleMayFollow) expect(frame.handle, `${who}: the ACTION ITEMS handle inside the first frame`).toBeLessThanOrEqual(REAL.height)
 }
 
 /** The shown chart's words: every axis tick and legend item visible, unclipped and at the floor size; no word cut; and
@@ -4893,8 +4895,14 @@ test.describe(`RC17 · Comparisons, Savings and Retirement Details at his window
     // frame, every word audited and apart (milestone 4's review, T3).
     await pickRc17Chart(page, copy.rdChartSpendingComparison)
     await expect(page.locator('[data-analysis-body] [data-chart="rd-grouped"]'), 'dip: the spending comparison drew').toBeAttached()
-    await assertRc17Frame(page, 'dip spending comparison')
+    // A landed what-if, and the chart's notes are every honesty line it owes: the frame binds to the R13 caveat and the
+    // ACTION ITEMS handle may sit just below it, never at the cost of a line (plan section 4.0's 2026-11-24 amendment;
+    // measured on Windows at milestone 4's review, round 2: caveat 720.9, handle 763.5 of 731).
+    await assertRc17Frame(page, 'dip spending comparison', { handleMayFollow: true })
     await auditRc17Text(page, 'dip spending comparison', { 'axis-label': 3 })
+    const handle = trayHandle(page)
+    await handle.scrollIntoViewIfNeeded()
+    await expect(handle, 'dip spending comparison: the ACTION ITEMS handle reachable').toBeVisible()
   })
 
   test('?seed=dateshort: every working year runs short, drawn below the zero line; Savings and Retirement Details in one frame and audited', async ({ page }) => {

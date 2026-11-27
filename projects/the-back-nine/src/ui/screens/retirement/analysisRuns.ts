@@ -39,6 +39,9 @@ export interface RunSide {
   /** Inside a sentence: a built-in name in lower case, a kept what-if's as typed. */
   readonly mid: string
   readonly rows: RunRows
+  /** These rows are your plan's own lane (`analysisSides`). Retirement Details points at Cash Flows' "Your plan beside
+   *  the what-if" only where the compared side is your plan and the alternative is not (round 2, R2F2). */
+  readonly plan?: boolean
 }
 
 export interface ReadySide {
@@ -48,6 +51,7 @@ export interface ReadySide {
   readonly rows: readonly LedgerYearRow[]
   readonly meta: TableMeta
   readonly updating: boolean
+  readonly plan?: boolean
 }
 
 /** Everything a tab's composer reads. */
@@ -79,7 +83,7 @@ export function gateSides(input: Pick<AnalysisInput, 'compared' | 'alternative'>
   const ready: ReadySide[] = []
   for (const s of all) {
     if (s.rows.kind !== 'ready') return { kind: 'words', words: copy.analysisRunsWaiting }
-    ready.push({ id: s.id, title: s.title, mid: s.mid, rows: s.rows.rows, meta: s.rows.meta, updating: s.rows.updating })
+    ready.push({ id: s.id, title: s.title, mid: s.mid, rows: s.rows.rows, meta: s.rows.meta, updating: s.rows.updating, ...(s.plan === true ? { plan: true } : {}) })
   }
   const keys = new Set(all.map((s) => (s.rows.kind === 'ready' ? s.rows.answerKey : '')))
   if (keys.size > 1) return { kind: 'words', words: copy.analysisRunsWaiting }
@@ -241,11 +245,12 @@ export function analysisSides(p: SidePicks): Pick<AnalysisInput, 'compared' | 'a
     title: p.rightTitle,
     mid: rightPlan || p.rightPick === 'recommended' ? lower(p.rightTitle) : p.rightTitle,
     rows: rightPlan ? p.planRows : p.rightRows,
+    ...(rightPlan ? { plan: true } : {}),
   }
   const alternative: RunSide | null = p.leftEmpty
     ? rightPlan
       ? null
-      : { id: 'alternative', title: p.planTitle, mid: lower(p.planTitle), rows: p.planRows }
+      : { id: 'alternative', title: p.planTitle, mid: lower(p.planTitle), rows: p.planRows, plan: true }
     : {
         id: 'alternative',
         title: p.leftTitle,

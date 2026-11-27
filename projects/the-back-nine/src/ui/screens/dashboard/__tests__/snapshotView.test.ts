@@ -176,6 +176,14 @@ describe('Snapshot: the stat rings read the steady future, each on the populatio
     const first = after[0]!
     const rate = ((first.draw.taxable + first.draw.pretax + first.draw.roth + first.hsaSpend) / (first.start.taxable + first.start.pretax + first.start.roth + first.start.hsa)) * 100
     expect(view.stats.rate.value).toBe(slots.snapshotRate(rate))
+    // The money runs out in the first year after work stops: no year the dial counts was paid, so the working route's
+    // words, no figure (round 2's residual: this slot had no test).
+    const out = [...rows.filter((r) => r.t < first.t), { ...first, ranOut: true }]
+    const none = snapshotView(input(snap(draft, answer), { steady: { kind: 'rows', rows: out, meta } }))
+    if (none.stats.kind !== 'figures') throw new Error(none.stats.kind)
+    expect(none.stats.tax.value).toBeUndefined()
+    expect(none.stats.tax.note).toBe(copy.snapshotStatNoTaxWorking)
+    expect(none.stats.tax.label).toBe(copy.snapshotStatTaxWorkingLabel)
   })
 
   it('a run whose money runs out (`offtracktypical`): the ran-out year’s tax was only asked for, so the ring leaves it out, as Comparisons does (A3)', () => {

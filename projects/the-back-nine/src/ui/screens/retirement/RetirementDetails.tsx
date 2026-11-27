@@ -157,7 +157,7 @@ export function RetirementDetailsPanel({
           axisDollar={view.axisDollar}
           words={{ ...chartWords(view.title), description: view.metric }}
           height={height}
-          padding={{ group: 0.06, point: 0.24 }}
+          padding={{ group: 0.03, point: 0.24 }}
         />
       </ChartSeat>
     )
@@ -175,6 +175,7 @@ export function RetirementDetailsPanel({
       metrics={metrics}
       notes={notes}
       updating={updating}
+      {...(view.kind === 'grouped' ? { split: 'notes' as const } : {})}
     />
   )
 }

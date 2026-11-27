@@ -2066,6 +2066,30 @@ for; both its comparisons carry the ran-out note. On the all-retired route the t
 assets today": row one's opening is the balance the household entered, so its figures are exact (no "~") and name no
 market, and a side whose money runs out says so in that chart's notes.
 
+**Amendment (2026-11-26, b9-8, milestone 4's review, round 2).** *(the pilot's call, 2026-11-26, b9-8: milestone 4's
+review, round 2)* The same-pay-check rule above still flipped direction for a claim-age or deposits what-if: its lever
+moves its OWN tax into the pay check's part (`workingYear.taxOnOutsideIncome`), so those years fell out and the total
+ran over the rest. `date` with Sam claiming at 62 printed "~$8,300 less" where, over every year both pay, the what-if
+pays ~$4,700 more; at 70, "~$5,500 more" against ~$3,400 less; the 401(k) deposit to $0, "~$7,900 less" against ~$9,700
+more (rough: "~$1,900 less" against ~$15,700 more); and its stated reason ("when their pay or deposits differ") was
+false (only Social Security differed). The rule now (`comparisonsView.ts`'s `taxYears`), checked exact in all six
+cases and in PA: a calendar year counts where (a) both sides are retired, the year's figure `taxPaid`; (b) both work
+and what a working year costs is given (the rows carry `workingYear`; no lever moves gross pay), the year's figure
+`taxPaid + workingYear.taxOnOutsideIncome`, what the run itself charges as income tax (the pay check's part plus
+savings' part; Social Security and deposits may differ between the sides; payroll tax is never in it); (c) both work
+and W is not given: the year counts only on an identical pay check (`taxPaid` alone), and where the sides' Social
+Security or deposits differ in such a year the chart prints words, never a total (the lever's own tax sits on pay and
+nothing prices it), with the premise that would price it. Years where work has stopped in one side but not the other
+are left out and named by the runs ("when work has stopped in new what-if but not yet in your plan", never "only one of
+them works"), and a Roth conversion in a left-out year still prints words. The lines draw the same per-year figure the
+total counts; the working-year note says what that figure holds under (b) and under (c). With no window but comparable
+years before the last left-out one, the words say from which year the two never compare again. Every from/through
+sentence on Comparisons, Retirement Details and Savings reads "In 2035" where its years match. Retirement Details' per-side
+working-year tax lines are replaced by one line for both sides, wherever either has a paid year before the window:
+"Each side's years before 2031 are left out here: spending, premiums and income tax, any Roth conversion included",
+pointing at Cash Flows' "Your plan beside the what-if" (whose Income tax column always shows on both rows) only where
+that form shows these two runs; never at Comparisons, which prints words for some pairs.
+
 **Files.** `src/ui/screens/retirement/Comparisons.tsx`, `RetirementDetails.tsx`, `Savings.tsx`, their `*View.ts`
 composers, `src/viz/charts/overlapAreasOptions.ts`, `incomeSourcesOptions.ts`.
 

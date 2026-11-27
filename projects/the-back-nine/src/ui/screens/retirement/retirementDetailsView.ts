@@ -17,9 +17,10 @@
  *   that is not a withdrawal in the hole; and the spending comparison: grouped bars of the three spending parts in all.
  *   Both count ONE window, the retired years both sides share (`sharedRetiredWindow`), named in the sentence, with the
  *   ran-out note where a side's money runs out (A1), and words, never a total, where they share none (O3). Beside the
- *   spending comparison, a side's income tax on its savings while it still works (a Roth conversion made then, say),
- *   which the retired window leaves out, is named where it differs between the two (milestone 4's review, X1), so
- *   "spends less in all" never reads as a saving the working years paid for.
+ *   spending comparison, wherever either side paid in a year before the window, one line says both sides' earlier years
+ *   are left out, spending, premiums and income tax, any Roth conversion included (milestone 4's review, X1; round 2,
+ *   R2F2), so "spends less in all" never reads as a saving those years paid for; it points at Cash Flows' "Your plan
+ *   beside the what-if" only where that form shows these two runs (your plan compared, a what-if beside it).
  *
  * THE YEAR THE MONEY RAN OUT draws no column (its row is what the year asked for): a cross-hatched band over it with
  * "Money ran out this year" and no dollar figure, the rows ending there, both said in the key-metric column.
@@ -47,6 +48,7 @@ import {
   futureNotes,
   gateSides,
   keptIncome,
+  paidRows,
   pctWords,
   premiumsOf,
   ranOutNote,
@@ -54,7 +56,6 @@ import {
   sharedRetiredWindow,
   startTotal,
   withdrawn,
-  workingPaidRows,
   yearOf,
   type AnalysisInput,
   type ReadySide,
@@ -166,6 +167,11 @@ export function shownDetailsChart(asked: RetirementDetailsChart, menu: readonly 
   return menu.find((m) => m.id === `${kind}:compared`)?.id ?? menu[0]!.id
 }
 
+/** The spending comparison's printed figure: the mm dialect at two decimals ("$1.18mm", trailing zeros dropped: "$1.1mm"),
+ *  below $1mm the dialect as it is. */
+const groupedFigure = (v: number): string =>
+  Math.abs(v) >= 1_000_000 ? `$${(v / 1_000_000).toFixed(2).replace(/0+$/, '').replace(/\.$/, '')}mm` : formatMmDollar(v)
+
 const dollarTicks = (max: number) => {
   const lattice = niceLattice(Math.max(1_000, max))
   return buildYTicks(lattice, mmAxisFormatterFor(lattice.ceiling)).map((t) => ({ value: t.dollars, label: t.label }))
@@ -262,14 +268,12 @@ export function retirementDetailsView(input: AnalysisInput & { readonly chart: R
     const lattice = niceLattice(Math.max(1_000, ...totals.flat()))
     const all = totals.map((t) => t.reduce((a, b) => a + b, 0))
     const d = direction(all[0]!, all[1]!, formatDeltaDollar)
-    // Each side's income tax on its savings while it still works, outside the retired window: named where the two differ
-    // as printed (a conversion on one side), so the window's total never hides it.
-    const working = sides.map((s) => {
-      const rows = workingPaidRows(s)
-      return { s, fig: formatDeltaDollar(rows.reduce((sum, r) => sum + Math.max(0, r.taxPaid), 0)), conversion: rows.some((r) => r.conversion > 0.5) }
-    })
-    const workingNotes =
-      working[0]!.fig === working[1]!.fig ? [] : working.filter((w) => w.fig !== '0').map((w) => slots.rdWorkingTax(w.s.mid, w.fig, w.conversion, steady))
+    // Either side paid in a year before the window (working years, or retired years the other side doesn't share): ONE
+    // line says both sides' earlier years are left out, conversions included, so "spends less in all" never reads as a
+    // saving those years paid for (round 2, R2F2). It points at Cash Flows only where its paired form shows these two.
+    const earlier = sides.some((s) => paidRows(s).some((r) => yearOf(s.meta, r) < window.from))
+    const paired = cmp.plan === true && alt.plan !== true
+    const beforeNotes = earlier ? [slots.rdBeforeWindow(window.from, paired)] : []
     return {
       ...menu,
       kind: 'grouped',
@@ -280,15 +284,17 @@ export function retirementDetailsView(input: AnalysisInput & { readonly chart: R
         name: s.title,
         role: s.id,
         values: totals[i]!,
-        // The axis dialect ("~$1.18mm", its own compact rounding): six full figures over three groups ran into each other at
-        // his window (RC17's look). Never pre-rounded: a part under $5,000 printed "~$0" over a bar with height.
-        figures: totals[i]!.map((v) => slots.probabilityBarFigure(formatMmDollar(v))),
+        // The mm dialect at two decimals ("~$1.18mm"): six full figures over three groups ran into each other at his window
+        // (RC17's look), and the axis formatter's three ("~$1.184mm") still met their neighbour ("~$1.1mm") once the notes
+        // column widened beside this chart (milestone 4's review, round 2). Never pre-rounded below $1mm: a part under
+        // $5,000 printed "~$0" over a bar with height.
+        figures: totals[i]!.map((v) => slots.probabilityBarFigure(groupedFigure(v))),
         points: totals[i]!.map((v, g) => slots.taxStratBarPoint(`${s.title}, ${SPENDING_PARTS[g]!.name}`, formatDeltaDollar(v))),
       })),
       lattice,
       axisDollar: mmAxisFormatterFor(lattice.ceiling),
       metric: slots.rdSpendingComparison(alt.mid, d.fig, d.dir, cmp.mid, window.from, window.through, steady),
-      notes: [windowNote, ...outNotes, copy.rdSpendNote, ...workingNotes, ...tail],
+      notes: [windowNote, ...outNotes, copy.rdSpendNote, ...beforeNotes, ...tail],
       updating: gate.updating,
     }
   }

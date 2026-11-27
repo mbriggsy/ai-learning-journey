@@ -712,4 +712,29 @@ describe('the inherited-IRA pace (U17)', () => {
     // The row is pulled now (its own way back shows), and the other account's row is not.
     expect(within(paceRow()).getByRole('button', { name: slots.workbenchRailBackName('Alex’s IRA inherited in 2023') })).not.toHaveAttribute('inert')
   })
+
+  it('a rule waiting on its year, or a refused year after a good one, stops Refresh and Apply: neither runs nor writes the row’s earlier lever', async () => {
+    const user = userEvent.setup()
+    const l = openTray(DEV_SEEDS.inherited)
+    const label = slots.trayPaceYearOf('Alex’s IRA inherited in 2023')
+    const paceOf = () => draftNow().enteredAccounts.find((a) => a.id === A)?.inherited?.pace
+    const before = paceOf()
+    // "Even amounts" is a lever; then "ending in a year you pick" with the year blank waits.
+    await user.click(within(paceRow()).getByRole('combobox'))
+    await user.click(await screen.findByRole('option', { name: slots.trayPaceEven(2033) }))
+    await user.click(within(paceRow()).getByRole('combobox'))
+    await user.click(await screen.findByRole('option', { name: copy.trayPaceChosen }))
+    await within(tray()).findByLabelText(label)
+    fireEvent.click(refresh())
+    expect(l.many.request, 'no run on "even amounts" under a picker showing the chosen-year rule').not.toHaveBeenCalled()
+    fireEvent.click(applyButton())
+    expect(paceOf(), 'Apply writes nothing while the row waits').toEqual(before)
+    // A good year, then a refused one: the box still parses, so only the row's words mark it.
+    typeIn(label, '2029')
+    await waitFor(() => expect(within(paceRow()).queryByRole('alert')).toBeNull())
+    typeIn(label, '2040')
+    await waitFor(() => expect(within(paceRow()).getByRole('alert')).toBeInTheDocument())
+    fireEvent.click(refresh())
+    expect(l.many.request, 'no run on 2029 under a box showing 2040').not.toHaveBeenCalled()
+  })
 })

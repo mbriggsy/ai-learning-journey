@@ -668,6 +668,17 @@ export const copy = {
   inheritedHeldOwnIra: 'In their own IRA',
   inheritedHeldJobPlan: 'Still in their job’s plan',
   inheritedOwnerInheritedLegend: 'Had the person who left it inherited it themselves?',
+  // A husband or wife who made an inherited IRA their own (a rollover, or the election) held it as their own IRA at the
+  // death, so it is not a successor's: the job-plan question's rollover line, for this question.
+  inheritedOwnerInheritedHelp: 'If their husband or wife had left it to them and they made it their own IRA, answer No.',
+  // KTD17: an heir who came to it through a will, an estate or a trust has no designated beneficiary's schedule.
+  inheritedNamedHelp: 'Named means listed on the account’s own beneficiary form.',
+  inheritedNamedYes: 'Named on the account',
+  inheritedNamedEstate: 'Through a will, an estate or a trust',
+  // An account opened after the death: the December 31 balance was still in the dead owner's IRA, and the law reads it.
+  inheritedDecemberHelp: 'If it was still in the name of the person who left it then, use that balance, or the share of it this account got.',
+  // KTD25: a late make-up still leaves the year's own minimum missed (refused), and "taken so far" must not hold it.
+  inheritedMinimumsHelp: 'A withdrawal made up after that date counts as No.',
   // The two years under one heading, so the boxes sit level (a two-line label beside a one-line one did not).
   inheritedOwnerYearsLegend: 'The person who left it',
   inheritedOwnerBornLabel: 'Year born',
@@ -685,6 +696,8 @@ export const copy = {
     'Money still in a job’s plan when its owner died keeps that plan’s rules, which this version can’t plan yet, so it can’t be added here.',
   inheritedRefuseSuccessor:
     'An IRA inherited a second time keeps the first owner’s schedule, which this version can’t plan yet, so it can’t be added here.',
+  inheritedRefuseEstate:
+    'An IRA that came through a will, an estate or a trust follows other rules (it can have to be empty within five years), which this version can’t plan yet, so it can’t be added here.',
   inheritedRefusePre2020: 'An IRA left by someone who died before 2020 follows the older rules, which this version can’t plan, so it can’t be added here.',
   inheritedRefuseEligibleAge:
     'Someone not more than ten years younger than the person who left it can spread withdrawals over a lifetime, which this version can’t plan yet, so it can’t be added here.',
@@ -694,8 +707,6 @@ export const copy = {
     'The owner’s child under 21 at the death follows other rules until 21, which this version can’t plan yet, so it can’t be added here.',
   inheritedRefuseDeathYearUnknown:
     'Only the custodian knows how much of that withdrawal is still to come out, and this version can’t plan it without that figure, so it can’t be added here.',
-  inheritedRefuseShared:
-    'An IRA shared with another heir and not split in time may be figured on the other heir’s age, which this version can’t plan yet, so it can’t be added here.',
   inheritedRefuseMissedMinimum:
     'A required withdrawal that wasn’t taken can owe a make-up and a penalty, which this version doesn’t charge, so the plan would read too well. It can’t be added here.',
   inheritedRefuseDeathYearLate:
@@ -5806,6 +5817,8 @@ export const slots = {
   // An inherited IRA named by the year its owner died (the Act 5 plan's U13): two of one heir's read apart, and each says
   // when its ten-year clock started (`enteredAccountName`, `tableRun.ts`).
   inheritedIraOf: (possessive: string, deathYear: number): string => `${possessive} IRA inherited in ${deathYear}`,
+  // Two of one heir's from deaths in the same year: their place in the entered order.
+  inheritedIraOfNth: (possessive: string, deathYear: number, n: number, of: number): string => `${possessive} IRA inherited in ${deathYear} (${n} of ${of})`,
   // The inherited IRA's drawer questions that name the heir or a year (U13; the static words sit beside
   // `inheritedSectionHeading`). `mid` is the heir as named mid-sentence ("Alex", or "you" before names are entered), so
   // the verb follows `you`.
@@ -5820,13 +5833,30 @@ export const slots = {
   inheritedDecemberLabel: (year: number): string => `Its balance on December 31, ${year}`,
   inheritedHasFigureLegend: (year: number): string => `Do you have the custodian’s figure for its required withdrawal in ${year}?`,
   inheritedCustodianFigureLabel: (year: number): string => `The custodian’s required withdrawal for ${year}`,
-  inheritedSharedLegend: (year: number): string => `Was it shared with another heir and not split into separate accounts by December 31, ${year}?`,
-  inheritedHasDeathYearLegend: (year: number): string =>
-    `Do you have the custodian’s figure for how much of their ${year} required withdrawal is still to come out?`,
-  inheritedDeathYearLabel: (year: number): string => `Still to come out of their ${year} required withdrawal`,
+  // The split's deadline (December 31 of the year after the death) can still be ahead in the asked year: then the
+  // question asks how it stands now, never about a date not yet come.
+  inheritedSharedLegend: (by: number, asked: number): string =>
+    by < asked
+      ? `Was it shared with another heir and not split into separate accounts by December 31, ${by}?`
+      : 'Is it shared with another heir and not yet split into separate accounts?',
+  // The owner's own death-year amount (KTD25). A death this year: the custodian's live figure, what is still to come
+  // out now. A death last year: the amount left on December 31 of the death year, a fixed figure, since a withdrawal
+  // this year counts against it and this year's own minimum together (`inheritedLedgerParams`, the engine's open row).
+  inheritedHasDeathYearLegend: (year: number, atYearEnd: boolean): string =>
+    atYearEnd
+      ? `Do you have the custodian’s figure for how much of their ${year} required withdrawal was still to come out on December 31, ${year}?`
+      : `Do you have the custodian’s figure for how much of their ${year} required withdrawal is still to come out?`,
+  inheritedHasDeathYearHelp: (atYearEnd: boolean): string =>
+    `The custodian is the firm that holds the account. If all of it had come out${atYearEnd ? ' by then' : ''}, answer Yes and enter $0.`,
+  inheritedDeathYearLabel: (year: number, atYearEnd: boolean): string =>
+    atYearEnd ? `Still to come out of their ${year} required withdrawal on December 31, ${year}` : `Still to come out of their ${year} required withdrawal`,
   inheritedTakenLabel: (year: number): string => `Taken out so far in ${year}`,
   inheritedMinimumsLegend: (from: number, to: number): string =>
-    `Was each year’s required withdrawal taken out for ${from === to ? String(from) : `${from} through ${to}`}?`,
+    from === to
+      ? `Was the required withdrawal for ${from} taken out by December 31, ${from}?`
+      : `Was each year’s required withdrawal, ${from} through ${to}, taken out by December 31 of its year?`,
+  inheritedNamedLegend: (mid: string, you: boolean): string =>
+    `${you ? 'Were you' : `Was ${mid}`} named on the account as its beneficiary, or did it come through a will, an estate or a trust?`,
   inheritedDeathYearInTimeLegend: (deathYear: number): string =>
     `If they owed a required withdrawal for ${deathYear}, was all of it taken out by December 31, ${deathYear + 1}?`,
   inheritedEarlierYearLabel: (year: number): string => `Taken out in ${year}`,
@@ -5838,6 +5868,12 @@ export const slots = {
   // every cause the predicate covers (a typed figure, the birth year on Family, another person's life).
   inheritedRefuseFigureMismatch: (computed: string, possessive: string): string =>
     `That figure doesn’t match the $${computed} that ${possessive} age gives for that balance. If both figures and the birth year on Family are right, the custodian may be using another person’s life, which this version can’t plan, so it can’t be added here.`,
+  // A shared account (KTD25): past its split deadline it stays figured on the other heir's age; before it, splitting in
+  // time still lifts that, so the words say when.
+  inheritedRefuseShared: (by: number, asked: number): string =>
+    by < asked
+      ? 'An IRA shared with another heir and not split in time may be figured on the other heir’s age, which this version can’t plan yet, so it can’t be added here.'
+      : `An IRA shared with another heir may be figured on the other heir’s age unless it is split into separate accounts by December 31, ${by}. This version can’t plan that yet, so it can’t be added here until it is split.`,
   inheritedRefuseSplit: (other: string): string =>
     `An account split between ${other} and someone else is something this version can’t plan yet, so it can’t be added here.`,
   inheritedBirthYearRange: (from: number, to: number): string => `That year has to be from ${from} to ${to}.`,
@@ -5975,6 +6011,9 @@ export const slots = {
   /** The year box's accessible name: the account's name rides with it (two accounts' boxes read apart). */
   trayPaceYearOf: (account: string): string => `${account}: last year`,
   trayPaceNeedsYear: (first: number, last: number): string => `Even amounts wait for a last year, ${first} to ${last}.`,
+  // An aged plan: a last year already gone would empty the account in a year the household did not (the Roth row's
+  // `workbenchRailRothStartPast`, for the pace's year).
+  trayPaceYearPast: (year: number): string => `The last year can’t be before ${year}.`,
   trayPaceYearRange: (first: number, last: number): string =>
     `The last year can be ${first} to ${last}: the law says this account is empty by ${last}.`,
   // --- The lever rail (Act 5, U15). The pilot's drafts, shipped flagged. Each count rides whole from its one producer

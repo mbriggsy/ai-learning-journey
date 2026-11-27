@@ -482,7 +482,10 @@ const KIND_COLUMNS: { readonly [K in WhatIfLeverKind]: (lever: Extract<WhatIfLev
  *  in the one reading order (no column chooser in version 1). A second person's pay only where there is one. */
 export function pairedColumnsFor(bundle: readonly WhatIfLeverV6[], draft: ScenarioDraft): readonly PairedColumnId[] {
   const want = new Set<PairedColumnId>(['income-tax', 'end-total'])
-  for (const l of bundle) {
+  // Inherited IRAs' pairs share one rank, so they keep the order added: add them in the entered order (the tray's and
+  // Settings'), never the order the levers were pulled.
+  const entered = (l: WhatIfLeverV6) => (l.kind === 'inherited-pace' ? draft.enteredAccounts.findIndex((a) => a.id === l.accountId) : -1)
+  for (const l of [...bundle].sort((a, b) => entered(a) - entered(b))) {
     for (const c of (KIND_COLUMNS[l.kind] as (lever: WhatIfLeverV6, d: ScenarioDraft) => readonly PairedColumnId[])(l, draft)) want.add(c)
   }
   if (draft.people.length < 2) want.delete('pay-1')

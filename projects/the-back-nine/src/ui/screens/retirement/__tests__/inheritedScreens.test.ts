@@ -6,7 +6,7 @@ import { applyBundle } from '@intake/whatIf'
 import { pairedColumnsFor } from '../../../workbench/railChrome'
 import { DEV_SEEDS } from '../../../devSeeds'
 import { copy, slots } from '../../../copy'
-import { tableRunFor, type TableMeta } from '../../../workbench/tableRun'
+import { enteredAccountName, tableRunFor, type TableMeta } from '../../../workbench/tableRun'
 import { formatTableDollars } from '../../../workbench/yearTableChrome'
 import { investedKinds } from '../../dashboard/snapshotView'
 import { balanceSheetView } from '../../dashboard/balanceSheetView'
@@ -59,6 +59,17 @@ describe('the two-inherited seed', () => {
     expect(rows.every((r) => r.inherited?.length === 2)).toBe(true)
     expect(meta.inherited.map((i) => i.name)).toEqual(NAMES)
     expect(meta.inherited.map((i) => i.label)).toEqual(NAMES)
+  })
+
+  it('two of one heir’s from deaths in the same year read apart by their place in the entered order', () => {
+    const sameYear: ScenarioDraft = {
+      ...draft,
+      enteredAccounts: draft.enteredAccounts.map((a) => (a.kind === 'inherited-ira' && a.inherited !== undefined ? { ...a, inherited: { ...a.inherited, ownerDeathYear: 2023 } } : a)),
+    }
+    const inherited = sameYear.enteredAccounts.filter((a) => a.kind === 'inherited-ira')
+    expect(inherited.map((a) => enteredAccountName(sameYear, a))).toEqual([slots.inheritedIraOfNth('Alex’s', 2023, 1, 2), slots.inheritedIraOfNth('Alex’s', 2023, 2, 2)])
+    // Different death years keep the plain name.
+    expect(draft.enteredAccounts.filter((a) => a.kind === 'inherited-ira').map((a) => enteredAccountName(draft, a))).toEqual(NAMES)
   })
 
   it('Cash Flows → Accounts, Ending balance: one column per inherited IRA, each its own year-end balance', () => {

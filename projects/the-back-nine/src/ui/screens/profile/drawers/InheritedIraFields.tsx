@@ -99,6 +99,9 @@ export function InheritedIraFields({
   const stamped = (stamp: FactStamp, node: ReactNode): ReactNode => <Fact stamp={stamp}>{node}</Fact>
   const deathYear = answers.ownerDeathYear ?? w.askedYear
   const untakenStamp = w.deathYearIsFigure === true ? 'inherited.askedFigure' : 'inherited.deathYearUntaken'
+  // A death last year: the owner's leftover is asked as of December 31 of the death year (a fixed figure); a death this
+  // year: the custodian's live figure.
+  const atYearEnd = w.deathYearIsFigure !== true
 
   const QUESTION: Readonly<Record<InheritedQuestionId, () => ReactNode>> = {
     treatment: () => (
@@ -133,7 +136,24 @@ export function InheritedIraFields({
         onValueChange={(v) => setChoice('heldAtDeath', v)}
       />
     ),
-    ownerInherited: () => yesNo('ownerInherited', copy.inheritedOwnerInheritedLegend),
+    ownerInherited: () => yesNo('ownerInherited', copy.inheritedOwnerInheritedLegend, copy.inheritedOwnerInheritedHelp),
+    named: () => (
+      <ChoiceGroup<'named' | 'estate-or-trust'>
+        legend={slots.inheritedNamedLegend(heir.mid, heir.you)}
+        description={copy.inheritedNamedHelp}
+        name="inherited-named"
+        items={[
+          { value: 'named', label: copy.inheritedNamedYes },
+          { value: 'estate-or-trust', label: copy.inheritedNamedEstate },
+        ]}
+        value={choiceValue('named')}
+        vertical
+        disabled={readOnly}
+        required
+        {...err('named')}
+        onValueChange={(v) => setChoice('named', v)}
+      />
+    ),
     // The two years sit side by side (`dates` below draws them together).
     ownerBirthYear: () => null,
     ownerDeathYear: () => null,
@@ -159,12 +179,13 @@ export function InheritedIraFields({
         />,
       ),
     diedBeforeApril1: () => stamped('inherited.ownerDiedBeforeApril1', yesNo('diedBeforeApril1', slots.inheritedBeforeApril1Legend(deathYear))),
-    hasDeathYearFigure: () => stamped(untakenStamp, yesNo('hasDeathYearFigure', slots.inheritedHasDeathYearLegend(deathYear), copy.inheritedCustodianHelp)),
+    hasDeathYearFigure: () =>
+      stamped(untakenStamp, yesNo('hasDeathYearFigure', slots.inheritedHasDeathYearLegend(deathYear, atYearEnd), slots.inheritedHasDeathYearHelp(atYearEnd))),
     deathYearUntaken: () =>
       stamped(
         untakenStamp,
         <MoneyInput
-          label={slots.inheritedDeathYearLabel(deathYear)}
+          label={slots.inheritedDeathYearLabel(deathYear, atYearEnd)}
           value={answers.deathYearUntaken !== undefined && answers.deathYearUntaken.key === keyOf('deathYearUntaken') ? answers.deathYearUntaken.value : undefined}
           invalidMessage={copy.profileInvalidMoney}
           readOnly={readOnly}
@@ -172,12 +193,13 @@ export function InheritedIraFields({
           onCommit={(v) => onAnswers('deathYearUntaken', withAnswer(answers, 'deathYearUntaken', v === undefined ? undefined : { value: v, key: keyOf('deathYearUntaken') }))}
         />,
       ),
-    decemberBalance: () => stamped('inherited.askedFigure', money('decemberBalance', slots.inheritedDecemberLabel(w.askedYear - 1))),
+    decemberBalance: () => stamped('inherited.askedFigure', money('decemberBalance', slots.inheritedDecemberLabel(w.askedYear - 1), copy.inheritedDecemberHelp)),
     hasCustodianFigure: () => stamped('inherited.askedFigure', yesNo('hasCustodianFigure', slots.inheritedHasFigureLegend(w.askedYear), copy.inheritedCustodianHelp)),
     custodianFigure: () => stamped('inherited.askedFigure', money('custodianFigure', slots.inheritedCustodianFigureLabel(w.askedYear))),
-    sharedUnsplit: () => yesNo('sharedUnsplit', slots.inheritedSharedLegend(deathYear + 1)),
+    sharedUnsplit: () => yesNo('sharedUnsplit', slots.inheritedSharedLegend(w.sharedBy ?? deathYear + 1, w.askedYear)),
     takenThisYear: () => stamped('inherited.takenInAskedYear', money('takenThisYear', slots.inheritedTakenLabel(w.askedYear))),
-    minimumsTaken: () => (w.minimumYears === undefined ? null : yesNo('minimumsTaken', slots.inheritedMinimumsLegend(w.minimumYears.from, w.minimumYears.to))),
+    minimumsTaken: () =>
+      w.minimumYears === undefined ? null : yesNo('minimumsTaken', slots.inheritedMinimumsLegend(w.minimumYears.from, w.minimumYears.to), copy.inheritedMinimumsHelp),
     deathYearTakenInTime: () => yesNo('deathYearTakenInTime', slots.inheritedDeathYearInTimeLegend(deathYear)),
     earlier: () => {
       const e = errorOf('earlier')

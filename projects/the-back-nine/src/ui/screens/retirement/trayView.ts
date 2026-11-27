@@ -505,12 +505,16 @@ export function moveBucket(order: readonly DrawdownOrderKey[], key: DrawdownOrde
 }
 
 /** An inherited IRA's pace (KTD21): a rule, and for "ending in a chosen year" its last year. That year waits while blank
- *  and is refused in words outside the asked year to the law's last (`applyBundle`'s bounds, carried by the offer), so
- *  no run starts on it; the plan's own pace is no lever. */
+ *  and is refused in words outside the asked year to the law's last (`applyBundle`'s bounds, carried by the offer), or
+ *  when it has already gone on an aged plan (the ONE plan-clock producer, as the Roth row's first year), so no run
+ *  starts on it; the plan's own pace is no lever. */
 export function paceCommit(
   offer: PaceOffer,
   kind: InheritedPace['kind'],
   year: number | undefined,
+  draftStartCalendarYear: number,
+  anchor: BandPlanClockAnchor,
+  wallCalendarYear: number,
 ): { readonly kind: 'lever'; readonly lever: WhatIfLeverV6 | null } | { readonly kind: 'wait'; readonly words: string } {
   let pace: InheritedPace
   if (kind === 'even-to-year') {
@@ -518,6 +522,7 @@ export function paceCommit(
     if (!Number.isInteger(year) || year < offer.firstYear || year > offer.lastYear) {
       return { kind: 'wait', words: slots.trayPaceYearRange(offer.firstYear, offer.lastYear) }
     }
+    if (rothPlanStartFor(anchor, year - draftStartCalendarYear).passed) return { kind: 'wait', words: slots.trayPaceYearPast(wallCalendarYear) }
     pace = { kind, lastYear: year }
   } else {
     pace = { kind }

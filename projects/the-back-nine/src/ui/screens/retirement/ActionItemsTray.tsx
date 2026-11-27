@@ -166,12 +166,13 @@ export function ActionItemsTray(props: ActionItemsTrayProps) {
   }, [focus, id])
 
   /** Blur the box under focus (its commit, or its refusal, lands first), then whether any tray box holds text it could
-   *  not read: Refresh and Apply stop while one does, the box's own words saying why. */
+   *  not read, or any row holds a choice it has not made a lever (`data-tray-waiting`, `Notes`): Refresh and Apply stop
+   *  while one does, the box's or the row's own words saying why. */
   const refusedBoxHeld = (): boolean => {
     const tray = document.getElementById(id)
     const active = document.activeElement
     if (active instanceof HTMLElement && tray?.contains(active) === true) active.blur()
-    return tray?.querySelector('[data-typed-refused]') != null
+    return tray?.querySelector('[data-typed-refused], [data-tray-waiting]') != null
   }
 
   const set = whatIf.setLever
@@ -331,7 +332,9 @@ function Notes({ notes, error }: { readonly notes: readonly string[]; readonly e
         <p key={n}>{n}</p>
       ))}
       {error !== undefined ? (
-        <p role="alert" className="text-stone-900">
+        // A row's words for what it holds and has not made a lever (a blank or refused year, a mix off 100): Refresh
+        // and Apply stop on it (`refusedBoxHeld`), else they would run or write the row's earlier lever under it.
+        <p role="alert" className="text-stone-900" data-tray-waiting="">
           {error}
         </p>
       ) : null}
@@ -602,7 +605,7 @@ function Row({ row, set, draft, anchor, wallCalendarYear, pending, awaiting, onA
     case 'group':
       return <TrayRow {...common} {...(row.notes.length > 0 ? { notes: <Notes notes={row.notes} /> } : {})} control={null} />
     case 'pace':
-      return <PaceRows row={row} offer={c.offer} value={c.value} set={set} common={common} back={back} />
+      return <PaceRows row={row} offer={c.offer} value={c.value} set={set} common={common} back={back} start={draft.startCalendarYear} anchor={anchor} wallCalendarYear={wallCalendarYear} />
     case 'aca':
       return (
         <TrayRow
@@ -657,6 +660,15 @@ function RothRows({
   const [mode, setMode] = useState<'none' | 'amount'>(shownPlan === undefined ? 'none' : 'amount')
   const [fields, setFields] = useState<RothFields>(() => rothFieldsFor(held, plan, draft.startCalendarYear, wallCalendarYear))
   const [wait, setWait] = useState<string | undefined>(undefined)
+  // As the pace row's: after an Apply the plan's own conversion moves once the refigured answer lands; re-seed then.
+  const planKey = JSON.stringify(plan ?? null)
+  const [seenPlan, setSeenPlan] = useState(planKey)
+  if (seenPlan !== planKey) {
+    setSeenPlan(planKey)
+    setMode(shownPlan === undefined ? 'none' : 'amount')
+    setFields(rothFieldsFor(held, plan, draft.startCalendarYear, wallCalendarYear))
+    setWait(undefined)
+  }
   const send = (m: 'none' | 'amount', f: RothFields) => {
     const out = rothCommit(plan, m, f, draft.startCalendarYear, anchor, wallCalendarYear)
     if (out.kind === 'wait') {
@@ -725,6 +737,9 @@ function PaceRows({
   set,
   common,
   back,
+  start,
+  anchor,
+  wallCalendarYear,
 }: {
   readonly row: TrayRowView
   readonly offer: Extract<TrayRowView['control'], { kind: 'pace' }>['offer']
@@ -732,13 +747,26 @@ function PaceRows({
   readonly set: WhatIf['setLever']
   readonly common: Common
   readonly back: (onBack: () => void) => ReactNode
+  readonly start: number
+  readonly anchor: BandPlanClockAnchor
+  readonly wallCalendarYear: number
 }) {
   const yearOf = (p: InheritedPace) => (p.kind === 'even-to-year' ? p.lastYear : undefined)
   const [kind, setKind] = useState<InheritedPace['kind']>(value.kind)
   const [year, setYear] = useState<number | undefined>(yearOf(value))
   const [wait, setWait] = useState<string | undefined>(undefined)
+  // The plan's own pace moves after an Apply only once the refigured answer lands, after the rows remounted on the old
+  // one (the row key's epoch bumps at once): re-seed then, or the picker keeps the old rule, marked changed.
+  const planKey = `${offer.plan.kind}|${yearOf(offer.plan) ?? ''}`
+  const [seenPlan, setSeenPlan] = useState(planKey)
+  if (seenPlan !== planKey) {
+    setSeenPlan(planKey)
+    setKind(value.kind)
+    setYear(yearOf(value))
+    setWait(undefined)
+  }
   const send = (k: InheritedPace['kind'], y: number | undefined) => {
-    const out = paceCommit(offer, k, y)
+    const out = paceCommit(offer, k, y, start, anchor, wallCalendarYear)
     if (out.kind === 'wait') {
       setWait(out.words)
       return

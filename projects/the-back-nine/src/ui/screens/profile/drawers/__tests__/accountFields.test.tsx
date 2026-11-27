@@ -497,7 +497,7 @@ describe('the inherited IRA’s drawer (the Act 5 plan’s U13)', () => {
       valueToday: 80_000,
       legs: { stock: '60', bond: '40', cash: '0' },
       inherited: {
-        treatment: k('traditional'), fromSpouse: k('no', '0'), heldAtDeath: k('own-ira'), ownerInherited: k('no'),
+        treatment: k('traditional'), fromSpouse: k('no', '0'), heldAtDeath: k('own-ira'), ownerInherited: k('no'), named: k('named', '0'),
         ownerBirthYear: 1945, ownerDeathYear: 2024, disabledAtDeath: k('no', '0'), childUnder21AtDeath: k('no', '0'),
         decemberBalance: 80_000, hasCustodianFigure: k('no'), sharedUnsplit: k('no', '2024'), takenThisYear: 0,
         // A 2024 death after the date: 2025's minimum and the death-year deadline are asked, keyed by the owner's dates.

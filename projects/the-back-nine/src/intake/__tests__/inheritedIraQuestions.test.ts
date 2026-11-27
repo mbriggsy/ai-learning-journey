@@ -41,6 +41,7 @@ const SERVED: Served = {
   fromSpouse: 'no',
   heldAtDeath: 'own-ira',
   ownerInherited: 'no',
+  named: 'named',
   disabledAtDeath: 'no',
   childUnder21AtDeath: 'no',
   moreThanTenYounger: 'yes',
@@ -137,6 +138,7 @@ describe('each refused case refuses on its own question, asks nothing after it, 
     ['a spouse', () => answerAll(ctx(), 1938, 2023, { fromSpouse: 'yes' }).walk, 'spouse'],
     ['money still in the job’s plan at the death', () => answerAll(ctx(), 1938, 2023, { heldAtDeath: 'job-plan' }).walk, 'job-plan'],
     ['a successor beneficiary', () => answerAll(ctx(), 1938, 2023, { ownerInherited: 'yes' }).walk, 'successor'],
+    ['an heir not named on the account (a will, an estate or a trust)', () => answerAll(ctx(), 1938, 2023, { named: 'estate-or-trust' }).walk, 'estate-or-trust'],
     ['a death before 2020', () => answerAll(ctx(), 1938, 2019).walk, 'pre-2020'],
     ['an heir under ten years younger', () => answerAll(ctx(), HEIR_BORN - 9, 2023).walk, 'eligible-age'],
     ['an heir exactly ten apart, not more than ten younger', () => answerAll(ctx(), HEIR_BORN - 10, 2023, { moreThanTenYounger: 'no' }).walk, 'eligible-age'],
@@ -165,11 +167,36 @@ describe('each refused case refuses on its own question, asks nothing after it, 
   })
 })
 
+describe('the missed-minimum and death-year deadline questions at their boundaries (asked in 2026)', () => {
+  const c26 = ctx({ askedYear: 2026, startCalendarYear: 2026 })
+  it('a 2024 death after the date: 2025’s minimum and the death-year deadline are both asked, and "no" refuses each', () => {
+    const w = answerAll(c26, 1945, 2024).walk
+    expect(ids(w)).toEqual(expect.arrayContaining(['minimumsTaken', 'deathYearTakenInTime']))
+    expect(w.words.minimumYears).toEqual({ from: 2025, to: 2025 })
+    expect(answerAll(c26, 1945, 2024, { minimumsTaken: 'no' }).walk.refusal?.why).toBe('missed-minimum')
+    expect(answerAll(c26, 1945, 2024, { deathYearTakenInTime: 'no' }).walk.refusal?.why).toBe('death-year-late')
+  })
+  it('a 2025 death: no minimum due yet and the death-year deadline (December 31, 2026) not past, so neither is asked', () => {
+    const w = answerAll(c26, 1945, 2025).walk
+    expect(ids(w)).not.toContain('minimumsTaken')
+    expect(ids(w)).not.toContain('deathYearTakenInTime')
+  })
+  it('a 2020 death: the CARES Act waived its death-year amount, so only 2025’s minimum is asked', () => {
+    const w = answerAll(c26, 1938, 2020).walk
+    expect(ids(w)).toContain('minimumsTaken')
+    expect(ids(w)).not.toContain('deathYearTakenInTime')
+    expect(w.facts).not.toBeNull()
+  })
+  it('a shared account whose split deadline is this year is asked about now, its deadline in the words', () => {
+    expect(answerAll(c26, 1945, 2025, { hasCustodianFigure: 'no' }).walk.words.sharedBy).toBe(2026)
+  })
+})
+
 describe('a blank answer, an impossible year and the heir’s missing birth year build no facts', () => {
   it('every question blank: nothing built, each unconditional question named', () => {
     const w = walkInheritedQuestions(NO_INHERITED_ANSWERS, ctx())
     expect(w.facts).toBeNull()
-    expect(w.blank).toEqual(['treatment', 'fromSpouse', 'heldAtDeath', 'ownerInherited', 'ownerBirthYear', 'ownerDeathYear', 'disabledAtDeath', 'childUnder21AtDeath', 'takenThisYear', 'leftTo'])
+    expect(w.blank).toEqual(['treatment', 'fromSpouse', 'heldAtDeath', 'ownerInherited', 'named', 'ownerBirthYear', 'ownerDeathYear', 'disabledAtDeath', 'childUnder21AtDeath', 'takenThisYear', 'leftTo'])
   })
   it('a death before the birth, or after this year, waits on its own year', () => {
     expect(answerAll(ctx(), 1950, 1949).walk.invalid).toEqual({ at: 'ownerDeathYear', why: 'death-before-birth' })

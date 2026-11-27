@@ -362,29 +362,38 @@ describe('the inherited-IRA pace (U17, KTD21)', () => {
     expect(railOffers({ ...inh, enteredAccounts: lastYear }, undefined).paces.map((p) => p.accountId)).toEqual([B])
   })
 
+  /** The pace's year checks on a fresh plan: built this year, opened this year. */
+  const FRESH = [inh.startCalendarYear, planClockAnchor(inh.startCalendarYear, inh.startCalendarYear), inh.startCalendarYear] as const
   it('a rule picked: the plan’s own is no lever; another is the lever on that account alone', () => {
-    expect(paceCommit(offerOf(A), 'law-minimum', undefined)).toEqual({ kind: 'lever', lever: null })
-    expect(paceCommit(offerOf(B), 'even', undefined)).toEqual({ kind: 'lever', lever: null })
-    expect(paceCommit(offerOf(A), 'even', undefined)).toEqual({ kind: 'lever', lever: { kind: 'inherited-pace', accountId: A, pace: { kind: 'even' } } })
-    expect(paceCommit(offerOf(B), 'law-minimum', undefined)).toEqual({ kind: 'lever', lever: { kind: 'inherited-pace', accountId: B, pace: { kind: 'law-minimum' } } })
+    expect(paceCommit(offerOf(A), 'law-minimum', undefined, ...FRESH)).toEqual({ kind: 'lever', lever: null })
+    expect(paceCommit(offerOf(B), 'even', undefined, ...FRESH)).toEqual({ kind: 'lever', lever: null })
+    expect(paceCommit(offerOf(A), 'even', undefined, ...FRESH)).toEqual({ kind: 'lever', lever: { kind: 'inherited-pace', accountId: A, pace: { kind: 'even' } } })
+    expect(paceCommit(offerOf(B), 'law-minimum', undefined, ...FRESH)).toEqual({ kind: 'lever', lever: { kind: 'inherited-pace', accountId: B, pace: { kind: 'law-minimum' } } })
   })
 
   it('"ending in a chosen year" waits for a year, and refuses in words a year outside the asked year to the law’s last, before any run', () => {
     const a = offerOf(A)
     expect([a.firstYear, a.lastYear]).toEqual([inh.startCalendarYear, 2033])
-    expect(paceCommit(a, 'even-to-year', undefined)).toEqual({ kind: 'wait', words: slots.trayPaceNeedsYear(a.firstYear, 2033) })
+    expect(paceCommit(a, 'even-to-year', undefined, ...FRESH)).toEqual({ kind: 'wait', words: slots.trayPaceNeedsYear(a.firstYear, 2033) })
     for (const year of [2034, a.firstYear - 1, 2029.5]) {
-      expect(paceCommit(a, 'even-to-year', year), String(year)).toEqual({ kind: 'wait', words: slots.trayPaceYearRange(a.firstYear, 2033) })
+      expect(paceCommit(a, 'even-to-year', year, ...FRESH), String(year)).toEqual({ kind: 'wait', words: slots.trayPaceYearRange(a.firstYear, 2033) })
     }
     // The ends are in: the asked year and the law's last year.
     for (const year of [a.firstYear, 2033]) {
-      expect(paceCommit(a, 'even-to-year', year)).toEqual({ kind: 'lever', lever: { kind: 'inherited-pace', accountId: A, pace: { kind: 'even-to-year', lastYear: year } } })
+      expect(paceCommit(a, 'even-to-year', year, ...FRESH)).toEqual({ kind: 'lever', lever: { kind: 'inherited-pace', accountId: A, pace: { kind: 'even-to-year', lastYear: year } } })
     }
     // The same bounds as the writer's own (`applyBundle`): what the tray lets through, the writer runs.
-    const ok = paceCommit(a, 'even-to-year', 2033)
+    const ok = paceCommit(a, 'even-to-year', 2033, ...FRESH)
     if (ok.kind !== 'lever' || ok.lever === null) throw new Error('[test setup]')
     expect(applyBundle(inh, [ok.lever]).ok).toBe(true)
     expect(applyBundle(inh, [{ kind: 'inherited-pace', accountId: A, pace: { kind: 'even-to-year', lastYear: 2034 } }])).toMatchObject({ ok: false, refusal: { kind: 'pace-year-outside' } })
+  })
+
+  it('on a plan opened a year after it was built, a last year already gone is refused in words before any run', () => {
+    const a = offerOf(A)
+    const aged = [inh.startCalendarYear, planClockAnchor(inh.startCalendarYear, inh.startCalendarYear + 1), inh.startCalendarYear + 1] as const
+    expect(paceCommit(a, 'even-to-year', a.firstYear, ...aged)).toEqual({ kind: 'wait', words: slots.trayPaceYearPast(inh.startCalendarYear + 1) })
+    expect(paceCommit(a, 'even-to-year', a.firstYear + 1, ...aged)).toMatchObject({ kind: 'lever' })
   })
 
   it('two accounts’ pace levers hold two targets: pulling one leaves the other', () => {

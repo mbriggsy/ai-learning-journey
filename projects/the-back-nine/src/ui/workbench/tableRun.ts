@@ -130,11 +130,18 @@ export function tablePerson(draft: ScenarioDraft, i: number, currentAge: number,
 
 /** An entered account named by its owner and its kind ("your Roth IRA", "Sam’s 401(k)"). An inherited IRA is named by
  *  the year its owner died as well ("Alex’s IRA inherited in 2023"), so two of one heir's read apart (the Act 5 plan's
- *  U13) and each says when its ten-year clock started. Every screen that names an entered account names it here. */
+ *  U13) and each says when its ten-year clock started. Two of one heir's from deaths in the same year (one parent's
+ *  IRAs at two custodians) add their place in the entered order, "(1 of 2)", or every screen, the tray's pace rows and
+ *  Settings would name both alike. Every screen that names an entered account names it here. */
 export function enteredAccountName(draft: ScenarioDraft, a: EnteredAccount): string {
   const possessive = tablePerson(draft, a.ownerIndex, 0, 0).possessive
   const deathYear = ACCOUNT_NAMING[a.kind] === 'death-year' ? a.inherited?.ownerDeathYear : undefined
-  return deathYear !== undefined ? slots.inheritedIraOf(possessive, deathYear) : slots.workbenchAccountOf(possessive, kindLabel(a.kind))
+  if (deathYear === undefined) return slots.workbenchAccountOf(possessive, kindLabel(a.kind))
+  const twins = draft.enteredAccounts.filter((b) => ACCOUNT_NAMING[b.kind] === 'death-year' && b.ownerIndex === a.ownerIndex && b.inherited?.ownerDeathYear === deathYear)
+  const at = twins.findIndex((b) => b === a || (a.id !== undefined && b.id === a.id))
+  // An account not yet in the draft (a drawer's new one) comes last.
+  const count = at < 0 ? twins.length + 1 : twins.length
+  return count > 1 ? slots.inheritedIraOfNth(possessive, deathYear, at < 0 ? count : at + 1, count) : slots.inheritedIraOf(possessive, deathYear)
 }
 
 /** How each kind's account is named: by its kind's words, or by the year its owner died. Exhaustive over the kinds

@@ -7,7 +7,7 @@
  * THE CASE (KTD17). Version 1 serves a non-spouse heir who is not an eligible beneficiary, of a traditional IRA whose
  * owner died in 2020 or later, with the money in the owner's own IRA at the death. Every other answer refuses the account
  * in words, on its question, and nothing after it is asked: a Roth, a spouse, money still in the owner's job's plan, a
- * successor beneficiary, a death before 2020, an heir not more than ten years younger, disabled or chronically ill, or the
+ * successor beneficiary, an heir not named on the account (it came through a will, an estate or a trust), a death before 2020, an heir not more than ten years younger, disabled or chronically ill, or the
  * owner's child under 21 at the death, a year past the law's last, an untaken death-year amount whose figure the household
  * cannot give, a custodian's figure off the heir's own divisor, a shared account not split in time, a missed minimum, a
  * death-year amount untaken past its waiver, and an account split between the other member and someone else. The
@@ -48,6 +48,8 @@ export interface InheritedAnswers {
   readonly fromSpouse?: Keyed<YesNo>
   readonly heldAtDeath?: Keyed<'own-ira' | 'job-plan'>
   readonly ownerInherited?: Keyed<YesNo>
+  /** Named on the account's own beneficiary form, or it came through a will, an estate or a trust. */
+  readonly named?: Keyed<'named' | 'estate-or-trust'>
   readonly ownerBirthYear?: number
   readonly ownerDeathYear?: number
   readonly disabledAtDeath?: Keyed<YesNo>
@@ -78,6 +80,7 @@ export const INHERITED_QUESTION_IDS = [
   'fromSpouse',
   'heldAtDeath',
   'ownerInherited',
+  'named',
   'ownerBirthYear',
   'ownerDeathYear',
   'disabledAtDeath',
@@ -105,6 +108,7 @@ export type InheritedRefusal =
   | 'spouse'
   | 'job-plan'
   | 'successor'
+  | 'estate-or-trust'
   | 'pre-2020'
   | 'eligible-age'
   | 'disabled'
@@ -149,6 +153,8 @@ export interface InheritedWords {
   readonly computedFigure?: number
   /** The owner's untaken death-year amount is this year's one figure (a death this year), not an amount beside it. */
   readonly deathYearIsFigure?: boolean
+  /** The year a shared account had to be split by (December 31), when the shared question is asked. */
+  readonly sharedBy?: number
 }
 
 export interface InheritedWalk {
@@ -201,6 +207,14 @@ function minimumYearsAsked(died: number, askedYear: number): { readonly from: nu
   return from <= to ? { from, to } : null
 }
 
+/** The CARES Act waived every 2020 required withdrawal (§2203; IRS Notice 2020-51), the owner's year-of-death amount
+ *  included, so an owner who died in 2020 left none untaken. */
+const DEATH_YEAR_AMOUNT_WAIVED = 2020
+
+/** Whether the death-year amount's deadline question is asked: its deadline (December 31 of the year after the death)
+ *  is past by the asked year, and the death year could owe one. */
+const asksDeathYearInTime = (died: number, askedYear: number): boolean => died <= askedYear - 2 && died !== DEATH_YEAR_AMOUNT_WAIVED
+
 /** Walk the questions for these answers: what is asked, what refuses, what is blank, and the facts once complete. */
 export function walkInheritedQuestions(a: InheritedAnswers, c: InheritedContext): InheritedWalk {
   const asked: { id: InheritedQuestionId; key: string }[] = []
@@ -231,6 +245,11 @@ export function walkInheritedQuestions(a: InheritedAnswers, c: InheritedContext)
   if (choice('fromSpouse', heir, a.fromSpouse) === 'yes') return refuse('fromSpouse', 'spouse')
   if (choice('heldAtDeath', '', a.heldAtDeath) === 'job-plan') return refuse('heldAtDeath', 'job-plan')
   if (choice('ownerInherited', '', a.ownerInherited) === 'yes') return refuse('ownerInherited', 'successor')
+  // An heir not named on the account's beneficiary form (it came through a will, an estate or a trust) has no designated
+  // beneficiary's schedule (26 CFR 1.401(a)(9)-3 and -5: five years before the required beginning date, the owner's
+  // own remaining life after it; a trust under its own rules, -4). Run on the heir's ten-year rule and the heir's
+  // divisor, it reads rosy (KTD17: "a trust or estate" is refused).
+  if (choice('named', heir, a.named) === 'estate-or-trust') return refuse('named', 'estate-or-trust')
 
   const bornTyped = figure('ownerBirthYear', a.ownerBirthYear)
   const diedTyped = figure('ownerDeathYear', a.ownerDeathYear)
@@ -324,7 +343,9 @@ export function walkInheritedQuestions(a: InheritedAnswers, c: InheritedContext)
           askedFigure = { kind: 'custodian', figure: fig, decemberBalance: december }
         }
       } else if (has === 'no') {
-        // Only the balance is known: was the account shared with another heir and not split in time (KTD25)?
+        // Only the balance is known: was the account shared with another heir and not split in time (KTD25)? The split's
+        // deadline is December 31 of the year after the death, which can still be ahead in the asked year.
+        words = { ...words, sharedBy: full.ownerDeathYear + 1 }
         const shared = choice('sharedUnsplit', died, a.sharedUnsplit)
         if (shared === 'yes') return refuse('sharedUnsplit', 'shared')
         if (shared === 'no' && december !== undefined) askedFigure = { kind: 'computed', decemberBalance: december }
@@ -350,7 +371,7 @@ export function walkInheritedQuestions(a: InheritedAnswers, c: InheritedContext)
           return refuse('minimumsTaken', 'missed-minimum')
         }
       }
-      if (owner.died <= c.askedYear - 2 && choice('deathYearTakenInTime', ownerDatesKey(owner), a.deathYearTakenInTime) === 'no') {
+      if (asksDeathYearInTime(owner.died, c.askedYear) && choice('deathYearTakenInTime', ownerDatesKey(owner), a.deathYearTakenInTime) === 'no') {
         return refuse('deathYearTakenInTime', 'death-year-late')
       }
     }
@@ -415,6 +436,7 @@ export function inheritedAnswersFrom(f: InheritedIraV7 | undefined, c: Inherited
     fromSpouse: yes('no', heir),
     heldAtDeath: yes('own-ira', ''),
     ownerInherited: yes('no', ''),
+    named: yes('named', heir),
     ownerBirthYear: f.ownerBirthYear,
     ownerDeathYear: f.ownerDeathYear,
     disabledAtDeath: yes('no', heir),
@@ -434,7 +456,7 @@ export function inheritedAnswersFrom(f: InheritedIraV7 | undefined, c: Inherited
     ...(sameYear && afterDate && minimumYears !== null
       ? { minimumsTaken: yes('yes', `${ownerDatesKey(owner)}|${minimumYears.from}-${minimumYears.to}`) }
       : {}),
-    ...(sameYear && afterDate && f.ownerDeathYear <= f.askedYear - 2 ? { deathYearTakenInTime: yes('yes', ownerDatesKey(owner)) } : {}),
+    ...(sameYear && afterDate && asksDeathYearInTime(f.ownerDeathYear, f.askedYear) ? { deathYearTakenInTime: yes('yes', ownerDatesKey(owner)) } : {}),
     earlier: sameYear ? Object.fromEntries(f.earlierWithdrawals.map((e) => [e.calendarYear, e.amount])) : {},
     ...(f.leftTo !== undefined ? { leftTo: yes(f.leftTo, heir) } : {}),
   }

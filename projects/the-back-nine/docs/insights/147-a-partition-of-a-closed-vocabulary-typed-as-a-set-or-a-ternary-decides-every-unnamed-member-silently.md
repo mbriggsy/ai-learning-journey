@@ -30,6 +30,10 @@ sentence per reading — ruling 41: NC "either way", FL and PA/unpriced each a r
 Record<WorkingYearStateTaxReading, {…} | null>` (ruling 42). Each member's answer is a line a reviewer reads; a new
 member fails to compile in every home.
 
+> **Out of date (corrected 2026-11-27):** `src/intake/WorkingYearLedger.tsx` (this insight's `modules:`) was deleted
+> with the walk at Act 6 · RC14 (`c43d7a50`). The current `STATE_TAX_IN_W` homes are `src/intake/workingYearLedgerRows.ts`
+> and `src/intake/workingYearQuote.ts`; `WORK_STATE_KEY` still lives in `src/ui/assumptionRegistry.ts`.
+
 ## Key Insight
 
 **When code chooses behavior by a closed vocabulary, type the choice as `Record<Vocabulary, …>` — never a Set, a

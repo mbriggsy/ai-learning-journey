@@ -50,6 +50,8 @@ the strip's **lead** (*"Your answer takes shape as you go."*) still sat above a
 permanent refusal — a keep-going promise over an answer that is never coming.
 `answerWithheldLead` now leads when *every* blocker is unrepresentable.
 
+> **Out of date (corrected 2026-11-27):** `AnswerStrip.tsx` and its `MissingList` were deleted with the walk at Act 6 · RC14 (`c43d7a50`). The two blocks' split lives in `src/intake/missingFacts.ts` (the `stillNeeded` / `cannotPrice` lines and `blockedLeadFor`), and the first-run stepper's lead reads it in `src/ui/screens/setup/stepperView.ts`.
+
 ## Key Insight
 
 **A refusal's honesty lives in the frame, not the fact name.** When a

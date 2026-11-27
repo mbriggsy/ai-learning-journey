@@ -64,3 +64,27 @@ calling it a product blank. The fix kept anyway is the fan chart's own rule for 
 
 What it adds: when a harness shows a chart word missing, run it once on an unpinned page before naming a product bug;
 and with reduced motion on (as most arms run) a deferred label shows at once, so only a motion-on arm can see the fade.
+
+## Extended (2026-11-26, RC17's review): a plot band at a year with no point sits past the axis, and its inside label wraps to the sliver
+
+RC17 marked a year with a plot band where the chart had no column. The x axis ends at the last column plus Highcharts'
+default 1% `maxPadding`, so the band fell mostly past the axis and drew as a sliver of about 8 px. Its `inside` label
+then wrapped one word per line, because a band label's default width is the band's own drawn width (`PlotLineOrBand.js`
+~287 in highcharts 13.1.1: `style.width || bBoxWidth`, then `+ 'px'`). The fix (`5bae2f61`, b9-6) set `xAxis.max` to
+the band's year and gave the label a NUMERIC `style.width`: Highcharts appends `px` itself, so a "300px" string becomes
+"300pxpx" and is ignored. An arm that asserts only "width > 0 and visible" passes on the broken tree; assert the band
+is one slot wide and its label one line.
+
+## Extended (2026-11-26, RC20's review): a minimum mark size in a proportional chart lies the moment it engages
+
+RC20's Sankey floored every link at one label line (`minLinkWidth` 21 in a plot about 222 px tall) so that labels
+could not touch. At his window the floor engaged on every year. On `retired`, Expenses (175 px) split into 202 px of
+parts; on `datesavedtypedpension` in 2031 every bar drew 21 px, so Pay of about $150,000 stood as tall as about $407.
+Every label check passed, because the labels were perfectly spaced. The fix (`e992e9d6`, b9-7) put legibility in the
+spacing (`nodePadding` 20, one label line) and took the floor out of the mark (`minLinkWidth` 1). `auditMapsProportion`
+in `e2e/rc-screens.spec.ts` guards it by drawn proportion: every bar on one px-per-dollar scale within 1 px, and each
+column summing to its total. It was red on the old floor (18.6 px off) and green after (0.55 px).
+
+**What it adds.** In a chart whose marks encode amounts, a floor on mark size is a second scale that silently takes
+over for small values, and in a dense chart it can take over for all of them. Make room for labels with padding or
+spacing, never by enlarging marks, and pin the picture by drawn proportion, not by label layout.

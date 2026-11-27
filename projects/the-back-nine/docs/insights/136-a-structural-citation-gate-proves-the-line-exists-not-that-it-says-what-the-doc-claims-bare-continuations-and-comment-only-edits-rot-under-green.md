@@ -112,3 +112,21 @@ green showed up in one day.
 The rule these add: re-anchor and run doc-stats on every commit that moves a cited line, never once per batch; run the
 tool last, after the final edit; take a citation of moved code as one to resolve by hand; and put the file's name next
 to any bare token that sits far from it.
+
+## Extended (2026-11-26, Act 6 RC19's review): the tool's REVIEW list is exactly the half doc-stats cannot see, and a rule the builder's brief leaves out is a rule the builder breaks
+
+- **The REVIEW lines are the ones only a person fixes.** `scripts/reanchor-citations.mjs` moves a citation only when
+  its line sits outside every changed hunk. A citation inside a changed hunk goes on the `REVIEW` list and keeps its
+  old number. That old line still exists and is usually not blank, so doc-stats passes it. RC19's builder applied the
+  moves and left all 13 REVIEW citations at their old numbers. Citations in `App.tsx`, insight 106, `reentryChrome.ts`
+  and the register then pointed at a blank line or at the wrong code, with the gate green (b9-6's review caught them).
+  The tool flags exactly these because it cannot place them, and doc-stats cannot see them, so a pass that skips the
+  list leaves every one wrong.
+- **The frozen log moved three times.** `docs/landmines.md` says the re-anchor also rewrites the dated
+  `docs/council-log.md`, whose citations are frozen as they were written, and that the file must be restored after the
+  run. RC16, RC17 and RC19 each committed it moved. The rule lives in the landmines file. Each builder's brief carried
+  the re-anchor step and left out the restore.
+
+**What it adds.** A re-anchor is not done until its REVIEW list is empty: resolve each line by content against the
+base, or say in the commit why it stays. And when a step is handed to a builder, the step's landmines go into the
+brief with it. A builder never reads a rule kept in a file it was not pointed at.

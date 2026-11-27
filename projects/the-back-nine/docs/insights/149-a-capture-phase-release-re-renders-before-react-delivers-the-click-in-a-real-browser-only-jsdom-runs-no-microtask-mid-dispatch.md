@@ -59,3 +59,18 @@ before the pointer reaches Save. Save still reads the committed form.
 pointer user can read: anything drawn from a commit-on-blur value appears and vanishes inside one press. Words that must
 be read before an action (a consequence, a warning, a receipt) come from the live text, never from the commit, and their
 test types without blurring.
+
+## Extended (2026-11-26, milestone 4's review, a refuted finding): a click race reproduced in jsdom is not a race in a browser
+
+The vault seat of milestone 4's review (b9-8) filed a race in `SaveFlow.tsx`: its jsdom probe showed a close of the
+Save drawer landing between the click handler's resolved promise chain and its `setStep('securing')`. Both refuters
+rejected it. In a real browser the promise's continuations run in the microtask checkpoint right after the click
+listener returns, while `window.event` is still the click. React 19 takes an update's priority from `window.event`
+when nothing else sets it, so a click makes the update discrete and React renders it at once, before any later key or
+click can be handled. In the jsdom probe the continuations ran after `fireEvent` had returned, with no event current,
+so the update got default priority and the probe's next event could get in first.
+
+**What it adds.** The same gap this insight's key section names (jsdom has no microtask checkpoint mid-dispatch),
+from the other side: it can invent a race as well as hide one. Before filing a race found with `fireEvent`, reproduce
+it with `window.event` set to the click, or with trusted input in Playwright. A race that exists only under a bare
+`fireEvent` is a fact about the test, not the app.

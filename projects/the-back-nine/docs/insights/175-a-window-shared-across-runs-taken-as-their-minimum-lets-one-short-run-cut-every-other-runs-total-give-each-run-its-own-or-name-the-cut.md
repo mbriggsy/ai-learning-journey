@@ -71,3 +71,32 @@ right window is no evidence that the metrics beside it do.
   (`taxOverlay.ts`), so a future that ran out reads low. The page names the cut (`healthLifetimeStopsAtRunOut`), which
   is the second branch above. See 176 for the same run-out on the per-year side.
 - Any later screen that totals a what-if beside the plan: pick the window first, then write the sentence.
+
+## Extended (2026-11-26, RC17's review and milestone 4's review): a figure that means different things in different rows cannot be summed across them, and dropping the rows that differ is wrong when the change acts in those rows
+
+Retirement → Comparisons prints how much income tax a what-if pays against the plan. Three wrong answers in a row,
+each fixing the last, came down to which years the total counts.
+
+- **Summed across row kinds (RC17, fixed `5bae2f61`, b9-6).** A working year's `taxPaid` holds only the tax the
+  portfolio's own income adds; the tax on pay rides `workingYear`, and a state's tax on pay sits inside W. A retired
+  year's `taxPaid` holds the whole return. Comparisons summed both kinds from row 0, so a stop-year or pre-tax→Roth
+  what-if could print "pays ~$24,000 less income tax" when it paid more. The fix counted retired years only, over
+  `sharedRetiredWindow`, and named the window. (The other fix, adding `taxOnOutsideIncome` to every working year, was
+  rejected because as a total it still leaves out Pennsylvania's tax on pay. The plan's F2 verdict gave a false reason
+  for that ruling: "the tax on pay is not a ledger field".)
+- **The dropped years were where the change acted (milestone 4, round 1, fixed `af889009`, b9-8).** A Roth conversion
+  made while working happens in exactly the years the retired-only window left out. On `date`, $60,000 a year for 4
+  years printed "new what-if pays ~$32,000 less income tax"; it paid ~$30,000 more. Round 1 put working years back only
+  where both runs had the same pay check.
+- **The same mistake, narrower (round 2, fixed `1e113b43`).** A claim-age or deposits lever changes exactly the years
+  that rule still left out. With Sam claiming at 62 the screen printed "~$8,300 less" against +$4,719, and its reason
+  ("their pay or deposits differ") was false. The fix: compare every year on the run's own whole charge,
+  `taxPaid + workingYear.taxOnOutsideIncome` once W is answered. That is exact where the pay is equal, even with
+  investment income and in Pennsylvania, because both sides carry the same tax on pay and it cancels. Where W is not
+  answered and the lever's years cannot be priced, the screen says so in words instead of printing a total.
+
+**What it adds.** Before summing a per-row figure, check that it means the same thing in every row. When it does not,
+leaving out the rows where it differs swaps one bias for another whenever the change being compared acts in those
+rows. Ask "does the lever act in the years I'm leaving out?" before leaving any out. The cure is a per-row measure
+that means the same in every row of both runs: here, each run's own whole charge, where what neither side prices
+cancels on equal inputs. Where no such measure exists, print words, never a total.

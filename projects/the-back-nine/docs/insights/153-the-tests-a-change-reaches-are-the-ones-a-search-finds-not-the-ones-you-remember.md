@@ -116,3 +116,19 @@ sat in, and the fix removes the list instead of searching harder for it.
   the expected list from the registry and pin the registry's contents in one place, its own unit test. Keep a hand list
   only where the content itself is the claim (these pages, by these names): a derived list there would agree with
   whatever the registry says, wrong or not. Give a derived list a non-empty guard, so it cannot pass on nothing.
+
+## Extended (2026-11-26, Act 6's RC19): deleting reds a sweep too, and a push of several commits runs CI only on the tip
+
+- **A deletion is a change the sweeps read.** RC19 deleted `Disclaimer.tsx` and, with it, `app.css`'s 68rem rules for
+  the old footer. `scripts/__tests__/breakpoint-mirrors.test.ts` sweeps every stylesheet and REQUIRES a mirror of the
+  seam in each file it names; `app.css` was named and now had none, so it went red. The builder had run the test files
+  that import what changed, and a deleted rule imports nothing. Fix `c4ef15d7`: `app.css` left the required list, and
+  theme.css's compact variant took its place.
+- **The red landed under the wrong commit.** RC19 and its review fix were pushed together, and a push runs the
+  workflow once, on the head commit. The red showed up under the fix's run, two commits after the commit that caused
+  it, so it read at first as the fix's fault.
+
+**What it adds.** A unit that deletes files, CSS rules or copy keys runs the sweeping guards (breakpoint-mirrors,
+tokens, `copyGuard`, the harness partition) or the full suite, because an import search finds nothing that reads a
+deletion. And when several commits go up in one push, a red belongs to the whole range, not to the tip: bisect it
+locally, or push a unit and its fix separately when the unit's own run matters.

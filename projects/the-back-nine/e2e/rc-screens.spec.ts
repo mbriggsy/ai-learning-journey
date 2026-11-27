@@ -939,6 +939,53 @@ async function assertDateRouteOrder(page: Page, who: string): Promise<string[]> 
 }
 
 // HEAD :1861 (dip), :1919 (date65), :1966 (datenc): the date route's order contract and its state and Medicare lines.
+// ── RC4b · the tray at the laptop seam (b9-9, 2026-11-27): at 1088 px, where the tray's two column groups first sit side
+// by side, the kit grid let the names' column shrink to a 6rem floor under `break-words` ("Withdrawal" and "conversions"
+// broke inside the word) and the control column shrink below its pickers (each ran ~25 px into the compared column).
+// Neither shows at his window or on the phone; U17's pace rows add the longest picker choice. Each word is read through a
+// Range: a word whose boxes sit on two lines is broken.
+const SEAM = { width: 1088, height: 731 } as const
+
+test.describe(`RC4b · the Action Items tray at the laptop seam (${SEAM.width}×${SEAM.height} @ ${REAL_DPR}dpr)`, () => {
+  test.use({ viewport: SEAM, deviceScaleFactor: REAL_DPR })
+  for (const seed of ['dip', 'budget', 'inherited'] as const) {
+    test(`?seed=${seed}: no name breaks inside a word and no control runs past its column into the compared one`, async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 60_000)
+      await openTrayOn(page, seed)
+      const r = await tray(page).evaluate((root) => {
+        const splits: string[] = []
+        const walk = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
+        for (let n = walk.nextNode(); n !== null; n = walk.nextNode()) {
+          for (const m of (n.textContent ?? '').matchAll(/\S+/g)) {
+            const range = document.createRange()
+            range.setStart(n, m.index!)
+            range.setEnd(n, m.index! + m[0].length)
+            const tops = new Set([...range.getClientRects()].filter((x) => x.width > 0).map((x) => Math.round(x.top)))
+            if (tops.size > 1) splits.push(m[0])
+          }
+        }
+        const past: string[] = []
+        for (const row of root.querySelectorAll('[data-tray-row]')) {
+          const [, ctl, cmp] = [...row.children]
+          if (ctl === undefined || cmp === undefined) continue
+          const kids = [...ctl.querySelectorAll('input, [role="combobox"], [role="slider"]')]
+          if (kids.length === 0) continue
+          const right = Math.max(...kids.map((k) => k.getBoundingClientRect().right))
+          const c = cmp.getBoundingClientRect()
+          const k0 = kids[0]!.getBoundingClientRect()
+          if (k0.top < c.bottom && c.top < k0.bottom && right > c.left + 0.5) past.push(row.getAttribute('data-tray-row') ?? '?')
+        }
+        return { splits, past, rows: root.querySelectorAll('[data-tray-row]').length, pace: root.querySelectorAll('[data-tray-group="inherited-pace"]').length }
+      })
+      expect(r.rows, '[test setup] the tray drew its rows').toBeGreaterThan(5)
+      if (seed === 'inherited') expect(r.pace, '[test setup] the pace group and its two accounts').toBe(3)
+      expect(r.splits, `${seed}: words broken across two lines`).toEqual([])
+      expect(r.past, `${seed}: controls past their column`).toEqual([])
+      await noSidewaysScroll(page, `${seed} seam tray`)
+    })
+  }
+})
+
 test.describe(`RC4 ported · the date route’s order contract on Probability (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr)`, () => {
   test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
 

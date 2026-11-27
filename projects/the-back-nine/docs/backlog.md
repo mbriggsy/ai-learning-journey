@@ -1,6 +1,6 @@
 # The Back Nine — Open Backlog
 
-> The complete open register *(this header is GATED — `pnpm verify:doc-stats` reds when its numbers disagree with the body below or when any other doc re-types the count)*: **256 open items** (330 entries, 74 closed and kept as records; two entries are half-closed and counted open — the runner-up, and the unwitnessable household whose mechanism shipped while its sentence stays open) consolidated
+> The complete open register *(this header is GATED — `pnpm verify:doc-stats` reds when its numbers disagree with the body below or when any other doc re-types the count)*: **257 open items** (331 entries, 74 closed and kept as records; two entries are half-closed and counted open — the runner-up, and the unwitnessable household whose mechanism shipped while its sentence stays open) consolidated
 > from **136 raw obligations** (a source audit of the shipped code + a salvage sweep of the 246 KB
 > `TODO.md` archive it replaced). Every raw obligation is accounted for — the `ids` on each entry are its
 > provenance.
@@ -5047,6 +5047,13 @@ re-clear it from this list.
 
 - **The gap (read).** `railOffers` (`src/ui/workbench/railChrome.ts`, its claim gate) skips a person whose `pia` is 0 or absent, so the tray's Social Security row never offers a spousal-only filer's claim age. The spousal benefit depends on that age (reduced before full retirement age), and the run prices it (`householdBenefits`). RC9's Social Security page already counts such a person as choosing a claim age (its builder's call), so the two screens disagree on who has a choice.
 - **Prescription.** Gate the claim offer on "has a benefit" the way `claimPeople` (`src/ui/screens/retirement/socialSecurityView.ts`) does: own PIA above 0, or a two-person household whose other member's PIA is above 0. A tray test on a draft with one spouse at PIA 0.
+
+### At the 1088 px laptop seam the top bar's household names break inside a word, and Analysis's display line covers the Probability tab
+
+`S` · **pilot** · filed 2026-11-27 (b9-9) from U17's look at the seam (the kit tray's own break there, the names' 6rem floor and the control column below its pickers, was fixed the same session in `src/ui/kit/Tray.tsx`, gated by the seam arm in `e2e/rc-screens.spec.ts`)
+
+- **The gap (measured, `?seed=dip` at 1088×731, 2 dpr, dev).** (1) The top bar's names column breaks each name inside the word ("Ale / x", "Sa / m"). b9-7's `85263bbe` gave the phone tier the names' own row; at 1088 the names still sit in a column too narrow for a four-letter name, and the band from the phone tier to 1088 is unmeasured at the 20-character ceiling. (2) On Retirement → Analysis the "Today's dollars" control and its "Provisional — with what you've entered so far" line sit over the first analysis tab: `document.elementFromPoint` at the Probability tab's centre returns that block 4 s after landing (not a passing frame), so a click there misses the tab. Neither shows at 1440×731.
+- **Prescription.** Measure first at 1088, 1180 and 1280 on `dip` and on a seed with 20-character names. (1) The names column never narrower than its longest word (the tray's `minmax(min-content, …)` rule), or the phone's own row up to the seam. (2) The display line on its own row above the tabs at the seam, or the tab row starting after it. Gate each with a fit arm at 1088: the split-word Range read the tray's seam arm uses, and a hit test at each tab's centre.
 
 ## Tier 3 — Briggsy’s call (taste, scope, one-way doors)
 

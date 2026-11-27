@@ -93,8 +93,9 @@ export interface ActionItemsTrayProps {
 
 const WIDE_BOX = 'w-32'
 const NARROW_BOX = 'w-24'
-/** The pace picker's width (U17): its choices wrap inside it. */
-const PACE_BOX = 'w-52 min-w-0'
+/** The pace picker's width (U17): its cell's room up to 13rem, never under the picker's own floor; its choices wrap
+ *  inside it. */
+const PACE_BOX = 'w-full max-w-52'
 /** The tray's short slider (ref 2.8's is about 140 px at RightCapital's wider tray; the row's name needs the room). */
 const SLIDER = 'w-24'
 

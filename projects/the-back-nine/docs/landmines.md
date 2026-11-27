@@ -577,6 +577,11 @@ said squeaky clears `temp/` UNCONDITIONALLY; its step 4 now deletes only the clo
 - **(b9-6, 2026-11-26) A collector installed by `page.addInitScript` resets on every navigation, a `page.reload()`
   included.** RC19 put a reload before the CSP shell arm's only `violations()` check, so every violation from the walk
   went unheard under a green arm (fixed `6aa20fa6`). Read the collector before each navigation that resets it.
+- **(b9-8, 11-27) The RC17 spending comparison is the tightest frame:** on `dip` with its stop-year what-if its caveat
+  sits at 720.9 of 731 on Windows with the notes column at 2fr_3fr (`AnalysisRunsFrame`'s `split: 'notes'`), and its
+  ACTION ITEMS handle below the frame by section 4.0's landed-what-if rule (`assertRc17Frame`'s `handleMayFollow`; the
+  arm proves the handle reachable). A new line in that chart's notes column breaks the caveat; its six figures print
+  at two decimals because three ("~$1.184mm") met their neighbour at that width.
 
 ## The mutation harness
 
@@ -1013,6 +1018,15 @@ chair; chair from a digest script, never the raw result, and expect the window t
 - **(2026-09-25 late)** 57.9 % context after one build + one 25-agent review: stop at the build boundary, never start the next Tier 0 in the same window.
 - **(2026-09-25)** a Workflow `resumeFromRunId` after a session-limit death REPLAYS the finders but RE-RUNS every nested verifier — not just the dead ones (journal: 384 started / 299 results for a 206-agent run; two verdicts changed) — budget a resume as a full second pass of everything after the first nondeterministically-ordered call
 - **(2026-09-13)** the classifier that gates auto-mode Bash can rate-limit mid-session; read-only tools keep working, so route the wait into Read/Grep work
+- **(b9-8, 11-27) A helper agent's report arrives cut at about 3,000 to 4,000 characters** in its idle notice ("[result
+  truncated — ask the agent for the rest via SendMessage]"): send it one SendMessage asking for the rest verbatim from
+  the cut before acting on a list that may be missing its worst item. Nearly every one of milestone 4's 22 seats and
+  refuters was cut this way.
+- **(b9-8, 11-27) Low memory reaps background shells.** With about a dozen idle Claude sessions open the laptop sat at
+  ~4 GB free of 31.5, and Claude Code stopped a background full `pnpm vitest run` ("the system is running low on
+  memory"; it must not be restarted unasked). Run the changed test files and the sweeping guards in the foreground,
+  let CI run the full suite, and tell probing helpers "one vitest probe at a time". A long inline `node -e` script in
+  the Bash tool hung the same night: write the script to the scratchpad and run the file.
 
 ## Probes and measurement
 

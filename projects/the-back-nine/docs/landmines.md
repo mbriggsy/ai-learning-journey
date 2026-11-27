@@ -1290,6 +1290,11 @@ rasterizer SILENTLY
   point plus the 1% default `maxPadding`): it draws as a sliver and an `inside` label wraps one word per line. Set
   `xAxis.max` to the band's year, and give the label a NUMBER `style.width` (Highcharts appends `px` itself; a string
   "300px" becomes "300pxpx"). RC17's money-ran-out band (`incomeSourcesOptions.ts`, fixed `5bae2f61`).
+- **(b9-9, 2026-11-27) A tray control's fixed width is its column's floor.** Since `09f3954d` the kit Tray's control cell
+  is `min-width: auto` from `wide`, so a fixed `w-*` on a control sets the control column's minimum and squeezes the
+  compared column (U17's pace picker at a fixed `w-52` left it 98 px at 1088). Size a tray control `w-full max-w-*` so its
+  floor stays the kit's own (`Select`'s `min-w-40`), and measure a new row at 1088, where the two column groups first sit
+  side by side (the seam arm, `e2e/rc-screens.spec.ts`), not only at 1440 and the phone.
 
 ## Research and re-verification
 

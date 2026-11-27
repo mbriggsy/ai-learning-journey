@@ -1188,6 +1188,8 @@ refusal witness), so `gotoSeedFinal` times out on it — anchor on `main.result`
   `gh api repos/{owner}/{repo}/actions/jobs/<job id>/logs > file` wrote one line, "the response contains terminal escape
   sequences; pass --allow-escape-sequences to output it anyway". `gh api --allow-escape-sequences …/jobs/<id>/logs` writes
   the whole log; strip the colour codes (`sed 's/\x1b\[[0-9;]*m//g'`) before grepping for `FAIL` or `AssertionError`.
+  Once the whole run has finished, `gh run view <run> --log-failed 2>&1 | grep -a FAIL` does work through a pipe (b9-13,
+  run 46052695767).
 
 - **(b9-11, 11-25) `jq` is not installed in this Git Bash: filter with `gh`'s own `--jq`.** b9-11's CI wait piped
   `gh run list` into `jq`; every probe printed "jq: command not found", the loop's test read an empty count, and it spun

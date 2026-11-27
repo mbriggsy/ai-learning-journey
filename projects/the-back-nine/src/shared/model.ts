@@ -786,15 +786,45 @@ export interface LedgerWorkingYear {
   readonly shortfall: number
 }
 
+/** One inherited IRA's year in the sink (the Act 5 plan's U12, KTD21 to KTD25), real $. Its income in the year is
+ *  `booked + taken`; `start − leftTheRun − taken` is what it carries into the year's growth. */
+export interface LedgerInheritedEntry {
+  /** The balance at the year's top (its prior December 31 balance). */
+  readonly start: number
+  /** Income the custodian reported with no balance moved this row (KTD25): an earlier row's withdrawal on a plan
+   *  aged past its build year, or what already came out in the asked year. */
+  readonly booked: number
+  /** What the law required out this row, never more than `start`: 0 before the asked year and in a year no minimum
+   *  is owed; the asked figure still owed plus any untaken death-year amount in the asked year; the whole balance in
+   *  the law's last year. */
+  readonly required: number
+  /** What came out as a withdrawal: the paced amount (KTD21) plus this ledger's share of the year's last-source
+   *  draw (a year the general accounts could not fund). */
+  readonly taken: number
+  /** `taken − required`. */
+  readonly aboveRequired: number
+  /** The part of `taken` beyond the year's need, moved to taxable at full basis (inside the total). */
+  readonly movedToTaxable: number
+  /** The whole balance that left the total because the heir died and the account was left to someone else: never
+   *  spending, never anyone's income. */
+  readonly leftTheRun: number
+  readonly end: number
+  /** The law's last year for this account (the tenth after the death), which takes everything left. */
+  readonly last: boolean
+}
+
 /** What the tax overlay's own year loop records for one year of the year-by-year table (workbench plan U3,
  *  KTD5–KTD8). Indexed by sim-year `t` (calendar year `startCalendarYear + t`, insight 134): every flow
  *  happened during year t, `start` is year t's opening and `end` its close. In a funded year each ledger
  *  reconciles by the loop's own arithmetic:
- *    taxable_end = (start − draw + rmdToTaxable) × growthScale + contribution + leftOverCredit
+ *    taxable_end = (start − draw + rmdToTaxable + Σ inherited movedToTaxable) × growthScale + contribution + leftOverCredit
  *    pretax_end  = (start − conversion − draw − rmdToTaxable) × growthScale + contribution
  *    roth_end    = (start + conversion − draw) × growthScale + contribution
  *    hsa_end     = (start − hsaSpend) × growthScale + contribution
+ *    each inherited end = (start − leftTheRun − taken) × growthScale
  *  (`growthScale` is 0 on the loop's knife-edge branch, where the year closes on its inflows alone).
+ *  The year's opening and closing totals are `ledgerRowStartTotal` / `ledgerRowEndTotal` (`@engine/sequencing`,
+ *  the Act 5 plan's KTD22: the four buckets plus each inherited ledger), never a sum of `start` or `end` alone.
  *  The year the money runs out records one last row with `ranOut` set: its flows are what the year
  *  asked for, its deposits and credit are forfeited, its close is zero, and it does not reconcile. */
 export interface LedgerLoopRow {
@@ -826,6 +856,9 @@ export interface LedgerLoopRow {
   readonly end: LedgerBalances
   /** Each person's own pre-tax balance at the close; present with `pretaxStartByPerson`. */
   readonly pretaxEndByPerson?: readonly number[]
+  /** Each inherited IRA's year, in `OverlayParams.inheritedIras`' order (the Act 5 plan's U12). PRESENT only when the
+   *  run carries an inherited ledger, so a run without one keeps its row shape byte for byte. */
+  readonly inherited?: readonly LedgerInheritedEntry[]
   /** Income tax the portfolio paid in the year (federal and state as the overlay solves them). In a
    *  working year this is only what the portfolio's own income adds; the tax on pay is in `workingYear`. */
   readonly taxPaid: number
@@ -1125,7 +1158,7 @@ export interface TaxAwareDistribution {
    *  concentrates in the pre-65 ACA years and may barely move the portfolio median. */
   readonly lifetimeNetPremiumReal: readonly number[]
   /** Σ Medicare cost actually paid across the path's funded years (real $; base Part B + IRMAA +
-   *  the Part D / Medigap / MA extras, per enrolled person — `taxOverlay.ts:3036`; P3·U11), an
+   *  the Part D / Medigap / MA extras, per enrolled person — `taxOverlay.ts:3046`; P3·U11), an
    *  addend of the pay-less-tax all-in cost. Same accrual rule as its siblings. */
   readonly lifetimeMedicareCostReal: readonly number[]
   /** The inherited IRAs' summed balance at the path's horizon end (real $; the Act 5 plan's U12) — counted
@@ -1844,7 +1877,8 @@ export interface WorkingYearLedgerYear0 {
     readonly medicareExtras: WorkingYearLedgerAmount
   }
   /** Show the worded line "plus any income tax on what savings pays out, which the answer counts": year 0
-   *  funds Medicare, extras or a shortfall from savings, or a Roth conversion or a required withdrawal lands. */
+   *  funds Medicare, extras or a shortfall from savings, or a Roth conversion, a required withdrawal or an
+   *  inherited IRA's withdrawal lands. */
   readonly savingsTaxLine: boolean
 }
 

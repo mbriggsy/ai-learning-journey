@@ -19,6 +19,9 @@
  *                    variant — the exact vector `ongoingIncomeForYear` sums at t), read off the struct;
  *   - `rmd`/`rmdAtStart` ← `@engine/rmd`'s `rmdStartAgeForBirthYear` + `selectRmdDivisor` on each
  *                    person's own year-0 pre-tax share (the `perPersonRmd` M6b·B math, t=0);
+ *   - `inheritedDistribution` ← the overlay loop's own ledger functions (`simulate.inheritedCommittedIncomeSteady`,
+ *                    the Act 5 plan's U12): year 0's asked figures, then each ledger carried by the steady path's
+ *                    one growth factor (insight 143: the anchor must see every income the year commits);
  *   - the ACA-cliff rail ← the engine's own per-year pricing predicate (`taxOverlay.ts` bracket-fill
  *                    site) + `cliffMagiFor(activeTable, fplForHousehold(livingCount))`;
  *   - the IRMAA rail ← the shipped `irmaa` schedule + the committed frame (`committedIncomeForYear`) of
@@ -38,6 +41,7 @@
  */
 import { expandRothConversion, type RothConversionPlan, type SimulationParams } from '@shared/model'
 import { householdBenefits } from '@engine/socialSecurityBenefit'
+import { inheritedCommittedIncomeSteady } from '@engine/simulate'
 import { rmdStartAgeForBirthYear, selectRmdDivisor } from '@engine/rmd'
 import { cliffMagiFor, type CommittedYearIncome } from '@engine/magiLandscape'
 import { fplForHousehold } from '@engine/healthOverlay'
@@ -121,7 +125,9 @@ function rmdYear0(base: SimulationParams): number {
  * biological 65+ count at `startCalendarYear + t`, and the forced RMD — year 0's own (`rmdYear0`), and
  * NONE after it: the conversion window ends at the FIRST person's RMD start age
  * (`conversionWindowFor`), so no later window year can carry one (asserted, never assumed). Year 0's
- * frame IS the anchor skeleton every rail reads.
+ * frame IS the anchor skeleton every rail reads. An inherited IRA's withdrawal (U12) is its own term, on
+ * every frame of a run that carries one: year 0's asked figures and the steady path's later rows, never the
+ * owner's RMD rule, so the window's end does not bound it.
  */
 export function committedIncomeForYear(base: SimulationParams, t: number): CommittedYearIncome {
   const overlay = base.overlay
@@ -141,6 +147,7 @@ export function committedIncomeForYear(base: SimulationParams, t: number): Commi
   }
   let ongoingTaxable = 0
   for (const leaf of overlay.income?.incomeByPerson ?? []) ongoingTaxable += leaf.taxableFull?.[t] ?? 0
+  const inherited = inheritedCommittedIncomeSteady(base, t + 1)
   return {
     rmd: t === 0 ? rmdYear0(base) : 0,
     conversion: 0, // the baseline skeleton; the enumerator adds each trial amount
@@ -149,6 +156,7 @@ export function committedIncomeForYear(base: SimulationParams, t: number): Commi
     filing: overlay.filing,
     count65: people.filter((p) => simAge0(p.birthYear, calendarYear) >= 65).length,
     calendarYear,
+    ...(inherited !== undefined ? { inheritedDistribution: inherited[t]! } : {}),
   }
 }
 

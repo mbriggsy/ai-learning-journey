@@ -349,8 +349,8 @@ function largestAmountWithin(metric: (a: number) => number, rail: number, hi: nu
  *  never a quietly narrower walk (burned/062). Non-empty, integer calendar years, strictly ascending,
  *  never before the anchor skeleton's year (and, with `startsAtSkeleton`, starting AT it), the skeleton's
  *  filing (both alive is one filing), conversion 0 (the enumerator adds each trial amount), finite ≥ 0
- *  income terms; a frame for the skeleton's own year must BE the skeleton (one year-0 truth for every
- *  rail). `label` names the field in every message. */
+ *  income terms (an inherited withdrawal on every frame or on none, U12); a frame for the skeleton's own year
+ *  must BE the skeleton (one year-0 truth for every rail). `label` names the field in every message. */
 function assertFrames(
   frames: readonly CommittedYearIncome[],
   skeleton: CommittedYearIncome,
@@ -379,9 +379,20 @@ function assertFrames(
     for (const [name, v] of [['rmd', f.rmd], ['ongoingTaxable', f.ongoingTaxable], ['ssBenefit', f.ssBenefit]] as const) {
       if (!Number.isFinite(v) || v < 0) throw new Error(`[candidates] ${label}[${k}].${name} must be finite ≥ 0 (got ${v}) — insight 010`)
     }
+    // U12: an inherited withdrawal rides a frame only beside a ledger, and then every frame carries it (one run).
+    if ((f.inheritedDistribution !== undefined) !== (skeleton.inheritedDistribution !== undefined)) {
+      throw new Error(`[candidates] ${label}[${k}] and the anchor skeleton disagree on whether an inherited withdrawal rides — one run's frames`)
+    }
+    if (f.inheritedDistribution !== undefined && !(Number.isFinite(f.inheritedDistribution) && f.inheritedDistribution >= 0)) {
+      throw new Error(`[candidates] ${label}[${k}].inheritedDistribution must be finite ≥ 0 (got ${f.inheritedDistribution}) — insight 010`)
+    }
     if (
       y === skeleton.calendarYear &&
-      (f.rmd !== skeleton.rmd || f.ongoingTaxable !== skeleton.ongoingTaxable || f.ssBenefit !== skeleton.ssBenefit || f.count65 !== skeleton.count65)
+      (f.rmd !== skeleton.rmd ||
+        f.ongoingTaxable !== skeleton.ongoingTaxable ||
+        f.ssBenefit !== skeleton.ssBenefit ||
+        f.count65 !== skeleton.count65 ||
+        f.inheritedDistribution !== skeleton.inheritedDistribution)
     ) {
       throw new Error(`[candidates] ${label}' ${y} frame is not the anchor skeleton — one year-0 truth for every rail`)
     }

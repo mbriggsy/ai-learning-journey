@@ -138,6 +138,7 @@ import {
   type DrawdownPolicy,
   type FilingStatus,
   type InheritedLedgerParams,
+  type LedgerInheritedEntry,
   type LedgerBalances,
   type LedgerLoopRow,
   type LedgerWorkingYear,
@@ -2525,6 +2526,10 @@ export function runTaxAwareDecumulation(
         filing: regime.filing,
         count65: regime.count65,
         calendarYear: regime.calendarYear,
+        // U12: the inherited ledgers' income the year books and paces is committed (gross-independent), so the fill
+        // leaves room for it and never counts it as fill. Their last-source draw is not: it funds only what the
+        // general accounts cannot, past the fill. Absent with no ledger (the literal pre-U12 frame).
+        ...(inheritedThisYear !== undefined ? { inheritedDistribution: inheritedThisYear.draw.paced + inheritedThisYear.draw.booked } : {}),
       }
       // The tax-bracket rail — always active under bracket-fill.
       let ceiling = bracketEdgeFillHeadroom(committed)
@@ -2939,6 +2944,11 @@ export function runTaxAwareDecumulation(
               growthScale: ledgerScale,
               end: { taxable: buckets.taxable, pretax: buckets.pretax, roth: buckets.roth, hsa: buckets.hsa ?? 0 },
               ...(pretaxLedger && ledgerPretaxStart ? { pretaxEndByPerson: [...pretaxLedger] } : {}),
+              // U12: each inherited ledger's year (its close is the ledger as this call finds it: advanced in a funded
+              // year, emptied at a run-out or on the knife-edge branch). Absent with no ledger: the row keeps its shape.
+              ...(ledgers && inheritedThisYear && inheritedSplitThisYear
+                ? { inherited: inheritedRowEntries(ledgers, inheritedThisYear, inheritedSplitThisYear) }
+                : {}),
               taxPaid: taxPaidThisYear,
               premiums: {
                 acaNet: acaNetPremiumThisYear,
@@ -3266,11 +3276,16 @@ function buildInheritedLedgers(
 }
 
 /** One year's terms for the ledgers: each one's balance at the top, the year's summed draw terms, each one's paced
- *  withdrawal and the room above it, and the summed exit. */
+ *  withdrawal, the room above it, what the law required, the income it booked and whether the year is its last, and
+ *  the summed exit. */
 interface InheritedYearTerms {
   readonly top: readonly number[]
   readonly paced: readonly number[]
   readonly room: readonly number[]
+  /** The law's required withdrawal, never more than the balance (the floor the pace reads; 0 before the open row). */
+  readonly required: readonly number[]
+  readonly bookedBy: readonly number[]
+  readonly last: readonly boolean[]
   readonly exitBy: readonly number[]
   readonly exit: number
   readonly draw: InheritedYearDraw
@@ -3287,6 +3302,9 @@ function inheritedYearTerms(ledgers: readonly InheritedLedgerRun[], alive: reado
   const top: number[] = []
   const paced: number[] = []
   const room: number[] = []
+  const requiredBy: number[] = []
+  const bookedBy: number[] = []
+  const last: boolean[] = []
   const exitBy: number[] = []
   let booked = 0
   for (const l of ledgers) {
@@ -3297,12 +3315,22 @@ function inheritedYearTerms(ledgers: readonly InheritedLedgerRun[], alive: reado
       exitBy.push(balance)
       paced.push(0)
       room.push(0)
+      requiredBy.push(0)
+      bookedBy.push(0)
+      last.push(false)
       continue
     }
     exitBy.push(0)
     const { openRow, bookedByRow } = l.rows
-    if (t <= openRow) booked += bookedByRow[t] ?? 0
+    if (t <= openRow) {
+      const b = bookedByRow[t] ?? 0
+      booked += b
+      bookedBy.push(b)
+    } else {
+      bookedBy.push(0)
+    }
     let w = 0
+    let floor = 0
     if (t >= openRow) {
       const year = l.schedule[t]
       if (year === undefined) throw new Error(`[taxOverlay] inherited IRA: no schedule entry for row ${t} — a defect`)
@@ -3312,29 +3340,104 @@ function inheritedYearTerms(ledgers: readonly InheritedLedgerRun[], alive: reado
             ? balance
             : Math.max(0, f.openYearFigure - f.takenInOpenYear) + (f.deathYearUntaken ?? 0)
           : inheritedMinimum(year, balance)
+      floor = Math.min(balance, required)
       w = inheritedPacedWithdrawal(f.pace, balance, required, calendarYear, l.lawLastYear, t === openRow ? f.takenInOpenYear : 0)
     }
     paced.push(w)
     room.push(balance - w)
+    requiredBy.push(floor)
+    last.push(l.schedule[t]?.kind === 'last')
   }
   const sum = (xs: readonly number[]) => xs.reduce((a, b) => a + b, 0)
   return {
     top,
     paced,
     room,
+    required: requiredBy,
+    bookedBy,
+    last,
     exitBy,
     exit: sum(exitBy),
     draw: { paced: sum(paced), booked, tailRoom: sum(room) },
   }
 }
 
-/** Each ledger at the year end: its room after the paced withdrawal less its share of the last-source draw (in
- *  proportion to that room, never more than it — KTD22), grown by the year's one shared factor. */
-function advanceInheritedLedgers(ledgers: InheritedLedgerRun[], year: InheritedYearTerms, tail: number, scale: number): void {
+/** Each ledger's share of the year's last-source draw: in proportion to its room after the paced withdrawal, never
+ *  more than that room (KTD22). The one split the ledger advance and the sink's row both read. */
+function inheritedTailShares(year: InheritedYearTerms, tail: number): number[] {
   const roomSum = year.draw.tailRoom
+  return year.room.map((room) => (tail <= 0 || roomSum <= 0 ? 0 : tail >= roomSum ? room : (tail * room) / roomSum))
+}
+
+/** Each ledger at the year end: its room after the paced withdrawal less its share of the last-source draw, grown by
+ *  the year's one shared factor. */
+function advanceInheritedLedgers(ledgers: InheritedLedgerRun[], year: InheritedYearTerms, tail: number, scale: number): void {
+  const shares = inheritedTailShares(year, tail)
   for (let j = 0; j < ledgers.length; j++) {
-    const room = year.room[j] ?? 0
-    const share = tail <= 0 || roomSum <= 0 ? 0 : tail >= roomSum ? room : (tail * room) / roomSum
-    ledgers[j]!.balance = Math.max(0, room - share) * scale
+    ledgers[j]!.balance = Math.max(0, (year.room[j] ?? 0) - shares[j]!) * scale
   }
+}
+
+/** The sink's per-ledger entries for one row (U12): the year's terms, each ledger's tail share, its part of the paced
+ *  cash moved to taxable (the year's excess, split in proportion to each ledger's paced withdrawal), and its balance
+ *  as the caller finds it at the row's close. */
+function inheritedRowEntries(
+  ledgers: readonly InheritedLedgerRun[],
+  year: InheritedYearTerms,
+  split: { readonly spentFromPaced: number; readonly tail: number },
+): LedgerInheritedEntry[] {
+  const shares = inheritedTailShares(year, split.tail)
+  const pacedSum = year.draw.paced
+  const moved = pacedSum - split.spentFromPaced
+  return ledgers.map((l, j) => {
+    const paced = year.paced[j]!
+    const required = year.required[j]!
+    const taken = paced + shares[j]!
+    return {
+      start: year.top[j]!,
+      booked: year.bookedBy[j]!,
+      required,
+      taken,
+      aboveRequired: taken - required,
+      movedToTaxable: moved > 0 && pacedSum > 0 ? (moved * paced) / pacedSum : 0,
+      leftTheRun: year.exitBy[j]!,
+      end: l.balance,
+      last: year.last[j]!,
+    }
+  })
+}
+
+/**
+ * The inherited ledgers' COMMITTED income in each of the first `rows` rows (U12, slice 2): what each row books plus
+ * what its pace takes (KTD21, KTD25), on one deterministic walk with everyone alive and no last-source draw, each
+ * ledger carried to the next row by `growth` (the walk's one yearly factor; row 0 never reads it). The loop's own
+ * functions, so the walk and the loop can never compute a row's terms differently. Read by the solver's anchor
+ * (`solveAnchor.committedIncomeForYear`, through `simulate.inheritedCommittedIncomeSteady`) and the money picture's
+ * savings-tax line. THROWS on any input `validateParams` refuses.
+ */
+export function inheritedCommittedIncome(
+  input: readonly InheritedLedgerParams[],
+  config: TaxOverlayConfig,
+  people: readonly OverlayPerson[],
+  horizon: number,
+  rows: number,
+  growth: number,
+): number[] {
+  if (!Number.isInteger(rows) || rows < 0 || rows > horizon) {
+    throw new Error(`[taxOverlay] inheritedCommittedIncome: ${rows} rows is outside the horizon [0, ${horizon}]`)
+  }
+  if (!(Number.isFinite(growth) && growth >= 0)) {
+    throw new Error(`[taxOverlay] inheritedCommittedIncome: the growth factor must be finite and at least 0 (got ${growth}) — insight 010`)
+  }
+  const ledgers = buildInheritedLedgers(input, config, people, horizon)
+  if (!config.taxEnabled) throw new Error('[taxOverlay] inheritedCommittedIncome: unreachable — buildInheritedLedgers refuses tax off')
+  const start = config.household.startCalendarYear
+  const allAlive = people.map(() => true)
+  const out: number[] = []
+  for (let t = 0; t < rows; t++) {
+    const year = inheritedYearTerms(ledgers, allAlive, start + t, t)
+    out.push(year.draw.paced + year.draw.booked)
+    if (t + 1 < rows) advanceInheritedLedgers(ledgers, year, 0, growth)
+  }
+  return out
 }

@@ -1054,7 +1054,7 @@ describe('the state-tax seed faces (the state-carrying seed increment)', () => {
 //
 // WHY THE LIGHT DOCTOR (the bug this shape supersedes): routing `statestale` through the FULL
 // doctorStaleVault aged `startCalendarYear` −2 (→ 2024), and the engine's priced-state lower bound
-// (simulate.ts:1152-1155) correctly REFUSES a priced-NC household whose year-0 precedes NC's earliest
+// (simulate.ts:1179-1182) correctly REFUSES a priced-NC household whose year-0 precedes NC's earliest
 // rate row (2026) → the affirm recompute demoted to the R19 calm indeterminate (S2's live drive
 // caught it). The engine-acceptance arm below is the pin that would have caught it up front.
 // ===========================================================================
@@ -1425,7 +1425,7 @@ describe('the no-pretax steer witness seed (engine-proven refusal regime)', () =
   // (probed 2026-07-23 before pinning — recorded, not assumed):
   it("the SMALL-IRA sub-arm: entered pre-tax dollars BELOW every rail still land 'no-pretax' (the reword's justification, test-proven)", () => {
     // The steer household + one $25k traditional IRA: overlay PRESENT with pretax 25,000, yet every
-    // rail-anchored conversion amount exceeds the post-RMD headroom (candidates.ts:643), so the
+    // rail-anchored conversion amount exceeds the post-RMD headroom (candidates.ts:654), so the
     // roster is conversion-free and the builder refuses 'no-pretax'. This is the household the
     // note's "doesn't have enough of them entered" was reworded FOR — the claim is now bitten.
     const blend = { kind: 'exact', stockPct: 60, bondPct: 30, cashPct: 10 } as const
@@ -1580,7 +1580,7 @@ describe('the stale aged plant (the re-entry gate notes, exposure-gated)', () =>
   // its SPINE sibling, which rides the very doctor that caused that bug, never did. Its only
   // witnesses were a ~90-second Chromium fit arm (`e2e/rc-screens.spec.ts` drives `?vault=stale`
   // through a real unlock to a settled home; `vertical-fit.spec.ts`'s until RC21a) and a DIFFERENT plant's date-route arm over
-  // a DIFFERENT base — `retired` is all-retired and `dateSearch.ts:590` refuses such a household
+  // a DIFFERENT base — `retired` is all-retired and `dateSearch.ts:609` refuses such a household
   // outright, so no date-route arm can ever cover it. This is the insight-051 tell: the plant
   // shipped its fit pin before it had a unit source. Now a doctored shape the engine would refuse
   // fails HERE, in under a second.
@@ -1605,7 +1605,7 @@ describe('the stale aged plant (the re-entry gate notes, exposure-gated)', () =>
     // ⚑ PINNED AS FOUND, NOT AS EXPECTED — and the difference is the point. Fresh `retired` is
     // ON-TRACK (0.8555, the documented knife-edge sitting on the 0.85 band edge); this plant reads
     // BORDERLINE. The cause is MEASURED: `doctorStaleVault` ages `startCalendarYear` alone, so the
-    // overlay's DERIVED birth year (`startCalendarYear − currentAge`, simulate.ts:418) forks from
+    // overlay's DERIVED birth year (`startCalendarYear − currentAge`, simulate.ts:445) forks from
     // each person's STATED `birthYear` — here 1958/1959 derived against 1960/1961 stated, which
     // straddles the SECURE-2.0 RMD band edge (`bornThrough: 1959 → 73` vs `null → 75`) for BOTH
     // people. The doctored household is therefore forced into RMDs two years earlier than the
@@ -2085,7 +2085,7 @@ describe('the arrived aged plant (the first live route to the hero\'s dateInYear
   // Arm 1 — THE MODEL INVARIANT THIS DOCTOR EXISTS TO HOLD. `PersonInputs` (model.ts:99) documents
   // `currentAge === startCalendarYear − birthYear`, and the engine reads a birth year through TWO
   // paths that must agree: the SS sub-engine's stated `p.birthYear` (FRA / DRC / deemed-filing) and
-  // the tax overlay's DERIVED `startCalendarYear − currentAge` (simulate.ts:418). Aging the build
+  // the tax overlay's DERIVED `startCalendarYear − currentAge` (simulate.ts:445). Aging the build
   // clock ALONE forks them by the full depth — silently, because nothing in the codec, the hydrator
   // or the sanity layer enforces the invariant. The arm pins all three halves: currentAge frozen
   // (so the engine sees the same household), birthYear moved by the SAME depth, invariant intact.
@@ -2195,7 +2195,7 @@ describe('the arrived aged plant (the first live route to the hero\'s dateInYear
   })
 
   // Arm 5 — THE STATELESS REQUIREMENT IS ENFORCED, not merely documented. A priced-state base
-  // rejects at any depth ≥1 on the engine's priced-state year bound (simulate.ts:1152-1155), which is
+  // rejects at any depth ≥1 on the engine's priced-state year bound (simulate.ts:1179-1182), which is
   // insight 085's own origin story — so the doctor fail-louds at the plant instead of shipping a
   // fixture that renders the R19 calm indeterminate and reads as a broken feature.
   it('REFUSES a priced-state base (the insight-085 bound), rather than minting an R19 fixture', () => {

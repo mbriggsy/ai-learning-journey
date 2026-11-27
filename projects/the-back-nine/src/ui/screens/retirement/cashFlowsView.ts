@@ -10,9 +10,9 @@
  *    in each column's own words ("taken out", "put in"), never colour; a short left over in parentheses. Nothing here adds, nets or re-derives a dollar figure, so RightCapital's Total inflows,
  *    Total outflows and its summed Income Inflows / Planned Distribution / Planned Saving cells are not drawn: each of
  *    those RightCapital columns is a header over its one-field columns, and its drill shows every field it holds (the
- *    pilot's call, 2026-11-24, b9-6). The two named exceptions are the engine's own sum of the year-end balances
- *    (`totalAcrossBuckets`, the one the engine reads): the Accounts ending-balance Total, said so under the table, and
- *    the paired form's year-end total (U15's `composePaired`).
+ *    pilot's call, 2026-11-24, b9-6). The two named exceptions are the engine's own year-end total
+ *    (`ledgerRowEndTotal`, the four buckets plus each inherited IRA, the Act 5 plan's KTD22): the Accounts
+ *    ending-balance Total, said so under the table, and the paired form's year-end total (U15's `composePaired`).
  *  - A column with nothing in any year of the run is left out, never zero-filled (critique 13), except spending and
  *    income tax (a blank year is a fact) and a bucket's balance where the household holds that bucket.
  *  - Income tax is `taxPaid` alone and never a drill (its federal, state and payroll split is gap 10); the pay check's
@@ -20,7 +20,7 @@
  *  - Accounts are named from the run's own grouping (`meta.sources`, through `composeYearTable`'s source key).
  *  - A one-future table never stands alone as the odds: the lines above it say which future it is (plan 4.0).
  */
-import { totalAcrossBuckets } from '@engine/sequencing'
+import { ledgerRowEndTotal } from '@engine/sequencing'
 import type { LedgerYearRow } from '@shared/model'
 import { copy, slots } from '../../copy'
 import type { TableMeta, TableView } from '../../workbench/tableRun'
@@ -362,9 +362,9 @@ function accountsFields(table: AccountsTable, meta: TableMeta, rows: readonly Le
         ...pretaxEnd,
         { id: 'roth', header: copy.workbenchSourceRoth, read: (r) => r.end.roth, balance: true, always: holdsBucket('roth') },
         { id: 'hsa', header: copy.workbenchSourceHsa, read: (r) => r.end.hsa, balance: true, always: holdsBucket('hsa') },
-        // The engine's own sum of the year's closing balances (`totalAcrossBuckets`, the one the engine reads), said so
-        // under the table: the one figure here that is not a single field.
-        { id: 'total', header: copy.cashFlowsColTotal, read: (r) => totalAcrossBuckets(r.end), balance: true, always: true },
+        // The engine's own year-end total (`ledgerRowEndTotal`: the four buckets plus each inherited IRA, KTD22), said
+        // so under the table: the one figure here that is not a single field.
+        { id: 'total', header: copy.cashFlowsColTotal, read: (r) => ledgerRowEndTotal(r), balance: true, always: true },
       ]
     case 'deposits':
       return [

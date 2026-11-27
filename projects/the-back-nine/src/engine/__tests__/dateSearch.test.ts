@@ -983,6 +983,30 @@ describe('workingYearTaxReach — can the working-year tax floor move this house
     expect(workingYearTaxReachOfRun({ ...input.params, overlay: { ...noConstruct, conversions: [20_000] } })).toBe('unpriced')
   })
 
+  it('an inherited IRA is a channel (U12): the unreached household reads `priced` once it holds one, even one that books and paces nothing this year (the top-up can draw it)', () => {
+    const unreached = household()
+    expect(workingYearTaxReach(unreached), 'the control').toBe('unpriced')
+    const overlay = unreached.params.overlay!
+    const ledger = {
+      ownerBirthYear: 1960, // died 2025, before the required beginning date: no minimum until the ten-year end
+      ownerDeathYear: 2025,
+      heirIndex: 0,
+      balance: 50_000,
+      openYear: overlay.startCalendarYear,
+      openYearFigure: 0,
+      takenInOpenYear: 0,
+      earlierWithdrawals: [],
+      pace: { kind: 'law-minimum' as const },
+      leftTo: 'other-member' as const,
+    }
+    const holding: DateSearchInput = {
+      ...unreached,
+      params: { ...unreached.params, initialPortfolio: unreached.params.initialPortfolio + 50_000, overlay: { ...overlay, inheritedIras: [ledger] } },
+    }
+    expect(workingYearTaxReach(holding)).toBe('priced')
+    expect(workingYearTaxReachOfRun(buildCandidateParams(holding, 6, 1))).toBe('priced')
+  })
+
   // The working-year pay check (docs/plans/features/working-year-pay-check-build-spec.md, KTD15): a run carrying
   // W is read before any per-year cash term (its cashTermsForYear needs a per-path earnings-test schedule the walk
   // never builds, and throws without one) — `priced` iff someone still works, over-reading on the safe side.

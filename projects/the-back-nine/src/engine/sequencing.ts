@@ -21,7 +21,7 @@
  * uncapped escape) it recovers `pre-tax-first` exactly, so a single pool stays inert
  * (reduce-to-spine).
  */
-import type { DrawdownOrderKey, DrawdownPolicy } from '@shared/model'
+import type { DrawdownOrderKey, DrawdownPolicy, LedgerLoopRow } from '@shared/model'
 
 /** The account buckets the policy allocates across. `hsa` (U3 · M5) is the 4th,
  *  MEDICAL-EARMARKED bucket: it shares the one market draw like every bucket (contract #2)
@@ -66,6 +66,18 @@ export const totalAcrossBuckets = (b: AccountBuckets): number => b.taxable + b.p
  *  {@link totalAcrossBuckets} itself (never `+ 0`), so a run without one is byte-identical. */
 export const portfolioTotal = (b: AccountBuckets, inherited?: readonly number[]): number =>
   inherited === undefined ? totalAcrossBuckets(b) : inherited.reduce((acc, x) => acc + x, totalAcrossBuckets(b))
+
+/** A sink row's OPENING invested total (the Act 5 plan's KTD22, U12): {@link portfolioTotal} over the row's four
+ *  buckets and each inherited ledger's start. The one figure every reader of a row's opening total reads — with no
+ *  inherited ledger on the row it is {@link totalAcrossBuckets} of `start` itself. */
+export const ledgerRowStartTotal = (r: Pick<LedgerLoopRow, 'start' | 'inherited'>): number =>
+  portfolioTotal(r.start, r.inherited?.map((e) => e.start))
+
+/** A sink row's CLOSING invested total (KTD22, U12): {@link portfolioTotal} over the row's four buckets and each
+ *  inherited ledger's end. A total of the four buckets alone would show a faster inherited pace leaving MORE money,
+ *  as the pace moves money from the uncounted ledger into the counted taxable bucket. */
+export const ledgerRowEndTotal = (r: Pick<LedgerLoopRow, 'end' | 'inherited'>): number =>
+  portfolioTotal(r.end, r.inherited?.map((e) => e.end))
 
 /** The GENERAL-drawable total (taxable + pretax + roth) — what a year's spending withdrawal can
  *  actually be funded from. The `hsa` bucket is excluded: it pays only the qualified-medical cap

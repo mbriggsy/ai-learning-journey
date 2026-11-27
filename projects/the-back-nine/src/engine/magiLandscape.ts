@@ -19,7 +19,8 @@
  * THE FILL MODEL (documented, disclosed): `f` is the year's discretionary pre-tax draw
  * (`alloc.pretax` under `bracket-fill`). Ordinary income at fill `f` is
  * `max(f, rmd) + conversion + ongoingTaxable` (a fill below the forced RMD adds nothing —
- * the RMD is distributed regardless). The realized-gain term is modeled 0 AT THE CAP:
+ * the RMD is distributed regardless), plus an inherited IRA's booked and paced withdrawal where
+ * the run carries one (U12). The realized-gain term is modeled 0 AT THE CAP:
  * bracket-fill draws pre-tax FIRST, so the taxable bucket is untouched until the pre-tax
  * room exhausts — the DISCRETIONARY draw this ceiling caps respects the rail by
  * construction, while income the fill does not control (a taxable-bucket realization
@@ -72,6 +73,10 @@ export interface CommittedYearIncome {
    *  2026-09-24) in EVERY year, not only 2025–2028 — never clamp it or pass the anchor year.
    *  Gross-independent like every other term, so the headroom stays a constant inside the fixed point. */
   readonly calendarYear: number
+  /** The inherited IRAs' income the year books and paces (the Act 5 plan's U12): ordinary income whether or not the
+   *  fill reaches it, and never fill. PRESENT only when the run carries an inherited ledger, so every frame without
+   *  one keeps its literal pre-U12 arithmetic (AE7). */
+  readonly inheritedDistribution?: number
 }
 
 // Bisection controls — the fail-loud discipline mirrors the ACA solver's (burned/062):
@@ -80,9 +85,12 @@ const LANDSCAPE_MAX_PASSES = 64
 const LANDSCAPE_EPSILON = 1e-6 // dollars
 
 /** Ordinary income (excl. SS inclusion) at discretionary pre-tax fill `f` — the fill model's
- *  one nonlinearity below the RMD: `max(f, rmd)` (a fill under the forced RMD is free). */
+ *  one nonlinearity below the RMD: `max(f, rmd)` (a fill under the forced RMD is free). An inherited withdrawal is
+ *  its own additive term, never folded into `rmd` (U12): `max(f, rmd)` would count a fill as meeting it. */
 function ordinaryAtFill(c: CommittedYearIncome, f: number): number {
-  return Math.max(f, c.rmd) + c.conversion + c.ongoingTaxable
+  return c.inheritedDistribution === undefined
+    ? Math.max(f, c.rmd) + c.conversion + c.ongoingTaxable
+    : Math.max(f, c.rmd) + c.conversion + c.ongoingTaxable + c.inheritedDistribution
 }
 
 /** ACA-MAGI at fill `f`: ordinary + the FULL SS benefit (the §36B add-back counts the whole
@@ -144,8 +152,8 @@ function largestFillWithin(metric: (f: number) => number, rail: number, hi: numb
  * under the cliff regime; insight 027 — the predicate lives with the hazard creator).
  *
  * CLOSED FORM (ACA counts the FULL SS benefit, so the metric is linear above the RMD):
- * `K = cliffMagi − conversion − ongoingTaxable − ssBenefit`; committed-over (even a zero fill
- * lands over, `rmd > K`) ⇒ 0; else the headroom IS `K`. Sitting exactly AT the cliff is
+ * `K = cliffMagi − conversion − ongoingTaxable − ssBenefit` (less any inherited withdrawal, U12);
+ * committed-over (even a zero fill lands over, `rmd > K`) ⇒ 0; else the headroom IS `K`. Sitting exactly AT the cliff is
  * eligible (IRC §36B is 100–400% INCLUSIVE; the engine's CEIL-quantized compare admits an
  * integer-cliff-exact MAGI — insight 012, `ceil(x) > N ⟺ x > N` on the integer grid).
  */
@@ -153,7 +161,10 @@ export function acaCliffFillHeadroom(c: CommittedYearIncome, cliffMagi: number):
   if (!Number.isFinite(cliffMagi) || cliffMagi <= 0) {
     throw new Error(`[magiLandscape] acaCliffFillHeadroom: cliffMagi must be finite > 0 (got ${cliffMagi}) — insight 010`)
   }
-  const k = cliffMagi - c.conversion - c.ongoingTaxable - c.ssBenefit
+  const k =
+    c.inheritedDistribution === undefined
+      ? cliffMagi - c.conversion - c.ongoingTaxable - c.ssBenefit
+      : cliffMagi - c.conversion - c.ongoingTaxable - c.ssBenefit - c.inheritedDistribution
   if (c.rmd > k) return 0 // committed income alone is over — nothing discretionary fits
   return k
 }

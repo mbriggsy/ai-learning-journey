@@ -54,6 +54,7 @@ import { SAVED_RECORD_COPY } from '../../savedRecordCopy'
 import { axisNumberAt, type TimeAxis } from '../../displaySettings'
 import { composeVerdictStateNote } from '../../stateTaxDisclosure'
 import { recommendationBundle } from '../../workbench/railChrome'
+import { startTotal, withdrawn } from '../retirement/analysisRuns'
 import type { TableMeta } from '../../workbench/tableRun'
 import { planReadingFor } from '../../workbench/whatIfRun'
 
@@ -208,9 +209,9 @@ export function steadyStats(rows: readonly LedgerYearRow[], meta: Pick<TableMeta
   const first = after[0]
   let ratePercent: number | null = null
   if (first !== undefined) {
-    const draws = first.draw.taxable + first.draw.pretax + first.draw.roth + first.hsaSpend
-    const start = first.start.taxable + first.start.pretax + first.start.roth + first.start.hsa
-    ratePercent = start > 0 ? (draws / start) * 100 : null
+    // Both parts count each inherited IRA (the Act 5 plan's U12): its spent part in the draws, its balance in the start.
+    const start = startTotal(first)
+    ratePercent = start > 0 ? (withdrawn(first) / start) * 100 : null
   }
   // Where the run runs out, the total stops the year before: the label names that cut (insight 175; round 3 of
   // milestone 4's review).

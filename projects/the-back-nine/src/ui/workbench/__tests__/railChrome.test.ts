@@ -382,6 +382,15 @@ describe('the paired form — each figure one field of its own run’s row (R5),
     })
   })
 
+  it('the year-end total counts each inherited IRA (the Act 5 plan’s U12: the engine’s row total, never the four buckets alone)', () => {
+    const inherited = (end: number) => [{ start: 0, booked: 0, required: 0, taken: 0, aboveRequired: 0, movedToTaxable: 0, leftTheRun: 0, end, last: false }]
+    const plan = [row(0, 0, { inherited: inherited(5_000) })]
+    const whatIf = [row(0, 900, { inherited: inherited(9_000) })]
+    const cell = composePaired({ columns: ['end-total'], plan: { rows: plan, meta: META }, whatIf: { rows: whatIf, meta: META } }).rows[0]!.cells[0]!
+    expect(cell.plan?.value).toBe(FIELD['end-total'](plan[0]!)! + 5_000)
+    expect(cell.whatIf?.value).toBe(FIELD['end-total'](whatIf[0]!)! + 9_000)
+  })
+
   it('the year’s end total is the engine’s own sum of the row’s year-end balances', () => {
     const table = composePaired({ columns: ['end-total'], plan: { rows: planRows, meta: META }, whatIf: { rows: whatIfRows, meta: META } })
     expect(table.rows[0]!.cells[0]!.plan?.value).toBe(totalAcrossBuckets(planRows[0]!.end))

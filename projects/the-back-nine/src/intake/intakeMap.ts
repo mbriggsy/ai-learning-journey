@@ -994,7 +994,7 @@ function acaPricedOverlayArm(o: OverlayParams | undefined): boolean {
  *  This is the read that makes the all-65+ household honest: it takes `buildOverlay`'s
  *  Medicare-only branch (`intakeMap.ts:683-686` — "healthcareEnabled with NO ACA quote pair"),
  *  so `enrolledPremium` is absent, the engine's per-year ACA gate
- *  (`taxOverlay.ts:2669-2674`) can never open, and this correctly reads FALSE. `buildSpineParams`
+ *  (`taxOverlay.ts:2674-2679`) can never open, and this correctly reads FALSE. `buildSpineParams`
  *  returns null on the date route ⇒ false there (the caller handles that route separately —
  *  reading false as "unpriced" off-route would be the insight-080 shortcut, not a fact). */
 export function spineAcaPriced(d: ScenarioDraft): boolean {
@@ -1035,7 +1035,7 @@ export function dateBaseAcaPriced(d: ScenarioDraft): boolean {
 }
 
 /** "Did the DATE route's run price Medicare?" — `dateSearch` forces `healthcareEnabled: true` on
- *  EVERY candidate (`dateSearch.ts:261`), so the only question left is whether a run exists at
+ *  EVERY candidate (`dateSearch.ts:262`), so the only question left is whether a run exists at
  *  all: `buildDateInput` returns null off-route / on missing facts, and an overlay-less
  *  household (the degenerate early-return) prices no healthcare whatever the sweep forces —
  *  `buildCandidateParams` throws on it and `runDateSearch` pre-rejects it calmly. Reading the
@@ -1077,7 +1077,7 @@ export function overlayBuiltForRun(d: ScenarioDraft): boolean {
  *  BASE overlay, U17 §S4's exposure read for the contribution-limit clock.
  *
  *  READ THE BASE, NOT A CANDIDATE. `buildCandidateParams` sets `accumulation` on EVERY date
- *  candidate unconditionally (`dateSearch.ts:262` — its presence keys the §7 working-year
+ *  candidate unconditionally (`dateSearch.ts:263` — its presence keys the §7 working-year
  *  zero-withdrawal clamp), so a candidate's `accumulation !== undefined` is a constant `true`
  *  and discriminates nothing. What it actually carries is this base overlay's streams,
  *  TRUNCATED (`truncateStreams(enteredContributions?.[i] ?? {}, Y)`) — and `buildOverlay` spreads

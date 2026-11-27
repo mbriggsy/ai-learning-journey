@@ -21,7 +21,7 @@
  * WINDOWS (insight 175): two runs can end in different years (a run whose money runs out stops there). Each figure picks
  * its years here and its sentence names them; nothing sums each run to its own end.
  */
-import { totalAcrossBuckets } from '@engine/sequencing'
+import { ledgerRowEndTotal, ledgerRowStartTotal } from '@engine/sequencing'
 import type { LedgerYearRow } from '@shared/model'
 import type { TableMeta } from '../../workbench/tableRun'
 import { copy, slots } from '../../copy'
@@ -104,14 +104,20 @@ export function firstRetiredT(meta: TableMeta): number {
   return Math.max(0, meta.stopYear - meta.startCalendarYear)
 }
 
-/** A row's year-end invested total: the engine's own sum (`totalAcrossBuckets`). */
-export const endTotal = (r: LedgerYearRow): number => totalAcrossBuckets(r.end)
-/** A row's opening invested total. */
-export const startTotal = (r: LedgerYearRow): number => totalAcrossBuckets(r.start)
+/** A row's year-end invested total: the engine's own (`ledgerRowEndTotal`, the four buckets plus each inherited IRA). */
+export const endTotal = (r: LedgerYearRow): number => ledgerRowEndTotal(r)
+/** A row's opening invested total (`ledgerRowStartTotal`). */
+export const startTotal = (r: LedgerYearRow): number => ledgerRowStartTotal(r)
 
-/** What a year takes from the accounts toward its need: the three draws and the HSA's spend. Never a conversion, and
- *  never a required withdrawal moved to taxable (both move money between accounts). */
-export const withdrawn = (r: LedgerYearRow): number => r.draw.taxable + r.draw.pretax + r.draw.roth + r.hsaSpend
+/** What a year takes from the accounts toward its need: the three draws, the HSA's spend and each inherited IRA's
+ *  spent part (what it paid out less what moved to taxable). Never a conversion, never a required withdrawal moved to
+ *  taxable (both move money between accounts), and never an inherited balance that left the run at the heir's death.
+ *  Retirement Details divides it by {@link startTotal}, which counts the inherited ledgers, so it must count their
+ *  spending too (the Act 5 plan's U12). */
+export const withdrawn = (r: LedgerYearRow): number => {
+  const general = r.draw.taxable + r.draw.pretax + r.draw.roth + r.hsaSpend
+  return r.inherited === undefined ? general : r.inherited.reduce((s, e) => s + (e.taken - e.movedToTaxable), general)
+}
 
 /** The year's health premiums: the marketplace premium after its credit, the Medicare bill (its surcharge already in it,
  *  `irmaaSurcharge` is part of `medicare`) and the entered extras. */

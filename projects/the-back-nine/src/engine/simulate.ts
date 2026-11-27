@@ -18,6 +18,7 @@ import { mulberry32, standardNormal, simpleReturnFromNormal, toLogMoments } from
 import { runDecumulation, type PortfolioState, type DecumulationResult } from '@engine/decumulation'
 import { middleLifespanScores, sampleCouplePath, type LongevityPerson } from '@engine/longevity'
 import {
+  inheritedCommittedIncome,
   runTaxAwareDecumulation,
   type HealthYearSink,
   type TaxOverlayConfig,
@@ -156,6 +157,32 @@ export function steadyFuture(params: Pick<SimulationParams, 'maxHorizonYears' | 
     bondZ: new Array<number>(params.maxHorizonYears).fill(0),
     longevityU: middleLifespanScores(params.people.map((p) => ({ sex: p.sex, currentAge: p.currentAge }))),
   }
+}
+
+/**
+ * The steady future's one yearly growth factor (the Act 5 plan's U12, slice 2): every market score 0, so each leg
+ * earns the engine's own transform of 0 (`simpleReturnFromNormal(toLogMoments(mean, stdDev), 0)`, the bond's score
+ * mixed through the correlation is 0 too), split at the run's stock weight the way `stepYear` splits a year's
+ * after-withdrawal total. The factor every account on the steady path grows by in a year.
+ */
+export function steadyGrowthFactor(params: Pick<SimulationParams, 'market' | 'stockWeight'>): number {
+  const stock = simpleReturnFromNormal(toLogMoments(params.market.stock.mean, params.market.stock.stdDev), 0)
+  const bond = simpleReturnFromNormal(toLogMoments(params.market.bond.mean, params.market.bond.stdDev), 0)
+  return params.stockWeight * (1 + stock) + (1 - params.stockWeight) * (1 + bond)
+}
+
+/**
+ * The inherited IRAs' committed income (what each row books plus what its pace takes) in each of the run's first
+ * `rows` rows on the steady path with everyone alive (U12, slice 2): row 0 is the asked year's figures, each later
+ * row the ledger carried there by {@link steadyGrowthFactor}. `undefined` when the run carries no inherited IRA (the
+ * readers then keep their literal pre-U12 arithmetic). The household and config are the overlay's own
+ * ({@link overlayHouseholdFor}). THROWS on an input `validateParams` refuses.
+ */
+export function inheritedCommittedIncomeSteady(params: SimulationParams, rows: number): number[] | undefined {
+  const input = params.overlay?.inheritedIras
+  if (input === undefined) return undefined
+  const { people, config } = overlayHouseholdFor(params)
+  return inheritedCommittedIncome(input, config, people, params.maxHorizonYears, rows, steadyGrowthFactor(params))
 }
 
 /** A resolved simulation: the full distribution (with the tax-aware solver surfaces when

@@ -13,12 +13,12 @@
  *    where the counts are equal, the even line. Never "helps", "costs", "better" or "worse": no sentence here says a
  *    lever helps or costs, because nothing here measured that for the household.
  *  - EVERY PAIRED FIGURE IS ONE FIELD OF ITS RUN'S ROW (R5), on the table's one grain (`tableDollars`), with one
- *    exception named here: the year's end total is the engine's own sum of the row's year-end balances
- *    (`totalAcrossBuckets`, the one producer the engine itself reads), never a sum written in this file.
+ *    exception named here: the year's end total is the engine's own year-end total (`ledgerRowEndTotal`, the four
+ *    buckets plus each inherited IRA, the Act 5 plan's KTD22), never a sum written in this file.
  *  - ROWS PAIR ONLY ON ONE ANSWER: the plan's rows and the what-if's carry the answer key they were asked under, and
  *    `composePaired` is called only when the two are equal (U14's report, its section 5).
  */
-import { totalAcrossBuckets } from '@engine/sequencing'
+import { ledgerRowEndTotal } from '@engine/sequencing'
 import { DATE_OFFSET_WINDOW_TOP } from '@engine/dateSearch'
 import {
   draftPretaxTotal,
@@ -489,9 +489,9 @@ const COLUMN_READS: Readonly<Record<PairedColumnId, ColumnRead>> = {
   // these; Cash Flows sets them beside the pair wherever either run has a working year.
   'tax-on-pay': { header: () => copy.cashFlowsColPayIncomeTax, read: (r) => r.workingYear?.taxOnOutsideIncome },
   payroll: { header: () => copy.workbenchLinePayroll, read: (r) => r.workingYear?.payrollTax },
-  // The one figure that is not a single field: the engine's own year-end total (`totalAcrossBuckets`, the sum the
-  // engine reads for the portfolio), over the row's own year-end balances.
-  'end-total': { header: () => copy.workbenchPairEndTotal, read: (r) => totalAcrossBuckets(r.end), balance: true },
+  // The one figure that is not a single field: the engine's own year-end total (`ledgerRowEndTotal`, the four buckets
+  // plus each inherited IRA, KTD22), over the row's own year-end balances.
+  'end-total': { header: () => copy.workbenchPairEndTotal, read: (r) => ledgerRowEndTotal(r), balance: true },
 }
 
 function pairedFigure(c: ColumnRead, r: LedgerYearRow | undefined, meta: TableMeta): PairedFigure | null {

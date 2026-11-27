@@ -41,6 +41,7 @@ import { validationMarket } from '@engine/reference/methodology'
 import type {
   AccountBalances,
   IncomeParams,
+  InheritedLedgerParams,
   PersonContributionStreams,
   PersonInputs,
   RetirementState,
@@ -1173,6 +1174,30 @@ describe('the worded tax line shows exactly on KTD12’s trigger: year 0 bills M
     expect(at([0, 5_000]).year0.savingsTaxLine).toBe(false)
   })
 
+  it('an inherited IRA’s withdrawal in year 0 shows it (the owner’s untaken death-year amount alone is enough); one that books and paces nothing in year 0 does not (U12)', () => {
+    // The one earner (born 1976) at W = 20,000 has no trigger (above). Each arm adds one inherited IRA in 2026.
+    const at = (over: Partial<InheritedLedgerParams>) => {
+      const ledger: InheritedLedgerParams = {
+        ownerBirthYear: 1960, // died 2025 at 65, before the required beginning date: no 2026 minimum
+        ownerDeathYear: 2025,
+        heirIndex: 0,
+        balance: 80_000,
+        openYear: START,
+        openYearFigure: 0,
+        takenInOpenYear: 0,
+        earlierWithdrawals: [],
+        pace: { kind: 'law-minimum' },
+        ...over,
+      }
+      const base = earner(20_000)
+      return checked({ ...base, initialPortfolio: base.initialPortfolio + ledger.balance, overlay: { ...base.overlay!, inheritedIras: [ledger] } })
+    }
+    expect(at({}).year0.savingsTaxLine).toBe(false)
+    expect(at({ ownerBirthYear: 1945, deathYearUntaken: 2_000 }).year0.savingsTaxLine).toBe(true)
+    expect(at({ ownerBirthYear: 1945, openYearFigure: 2_500 }).year0.savingsTaxLine).toBe(true)
+    expect(at({ pace: { kind: 'even' } }).year0.savingsTaxLine).toBe(true) // the pace takes $8,000 (ten years left)
+  })
+
   it('a required withdrawal: a 75-year-old still working with pre-tax money shows it (start age 73); at 72 it does not', () => {
     // Born 1951: the SECURE 2.0 start age is 73. Born 1954: also 73, so at 72 nothing is required yet. A worker's
     // Medicare waits for the stop, so neither year bills Medicare.
@@ -1378,7 +1403,9 @@ describe('the run’s horizon caps the picture', () => {
 // ===========================================================================
 const ALLOWED: Readonly<Record<string, readonly string[] | 'any'>> = {
   '@shared/model': 'any',
-  '@engine/simulate': ['cashTermsForYear', 'personOffsetsFor', 'overlayHouseholdFor', 'bothAliveYearBenefit', 'validateParams'],
+  // `inheritedCommittedIncomeSteady` (the Act 5 plan's U12, slice 2) is the overlay loop's own ledger functions on the
+  // steady walk: the savings-tax line's inherited arm reads year 0 through it.
+  '@engine/simulate': ['cashTermsForYear', 'personOffsetsFor', 'overlayHouseholdFor', 'bothAliveYearBenefit', 'validateParams', 'inheritedCommittedIncomeSteady'],
   '@engine/earningsTest': 'any',
   '@engine/payrollTax': 'any',
   '@engine/taxOverlay': [

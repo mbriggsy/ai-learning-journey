@@ -44,6 +44,7 @@
  */
 import { cashTermsForYear, personOffsetsFor, simulate, validateParams } from '@engine/simulate'
 import { rmdStartAgeForBirthYear } from '@engine/rmd'
+import { inheritedLastYear } from '@engine/inheritedRmd'
 import { BANDS, quantizeSurvival, summarize } from '@engine/confidence'
 import { buildHealthcareStreams, type EnteredHealthSchedules } from '@engine/healthcareStreams'
 import type {
@@ -313,7 +314,10 @@ export type WorkingYearTaxReach = 'priced' | 'unpriced'
  *     match), or inherited from a member dead by t (the spousal rollover); on the aggregate pool (no
  *     per-person split) the holder is the first living member and any household pre-tax counts;
  *   - a LIVING member Medicare-enrolled at t (t ≥ that candidate's `medicareOnsetSimYear[i]`; the
- *     biological-65 default where absent) under `healthcareEnabled` — the premium draw.
+ *     biological-65 default where absent) under `healthcareEnabled` — the premium draw;
+ *   - an inherited IRA's ledger (the Act 5 plan's U12) in any row up to its law's last year that it has not left
+ *     (its heir dead, left to someone else): the row books, paces or tops up from it, each ordinary income. A row
+ *     that books and paces nothing still reads it — the top-up is the gross's, never known here (the over-read).
  * Otherwise the year's portfolio income P is 0, the charge is T(0, ss) — today's figure — and nothing
  * moves. There are NO standalone age, pension or I triggers: with P = 0 and SS = 0, B and I change nothing.
  * The ACA premium is not a channel: a candidate window-gates it to t ≥ Y, and a clamped year is t < Y.
@@ -375,12 +379,27 @@ export function workingYearTaxReachOfRun(params: SimulationParams): WorkingYearT
     return start + t - birthYear >= rmdStartAgeForBirthYear(birthYear)
   }
   const onset = overlay.medicareOnsetSimYear
+  // U12: each inherited IRA's last row (its law's ten-year end, on the overlay's own heir birth year) and whether it
+  // leaves the run at its heir's death. Absent with no inherited IRA: the channel below is never read.
+  const inherited = overlay.inheritedIras?.map((l) => ({
+    lastRow:
+      inheritedLastYear({
+        ownerBirthYear: l.ownerBirthYear,
+        ...(l.ownerBornFirstHalf !== undefined ? { ownerBornFirstHalf: l.ownerBornFirstHalf } : {}),
+        ownerDeathYear: l.ownerDeathYear,
+        ...(l.ownerDiedBeforeApril1 !== undefined ? { ownerDiedBeforeApril1: l.ownerDiedBeforeApril1 } : {}),
+        heirBirthYear: overlayBirthYears[l.heirIndex]!,
+      }) - start,
+    heir: l.heirIndex,
+    leavesAtDeath: l.leftTo === 'someone-else',
+  }))
 
   /** Does clamped year t on this death timeline carry a portfolio income channel? */
   const portfolioIncomeIn = (t: number, deaths: readonly number[], ss: number): boolean => {
     if (ss > 0) return true
     if ((overlay.conversions?.[t] ?? 0) > 0) return true
     const alive = (i: number): boolean => t < (deaths[i] ?? 0)
+    if (inherited !== undefined && inherited.some((l) => t <= l.lastRow && !(l.leavesAtDeath && !alive(l.heir)))) return true
     if (overlay.rmdEnabled) {
       if (perPerson !== undefined) {
         for (let i = 0; i < people.length; i++) {

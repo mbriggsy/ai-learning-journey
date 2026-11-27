@@ -156,5 +156,14 @@
  * `ENGINE_PRICING_LEDGER` appends no row (pricingVersion.test pins the split; the register's
  * ledger-cannot-name entry carries the change). The stamp is global, so every record re-stales (the
  * when-in-doubt over-re-run).
+ *
+ * VERSION 13 (2026-11-27) — the Act 5 plan's U12, slice 2: an inherited IRA's withdrawal (what the year books and
+ * paces) is committed income in every frame the anchors read (`solveAnchor.committedIncomeForYear`: year 0's asked
+ * figures, then the steady path's later rows) and in the engine's bracket-fill rails (`CommittedYearIncome`'s
+ * `inheritedDistribution`, read by `magiLandscape.ordinaryAtFill` and the ACA-cliff closed form). A household
+ * holding one gets a different conversion roster and, under bracket-fill, a different fill. Ranking logic only: no
+ * pricer moved and no saved plan can hold an inherited IRA before U13, so `ENGINE_PRICING_LEDGER` appends no row
+ * (pricingVersion.test pins the split). The stamp is global, so every record re-stales (the when-in-doubt
+ * over-re-run; no real save exists).
  */
-export const SOLVER_CODE_VERSION = 12
+export const SOLVER_CODE_VERSION = 13

@@ -19,6 +19,7 @@
  * sentence names the axis's number with that title.
  */
 import type { SolveRecommendation } from '@engine/solver/solve'
+import { ledgerRowEndTotal } from '@engine/sequencing'
 import { irmaa } from '@engine/constants/health'
 import { irmaaScheduleAsCompared } from '@engine/healthOverlay'
 import { niceLattice, type DollarLattice } from '@viz/bandData'
@@ -151,7 +152,9 @@ export type ComparisonView =
       readonly updating: boolean
     })
 
-const endTotal = (r: LedgerYearRow): number => r.end.taxable + r.end.pretax + r.end.roth + r.end.hsa
+/** A row's year-end invested total: the engine's own (`ledgerRowEndTotal`, the four buckets plus each inherited IRA,
+ *  the Act 5 plan's KTD22), never a sum of the four buckets alone. */
+const endTotal = (r: LedgerYearRow): number => ledgerRowEndTotal(r)
 
 const MEASURE: Readonly<Record<Exclude<ComparisonChart, 'withdrawals'>, (r: LedgerYearRow) => number>> = {
   assets: endTotal,

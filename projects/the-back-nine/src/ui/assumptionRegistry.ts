@@ -50,6 +50,7 @@ export type AssumptionSeat =
   | 'drawdown' // the withdrawal order — tried and applied in the Action Items tray (U15's rule; one home per fact, insight 058)
   | 'roth-conversion' // the Roth plan — tried and applied in the Action Items tray
   | 'subsidy-regime' // the marketplace subsidy rules — tried and applied in the Action Items tray
+  | 'inherited-pace' // each inherited IRA's withdrawal pace (U17) — tried and applied in the Action Items tray; a nested fact (`enteredAccounts[].inherited.pace`), so the fact registry's INHERITED_FACTS accounts for it, not a draft disposition
   | 'working-year-cost' // W, what a year costs while someone still works (date route); its door is the W drawer
   | 'working-year-left-over' // build 2's left-over answer (date route, where the question is asked); the W drawer holds it
   | 'medicare-extras' // the per-person Medicare-extras answer (the details home for the funded typical); its door is the Medicare drawer

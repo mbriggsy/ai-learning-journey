@@ -10,8 +10,9 @@
  * valid years only), Savings (each working owner's account deposit; the employer's figure as a sub-row only while the
  * deposit is lowered below the plan's, D7), Expenses (the one-figure total, or one row per budget line: amount and kind,
  * taken out; a line added only in this what-if wears the green dot with a "+" and words); right, Strategies (Social
- * Security, one indented row per person not yet claimed; the withdrawal order; Roth conversions: none, or amount, start
- * and years; how the savings are invested; the marketplace subsidy rules).
+ * Security, one indented row per person not yet claimed; the withdrawal order; each inherited IRA's pace, one indented
+ * row per account (U17); Roth conversions: none, or amount, start and years; how the savings are invested; the
+ * marketplace subsidy rules).
  *
  * PENDING UNTIL REFRESH: the tray edits a PENDING bundle; the left half runs the COMMITTED one (`useWhatIf`). Every commit
  * function here maps a typed value to the lever it means, or to `null` when the value is the plan's own (no lever that
@@ -24,7 +25,7 @@ import { applyBundle } from '@intake/whatIf'
 import { acaPricedForRun, healthcarePriced, isDateRoute, KIND_TO_BUCKET, medicareOnlyPriced, pricedStateForRun, spineMedicarePriced } from '@intake/intakeMap'
 import { rothPlanMissingField } from '@intake/rothPlan'
 import type { ScenarioDraft } from '@store/memoryModel'
-import type { DrawdownOrderKey, DrawdownPolicy, RothConversionPlan, WhatIfBudgetLineV6, WhatIfLeverKind, WhatIfLeverV6 } from '@shared/model'
+import type { DrawdownOrderKey, DrawdownPolicy, InheritedPace, RothConversionPlan, WhatIfBudgetLineV6, WhatIfLeverKind, WhatIfLeverV6 } from '@shared/model'
 import { canonicalIdentityToken } from '@shared/model'
 import { copy, slots } from '../../copy'
 import { rothPlanStartFor, type BandPlanClockAnchor } from '../../bandAnnotations'
@@ -35,6 +36,7 @@ import {
   BUCKET_LABEL,
   leverTarget,
   lineName,
+  paceWords,
   POLICY_LABEL,
   policyWords,
   railMoney,
@@ -43,6 +45,7 @@ import {
   stopWords,
   type ClaimOffer,
   type DepositOffer,
+  type PaceOffer,
   type RailOffers,
 } from '../../workbench/railChrome'
 import { tablePerson } from '../../workbench/tableRun'
@@ -62,7 +65,10 @@ export type TrayControl =
   | { readonly kind: 'roth'; readonly plan: RothConversionPlan | undefined; readonly held: RothConversionPlan | 'none' | undefined }
   | { readonly kind: 'mix'; readonly held: { readonly stock: number; readonly bond: number; readonly cash: number } | undefined }
   | { readonly kind: 'aca'; readonly plan: boolean; readonly value: boolean }
-  /** A group's own row (Social Security over its people): its name, no control. */
+  /** An inherited IRA's pace (U17): the rule shown (the held lever's, else the plan's). */
+  | { readonly kind: 'pace'; readonly offer: PaceOffer; readonly value: InheritedPace }
+  /** A group's own row (Social Security over its people, the inherited IRAs' pace over its accounts): its name, no
+   *  control. */
   | { readonly kind: 'group' }
 
 export interface TrayRowView {
@@ -331,6 +337,27 @@ export function trayView(input: TrayInput): TrayView {
       })
     }
   }
+  if (offers.paces.length > 0) {
+    strategyItems.push({ id: 'inherited-pace', label: copy.trayPaceTitle })
+    if (shows('inherited-pace')) {
+      strategies.push({ id: 'inherited-pace', lever: 'inherited-pace', label: copy.trayPaceTitle, compared: '', changed: false, notes: [copy.trayPaceNote], control: { kind: 'group' } })
+      for (const offer of offers.paces) {
+        const id = `inherited-pace:${offer.accountId}`
+        const lever = find(pending, id)
+        strategies.push({
+          id,
+          lever: 'inherited-pace',
+          // The account by name under the group's row, as Social Security's people are.
+          label: offer.label,
+          compared: paceWords(offer.plan, offer.lastYear),
+          changed: lever !== undefined,
+          indent: true,
+          notes: [],
+          control: { kind: 'pace', offer, value: lever?.kind === 'inherited-pace' ? lever.pace : offer.plan },
+        })
+      }
+    }
+  }
   if (offers.roth !== undefined) {
     const plan = offers.roth.plan
     strategyItems.push({ id: 'roth', label: copy.workbenchRailRothTitle })
@@ -477,6 +504,28 @@ export function moveBucket(order: readonly DrawdownOrderKey[], key: DrawdownOrde
   return next
 }
 
+/** An inherited IRA's pace (KTD21): a rule, and for "ending in a chosen year" its last year. That year waits while blank
+ *  and is refused in words outside the asked year to the law's last (`applyBundle`'s bounds, carried by the offer), so
+ *  no run starts on it; the plan's own pace is no lever. */
+export function paceCommit(
+  offer: PaceOffer,
+  kind: InheritedPace['kind'],
+  year: number | undefined,
+): { readonly kind: 'lever'; readonly lever: WhatIfLeverV6 | null } | { readonly kind: 'wait'; readonly words: string } {
+  let pace: InheritedPace
+  if (kind === 'even-to-year') {
+    if (year === undefined) return { kind: 'wait', words: slots.trayPaceNeedsYear(offer.firstYear, offer.lastYear) }
+    if (!Number.isInteger(year) || year < offer.firstYear || year > offer.lastYear) {
+      return { kind: 'wait', words: slots.trayPaceYearRange(offer.firstYear, offer.lastYear) }
+    }
+    pace = { kind, lastYear: year }
+  } else {
+    pace = { kind }
+  }
+  const same = pace.kind === offer.plan.kind && (pace.kind !== 'even-to-year' || (offer.plan.kind === 'even-to-year' && offer.plan.lastYear === pace.lastYear))
+  return { kind: 'lever', lever: same ? null : { kind: 'inherited-pace', accountId: offer.accountId, pace } }
+}
+
 /** The marketplace subsidy rules. */
 export function acaCommit(plan: boolean, enhanced: boolean): WhatIfLeverV6 | null {
   return enhanced === plan ? null : { kind: 'aca-subsidy', enhanced }
@@ -537,6 +586,7 @@ export function withoutHidden(bundle: readonly WhatIfLeverV6[], hidden: Readonly
     const target = leverTarget(l)
     if (hidden.has(target)) return false
     if (l.kind === 'claim-age' && hidden.has('claim-age')) return false
+    if (l.kind === 'inherited-pace' && hidden.has('inherited-pace')) return false
     return true
   })
 }

@@ -32,6 +32,8 @@ import {
 } from '@intake/intakeMap'
 import { isEmployerPlanKind, takesDeposits } from '@intake/sanity'
 import { applyBundle, type WhatIfRefusal } from '@intake/whatIf'
+import { inheritedOwnerOf, isInheritedAccount } from '@intake/inheritedIra'
+import { inheritedLastYear } from '@engine/inheritedRmd'
 import { LEFT_OVER_CARRIES } from '@intake/workingYearLeftOverState'
 import { lineDisplayName } from '@intake/budgetLines'
 import { kindLabel } from '@intake/accountKinds'
@@ -42,6 +44,7 @@ import type {
   BudgetLineItem,
   DrawdownOrderKey,
   DrawdownPolicy,
+  InheritedPace,
   LedgerYearRow,
   RothConversionPlan,
   SavedRecommendationV3,
@@ -54,7 +57,7 @@ import { dateOddsText } from '../dateOdds'
 import { verdictReadingText } from '../verdictSentence'
 import { copy, slots, type CopyKey } from '../copy'
 import type { BandPlanClockAnchor } from '../bandAnnotations'
-import { tablePerson, type TableMeta } from './tableRun'
+import { capFirst, enteredAccountName, tablePerson, type TableMeta } from './tableRun'
 import { tableDollars, yieldLine } from './yearTableChrome'
 import type { WhatIfReading, WhatIfRunRefusal } from './whatIfRun'
 
@@ -81,6 +84,36 @@ export interface ClaimOffer {
   readonly planAge: number
 }
 
+/** One inherited IRA's pace lever (the Act 5 plan's U17, KTD21): its account, its name, the plan's own pace, and the years
+ *  a chosen last year may take, from the year its figures were asked to the law's last year (`applyBundle`'s own bounds,
+ *  read once here). */
+export interface PaceOffer {
+  readonly accountId: string
+  /** Mid-sentence: "Alex’s IRA inherited in 2023". */
+  readonly name: string
+  /** A row's name: the same words, the first letter capital. */
+  readonly label: string
+  readonly plan: InheritedPace
+  readonly firstYear: number
+  readonly lastYear: number
+}
+
+/** Each inherited IRA whose pace is still a choice, in the entered order: an account the law empties in its asked year
+ *  takes everything whatever the pace (KTD15: a lever only where the choice is open). ONE rule, read by the tray's
+ *  offers and by Settings' pace row, so the gear never opens a tray row the tray does not draw. */
+export function paceOffers(draft: ScenarioDraft): readonly PaceOffer[] {
+  return draft.enteredAccounts.flatMap((a): PaceOffer[] => {
+    if (a.id === undefined || !isInheritedAccount(a)) return []
+    const owner = inheritedOwnerOf(draft, a)
+    if (owner === undefined) return []
+    const firstYear = a.inherited.askedYear
+    const lastYear = inheritedLastYear(owner)
+    if (lastYear <= firstYear) return []
+    const name = enteredAccountName(draft, a)
+    return [{ accountId: a.id, name, label: capFirst(name), plan: a.inherited.pace, firstYear, lastYear }]
+  })
+}
+
 export interface RailOffers {
   /** The date route only: every year the date window holds, the plan's own year among them, and who stops then. */
   readonly stop?: {
@@ -100,6 +133,8 @@ export interface RailOffers {
   readonly order?: { readonly policy: DrawdownPolicy; readonly order: readonly DrawdownOrderKey[] | undefined }
   readonly claims: readonly ClaimOffer[]
   readonly aca?: { readonly planEnhanced: boolean }
+  /** Each inherited IRA's pace (U17), in the entered order. */
+  readonly paces: readonly PaceOffer[]
 }
 
 /** The answer's own door rule for the Roth plan (no hollow door): it rides the joint return, and needs pre-tax money to
@@ -165,6 +200,7 @@ export function railOffers(draft: ScenarioDraft, planStopYear: number | undefine
     ...(draft.enteredAccounts.length > 0 ? { order: { policy: draft.drawdownPolicy, order: draft.drawdownOrder } } : {}),
     claims,
     ...(healthcarePriced(draft) ? { aca: { planEnhanced: draft.enhancedSubsidies === true } } : {}),
+    paces: paceOffers(draft),
   }
 }
 
@@ -172,18 +208,23 @@ export function railOffers(draft: ScenarioDraft, planStopYear: number | undefine
 // The bundle the rail holds
 // ---------------------------------------------------------------------------
 
+/** Each kind's target (the tray's row id). Exhaustive (insight 147): the old `default: return l.kind` gave every kind it
+ *  did not name one target per household, so a kind held per account or per person (U17's pace) would have collided. */
+const LEVER_TARGET: { readonly [K in WhatIfLeverKind]: (lever: Extract<WhatIfLeverV6, { kind: K }>) => string } = {
+  'stop-year': () => 'stop-year',
+  spending: (l) => (l.op === 'total' ? 'spending:total' : `spending:line:${l.op === 'remove' ? l.lineId : l.line.id}`),
+  deposits: (l) => `deposits:${l.accountId}`,
+  mix: () => 'mix',
+  roth: () => 'roth',
+  'withdrawal-order': () => 'withdrawal-order',
+  'claim-age': (l) => `claim-age:${l.personIndex}`,
+  'aca-subsidy': () => 'aca-subsidy',
+  'inherited-pace': (l) => `inherited-pace:${l.accountId}`,
+}
+
 /** A lever's target inside a bundle (the rail holds at most one lever per target, as `applyBundle` requires). */
 export function leverTarget(l: WhatIfLeverV6): string {
-  switch (l.kind) {
-    case 'spending':
-      return l.op === 'total' ? 'spending:total' : `spending:line:${l.op === 'remove' ? l.lineId : l.line.id}`
-    case 'deposits':
-      return `deposits:${l.accountId}`
-    case 'claim-age':
-      return `claim-age:${l.personIndex}`
-    default:
-      return l.kind
-  }
+  return (LEVER_TARGET[l.kind] as (lever: WhatIfLeverV6) => string)(l)
 }
 
 /** The bundle with `lever` in its target's place (added at the end when new), or with that target dropped
@@ -369,7 +410,8 @@ export function floorUnread(track: 'full' | 'floor', draft: ScenarioDraft, bundl
 // The paired form
 // ---------------------------------------------------------------------------
 
-/** The paired columns, in their one reading order. */
+/** The paired columns every household can have, in their one reading order. An inherited IRA's two columns are per
+ *  account (`InheritedPairedColumnId`) and read after the household's own withdrawals. */
 export const PAIRED_COLUMNS = [
   'pay-0',
   'pay-1',
@@ -390,7 +432,24 @@ export const PAIRED_COLUMNS = [
   'payroll',
   'end-total',
 ] as const
-export type PairedColumnId = (typeof PAIRED_COLUMNS)[number]
+export type HouseholdPairedColumnId = (typeof PAIRED_COLUMNS)[number]
+/** One inherited IRA's required and taken columns, by the entered account's id (U17: two accounts never share one). */
+export type InheritedPairedColumnId = `inherited-required:${string}` | `inherited-taken:${string}`
+export type PairedColumnId = HouseholdPairedColumnId | InheritedPairedColumnId
+
+const INHERITED_COLUMN = /^inherited-(required|taken):(.+)$/
+const parseInherited = (id: PairedColumnId): { readonly field: 'required' | 'taken'; readonly accountId: string } | null => {
+  const m = INHERITED_COLUMN.exec(id)
+  return m === null ? null : { field: m[1] as 'required' | 'taken', accountId: m[2]! }
+}
+
+/** Columns in the one reading order: the household's by `PAIRED_COLUMNS`, each inherited IRA's pair after the
+ *  household's own withdrawals (beside "taken out" columns of its kind), in the order given; each id once. */
+export function orderPairedColumns(ids: Iterable<PairedColumnId>): readonly PairedColumnId[] {
+  const inheritedRank = PAIRED_COLUMNS.indexOf('taken-roth') + 0.5
+  const rank = (id: PairedColumnId) => (parseInherited(id) !== null ? inheritedRank : PAIRED_COLUMNS.indexOf(id as HouseholdPairedColumnId))
+  return [...new Set(ids)].map((id, i) => ({ id, i })).sort((a, b) => rank(a.id) - rank(b.id) || a.i - b.i).map((x) => x.id)
+}
 
 /** A deposit's column by grouping. An inherited IRA takes no deposits (U13), so it has none. */
 const PUT_IN: Readonly<Record<Exclude<KindBucket, 'inherited'>, PairedColumnId>> = {
@@ -414,9 +473,9 @@ const KIND_COLUMNS: { readonly [K in WhatIfLeverKind]: (lever: Extract<WhatIfLev
   'withdrawal-order': () => ['taken-taxable', 'taken-pretax', 'taken-roth'],
   'claim-age': () => ['social-security'],
   'aca-subsidy': () => ['marketplace'],
-  // U17 widens this to each ledger's taken and required columns; until then the pace pairs income tax and the year's end
-  // total, which already counts the inherited ledgers (U12's row total).
-  'inherited-pace': () => [],
+  // That account's own required and taken columns (U17); income tax and the year's end total ride every set, and the end
+  // total already counts each inherited ledger (U12's row total).
+  'inherited-pace': (l) => [`inherited-required:${l.accountId}`, `inherited-taken:${l.accountId}`],
 }
 
 /** The paired column set for a bundle: the union of its kinds' own columns, then income tax and the year's end total,
@@ -427,7 +486,7 @@ export function pairedColumnsFor(bundle: readonly WhatIfLeverV6[], draft: Scenar
     for (const c of (KIND_COLUMNS[l.kind] as (lever: WhatIfLeverV6, d: ScenarioDraft) => readonly PairedColumnId[])(l, draft)) want.add(c)
   }
   if (draft.people.length < 2) want.delete('pay-1')
-  return PAIRED_COLUMNS.filter((c) => want.has(c))
+  return orderPairedColumns(want)
 }
 
 /** One paired figure: its field's value and how it prints (the table's grain; "~" for the tool's projection). */
@@ -462,14 +521,15 @@ export interface PairedTable {
 
 interface ColumnRead {
   readonly header: (meta: TableMeta) => string
-  readonly read: (r: LedgerYearRow) => number | undefined
+  /** The row's field; `meta` is the row's own run's (an inherited IRA's entry is found there by its account). */
+  readonly read: (r: LedgerYearRow, meta: TableMeta) => number | undefined
   /** Year 0's figure is a fact the household entered: it prints exactly. */
   readonly enteredInYear0?: (r: LedgerYearRow, meta: TableMeta) => boolean
   /** A balance: a zero prints. */
   readonly balance?: boolean
 }
 
-const COLUMN_READS: Readonly<Record<PairedColumnId, ColumnRead>> = {
+const COLUMN_READS: Readonly<Record<HouseholdPairedColumnId, ColumnRead>> = {
   'pay-0': { header: (m) => slots.workbenchPairPay(m.people[0]?.label ?? copy.personYou), read: (r) => r.payByPerson[0], enteredInYear0: () => true },
   'pay-1': { header: (m) => slots.workbenchPairPay(m.people[1]?.label ?? copy.personSpouse), read: (r) => r.payByPerson[1], enteredInYear0: () => true },
   'social-security': { header: () => copy.workbenchColSocialSecurity, read: (r) => r.socialSecurity },
@@ -499,9 +559,28 @@ const COLUMN_READS: Readonly<Record<PairedColumnId, ColumnRead>> = {
   'end-total': { header: () => copy.workbenchPairEndTotal, read: (r) => ledgerRowEndTotal(r), balance: true },
 }
 
+/** An inherited IRA's column, found in each run by the account's id (a row's `inherited` entries keep that run's own
+ *  order), headed by the account's name: "Alex’s IRA inherited in 2023, required". */
+function inheritedRead(field: 'required' | 'taken', accountId: string): ColumnRead {
+  const at = (meta: TableMeta) => meta.inherited.findIndex((x) => x.accountId === accountId)
+  const label = (meta: TableMeta) => meta.inherited[at(meta)]?.label ?? ''
+  return {
+    header: (m) => (field === 'required' ? slots.workbenchPairRequiredOf(label(m)) : slots.workbenchPairTakenFrom(label(m))),
+    read: (r, m) => {
+      const k = at(m)
+      return k === -1 ? undefined : r.inherited?.[k]?.[field]
+    },
+  }
+}
+
+const columnRead = (id: PairedColumnId): ColumnRead => {
+  const inherited = parseInherited(id)
+  return inherited === null ? COLUMN_READS[id as HouseholdPairedColumnId] : inheritedRead(inherited.field, inherited.accountId)
+}
+
 function pairedFigure(c: ColumnRead, r: LedgerYearRow | undefined, meta: TableMeta): PairedFigure | null {
   if (r === undefined) return null
-  const v = c.read(r)
+  const v = c.read(r, meta)
   if (v === undefined) return null
   const dollars = tableDollars(v)
   if (dollars === 0 && c.balance !== true) return null
@@ -520,6 +599,13 @@ export function composePaired(input: {
 }): PairedTable {
   const { plan, whatIf } = input
   const meta = plan.meta
+  // An inherited IRA's column needs the account in the plan's run (it names the header); a lever on a gone account is
+  // refused before any run, so this drops nothing a household can reach.
+  const columns = input.columns.filter((id) => {
+    const inherited = parseInherited(id)
+    return inherited === null || meta.inherited.some((x) => x.accountId === inherited.accountId)
+  })
+  const reads = columns.map(columnRead)
   const planName = input.names?.plan ?? copy.workbenchRailPlanLabel
   const whatIfName = input.names?.whatIf ?? copy.workbenchRailWhatIfLabel
   const byT = (rows: readonly LedgerYearRow[]) => new Map(rows.map((r) => [r.t, r]))
@@ -537,23 +623,23 @@ export function composePaired(input: {
     return {
       t,
       year,
-      cells: input.columns.map((id) => ({
-        plan: pairedFigure(COLUMN_READS[id], p, plan.meta),
-        whatIf: pairedFigure(COLUMN_READS[id], w, whatIf.meta),
+      cells: reads.map((c) => ({
+        plan: pairedFigure(c, p, plan.meta),
+        whatIf: pairedFigure(c, w, whatIf.meta),
       })),
       notes,
     }
   })
   // A column neither run fills in any year (a withdrawal order's taxable column with no taxable money) is left out, as
   // the year table leaves out an empty column; income tax and the year's end total always show (a blank year is a fact).
-  const keep = input.columns.map((id, i) => id === 'income-tax' || id === 'end-total' || rows.some((r) => r.cells[i]!.plan !== null || r.cells[i]!.whatIf !== null))
-  const kept = input.columns.filter((_, i) => keep[i])
+  const keep = columns.map((id, i) => id === 'income-tax' || id === 'end-total' || rows.some((r) => r.cells[i]!.plan !== null || r.cells[i]!.whatIf !== null))
+  const kept = columns.map((id, i) => ({ id, read: reads[i]! })).filter((_, i) => keep[i])
   const keptRows = rows.map((r) => ({ ...r, cells: r.cells.filter((_, i) => keep[i]) }))
   const yieldLines = [
     [planName, yieldLine(plan.meta, plan.rows)] as const,
     [whatIfName, yieldLine(whatIf.meta, whatIf.rows)] as const,
   ].flatMap(([run, line]) => (line === null ? [] : [slots.workbenchPairYield(run, line)]))
-  return { columns: kept.map((id) => ({ id, header: COLUMN_READS[id].header(meta) })), rows: keptRows, yieldLines }
+  return { columns: kept.map(({ id, read }) => ({ id, header: read.header(meta) })), rows: keptRows, yieldLines }
 }
 
 // ---------------------------------------------------------------------------
@@ -624,6 +710,13 @@ export const BUCKET_LABEL: Readonly<Record<DrawdownOrderKey, CopyKey>> = {
 /** A withdrawal policy in words: a named policy's label, or a custom order first to last. */
 export function policyWords(policy: DrawdownPolicy, order: readonly DrawdownOrderKey[] | undefined): string {
   return policy === 'custom' && order !== undefined ? slots.workbenchFactOrder(order.map((k) => copy[BUCKET_LABEL[k]])) : copy[POLICY_LABEL[policy]]
+}
+
+/** An inherited IRA's pace in words (KTD21): the tray's compared value and Settings' value. `lawLastYear` is the year
+ *  the law empties the account, where "even amounts" end. */
+export function paceWords(pace: InheritedPace, lawLastYear: number): string {
+  if (pace.kind === 'law-minimum') return copy.trayPaceLawMinimum
+  return pace.kind === 'even' ? slots.trayPaceEven(lawLastYear) : slots.trayPaceEvenTo(pace.lastYear)
 }
 
 /** A Roth plan in words, on the plan's clock. */

@@ -23,7 +23,7 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { Undo2 } from 'lucide-react'
 import type { ScenarioDraft } from '@store/memoryModel'
-import { canonicalIdentityToken, type BudgetTier, type DrawdownPolicy, type WhatIfBudgetLineV6, type WhatIfLeverKind, type WhatIfLeverV6 } from '@shared/model'
+import { canonicalIdentityToken, type BudgetTier, type DrawdownPolicy, type InheritedPace, type WhatIfBudgetLineV6, type WhatIfLeverKind, type WhatIfLeverV6 } from '@shared/model'
 import { freshStableId, idsInUse } from '@shared/stableIds'
 import { AddMenu, Button, Checkbox, Drawer, DrawerFields, MoneyInput, Select, Slider, Tray, TrayColumn, TrayRow, TraySection, WholeInput, cn } from '../../kit'
 import { copy, slots } from '../../copy'
@@ -40,6 +40,7 @@ import {
   mixCommit,
   moveBucket,
   orderCommit,
+  paceCommit,
   policyLabel,
   rothCommit,
   rothFieldsFor,
@@ -92,6 +93,8 @@ export interface ActionItemsTrayProps {
 
 const WIDE_BOX = 'w-32'
 const NARROW_BOX = 'w-24'
+/** The pace picker's width (U17): its choices wrap inside it. */
+const PACE_BOX = 'w-52 min-w-0'
 /** The tray's short slider (ref 2.8's is about 140 px at RightCapital's wider tray; the row's name needs the room). */
 const SLIDER = 'w-24'
 
@@ -146,11 +149,13 @@ export function ActionItemsTray(props: ActionItemsTrayProps) {
     // (Until RC18 a door inside the closing assumption panel waited here for its sheet to hand focus back first; the
     // doors that come here now are Settings' rows and Health Care's tray, page buttons with no sheet to close.)
     const look = () => {
-      const row = document.querySelector<HTMLElement>(`#${CSS.escape(id)} [data-tray-group="${focus.lever}"]`)
-      const target = row?.querySelector<HTMLElement>('input, [role="combobox"], [role="slider"], button:not([inert])')
-      if (target !== null && target !== undefined) {
+      // The lever's first row that holds a control: a group's own row (Social Security's, the pace's) holds none.
+      const rows = document.querySelectorAll<HTMLElement>(`#${CSS.escape(id)} [data-tray-group="${focus.lever}"]`)
+      for (const row of rows) {
+        const target = row.querySelector<HTMLElement>('input, [role="combobox"], [role="slider"], button:not([inert])')
+        if (target === null) continue
         target.focus()
-        if (typeof row?.scrollIntoView === 'function') row.scrollIntoView({ block: 'center' })
+        if (typeof row.scrollIntoView === 'function') row.scrollIntoView({ block: 'center' })
         return
       }
       if (++frames < 240) raf = requestAnimationFrame(look)
@@ -594,7 +599,9 @@ function Row({ row, set, draft, anchor, wallCalendarYear, pending, awaiting, onA
     case 'mix':
       return <MixRows row={row} held={c.held} set={set} common={common} back={back} />
     case 'group':
-      return <TrayRow {...common} control={null} />
+      return <TrayRow {...common} {...(row.notes.length > 0 ? { notes: <Notes notes={row.notes} /> } : {})} control={null} />
+    case 'pace':
+      return <PaceRows row={row} offer={c.offer} value={c.value} set={set} common={common} back={back} />
     case 'aca':
       return (
         <TrayRow
@@ -703,6 +710,97 @@ function RothRows({
           {fieldRow('startYear', copy.leverRothStartLabel, <WholeInput label={copy.leverRothStartLabel} hideLabel value={fields.startYear} changed={row.changed} invalidMessage={copy.trayInvalidWhole} onCommit={field('startYear')} className={NARROW_BOX} />)}
           {fieldRow('years', copy.leverRothYearsLabel, <WholeInput label={copy.leverRothYearsLabel} hideLabel value={fields.years} changed={row.changed} invalidMessage={copy.trayInvalidWhole} onCommit={field('years')} className={NARROW_BOX} />)}
         </>
+      ) : null}
+    </>
+  )
+}
+
+/** An inherited IRA's pace (U17): the rule, and for "ending in a chosen year" an indented year row. The rule is held here
+ *  while its year is blank or refused, as the Roth row holds its mode: no lever until the year reads (`paceCommit`). */
+function PaceRows({
+  row,
+  offer,
+  value,
+  set,
+  common,
+  back,
+}: {
+  readonly row: TrayRowView
+  readonly offer: Extract<TrayRowView['control'], { kind: 'pace' }>['offer']
+  readonly value: InheritedPace
+  readonly set: WhatIf['setLever']
+  readonly common: Common
+  readonly back: (onBack: () => void) => ReactNode
+}) {
+  const yearOf = (p: InheritedPace) => (p.kind === 'even-to-year' ? p.lastYear : undefined)
+  const [kind, setKind] = useState<InheritedPace['kind']>(value.kind)
+  const [year, setYear] = useState<number | undefined>(yearOf(value))
+  const [wait, setWait] = useState<string | undefined>(undefined)
+  const send = (k: InheritedPace['kind'], y: number | undefined) => {
+    const out = paceCommit(offer, k, y)
+    if (out.kind === 'wait') {
+      setWait(out.words)
+      return
+    }
+    setWait(undefined)
+    set(row.id, out.lever)
+  }
+  return (
+    <>
+      <TrayRow
+        back={back(() => {
+          setKind(offer.plan.kind)
+          setYear(yearOf(offer.plan))
+          setWait(undefined)
+          set(row.id, null)
+        })}
+        {...common}
+        {...(wait !== undefined || row.notes.length > 0 ? { notes: <Notes notes={row.notes} error={wait} /> } : {})}
+        control={
+          <>
+            <Select<InheritedPace['kind']>
+              label={row.label}
+              hideLabel
+              items={[
+                { value: 'law-minimum', label: copy.trayPaceLawMinimum },
+                { value: 'even', label: slots.trayPaceEven(offer.lastYear) },
+                { value: 'even-to-year', label: copy.trayPaceChosen },
+              ]}
+              value={kind}
+              changed={row.changed || kind !== offer.plan.kind}
+              onValueChange={(k) => {
+                setKind(k)
+                send(k, year)
+              }}
+              // Its longest choice wraps inside the box: grown to its words, the box widened the tray's shared control
+              // column until the names beside it broke inside a word ("Roth conversion / s" at 1440 px).
+              className={PACE_BOX}
+            />
+          </>
+        }
+      />
+      {kind === 'even-to-year' ? (
+        <TrayRow
+          rowId={`${row.id}:year`}
+          group="inherited-pace"
+          indent
+          label={copy.trayPaceYear}
+          compared=""
+          control={
+            <WholeInput
+              label={slots.trayPaceYearOf(offer.name)}
+              hideLabel
+              value={year}
+              changed={row.changed}
+              invalidMessage={copy.trayInvalidWhole}
+              className={NARROW_BOX}
+              onCommit={(y) => {
+                setYear(y)
+                send('even-to-year', y)
+              }}
+            />
+          }
+        />
       ) : null}
     </>
   )

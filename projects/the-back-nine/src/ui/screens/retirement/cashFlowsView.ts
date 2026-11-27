@@ -25,7 +25,7 @@ import type { LedgerYearRow } from '@shared/model'
 import { copy, slots } from '../../copy'
 import type { TableMeta, TableView } from '../../workbench/tableRun'
 import { composeYearTable, inheritedYearNotes, lifespansLine, payCheckNotes, tableFigure, yieldLine, type SourceKeyEntry, type TableLine } from '../../workbench/yearTableChrome'
-import { composePaired, PAIRED_COLUMNS, type PairedColumnId, type PairedFigure } from '../../workbench/railChrome'
+import { composePaired, orderPairedColumns, type PairedColumnId, type PairedFigure } from '../../workbench/railChrome'
 import { mapsView, mapsViewSelect, type MapsChoice, type MapsView } from './mapsView'
 
 /** Maps first, as RightCapital orders them (RC20); the Summary stays the page's first view (the builder's call, RC20). */
@@ -693,7 +693,7 @@ export function cashFlowsView(input: CashFlowsInput): CashFlowsView {
     const working = input.plan.rows.some((r) => r.workingYear !== undefined) || other.rows.some((r) => r.workingYear !== undefined)
     const want = new Set<PairedColumnId>([...(input.pairedColumns ?? ['income-tax', 'end-total']), ...(working ? (['tax-on-pay', 'payroll'] as const) : [])])
     const table = composePaired({
-      columns: PAIRED_COLUMNS.filter((c) => want.has(c)),
+      columns: orderPairedColumns(want),
       plan: { rows: input.plan.rows, meta: input.plan.meta },
       whatIf: { rows: other.rows, meta: other.meta },
       names: { plan: copy.workbenchRailPlanLabel, whatIf: whatIfName },
@@ -736,6 +736,7 @@ export function cashFlowsView(input: CashFlowsInput): CashFlowsView {
       ...([...kept].some((id) => id.startsWith('put-in-')) ? [copy.workbenchMatchNote] : []),
       ...payCheck,
       ...(kept.has('required') ? [copy.workbenchRequiredPairedNote] : []),
+      ...([...kept].some((id) => id.startsWith('inherited-required:')) ? [copy.cashFlowsInheritedRequiredNote] : []),
       ...(kept.has('spending') && blankSpending ? [copy.workbenchNoSpendingNote] : []),
       copy.cashFlowsPairedNote,
     ]

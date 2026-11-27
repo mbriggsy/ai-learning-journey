@@ -56,6 +56,8 @@ export interface TableInherited {
   readonly name: string
   /** A column's header: the same words, the first letter capital. */
   readonly label: string
+  /** The entered account's id: how the paired form finds one account in two runs (U17's pace columns). */
+  readonly accountId?: string
 }
 
 /** What the composer and the heading need beside the rows, all captured from the run's own compile. */
@@ -148,7 +150,7 @@ const ACCOUNT_NAMING: Readonly<Record<AccountKind, 'kind' | 'death-year'>> = {
   'inherited-ira': 'death-year',
 }
 
-const capFirst = (s: string): string => (s === '' ? s : s[0]!.toUpperCase() + s.slice(1))
+export const capFirst = (s: string): string => (s === '' ? s : s[0]!.toUpperCase() + s.slice(1))
 
 /** The committed answer's key: one per figured answer and tier. The what-if's runs (U14, `whatIfRun.ts`) key on the
  *  same string, so a plan cell and a what-if cell pair only on one answer. */
@@ -200,8 +202,9 @@ export function tableRequestsOn(
     meta: {
       sources: base.sources,
       inherited: base.sources.inherited.map((src) => {
-        const name = enteredAccountName(draft, draft.enteredAccounts[src.index]!)
-        return { name, label: capFirst(name) }
+        const account = draft.enteredAccounts[src.index]!
+        const name = enteredAccountName(draft, account)
+        return { name, label: capFirst(name), ...(account.id !== undefined ? { accountId: account.id } : {}) }
       }),
       track: base.track,
       route: base.route,

@@ -182,6 +182,21 @@ describe('the pace (KTD21)', () => {
     expect(run({ years: 6, net: 40_000, ledgers: [by] }).finalInherited).toBe(0)
   })
 
+  it('“even amounts” never take less than the law’s minimum: where the minimum beats the even share every year, the two paces are one path', () => {
+    // The old-heir case above: heir born 1939, owner born 1930 who died in 2022 past the date, so the law empties it in
+    // 2032 and 2031's divisor (0.7) takes everything. The even share over the years left (2026: a seventh) is under the
+    // minimum (2026: 1 / 5.7) in every year, so the clamp holds the even pace to the minimum, year by year.
+    const old = (pace: InheritedLedgerParams['pace']) => ae5({ ownerBirthYear: 1930, ownerDeathYear: 2022, openYearFigure: 100_000 / 5.7, pace })
+    const household = singleHousehold(person(1939))
+    for (let years = 1; years <= 6; years++) {
+      const minimum = run({ years, net: 0, household, ledgers: [old({ kind: 'law-minimum' })] }).finalInherited
+      const even = run({ years, net: 0, household, ledgers: [old({ kind: 'even' })] }).finalInherited
+      expect(even, `after ${START + years - 1}`).toBeCloseTo(minimum!, 6)
+    }
+    // The even share alone would leave more behind: 2026 takes a seventh, $14,285.71, not the minimum's $17,543.86.
+    expect(run({ years: 1, net: 0, household, ledgers: [old({ kind: 'even' })] }).finalInherited).toBeCloseTo(100_000 - 100_000 / 5.7, 6)
+  })
+
   it('the open year’s even share counts what already came out that year', () => {
     // $8,000 out already; the year's share is (100,000 + 8,000) / 8 = 13,500, so $5,500 more comes out.
     const r = run({ years: 1, net: 40_000, ledgers: [ae5({ pace: { kind: 'even' }, takenInOpenYear: 8_000, openYearFigure: 3_496.5 })] })

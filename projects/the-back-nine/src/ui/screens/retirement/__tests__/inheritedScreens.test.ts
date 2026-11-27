@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { simulate } from '@engine/simulate'
-import type { LedgerYearRow } from '@shared/model'
-import type { ModelAnswer } from '@store/memoryModel'
+import type { InheritedPace, LedgerYearRow, WhatIfLeverV6 } from '@shared/model'
+import type { ModelAnswer, ScenarioDraft } from '@store/memoryModel'
+import { applyBundle } from '@intake/whatIf'
+import { pairedColumnsFor } from '../../../workbench/railChrome'
 import { DEV_SEEDS } from '../../../devSeeds'
 import { copy, slots } from '../../../copy'
 import { tableRunFor, type TableMeta } from '../../../workbench/tableRun'
@@ -21,13 +23,16 @@ import { cashFlowsView, leavesOf, type AccountsTable, type CashFlowsInput, type 
  */
 
 const draft = DEV_SEEDS.inherited
-const run = tableRunFor({ kind: 'headline', tier: 'final', draft, inputKey: 'k' } as unknown as ModelAnswer)
-if (run.kind !== 'run') throw new Error(`[test setup] the inherited seed builds no table run: ${run.kind}`)
-const meta: TableMeta = run.meta
-const ask = run.views.steady
-if (ask.kind !== 'run') throw new Error('[test setup] no steady run')
-const res = simulate(ask.request.params, ask.request.seed, ask.request.options)
-const rows: readonly LedgerYearRow[] = res.indeterminate || res.infeasible ? [] : (res.distribution.ledgerRows ?? [])
+/** A draft's steady rows and its run's meta, through the app's own table run (the paired form's two runs, U17). */
+function steadyRows(d: ScenarioDraft): { readonly rows: readonly LedgerYearRow[]; readonly meta: TableMeta } {
+  const run = tableRunFor({ kind: 'headline', tier: 'final', draft: d, inputKey: 'k' } as unknown as ModelAnswer)
+  if (run.kind !== 'run') throw new Error(`[test setup] the inherited seed builds no table run: ${run.kind}`)
+  const ask = run.views.steady
+  if (ask.kind !== 'run') throw new Error('[test setup] no steady run')
+  const res = simulate(ask.request.params, ask.request.seed, ask.request.options)
+  return { rows: res.indeterminate || res.infeasible ? [] : (res.distribution.ledgerRows ?? []), meta: run.meta }
+}
+const { rows, meta } = steadyRows(draft)
 
 const view = (tab: CashFlowsTab, accounts: AccountsTable = 'end') =>
   cashFlowsView({
@@ -133,5 +138,74 @@ describe('the two-inherited seed', () => {
     expect(worth.total).toBe(alloc.total)
     // A household with no inherited IRA prints no $0 inherited row.
     expect(investedKinds(DEV_SEEDS.buckets).kinds.map((k) => k.id)).toEqual(['taxable', 'pretax', 'roth', 'hsa'])
+  })
+})
+
+/**
+ * U17, the pace lever, on the same seed: each rule other than the plan's own, as the tray writes it, changes only that
+ * account's pace on the what-if's copy (field by field, as U14's arms are proven), and Cash Flows' paired form shows that
+ * account's own required and taken columns, the what-if's differing from the plan's in some year.
+ */
+describe('U17: an inherited IRA’s pace, tried beside the plan', () => {
+  const IDS = ['acct-0-inherited-ira-2023', 'acct-0-inherited-ira-2021'] as const
+  // The 2023 account's plan is "only what the law requires"; the 2021 account's is "even amounts" (the seed's facts).
+  const OTHER_RULES: readonly (readonly [number, InheritedPace])[] = [
+    [0, { kind: 'even' }],
+    [0, { kind: 'even-to-year', lastYear: 2029 }],
+    [1, { kind: 'law-minimum' }],
+    [1, { kind: 'even-to-year', lastYear: 2028 }],
+  ]
+  const withPace = (d: ScenarioDraft, accountId: string, pace: InheritedPace | undefined): ScenarioDraft => ({
+    ...d,
+    enteredAccounts: d.enteredAccounts.map((a) => (a.id === accountId && a.inherited !== undefined ? { ...a, inherited: { ...a.inherited, pace: pace ?? a.inherited.pace } } : a)),
+  })
+
+  it.each(OTHER_RULES)('account %i, %j: the what-if’s copy differs from the plan in that account’s pace alone, and its paired columns differ from the plan’s', (k, pace) => {
+    const accountId = IDS[k]!
+    const lever: WhatIfLeverV6 = { kind: 'inherited-pace', accountId, pace }
+    const applied = applyBundle(draft, [lever])
+    if (!applied.ok) throw new Error(applied.refusal.kind)
+    expect(applied.draft.enteredAccounts.find((a) => a.id === accountId)?.inherited?.pace).toEqual(pace)
+    // Put the plan's pace back on the copy and it is the plan's draft, every field: nothing else moved.
+    const planPace = draft.enteredAccounts.find((a) => a.id === accountId)!.inherited!.pace
+    expect(withPace(applied.draft, accountId, planPace)).toEqual(draft)
+
+    const whatIf = steadyRows(applied.draft)
+    const columns = pairedColumnsFor([lever], draft)
+    expect(columns).toEqual([`inherited-required:${accountId}`, `inherited-taken:${accountId}`, 'income-tax', 'end-total'])
+    const v = cashFlowsView({
+      tab: 'summary',
+      drill: null,
+      maps: { t: null, choice: 'flow' },
+      readOnly: false,
+      accounts: 'end',
+      future: 'steady',
+      pick: 'paired',
+      offers: { working: null, kept: [], recommended: false, paired: copy.probabilityPickNew },
+      plan: { kind: 'ready', rows, meta, updating: false, answerKey: 'k' },
+      other: { kind: 'ready', rows: whatIf.rows, meta: whatIf.meta, updating: false, answerKey: 'k' },
+      otherName: copy.probabilityPickNew,
+      pairedColumns: columns,
+      roughYears: { start: 1966, end: 1995, years: 30 },
+      wallCalendarYear: draft.startCalendarYear,
+      stateClause: null,
+    } satisfies CashFlowsInput)
+    if (v.body.kind !== 'table') throw new Error(v.body.kind)
+    const leaves = leavesOf(v.body.columns)
+    const taken = leaves.find((l) => l.id === `inherited-taken:${accountId}`)
+    expect(taken?.header).toBe(slots.workbenchPairTakenFrom(NAMES[k]!))
+    expect(leaves.find((l) => l.id === `inherited-required:${accountId}`)?.header).toBe(slots.workbenchPairRequiredOf(NAMES[k]!))
+    expect(leaves.some((l) => l.id.includes(IDS[1 - k]!)), 'the other account’s columns stay out').toBe(false)
+    // Each cell is its own run's entry for that account: the plan's row over the what-if's.
+    const byKey = new Map(v.body.rows.map((r) => [r.key, r]))
+    let differs = false
+    for (const r of rows) {
+      const p = byKey.get(`${r.t}-plan`)!.cells[`inherited-taken:${accountId}`]?.value ?? null
+      const w = byKey.get(`${r.t}-whatIf`)?.cells[`inherited-taken:${accountId}`]?.value ?? null
+      expect(p ?? 0, `${yearOf(r)} plan`).toBeCloseTo(formatTableDollars(r.inherited![k]!.taken) === '0' ? 0 : r.inherited![k]!.taken, 6)
+      if (p !== w) differs = true
+    }
+    expect(differs, 'the what-if’s taken column differs from the plan’s in some year').toBe(true)
+    expect(v.footnotes).toContain(copy.cashFlowsInheritedRequiredNote)
   })
 })

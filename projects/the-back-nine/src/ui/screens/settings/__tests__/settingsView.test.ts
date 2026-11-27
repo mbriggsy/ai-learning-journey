@@ -252,3 +252,25 @@ describe('read-only (plan 4.0)', () => {
     expect(settingsView({ draft: RETIRED, tab: 'methodology', readOnly: false, anchor: anchorOf(RETIRED), trayDraft: RETIRED }).intro).toBe(copy.settingsIntro)
   })
 })
+
+describe('the inherited-IRA pace row (U17)', () => {
+  const INH = DEV_SEEDS.inherited
+
+  it('one Methodology row names each inherited IRA’s pace, its line says what the pace is, and its door is the tray’s pace rows', () => {
+    const r = rowsOf(INH).methodology.find((x) => x.seat === 'inherited-pace')!
+    expect(r.name).toBe(copy.assumptionInheritedPaceName)
+    expect(r.values).toEqual([`Alex’s IRA inherited in 2023: ${copy.trayPaceLawMinimum}`, `Alex’s IRA inherited in 2021: ${slots.trayPaceEven(2031)}`])
+    expect(r.lines).toEqual([copy.settingsPaceLine])
+    expect(r.door).toEqual({ kind: 'tray', lever: 'inherited-pace', label: copy.settingsPaceDoor })
+    // The door lands where the tray draws a pace row (the tray's own offers over the same draft).
+    expect(trayView({ draft: INH, offers: railOffers(INH, undefined), pending: [], committed: [], hidden: new Set(), awaitingEmployer: new Map(), anchor: anchorOf(INH) }).right[0]!.rows.some((x) => x.lever === 'inherited-pace')).toBe(true)
+  })
+
+  it('no inherited IRA, no row; no committed reading or a read-only tab, no door', () => {
+    expect(allRows(RETIRED).some((x) => x.seat === 'inherited-pace')).toBe(false)
+    expect(rowsOf(INH, false, null).methodology.find((x) => x.seat === 'inherited-pace')!.door).toBeUndefined()
+    expect(rowsOf(INH, true).methodology.find((x) => x.seat === 'inherited-pace')!.door).toBeUndefined()
+    // The door reads the tray's draft: a reading of a draft with no inherited IRA opens none.
+    expect(rowsOf(INH, false, RETIRED).methodology.find((x) => x.seat === 'inherited-pace')!.door).toBeUndefined()
+  })
+})

@@ -2261,7 +2261,7 @@ Briggsy's eye, and should not be re-filed as a copy defect without a read.
   - Never model it as a traditional IRA with a shorter clock bolted on: the conversion rule and the penalty rule differ too.
   - Never let a conversion draw on it.
   - Never default the year of death or the owner's age.
-- ⚑ **Built 2026-11-27 (gap 3, the Act 5 plan's U10 to U13):** the kind, its own ledger and producer, its screens, and its drawer on Net Worth (`src/intake/inheritedIraQuestions.ts`, `InheritedIraFields.tsx`), which asks every fact and refuses every case version 1 does not run. Still open here: the pace lever (U17), then gap 3's whole-file review, which closes this entry. The refused cases' builds are their own entry, next.
+- ⚑ **Built 2026-11-27 (gap 3, the Act 5 plan's U10 to U13 and U17):** the kind, its own ledger and producer, its screens, its drawer on Net Worth (`src/intake/inheritedIraQuestions.ts`, `InheritedIraFields.tsx`), which asks every fact and refuses every case version 1 does not run, and the pace lever in the Action Items tray (U17, b9-9). Still open here: gap 3's whole-file review, which closes this entry. The refused cases' builds are their own entry, next.
 
 ### Version 1 of the inherited IRA refuses fourteen cases in words, and each refused case is a build
 

@@ -14,7 +14,8 @@
  * Roth plan, the subsidy rules: tried beside the plan and written by Apply, U15's rule); or Tax Strategies (the heirs'
  * bracket, set beside the goal it ranks). A door shows only where its home can act (no hollow door, council 2026-07-03):
  * the tray's withdrawal order needs an account, its Roth row a married couple with pre-tax money or a saved plan
- * (`rothDoorOpen`, the tray's own rule), its subsidy rules a priced pre-65 year. THE TRAY'S DOORS READ THE TRAY'S OWN
+ * (`rothDoorOpen`, the tray's own rule), its pace rows an inherited IRA whose pace is still a choice (`paceOffers`), its
+ * subsidy rules a priced pre-65 year. THE TRAY'S DOORS READ THE TRAY'S OWN
  * DRAFT (milestone 3's review, round 2): the tray draws only over a committed reading and reads that reading's draft
  * (`Shell.tsx`'s `offers`), so with no reading committed no tray door draws and no line sends the household to try one,
  * and each tray door's rule reads the committed draft, never the live one an edit may have moved since.
@@ -38,7 +39,7 @@ import { METHODOLOGY_DISCLOSURES, leftOverLineKey, methodologyLines, type Assump
 import { rothPlanStartFor, type BandPlanClockAnchor } from '../../bandAnnotations'
 import { copy, slots, type CopyKey } from '../../copy'
 import { formatBracketPercent } from '../../money'
-import { policyWords, rothDoorOpen } from '../../workbench/railChrome'
+import { paceOffers, paceWords, policyWords, rothDoorOpen } from '../../workbench/railChrome'
 import { tablePerson } from '../../workbench/tableRun'
 import { extrasValue, stateLabel, type DrawerTarget } from '../profile/profileView'
 
@@ -188,7 +189,20 @@ export function settingsRows(
     lines: [copy.assumptionSurvivorRatioHelp],
     ...door(true, { kind: 'drawer', target: { kind: 'living' }, label: copy.settingsSurvivorRatioDoor } as const),
   }
-  const methodology: SettingsRow[] = [drawdown, rothRow, survivor]
+  const methodology: SettingsRow[] = [drawdown, rothRow]
+  // Each inherited IRA's pace (U17): one row, a line per account (as Medicare's extras name each person), its one door the
+  // tray's pace rows (the door lands on the first account's rule; a door per account would land there too).
+  const paces = paceOffers(d)
+  if (paces.length > 0) {
+    methodology.push({
+      seat: 'inherited-pace',
+      name: copy.assumptionInheritedPaceName,
+      values: paces.map((p) => `${p.label}: ${paceWords(p.plan, p.lastYear)}`),
+      lines: [copy.settingsPaceLine],
+      ...trayDoor((t) => paceOffers(t).length > 0, { kind: 'tray', lever: 'inherited-pace', label: copy.settingsPaceDoor } as const),
+    })
+  }
+  methodology.push(survivor)
   if (dateRoute) {
     // W: the value line is the sentence (it names the figure and where it came from, or that it is unanswered or stale).
     methodology.push({

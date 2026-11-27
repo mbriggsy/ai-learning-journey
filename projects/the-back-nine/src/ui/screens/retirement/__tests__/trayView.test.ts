@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import { DATE_OFFSET_WINDOW_TOP } from '@engine/dateSearch'
 import type { WhatIfLeverV6 } from '@shared/model'
+import { applyBundle } from '@intake/whatIf'
 import type { ScenarioDraft } from '@store/memoryModel'
 import { DEV_SEEDS } from '../../../devSeeds'
 import { copy, slots } from '../../../copy'
 import { planClockAnchor } from '../../../bandAnnotations'
-import { railOffers, stopWords } from '../../../workbench/railChrome'
+import { leverTarget, railOffers, stopWords, withLever } from '../../../workbench/railChrome'
 import { composeRothOmissionsNote } from '../../../stateTaxDisclosure'
 import { acaPricedForRun, draftPretaxTotal, healthcarePriced, medicareOnlyPriced, pricedStateForRun } from '@intake/intakeMap'
 import {
@@ -17,6 +18,7 @@ import {
   mixCommit,
   moveBucket,
   orderCommit,
+  paceCommit,
   rothCommit,
   rothNotes,
   stopCommit,
@@ -334,5 +336,76 @@ describe('an inherited IRA is never pre-tax money to the tray (the Act 5 plan’
     const order = row(trayView(input(d)), 'withdrawal-order')
     expect(order, '[test setup] the order row is drawn').toBeDefined()
     expect(order!.control.kind === 'order' && order!.control.offered).not.toContain('pre-tax-first')
+  })
+})
+
+describe('the inherited-IRA pace (U17, KTD21)', () => {
+  const inh = DEV_SEEDS.inherited
+  const A = 'acct-0-inherited-ira-2023' // the plan's pace: only what the law requires; the law empties it in 2033
+  const B = 'acct-0-inherited-ira-2021' // the plan's pace: even amounts; the law empties it in 2031
+  const offerOf = (id: string) => railOffers(inh, undefined).paces.find((p) => p.accountId === id)!
+
+  it('Strategies holds the pace group over one indented row per inherited IRA, named by its account, after the withdrawal order', () => {
+    const v = trayView(input(inh))
+    const ids = v.right[0]!.rows.map((r) => r.id)
+    expect(ids.slice(ids.indexOf('withdrawal-order') + 1, ids.indexOf('withdrawal-order') + 4)).toEqual(['inherited-pace', `inherited-pace:${A}`, `inherited-pace:${B}`])
+    expect(row(v, 'inherited-pace')).toMatchObject({ label: copy.trayPaceTitle, control: { kind: 'group' }, notes: [copy.trayPaceNote] })
+    expect(row(v, `inherited-pace:${A}`)).toMatchObject({ label: 'Alex’s IRA inherited in 2023', compared: copy.trayPaceLawMinimum, indent: true, changed: false })
+    expect(row(v, `inherited-pace:${B}`)).toMatchObject({ label: 'Alex’s IRA inherited in 2021', compared: slots.trayPaceEven(2031), indent: true })
+    expect(v.editSections.find((s) => s.title === copy.traySectionStrategies)!.items.map((i) => i.id)).toContain('inherited-pace')
+    // No inherited IRA, no pace row.
+    expect(rowsOf(trayView(input(retired))).some((r) => r.lever === 'inherited-pace')).toBe(false)
+  })
+
+  it('an account the law empties in its asked year takes everything whatever the pace, so it offers no row', () => {
+    const lastYear = inh.enteredAccounts.map((a) => (a.id === A && a.inherited !== undefined ? { ...a, inherited: { ...a.inherited, askedYear: 2033 } } : a))
+    expect(railOffers({ ...inh, enteredAccounts: lastYear }, undefined).paces.map((p) => p.accountId)).toEqual([B])
+  })
+
+  it('a rule picked: the plan’s own is no lever; another is the lever on that account alone', () => {
+    expect(paceCommit(offerOf(A), 'law-minimum', undefined)).toEqual({ kind: 'lever', lever: null })
+    expect(paceCommit(offerOf(B), 'even', undefined)).toEqual({ kind: 'lever', lever: null })
+    expect(paceCommit(offerOf(A), 'even', undefined)).toEqual({ kind: 'lever', lever: { kind: 'inherited-pace', accountId: A, pace: { kind: 'even' } } })
+    expect(paceCommit(offerOf(B), 'law-minimum', undefined)).toEqual({ kind: 'lever', lever: { kind: 'inherited-pace', accountId: B, pace: { kind: 'law-minimum' } } })
+  })
+
+  it('"ending in a chosen year" waits for a year, and refuses in words a year outside the asked year to the law’s last, before any run', () => {
+    const a = offerOf(A)
+    expect([a.firstYear, a.lastYear]).toEqual([inh.startCalendarYear, 2033])
+    expect(paceCommit(a, 'even-to-year', undefined)).toEqual({ kind: 'wait', words: slots.trayPaceNeedsYear(a.firstYear, 2033) })
+    for (const year of [2034, a.firstYear - 1, 2029.5]) {
+      expect(paceCommit(a, 'even-to-year', year), String(year)).toEqual({ kind: 'wait', words: slots.trayPaceYearRange(a.firstYear, 2033) })
+    }
+    // The ends are in: the asked year and the law's last year.
+    for (const year of [a.firstYear, 2033]) {
+      expect(paceCommit(a, 'even-to-year', year)).toEqual({ kind: 'lever', lever: { kind: 'inherited-pace', accountId: A, pace: { kind: 'even-to-year', lastYear: year } } })
+    }
+    // The same bounds as the writer's own (`applyBundle`): what the tray lets through, the writer runs.
+    const ok = paceCommit(a, 'even-to-year', 2033)
+    if (ok.kind !== 'lever' || ok.lever === null) throw new Error('[test setup]')
+    expect(applyBundle(inh, [ok.lever]).ok).toBe(true)
+    expect(applyBundle(inh, [{ kind: 'inherited-pace', accountId: A, pace: { kind: 'even-to-year', lastYear: 2034 } }])).toMatchObject({ ok: false, refusal: { kind: 'pace-year-outside' } })
+  })
+
+  it('two accounts’ pace levers hold two targets: pulling one leaves the other', () => {
+    const onA: WhatIfLeverV6 = { kind: 'inherited-pace', accountId: A, pace: { kind: 'even' } }
+    const onB: WhatIfLeverV6 = { kind: 'inherited-pace', accountId: B, pace: { kind: 'law-minimum' } }
+    expect(leverTarget(onA)).not.toBe(leverTarget(onB))
+    const both = withLever(withLever([], leverTarget(onA), onA), leverTarget(onB), onB)
+    expect(both).toEqual([onA, onB])
+    const v = trayView(input(inh, { pending: both }))
+    expect([row(v, `inherited-pace:${A}`)!.changed, row(v, `inherited-pace:${B}`)!.changed]).toEqual([true, true])
+    expect(row(v, `inherited-pace:${A}`)!.control).toMatchObject({ value: { kind: 'even' } })
+    const pulled = withLever(both, leverTarget(onA), null)
+    expect(pulled).toEqual([onB])
+    const after = trayView(input(inh, { pending: pulled }))
+    expect([row(after, `inherited-pace:${A}`)!.changed, row(after, `inherited-pace:${B}`)!.changed]).toEqual([false, true])
+  })
+
+  it('the Edit drawer hiding the pace group drops every pace lever, and nothing else', () => {
+    const order: WhatIfLeverV6 = { kind: 'withdrawal-order', policy: 'taxable-first' }
+    const bundle: WhatIfLeverV6[] = [{ kind: 'inherited-pace', accountId: A, pace: { kind: 'even' } }, order, { kind: 'inherited-pace', accountId: B, pace: { kind: 'law-minimum' } }]
+    expect(withoutHidden(bundle, new Set(['inherited-pace']))).toEqual([order])
+    expect(withoutHidden(bundle, new Set(['claim-age']))).toEqual(bundle)
   })
 })

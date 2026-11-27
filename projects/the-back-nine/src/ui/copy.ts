@@ -1472,6 +1472,7 @@ export const copy = {
   assumptionNoneApplied: 'None applied.',
   assumptionDrawdownName: 'Withdrawal order',
   assumptionRothName: 'Roth conversions',
+  assumptionInheritedPaceName: 'Inherited IRA pace',
   assumptionRegimeName: 'Health-subsidy rules',
   // The retirement-state row (the state-tax unit, S3): the editable "where you’ll retire" pick —
   // a changeable best guess, edit → re-run (the SC-vs-GA what-if lever). The picker's own legend
@@ -2524,6 +2525,10 @@ export const copy = {
     'The plan prices this state’s income tax on your retirement income where B9 knows the state’s rules; each figured page’s state line says whether it does.',
   settingsHeirDoor: 'Change it on Tax Strategies',
   settingsAcaDoor: 'Try the other rules in the action items',
+  // The inherited-IRA pace row (U17): one row, one line per account, its door the tray's pace rows.
+  settingsPaceLine:
+    'How fast money comes out of each inherited IRA. Each year takes at least what the law requires, and the law’s last year takes whatever is left.',
+  settingsPaceDoor: 'Try another pace in the action items',
   settingsMedicareDoor: 'Change it in Medicare',
   settingsNotShownHere:
     'The facts you gave (your ages, savings, income and spending) live on the Profile pages, each in its own card.',
@@ -2659,6 +2664,13 @@ export const copy = {
   trayRothNeedsAmount: 'Roth conversions wait for a yearly amount.',
   trayRothNeedsStart: 'Roth conversions wait for a first year.',
   trayRothNeedsYears: 'Roth conversions wait for how many years.',
+  // The inherited-IRA pace (the Act 5 plan's U17, KTD21). The pilot's drafts, shipped flagged for Briggsy's read. No
+  // word says a faster or slower pace helps or costs (R20): the left half's counts say what it does.
+  trayPaceTitle: 'Inherited IRA pace',
+  trayPaceLawMinimum: 'Only what the law requires',
+  trayPaceChosen: 'Even amounts, ending in a year you pick',
+  trayPaceYear: 'Last year',
+  trayPaceNote: 'Each year takes at least what the law requires, and the law’s last year takes whatever is left.',
   trayEditTitle: 'Add or remove action items',
   trayEditSections: 'The rows to show',
   trayEditSelectAll: 'Select all',
@@ -5957,6 +5969,14 @@ export const slots = {
   trayAge: (age: number): string => `Age ${age}`,
   /** The tray's compared value for the plan's stock share. */
   trayMixPlan: (pct: string): string => `About ${pct}% stocks`,
+  /** An inherited IRA's pace in words (the tray's compared value, Settings' value): even amounts through a year. */
+  trayPaceEven: (lastYear: number): string => `Even amounts through ${lastYear}`,
+  trayPaceEvenTo: (lastYear: number): string => `Even amounts, ending in ${lastYear}`,
+  /** The year box's accessible name: the account's name rides with it (two accounts' boxes read apart). */
+  trayPaceYearOf: (account: string): string => `${account}: last year`,
+  trayPaceNeedsYear: (first: number, last: number): string => `Even amounts wait for a last year, ${first} to ${last}.`,
+  trayPaceYearRange: (first: number, last: number): string =>
+    `The last year can be ${first} to ${last}: the law says this account is empty by ${last}.`,
   // --- The lever rail (Act 5, U15). The pilot's drafts, shipped flagged. Each count rides whole from its one producer
   // (`verdictReadingText`, `dateOddsText`); a run's name rides whole ("Your plan", "This what-if"). ---
   /** Equal counts: the even line (R20). */
@@ -5994,6 +6014,7 @@ export const slots = {
   workbenchPairPay: (label: string): string => `Pay, ${label}`,
   workbenchPairPutIn: (source: string): string => `${source}, put in`,
   workbenchPairTakenFrom: (source: string): string => `${source}, taken out`,
+  workbenchPairRequiredOf: (source: string): string => `${source}, required`,
   workbenchPairRanOut: (run: string, year: number): string => `${run}: the money runs out in ${year} in this future.`,
   /** KTD32's stopgap on the paired form, named for the run whose taxable ledger holds money (round 3's c3-adv-hidden-work-4). */
   workbenchPairYield: (run: string, line: string): string => `${run}: ${line}`,

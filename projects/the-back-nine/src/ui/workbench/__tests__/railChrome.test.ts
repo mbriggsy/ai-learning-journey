@@ -6,6 +6,8 @@ import {
   floorUnread,
   kindsOf,
   leftOverNoteFor,
+  leverTarget,
+  orderPairedColumns,
   pairedColumnsFor,
   PAIRED_COLUMNS,
   railOffers,
@@ -14,7 +16,7 @@ import {
   refusalWords,
   stopWords,
   withLever,
-  type PairedColumnId,
+  type HouseholdPairedColumnId,
 } from '../railChrome'
 import type { TableMeta, TablePerson } from '../tableRun'
 import type { WhatIfReading } from '../whatIfRun'
@@ -85,7 +87,7 @@ function row(t: number, base: number, over: Partial<LedgerYearRow> = {}): Ledger
 }
 
 /** The field each paired column must read, typed here by hand from the plan's column list (never from the composer). */
-const FIELD: Readonly<Record<PairedColumnId, (r: LedgerYearRow) => number | undefined>> = {
+const FIELD: Readonly<Record<HouseholdPairedColumnId, (r: LedgerYearRow) => number | undefined>> = {
   'pay-0': (r) => r.payByPerson[0],
   'pay-1': (r) => r.payByPerson[1],
   'social-security': (r) => r.socialSecurity,
@@ -377,8 +379,8 @@ describe('the paired form — each figure one field of its own run’s row (R5),
     table.rows.forEach((r, k) => {
       r.cells.forEach((cell, i) => {
         const id = table.columns[i]!.id
-        expect(cell.plan?.value, `${id} plan, t=${k}`).toBe(FIELD[id](planRows[k]!))
-        expect(cell.whatIf?.value, `${id} what-if, t=${k}`).toBe(FIELD[id](whatIfRows[k]!))
+        expect(cell.plan?.value, `${id} plan, t=${k}`).toBe(FIELD[id as HouseholdPairedColumnId](planRows[k]!))
+        expect(cell.whatIf?.value, `${id} what-if, t=${k}`).toBe(FIELD[id as HouseholdPairedColumnId](whatIfRows[k]!))
       })
     })
   })
@@ -420,6 +422,59 @@ describe('the paired form — each figure one field of its own run’s row (R5),
     const table = composePaired({ columns: ['spending'], plan: { rows: planRows, meta: META }, whatIf: { rows: withTaxable, meta: META } })
     expect(table.yieldLines).toHaveLength(1)
     expect(table.yieldLines[0]!.startsWith(`${copy.workbenchRailWhatIfLabel}: `)).toBe(true)
+  })
+})
+
+describe('the paired form — an inherited IRA’s own columns (U17)', () => {
+  const inheritedOf = (required: number, taken: number) => ({ start: 0, booked: 0, required, taken, aboveRequired: taken - required, movedToTaxable: 0, leftTheRun: 0, end: 0, last: false })
+  const named = (accountId: string, name: string) => ({ name, label: name, accountId })
+  const A = named('acct-a', 'Alex’s IRA inherited in 2023')
+  const B = named('acct-b', 'Alex’s IRA inherited in 2021')
+
+  it('a pace lever brings that account’s required and taken columns, after the household’s own withdrawals, and no other account’s', () => {
+    const pace: WhatIfLeverV6 = { kind: 'inherited-pace', accountId: 'acct-a', pace: { kind: 'even' } }
+    expect(pairedColumnsFor([pace, { kind: 'withdrawal-order', policy: 'taxable-first' }], DEV_SEEDS.inherited)).toEqual([
+      'taken-taxable',
+      'taken-pretax',
+      'taken-roth',
+      'inherited-required:acct-a',
+      'inherited-taken:acct-a',
+      'income-tax',
+      'end-total',
+    ])
+    // Each id once, in the given order among the inherited pairs, wherever the household's columns came in.
+    expect(orderPairedColumns(['end-total', 'inherited-taken:acct-b', 'income-tax', 'spending', 'inherited-taken:acct-b'])).toEqual(['spending', 'inherited-taken:acct-b', 'income-tax', 'end-total'])
+  })
+
+  it('each cell is its own run’s entry for that account, found by the account’s id, never by position (the two runs list it apart)', () => {
+    const planMeta: TableMeta = { ...META, inherited: [A, B] }
+    const whatIfMeta: TableMeta = { ...META, inherited: [B, A] }
+    const planRows = [row(0, 1_000, { inherited: [inheritedOf(3_000, 3_000), inheritedOf(0, 15_000)] })]
+    const whatIfRows = [row(0, 2_000, { inherited: [inheritedOf(0, 15_000), inheritedOf(3_000, 21_000)] })]
+    const table = composePaired({
+      columns: ['inherited-required:acct-a', 'inherited-taken:acct-a', 'income-tax', 'end-total'],
+      plan: { rows: planRows, meta: planMeta },
+      whatIf: { rows: whatIfRows, meta: whatIfMeta },
+    })
+    expect(table.columns.map((c) => c.header).slice(0, 2)).toEqual([slots.workbenchPairRequiredOf(A.label), slots.workbenchPairTakenFrom(A.label)])
+    const [required, taken] = table.rows[0]!.cells
+    expect([required!.plan?.value, required!.whatIf?.value]).toEqual([3_000, 3_000])
+    expect([taken!.plan?.value, taken!.whatIf?.value]).toEqual([3_000, 21_000])
+  })
+
+  it('a column whose account the plan’s run does not name is left out (no header to give it)', () => {
+    const table = composePaired({ columns: ['inherited-taken:gone', 'income-tax', 'end-total'], plan: { rows: [row(0, 1)], meta: META }, whatIf: { rows: [row(0, 2)], meta: META } })
+    expect(table.columns.map((c) => c.id)).toEqual(['income-tax', 'end-total'])
+  })
+
+  it('every lever kind has a target, and two accounts’ or two people’s levers never share one', () => {
+    expect(leverTarget({ kind: 'inherited-pace', accountId: 'acct-a', pace: { kind: 'even' } })).toBe('inherited-pace:acct-a')
+    expect(leverTarget({ kind: 'inherited-pace', accountId: 'acct-b', pace: { kind: 'even' } })).toBe('inherited-pace:acct-b')
+    expect(leverTarget({ kind: 'stop-year', calendarYear: 2030 })).toBe('stop-year')
+    expect(leverTarget({ kind: 'mix', stockPct: 60, bondPct: 40, cashPct: 0 })).toBe('mix')
+    expect(leverTarget({ kind: 'roth', conversion: { kind: 'none' } })).toBe('roth')
+    expect(leverTarget({ kind: 'withdrawal-order', policy: 'proportional' })).toBe('withdrawal-order')
+    expect(leverTarget({ kind: 'aca-subsidy', enhanced: true })).toBe('aca-subsidy')
   })
 })
 

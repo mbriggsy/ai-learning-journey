@@ -682,3 +682,34 @@ describe('doors into a lever open the tray at its row, and no sheet', () => {
     await waitFor(() => expect(tray().querySelector('[data-tray-group="withdrawal-order"]')!.contains(document.activeElement)).toBe(true), { timeout: 5_000 })
   })
 })
+
+describe('the inherited-IRA pace (U17)', () => {
+  const A = 'acct-0-inherited-ira-2023'
+  const paceRow = () => tray().querySelector(`[data-tray-row="inherited-pace:${A}"]`) as HTMLElement
+
+  it('Settings’ pace row opens the tray at the first account’s rule: the group’s own row holds no control, so focus lands on the row under it', async () => {
+    openTray(DEV_SEEDS.inherited, { open: false })
+    fireEvent.click(screen.getByRole('button', { name: copy.shellGearLabel }))
+    const row = await waitFor(() => document.querySelector<HTMLElement>('[data-assumption-seat="inherited-pace"]')!)
+    fireEvent.click(within(row).getByRole('button', { name: copy.settingsPaceDoor }))
+    await waitFor(() => expect(handle()).toHaveAttribute('aria-expanded', 'true'), { timeout: 5_000 })
+    await waitFor(() => expect(paceRow().contains(document.activeElement)).toBe(true), { timeout: 5_000 })
+  })
+
+  it('"ending in a year you pick" opens a year box that waits for a year, refuses one past the law’s last in words, and takes one inside', async () => {
+    const user = userEvent.setup()
+    openTray(DEV_SEEDS.inherited)
+    await user.click(within(paceRow()).getByRole('combobox'))
+    await user.click(await screen.findByRole('option', { name: copy.trayPaceChosen }))
+    const first = DEV_SEEDS.inherited.startCalendarYear
+    await waitFor(() => expect(within(paceRow()).getByRole('alert')).toHaveTextContent(slots.trayPaceNeedsYear(first, 2033)))
+    const label = slots.trayPaceYearOf('Alex’s IRA inherited in 2023')
+    await within(tray()).findByLabelText(label)
+    typeIn(label, '2040')
+    await waitFor(() => expect(within(paceRow()).getByRole('alert')).toHaveTextContent(slots.trayPaceYearRange(first, 2033)))
+    typeIn(label, '2029')
+    await waitFor(() => expect(within(paceRow()).queryByRole('alert')).toBeNull())
+    // The row is pulled now (its own way back shows), and the other account's row is not.
+    expect(within(paceRow()).getByRole('button', { name: slots.workbenchRailBackName('Alex’s IRA inherited in 2023') })).not.toHaveAttribute('inert')
+  })
+})

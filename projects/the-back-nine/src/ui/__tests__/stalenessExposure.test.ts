@@ -302,6 +302,8 @@ describe('exposureForDraft — the working-year tax floor’s reach (ledger v12)
     // Act 6 · RC5: `dip` holding kept what-ifs (the plan list's plant). Kept what-ifs are never an engine input, so it is
     // `dip`'s own household, read through the W branch like the rest here.
     'dipkept',
+    // Gap 4's U3: `dip`'s household with a car repeating every five years, read through the W branch.
+    'daterepeat',
   ] as const
   const withoutW = (d: ScenarioDraft): ScenarioDraft => {
     const { workingYearCost: _w, ...rest } = d

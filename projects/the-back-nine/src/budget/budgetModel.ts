@@ -27,6 +27,7 @@
  * owns the compiled-profile domain gate. Three gates, no overlap (the two-gate rule).
  */
 import type { BudgetLineItem } from '@shared/model'
+import { everyYearsInRange } from '@shared/spendingBounds'
 
 /** Survivor-sticky = essentials-tier AND a category whose cost does not shrink at
  *  widowhood (`other` errs sticky — conservative). See the module header. */
@@ -35,11 +36,15 @@ export function isSurvivorSticky(item: BudgetLineItem): boolean {
   return item.category === 'housing' || item.category === 'utilities' || item.category === 'other'
 }
 
-/** Is the line active in retirement-year k (offsets from the household work-stop
- *  anchor; `endYear` ABSENT = lifelong, inclusive when present)? */
+/** Is the line charged in retirement-year k (offsets from the household work-stop anchor; `endYear` ABSENT =
+ *  lifelong, inclusive when present)? A line with a repeat (`everyYears`, schema version 8) is charged only in its
+ *  start year and every `everyYears` years after, inside its window (gap 4's KTD5): the ONE home of a line's years,
+ *  read by the compile, the year-0 totals and every other reader, so no two can disagree. Counted in the window's own
+ *  frame (insight 167). */
 export function isActiveAt(item: BudgetLineItem, k: number): boolean {
   if (k < item.startYear) return false
-  return item.endYear === undefined || k <= item.endYear
+  if (item.endYear !== undefined && k > item.endYear) return false
+  return item.everyYears === undefined || (k - item.startYear) % item.everyYears === 0
 }
 
 /** THE HAS-BUDGET GATE (U9b — pure + exported per insight 048): a budget governs the
@@ -53,18 +58,25 @@ export function budgetGoverns(
   return budget !== undefined
 }
 
-/** RAMPED = any line's window departs from lifelong-at-year-0 (a later start, or any
- *  finite end). For a ramped budget the year-0 reconciled total is an ANCHOR — the figure
+/** RAMPED = any line's window departs from lifelong-at-year-0 (a later start, any
+ *  finite end, or a repeat — gap 4's U3: a repeat charges some years and not others). For a ramped budget the year-0 reconciled total is an ANCHOR — the figure
  *  the answer is reconciled through — not a steady-state spend, and the surfaces quoting
  *  it must label it so (council 2026-07-02, the anchor-not-steady-state carry-forward). */
 export function isRampedBudget(items: readonly BudgetLineItem[]): boolean {
-  return items.some((i) => i.startYear > 0 || i.endYear !== undefined)
+  return items.some((i) => i.startYear > 0 || i.endYear !== undefined || i.everyYears !== undefined)
 }
 
 /** A blocking R19 problem on one line (calm inline message material — U9b renders). */
 export interface BudgetItemError {
   readonly index: number
-  readonly kind: 'non-finite-amount' | 'negative-amount' | 'non-integer-window' | 'negative-start' | 'reversed-window'
+  readonly kind:
+    | 'non-finite-amount'
+    | 'negative-amount'
+    | 'non-integer-window'
+    | 'negative-start'
+    | 'reversed-window'
+    /** A repeat (schema version 8) that is not a whole number of years from 2 to 50 (`spendingBounds.ts`). */
+    | 'repeat-out-of-range'
 }
 
 /** A non-blocking R19 caution about the budget as a whole. `zero-essentials` = an
@@ -93,6 +105,7 @@ export function validateBudgetItems(items: readonly BudgetLineItem[]): BudgetVal
     } else if (item.endYear !== undefined && item.endYear < item.startYear) {
       errors.push({ index, kind: 'reversed-window' })
     }
+    if (item.everyYears !== undefined && !everyYearsInRange(item.everyYears)) errors.push({ index, kind: 'repeat-out-of-range' })
   })
 
   const warnings: BudgetWarning[] = []

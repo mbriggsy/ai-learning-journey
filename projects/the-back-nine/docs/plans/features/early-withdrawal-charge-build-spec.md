@@ -46,12 +46,12 @@ The engine never checks an owner's age when it draws. `allocateWithdrawal` takes
 
 The miss is rosy, so it is a cardinal-rule problem: every uncharged dollar is tax the household really owes. The register files it Tier 0 (`docs/backlog.md`, *Money taken from retirement accounts before age 59½ is never charged the 10% early-withdrawal tax…*). The reach is wider than the working years:
 
-- `healthgap`'s Sam is 40, retired, and owns the household's only Roth IRA; under the default proportional order Sam draws from it for about 20 years before 59½ (`src/ui/devSeeds.ts:1500-1506`).
+- `healthgap`'s Sam is 40, retired, and owns the household's only Roth IRA; under the default proportional order Sam draws from it for about 20 years before 59½ (`src/ui/devSeeds.ts:1516-1522`).
 - `health` and `healthnc` draw Sam's Roth at 59.
 - The date search tests stops 0–10 years out (`src/engine/dateSearch.ts:61-70`), so a household in its late 50s draws pre-tax right after a tested stop.
 - Since the pay check (2026-10-30), a short working year is paid from savings through the withdrawal order, so an under-59½ owner's pre-tax money can pay part of it, uncharged like every other draw.
 
-The only words about the gap are K1 (`copy.assumptionWorkingYearCheckEarlyCharge`, `src/ui/copy.ts:1562-1563`), and they cover working years only. The retired route says nothing. D7 says a gap like this is a build item, never a sentence: K1 may stand only until the charge lands.
+The only words about the gap are K1 (`copy.assumptionWorkingYearCheckEarlyCharge`, `src/ui/copy.ts:1563-1564`), and they cover working years only. The retired route says nothing. D7 says a gap like this is a build item, never a sentence: K1 may stand only until the charge lands.
 
 ### Requirements
 
@@ -523,7 +523,7 @@ These are bets made without Briggsy's confirmation. Each can be overturned at U2
 **Approach:**
 1. Freeze the tree after U6 (KTD13) and run every date seed and `healthgap`, `health` and `healthnc` with the construct supplied, bracketed between "not sure" everywhere and the exempt answers. Run each reached seed under the shipped taxable-first order as well as the default proportional one, with the charge on and off, and record how much of each move appears only under the default order.
 2. Record the date, the grade, the confidence statement and whether the crown or runner-up moves.
-3. For each pin U10 will re-check, record whether it moves: `dip`'s `nonMonotoneOffsets` (`src/ui/__tests__/devSeeds.test.ts:817-829`), `datesplit`'s crowns (`:655-722`), the crown-seat tables (`e2e/chart-text.spec.ts line 662-700 at 95c715e19`), `healthSheetSeedGate`'s MAGI and headroom figures (`src/ui/__tests__/healthSheetSeedGate.test.ts:94-144`), the `health` crowns (`src/ui/__tests__/allInWitnessHl50.test.ts`), the `healthnc` 160-path crown flip (`src/ui/__tests__/solvePayloadIdentity.health.test.ts`, `solvePoolIdentity.health.test.ts`), and the seed docblocks (`src/ui/devSeeds.ts:1573-1596`).
+3. For each pin U10 will re-check, record whether it moves: `dip`'s `nonMonotoneOffsets` (`src/ui/__tests__/devSeeds.test.ts:817-829`), `datesplit`'s crowns (`:655-722`), the crown-seat tables (`e2e/chart-text.spec.ts line 662-700 at 95c715e19`), `healthSheetSeedGate`'s MAGI and headroom figures (`src/ui/__tests__/healthSheetSeedGate.test.ts:94-144`), the `health` crowns (`src/ui/__tests__/allInWitnessHl50.test.ts`), the `healthnc` 160-path crown flip (`src/ui/__tests__/solvePayloadIdentity.health.test.ts`, `solvePoolIdentity.health.test.ts`), and the seed docblocks (`src/ui/devSeeds.ts:1589-1612`).
 4. Re-count the work (KTD13) on the same seeds as U1 and compare.
 5. Run the amendment's household and the other probe households.
 6. If the crown moves on a seed where the true best order would draw taxable first until 59½, file the age-aware order entry with that seed's numbers.
@@ -544,7 +544,7 @@ These are bets made without Briggsy's confirmation. Each can be overturned at U2
 - `src/ui/copy.ts`: drafts, each tagged with the surface that will show it
 
 **Approach:**
-1. Draft plainly, in his "no PhD" register: each ask and its "not sure" (the job link, the earlier job's separation, each Roth account's basis, the 457(b) answer and its rolled-in amount); the charge's name wherever the year's tax is shown; any line whose meaning changes, such as the money picture's "Plus any income tax on what savings pays out…" (`src/ui/copy.ts:549`); K1's deletion; anything a U2 ruling leaves the household to know.
+1. Draft plainly, in his "no PhD" register: each ask and its "not sure" (the job link, the earlier job's separation, each Roth account's basis, the 457(b) answer and its rolled-in amount); the charge's name wherever the year's tax is shown; any line whose meaning changes, such as the money picture's "Plus any income tax on what savings pays out…" (`src/ui/copy.ts:550`); K1's deletion; anything a U2 ruling leaves the household to know.
 2. copyGuard bans "penalty" only in survivor copy (`src/ui/copyGuard.ts:295-309`); the word itself is his call at U12. Whatever he picks, the charge never becomes a line inside the working-year cash lines (KTD9).
 
 **Test expectation:** none. These are drafts. U12 puts them to Briggsy on real screens, and U10 pins the words he picks.
@@ -624,7 +624,7 @@ These are bets made without Briggsy's confirmation. Each can be overturned at U2
 - `src/intake/__tests__/intakeMap.test.ts`: the builder-side proof over every dev seed and candidate (KTD4)
 - `src/engine/pricingVersion.ts` and `src/engine/__tests__/pricingVersion.test.ts`; `src/store/staleness.ts` and its test; `src/ui/stalenessExposure.ts` and its test: the reach predicate U6 exported, wired in
 - `src/engine/solver/solverCodeVersion.ts`; `src/engine/__tests__/pricingWitness.test.ts`
-- K1's removal: `src/ui/copy.ts:1562-1563`, `src/ui/assumptionRegistry.ts:350-378`, `src/intake/__tests__/assumptionPanel.test.tsx`, `src/ui/__tests__/workingYearTaxDisclosure.test.ts`
+- K1's removal: `src/ui/copy.ts:1563-1564`, `src/ui/assumptionRegistry.ts:350-378`, `src/intake/__tests__/assumptionPanel.test.tsx`, `src/ui/__tests__/workingYearTaxDisclosure.test.ts`
 - the pins U7 marked moved: `src/ui/__tests__/devSeeds.test.ts`, `e2e/chart-text.spec.ts`, `src/ui/__tests__/healthSheetSeedGate.test.ts`, `src/ui/__tests__/allInWitnessHl50.test.ts`, `src/ui/__tests__/solvePayloadIdentity.health.test.ts`, `src/ui/__tests__/solvePoolIdentity.health.test.ts`, `src/ui/devSeeds.ts` docblocks
 - `src/ui/devSeeds.ts`: the amendment's household, if Briggsy said yes at U12
 - the words he picked at U12, in `src/ui/copy.ts` and their pins; if he ruled a line of the charge's own, the presence-keyed display sink System-Wide Impact describes, with its surface and test

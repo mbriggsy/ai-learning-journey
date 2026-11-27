@@ -88,6 +88,33 @@ describe('compileBudget — the OOP-medical injection (the containment fix)', ()
   })
 })
 
+describe('compileBudget — a line that repeats (gap 4’s U3, KTD5)', () => {
+  // The charged years are listed by hand (AE1), never derived through the compile or `isActiveAt`.
+  const chargedYears = (profile: readonly number[]): number[] => profile.flatMap((v, k) => (v !== 0 ? [k] : []))
+
+  it('AE1: a $40,000 line from year 3 repeating every 5 years, no end, horizon 30, is charged in exactly 3, 8, 13, 18, 23 and 28', () => {
+    const c = compileBudget([line({ annualAmountReal: 40_000, startYear: 3, everyYears: 5 })], undefined, 30)
+    expect(chargedYears(c.scalableEssentials)).toEqual([3, 8, 13, 18, 23, 28])
+    expect(c.scalableEssentials[8]).toBe(40_000)
+  })
+
+  it('with a Through year of 14 the same line is charged in 3, 8 and 13 only', () => {
+    const c = compileBudget([line({ annualAmountReal: 40_000, startYear: 3, endYear: 14, everyYears: 5 })], undefined, 30)
+    expect(chargedYears(c.scalableEssentials)).toEqual([3, 8, 13])
+  })
+
+  it('a repeat from year 0 is in the year-0 total; a line without one compiles exactly as before', () => {
+    expect(budgetYearZeroFullTotal([line({ annualAmountReal: 40_000, everyYears: 5 }), line({ annualAmountReal: 30_000 })], 5_000)).toBe(75_000)
+    expect(budgetYearZeroFullTotal([line({ annualAmountReal: 40_000, startYear: 1, everyYears: 5 })], undefined)).toBe(0)
+    expect(compileBudget([line({ startYear: 2, endYear: 4 })], undefined, 6).scalableEssentials).toEqual([0, 0, 12_000, 12_000, 12_000, 0])
+  })
+
+  it('throws loud on a repeat that is not a whole number from 2 to 50 (compiling it would charge the wrong years)', () => {
+    expect(() => compileBudget([line({ everyYears: 1 })], undefined, H)).toThrow(/everyYears/)
+    expect(() => compileBudget([line({ everyYears: 2.5 })], undefined, H)).toThrow(/everyYears/)
+  })
+})
+
 describe('compileBudget — structural throws vs faithful domain-bad values', () => {
   it('throws loud on a reversed window (compiling it faithfully would silently drop the line)', () => {
     expect(() => compileBudget([line({ startYear: 5, endYear: 2 })], undefined, H)).toThrow(/reversed window/)

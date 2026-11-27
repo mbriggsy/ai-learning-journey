@@ -16,6 +16,11 @@
  *    budget's year-0 total, `budgetYearZeroFullTotal`'s composition), EXCEPT a discretionary line
  *    that is windowed (it ends) or starts later — those are named as left out. A finite-ended
  *    ESSENTIAL (a mortgage that ends) stays in. A budget quote is yearly, like its anchor line.
+ *    A line that REPEATS (schema version 8, gap 4's KTD5) and is not left out counts at its yearly average,
+ *    amount ÷ N, when it starts inside its first cycle (`startYear` below N: a car every 5 years first
+ *    bought in year 1 is the same habit as one bought in year 0), since W is one flat figure for every
+ *    working year; the quote names each such line and its average. One that starts later is a cost that
+ *    begins after the stop, treated as a later line is: an essential counts nothing, an extra is left out.
  * Never the k = 0 retirement total fed straight to a draw (the Hawk's veto; the binding NEGATIVE).
  *
  * THE READING (KTD18) — DRAFT-KEYED, a recorded departure from the plan's "from the built read"
@@ -88,6 +93,9 @@ export interface WorkingYearQuote {
   /** The discretionary lines the quote left out (windowed, or starting later), in budget order —
    *  the question names them: at most three, then "N more". */
   readonly leftOut: readonly Pick<BudgetLineItem, 'label' | 'category'>[]
+  /** The repeating lines the quote counts at their yearly average (gap 4's KTD5), in budget order — the question
+   *  names each with its average: at most three, then "N more". Empty with no budget. */
+  readonly repeats: readonly (Pick<BudgetLineItem, 'label' | 'annualAmountReal'> & { readonly everyYears: number })[]
 }
 
 /** Is a budget line a retirement-only splurge the quote leaves out? A discretionary line that ends,
@@ -101,9 +109,18 @@ export function workingYearQuote(d: ScenarioDraft): WorkingYearQuote {
     const medical = d.health.oopMedicalAnnual ?? 0
     let total = medical
     const leftOut: Pick<BudgetLineItem, 'label' | 'category'>[] = []
+    const repeats: WorkingYearQuote['repeats'][number][] = []
     for (const item of d.budget) {
       if (leftOutOfQuote(item)) {
         leftOut.push({ label: item.label, category: item.category })
+        continue
+      }
+      const n = item.everyYears
+      if (n !== undefined) {
+        if (item.startYear < n) {
+          total += item.annualAmountReal / n
+          repeats.push({ label: item.label, annualAmountReal: item.annualAmountReal, everyYears: n })
+        }
         continue
       }
       if (isActiveAt(item, 0)) total += item.annualAmountReal
@@ -114,6 +131,7 @@ export function workingYearQuote(d: ScenarioDraft): WorkingYearQuote {
       period: 'year',
       medicalReal: medical,
       leftOut,
+      repeats,
     }
   }
   const spending = d.annualSpendingReal
@@ -123,6 +141,7 @@ export function workingYearQuote(d: ScenarioDraft): WorkingYearQuote {
     period: d.spendEntryPeriod,
     medicalReal: 0,
     leftOut: [],
+    repeats: [],
   }
 }
 

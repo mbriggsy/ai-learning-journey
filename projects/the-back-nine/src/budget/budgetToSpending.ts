@@ -32,6 +32,7 @@
  * indeterminate (`validateParams` — the engine, never the UI, decides).
  */
 import type { BudgetLineItem, CompiledBudget } from '@shared/model'
+import { everyYearsInRange } from '@shared/spendingBounds'
 import { isActiveAt, isSurvivorSticky } from './budgetModel'
 
 /**
@@ -62,6 +63,11 @@ export function compileBudget(
         `[budget] items[${i}].endYear must be an integer ≥ startYear (got ${item.endYear} < ${item.startYear}) — a reversed window would silently drop the line`,
       )
     }
+    if (item.everyYears !== undefined && !everyYearsInRange(item.everyYears)) {
+      throw new Error(
+        `[budget] items[${i}].everyYears must be a whole number from 2 to 50 (got ${item.everyYears}) — compiling it would charge the wrong years`,
+      )
+    }
   }
 
   const sticky = new Array<number>(maxHorizonYears).fill(0)
@@ -71,8 +77,10 @@ export function compileBudget(
   for (const item of items) {
     const target =
       item.tier === 'discretionary' ? discretionary : isSurvivorSticky(item) ? sticky : scalableEssentials
-    const last = item.endYear === undefined ? maxHorizonYears - 1 : Math.min(item.endYear, maxHorizonYears - 1)
-    for (let k = item.startYear; k <= last; k++) target[k]! += item.annualAmountReal
+    // The line's years come from the one window helper (gap 4's KTD5, the workbench plan's KTD27): its window and,
+    // since schema version 8, its repeat. The sum per year runs in the same item order as before, so a budget with no
+    // repeat compiles byte-identically.
+    for (let k = item.startYear; k < maxHorizonYears; k++) if (isActiveAt(item, k)) target[k]! += item.annualAmountReal
   }
 
   // The injected OOP-medical floor line: sticky (held whole at widowhood — a disclosed

@@ -7,6 +7,8 @@ import {
   isSurvivorSticky,
   validateBudgetItems,
 } from '@budget/budgetModel'
+import { EVERY_YEARS_MAX, EVERY_YEARS_MIN } from '@shared/spendingBounds'
+import { copy } from '@ui/copy'
 
 const line = (over: Partial<BudgetLineItem>): BudgetLineItem => ({
   category: 'food',
@@ -79,6 +81,25 @@ describe('isRampedBudget — the anchor-not-steady-state label gate (U9b)', () =
   it('a later start OR any finite end makes the budget ramped', () => {
     expect(isRampedBudget([line({}), line({ startYear: 3 })])).toBe(true)
     expect(isRampedBudget([line({}), line({ endYear: 19 })])).toBe(true)
+  })
+
+  it('a repeat makes the budget ramped, even one from year 0 with no end (it charges some years and not others; gap 4’s U3)', () => {
+    expect(isRampedBudget([line({}), line({ everyYears: 5 })])).toBe(true)
+  })
+})
+
+describe('a line’s repeat — the window helper and the validator (gap 4’s U3, KTD5)', () => {
+  it('isActiveAt charges a repeat in its start year and every N years after, inside its window', () => {
+    const car = line({ startYear: 3, endYear: 14, everyYears: 5 })
+    expect([0, 3, 4, 8, 13, 14, 18].map((k) => isActiveAt(car, k))).toEqual([false, true, false, true, true, false, false])
+  })
+
+  it('the validator refuses a repeat of 1 or 2.5 with its own kind; 2 and 50 pass; the words name the band the bounds module holds', () => {
+    for (const everyYears of [1, 2.5, 51]) {
+      expect(validateBudgetItems([line({ everyYears })]).errors, `every ${everyYears}`).toEqual([{ index: 0, kind: 'repeat-out-of-range' }])
+    }
+    for (const everyYears of [2, 50]) expect(validateBudgetItems([line({ everyYears })]).errors, `every ${everyYears}`).toEqual([])
+    expect(copy.errBudgetRepeatRange).toContain(`from ${EVERY_YEARS_MIN.value} to ${EVERY_YEARS_MAX.value}`)
   })
 })
 

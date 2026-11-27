@@ -2387,7 +2387,7 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
     expect(carrying).toEqual(keys.filter((k) => isDateRoute(DEV_SEEDS[k])).sort())
     // Named, so a seed that falls off the date route cannot take its W with it unseen.
     expect(carrying).toEqual([
-      'atceiling', 'date', 'date65', 'dateborder', 'datecoststale', 'datelateleftover', 'datemixed', 'datenc', 'datesaved',
+      'atceiling', 'date', 'date65', 'dateborder', 'datecoststale', 'datelateleftover', 'datemixed', 'datenc', 'daterepeat', 'datesaved',
       'datesavedfourbuckets', 'datesavedmoved', 'datesavedrisen', 'datesavedrisenlater', 'datesavedrisenshort', 'datesavedstale', 'datesavedtyped',
       'datesavedtypedcrowned', 'datesavedtypedmoved', 'datesavedtypednearline', 'datesavedtypedpension', 'datesavedtypedsticky', 'dateshort',
       'datesolo',
@@ -2511,8 +2511,9 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
     // (short at the quote, a later year short at the quote), U11 walk 6's retype (R1: a typed W, fresh), the
     // four-bucket twin (council (6)), the retype after a move (the walk-6 round review's pair), the whole-window
     // rebuild's two (the pension household and the crowned one), the tax rider's two walk-8 twins (the near-line
-    // household and the all-sticky one) and the year-by-year table's widest household (the workbench's U7) included.
-    expect(swept, 'the sweep reached every buildable W-carrying seed').toBe(26)
+    // household and the all-sticky one), the year-by-year table's widest household (the workbench's U7) and gap 4's
+    // repeat witness (`daterepeat`, U3) included.
+    expect(swept, 'the sweep reached every buildable W-carrying seed').toBe(27)
   })
 
   // The whole-window rebuild's every-year field (KTD1) on two witnesses the typed-below line reads. A (`datesavedtyped`):
@@ -2569,7 +2570,7 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
       if (key === 'dateshort') expect(credits.every((c) => c === 0), 'dateshort: short in year 0, so nothing in any year').toBe(true)
       swept++
     }
-    expect(swept, 'the sweep reached every buildable W-carrying seed (the twenty-six above)').toBe(26)
+    expect(swept, 'the sweep reached every buildable W-carrying seed (the twenty-seven above)').toBe(27)
   })
 
   // Build 2's U9 (KTD14): the three saved witnesses, each minted through the shipped write. Every figure typed by

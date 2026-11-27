@@ -22,6 +22,7 @@ import {
 import { workingYearCostStaleNote } from '../workingYearLeftOver'
 import { isDateRoute, missingRequiredFacts, pricedStateForRun } from '../intakeMap'
 import { threeThenMore } from '../missingFacts'
+import { quoteLine } from '../workingCostFace'
 import { STATE_TAX_PROFILES } from '@engine/constants/stateTax'
 import type { StateBaseSystem } from '@engine/constants'
 import {
@@ -86,6 +87,7 @@ describe('the quote (KTD5)', () => {
       period: 'month',
       medicalReal: 0,
       leftOut: [],
+      repeats: [],
     })
     expect(workingYearQuote(base({ annualSpendingReal: 60_000, spendEntryPeriod: 'year' }))).toEqual({
       annualReal: 60_000,
@@ -93,6 +95,7 @@ describe('the quote (KTD5)', () => {
       period: 'year',
       medicalReal: 0,
       leftOut: [],
+      repeats: [],
     })
   })
 
@@ -106,6 +109,7 @@ describe('the quote (KTD5)', () => {
       period: 'year',
       medicalReal: 4_000,
       leftOut: [],
+      repeats: [],
     })
   })
 
@@ -151,7 +155,7 @@ describe('the quote (KTD5)', () => {
   it('a budget with no first-year line and no M quotes $0 (the step then asks for a figure)', () => {
     // An essential that starts at k = 2 is neither active in the first year nor left out.
     const d = base({ budget: [line('other', 'Care', 12_000, 'essentials', 2)] })
-    expect(workingYearQuote(d)).toEqual({ annualReal: 0, source: 'budget', period: 'year', medicalReal: 0, leftOut: [] })
+    expect(workingYearQuote(d)).toEqual({ annualReal: 0, source: 'budget', period: 'year', medicalReal: 0, leftOut: [], repeats: [] })
     expect(confirmedWorkingYearCost(d), 'nothing to confirm').toBeNull()
   })
 
@@ -165,6 +169,34 @@ describe('the quote (KTD5)', () => {
     expect(q.leftOut.map((l) => l.label)).toEqual(names)
     // The component applies the shared three-then-more rule over the names.
     expect(threeThenMore(q.leftOut.map((l) => l.label))).toEqual({ shown: ['Cruise', 'Europe', 'New car'], more: 2 })
+  })
+
+  // Gap 4's U3 (KTD5): a repeating line counts at its yearly average when it starts inside its first cycle. The
+  // figures are typed by hand: a $40,000 car every 5 years averages $8,000 a year.
+  const car = (startYear: number, tier: BudgetLineItem['tier'] = 'essentials'): BudgetLineItem => ({
+    ...line('transportation', 'A new car', 40_000, tier, startYear),
+    everyYears: 5,
+  })
+
+  it('a $40,000 essentials car every 5 years adds $8,000, whether it starts in year 0 or year 1, and the quote names it with its average', () => {
+    for (const startYear of [0, 1]) {
+      const q = workingYearQuote(base({ budget: [HOME, car(startYear)] }))
+      expect(q.annualReal, `from year ${startYear}`).toBe(28_000) // 20,000 + 40,000 / 5
+      expect(q.repeats).toEqual([{ label: 'A new car', annualAmountReal: 40_000, everyYears: 5 }])
+      expect(quoteLine(q)).toBe(
+        'Your budget’s first year after work stops comes to $28,000 a year. A new car, $40,000 every 5 years, counts here as $8,000 a year.',
+      )
+    }
+  })
+
+  it('a repeat that starts after its first cycle counts nothing (a cost that begins after the stop), and a later discretionary repeat stays left out and named', () => {
+    const late = workingYearQuote(base({ budget: [HOME, car(5)] }))
+    expect(late.annualReal).toBe(20_000)
+    expect(late.repeats).toEqual([])
+    const extra = workingYearQuote(base({ budget: [HOME, car(2, 'discretionary')] }))
+    expect(extra.annualReal).toBe(20_000)
+    expect(extra.leftOut).toEqual([{ label: 'A new car', category: 'transportation' }])
+    expect(extra.repeats).toEqual([])
   })
 
   it('a non-finite or absent spending figure quotes $0 — never NaN or a stand-in', () => {

@@ -40,13 +40,27 @@ export function withWorkingYearCost(d: ScenarioDraft, w: ScenarioDraft['workingY
 export function quoteLine(quote: WorkingYearQuote): string {
   const amount = formatMoney(quote.annualReal)
   if (quote.source === 'budget') {
-    return quote.medicalReal > 0
-      ? slots.workingCostQuoteBudgetMedical(amount, formatMoney(quote.medicalReal))
-      : slots.workingCostQuoteBudget(amount)
+    const total =
+      quote.medicalReal > 0
+        ? slots.workingCostQuoteBudgetMedical(amount, formatMoney(quote.medicalReal))
+        : slots.workingCostQuoteBudget(amount)
+    return [total, ...repeatSentences(quote)].join(' ')
   }
   return quote.period === 'month'
     ? slots.workingCostQuoteMonthly(formatMoney(quote.annualReal / 12), amount)
     : slots.workingCostQuoteYearly(amount)
+}
+
+/** Each repeating line the budget quote counts at its average (gap 4's KTD5), one sentence each: at most three, then
+ *  the rest counted. */
+function repeatSentences(quote: WorkingYearQuote): readonly string[] {
+  if (quote.repeats.length === 0) return []
+  const shown = quote.repeats.slice(0, 3)
+  const more = quote.repeats.length - shown.length
+  const lines = shown.map((r) =>
+    slots.workingCostQuoteRepeat(r.label, formatMoney(r.annualAmountReal), String(r.everyYears), formatMoney(r.annualAmountReal / r.everyYears)),
+  )
+  return more > 0 ? [...lines, slots.workingCostQuoteRepeatMore(more)] : lines
 }
 
 export function leftOutLine(quote: WorkingYearQuote): string | null {

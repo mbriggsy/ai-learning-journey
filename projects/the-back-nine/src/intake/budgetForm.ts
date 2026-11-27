@@ -29,6 +29,7 @@ export const BUDGET_ERROR_COPY: Record<BudgetItemError['kind'], CopyKey> = {
   'non-integer-window': 'errBudgetWindowNonInteger',
   'negative-start': 'errBudgetWindowNegativeStart',
   'reversed-window': 'errBudgetWindowReversed',
+  'repeat-out-of-range': 'errBudgetRepeatRange',
 }
 
 /** The line's amount errors and window errors (the two places a line shows its errors). */

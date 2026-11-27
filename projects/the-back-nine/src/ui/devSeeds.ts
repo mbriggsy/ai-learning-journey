@@ -750,6 +750,22 @@ const dateDipSeed: ScenarioDraft = {
 }
 
 /**
+ * THE REPEAT WITNESS — `?seed=daterepeat` (gap 4's U3): `dip`'s household with a $40,000 car bought in the first year
+ * after work stops and every five years after (`everyYears: 5`), so the compile charges it in years 0, 5, 10 and on,
+ * the year-0 total holds it (reconciled: 20,000 + 16,000 + 42,000 + 40,000 = $118,000), the budget reads ramped, and
+ * the W quote counts it at its average, $8,000 a year ($36,000 + $8,000 = $44,000; Go-go years still left out). A
+ * date-route seed with a confirmed W minted on its own draft, fact-complete.
+ */
+const dateRepeatSeed: ScenarioDraft = {
+  ...dateDipSeed,
+  budget: [
+    ...dateDipSeed.budget!,
+    { id: 'line-car', category: 'transportation', label: 'A new car', annualAmountReal: 40_000, tier: 'essentials', startYear: 0, everyYears: 5 },
+  ],
+  annualSpendingReal: 118_000,
+}
+
+/**
  * THE CUSTOM-DRAWDOWN-ORDER round-trip seed (U10 — the persisted 'custom' policy + `drawdownOrder`).
  * Every other seed rides the `proportional` default; this one is the ONLY seed that drives the
  * 'custom' policy and an explicit bucket order through `plantDevVault`'s scenarioFromDraft → codec
@@ -2124,6 +2140,8 @@ export const DEV_SEEDS = {
   // Act 6 · RC5: the plan list's plants (kept what-ifs, retired and working).
   retiredkept: retiredKept,
   dipkept: dipKept,
+  // Gap 4's U3: a budget line that repeats (a car every five years from the first year).
+  daterepeat: withConfirmedW(dateRepeatSeed),
 } satisfies Record<string, ScenarioDraft>
 
 export type DevSeedKey = keyof typeof DEV_SEEDS

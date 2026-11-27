@@ -165,13 +165,14 @@ export const copy = {
     'Counted from the first retirement year — year 0. Leave “through” blank for always.',
   // The ramped-budget anchor disclosure (shared: the sheet readout + the governed spend step).
   budgetAnchorRampNote:
-    'With lines that start later or end, the first-year figure is an anchor for the math — not every year’s spending.',
+    'With lines that start later, end or repeat, the first-year figure is an anchor for the math — not every year’s spending.',
   // R19 line errors — calm advisor voice, blocking (validate-before-mutate), one per defect kind.
   errBudgetAmountNonFinite: 'That amount didn’t read as a number — mind checking it?',
   errBudgetAmountNegative: 'An amount below zero can’t work here.',
   errBudgetWindowNonInteger: 'Years here are whole numbers — 0, 1, 2…',
   errBudgetWindowNegativeStart: 'The start year can’t sit before year 0.',
   errBudgetWindowReversed: 'The end year sits before the start — mind swapping them?',
+  errBudgetRepeatRange: 'A repeat is a whole number of years, from 2 to 50. Leave it blank for every year.',
   // R19 whole-budget cautions — calm, never blocking.
   budgetWarnZeroEssentials: 'Nothing here is marked essential yet, so the safety floor reads as empty.',
   budgetWarnNoYearZero:
@@ -4444,6 +4445,11 @@ export const slots = {
     `That leaves out extras that end or start in a later year, since those read as plans for after work: ${names}.`,
   workingCostLeftOutMore: (names: string, more: number): string =>
     `That leaves out extras that end or start in a later year, since those read as plans for after work: ${names}, and ${more} more.`,
+  /** A repeating line inside the budget quote (gap 4's U3, KTD5): counted at its yearly average, since W is one flat
+   *  figure for every working year. One sentence per line, at most three, then the rest counted. */
+  workingCostQuoteRepeat: (label: string, amountFormatted: string, everyYears: string, averageFormatted: string): string =>
+    `${label}, $${amountFormatted} every ${everyYears} years, counts here as $${averageFormatted} a year.`,
+  workingCostQuoteRepeatMore: (more: number): string => `${more} more lines that repeat count the same way.`,
   /** The stale note (KTD21, role="note", present before any tap): the last figure, the current
    *  quote where it moved, and which input moved — the spending figures (spending, budget lines or
    *  medical, one cause) and/or the state answer. Both figures yearly, each with its own words. */
@@ -5410,7 +5416,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:2421` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:2424` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,

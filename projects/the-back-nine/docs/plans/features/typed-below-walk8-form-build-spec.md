@@ -30,7 +30,7 @@ round's other walk-8 items (U3, U4). No engine output moves; `src/engine` and `i
   `, not including any difference between the two answers in income tax and Medicare’s income surcharge.`
   ("between the two answers" changes one variable inside the refrain the ear keeps, ear §3.) No "the tool works out
   your tax" line (red team attack 2, conceded by every proposer: E20's shape, two scopes, and it restates an open gap's
-  stopgap, `copy.ts:406-413`).
+  stopgap, `copy.ts:407-414`).
 - **KD3. The gloss, once per composed line.** The first rider on each line carries, before its period,
   ` (the extra premium Medicare charges once you’re on it, when your income two years before was high)`. "two" is
   spelled from `magiLookbackYears` (`src/engine/constants/health.ts:151`), never typed.

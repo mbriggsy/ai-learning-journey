@@ -3,6 +3,7 @@ title: Spending Lines That Repeat or Grow at Their Own Rate, and Loans That End 
 type: feat
 date: 2026-11-27
 deepened: 2026-11-27
+read: 2026-11-27
 artifact_contract: ce-unified-plan/v1
 product_contract_source: ce-plan-bootstrap
 execution: code
@@ -16,7 +17,7 @@ execution: code
 - **Means.** Three constructs, each in its own frame: a repeat and a rate on a budget line, and a loan as its own record on Net Worth (KTD1, KTD2).
 - **Authority.** This plan's Requirements win on product behavior and its KTDs win on mechanism. Project law outranks both: `CLAUDE.md`, `docs/architecture.md` (the byte-identity and presence-key invariants, the single shared market draw), and `docs/product.md` §4 (D7).
 - **Execution profile.** Built on main, as one or more commits per unit in the order of the Unit Index; no branches and no pull requests (the project's practice: `CLAUDE.md`, *Test cadence*). Every commit that touches `src/engine` or `src/intake/intakeMap.ts` carries `pnpm engine:identity`'s first line in its message.
-- **Who finishes.** The pilot builds, reviews and ships every unit. Briggsy reads the new words after they ship; they ship flagged, never held for his read. One fact is his to give (Open Questions): it gates the loan half only.
+- **Who finishes.** The pilot builds, reviews and ships every unit. Briggsy reads the new words after they ship; they ship flagged, never held for his read. Two calls are his (Open Questions), each with a recommended answer the build proceeds on: whether his plan needs a loan (it gates the loan half only), and whether the one spending figure gets its own repeat or rate.
 - **Stop conditions.** Stop the line and diagnose when any of these happens: `engine:identity` moves a key on an existing seed or plant that the unit did not mean to move; the price index throws on any plant; two sources disagree about a rule this plan rests on.
 
 ---
@@ -31,7 +32,7 @@ A budget line gains two optional answers: how often it repeats, and how its doll
 
 Every budget line is charged flat in today's dollars across its window (`compileBudget` in `src/budget/budgetToSpending.ts`). That is right for most living costs and wrong for three common ones.
 
-A purchase that comes back every few years, such as a car, can only be entered as one line for one year or as a steady yearly cost. The first leaves out every later car; the second charges a car's worth every year.
+A purchase that comes back every few years, such as a car, can only be entered as one line for one year, which leaves out every later car, or as a steady yearly line at its average (the car's price ÷ the years between), which spreads each car across the years between instead of charging it in the year it is bought.
 
 A cost whose price doesn't follow general inflation can't say so. A fixed-rate mortgage payment is the sharpest case: its dollars never change, so in today's dollars it shrinks every year, and it stops in a set calendar year. Today it reads too high in every later year and never ends unless its line has an end year. That end year counts from the work stop, so on the date route it moves with every stop the search tests (insight 167). The register files this as *Every spending line keeps pace with inflation — a fixed mortgage payment that shrinks in real terms can't be marked*.
 
@@ -67,7 +68,7 @@ RightCapital handles all three. A goal is one-time or recurring, with an "annual
 
 ### Key Decisions
 
-- **A loan is its own record on Net Worth, as RightCapital does it, not a fixed-dollar budget line with an end year.** A line's end counts from the stop, and a mortgage ends in a calendar year. Governs R5, R6, R7, R9.
+- **A loan is its own record on Net Worth, as RightCapital does it, not a fixed-dollar budget line with an end year.** RightCapital asks for a loan there (the clone mandate), and a loan is paid in working years too, where no budget line is charged (W stands for them), so only its own record can charge it in every year it runs. A line's end also counts from the stop, while a mortgage ends in a calendar year. Governs R5, R6, R7, R9.
 - **The repeat and the rate live on the Living expenses lines, not on a new Goals card.** Lines are B9's home for itemized spending, and KTD27 already planned the repeat there. Governs R1, R2.
 - **An early payoff is a calendar year only.** RightCapital also offers an age or a retirement; on the date route those would make the remaining balance depend on each tested stop. Governs R6.
 
@@ -75,7 +76,7 @@ RightCapital handles all three. A goal is one-time or recurring, with an "annual
 
 - AE1. **Covers R1.** **Given** a $40,000 line with startYear 3 and a repeat of 5, **when** the plan compiles, **then** it is charged in plan years 3, 8, 13 and so on, and in no year between.
 - AE2. **Covers R3, R4.** **Given** a line typed at $10,000 that "stays the same dollar amount" on a plan built in 2026, **when** its year lands in calendar 2036 on two different tested stops, **then** both charge $10,000 divided by the price index's growth from 2026 to 2036.
-- AE3. **Covers R6, R7.** **Given** a $300,000 balance read in January 2026, at 6% with a $1,798.65 monthly payment, **when** the plan runs, **then** it pays $21,583.80 a year in dollars through 2055, the last payment carrying the $1.58 left over (KTD7), and nothing after, each year divided by the price index's growth to that year.
+- AE3. **Covers R6, R7.** **Given** a $300,000 balance read in January 2026, at 6% with a $1,798.65 monthly payment, **when** the plan runs, **then** it pays $21,583.80 a year in dollars from 2026 through 2054 and $21,585.38 in 2055 (its last payment carries the $1.58 left over, KTD7), and nothing after, each year divided by the price index's growth to that year.
 - AE4. **Covers R6.** **Given** the AE3 loan with an early payoff year of 2036, **when** the plan runs, **then** 2026 to 2035 pay the yearly payment, 2036 pays the $251,057.43 still owed at its start, and nothing is paid after.
 - AE5. **Covers R8.** **Given** a loan and a sampled death in its third year, **when** the survivor years run, **then** the loan's charge in each later year is the same as on a path with no death.
 - AE6. **Covers R13.** **Given** any existing seed or aged plant, **when** `pnpm engine:identity` compares this build with its parent, **then** every key is identical.
@@ -95,7 +96,7 @@ RightCapital handles all three. A goal is one-time or recurring, with an "annual
 - A fixed obligation that is not a loan and ends in a calendar year (a term-life premium, a lease): it stays a line whose end counts from the stop, so on early tested stops it ends early. A calendar-frame end on a budget line is filed by U11.
 - An automatic subtraction to stop double counting: the tool can't know what a line or a typed figure includes, so R12's words do it.
 - A staleness clock for an ended loan: no incident, so no guard. Net Worth shows the last payment's year.
-- An intake re-check of a stored loan's problems on every read: nothing edited outside the loan drawer moves a loan's problems, the drawer refuses them before Save, and a stored one that slipped through errs harsh (its payments run to the horizon). What would change it: a second writer of loans.
+- An intake re-check of a stored loan's problems on every read: nothing edited outside the loan drawer moves a loan's problems, the drawer refuses them before Save, and the codec refuses a payment of 0. A stored one that slipped through with a payment that never pays the balance off runs its payments to the horizon and leaves the rest unpaid; the drawer's refusal is what prevents it. What would change it: a second writer of loans.
 - Frozen version-7 fixtures minted by the old build, and a planted fault on the version floor: the version-6 and version-7 bumps shipped without either, no real save exists yet, and the floor test is not a new kind of check.
 - A worker round-trip test for the new params or ledger fields: params and ledger rows cross to the worker whole, by structured clone, with no field list (`engineProtocol.ts`, `engineWire.ts`), so such a test cannot fail.
 - A Caddie walk of the new surfaces: dropped under Briggsy's 2026-11-22 rulings (no extra Caddie read; the words ship flagged for his later read), as the workbench plan applied them.
@@ -108,11 +109,14 @@ RightCapital handles all three. A goal is one-time or recurring, with an "annual
 - A Net Worth tab in Cash Flows with each loan's balance by year.
 - Moving nominal income streams from the flat 3% onto the price index (the register's *A pension that doesn't keep up with inflation is shrunk by a fixed 3%…*). This plan widens that entry's reach (U11).
 - Gap 8's higher-inflation stress test must move the loans' and rated lines' deflator too, or a fixed loan reads unchanged under it (U11 records it on the map).
-- The survivor card's "assumes $X" line for a plan with a loan, a repeating line or a rated line (KTD11).
+- The survivor card's "assumes $X" line for a plan with a loan, a repeating line or a rated line (KTD11; the register's open *The survivor card's spending-basis line is withheld on a RAMPED budget…* owns it).
 
 ### Open Questions
 
-- **Does the household carry a mortgage or other fixed-payment loan into the plan's years?** Only Briggsy knows. The project's yardstick is "does RightCapital do it, and does his plan need it", and nothing on record says whether his plan needs a loan. It gates the loan half only: `loans` in U2, and U5, U6, U12, U7, U10 and U13's loan parts. The line half (U2's line fields, U3, U4, U8, U9) is built first either way. Recommendation: build the loan half if he says yes. If he says no, file it as one deferred register entry. If he hasn't answered when U2 starts, U2 ships the line fields alone, and the loan half takes the next schema version when it is built.
+These are Briggsy's. Each has a recommended answer, and the build proceeds on it until he says otherwise.
+
+- **Does the household carry a mortgage or other fixed-payment loan into the plan's years?** Only Briggsy knows. The project's yardstick is "does RightCapital do it, and does his plan need it", and nothing on record says whether his plan needs a loan. It gates the loan half only: U14, U5, U6, U12, U7, U10 and U13. **What a yes costs:** the loan half is about half this plan, seven units, roughly two to three sessions on top of the line half's two (estimates; the map and the register sized the whole gap small before the clone ruling made the loan RightCapital's record). It buys RightCapital's Loan on Net Worth, charged in working and retired years alike. **The smaller option:** a "Stays the same dollar amount" line with an end in a set calendar year (U4's factors by `t` could carry it). That prices a loan in retired years only, because a working year charges W instead of the lines, and it is not RightCapital's entry. Recommendation: build the loan half on a yes. On a no, file the loan as one deferred register entry that records the product call (deferred until a plan needs a loan), never his answer: the repo is public. The line half (U2, U3, U4, U8, U15, U9) is built first either way: U2 ships the line fields alone at schema version 8, and the loan half takes version 9 (U14).
+- **Does the one spending figure get its own repeat or rate?** The register's mortgage entry leaves it to him. What a household with one spending figure and no itemized lines gets from this plan: loans (if built) and the words that say to leave their payments out of the figure; no repeat and no rate on the figure itself. Recommendation: no ask of its own now. A household that needs a repeating car itemizes its lines, and RightCapital's Goals card for a purchase (Deferred to Follow-Up Work) is the later home that lets a one-figure household add one.
 
 ### Sources
 
@@ -128,15 +132,15 @@ RightCapital handles all three. A goal is one-time or recurring, with an "annual
 - KTD1. **Each construct is priced in its own frame, and the engine applies anything that depends on the calendar year.** The compiled budget is indexed by `k`, years since the stop, and is built once per run: the date search never recompiles it per tested stop (`dateSearch.ts`, `buildCandidateParams`). A repeat depends only on `k`, so it belongs in the compile. A rate's growth and a loan's deflation depend on the sim year `t` (`t = Y + k` on the date route), so they are compiled at intake into arrays by `t` and joined with the `k` windows in the engine, year by year. Rejected: deflating inside the `k` arrays, which is wrong on every date-route candidate but one (harsh for a fixed payment, rosy for a line rising faster than prices); recompiling per candidate, which would need the engine to import the budget layer (banned by the layer rules). No bake-off: the layer rule and the date search's single compile settle it.
 - KTD2. **A loan is a top-level list on the saved plan (`loans?`) and a top-level series on the engine params, never an account kind and never on the overlay.** As an `EnteredAccount` kind, `initialPortfolio` would add the balance to the money (rosy), the `mix` lever would write a blend onto it, and five exhaustive per-kind tables would need a row. On the overlay it would vanish for a household with no accounts, premium or income, where `buildOverlay` returns nothing. ⚑ NEGATIVE: never an `EnteredAccount` kind.
 - KTD3. **The deflator is the one price index on its own base for every plan built through the index's anchor year, and the build year's growth after that.** The engine's real dollars are the anchor year's (`priceIndex.ts`'s header: "a plan first run later still prices against that base"). In sim year `t`, with calendar year C = `startCalendarYear + t` and B′ = the later of `startCalendarYear` and the anchor year (read from the constants, `medicareCostTrend.value.anchorYear`, never typed), a nominal figure is divided by `cpiGrowth(B′, C)` for C after B′ and by 1 otherwise. For a plan built in or before the anchor year (every fresh seed, and the aged plants built in 2024 and 2020) that is exactly `cumulativePriceIndex(C)`, the path every frozen-dollar figure in the same run already reads. For a plan built later it rebases to the build year, a deliberate departure: the household types its payment in the build year's dollars, so year 0 must charge the typed figure. The Part B and statute figures keep the anchor base, so that split already exists for those plans; U11 files it. Rejected: the flat 3% the income streams use, which is the register's open contradiction, not a ruling. The factors are computed at intake, where `startCalendarYear` lives.
-- KTD4. **A rate is a nominal yearly increase that replaces general inflation; absent means "with prices".** This is the income-stream convention (`grossAtYear` in `src/intake/otherIncome.ts`). The saved field `growthRate` is a fraction (0.05 means 5%), the kit's `PercentInput` output and `colaPct`'s convention: 0 is the same dollar amount every year, and a custom rate is above 0 and at most 0.15. Its bounds live in one cited module, `src/shared/spendingBounds.ts` (the `incomeBounds.ts` pattern), read by the codec, `validateBudgetItems` and the drawer. An absent field takes today's branch untouched: `((1+π)/(1+π))^t` is not exactly 1 in floating point, and the index's π changes by year. Growth runs from the plan's year 0, because a line carries no year it was typed in. A rated line typed into a plan built years earlier is therefore overcharged by its growth since the build year (harsh), and its read-back uses the engine's calendar year, never the wall clock. A rated line's factor in sim year `t` is `(1 + g)^t ÷ deflator(t)` (KTD3). The working-year cost quote counts a rated line at its typed amount, because W is one flat figure across the working years (up to 10). That residual is harsh for a fixed line and rosy for a rising one, so the W question carries a stopgap line while its build is open (U13) and U11 files the build.
-- KTD5. **A repeat is read through the one window helper, `isActiveAt` (KTD27, carried from `docs/plans/5-workbench-plan.md`).** Every year-0 reader already calls it; only the compile's fill loop keeps its own range, and U3 moves that loop onto it first. The saved field `everyYears` is a whole number from 2 to 50 (bounds in `spendingBounds.ts`); 1 is refused because it would be a second spelling of "every year". The line is on at `k` when `k` is inside its window and `k − startYear` is a multiple of N. The year-0 total counts the line as the helper says at `k = 0`, so the engine's reconciliation check still agrees. The working-year cost quote counts every repeating line it doesn't leave out at amount ÷ N, whatever its start year, and names the average. The survivor's held share of W (`workingYearCostForYear`) reads `sticky[0]`, which holds a sticky repeat that is on at `k = 0` at its full amount (harsh; stated, not changed). `isRampedBudget` counts a repeating line (U3) and a rated one (U4) as ramped.
+- KTD4. **A rate is a nominal yearly increase that replaces general inflation; absent means "with prices".** This is the income-stream convention (`grossAtYear` in `src/intake/otherIncome.ts`). The saved field `growthRate` is a fraction (0.05 means 5%), the kit's `PercentInput` output and `colaPct`'s convention: 0 is the same dollar amount every year, and a custom rate is above 0 and at most 0.15. Its bounds live in one cited module, `src/shared/spendingBounds.ts` (the `incomeBounds.ts` pattern), read by the codec, `validateBudgetItems` and the drawer. An absent field takes today's branch untouched, never a rated track whose factor merely works out near 1: the index's rate changes by year, a factor computed by another path is not bit-identical to 1, and the identity check compares bytes. Growth runs from the plan's year 0, because a line carries no year it was typed in. A rated line typed into a plan built years earlier is therefore overcharged by its growth since the build year (harsh), and its read-back uses the engine's calendar year, never the wall clock. A rated line's factor in sim year `t` is `(1 + g)^t ÷ deflator(t)` (KTD3). The working-year cost quote counts a rated line at its typed amount, because W is one flat figure across the working years (up to 10). That residual is harsh for a fixed line and rosy for a rising one, so the W question carries a stopgap line while its build is open (U15) and U11 files the build.
+- KTD5. **A repeat is read through the one window helper, `isActiveAt` (KTD27, carried from `docs/plans/5-workbench-plan.md`).** Every year-0 reader already calls it; only the compile's fill loop keeps its own range, and U3 moves that loop onto it first. The saved field `everyYears` is a whole number from 2 to 50 (bounds in `spendingBounds.ts`); 1 is refused because it would be a second spelling of "every year". The line is on at `k` when `k` is inside its window and `k − startYear` is a multiple of N. The year-0 total counts the line as the helper says at `k = 0`, so the engine's reconciliation check still agrees. The working-year cost quote counts a repeating line it doesn't leave out at amount ÷ N when the line starts inside its first cycle (`startYear` below N: a car every 5 years first bought in year 1 is the same habit as one bought in year 0), and names the average. One that starts later is a cost that begins after the stop and is treated as a later line is today (`workingYearQuote.ts`: an essentials line is not counted; a discretionary one is left out and named). The survivor's held share of W (`workingYearCostForYear`) reads `sticky[0]`, which holds a sticky repeat that is on at `k = 0` at its full amount (harsh; stated, not changed). `isRampedBudget` counts a repeating line (U3) and a rated one (U4) as ramped.
 - KTD6. **The year-0 total and its reconcilers stay on a line's typed amount; the engine applies the rate factor separately.** A rated line keeps its raw amounts in its own `k` profile and never joins the three base arrays, so unrated lines compile byte-identically. In the engine, a rated line adds `factor[t] × amount[k]` to its route (sticky, scalable essentials or discretionary), so the survivor share and the floor track treat it as they treat its tier and category today. Two engine readers of the base arrays at `k = 0` gain the rated tracks' raw `amount[0]`: the reconciliation check in `validateParams` (otherwise every plan with a rated line on at year 0 runs indeterminate) and the survivor's held share in `workingYearCostForYear` (each rated sticky track's `amount[0]`; otherwise a fixed housing line is scaled away on a survivor working year, rosy). The out-of-pocket medical containment check stays on the base arrays, because the medical line is never rated.
 - KTD7. **A loan record carries the month and year its balance was read, and its schedule is worked out once, in intake.** The fields are an id, a name, an owner (a string vocabulary, one per person or both, checked with `needVocab` and bounded by the household's people), the balance, `balanceYear`, `balanceMonth`, `interestRate` (a fraction, at most 0.30, bounds in `spendingBounds.ts`), the monthly payment, and an optional `payoffYear`. The read date follows the inherited IRA's `askedYear`, because `startCalendarYear` is the build year and never moves on a re-save, so a payoff counted from the build year would end early. The schedule (`src/intake/loanSchedule.ts`) walks month by month from the read month. Each plan year from the build year through the year before the payoff charges 12 payments, including the months of the read year already paid and any years before the read year (harsh, the full-year convention every line follows). The payoff year charges the months still owed. A balance left after a scheduled payment that is under 1% of the payment is paid with that payment, so a cent-rounded payment never makes a stray last month. With `payoffYear`, that year pays the balance the walk holds at its start (never below 0) and no payments. A 0% loan takes its own path (no division by the rate). A payoff past the horizon pays to the horizon. Every page shows the stored balance with its read month and year; the walk feeds only the payoff read-back, the last-payment year and the payoff events, and its yearly balances wait for the deferred Cash Flows Net Worth tab. Rules that need the walk (a payment that never pays off, a `payoffYear` past the natural payoff) are `loanProblems` in the same module, and the drawer refuses on them before Save; the codec never runs the walk (KTD9).
-- KTD8. **How a year charges a loan.** Every year is charged through one presence-keyed params series by `t`, real dollars after KTD3, with any early-payoff amount included in its year. In a retired year it is added to essentials spending as sticky (never scaled by the survivor share), on the full track and the floor track. In a working year it is its own working-year cash line beside the working-year cost (W). Inside W it would be scaled by the survivor share and printed as "What a year costs". Drawn outside the cash lines, the left-over credit would count money paid to the lender. A working year with no W charges nothing, as today. The ledger row gains `loanPayments?`, written only in a year the loan was charged, and that row's `spending` includes it.
-- KTD9. **Schema version 8, one step for all three, and the codec checks shape only.** Every new field is written only when answered, never as an `undefined`-valued key (DND 009, and the identity recorder digests key presence). The codec checks shape and simple arithmetic: types, finiteness, the bounds in `spendingBounds.ts`, unique loan ids, the owner vocabulary, `balanceYear` at or after `startCalendarYear`, `payoffYear` at or after `balanceYear`. It never reads the wall clock (the hydrate step re-runs the codec on every open, so a passed year would make a plan unopenable) and never runs the loan walk (a computed bound that tightens later would make a good saved plan read as damaged). It accepts an empty `loans` list, which every reader treats as absent; the writers still never store one. The 7 → 8 step, on the shape of `versionSevenFieldIn`, guards every access (it runs before any check) and refuses a version-7 plan that carries a new field in `budget[i]`, in a kept what-if's spending add or replace lever's `line`, or a `loans` list. `FLOOR` moves to 8 in its own later commit. Any later change to how the engine charges the loan series or the rated tracks, with no params change, must bump `SOLVER_CODE_VERSION` (the saved recommendation's params hash cannot see it; the IRMAA precedent in `docs/architecture.md` §7.2).
+- KTD8. **How a year charges a loan.** Every year is charged through one presence-keyed params series by `t`, real dollars after KTD3, with any early-payoff amount included in its year. In a retired year it is added to essentials spending as sticky (never scaled by the survivor share), on the full track and the floor track. In a working year it is its own working-year cash line beside the working-year cost (W). Inside W it would be scaled by the survivor share and printed as "What a year costs". Drawn outside the cash lines, the left-over credit would count money paid to the lender. A working year with no W charges nothing, as today. The ledger row gains `loanPayments?`, written only in a year the loan was charged, and that row's `spending` includes it. The working-year cash line, the working-year check's loan term and the year-0 going-out line are each optional, present only when a loan is charged in that year (the going-out line, in year 0): the identity recorder hashes every key of the money picture (`scripts/engine-sweep/record.ts`), so a field present on every plan would move every working-year seed.
+- KTD9. **Schema version 8 carries the line fields, version 9 the loans (U14), and the codec checks shape only.** Briggsy's loan question was still open when U2 started, so the line half ships its own version and the loan half takes the next one when it is built. Every new field is written only when answered, never as an `undefined`-valued key (DND 009, and the identity recorder digests key presence). The codec checks shape and simple arithmetic: types, finiteness, the bounds in `spendingBounds.ts`, and for a loan a payment above 0, unique loan ids, the owner vocabulary, and `payoffYear` at or after `balanceYear`. It sets no floor on `balanceYear` against `startCalendarYear`: the drawer stamps it from the wall date, never before the build year, and the walk charges no year before the plan anyway (the inherited IRA's `askedYear` has no such floor either). It never reads the wall clock (the hydrate step re-runs the codec on every open, so a passed year would make a plan unopenable) and never runs the loan walk (a computed bound that tightens later would make a good saved plan read as damaged). It accepts an empty `loans` list, which every reader treats as absent; the writers still never store one. The 7 → 8 step, on the shape of `versionSevenFieldIn`, guards every access (it runs before any check) and refuses a version-7 plan that carries a new field in `budget[i]` or in a kept what-if's spending add or replace lever's `line`. The 8 → 9 step, on the same shape, refuses a version-8 plan that carries a `loans` list. Each version's `FLOOR` raise is its own later commit. Any later change to how the engine charges the loan series or the rated tracks, with no params change, must bump `SOLVER_CODE_VERSION` (the saved recommendation's params hash cannot see it; the IRMAA precedent in `docs/architecture.md` §7.2).
 - KTD10. **Double counting is closed with words.** The Living drawer, the one-figure spending help and the W question name the loans entered on Net Worth and say to leave their payments out. The loan drawer says the reverse, naming all three places, and names the household's working-year cost with both figures when one exists, because a W typed before the loan was entered never goes stale on its own. Its payoff read-back ("At $X a month this is paid off in {month year} — does that match your statement? If your statement ends later, your payment may include property tax or insurance; enter principal and interest only.") catches a payment typed with tax and insurance in it, because that payoff lands years early. No sum is changed automatically.
-- KTD11. **The survivor card's "assumes $X" line is accepted as lost for any plan whose spending isn't steady.** A loan, a repeat or a rate makes `steady` false by construction (the `Object.is` check in `simulate.ts`). The line is informational and the card's figures stay right. Filed as a register entry (U11), so the loss isn't silent.
-- KTD12. **The working-year events gain a loan-coded shape.** Today an event names a person or the household (the union in `src/shared/model.ts`), and a draft event's `person` is required and checked against the people (`workingYearLedger.ts`). A loan, often owned by both, fits neither, and its words must name it. A third shape `{ code: 'loanEnds' | 'loanPaidOff', loan }` carries the loan's index in the draft's list. Both codes join `WORKING_YEAR_LEDGER_EVENT_CODES` and `CAN_LOWER_THE_BOTTOM_LINE` (a last payment cannot lower the bottom line; an early payoff can). The year-0 money picture gains a going-out loan line, because its lines must sum to the bottom line exactly (`roundLinesToBottomLine`). Without these, a loan ending inside the working window throws in the ledger, intake catches it as `'unknown'`, and the money picture and a saved left-over credit silently disappear.
+- KTD11. **The survivor card's "assumes $X" line is accepted as lost for any plan whose spending isn't steady.** A loan, a repeat or a rate makes `steady` false by construction (the `Object.is` check in `simulate.ts`). The line is informational and the card's figures stay right. The register's open entry *The survivor card's spending-basis line is withheld on a RAMPED budget…* already covers a ramped budget, and every repeating or rated line makes a budget ramped (KTD5, U4); U11 adds the loan and the new causes to that entry rather than filing a second one, so the loss isn't silent.
+- KTD12. **The working-year events gain a loan-coded shape.** Today an event names a person or the household (the union in `src/shared/model.ts`), and a draft event's `person` is required and checked against the people (`workingYearLedger.ts`). A loan, often owned by both, fits neither, and its words must name it. A third shape `{ code: 'loanEnds' | 'loanPaidOff', loan }` carries the loan's index in the draft's list. Both codes join `WORKING_YEAR_LEDGER_EVENT_CODES` and `CAN_LOWER_THE_BOTTOM_LINE` (a last payment cannot lower the bottom line; an early payoff can). The year-0 money picture gains a going-out loan line, present only when a loan is charged in year 0 (KTD8), because its lines must sum to the bottom line exactly (`roundLinesToBottomLine`). Without these, a loan ending inside the working window throws in the ledger, intake catches it as `'unknown'`, and the money picture and a saved left-over credit silently disappear.
 - KTD13. **A kept what-if's replaced line follows the live plan line's rate, and is refused by name when the plan line's repeat has changed.** The tray cannot edit `everyYears` or `growthRate`. A replace lever takes `growthRate` from the plan line it replaces, never from the line stored when it was kept (insight 167): R3 keeps an amount's meaning the same under every rate choice. A repeat changes what an amount means (per occurrence, not per year), so pairing a stored amount with a later repeat would run a cost several times too low (rosy) and Apply would copy it in. So when the live plan line's `everyYears` differs from the stored line's, the lever is refused by name with a new refusal kind, `line-repeat-changed`, worded like `line-gone` (whatIf.ts never re-targets a lever, R21). An add lever keeps its own repeat and rate. `sameLine` compares only what the tray can edit.
 
 ### High-Level Technical Design
@@ -145,7 +149,7 @@ From the saved plan to the screens:
 
 ```mermaid
 flowchart TB
-  S["Saved plan v8: budget[] lines (everyYears?, growthRate?), loans?"] --> I["intake: compileBudget (repeat via isActiveAt)<br/>+ rated profiles by k with factors by t (KTD3, KTD4)<br/>+ loanSchedule → loan series by t (KTD7)"]
+  S["Saved plan: budget[] lines (everyYears?, growthRate?; v8), loans? (v9)"] --> I["intake: compileBudget (repeat via isActiveAt)<br/>+ rated profiles by k with factors by t (KTD3, KTD4)<br/>+ loanSchedule → loan series by t (KTD7)"]
   I --> P["SimulationParams: budget (base three arrays + rated tracks?), loanPaymentsReal?"]
   P --> E["engine, each year t: spending by route + loan (sticky)<br/>or, in a working year, loan as its own cash line"]
   E --> L["ledger row: spending (incl. loan), loanPayments?; money picture events"]
@@ -171,23 +175,26 @@ flowchart TB
 
 ### Assumptions
 
-These are the planner's bets. They were not put to Briggsy (the plan step ran with its scope confirmation off), and each is his to overrule:
+Settled by the pilot under Briggsy's 2026-11-24 ruling (he owns which RightCapital features come first; the pilot owns how). Each is reversible:
 
-- He wants RightCapital's Loan on Net Worth rather than the map's older wording, "a fixed-dollar line that can end". That wording was written before the 2026-11-24 clone ruling.
-- A repeating purchase belongs on the Living expenses lines for now; a Goals card is deferred.
-- An early payoff year is enough; "at retirement" is not needed yet.
+- A repeating purchase lives on the Living expenses lines for now; RightCapital's Goals card is deferred.
+- An early payoff year is enough; "at retirement" is not offered (Key Decisions).
 - The loan's owner is asked for display only (Blueprint's per-person Net Worth tab).
-- A custom rate from just above 0% to 15% covers real lines; a cost that falls in dollars is not offered.
-- Losing the survivor card's "assumes $X" line on a plan with a loan, a repeating line or a rated line is acceptable for now (KTD11).
+- A custom rate runs from just above 0% to 15%; a cost that falls in dollars is not offered.
+- The survivor card's "assumes $X" line is withheld on a plan with a loan, a repeat or a rate (KTD11), as it already is on any ramped budget.
+
+The Loan-on-Net-Worth framing (over the map's older "a fixed-dollar line that can end", written before the 2026-11-24 clone ruling) rides on his loan answer (Open Questions).
 
 ### System-Wide Impact
 
 - **The engine contract.** New presence-keyed params (rated tracks on the compiled budget, the loan series) and a new ledger row field. Absent, every arm is byte-identical: `engine:identity` proves it at each engine or `intakeMap` commit. The run key and the solver fingerprint hash the whole built params, so they pick up the new fields with no change; date-search candidates carry top-level params through their spread.
-- **The saved shape.** Version 8. An older open tab sees "saved by a newer version". A budget line sits in two saved places (`budget`, and a kept spending lever's `line`); the saved recommendation, the vintage stamps and the backup file hold no copy (the backup is the same ciphertext, checked by the codec on restore).
-- **Compile-time homes of the draft.** `ScenarioDraft`'s field list and its shape tie in `src/store/memoryModel.ts`, `src/ui/assumptionRegistry.ts`, `src/ui/workbench/factRegistry.ts` and `src/shared/stableIds.ts` each gain the loans (U2).
+- **The saved shape.** Version 8 (the line fields, U2), then version 9 (the loans, U14). An older open tab sees "saved by a newer version". A budget line sits in two saved places (`budget`, and a kept spending lever's `line`); the saved recommendation, the vintage stamps and the backup file hold no copy (the backup is the same ciphertext, checked by the codec on restore).
+- **Compile-time homes of the draft.** `ScenarioDraft`'s field list and its shape tie in `src/store/memoryModel.ts`, `src/ui/assumptionRegistry.ts`, `src/ui/workbench/factRegistry.ts` and `src/shared/stableIds.ts` each gain the loans (U14). The line fields need none: no registry lists a budget line's fields (`factRegistry.ts` files `budget` whole, as shown on Living expenses).
+- **The spend solve** needs no change. It returns "unsized" for any plan with an itemized budget (`spendSolve.ts`), so a repeating or rated line is never solved, and each probe moves only `annualSpendingReal` (`{...params, annualSpendingReal}`), so the top-level loan series rides through every probe unscaled. The figure it finds is spending besides the loans, which U13's words say.
+- **Staleness's expired-line clock** needs no change. It reads only a line's `endYear` (`src/store/staleness.ts`), and a repeat does not change what `endYear` means; the store layer may not import `@budget`, so it cannot call `isActiveAt`. This drops KTD27's "the expired-line clock reads that helper" (insight 041), as it drops U18's calendar-year display of a repeat's years.
 - **Every writer of the year-0 total** (insight 058) goes through `budgetYearZeroFullTotal`, so KTD5 and KTD6 keep them reconciled with no call-site change.
 - **The working-year money picture** gains a cash line, a year-0 going-out line and a loan-coded event shape (KTD8, KTD12).
-- **Every sentence that quotes spending:** the verdict's `magnitudeClause` and its reserved height `reserveClauseFor` (`src/ui/verdictSentence.ts`, composed on Probability) and `spendLevels` (`src/ui/answerView.ts`), on one-figure and budget plans alike (U13).
+- **Every sentence that quotes spending:** the verdict's `magnitudeClause` and its reserved height `reserveClauseFor` (`src/ui/verdictSentence.ts`, composed on Probability) and `spendLevels` (`src/ui/answerView.ts`), on one-figure and budget plans alike (U15 for a repeat, U13 for loans).
 - **Pages that say B9 holds no debts:** `snapshotInvestedStopgap` in `src/ui/copy.ts`, used on five pages (Balance Sheet, Snapshot, Investment, Blueprint, Net Worth), and the header laws in `balanceSheetView.ts`, `NetWorth.tsx` and `comparisonsView.ts` (U13).
 - **Docs.** `docs/architecture.md` §5 (the new presence keys) and §7.3 (the version chart, which still stops at 6), the glossary, the map, the roadmap's You-Are-Here table, and the register (U11).
 
@@ -202,10 +209,11 @@ These are the planner's bets. They were not put to Briggsy (the plan step ran wi
 | A W typed before the loan keeps the payment, so every working year is charged twice (harsh) | The loan drawer names W with both figures (KTD10, U7) |
 | An edited loan keeps an old read date under a new balance, so it ends early (rosy) | The read date is re-stamped exactly when the balance changes (U7) |
 | A kept what-if freezes a line's rate, or runs an old amount under a new repeat (rosy) | KTD13 |
-| A year-0 repeat inflates the headline's quoted monthly spend (rosy) | The quoted figure says it is the first year's and names the repeat inside it (U13) |
-| A new seed trips a hard-counted gate (the survivor basis gate's seed count and "no card-bearing seed is ramped", the every-seed arms, the shown-lines sum) | The repeat and rate seeds ride the date route with a confirmed W; U6 re-cuts the survivor gate for the mortgage seed; each unit updates its counts |
+| A year-0 repeat inflates the headline's quoted monthly spend (rosy) | The quoted figure says it is the first year's and names the repeat inside it (U15) |
+| A fixed or rated line with a Through year ends early on an earlier tested stop, so the date search can name too early a date (rosy), and "Stays the same dollar amount" invites a mortgage typed that way | The drawer's date-route note under such a line (U8), a stopgap while the calendar-frame end U11 files is open |
+| A new seed trips a hard-counted gate (the survivor basis gate's seed count and "no card-bearing seed is ramped", the every-seed arms, the shown-lines sum, the staleness census of buildable date seeds) | The repeat and rate seeds ride the date route with a confirmed W; U6 re-cuts the survivor gate for the mortgage seed; each unit updates its counts |
 | Line-numbered citations in docs move as files change | Cite code by symbol in this plan; `pnpm doc:reanchor` and `verify:doc-stats` arm 4 for docs that cite lines |
-| A new drawer row or sentence overflows at the phone tier, or a reserved height jumps | Fit arms for each new surface at his window and the phone (U7, U8, U10, U13) |
+| A new drawer row or sentence overflows at the phone tier, or a reserved height jumps | Fit arms for each new surface at his window and the phone (U7, U8, U10, U13, U15) |
 
 ---
 
@@ -213,44 +221,44 @@ These are the planner's bets. They were not put to Briggsy (the plan step ran wi
 
 | U-ID | Title | Key files | Depends on |
 |---|---|---|---|
-| U2 | Version 8: the new fields, their bounds, the codec and the step | `src/shared/model.ts`, new `src/shared/spendingBounds.ts`, `src/shared/scenarioCodec.ts`, `src/store/memoryModel.ts` | — |
+| U2 | Version 8: the line fields, their bounds, the codec and the step | `src/shared/model.ts`, new `src/shared/spendingBounds.ts`, `src/shared/scenarioCodec.ts` | — |
 | U3 | The repeat | `src/budget/budgetToSpending.ts`, `src/budget/budgetModel.ts`, `src/intake/workingYearQuote.ts`, `src/ui/devSeeds.ts` | U2 |
 | U4 | The rate, priced by the engine | `src/budget/budgetToSpending.ts`, `src/intake/intakeMap.ts`, `src/engine/simulate.ts` | U2 |
 | U8 | The Living drawer's repeat and rate | `src/ui/screens/profile/drawers/ExpensesDrawers.tsx`, `expensesFields.ts`, `src/budget/budgetModel.ts` | U3, U4 |
+| U15 | The spending words for a repeat and a rate | `src/ui/verdictSentence.ts`, `src/ui/answerView.ts`, `src/ui/copy.ts` | U8 |
 | U9 | The tray and kept what-ifs carry the new fields | `src/ui/screens/retirement/ActionItemsTray.tsx`, `trayView.ts`, `src/intake/whatIf.ts` | U3, U4 |
-| U5 | The loan schedule and its problems | new `src/intake/loanSchedule.ts` | U2 |
+| U14 | Version 9: the loan record | `src/shared/model.ts`, `src/shared/spendingBounds.ts`, `src/shared/scenarioCodec.ts`, `src/store/memoryModel.ts` | U2 |
+| U5 | The loan schedule and its problems | new `src/intake/loanSchedule.ts` | U14 |
 | U6 | Loans in retired years | `src/intake/intakeMap.ts`, `src/engine/simulate.ts`, `src/ui/devSeeds.ts` | U4, U5 |
 | U12 | Loans in working years and the money picture | `src/engine/taxOverlay.ts`, `src/engine/simulate.ts`, `src/engine/workingYearLedger.ts`, `src/intake/workingYearLedgerRows.ts` | U6 |
 | U7 | Entering loans on Net Worth and in the stepper | new `src/ui/screens/profile/drawers/LoanDrawer.tsx` and `loanFields.ts`, `NetWorth.tsx`, `profileView.ts`, `drawerHost.tsx` | U5, U12 |
 | U10 | Cash Flows' loan column | `src/ui/screens/retirement/cashFlowsView.ts` | U6 |
-| U13 | Loans on the read-only pages, and the spending words everywhere | `balanceSheetView.ts`, `blueprintView.ts`, `verdictSentence.ts`, `answerView.ts`, `ExpensesDrawers.tsx`, `src/ui/copy.ts` | U7, U8 |
+| U13 | Loans on the read-only pages, and the loan words everywhere | `balanceSheetView.ts`, `blueprintView.ts`, `verdictSentence.ts`, `answerView.ts`, `ExpensesDrawers.tsx`, `src/ui/copy.ts` | U7, U15 |
 | U11 | The docs and the register | `docs/architecture.md`, `docs/glossary.md`, `docs/plans/rightcapital-map.md`, `docs/plans/5-workbench-plan.md`, `docs/roadmap.md`, `docs/backlog.md` | all above |
 
-Build order: U2, U3, U4, U8, U9 (the line half, entered end to end), then U5, U6, U12, U7, U10, U13 (the loan half, gated by the Open Question), then U11. U1 was folded into U3 (its helper already exists), so the ID is unused. If the loan half is not built, U13 keeps only its repeat words (step 5 and the W stopgap line) and lands after U8.
+Build order: U2, U3, U4, U8, U15, U9 (the line half, entered end to end), then U14, U5, U6, U12, U7, U10, U13 (the loan half, gated by the Open Question), then U11. U1 was folded into U3 (its helper already exists), so the ID is unused. The line half's words (U15) land right after U8 in every case, so no repeat or rate ships without them.
 
-### U2. Version 8: the new fields, their bounds, the codec and the step
+### U2. Version 8: the line fields, their bounds, the codec and the step
 
-- **Goal.** The saved plan can hold a line's repeat and rate and a list of loans, checked by the codec for shape and guarded by a version-8 step.
-- **Requirements.** R14, R13; KTD2, KTD4, KTD5, KTD7, KTD9.
-- **Dependencies.** None. `loans` and `LoanRecord` join only if the Open Question is answered yes by then.
+- **Goal.** The saved plan can hold a line's repeat and rate, checked by the codec for shape and guarded by a version-8 step.
+- **Requirements.** R14, R13; KTD4, KTD5, KTD9.
+- **Dependencies.** None. Loans are not in this unit: they take version 9 in U14.
 - **Files.**
-  - `src/shared/model.ts`: `BudgetLineItem` gains `everyYears?` and `growthRate?`; `CurrentScenario` gains `loans?`; a `LoanRecord` type; `CURRENT_SCHEMA_VERSION` = 8; `SCENARIO_V3_FIELDS` gains `loans`.
-  - New `src/shared/spendingBounds.ts`: the cited bounds and their predicates (repeat 2–50, growth above 0 to 0.15 or exactly 0, interest 0 to 0.30), on the `incomeBounds.ts` pattern.
-  - `src/shared/scenarioCodec.ts`: `checkBudgetLineItemV3` checks both line fields; a loan shape check; `checkV3Fields` reads `loans`; `versionEightFieldIn` and the 7 → 8 step.
-  - Compile-time homes: `src/store/memoryModel.ts` (`ScenarioDraft`'s list and shape tie; `loans` noted as a user fact carried by `...draft`, never seeded or re-stamped, like `keptWhatIfs`), `src/ui/assumptionRegistry.ts`, `src/ui/workbench/factRegistry.ts` (`DRAFT_FACTS` gains `loans`; a loan record whose fields are filed as not-a-fact until U7 gives them a drawer; `balanceYear` and `balanceMonth` not-a-fact for good, as `askedYear` is), `src/shared/stableIds.ts` (`idsInUse` includes loan ids).
-  - Tests: `src/shared/__tests__/scenarioCodec.test.ts` (the version pins; `laterFields` gains `loans`; the schema-surface record gains the owner vocabulary); `src/shared/__tests__/schemaVersionFloor.test.ts` (in a later commit); `src/store/__tests__/session.test.ts` and `src/ui/__tests__/scenarioFromDraft.test.ts` (the raw-byte version literals); `src/ui/__tests__/draftFromScenario.test.ts` (round trips).
+  - `src/shared/model.ts`: `BudgetLineItem` gains `everyYears?` and `growthRate?`, each docblock naming its frame (KTD4, KTD5); `CURRENT_SCHEMA_VERSION` = 8.
+  - New `src/shared/spendingBounds.ts`: the cited bounds and their predicates (repeat 2–50, growth exactly 0 or above 0 to 0.15), on the `incomeBounds.ts` pattern. U14 adds the interest bound.
+  - `src/shared/scenarioCodec.ts`: `checkBudgetLineItemV3` checks both line fields (a plan line and a kept lever's `line` both pass through it); `versionEightFieldIn` and the 7 → 8 step.
+  - Tests: `src/shared/__tests__/scenarioCodec.test.ts` (the version pins); `src/shared/__tests__/schemaVersionFloor.test.ts` (in a later commit); `src/store/__tests__/session.test.ts` and `src/ui/__tests__/scenarioFromDraft.test.ts` (the raw-byte version literals); `src/ui/__tests__/draftFromScenario.test.ts` (round trips).
   - `docs/architecture.md` §7.3: prose and the Mermaid chart.
 - **Approach.**
-  1. Add the types, the bounds module and the codec's shape checks (KTD9). The codec accepts an empty `loans` list.
+  1. Add the two fields, the bounds module and the codec's line checks (KTD9).
   2. Add the 7 → 8 step (KTD9), looking only at spending levers whose op is add or replace.
   3. Move the version pins as the version-7 bump did: the version-7 pin becomes "decodes as current", a new absolute pin at 8, and the literal-successor list gains 7.
   4. Raise `FLOOR` to 8 in its own later commit, and add the 7 → 8 sentence to that test's header.
-- **Patterns to follow.** The version-7 bump (`d55681ab`, then `341bed33` for the floor); `incomeBounds.ts` and `colaRateInRange` for the bounds; the inherited IRA's `askedYear` for the read date; the `chosenGoal` round-trip tests in `draftFromScenario.test.ts`.
+- **Patterns to follow.** The version-7 bump (`d55681ab`, then `341bed33` for the floor); `incomeBounds.ts` and `colaRateInRange` for the bounds; the `chosenGoal` round-trip tests in `draftFromScenario.test.ts`.
 - **Test scenarios.**
-  - A version-7-labelled plan is refused as a writer bug when it carries `everyYears` on a budget line, `growthRate` on a kept replace lever's line, or a `loans` list. The same three plans labelled 8 decode. The version-4 fixtures still climb the ladder and decode as current.
-  - Each bound at its edges, on both sides: `everyYears` 1 refused, 2 and 50 accepted, 51 and 2.5 refused; `growthRate` −0.0001 refused, 0 and 0.15 accepted, 0.1501 and NaN refused; `interestRate` 0 and 0.30 accepted, 0.3001 refused.
-  - Refused: a loan with balance 0, a duplicate loan id, an owner outside the vocabulary, a `payoffYear` before `balanceYear`, a `balanceYear` before `startCalendarYear`, `balanceMonth` 0 or 13. Accepted: `loans: []`.
-  - Round trips through draft and scenario keep each new field when present and write no key when absent, for a line, a lever line and a loan.
+  - A version-7-labelled plan is refused as a writer bug when it carries `everyYears` on a budget line or `growthRate` on a kept replace lever's line. The same plans labelled 8 decode. The version-4 fixtures still climb the ladder and decode as current.
+  - Each bound at its edges, on both sides: `everyYears` 1 refused, 2 and 50 accepted, 51 and 2.5 refused; `growthRate` −0.0001 refused, 0 and 0.15 accepted, 0.1501 and NaN refused.
+  - Round trips through draft and scenario keep each new field when present and write no key when absent, for a plan line and a lever line.
   - A plan labelled 9 surfaces "saved by a newer version".
 - **Verification.** The codec, session and draft suites green; `pnpm typecheck` green; `pnpm verify:doc-stats` green after the §7.3 edit.
 
@@ -309,10 +317,11 @@ Build order: U2, U3, U4, U8, U9 (the line half, entered end to end), then U5, U6
 - **Files.** `src/ui/screens/profile/drawers/ExpensesDrawers.tsx` (`LineRow`), `expensesFields.ts`, `src/budget/budgetModel.ts` and `src/intake/budgetForm.ts` (the error kind for a blank or out-of-range custom rate, and its words), `src/intake/budgetForm.ts` and `src/ui/screens/profile/profileView.ts` (the readout and the Expenses card), `src/intake/steps.ts` (the year-0 tier split, if the repeat is named there), `src/ui/screens/profile/blueprintView.ts` (`lineTile`: "every N years" and the repeat icon), `src/ui/copy.ts`, tests beside each, fit arms in `e2e/rc-screens.spec.ts`.
 - **Approach.**
   1. Each line row gains "How it changes": "Goes up with prices" (removes the key), "Stays the same dollar amount" (0), or "Goes up by __% a year". Only the first choice removes the key. A blank or out-of-range box under the third holds Save with words.
-  2. Under a rate, a read-back names the plan's first year + 10 as a calendar year, from `startCalendarYear` (KTD4), worded as a price, not a schedule, and says whether the line rises slower or faster than prices ("That's slower than prices are expected to rise, so in 2036 a year of this would cost about $8,500 in today's dollars"). It holds whether or not the line is charged that year.
+  2. Under a rate, a read-back names the plan's first year + 10 as a calendar year, from `startCalendarYear` (KTD4), worded as a price, not a schedule. It gives that year's cost in today's dollars and compares it with the typed amount: lower reads "slower than prices", higher reads "faster than prices", and within 1% reads "about the same as prices". For a $10,000 line that stays the same dollar amount on a 2026 plan: "That's slower than prices are expected to rise, so in 2036 a year of this would cost about $7,355 in today's dollars" (AE2's figure). It holds whether or not the line is charged that year.
   3. Each row gains "Repeats every __ years" (blank means every year).
   4. Where the year-0 total is printed (the readout, the Expenses card), a repeat on at year 0 is named ("including a $40,000 car in your first year"), never "this year". The switch to one figure warns that repeats and rates become one steady figure.
   5. Blueprint's tile says "every N years" instead of "for N years".
+  6. On the date route, a line marked "Stays the same dollar amount" or "Goes up by" that has a Through year shows a note under it: "The tool tries different years for you to stop working, and this line's last year moves with each one, so a payment that ends in a set calendar year can end too soon here." Once loans exist (U7), the note adds: "Add it as a loan on Net Worth instead, so it ends in its own year whatever year you stop." It is a stopgap while the calendar-frame end U11 files is open (R4 fixes a rated line's price by calendar year, but its window still counts from the stop).
 - **Patterns to follow.** `LineRow`'s commit-on-blur by spread and its NaN rule for a cleared box. Load `back-nine-design`, `emil-design-eng` and `web-design-guidelines` first (a clone unit does not load `frontend-design`).
 - **Test scenarios.**
   - Choosing "Stays the same dollar amount" writes `growthRate: 0`; choosing "Goes up with prices" removes the key.
@@ -321,8 +330,24 @@ Build order: U2, U3, U4, U8, U9 (the line half, entered end to end), then U5, U6
   - A repeat of 5 writes `everyYears: 5`; clearing it removes the key.
   - The read-back for a $10,000 fixed line on a 2026 plan names 2036 and the hand-worked figure (AE2's), and says it rises slower than prices.
   - Blueprint's tile for a repeating line says "every 5 years".
-  - Fit arms: a line row with both new controls open at 1440 × 731 and at the phone.
+  - On the date route a fixed line with a Through year shows the note; on the all-retired route it does not, and a line that goes up with prices shows none.
+  - Fit arms: a line row with both new controls open, and the date-route note, at 1440 × 731 and at the phone.
 - **Verification.** The fit arms green on Windows; the drawer and Blueprint suites green.
+
+### U15. The spending words for a repeat and a rate
+
+- **Goal.** Every sentence that quotes the household's spending says when the figure is the first year's with a repeat inside it, and the W question names a rated line's residual.
+- **Requirements.** R11, R12 (the repeat's half); KTD4.
+- **Dependencies.** U8.
+- **Files.** `src/ui/verdictSentence.ts` (`magnitudeClause` and `reserveClauseFor`), `src/ui/answerView.ts` (`spendLevels`), the W question's help (its slot in `src/ui/copy.ts`), tests beside each, a fit arm in `e2e/rc-screens.spec.ts`.
+- **Approach.**
+  1. When a repeating line is on at year 0, `magnitudeClause` and `spendLevels` say the figure is the first year's and name the repeat inside it ("$10,000 a month in your first year, with a $40,000 car in it"). `reserveClauseFor` reserves the longest such clause, so the band below never jumps when the figure lands (insight 035).
+  2. While a rated line exists, the W question carries one stopgap line: a line that changes at its own rate is counted here at its first-year price (KTD4).
+- **Test scenarios.**
+  - On the U3 repeat seed the verdict's spending clause says "in your first year" and names the car.
+  - With a rated line present the W question shows the stopgap line; without one it does not.
+  - Fit arm: Probability's verdict with the longest repeat clause, at 1440 × 731 and at the phone.
+- **Verification.** The pinning tests and the fit arm green on Windows.
 
 ### U9. The tray and kept what-ifs carry the new fields
 
@@ -340,16 +365,38 @@ Build order: U2, U3, U4, U8, U9 (the line half, entered end to end), then U5, U6
   - A repeat line's tray row reads "$40,000 every 5 years".
 - **Verification.** The tray and what-if suites green.
 
+### U14. Version 9: the loan record
+
+- **Goal.** The saved plan can hold a list of loans, checked by the codec for shape and guarded by a version-9 step. The loan half's first unit, built only on a yes to the Open Question.
+- **Requirements.** R14, R13; KTD2, KTD7, KTD9.
+- **Dependencies.** U2 (version 8).
+- **Files.**
+  - `src/shared/model.ts`: a `LoanRecord` type (KTD7's fields); `CurrentScenario` gains `loans?`; `CURRENT_SCHEMA_VERSION` = 9; `SCENARIO_V3_FIELDS` gains `loans`.
+  - `src/shared/spendingBounds.ts`: the interest bound (0 to 0.30).
+  - `src/shared/scenarioCodec.ts`: a loan shape check (KTD9's list, a payment above 0 included); `checkV3Fields` reads `loans`; `versionNineFieldIn` and the 8 → 9 step.
+  - Compile-time homes: `src/store/memoryModel.ts` (`ScenarioDraft`'s list and shape tie; `loans` noted as a user fact carried by `...draft`, never seeded or re-stamped, like `keptWhatIfs`), `src/ui/assumptionRegistry.ts`, `src/ui/workbench/factRegistry.ts` (`DRAFT_FACTS` gains `loans`; a loan record whose fields are filed as not-a-fact until U7 gives them a drawer; `balanceYear` and `balanceMonth` not-a-fact for good, as `askedYear` is), `src/shared/stableIds.ts` (`idsInUse` includes loan ids).
+  - Tests: `src/shared/__tests__/scenarioCodec.test.ts` (the version pins; `laterFields` gains `loans`; the schema-surface record gains the owner vocabulary); `src/shared/__tests__/schemaVersionFloor.test.ts` (in a later commit); the raw-byte version literals in `session.test.ts` and `scenarioFromDraft.test.ts`; round trips in `draftFromScenario.test.ts`.
+  - `docs/architecture.md` §7.3: prose and the Mermaid chart.
+- **Approach.** U2's four steps, one version on: the shape check, the 8 → 9 step, the pins (the version-8 pin becomes "decodes as current", a new absolute pin at 9, the literal-successor list gains 8), and `FLOOR` raised to 9 in its own later commit. The codec accepts an empty `loans` list.
+- **Patterns to follow.** U2; the inherited IRA's `askedYear` for the read date.
+- **Test scenarios.**
+  - A version-8-labelled plan carrying a `loans` list is refused as a writer bug; labelled 9 it decodes.
+  - `interestRate` 0 and 0.30 accepted, 0.3001 refused.
+  - Refused: a loan with balance 0, a payment of 0, a duplicate loan id, an owner outside the vocabulary, a `payoffYear` before `balanceYear`, `balanceMonth` 0 or 13. Accepted: `loans: []`.
+  - Round trips through draft and scenario keep a loan when present and write no `loans` key when absent.
+  - A plan labelled 10 surfaces "saved by a newer version".
+- **Verification.** The codec, session and draft suites green; `pnpm typecheck` green; `pnpm verify:doc-stats` green after the §7.3 edit.
+
 ### U5. The loan schedule and its problems
 
 - **Goal.** One pure function turns a loan record into its payments by calendar year, and names the problems that need the walk.
 - **Requirements.** R6, R7; KTD7.
-- **Dependencies.** U2 (the `LoanRecord` type).
+- **Dependencies.** U14 (the `LoanRecord` type).
 - **Files.** New `src/intake/loanSchedule.ts` (the schedule and `loanProblems`), new `src/intake/__tests__/loanSchedule.test.ts`.
 - **Approach.** The month-by-month walk, the charging rules, the leftover rule, the payoff amount and the 0% path are KTD7's. Deflation is not done here; U6 applies KTD3. The read-back, the natural payoff, the early-payoff lump, Net Worth's last-payment year and the payoff events all read this module's output, so no two screens can disagree.
 - **Execution note.** Red first, against published and hand-worked figures, with the closed form B(1+i)^n − P((1+i)^n − 1)/i as the independent check (DND 012).
 - **Test scenarios.**
-  - Covers AE3. $300,000 at 0.06 for 30 years: the textbook payment is $1,798.65 a month. Read in January 2026, the loan pays 12 × 1,798.65 in each year 2026 to 2055, the last payment carrying the $1.58 left over, and nothing in 2056.
+  - Covers AE3. $300,000 at 0.06 for 30 years: the textbook payment is $1,798.65 a month. Read in January 2026, the loan pays 12 × 1,798.65 in each year 2026 to 2054, 12 × 1,798.65 plus the $1.58 left over in 2055 (its last payment carries it), and nothing in 2056.
   - Covers AE4. With `payoffYear` 2036, 2036 pays $251,057.43 (the walk, matched by the closed form at 120 months) and nothing after.
   - Read in July 2026 instead, the natural payoff moves to June 2056, and 2026 still charges 12 payments.
   - A plan built in 2026 with the AE3 loan read in January 2028 charges 2026 and 2027 too, and its last payment falls in the same calendar year as the same loan in a plan built in 2028.
@@ -382,7 +429,7 @@ Build order: U2, U3, U4, U8, U9 (the line half, entered end to end), then U5, U6
 - **Goal.** A loan is charged in every working year it runs as its own cash line, and the money picture shows it, names its end and stays whole.
 - **Requirements.** R8 (working years), R10 (the events), R13; KTD8, KTD12.
 - **Dependencies.** U6.
-- **Files.** `src/engine/taxOverlay.ts` (the working-year terms; `workingYearCashLines` gains the loan line; the finite-and-at-least-0 backstop lists the new field), `src/engine/simulate.ts` (`cashTermsForYear`'s working-year check; the working-year row's `spending` includes the loan), `src/shared/model.ts` (the loan-coded event shape; the codes in `WORKING_YEAR_LEDGER_EVENT_CODES`; `WorkingYearLedgerYear0.goingOut` gains the loan line), `src/intake/intakeMap.ts` (`workingYearDraftEvents` emits the loan events), `src/engine/workingYearLedger.ts` (the year-0 `signed` list and `goingOut`; `CAN_LOWER_THE_BOTTOM_LINE`), `src/intake/workingYearLedgerRows.ts` (`eventLine` and the going-out rows, with words that name the loan), `src/ui/devSeeds.ts` (a date-route seed whose joint loan ends inside the working window), `src/ui/__tests__/devSeeds.test.ts` (the shown-lines sum gains the loan line; the counts), tests in `src/engine/__tests__/` and `src/intake/__tests__/`.
+- **Files.** `src/engine/taxOverlay.ts` (the working-year terms; `workingYearCashLines` gains the loan line; the finite-and-at-least-0 backstop lists the new field), `src/engine/simulate.ts` (`cashTermsForYear`'s working-year check; the working-year row's `spending` includes the loan), `src/shared/model.ts` (the loan-coded event shape; the codes in `WORKING_YEAR_LEDGER_EVENT_CODES`; `WorkingYearLedgerYear0.goingOut` gains an optional loan line, written only when a loan is charged in year 0, KTD8), `src/intake/intakeMap.ts` (`workingYearDraftEvents` emits the loan events), `src/engine/workingYearLedger.ts` (the year-0 `signed` list and `goingOut`; `CAN_LOWER_THE_BOTTOM_LINE`), `src/intake/workingYearLedgerRows.ts` (`eventLine` and the going-out rows, with words that name the loan), `src/ui/devSeeds.ts` (a date-route seed whose joint loan ends inside the working window), `src/ui/__tests__/devSeeds.test.ts` (the shown-lines sum gains the loan line; the counts), tests in `src/engine/__tests__/` and `src/intake/__tests__/`.
 - **Approach.** The loan joins the working-year cash lines as its own line, so the shortfall, the left over, the capped credit and the picture's money in against money out all see it. The year-0 picture shows it as a going-out line, and the event shape is KTD12's.
 - **Test scenarios.**
   - The AE3 loan on a date-route plan ends in 2055 at stops 0 and 5.
@@ -391,6 +438,7 @@ Build order: U2, U3, U4, U8, U9 (the line half, entered end to end), then U5, U6
   - A joint loan whose last payment falls in a working year carries `loanEnds` with the loan's name in its words; the money picture is shown, not `'unknown'`.
   - An early payoff year inside the working window carries `loanPaidOff`, which may lower the bottom line.
   - A working year with no W charges and writes nothing for the loan.
+  - A working-year plan with no loan writes no loan key in its cash lines, its working-year check or its money picture.
 - **Verification.** `engine:identity` IDENTICAL on every existing key; the new seed's money picture renders.
 
 ### U7. Entering loans on Net Worth and in the stepper
@@ -401,11 +449,12 @@ Build order: U2, U3, U4, U8, U9 (the line half, entered end to end), then U5, U6
 - **Files.** New `src/ui/screens/profile/drawers/LoanDrawer.tsx`, `drawers/loanFields.ts` and `drawers/__tests__/loanFields.test.tsx`; `src/ui/screens/profile/profileView.ts` (`DrawerTarget` gains loan and new-loan; `cardIdOf`; `netWorthView`; `accountAddItems('net-worth')` offers Loan); `src/ui/screens/profile/drawerHost.tsx` (the switch that opens each drawer); `src/ui/screens/profile/NetWorth.tsx` and `src/ui/screens/setup/Stepper.tsx` (the Loans category, which turns the category list into a real switch); `src/ui/screens/setup/stepperView.ts` (the Net Worth step's words name loans); `src/ui/workbench/factRegistry.ts` (the loan fields become shown) and its test's made-up households; `src/ui/copy.ts`; fit arms in `e2e/rc-screens.spec.ts`.
 - **Approach.**
   1. The drawer asks name, whose (each person or both), balance today, interest rate, monthly payment ("principal and interest only — property tax and insurance stay in your living expenses"), and an optional early payoff year, whose help says it means one payment of what is left that year, not extra payments along the way.
-  2. On a new loan, or when the balance box saves a changed value, it stamps `balanceYear` and `balanceMonth` from the local wall date, never earlier than the plan's first year (so the codec's floor always holds). Any other edit keeps them. The balance box names its month and year when they aren't this month's.
+  2. On a new loan, or when the balance box saves a changed value, it stamps `balanceYear` and `balanceMonth` from the local wall date. Any other edit keeps them. The balance box names its month and year when they aren't this month's.
   3. It reads back the payoff from U5 (KTD10's words, with the next step on a mismatch), and, when an early payoff year is set, the lump ("In 2036 the $251,057 still owed is paid at once, out of your savings that year"). It refuses on `loanProblems` in words before Save.
   4. Its leave-out words name all three places (living expenses, the one spending figure, what a working year costs), and, when the draft carries a working-year cost, name it with both figures ("Your working-year cost is $X a year. If it includes this $Y a month payment, lower it."). A variable rate gets one line: the tool holds today's payment and can't know future rates. A fixed payment gets one can't-know line: if prices rise more slowly than expected, the payment costs more in today's dollars than shown.
   5. Net Worth lists each loan with its stored balance in parentheses, "owed as of {month year}", and its last payment's year; the band stays "Invested accounts". Investment is selected on open, unless there are no invested accounts and a loan exists, in which case Loans is. Saving a new loan selects Loans, so its row shows. Each category row is a button with `aria-current`, its selection shown by the 4 px left edge and fill as today, and the right strip and rows follow it. On the phone the category list is shown when a loan exists, in Profile and in the stepper.
   6. Deleting the last loan removes the key.
+  7. U8's date-route note under a fixed or rated line with a Through year gains its loan sentence (`ExpensesDrawers.tsx`).
 - **Patterns to follow.** `OtherIncomeDrawer.tsx` with `otherIncomeFields.ts` (a list record with edit and new targets); `assertDrawerFits` in `e2e/rc-screens.spec.ts`; the drawer anatomy in `docs/research/rightcapital-ui-reference.md`. Load `back-nine-design`, `emil-design-eng` and `web-design-guidelines` before the first edit (a clone unit does not load `frontend-design`).
 - **Test scenarios.**
   - Saving a complete new loan writes one record with its read month and year, and the plan reruns.
@@ -434,28 +483,23 @@ Build order: U2, U3, U4, U8, U9 (the line half, entered end to end), then U5, U6
   - On a plan with no loans the column is absent.
 - **Verification.** The fit arm green on Windows.
 
-### U13. Loans on the read-only pages, and the spending words everywhere
+### U13. Loans on the read-only pages, and the loan words everywhere
 
-- **Goal.** Every page that lists what the household holds shows its loans in the right place, and every sentence that quotes its spending or asks for it names its loans and any repeat inside the figure.
-- **Requirements.** R9, R12; KTD4, KTD10.
-- **Dependencies.** U7, U8.
-- **Files.** `src/ui/screens/dashboard/balanceSheetView.ts`, `src/ui/screens/dashboard/snapshotView.ts`, `src/ui/screens/investment/investmentView.ts`, `src/ui/screens/profile/blueprintView.ts`, `src/ui/screens/profile/NetWorth.tsx` (the header law: Loans join Investment as a kind of record B9 holds), `src/ui/screens/retirement/comparisonsView.ts` (the header law), `src/ui/screens/profile/drawers/ExpensesDrawers.tsx` (the leave-out words; the date-route note), the one-figure spending help and the W question's help, `src/ui/verdictSentence.ts` (`magnitudeClause` and `reserveClauseFor`), `src/ui/answerView.ts` (`spendLevels`), `src/ui/copy.ts` (`snapshotInvestedStopgap` stops saying B9 doesn't ask about debts), the pinning tests in `balanceSheetView.test.ts`, `snapshotView.test.ts`, `investmentView.test.ts` and `blueprintView.test.ts`, fit arms in `e2e/rc-screens.spec.ts`.
+- **Goal.** Every page that lists what the household holds shows its loans in the right place, and every sentence that quotes its spending or asks for it names its loans.
+- **Requirements.** R9, R12; KTD10.
+- **Dependencies.** U7, U15.
+- **Files.** `src/ui/screens/dashboard/balanceSheetView.ts`, `src/ui/screens/dashboard/snapshotView.ts`, `src/ui/screens/investment/investmentView.ts`, `src/ui/screens/profile/blueprintView.ts`, `src/ui/screens/profile/NetWorth.tsx` (the header law: Loans join Investment as a kind of record B9 holds), `src/ui/screens/retirement/comparisonsView.ts` (the header law), `src/ui/screens/profile/drawers/ExpensesDrawers.tsx` (the leave-out words), the one-figure spending help and the W question's help, `src/ui/verdictSentence.ts` (`magnitudeClause` and `reserveClauseFor`), `src/ui/answerView.ts` (`spendLevels`), `src/ui/copy.ts` (`snapshotInvestedStopgap` stops saying B9 doesn't ask about debts), the pinning tests in `balanceSheetView.test.ts`, `snapshotView.test.ts`, `investmentView.test.ts` and `blueprintView.test.ts`, fit arms in `e2e/rc-screens.spec.ts`.
 - **Approach.**
   1. Balance Sheet lists loans as a Loans group after the invested kinds, in its Details tab and the Current tab's breakdown, values in parentheses, the stored balance as of its read month; no liabilities bar. Snapshot's Invested accounts card and the Investment page show no loans; only their stopgap line changes.
   2. Blueprint shows a payoff tile, a one-person loan in its owner's Net Worth column, and a joint loan once, in a line under the two owner columns, never in both.
-  3. The Living drawer, the one-figure spending help and the W question name the entered loans and say to leave their payments out. On the date route, a fixed line with a Through year shows "A loan payment that ends in a set year? Add it as a loan on Net Worth, so it ends then whatever year you stop."
-  4. The words beside every quoted spending figure name the loans and their last year ("besides your loan payments until 2055"), on one-figure and budget plans alike. `reserveClauseFor` reserves the longest such clause, so the band below never jumps when the figure lands (insight 035).
-  5. When a repeating line is on at year 0, `magnitudeClause` and `spendLevels` say the figure is the first year's and name the repeat inside it ("$10,000 a month in your first year, with a $40,000 car in it").
-  6. While a rated line exists, the W question carries one stopgap line: a line that changes at its own rate is counted here at its first-year price (KTD4).
+  3. The Living drawer, the one-figure spending help and the W question name the entered loans and say to leave their payments out. (U8's date-route note gains its loan sentence in U7.)
+  4. The words beside every quoted spending figure name the loans and their last year ("besides your loan payments until 2055"), on one-figure and budget plans alike. `reserveClauseFor` reserves the longest clause, U15's repeat words and the loan words together, so the band below never jumps when the figure lands (insight 035).
 - **Test scenarios.**
   - The stopgap line no longer mentions debts on any of the five pages.
   - Balance Sheet lists a loan in its Loans group and draws no liabilities bar; Snapshot's invested card shows no loan.
   - Blueprint shows a joint loan once, under the two columns, and a one-person loan in its owner's column.
   - With a loan entered, the Living drawer, the one-figure spending help and the W question each name it.
-  - On the date route a fixed line with a Through year shows the loan note; on the all-retired route it does not.
   - The verdict's spending clause and `spendLevels` name the loan on a one-figure plan and on a budget plan.
-  - On the U3 repeat seed the verdict's spending clause says "in your first year" and names the car.
-  - With a rated line present the W question shows the stopgap line; without one it does not.
   - Fit arms: Balance Sheet and Blueprint with the mortgage seed, and Probability's verdict with the longest loan clause, at 1440 × 731 and at the phone.
 - **Verification.** The pinning tests and the fit arms green on Windows.
 
@@ -464,13 +508,26 @@ Build order: U2, U3, U4, U8, U9 (the line half, entered end to end), then U5, U6
 - **Goal.** Every doc says what was built, and every residual is a register entry, not a note.
 - **Requirements.** All, as records.
 - **Dependencies.** Every unit above.
-- **Files.** `docs/architecture.md` §5 (the new presence keys), `docs/glossary.md`, `docs/plans/rightcapital-map.md` (rows 76, 79 and 80 to "Have"; gap 8's line on the deflator), `docs/plans/5-workbench-plan.md` (U18 points to this plan), `docs/roadmap.md` (the You-Are-Here row), `docs/backlog.md`.
+- **Files.** `docs/architecture.md` §5 (the new presence keys), `docs/glossary.md`, `docs/plans/rightcapital-map.md` (rows 79 and 80 to "Have", and row 76 too only if the loan half is built; gap 8's line on the deflator), `docs/plans/5-workbench-plan.md` (U18 points to this plan), `docs/roadmap.md` (the You-Are-Here row), `docs/backlog.md`.
 - **Approach.**
-  1. Close the register's mortgage entry with this plan's commits.
-  2. Extend the pension entry: a fixed pension and an equal fixed loan payment now deflate by different figures.
-  3. File: the survivor-card line (KTD11); a rated line in the working-year cost quote, with its stopgap line (KTD4); the anchor-base split for plans built after the anchor year (KTD3); the leave-more figure's unsecured unpaid balance; a calendar-frame end for a fixed obligation that is not a loan; each deferred item above that has no entry yet.
+  1. Close the register's mortgage entry with this plan's commits (if the loan half is not built: close its line half, and re-file the loan as one deferred entry that records the product call, never Briggsy's answer).
+  2. Extend the pension entry and the brokerage-basis entry (the register's one-inflation-path cluster): a fixed pension (the flat 3%) and an equal fixed line or loan payment (the price index) now deflate by different figures in one run. KTD3 rules for the new constructs only, not for the cluster.
+  3. Add the new causes (a repeat, a rate, a loan) to the register's open *The survivor card's spending-basis line is withheld on a RAMPED budget…* (KTD11). File: a rated line in the working-year cost quote, with its stopgap line (KTD4); the anchor-base split for plans built after the anchor year (KTD3); the leave-more figure's unsecured unpaid balance; a calendar-frame end for a fixed obligation that is not a loan; each deferred item above that has no entry yet.
 - **Test expectation.** None, docs only. `pnpm verify:doc-stats` is the check.
 - **Verification.** `verify:doc-stats` green.
+
+### The readers' minor findings
+
+The three blind readers (2026-11-27) graded these minor. They are listed here, not folded into the units; each carries the answer to build on. Their findings that corrected a wrong figure, rule or instruction were fixed in place above.
+
+- **U2.** `spendingBounds.ts` cites each bound as a catch for a gross mis-entry and names its direction: a rate above 15% errs harsh (more spending), so the ceiling is a plausibility bound, not a guard on the rosy side; 0 is the floor because a cost that falls in dollars is not offered; a repeat of 2 is the least that differs from "every year", and 50 is past any horizon a line can use.
+- **U3.** Test the year-0 total's repeat once, through `budgetYearZeroFullTotal`: its three writers (`budgetDraftPatch`, `writeOopMedical`, the stress raise) all call it, so a pin per writer duplicates one.
+- **U4.** How the factors reach the engine: `compileBudget` may import only `@shared` and knows no calendar year, so it emits each rated track with its route, its amounts by `k` and its `growthRate`; `buildParams` turns each rate into factors by `t` (KTD3, KTD4) before the params leave intake, and the engine reads only the route, the amounts and the factors.
+- **U8.** A 0 typed under "Goes up by __% a year" saves as `growthRate: 0`, and the drawer then shows "Stays the same dollar amount".
+- **U8.** The switch to one figure names the figure it keeps: the first year's total, a repeat on in year 0 included, charged every year (harsh, and on screen).
+- **U12.** Red first, with the shortfall and the left over in a loan year worked by hand from U5's schedule and the index's constants.
+- **U12 (KTD12).** The loan-coded event shape reaches more than the codes and `CAN_LOWER_THE_BOTTOM_LINE`: `WORKING_YEAR_DRAFT_EVENT_CODES`, the `WorkingYearDraftEvent` type (its `person` is required), the draft check that throws on a missing or out-of-range person, and the de-duplicating push that rebuilds `{ code, person }` (`workingYearLedger.ts`). The engine never sees the loans list, so it cannot check a loan index; the intake side, which builds the events from the draft's own list, owns that check. `loanEnds` lands in the year after the last payment, as `incomeEnds` uses last + 1 (`workingYearDraftEvents` in `intakeMap.ts`).
+- **Outside this plan.** CI's quick job will red when `pnpm verify:aca` goes stale (about 2026-12-12). That red belongs to the TODO's re-verify, not to a unit here.
 
 ---
 
@@ -481,9 +538,9 @@ Build order: U2, U3, U4, U8, U9 (the line half, entered end to end), then U5, U6
 | Every commit | `pnpm typecheck`, `pnpm lint`, and the unit test files the change reaches (`pnpm vitest run <files>`) |
 | A commit touching `src/engine` or `src/intake/intakeMap.ts` | `pnpm engine:identity` against its parent, alone on a quiet tree; its first line in the commit message |
 | A new words slot in `src/ui/copy.ts` | A sample in the copy guard's `SLOT_RENDER`, and the universal advice check passes |
-| A new dev seed | Every every-seed arm and hard count it reaches (the survivor basis gate, `devSeeds.test.ts`) updated in the same commit |
+| A new dev seed | Every every-seed arm and hard count it reaches updated in the same commit: the survivor basis gate, `devSeeds.test.ts`, and for a date-route seed `stalenessExposure.test.ts`'s `W_KEYED` list (it holds the exact set of buildable date seeds) and complete investment figures (`intakeMap.test.ts`'s every-date-seed arm) |
 | A commit moving a doc, a test count or a cited line | `pnpm verify:doc-stats`, with `pnpm doc:reanchor` where a cited line moved |
-| A new or changed screen (U7, U8, U10, U13) | Its `verify:fit` arms on Windows with `-g`, alone |
+| A new or changed screen (U7, U8, U10, U13, U15) | Its `verify:fit` arms on Windows with `-g`, alone |
 | After each push | CI's four jobs on the full sha; a red is fixed in the next commit |
 
 ## Definition of Done
@@ -492,5 +549,5 @@ Build order: U2, U3, U4, U8, U9 (the line half, entered end to end), then U5, U6
 - `engine:identity` read IDENTICAL on every existing key at every engine or `intakeMap` commit.
 - AE1 to AE6 each hold in a named test (AE3 to AE5 only if the loan half is built).
 - No code is left from an approach that was tried and dropped.
-- The register's mortgage entry is closed, or, if the loan half is not built, re-filed as deferred with the Open Question's answer; every residual this plan names has a register entry (U11).
+- The register's mortgage entry is closed, or, if the loan half is not built, its line half closed and the loan re-filed as one deferred entry that records the product call, never Briggsy's answer (the repo is public); every residual this plan names has a register entry (U11).
 - New words ship flagged in the close's "For Briggsy" line.

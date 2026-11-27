@@ -1285,7 +1285,10 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     ].join(' '),
     cmpTaxStartsAfter: slots.cmpTaxStartsAfter(2030, '2028 and 2029, when work has stopped in new what-if but not yet in your plan'),
     cmpTaxConversionBefore: slots.cmpTaxConversionBefore(2030, '2028 and 2029, when work has stopped in new what-if but not yet in your plan', false),
-    cmpTaxWorkingCounted: [slots.cmpTaxWorkingCounted('2026 through 2029', true), slots.cmpTaxWorkingCounted('2026', false)].join(' '),
+    cmpTaxWorkingCounted: [
+      ...(['counted', 'in-w', 'maybe-in-w'] as const).map((s) => slots.cmpTaxWorkingCounted('2026 through 2029', true, s)),
+      slots.cmpTaxWorkingCounted('2026', false, 'counted'),
+    ].join(' '),
     cmpTaxUnpriced: (['ss', 'deposits', 'both', 'pay'] as const).map((w, i) => slots.cmpTaxUnpriced(w, '2028 through 2034', i % 2 === 0)).join(' '),
     cmpTaxOneWorkingSavings: slots.cmpTaxOneWorkingSavings('your plan', '6,900', '2030', true),
     cmpOneRanOut: slots.cmpOneRanOut('Your plan', 'age 90', 2051, false),

@@ -6322,11 +6322,21 @@ export const slots = {
     `In the ${steady ? 'steady' : 'rough'} market the two compare on income tax only from ${from}, after ${leftOut}, and a Roth conversion falls before then. So no total is shown: it would leave out that conversion’s tax.`,
   /** Working years counted beside each other: what their lines hold (round 2, R2F1). `priced`: what a working year costs
    *  is given, so a year's figure is the pay check's income tax (`workingYear.taxOnOutsideIncome`) plus what savings add
-   *  (`taxPaid`); otherwise it is `taxPaid` alone, counted only on the same pay check. `years` arrives as `analysisYears`
+   *  (`taxPaid`); otherwise it is `taxPaid` alone, counted only on the same pay check. `stateOnPay` (priced only, the
+   *  run's state reading as Cash Flows' pay-check notes read it, `comparisonsView`'s `STATE_ON_PAY`): `counted` where the
+   *  pay check's income tax holds the state's tax on pay (NC) or there is none; `in-w` for PA, whose tax on pay the
+   *  household puts in W, so the pay check's line leaves it out (`taxOverlay.ts`'s `stateTaxOnOutsideIncome`); `maybe-in-w`
+   *  where the tool doesn't price the state (milestone 4's review, round 3's P3). `years` arrives as `analysisYears`
    *  prints it. */
-  cmpTaxWorkingCounted: (years: string, priced: boolean): string =>
+  cmpTaxWorkingCounted: (years: string, priced: boolean, stateOnPay: 'counted' | 'in-w' | 'maybe-in-w'): string =>
     priced
-      ? `In ${years}, before work stops in either plan, each line shows the pay check’s income tax plus the income tax savings add. Payroll tax is never in it.`
+      ? `In ${years}, before work stops in either plan, each line shows the pay check’s income tax plus the income tax savings add. ${
+          {
+            counted: 'Payroll tax is never in it.',
+            'in-w': 'Payroll tax is never in it, and neither is your state’s tax on pay: that belongs in your figure for a working year.',
+            'maybe-in-w': 'Payroll tax is never in it, nor any state tax on pay: if your state taxes pay, that belongs in your figure for a working year.',
+          }[stateOnPay]
+        }`
       : `In ${years}, before work stops in either plan, each line shows only the income tax savings add on top of pay. The pay check is the same on both, so its tax doesn’t change the difference.`,
   /** Both still work, what a working year costs isn't given, and the pay checks differ (a claim age or a deposit): the
    *  tax that difference makes sits on pay, which nothing prices, so words, never a total (round 2, R2F1). `years`

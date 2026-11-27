@@ -187,8 +187,20 @@ describe('Comparisons', () => {
     const last = START + RETIRED.rows.at(-1)!.t
     const d = 2_000 * STOP_T + 500 * (RETIRED.rows.length - STOP_T) - 1_500
     expect(v.metric).toBe(slots.cmpTaxMore('new what-if', formatDeltaDollar(d), 'more', START, last, 'your plan', true))
-    expect(v.notes).toContain(slots.cmpTaxWorkingCounted(`${START} through ${START + 2}`, true))
+    expect(WORKING_META.stateTaxReading, '[test setup] the retired seed names no state').toBe('unpriced')
+    expect(v.notes).toContain(slots.cmpTaxWorkingCounted(`${START} through ${START + 2}`, true, 'maybe-in-w'))
     expect(v.notes).toContain(copy.cmpPayTaxShown)
+    // The state's tax on pay, by the run's state reading (round 3's P3): PA's sits in W, so the line says it is left out;
+    // NC's is in the pay check's income tax, so the line says nothing of it. The total is the same either way.
+    for (const [reading, stateOnPay] of [['class-based', 'in-w'], ['agi-derived', 'counted'], ['none', 'counted']] as const) {
+      const meta: TableMeta = { ...WORKING_META, stateTaxReading: reading }
+      const s = cmp('tax', { compared: side('compared', ready(plan, meta)), alternative: side('alternative', ready(deposits, meta)) })
+      if (s.kind !== 'pair') throw new Error(`${reading}: ${s.kind}`)
+      expect(s.metric, reading).toBe(v.metric)
+      expect(s.notes, reading).toContain(slots.cmpTaxWorkingCounted(`${START} through ${START + 2}`, true, stateOnPay))
+    }
+    expect(slots.cmpTaxWorkingCounted('2026', true, 'in-w')).toContain('neither is your state’s tax on pay')
+    expect(slots.cmpTaxWorkingCounted('2026', true, 'counted')).not.toContain('state')
     expect(v.notes.some((n) => n.startsWith('The total starts in')), 'no year left out').toBe(false)
     // Both lines draw the figure the total counts: a working year's taxPaid plus its pay check's income tax.
     expect(v.series[1]!.points[0]).toEqual({ year: START, value: plan[0]!.taxPaid + 20_000 })
@@ -199,7 +211,7 @@ describe('Comparisons', () => {
     const same = cmp('tax', { compared: side('compared', ready(planNoW, WORKING_META)), alternative: side('alternative', ready(moreNoW, WORKING_META)) })
     if (same.kind !== 'pair') throw new Error(same.kind)
     expect(same.metric).toBe(slots.cmpTaxMore('new what-if', formatDeltaDollar(d + 1_500), 'more', START, last, 'your plan', true))
-    expect(same.notes).toContain(slots.cmpTaxWorkingCounted(`${START} through ${START + 2}`, false))
+    expect(same.notes).toContain(slots.cmpTaxWorkingCounted(`${START} through ${START + 2}`, false, 'maybe-in-w'))
     expect(same.notes).toContain(copy.cmpPayTaxUnasked)
     // No W and a pay check that differs (a deposit, then Social Security too): the tax that difference makes sits on pay,
     // which nothing prices, so words, never a total.
@@ -660,7 +672,8 @@ describe('the real witnesses (milestone 4’s review)', () => {
     const d = taxThrough(W, whatIf.meta, start, through) - taxThrough(plan.rows.rough, plan.meta, start, through)
     expect(d, '[test setup] across every year both pay, the what-if pays more').toBeGreaterThan(20_000)
     expect(v.metric).toBe(slots.cmpTaxMore('new what-if', formatDeltaDollar(d), 'more', start, through, 'your plan', false))
-    expect(v.notes).toContain(slots.cmpTaxWorkingCounted(`${start} through ${stop - 1}`, true))
+    expect(plan.meta.stateTaxReading, '[test setup] `date` names no state').toBe('unpriced')
+    expect(v.notes).toContain(slots.cmpTaxWorkingCounted(`${start} through ${stop - 1}`, true, 'maybe-in-w'))
     for (const s of v.series) expect(s.points[0]!.year).toBe(start)
     // Retirement Details keeps its retired window, and says both sides' earlier years are left out, conversions
     // included, pointing at Cash Flows' paired form (your plan compared, the what-if beside it) (R2F2).
@@ -734,7 +747,7 @@ describe('the real witnesses (milestone 4’s review)', () => {
         const d = charged(whatIf.rows[future], start, through) - charged(plan.rows[future], start, through)
         expect(Math.sign(d), `[test setup] ${label}, ${future}: the engine's own direction`).toBe(dir === 'more' ? 1 : -1)
         expect(v.metric, `${label}, ${future}`).toBe(slots.cmpTaxMore('new what-if', formatDeltaDollar(Math.abs(d)), dir, start, through, 'your plan', future === 'steady'))
-        expect(v.notes, `${label}, ${future}`).toContain(slots.cmpTaxWorkingCounted(slots.analysisYears(Array.from({ length: plan.meta.stopYear! - start }, (_, i) => start + i)), true))
+        expect(v.notes, `${label}, ${future}`).toContain(slots.cmpTaxWorkingCounted(slots.analysisYears(Array.from({ length: plan.meta.stopYear! - start }, (_, i) => start + i)), true, 'maybe-in-w'))
       }
     }
   })

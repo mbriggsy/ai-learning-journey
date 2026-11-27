@@ -41,7 +41,7 @@
 import { buildYTicks, niceLattice, type DollarLattice } from '@viz/bandData'
 import type { KindBar } from '@viz/charts/kindBarsOptions'
 import type { PairSeries, YearPoint } from '@viz/charts/stackedAreasOptions'
-import type { LedgerYearRow } from '@shared/model'
+import type { LedgerYearRow, WorkingYearStateTaxReading } from '@shared/model'
 import { copy, slots } from '../../copy'
 import { formatDeltaDollar, formatEnteredDollar, mmAxisFormatterFor } from '../../money'
 import { tableFigure } from '../../workbench/yearTableChrome'
@@ -341,6 +341,9 @@ export function comparisonsView(input: AnalysisInput & { readonly chart: Compari
   const countedWorking = counted.filter((y) => y.working)
   // W is the household's, so every counted working year is priced or none is.
   const priced = countedWorking.every((y) => y.priced)
+  // Where the pay check's income tax leaves the state's tax on pay out, the line says so (both sides carry the plan's
+  // state; were they ever to differ, the reading that leaves more out speaks).
+  const stateOnPay = (['in-w', 'maybe-in-w', 'counted'] as const).find((s) => sides.some((x) => STATE_ON_PAY[x.meta.stateTaxReading] === s))!
   // The ran-out note names the window's last year.
   const out = ranOutNote(sides, steady, through)
   return {
@@ -355,7 +358,7 @@ export function comparisonsView(input: AnalysisInput & { readonly chart: Compari
     notes: [
       ...(out !== undefined ? [out] : []),
       ...(left.length > 0 ? [slots.cmpTaxStartsAfter(from, leftOut)] : []),
-      ...(countedWorking.length > 0 ? [slots.cmpTaxWorkingCounted(slots.analysisYears(countedWorking.map((y) => y.year)), priced), pointer] : []),
+      ...(countedWorking.length > 0 ? [slots.cmpTaxWorkingCounted(slots.analysisYears(countedWorking.map((y) => y.year)), priced, stateOnPay), pointer] : []),
       ...tail,
     ],
     updating: gate.updating,
@@ -377,6 +380,17 @@ export interface TaxYear {
   readonly left?: 'a' | 'b'
   /** Both work with no W, on different pay checks: what differs. The chart prints words, never a total. */
   readonly unpriced?: { readonly ss: boolean; readonly deposits: boolean }
+}
+
+/** Whether a priced working year's line holds the state's tax on pay, by the run's state reading (the same reading
+ *  Cash Flows' pay-check notes key on, `yearTableChrome.ts`'s `PAY_CHECK_NOTES`): NC's is in `taxOnOutsideIncome`, a
+ *  state with no income tax has none, PA's sits in W (`taxOverlay.ts`'s `stateTaxOnOutsideIncome` prices PA on the
+ *  income other than pay only), and an unpriced state's, if it taxes pay, belongs in W too. Exhaustive (insight 147). */
+const STATE_ON_PAY: Readonly<Record<WorkingYearStateTaxReading, 'counted' | 'in-w' | 'maybe-in-w'>> = {
+  'agi-derived': 'counted',
+  none: 'counted',
+  'class-based': 'in-w',
+  unpriced: 'maybe-in-w',
 }
 
 /** Every calendar year both sides paid (never a money-ran-out row), in order, each with its figure (milestone 4's review,

@@ -28,7 +28,7 @@ import { freshStableId, idsInUse } from '@shared/stableIds'
 import { AddMenu, Button, Checkbox, Drawer, DrawerFields, MoneyInput, Select, Slider, Tray, TrayColumn, TrayRow, TraySection, WholeInput, cn } from '../../kit'
 import { copy, slots } from '../../copy'
 import type { BandPlanClockAnchor } from '../../bandAnnotations'
-import { leverTarget, railMoney, type RailOffers } from '../../workbench/railChrome'
+import { leverTarget, type RailOffers } from '../../workbench/railChrome'
 import type { WhatIf } from '../../workbench/useWhatIf'
 import {
   acaCommit,
@@ -37,6 +37,8 @@ import {
   depositCommit,
   employerCommit,
   lineCommit,
+  addedLineWords,
+  drawerLine,
   mixCommit,
   moveBucket,
   orderCommit,
@@ -527,7 +529,7 @@ function Row({ row, set, draft, anchor, wallCalendarYear, pending, awaiting, onA
             <>
               {/* Taken out, the box stays (locked) so nothing in the row moves under the press. */}
               <MoneyInput
-                label={slots.workbenchRailLineAmount(name)}
+                label={c.line.everyYears !== undefined ? slots.workbenchRailLineAmountEvery(name, c.line.everyYears) : slots.workbenchRailLineAmount(name)}
                 hideLabel
                 value={c.shown.annualAmountReal}
                 readOnly={c.removed}
@@ -567,7 +569,7 @@ function Row({ row, set, draft, anchor, wallCalendarYear, pending, awaiting, onA
           {...withNotes(notes())}
           control={
             <>
-              <span className="text-body text-stone-900 tabular-nums">{slots.workbenchRailPerYear(railMoney(c.line.annualAmountReal))}</span>
+              <span className="text-body text-stone-900 tabular-nums">{addedLineWords(c.line)}</span>
             </>
           }
         />
@@ -1099,7 +1101,7 @@ function LineDrawer({
         }
         const id =
           editing?.id ?? freshStableId(new Set([...idsInUse(draft), ...pending.flatMap((l) => (l.kind === 'spending' && l.op !== 'remove' && l.op !== 'total' ? [l.line.id] : []))]))
-        onSave({ id, category: editing?.category ?? 'other', label: now.label.trim(), annualAmountReal: amount, tier: now.tier, startYear, ...(endYear !== undefined ? { endYear } : {}) })
+        onSave(drawerLine(editing, id, { label: now.label.trim(), amount, tier: now.tier, startYear, ...(endYear !== undefined ? { endYear } : {}) }))
         onClose()
         return true
       }}

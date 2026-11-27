@@ -292,6 +292,47 @@ describe('applyBundle — a gone target is refused by name, never re-targeted (R
   })
 })
 
+describe('a replaced line’s repeat and rate follow the plan line (gap 4’s U9, KTD13)', () => {
+  // `datefixed`: dip with its Home line (`line-housing`) at the same dollar amount (growthRate 0).
+  const fixed = DEV_SEEDS.datefixed
+  const home = fixed.budget!.find((l) => l.id === 'line-housing')!
+
+  it('an amount change kept on a plan line runs with the rate the plan line has NOW, not the one stored when it was kept', () => {
+    // Kept before the plan line got its rate (no growthRate stored): the run takes the plan line's 0.
+    const kept = line({ id: 'line-housing', category: 'housing', label: 'Home', annualAmountReal: 24_000 })
+    const out = applied(fixed, [{ kind: 'spending', op: 'replace', line: kept }])
+    expect(out.draft.budget!.find((l) => l.id === 'line-housing')).toEqual({ ...kept, growthRate: 0 })
+    // Stored with a rate the plan line no longer has: the run drops it (no key, never an undefined-valued one).
+    const stale = { ...kept, growthRate: 0.05 }
+    const back = applied(dip, [{ kind: 'spending', op: 'replace', line: stale }])
+    const ran = back.draft.budget!.find((l) => l.id === 'line-housing')!
+    expect(ran).toEqual(kept)
+    expect('growthRate' in ran).toBe(false)
+  })
+
+  it('a plan line whose repeat has changed since the line was kept is refused by name (an old amount under a new repeat would run several times too low)', () => {
+    const repeating: ScenarioDraft = { ...dip, budget: dip.budget!.map((l) => (l.id === 'line-food' ? { ...l, everyYears: 5 } : l)) }
+    const kept = line({ id: 'line-food', label: 'Living', annualAmountReal: 18_000 })
+    expect(applyBundle(repeating, [{ kind: 'spending', op: 'replace', line: kept }])).toEqual({
+      ok: false,
+      refusal: { kind: 'line-repeat-changed', lineId: 'line-food' },
+    })
+    // The same repeat on both runs as kept; a repeat taken off the plan line is a change too.
+    expect(applyBundle(repeating, [{ kind: 'spending', op: 'replace', line: { ...kept, everyYears: 5 } }]).ok).toBe(true)
+    expect(applyBundle(dip, [{ kind: 'spending', op: 'replace', line: { ...kept, everyYears: 5 } }])).toMatchObject({
+      ok: false,
+      refusal: { kind: 'line-repeat-changed' },
+    })
+  })
+
+  it('an added line keeps its own repeat and rate as stored', () => {
+    const car = line({ id: 'new-car', category: 'transportation', label: 'A new car', annualAmountReal: 40_000, everyYears: 5, growthRate: 0.03 })
+    const out = applied(dip, [{ kind: 'spending', op: 'add', line: car }])
+    expect(out.draft.budget!.at(-1)).toEqual(car)
+    expect(home.growthRate).toBe(0) // the premise above
+  })
+})
+
 describe('applyBundle never writes the plan’s draft', () => {
   it('every lever kind on a deep-frozen plan', () => {
     const plan = frozen(structuredClone(dip))

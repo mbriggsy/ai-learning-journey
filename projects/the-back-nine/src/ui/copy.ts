@@ -3032,6 +3032,9 @@ export const copy = {
   workbenchRailRefusedDuplicate: 'This what-if changes one thing twice, so it isn’t run.',
   workbenchRailRefusedAllRetired: 'Everyone has stopped work, so there is no stop year to change.',
   workbenchRailRefusedLineGone: 'A spending line this what-if changes is no longer in your plan, so it isn’t run.',
+  // Gap 4's U9 (KTD13): the plan line's repeat moved after the what-if was kept, so its amount means something else now.
+  workbenchRailRefusedLineRepeat:
+    'A spending line this what-if changes now repeats on a different schedule in your plan, so it isn’t run.',
   workbenchRailRefusedLineThere: 'A line this what-if adds is already in your plan, so it isn’t run.',
   workbenchRailRefusedNoBudget: 'Your plan has no budget lines, so a line can’t be added or changed here; the one spending figure can.',
   workbenchRailRefusedTotalOnBudget: 'Your plan’s spending is set by its budget lines, so the one figure can’t be changed here; the lines can.',
@@ -5416,7 +5419,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:2424` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:2426` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,
@@ -6066,6 +6069,8 @@ export const slots = {
   taxStratHeirDefault: (pct: string): string => `${pct}% is the tool’s starting figure until you choose one.`,
   /** The tray's compared value for a figure the household entered (exact, a fact). */
   trayDollars: (amount: string): string => `$${amount}`,
+  /** A repeating line's figure in the tray (gap 4's U9): the cost each time and how often, never "a year"; "every N years" held on one line (no-break spaces: free, the phone split "5" from "years"). */
+  trayLineEvery: (amount: string, everyYears: number): string => `$${amount} every ${everyYears} years`,
   /** The tray's compared value for a claim age. */
   trayAge: (age: number): string => `Age ${age}`,
   /** The tray's compared value for the plan's stock share. */
@@ -6102,6 +6107,8 @@ export const slots = {
   /** A lever's own "Back to the plan", named for what it puts back. */
   workbenchRailBackName: (what: string): string => `Put ${what} back to the plan`,
   workbenchRailLineAmount: (name: string): string => `${name}, dollars a year`,
+  /** The same box on a line that repeats (gap 4's U9): its amount is one occurrence's cost. */
+  workbenchRailLineAmountEvery: (name: string, everyYears: number): string => `${name}, dollars each time, every ${everyYears} years`,
   workbenchRailLineTier: (name: string): string => `${name}: essential or extra`,
   workbenchRailDepositLabel: (account: string): string => `Into ${account}, dollars a year`,
   workbenchRailEmployerPlan: (amount: string): string => `In your plan the employer puts in $${amount} a year.`,

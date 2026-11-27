@@ -15,6 +15,8 @@ import {
   depositCommit,
   employerCommit,
   lineCommit,
+  addedLineWords,
+  drawerLine,
   mixCommit,
   moveBucket,
   orderCommit,
@@ -100,6 +102,42 @@ describe('the column groups (ref 2.8’s table)', () => {
     const plain = trayView(input(retired))
     expect(plain.canAddLine).toBe(false)
     expect(row(plain, 'spending:total')!.compared).toBe(slots.trayDollars(retired.annualSpendingReal!.toLocaleString('en-US')))
+  })
+})
+
+describe('a line that repeats or changes at its own rate, carried (gap 4’s U9; the tray offers neither)', () => {
+  const car = { id: 'line-car', category: 'transportation', label: 'A new car', annualAmountReal: 40_000, tier: 'essentials', startYear: 0, everyYears: 5 } as const
+
+  it('a repeat line’s row compares "$40,000 every 5 years", never "a year"; a line without one compares its dollars', () => {
+    const v = trayView(input(DEV_SEEDS.daterepeat))
+    expect(row(v, 'spending:line:line-car')!.compared).toBe(slots.trayLineEvery('40,000', 5))
+    expect(slots.trayLineEvery('40,000', 5)).toBe('$40,000 every 5 years') // "every 5 years" held on one line
+    expect(row(v, 'spending:line:line-food')!.compared).toBe(slots.trayDollars('16,000'))
+  })
+
+  it('a tray edit of a line keeps its repeat and rate: the replace carries both, and a change to them alone is no change', () => {
+    const rated = { ...car, growthRate: 0.03 }
+    expect(lineCommit(rated, { ...rated, annualAmountReal: 45_000 })).toEqual({ kind: 'spending', op: 'replace', line: { ...rated, annualAmountReal: 45_000 } })
+    expect(lineCommit(rated, { ...rated })).toBeNull()
+  })
+
+  it('an added line that repeats reads "$40,000 every 5 years" on its row too; one without reads "a year"', () => {
+    const v = trayView(input(dip, { pending: [{ kind: 'spending', op: 'add', line: car }] }))
+    expect(row(v, 'spending:line:line-car')!.control).toMatchObject({ kind: 'added', line: car })
+    expect(addedLineWords(car)).toBe(slots.trayLineEvery('40,000', 5))
+    const { everyYears: _e, ...yearly } = car
+    expect(addedLineWords(yearly)).toBe(slots.workbenchRailPerYear('40,000'))
+  })
+
+  it('the line drawer’s Save keeps an edited line’s repeat, rate and category; a blank Through year drops its key; a new line is "other" with no extra key', () => {
+    const edited = { ...car, endYear: 20, growthRate: 0.03 }
+    expect(drawerLine(edited, 'line-car', { label: 'A new car', amount: 45_000, tier: 'essentials', startYear: 1 })).toEqual({
+      id: 'line-car', category: 'transportation', label: 'A new car', annualAmountReal: 45_000, tier: 'essentials', startYear: 1, everyYears: 5, growthRate: 0.03,
+    })
+    expect(drawerLine(edited, 'line-car', { label: 'A new car', amount: 45_000, tier: 'essentials', startYear: 1, endYear: 25 }).endYear).toBe(25)
+    const fresh = drawerLine(undefined, 'line-new', { label: 'Boat', amount: 9_000, tier: 'discretionary', startYear: 0 })
+    expect(fresh).toEqual({ id: 'line-new', category: 'other', label: 'Boat', annualAmountReal: 9_000, tier: 'discretionary', startYear: 0 })
+    expect(Object.keys(fresh)).toEqual(['id', 'category', 'label', 'annualAmountReal', 'tier', 'startYear'])
   })
 })
 

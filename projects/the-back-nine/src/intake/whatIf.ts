@@ -12,7 +12,8 @@
  *    `startCalendarYear`) and refuses an offset outside the date window, and any stop year on an all-retired household,
  *    before any run (the engine itself accepts the window top plus one, so this is the guard).
  *  - spending: adds, replaces or removes a whole line by id (the line in `BudgetLineItem`'s own shape, years counted
- *    from the stop exactly as the plan's lines are, KTD18), then re-reconciles the copy's total ONCE through the plan's
+ *    from the stop exactly as the plan's lines are, KTD18; a replaced line takes its rate from the live plan line and
+ *    is refused when that line's repeat has changed, gap 4's KTD13), then re-reconciles the copy's total ONCE through the plan's
  *    own budget writer (`commitBudgetPatch`, insight 058), so the order of a bundle's line levers never matters; or sets
  *    the one-figure total on a draft with no itemized budget. A bundle that would remove every line is refused: the
  *    budget writer's empty list is the builder's "back to a single number" escape, which keeps the old total (so the
@@ -111,6 +112,8 @@ export type WhatIfRefusal =
   | { readonly kind: 'stop-year-all-retired' }
   | { readonly kind: 'stop-year-outside-window'; readonly calendarYear: number; readonly offsetYears: number }
   | { readonly kind: 'line-gone'; readonly lineId: string }
+  /** A replaced line whose plan line now repeats on a different schedule than the one stored (gap 4's KTD13). */
+  | { readonly kind: 'line-repeat-changed'; readonly lineId: string }
   | { readonly kind: 'line-already-there'; readonly lineId: string }
   | { readonly kind: 'spending-no-budget' }
   | { readonly kind: 'spending-total-on-budget' }
@@ -190,8 +193,16 @@ const ARMS: { readonly [K in WhatIfLeverKind]: Arm<K> } = {
       return null
     }
     if (at === -1) return { kind: 'line-gone', lineId: id }
-    if (l.op === 'replace') lines[at] = l.line
-    else lines.splice(at, 1)
+    if (l.op === 'replace') {
+      // Gap 4's KTD13: the tray edits neither a line's repeat nor its rate. The rate follows the LIVE plan line, never
+      // the one stored when the lever was kept (insight 167: an amount means the same under every rate choice). A
+      // repeat changes what the amount means (per occurrence, not per year), so a plan line whose repeat has moved
+      // since is refused by name: an old amount under a new repeat would run several times too low, the rosy side.
+      const live = lines[at]!
+      if (live.everyYears !== l.line.everyYears) return { kind: 'line-repeat-changed', lineId: id }
+      const { growthRate: _stored, ...kept } = l.line
+      lines[at] = live.growthRate !== undefined ? { ...kept, growthRate: live.growthRate } : kept
+    } else lines.splice(at, 1)
     return null
   },
   deposits: (w, l) => {

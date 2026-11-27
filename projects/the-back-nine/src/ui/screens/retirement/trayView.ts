@@ -25,7 +25,7 @@ import { applyBundle } from '@intake/whatIf'
 import { acaPricedForRun, healthcarePriced, isDateRoute, KIND_TO_BUCKET, medicareOnlyPriced, pricedStateForRun, spineMedicarePriced } from '@intake/intakeMap'
 import { rothPlanMissingField } from '@intake/rothPlan'
 import type { ScenarioDraft } from '@store/memoryModel'
-import type { DrawdownOrderKey, DrawdownPolicy, InheritedPace, RothConversionPlan, WhatIfBudgetLineV6, WhatIfLeverKind, WhatIfLeverV6 } from '@shared/model'
+import type { BudgetLineItem, BudgetTier, DrawdownOrderKey, DrawdownPolicy, InheritedPace, RothConversionPlan, WhatIfBudgetLineV6, WhatIfLeverKind, WhatIfLeverV6 } from '@shared/model'
 import { canonicalIdentityToken } from '@shared/model'
 import { copy, slots } from '../../copy'
 import { rothPlanStartFor, type BandPlanClockAnchor } from '../../bandAnnotations'
@@ -260,7 +260,7 @@ export function trayView(input: TrayInput): TrayView {
         id,
         lever: 'spending',
         label: name,
-        compared: dollars(line.annualAmountReal),
+        compared: lineFigure(line),
         changed: lever !== undefined,
         notes: [],
         control: { kind: 'line', line, shown, removed },
@@ -438,8 +438,39 @@ export function totalCommit(plan: number | undefined, v: number | undefined): Wh
   return v === undefined || v === plan ? null : { kind: 'spending', op: 'total', annualSpendingReal: v }
 }
 
+/** A line's figure as the tray prints it: "$40,000 every 5 years" for a line that repeats (gap 4's U9: its amount is one
+ *  occurrence's cost), its dollars otherwise. */
+export const lineFigure = (line: BudgetLineItem): string =>
+  line.everyYears !== undefined ? slots.trayLineEvery(railMoney(line.annualAmountReal), line.everyYears) : dollars(line.annualAmountReal)
+
+/** An added line's words on its row: "$40,000 every 5 years" for a repeat, "$9,000 a year" otherwise. */
+export const addedLineWords = (line: BudgetLineItem): string =>
+  line.everyYears !== undefined ? slots.trayLineEvery(railMoney(line.annualAmountReal), line.everyYears) : slots.workbenchRailPerYear(railMoney(line.annualAmountReal))
+
+/** Compares only what the tray can edit (gap 4's KTD13): a line's repeat and rate ride along by spread, never offered. */
 const sameLine = (a: WhatIfBudgetLineV6, b: WhatIfBudgetLineV6) =>
   a.annualAmountReal === b.annualAmountReal && a.tier === b.tier && a.startYear === b.startYear && a.endYear === b.endYear && a.label === b.label && a.category === b.category
+
+/** The line the tray's line drawer saves: a new line (category "other"), or the line it edits with every field the
+ *  drawer doesn't offer carried by spread (its category, its repeat, its rate: gap 4's U9), the Through year absent when
+ *  the box is blank (DND 009). */
+export function drawerLine(
+  editing: WhatIfBudgetLineV6 | undefined,
+  id: string,
+  fields: { readonly label: string; readonly amount: number; readonly tier: BudgetTier; readonly startYear: number; readonly endYear?: number },
+): WhatIfBudgetLineV6 {
+  const { endYear: _was, ...carried }: Partial<WhatIfBudgetLineV6> = editing ?? {}
+  return {
+    ...carried,
+    id,
+    category: editing?.category ?? 'other',
+    label: fields.label,
+    annualAmountReal: fields.amount,
+    tier: fields.tier,
+    startYear: fields.startYear,
+    ...(fields.endYear !== undefined ? { endYear: fields.endYear } : {}),
+  }
+}
 
 /** A budget line changed to `next`: a replace, or none when it is the plan's line again. */
 export function lineCommit(line: WhatIfBudgetLineV6, next: WhatIfBudgetLineV6): WhatIfLeverV6 | null {

@@ -130,12 +130,12 @@ Result: the all-in vector equals the tax vector element by element, and its mean
 - `solve.ts:214-224, :385-390` (deltaSkew wording).
 - `stateTaxDisclosure.ts:152-156`: the priced-state layer reaches the hero through the tax addend; the logic is unchanged.
 - `recommendationView.ts:102` and `line 719 at b69c28483`.
-- `copy.ts:2117` comment and `:5434`.
+- `copy.ts:2117` comment and `:5437`.
 - the `recommendationView.test.ts line 596 at b69c28483` comment.
 
 The viz suppression off leave-more stays correct, because all-in is still lower-is-better.
 
-**Copy (HIS, §6):** `recDeltaPayLessTax` (`copy.ts:5665-5666`, read), `goalPayLessTaxGloss` (`:2157`), `recDiscNiit` (`:2312-2313`), `recDiscStateTax` (`:2265-2266`), the optional new `recDisc*`, and `recDeltaTypical*` (`src/ui/copy.ts:3669-3688`) only under a "$X less" hero.
+**Copy (HIS, §6):** `recDeltaPayLessTax` (`copy.ts:5668-5669`, read), `goalPayLessTaxGloss` (`:2157`), `recDiscNiit` (`:2312-2313`), `recDiscStateTax` (`:2265-2266`), the optional new `recDisc*`, and `recDeltaTypical*` (`src/ui/copy.ts:3672-3691`) only under a "$X less" hero.
 
 **Calibration:**
 - Add "an objective-statistic change" to the RE-MEASURE triggers at `fallback.ts:44, :58, :72` (map).

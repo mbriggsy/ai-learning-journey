@@ -5261,7 +5261,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:2403` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:2404` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,
@@ -5860,6 +5860,11 @@ export const slots = {
    *  names (round 3 of the milestone-1 review, the no-date dials). */
   snapshotStatRateNoDateLabel: (year: number): string => `Withdrawal rate in your first retired year if you stop in ${year}, in the steady future`,
   snapshotStatTaxNoDateLabel: (year: number): string => `Income tax after you stop working, if you stop in ${year}, in the steady future`,
+  /** Snapshot's tax dial where the steady run's money runs out: the total stops the year before, and the label says so
+   *  (round 3 of milestone 4's review; insight 175). `stop` is the route's lead: an already-retired couple's, a working
+   *  household's, or the no-date window's top year. */
+  snapshotStatTaxThroughLabel: (stop: 'retired' | 'working' | number, ranOutYear: number): string =>
+    `${stop === 'retired' ? 'Income tax' : stop === 'working' ? 'Income tax after you stop working' : `Income tax after you stop working, if you stop in ${stop}`} through ${ranOutYear - 1}, when the money runs out in ${ranOutYear}, in the steady future`,
   /** An aged plan whose stop year has passed (`offsetHasPassed`, the odds chart's own test): the count is the plan's own
    *  reading for that year, kept, and the caption speaks of it in the past rather than offering it as a choice. */
   snapshotRingStoppedIn: (year: number): string => `if you’d stopped in ${year}`,

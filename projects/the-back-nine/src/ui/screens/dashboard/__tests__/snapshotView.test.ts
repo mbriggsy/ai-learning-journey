@@ -197,6 +197,8 @@ describe('Snapshot: the stat rings read the steady future, each on the populatio
     const view = snapshotView(input(snap(draft, answer), { steady: { kind: 'rows', rows, meta } }))
     if (view.stats.kind !== 'figures') throw new Error(view.stats.kind)
     expect(view.stats.tax.value).toBe(slots.snapshotApprox(formatMmDollar(paid)))
+    // The total stops the year before the money runs out, and the label names that cut (round 3 of milestone 4's review).
+    expect(view.stats.tax.label).toBe(slots.snapshotStatTaxThroughLabel('retired', meta.startCalendarYear + out.t))
     // Run out in its first year: no year it counts was paid, so the dial prints no figure and says why, never "~$0".
     const first = [{ ...rows[0]!, ranOut: true }]
     const none = snapshotView(input(snap(draft, answer), { steady: { kind: 'rows', rows: first, meta } }))

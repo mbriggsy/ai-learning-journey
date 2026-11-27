@@ -1145,6 +1145,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     snapshotRingStopIn: slots.snapshotRingStopIn(2031),
     snapshotStatRateNoDateLabel: slots.snapshotStatRateNoDateLabel(2036),
     snapshotStatTaxNoDateLabel: slots.snapshotStatTaxNoDateLabel(2036),
+    snapshotStatTaxThroughLabel: slots.snapshotStatTaxThroughLabel('working', 2044),
     snapshotRingStoppedIn: slots.snapshotRingStoppedIn(2025),
     snapshotInvestedAsEnteredIn: slots.snapshotInvestedAsEnteredIn(2025),
     balanceSheetTotal: slots.balanceSheetTotal('$1,240,000'),

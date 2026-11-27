@@ -188,6 +188,8 @@ export function steadyStats(rows: readonly LedgerYearRow[], meta: Pick<TableMeta
   /** The first retired year's withdrawal rate, as a percent; null where that year opens with no invested money. */
   readonly ratePercent: number | null
   readonly working: boolean
+  /** The year the steady run's money runs out, when it does: the tax total stops the year before. */
+  readonly ranOutYear?: number
 } {
   const working = meta.route !== 'spine'
   const after = retiredRows(rows, meta)
@@ -201,7 +203,11 @@ export function steadyStats(rows: readonly LedgerYearRow[], meta: Pick<TableMeta
     const start = first.start.taxable + first.start.pretax + first.start.roth + first.start.hsa
     ratePercent = start > 0 ? (draws / start) * 100 : null
   }
-  return { taxPaid, taxPaidYears: after.filter((r) => !r.ranOut).length, ratePercent, working }
+  // Where the run runs out, the total stops the year before: the label names that cut (insight 175; round 3 of
+  // milestone 4's review).
+  const ranOut = after.find((r) => r.ranOut)
+  const ranOutYear = ranOut === undefined ? undefined : meta.startCalendarYear + ranOut.t
+  return { taxPaid, taxPaidYears: after.filter((r) => !r.ranOut).length, ratePercent, working, ...(ranOutYear !== undefined ? { ranOutYear } : {}) }
 }
 
 function statsView(steady: SteadyRows, working: boolean): StatsView {
@@ -213,7 +219,9 @@ function statsView(steady: SteadyRows, working: boolean): StatsView {
     // names ("if you stop in 2036"): "after you stop working" alone would point at a date the answer doesn't have.
     const noDateYear = steady.meta.route === 'no-date' ? steady.meta.stopYear : undefined
     const taxLabel =
-      noDateYear !== undefined ? slots.snapshotStatTaxNoDateLabel(noDateYear) : s.working ? copy.snapshotStatTaxWorkingLabel : copy.snapshotStatTaxRetiredLabel
+      s.ranOutYear !== undefined && s.taxPaidYears > 0
+        ? slots.snapshotStatTaxThroughLabel(noDateYear ?? (s.working ? 'working' : 'retired'), s.ranOutYear)
+        : noDateYear !== undefined ? slots.snapshotStatTaxNoDateLabel(noDateYear) : s.working ? copy.snapshotStatTaxWorkingLabel : copy.snapshotStatTaxRetiredLabel
     const rate = noDateYear !== undefined ? { ...rateBase, label: slots.snapshotStatRateNoDateLabel(noDateYear) } : rateBase
     return {
       kind: 'figures',

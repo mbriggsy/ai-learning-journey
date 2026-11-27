@@ -136,6 +136,7 @@ describe('the rules re-judge the stored facts against the live draft (KTD17, KTD
   })
   it.each([
     ['a death before 2020', { ownerDeathYear: 2019 }, [{ labelKey: 'inheritedRefusedPre2020', kind: 'unrepresentable' }]],
+    ['a death after the asked year (gap 3’s review: the drawer refuses it, and now the codec’s date check does too)', { ownerDeathYear: 2027 }, [{ labelKey: 'inheritedRefusedDeathAfterAsked', kind: 'unrepresentable' }]],
     ['a custodian’s figure off the heir’s own divisor', { askedFigure: { kind: 'custodian', figure: 3_700, decemberBalance: 100_000 } }, [{ labelKey: 'inheritedRefusedFigureMismatch', kind: 'unrepresentable' }]],
     ['an asked year past the ten-year end', { ownerDeathYear: 2020, askedYear: 2031, askedFigure: { kind: 'not-asked' } }, [{ labelKey: 'inheritedRefusedPastEnd', kind: 'unrepresentable' }]],
     ['this year’s figure in the wrong shape', { askedFigure: { kind: 'not-asked' } }, [{ labelKey: 'inheritedFigureLabel', kind: 'absent' }]],

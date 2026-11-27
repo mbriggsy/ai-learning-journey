@@ -650,6 +650,9 @@ export const copy = {
   inheritedRefusedPre2020: 'An inherited IRA whose owner died before 2020',
   inheritedRefusedEligible: 'An inherited IRA left to someone not more than ten years younger than its owner',
   inheritedRefusedPastEnd: 'An inherited IRA still holding money after the year the law says it must be empty',
+  // Gap 3's review (the intake-persistence seat, P3): the drawer refuses this in words (`inheritedDiedAfterAsked`); this
+  // names it for a stored record that reaches the codec past the drawer.
+  inheritedRefusedDeathAfterAsked: 'An inherited IRA whose year of death is later than the year its figures are for',
   inheritedRefusedFigureMismatch:
     'An inherited IRA whose required withdrawal doesn’t match its heir’s age: the custodian may be using another person’s life, which this version can’t price, or the birth year in Family is a year off',
   // --- THE INHERITED IRA'S DRAWER (the Act 5 plan's U13; KTD17, KTD25; `src/intake/inheritedIraQuestions.ts`, the one

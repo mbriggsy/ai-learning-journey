@@ -100,6 +100,8 @@ export interface InheritedProblem {
  * run it. In order, stopping at the first problem the later rules would need answered:
  *  - the heir's birth year (Family) not given yet: the household's own missing fact names it, so nothing here;
  *  - a death before 2020 (refused, KTD17);
+ *  - a death after the asked year (refused: no inherited account existed in that year; the drawer refuses it too, as
+ *    `death-after-asked`, but a stored record can reach the codec past the drawer);
  *  - an heir not more than ten years younger than the owner, an eligible beneficiary (refused, KTD17); exactly ten years
  *    apart by birth year needs the household's answer by the two birthdays;
  *  - the birth half and "before April 1?" where the producer reads them (`inheritedOwnerAsks`);
@@ -116,6 +118,7 @@ export function inheritedFactsProblems(d: ScenarioDraft, a: InheritedAccount): r
   if (owner === undefined) return []
   const f = a.inherited
   if (f.ownerDeathYear < FIRST_TEN_YEAR_DEATH_YEAR) return [{ labelKey: 'inheritedRefusedPre2020', kind: 'unrepresentable' }]
+  if (f.ownerDeathYear > f.askedYear) return [{ labelKey: 'inheritedRefusedDeathAfterAsked', kind: 'unrepresentable' }]
   const apart = owner.heirBirthYear - owner.ownerBirthYear
   if (apart < 10) return [{ labelKey: 'inheritedRefusedEligible', kind: 'unrepresentable' }]
   if (apart === 10 && f.heirMoreThanTenYearsYounger !== true) return [{ labelKey: 'inheritedBirthdaysLabel', kind: 'absent' }]

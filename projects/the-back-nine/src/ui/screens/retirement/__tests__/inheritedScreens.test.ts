@@ -7,7 +7,7 @@ import { pairedColumnsFor } from '../../../workbench/railChrome'
 import { DEV_SEEDS } from '../../../devSeeds'
 import { copy, slots } from '../../../copy'
 import { enteredAccountName, tableRunFor, type TableMeta } from '../../../workbench/tableRun'
-import { formatTableDollars } from '../../../workbench/yearTableChrome'
+import { formatTableDollars, inheritedYearNotes } from '../../../workbench/yearTableChrome'
 import { investedKinds } from '../../dashboard/snapshotView'
 import { balanceSheetView } from '../../dashboard/balanceSheetView'
 import { taxAllocationView } from '../../investment/investmentView'
@@ -109,6 +109,27 @@ describe('the two-inherited seed', () => {
     expect(v.yearNotes).toContain(slots.cashFlowsYearNote(2031, slots.cashFlowsInheritedLastNote(NAMES[1])))
     expect(v.yearNotes).toContain(slots.cashFlowsYearNote(2033, slots.cashFlowsInheritedLastNote(NAMES[0])))
     expect(v.footnotes).toContain(copy.cashFlowsInheritedRequiredNote)
+  })
+
+  it('a pace that empties an account before the law’s last year names that year, and the law’s last year then says nothing over an empty account', () => {
+    // The 2021 account (the law's last year 2031) paced in even amounts ending in 2028 (gap 3's review).
+    const paced: ScenarioDraft = {
+      ...draft,
+      enteredAccounts: draft.enteredAccounts.map((a) =>
+        a.id === 'acct-0-inherited-ira-2021' && a.inherited !== undefined ? { ...a, inherited: { ...a.inherited, pace: { kind: 'even-to-year', lastYear: 2028 } } } : a,
+      ),
+    }
+    const run = steadyRows(paced)
+    const notes = inheritedYearNotes(run.meta, run.rows)
+    const notesIn = (year: number) => notes.get(year - draft.startCalendarYear) ?? []
+    const emptied = run.rows.find((r) => formatTableDollars(r.inherited![1]!.start) !== '0' && formatTableDollars(r.inherited![1]!.end) === '0')
+    expect(emptied && yearOf(emptied), '[test setup] the chosen last year empties the account').toBe(2028)
+    expect(notesIn(2028)).toContain(slots.cashFlowsInheritedEmptiedNote(NAMES[1]))
+    expect(notesIn(2031)).not.toContain(slots.cashFlowsInheritedLastNote(NAMES[1]))
+    // The plan's own pace still reaches the law's last year with money in it, and only that note speaks there.
+    const planNotes = inheritedYearNotes(meta, rows)
+    expect(planNotes.get(2031 - draft.startCalendarYear)).toContain(slots.cashFlowsInheritedLastNote(NAMES[1]))
+    expect([...planNotes.values()].flat()).not.toContain(slots.cashFlowsInheritedEmptiedNote(NAMES[1]))
   })
 
   it('the part of a withdrawal the year did not need moves to taxable: its column, and its sentence in that year', () => {

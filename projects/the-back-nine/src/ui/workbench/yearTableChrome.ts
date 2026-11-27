@@ -385,10 +385,17 @@ export function inheritedYearNotes(meta: TableMeta, rows: readonly LedgerYearRow
       const name = meta.inherited[k]?.name
       if (name === undefined) return []
       const moved = formatTableDollars(e.movedToTaxable)
+      // Read at the table's own grain, so a note never names money the table prints as 0 (gap 3's review): the law's
+      // last year speaks only while the account still holds money then (a pace ending sooner has emptied it), and the
+      // year an account is emptied sooner (its chosen last year, or its last money spent as the year's last source)
+      // gets its own note.
+      const holds = formatTableDollars(e.start) !== '0'
+      const emptiedSooner = holds && !e.last && e.leftTheRun === 0 && formatTableDollars(e.end) === '0'
       return [
         ...(moved !== '0' ? [slots.cashFlowsInheritedMovedNote(moved, name)] : []),
         ...(e.leftTheRun > 0 ? [slots.cashFlowsInheritedLeftNote(name)] : []),
-        ...(e.last && e.leftTheRun === 0 ? [slots.cashFlowsInheritedLastNote(name)] : []),
+        ...(e.last && e.leftTheRun === 0 && holds ? [slots.cashFlowsInheritedLastNote(name)] : []),
+        ...(emptiedSooner ? [slots.cashFlowsInheritedEmptiedNote(name)] : []),
       ]
     })
     if (notes.length > 0) out.set(r.t, notes)

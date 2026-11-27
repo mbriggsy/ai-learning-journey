@@ -1099,6 +1099,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     workbenchRolledIn: slots.workbenchRolledIn(2049, 'Sam’s Traditional IRA'),
     workbenchRowRmdMoved: slots.workbenchRowRmdMoved('4,210'),
     cashFlowsInheritedLastNote: slots.cashFlowsInheritedLastNote('Sam’s IRA inherited in 2023'),
+    cashFlowsInheritedEmptiedNote: slots.cashFlowsInheritedEmptiedNote('Sam’s IRA inherited in 2023'),
     cashFlowsInheritedLeftNote: slots.cashFlowsInheritedLeftNote('your IRA inherited in 2023'),
     taxStratDetailsInheritedLeft: slots.taxStratDetailsInheritedLeft('Sam’s IRA inherited in 2023', 2041),
     cashFlowsInheritedMovedNote: slots.cashFlowsInheritedMovedNote('4,210', 'Sam’s IRA inherited in 2023'),

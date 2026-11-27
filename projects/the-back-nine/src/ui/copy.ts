@@ -5410,7 +5410,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:2420` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:2421` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,
@@ -5936,6 +5936,9 @@ export const slots = {
   workbenchRolledIn: (year: number, accounts: string): string => `from ${year}, also ${accounts}, rolled in`,
   // An inherited IRA's year sentences (the Act 5 plan's U13; `inheritedYearNotes`, `cashFlowsView.ts`).
   cashFlowsInheritedLastNote: (name: string): string => `The law’s last year for ${name}: everything left in it comes out.`,
+  // The year an inherited IRA is emptied before the law's last year (gap 3's review): by a chosen last year, or as the
+  // year's last source of cash. Shipped flagged for Briggsy's read.
+  cashFlowsInheritedEmptiedNote: (name: string): string => `Everything left in ${name} comes out.`,
   // Tax Strategies' Details table, the same event by its year (`detailsView`).
   taxStratDetailsInheritedLeft: (name: string, year: number): string =>
     `${upperFirst(name)} goes to someone outside this plan, so its balance left the plan in ${year}.`,

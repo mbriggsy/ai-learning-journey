@@ -35,6 +35,8 @@ non-empty-invalid ⇒ `Number.NaN` (a distinct value the caller's validator flag
 byte-identical (a required field still collapses both to `undefined → NaN → error`). Live-verified:
 `2.5` now errors and blocks Apply; a genuine clear still commits the line as lifelong.
 
+> **Out of date (corrected 2026-11-27):** `src/intake/fields.tsx` and `src/intake/BudgetLineItem.tsx` left with the intake walk at Act 6 · RC14 (`c43d7a50`, 2026-11-25). The budget line's editor is now `LineRow` in `src/ui/screens/profile/drawers/ExpensesDrawers.tsx`, on the kit's number inputs (`src/ui/kit/NumberInputs.tsx`): a refused entry keeps its own words and the `data-typed-refused` mark, and the kit Drawer's Save refuses to run past it (insight 180).
+
 ## Key Insight
 
 When a shared input primitive folds several distinct outcomes into ONE sentinel, that fold is safe

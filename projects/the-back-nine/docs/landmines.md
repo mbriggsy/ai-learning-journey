@@ -703,7 +703,10 @@ said squeaky clears `temp/` UNCONDITIONALLY; its step 4 now deletes only the clo
   shell line (once piped to a count, once to a tail), so 276 citations moved twice (983 → 1109 → 1235). Capture ONE
   run's output to a file and read the file. The recovery that touches no other edit is
   `b9-a6-tools\unreanchor.mjs` (an LCS over lines with citation numbers masked puts HEAD's text back on every line that
-  differs only in them; it snapshots first), then one fresh run, then the three checkers.
+  differs only in them; it snapshots first), then one fresh run, then the three checkers. `--only-missed` is no way
+  round it (b9-11, 11-27): run after an `--apply` it re-proposed 50 applied shifts and moved them again. And the LCS
+  revert puts back EVERY digit-only line, real edits included (the register header's count, README's and the roadmap's
+  test counts): re-stamp those after it.
 
 - **(b9-14, 10-29) The re-anchor tool still misses bare tokens on a line that names another file first** (four this time, plus four
   bare `taxOverlay.ts` tokens in `objectiveHeadline.ts`'s docblock that only `crossline-sweep.mjs` sees — the same four

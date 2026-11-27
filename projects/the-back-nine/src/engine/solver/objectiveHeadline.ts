@@ -54,13 +54,17 @@ export function afterTaxBequestPerPath(dist: Distribution, heirBracket: number):
   }
   const ta = dist.taxAware
   if (ta === undefined) return undefined
-  return ta.terminalTaxableReal.map(
-    (taxable, p) =>
+  // The Act 5 plan's U12: an inherited IRA left at the last death is IRD at the declared bracket, as pre-tax money
+  // is (presence-keyed: absent ⇒ the literal four-bucket sum, byte-identical).
+  const inherited = ta.terminalInheritedReal
+  return ta.terminalTaxableReal.map((taxable, p) => {
+    const buckets =
       taxable + // §1014: stepped up at death — heirs owe nothing on the gain
       (ta.terminalPretaxReal[p] ?? 0) * (1 - heirBracket) + // IRD at the declared bracket
       (ta.terminalRothReal[p] ?? 0) + // tax-free
-      (ta.terminalHsaReal[p] ?? 0) * (1 - heirBracket), // taxable to a non-spouse heir (first-order)
-  )
+      (ta.terminalHsaReal[p] ?? 0) * (1 - heirBracket) // taxable to a non-spouse heir (first-order)
+    return inherited === undefined ? buckets : buckets + (inherited[p] ?? 0) * (1 - heirBracket)
+  })
 }
 
 /**

@@ -30,7 +30,8 @@ import {
   type YearContribution,
 } from '@engine/taxOverlay'
 import { earningsTestSchedule, socialSecurityPaid, type EarningsTestSchedule } from '@engine/earningsTest'
-import { totalAcrossBuckets } from '@engine/sequencing'
+import { portfolioTotal } from '@engine/sequencing'
+import { inheritedLastYear, inheritedRows, inheritedSchedule, type InheritedAccountOwner } from '@engine/inheritedRmd'
 import { householdBenefits, type BenefitPerson } from '@engine/socialSecurityBenefit'
 import { bothAliveYearBenefit, survivorYearBenefit, type PersonOffsets } from '@engine/benefitYear'
 import { ENGINE_MAX_DOLLAR, ENGINE_MAX_HORIZON_YEARS, ENGINE_MAX_MOMENT } from '@engine/engineDomain'
@@ -40,9 +41,13 @@ import { isPricedState, earliestPricedRateYear } from '@engine/constants/stateTa
 import {
   DRAWDOWN_ORDER_KEYS,
   DRAWDOWN_POLICIES,
+  INHERITED_LEFT_TO,
+  INHERITED_PACE_KINDS,
   NEVER_DEPLETED,
   isRetirementState,
   type AccumulationParams,
+  type InheritedLedgerParams,
+  type OverlayParams,
   type BandFan,
   type BandFanYear,
   type DepletionYear,
@@ -946,6 +951,56 @@ export function contributionsForYear(
  *  BEFORE any 16k-path run is dispatched, so a rejecting candidate fails the RUN with the
  *  named reason — never drop-and-continue (an unevaluated offset voids the "earliest"
  *  claim), never a wasted sweep. Cheap and draw-free by construction. */
+/**
+ * The R19 arms for the inherited IRAs (the Act 5 plan's U12) — the twin of every throw in the overlay's
+ * `buildInheritedLedgers` and the producer, so a bad ledger returns the calm indeterminate, never a mid-path
+ * throw. The producer is CALLED here (its own schedule and rows), never re-derived. null when every ledger passes.
+ */
+function inheritedIrasRefusal(
+  ledgers: readonly InheritedLedgerParams[],
+  o: OverlayParams,
+  params: SimulationParams,
+  finiteNonNeg: (x: number) => boolean,
+): string | null {
+  if (ledgers.length === 0) return 'overlay inheritedIras must be absent when the household holds none (one OFF shape)'
+  if (!o.taxEnabled) return 'overlay inheritedIras need taxEnabled (an inherited IRA’s withdrawals are taxed income)'
+  for (let i = 0; i < ledgers.length; i++) {
+    const l = ledgers[i]!
+    const at = `overlay inheritedIras[${i}]`
+    if (!finiteNonNeg(l.balance)) return `${at} balance invalid`
+    if (![l.openYearFigure, l.takenInOpenYear, l.deathYearUntaken ?? 0].every(finiteNonNeg)) return `${at} asked figure invalid`
+    if (!l.earlierWithdrawals.every((e) => finiteNonNeg(e.amount))) return `${at} earlier withdrawal invalid`
+    if (!Number.isInteger(l.heirIndex) || l.heirIndex < 0 || l.heirIndex >= params.people.length)
+      return `${at} heirIndex invalid (must index the household people)`
+    if (params.people.length > 1) {
+      if (l.leftTo === undefined || !(INHERITED_LEFT_TO as readonly string[]).includes(l.leftTo))
+        return `${at} leftTo required for a couple (the other member, or someone else)`
+    } else if (l.leftTo !== undefined) return `${at} leftTo is for a couple only`
+    if (!(INHERITED_PACE_KINDS as readonly string[]).includes(l.pace.kind)) return `${at} pace invalid`
+    const heir = params.people[l.heirIndex]!
+    const owner: InheritedAccountOwner = {
+      ownerBirthYear: l.ownerBirthYear,
+      ...(l.ownerBornFirstHalf !== undefined ? { ownerBornFirstHalf: l.ownerBornFirstHalf } : {}),
+      ownerDeathYear: l.ownerDeathYear,
+      ...(l.ownerDiedBeforeApril1 !== undefined ? { ownerDiedBeforeApril1: l.ownerDiedBeforeApril1 } : {}),
+      heirBirthYear: o.startCalendarYear - heir.currentAge,
+    }
+    try {
+      const last = inheritedLastYear(owner)
+      if (l.openYear > last) return `${at} the asked year is after the ten-year end`
+      if (l.pace.kind === 'even-to-year') {
+        const y = l.pace.lastYear
+        if (!Number.isInteger(y) || y < l.openYear || y > last) return `${at} the chosen last year must fall from the asked year to the ten-year end`
+      }
+      inheritedSchedule(owner, o.startCalendarYear, params.maxHorizonYears)
+      inheritedRows(l.openYear, l.takenInOpenYear, l.earlierWithdrawals, o.startCalendarYear, params.maxHorizonYears)
+    } catch (e) {
+      return `${at} ${e instanceof Error ? e.message : String(e)}`
+    }
+  }
+  return null
+}
+
 export function validateParams(params: SimulationParams): string | null {
   // Finite, ≥ 0, AND inside the engine's computable dollar domain (the upper bound is
   // what keeps every downstream compounding finite — see ENGINE_MAX_DOLLAR in engineDomain.ts; it
@@ -1107,13 +1162,23 @@ export function validateParams(params: SimulationParams): string | null {
     // (insights 008/010: finiteness FIRST, before any compare).
     if (b.hsa !== undefined && !finiteNonNeg(b.hsa)) return 'overlay buckets invalid'
     // The overlay's total IS the portfolio: the buckets (ALL FOUR — the medical-earmarked hsa is
-    // part of the portfolio and rides the one shared market draw) must sum to initialPortfolio (a
-    // relative tolerance absorbs the caller's float dust) so a collapsed-pool overlay reduces to
-    // the spine. The sum is the CANONICAL totalAcrossBuckets — never re-derived inline, so a future
-    // 5th bucket cannot silently desync the gate from the engine's own total (single-source).
-    const bucketSum = totalAcrossBuckets(b)
+    // part of the portfolio and rides the one shared market draw) plus any inherited IRA's ledger
+    // (U12, inside the total) must sum to initialPortfolio (a relative tolerance absorbs the caller's
+    // float dust) so a collapsed-pool overlay reduces to the spine. The sum is the CANONICAL
+    // portfolioTotal — never re-derived inline, so a future 5th bucket cannot silently desync the gate
+    // from the engine's own total (single-source).
+    // The Act 5 plan's U12: each inherited IRA's balance sits inside the total (KTD22), so the gate reads the
+    // buckets plus the ledgers through the ONE helper — finiteness first, before the sum reads them.
+    const inh = o.inheritedIras
+    if (inh !== undefined) {
+      const refused = inheritedIrasRefusal(inh, o, params, finiteNonNeg)
+      if (refused !== null) return refused
+    }
+    const bucketSum = portfolioTotal(b, inh?.map((l) => l.balance))
     if (Math.abs(bucketSum - params.initialPortfolio) > 1e-6 * Math.max(1, Math.abs(params.initialPortfolio)))
-      return 'overlay buckets must sum to initialPortfolio'
+      return inh === undefined
+        ? 'overlay buckets must sum to initialPortfolio'
+        : 'overlay buckets plus the inherited IRAs must sum to initialPortfolio'
     // Finiteness is checked UNCONDITIONALLY when present — NOT gated on `b.taxable > 0`. A NaN basis with
     // an EMPTY starting taxable bucket would otherwise slip both this gate and the overlay backstop, sit
     // dormant (year 0's realizedGain short-circuits on taxableValue===0), then poison the gross-up once an
@@ -1976,6 +2041,8 @@ export function simulate(
         // previously dropped here): the regime-toggle preview's median health-cost delta.
         lifetimeNetPremiumReal: new Array<number>(paths),
         lifetimeMedicareCostReal: new Array<number>(paths),
+        // The Act 5 plan's U12: the inherited IRAs' horizon-end balance, only when the run carries them.
+        ...(overlay.inheritedIras !== undefined ? { terminalInheritedReal: new Array<number>(paths) } : {}),
       }
     : undefined
 
@@ -2015,6 +2082,9 @@ export function simulate(
         taxAware.terminalTaxableBasisReal[p] = overlay.initialTaxableBasis ?? 0
         taxAware.lifetimeNetPremiumReal[p] = 0
         taxAware.lifetimeMedicareCostReal[p] = 0
+        if (taxAware.terminalInheritedReal && overlay.inheritedIras) {
+          taxAware.terminalInheritedReal[p] = overlay.inheritedIras.reduce((acc, l) => acc + l.balance, 0)
+        }
       }
       continue
     }
@@ -2144,8 +2214,9 @@ export function simulate(
     let res: DecumulationResult
     let floorRes: DecumulationResult | undefined
     if (overlay) {
-      // Tax-aware decumulation. `overlay.buckets` (sum === initialPortfolio, validated) IS the
-      // total, so a collapsed pool under the EXHAUSTIVE OFF condition reduces byte-identically to
+      // Tax-aware decumulation. `overlay.buckets` plus any inherited IRA's ledger (U12; `portfolioTotal`
+      // === initialPortfolio, validated) IS the total, so a collapsed pool under the EXHAUSTIVE OFF
+      // condition (no inherited IRA) reduces byte-identically to
       // the spine branch below (the reduce-to-spine golden, contract #3).
       // P3·U9: the tax inputs are built ONCE and shared by both passes — the floor pass differs
       // ONLY in its withdrawals vector (a tier is a different SPEND on the SAME paths; identical
@@ -2190,6 +2261,9 @@ export function simulate(
           // Build 2 (KTD2): the saved left over, spread ONLY when carried (validateParams admits it only beside
           // W), inside `taxInputs` so the essentials-floor pass credits the SAME dollars (R9: both tracks).
           ...(savedLeftOver !== undefined ? { workingYearLeftOverSavedReal: savedLeftOver } : {}),
+          // The Act 5 plan's U12: the inherited IRAs' ledgers, spread ONLY when carried (absent ⇒ the
+          // byte-identical taxInputs, AE7), inside `taxInputs` so the essentials-floor pass runs the SAME ledgers.
+          ...(overlay.inheritedIras !== undefined ? { inheritedLedgers: overlay.inheritedIras } : {}),
           ...(options?._workingYearProbe !== undefined ? { _workingYearProbe: options._workingYearProbe } : {}),
           ...(overlay.healthcareEnabled || overlay.accumulation ? { bridgeYearMask: bridgeMask } : {}),
           // U3 · M3 Slice 4 healthcare streams: spread ONLY when the overlay is enabled, so a
@@ -2312,6 +2386,7 @@ export function simulate(
         !Number.isFinite(taxRes.finalBuckets.pretax) ||
         !Number.isFinite(taxRes.finalBuckets.roth) ||
         !Number.isFinite(taxRes.finalBuckets.hsa ?? 0) ||
+        !Number.isFinite(taxRes.finalInherited ?? 0) ||
         (floorTaxRes !== undefined &&
           (!Number.isFinite(floorTaxRes.terminalReal) || !Number.isFinite(floorTaxRes.totalTaxPaidReal)))
       ) {
@@ -2333,6 +2408,10 @@ export function simulate(
         taxAware.terminalTaxableBasisReal[p] = taxRes.finalTaxableBasis
         taxAware.lifetimeNetPremiumReal[p] = taxRes.totalNetPremiumReal
         taxAware.lifetimeMedicareCostReal[p] = taxRes.totalMedicareCostReal
+        if (taxAware.terminalInheritedReal) {
+          if (taxRes.finalInherited === undefined) throw new Error('[simulate] a run carrying inherited IRAs returned no inherited terminal — a defect')
+          taxAware.terminalInheritedReal[p] = taxRes.finalInherited
+        }
       }
     } else {
       const initial: PortfolioState = {

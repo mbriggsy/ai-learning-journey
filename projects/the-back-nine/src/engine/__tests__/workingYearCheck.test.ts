@@ -299,7 +299,8 @@ describe('byte-identity: a W-present run with nothing short, nothing withheld an
     da.terminalValuesReal.forEach((v, p) => expect(Object.is(v, db.terminalValuesReal[p]), `terminal ${p}`).toBe(true))
     da.depletionYears.forEach((v, p) => expect(Object.is(v, db.depletionYears[p]), `depletion ${p}`).toBe(true))
     for (const key of Object.keys(da.taxAware!) as (keyof NonNullable<typeof da.taxAware>)[]) {
-      da.taxAware![key].forEach((v, p) => expect(Object.is(v, db.taxAware![key][p]), `${key} ${p}`).toBe(true))
+      // `terminalInheritedReal` is optional (present only with an inherited IRA); `toEqual` above already pins presence.
+      ;(da.taxAware![key] ?? []).forEach((v, p) => expect(Object.is(v, db.taxAware![key]?.[p]), `${key} ${p}`).toBe(true))
     }
   }
 

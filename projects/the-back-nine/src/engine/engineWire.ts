@@ -28,6 +28,8 @@ export interface TaxAwareWire {
   /** P3·U11 — Σ net ACA premium / Σ Medicare cost per path (the regime-preview medians). */
   readonly lifetimeNetPremiumReal: Float64Array
   readonly lifetimeMedicareCostReal: Float64Array
+  /** The Act 5 plan's U12 — the inherited IRAs' horizon-end balance, present iff the run carried them. */
+  readonly terminalInheritedReal?: Float64Array
 }
 
 /** A resolved result in WIRE form: the big arrays as transferable typed-array buffers,
@@ -119,6 +121,7 @@ export function fromWire(wire: EngineWire): EngineResult {
                 terminalTaxableBasisReal: Array.from(wire.taxAware.terminalTaxableBasisReal),
                 lifetimeNetPremiumReal: Array.from(wire.taxAware.lifetimeNetPremiumReal),
                 lifetimeMedicareCostReal: Array.from(wire.taxAware.lifetimeMedicareCostReal),
+                ...(wire.taxAware.terminalInheritedReal ? { terminalInheritedReal: Array.from(wire.taxAware.terminalInheritedReal) } : {}),
               },
             }
           : {}),
@@ -296,6 +299,7 @@ function armFromWire(arm: SolveArmWire): SolveArm {
             terminalTaxableBasisReal: Array.from(arm.taxAware.terminalTaxableBasisReal),
             lifetimeNetPremiumReal: Array.from(arm.taxAware.lifetimeNetPremiumReal),
             lifetimeMedicareCostReal: Array.from(arm.taxAware.lifetimeMedicareCostReal),
+            ...(arm.taxAware.terminalInheritedReal ? { terminalInheritedReal: Array.from(arm.taxAware.terminalInheritedReal) } : {}),
           },
         }
       : {}),

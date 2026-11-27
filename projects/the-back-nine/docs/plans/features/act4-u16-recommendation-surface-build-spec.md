@@ -335,7 +335,7 @@ to a single commit.
 - The surface renders no percentile of its own: the survival context is source-bound BY REFERENCE
   to the spine's rendered confidence object (Q1), which is where the `displayTenth`/`xOfTenClamp`
   convention lives (`confidence.ts:71`, `gradeCalibration.ts:105`). Nothing is re-typed.
-- **`assertObjectiveMatchesHeadline(payload)`** (`src/engine/solver/objectiveHeadline.ts:174`): a
+- **`assertObjectiveMatchesHeadline(payload)`** (`src/engine/solver/objectiveHeadline.ts:178`): a
   PURE exported guard the render path AND a unit test both call — the statistic that RANKED
   (seed-A tier2) ≡ the statistic DISPLAYED (seed-B headline) — with PLANTED-MISMATCH arms proving
   it bites (burned/070). The seed-A selection score NEVER renders, for winner or runner-up.

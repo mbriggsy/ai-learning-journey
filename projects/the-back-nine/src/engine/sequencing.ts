@@ -54,10 +54,18 @@ void _orderKeysTied
 
 const ZERO: BucketWithdrawals = { taxable: 0, pretax: 0, roth: 0 }
 
-/** The hsa-INCLUSIVE portfolio total — the authoritative figure `stepYear` advances (all four
- *  buckets ride the one shared market draw). Distinct from {@link generalDrawableTotal}: the two
- *  diverge exactly when `hsa > 0` (dark at `hsa = 0` — insight 014's crossing class). */
+/** The hsa-INCLUSIVE sum of the four buckets (all ride the one shared market draw). With no inherited IRA it IS
+ *  the authoritative figure `stepYear` advances; with one, that figure is {@link portfolioTotal}. Distinct from
+ *  {@link generalDrawableTotal}: the two diverge exactly when `hsa > 0` (dark at `hsa = 0` — insight 014's
+ *  crossing class). */
 export const totalAcrossBuckets = (b: AccountBuckets): number => b.taxable + b.pretax + b.roth + (b.hsa ?? 0)
+
+/** The AUTHORITATIVE portfolio total (the Act 5 plan's KTD22): the four buckets plus each inherited IRA's ledger,
+ *  which sit inside the total and outside `AccountBuckets`. The one home of that sum — the overlay's opening
+ *  state, its `totalBefore`, and the R19 sum gate all read it. With no ledger it returns
+ *  {@link totalAcrossBuckets} itself (never `+ 0`), so a run without one is byte-identical. */
+export const portfolioTotal = (b: AccountBuckets, inherited?: readonly number[]): number =>
+  inherited === undefined ? totalAcrossBuckets(b) : inherited.reduce((acc, x) => acc + x, totalAcrossBuckets(b))
 
 /** The GENERAL-drawable total (taxable + pretax + roth) — what a year's spending withdrawal can
  *  actually be funded from. The `hsa` bucket is excluded: it pays only the qualified-medical cap

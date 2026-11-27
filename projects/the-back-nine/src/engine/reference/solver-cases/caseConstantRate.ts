@@ -32,7 +32,7 @@
  *    = 2,371,035.71….
  *  - bracket-fill: healthcare OFF + baseline in the OPEN band ⇒ no active rail ⇒ the
  *    engine-derived ceiling is +∞ ⇒ bracket-fill degrades to pre-tax-first EXACTLY (the
- *    sequencing degrade, sequencing.ts:103-104) — asserted BYTE-identical, the degrade's
+ *    sequencing degrade, sequencing.ts:111-112) — asserted BYTE-identical, the degrade's
  *    live witness.
  *  - proportional: draws split by draw-pool share; every bucket shrinks by its own
  *    proportional draw and never re-scales (r = 0) ⇒ shares are CONSTANT (pretax share

@@ -71,6 +71,7 @@ export function runEngine(params: SimulationParams, seed: number, options?: RunO
               terminalTaxableBasisReal: Float64Array.from(taxAware.terminalTaxableBasisReal),
               lifetimeNetPremiumReal: Float64Array.from(taxAware.lifetimeNetPremiumReal),
               lifetimeMedicareCostReal: Float64Array.from(taxAware.lifetimeMedicareCostReal),
+              ...(taxAware.terminalInheritedReal ? { terminalInheritedReal: Float64Array.from(taxAware.terminalInheritedReal) } : {}),
             },
           }
         : {}),
@@ -247,6 +248,7 @@ function packArm(arm: SolveArm): SolveArmWire {
             terminalTaxableBasisReal: Float64Array.from(ta.terminalTaxableBasisReal),
             lifetimeNetPremiumReal: Float64Array.from(ta.lifetimeNetPremiumReal),
             lifetimeMedicareCostReal: Float64Array.from(ta.lifetimeMedicareCostReal),
+            ...(ta.terminalInheritedReal ? { terminalInheritedReal: Float64Array.from(ta.terminalInheritedReal) } : {}),
           },
         }
       : {}),
@@ -291,6 +293,7 @@ function armBuffers(arm: SolveArmWire): ArrayBufferLike[] {
       arm.taxAware.lifetimeNetPremiumReal.buffer,
       arm.taxAware.lifetimeMedicareCostReal.buffer,
     )
+    if (arm.taxAware.terminalInheritedReal) bufs.push(arm.taxAware.terminalInheritedReal.buffer)
   }
   // The floor track's paths-length depletion buffer joins the transfer list (its sibling fraction
   // stays a structured clone) — the ResolvedWire floor discipline at K-candidate scale.
@@ -449,6 +452,7 @@ export const engineApi = {
           wire.taxAware.lifetimeNetPremiumReal.buffer,
           wire.taxAware.lifetimeMedicareCostReal.buffer,
         )
+        if (wire.taxAware.terminalInheritedReal) buffers.push(wire.taxAware.terminalInheritedReal.buffer)
       }
       // P3·U9 — the floor track's paths-length depletion buffer joins the enumerated list
       // (its sibling fields — the fraction, the floorReading — stay structured clone).

@@ -163,6 +163,17 @@ export const ncRetirementIncome = sourced<StateIncomeTreatment>('taxed-ordinary'
   note: 'Private-sector IRA/401(k)/pension: 100% taxable at the flat rate. OUT (never modeled — this household never qualifies): Bailey govt-plan carve-out (§ 105-153.5(b)(5), 5+ yrs by 8/12/1989) and military retirement (§ 105-153.5(b)(5a)).',
 })
 
+/** NC inherited-IRA withdrawals (the Act 5 plan's KTD23) — FULLY TAXABLE ordinary income at the flat rate, as
+ *  every IRA distribution is: a beneficiary's distribution is in federal AGI (IRC § 408(d)(1)) and no NC
+ *  subtraction removes it. Its own entry so the treatment is read once, on its own channel. */
+export const ncInheritedDistribution = sourced<StateIncomeTreatment>('taxed-ordinary', {
+  citation:
+    'N.C.G.S. § 105-153.4 (NC taxable income begins at federal AGI) · IRC § 408(d)(1) (an IRA distribution, a beneficiary’s included, is in gross income) · § 105-153.5(b) (no subtraction covers a private IRA distribution) · NCDOR (corroboration)',
+  directionalUntilPinned: false,
+  pinTo: 'ncleg.gov codified G.S. 105-153.4 / .5(b) + IRC § 408(d)(1)',
+  note: 'Taxed at the flat rate at any heir age, like the household’s own pre-tax withdrawals (ncRetirementIncome).',
+})
+
 /** NC Roth conversion — the full taxable conversion is taxed as ordinary income at the flat
  *  rate, with NO age condition, NO source condition, NO exclusion (the ranking-relevant term
  *  the broad-brush rejection named). A purely LINEAR cost: rate × taxable conversion — no NC
@@ -271,6 +282,16 @@ export const paConversionTreatment = sourced<StateIncomeTreatment>('taxed-if-und
   note: 'Qualified-age (≥ 59½) conversion: $0 PA tax on the converted amount — PA is one of the few states that does not tax conversions for qualified-age retirees (the recommender treats PA conversion state-cost as ZERO). Under-59½: TAXED (the conservative arm — the primary sentence for the under-59½ conversion exemption could NOT be pinned; the date route can reach those ages).',
 })
 
+/** PA inherited-IRA withdrawals (the Act 5 plan's KTD23) — EXEMPT at ANY heir age: a payment to the designated
+ *  beneficiary by reason of the owner's death is not PA compensation, so PA's 59½ gate never applies to it. */
+export const paInheritedDistribution = sourced<StateIncomeTreatment>('exempt', {
+  citation:
+    'PA DOR PIT Guide, Gross Compensation chapter (pa.gov, re-read 2026-11-27): "Distributions to Beneficiaries and Rollovers — Payments paid to the estate or designated beneficiary of a participant by reason of the participant\'s death are not included as taxable compensation"; and under "Traditional IRA", amounts withdrawn are includable "except - … Payments paid to the estate or designated beneficiary of the participant by reason of the participant\'s death"',
+  directionalUntilPinned: false,
+  pinTo: 'pa.gov PIT Guide (Gross Compensation: Distributions to Beneficiaries and Rollovers; Traditional IRA)',
+  note: 'Exempt at every heir age, never through the 59½ gate (`paQualifiedAge`): gated, an under-59½ heir would be taxed, which is gloomy and false. PA inheritance tax on the account at the owner’s death is a separate tax, already settled before the heir’s withdrawals and not priced here.',
+})
+
 /** PA taxable-account interest/dividends/gains — taxed at the flat 3.07%, NO LTCG preference
  *  and NO short/long distinction (PA's one "net gains" class). This flat rate on brokerage
  *  income is essentially the ONLY PA tax a retired couple pays. */
@@ -311,6 +332,9 @@ export interface StateTaxProfile {
   readonly retirementIncomeTreatment: StateIncomeTreatment
   readonly conversionTreatment: StateIncomeTreatment
   readonly capGainsTreatment: StateIncomeTreatment
+  /** An inherited IRA's withdrawals (the Act 5 plan's KTD23) — their own channel, never the retirement-income or
+   *  ongoing-income ones (PA exempts them at any age, which neither of those channels would). */
+  readonly inheritedDistributionTreatment: StateIncomeTreatment
   /** `null` for a no-income-tax state (FL). */
   readonly rateSchedule: StateFlatRateSchedule | null
   /** `null` for a no-income-tax state (FL); `{mfj:0,single:0}` for PA (No provision). */
@@ -328,6 +352,7 @@ export const STATE_TAX_PROFILES: Readonly<Record<PricedState, StateTaxProfile>> 
     retirementIncomeTreatment: ncRetirementIncome.value,
     conversionTreatment: ncConversionTreatment.value,
     capGainsTreatment: ncCapitalGains.value,
+    inheritedDistributionTreatment: ncInheritedDistribution.value,
     rateSchedule: ncRateSchedule.value,
     standardDeduction: ncStandardDeduction.value,
     qualifiedAge: null,
@@ -338,6 +363,7 @@ export const STATE_TAX_PROFILES: Readonly<Record<PricedState, StateTaxProfile>> 
     retirementIncomeTreatment: paRetirementIncome.value,
     conversionTreatment: paConversionTreatment.value,
     capGainsTreatment: paCapitalGains.value,
+    inheritedDistributionTreatment: paInheritedDistribution.value,
     rateSchedule: paRateSchedule.value,
     standardDeduction: paStandardDeduction.value,
     qualifiedAge: paQualifiedAge.value,
@@ -348,6 +374,7 @@ export const STATE_TAX_PROFILES: Readonly<Record<PricedState, StateTaxProfile>> 
     retirementIncomeTreatment: 'none',
     conversionTreatment: 'none',
     capGainsTreatment: 'none',
+    inheritedDistributionTreatment: 'none',
     rateSchedule: null,
     standardDeduction: null,
     qualifiedAge: null,
@@ -467,6 +494,7 @@ export const stateTaxConstants = {
   ncRetirementIncome,
   ncConversionTreatment,
   ncCapitalGains,
+  ncInheritedDistribution,
   paRateSchedule,
   paStandardDeduction,
   paBaseSystem,
@@ -475,5 +503,6 @@ export const stateTaxConstants = {
   paRetirementIncome,
   paConversionTreatment,
   paCapitalGains,
+  paInheritedDistribution,
   flIncomeTax,
 } satisfies Record<string, ConstantEntry>

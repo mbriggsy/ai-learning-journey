@@ -88,7 +88,17 @@
  * PURE: no entropy/clock/environment (the engine-purity lint covers `src/engine/**`).
  */
 import { stepYear, totalValue, type DecumulationResult, type PortfolioState } from '@engine/decumulation'
-import { allocateWithdrawal, generalDrawableTotal, totalAcrossBuckets, type AccountBuckets, type GeneralBucketKey } from '@engine/sequencing'
+import { allocateWithdrawal, generalDrawableTotal, portfolioTotal, type AccountBuckets, type BucketWithdrawals, type GeneralBucketKey } from '@engine/sequencing'
+import {
+  inheritedLastYear,
+  inheritedMinimum,
+  inheritedPacedWithdrawal,
+  inheritedRows,
+  inheritedSchedule,
+  type InheritedAccountOwner,
+  type InheritedRows,
+  type InheritedYear,
+} from '@engine/inheritedRmd'
 import {
   acaApplicablePercentage,
   acaApplicablePercentageEnhanced,
@@ -127,6 +137,7 @@ import {
   type DepletionYear,
   type DrawdownPolicy,
   type FilingStatus,
+  type InheritedLedgerParams,
   type LedgerBalances,
   type LedgerLoopRow,
   type LedgerWorkingYear,
@@ -235,6 +246,9 @@ export interface TaxAwareResult extends DecumulationResult {
    *  reduce-to-spine total; accrued AFTER the depletion check (a year the portfolio could not fund
    *  accrues nothing). */
   readonly totalQualifiedHsaSpendReal: number
+  /** The inherited IRAs' summed balance at the end of the horizon (real $, the Act 5 plan's U12; 0 when the
+   *  portfolio depleted). PRESENT iff the run carried inherited ledgers. */
+  readonly finalInherited?: number
 }
 
 /**
@@ -441,6 +455,12 @@ export interface TaxYearInputs {
    *  stream must be SUPPLIED (an empty one is an offset-0 candidate: nothing to credit, never a throw); and a
    *  stream with any entry must carry year 0's. */
   readonly workingYearLeftOverSavedReal?: number
+  /** The Act 5 plan's U12: one ledger per inherited IRA (`OverlayParams.inheritedIras`, passed through). PRESENT ⇒
+   *  each ledger sits inside the authoritative total (`initialBuckets` plus the ledgers' balances is the opening
+   *  total), pays out its paced withdrawal toward the year's need first, is the year's last source, and leaves the
+   *  run in the year after the heir's death when it was left to someone else. Needs tax on (it throws
+   *  otherwise). ABSENT ⇒ every term below is structurally absent: byte-identical (AE7). */
+  readonly inheritedLedgers?: readonly InheritedLedgerParams[]
   /** PROBE-ONLY — the pay check's observation hook ({@link WorkingYearProbe}); never set by product code. */
   readonly _workingYearProbe?: WorkingYearProbe
   // --- U6/U7 band fan: an OPTIONAL output sink (not an input). ABSENT ⇒ no observation, the
@@ -1148,6 +1168,40 @@ interface GrossUpContext {
     readonly outside: WorkingYearOutsideIncome
     readonly floor: PreparedWorkingYearFloor
   }
+  /** The year's inherited-IRA draws (the Act 5 plan's U12), year-constant like everything here. PRESENT only
+   *  when the run carries an inherited ledger; ABSENT ⇒ the literal pre-U12 expressions below. */
+  readonly inherited?: InheritedYearDraw
+}
+
+/** One year's inherited-IRA terms, summed over the ledgers (U12; KTD21, KTD22, KTD25). */
+interface InheritedYearDraw {
+  /** The paced withdrawals (KTD21): forced out of the ledgers, ordinary income, and the year's FIRST source of
+   *  cash toward the gross. Never folded into `rmd`: `max(alloc.pretax, rmd)` would count a pre-tax spending
+   *  draw as meeting it. */
+  readonly paced: number
+  /** Income the ledgers book with no balance this row (KTD25: an earlier row's reported withdrawal, the open
+   *  row's amount already out): ordinary income only, no cash. */
+  readonly booked: number
+  /** What the ledgers hold after their paced withdrawals: the cap on the year's last-source draw. */
+  readonly tailRoom: number
+}
+
+/** How one gross splits across the sources (U12; KTD22): the paced inherited cash first, then the general
+ *  allocation, then the last source (the ledgers above their pace, never more than they hold). The ONE home both
+ *  the gross-up's passes and the year loop's settled draw read, so the two can never disagree. */
+function inheritedSplit(
+  gross: number,
+  inh: InheritedYearDraw,
+  drawPool: AccountBuckets,
+  policy: DrawdownPolicy,
+  bracketFillCeiling: number,
+  customOrder: readonly GeneralBucketKey[] | undefined,
+): { readonly alloc: BucketWithdrawals; readonly spentFromPaced: number; readonly tail: number } {
+  const spentFromPaced = Math.min(inh.paced, Math.max(0, gross))
+  const generalTarget = Math.max(0, gross) - spentFromPaced
+  const alloc = allocateWithdrawal(drawPool, generalTarget, policy, bracketFillCeiling, customOrder)
+  const short = generalTarget - (alloc.taxable + alloc.pretax + alloc.roth)
+  return { alloc, spentFromPaced, tail: short > 0 ? Math.min(short, inh.tailRoom) : 0 }
 }
 
 // =========================================================================
@@ -1384,6 +1438,8 @@ export interface WorkingYearStateChannels {
   readonly ongoingTaxable: number
   readonly realizedGain: number
   readonly ssBenefitTaxable: number
+  /** The inherited IRAs' withdrawals this pass (U12) — their own state channel; absent with no ledger. */
+  readonly inheritedDistribution?: number
 }
 
 /**
@@ -1645,7 +1701,7 @@ export interface WorkingYearProbe {
 }
 
 function solveGrossWithdrawal(net: number, ctx: GrossUpContext): GrossUpSolution {
-  const { drawPool, policy, customOrder, rmd, conversion, taxableBasis, filing, count65, calendarYear, ssBenefit, bracketFillCeiling, ongoingTaxable, retirementState, minLivingAge, workingYear } = ctx
+  const { drawPool, policy, customOrder, rmd, conversion, taxableBasis, filing, count65, calendarYear, ssBenefit, bracketFillCeiling, ongoingTaxable, retirementState, minLivingAge, workingYear, inherited } = ctx
   const taxableValue = drawPool.taxable
   // The working-year floor (2026-10-20), as the year loop prepared it — every baseline is
   // gross-independent. ABSENT (every unclamped / construct-absent / retired-route year) ⇒ undefined ⇒
@@ -1653,7 +1709,18 @@ function solveGrossWithdrawal(net: number, ctx: GrossUpContext): GrossUpSolution
   const floor = workingYear?.floor
   let gross = net
   for (let pass = 0; pass < GROSS_UP_MAX_PASSES; pass++) {
-    const alloc = allocateWithdrawal(drawPool, gross, policy, bracketFillCeiling, customOrder)
+    // U12: with an inherited ledger the gross is funded paced-cash first, then the general allocation, then the
+    // last source ({@link inheritedSplit}); the year's inherited income is the paced amount, the booked income
+    // and the last-source draw. Absent ⇒ the literal allocation, byte-identical.
+    let alloc: BucketWithdrawals
+    let inheritedIncome: number | undefined
+    if (inherited === undefined) {
+      alloc = allocateWithdrawal(drawPool, gross, policy, bracketFillCeiling, customOrder)
+    } else {
+      const split = inheritedSplit(gross, inherited, drawPool, policy, bracketFillCeiling, customOrder)
+      alloc = split.alloc
+      inheritedIncome = inherited.paced + inherited.booked + split.tail
+    }
     // Cap-gains realization (M5): the taxable draw realizes a pro-rata share of embedded gain.
     // A down-market loss (basis > value) floors at 0 — never a negative gain feeding the tax or
     // provisional income (the §1211 loss offset is OUT-but-disclosed).
@@ -1669,7 +1736,11 @@ function solveGrossWithdrawal(net: number, ctx: GrossUpContext): GrossUpSolution
     // outside income (B, I) is never folded in here — it rides the floor below and stays OUT of the
     // returned MagiComponents (KTD6: the IRMAA override already carries pay + investment income, and
     // the KTD-9 feed (3) carries the clamped pension — folding them in would double-count).
-    const nonSSordinary = pretaxDistribution + conversion + ongoingTaxable
+    // U12: the inherited income is its own additive term, never folded into `rmd`.
+    const nonSSordinary =
+      inheritedIncome === undefined
+        ? pretaxDistribution + conversion + ongoingTaxable
+        : pretaxDistribution + conversion + ongoingTaxable + inheritedIncome
     let ssBenefitTaxable: number
     let nextGross: number
     if (floor === undefined) {
@@ -1700,6 +1771,8 @@ function solveGrossWithdrawal(net: number, ctx: GrossUpContext): GrossUpSolution
           realizedGain,
           ssBenefitTaxable,
           minLivingAge,
+          // U12: the inherited withdrawals' own state channel (KTD23), absent with no ledger.
+          ...(inheritedIncome !== undefined ? { inheritedDistribution: inheritedIncome } : {}),
         })
       }
     } else {
@@ -1716,6 +1789,7 @@ function solveGrossWithdrawal(net: number, ctx: GrossUpContext): GrossUpSolution
           ongoingTaxable,
           realizedGain,
           ssBenefitTaxable,
+          ...(inheritedIncome !== undefined ? { inheritedDistribution: inheritedIncome } : {}),
         })
       }
     }
@@ -2242,9 +2316,16 @@ export function runTaxAwareDecumulation(
     pretaxLedger = [...initialPretaxByPerson]
   }
 
+  // The Act 5 plan's U12: one ledger per inherited IRA (KTD21 to KTD25), each with its schedule and rows from the
+  // one producer (`inheritedRmd.ts`, where the calendar-to-row translation happens once). Needs tax on and the
+  // household (validateParams twins every throw here, so `simulate` returns the calm indeterminate instead).
+  const inheritedInput = taxInputs.inheritedLedgers
+  const ledgers: InheritedLedgerRun[] | undefined =
+    inheritedInput === undefined ? undefined : buildInheritedLedgers(inheritedInput, config, people, netWithdrawals.length)
+
   let buckets = initialBuckets
   let basis = initialTaxableBasis ?? 0
-  const total0 = totalAcrossBuckets(initialBuckets)
+  const total0 = portfolioTotal(initialBuckets, ledgers?.map((l) => l.balance))
   // Construct the initial state with the SAME formula simulate.ts uses (stock = w·P,
   // bond = (1−w)·P) so a collapsed-pool run is byte-identical to the spine's
   // runDecumulation — stepYear only reads the sum, but matching the construction makes
@@ -2318,7 +2399,9 @@ export function runTaxAwareDecumulation(
       (hsaLive && hsaOwnerPerson !== undefined) ||
       (yearC !== undefined && household !== undefined) ||
       (medicareOnsetSimYear !== undefined && household !== undefined) ||
-      (medicareExtrasMonthly !== undefined && household !== undefined)
+      (medicareExtrasMonthly !== undefined && household !== undefined) ||
+      // U12: an inherited ledger's heir-death exit reads the heir's canonical slot (the SIXTH consumer).
+      (ledgers !== undefined && household !== undefined)
     ) {
       alive = aliveCanonical(people, householdYears, t)
       const injected = householdYears[t]
@@ -2398,6 +2481,13 @@ export function runTaxAwareDecumulation(
     } else {
       rmd = regime ? rmdForYear(buckets.pretax, config, regime, t) : 0
     }
+    // U12: each inherited ledger's year, at the year's top beside `rmd`, from its own balance at the top (its
+    // prior December 31 balance). Keyed on the ledgers' presence, never on `rmdEnabled` (a minimum the law forces
+    // is not a switch). Absent ⇒ undefined, and every term below takes its literal pre-U12 expression.
+    const inheritedThisYear =
+      ledgers !== undefined && alive !== null && household !== undefined
+        ? inheritedYearTerms(ledgers, alive, household.startCalendarYear + t, t)
+        : undefined
 
     // Roth conversion (M5): clamp to feasibility AFTER reserving the non-convertible RMD, using the
     // prior-year-end pre-tax (gross-independent ⇒ constant inside the fixed point). Apply it to the
@@ -2717,6 +2807,7 @@ export function runTaxAwareDecumulation(
         // context's (household-granularity conservative); consumed ONLY inside the priced-state branch.
         minLivingAge: regime.minLivingAge,
         ...(workingYear !== undefined ? { workingYear } : {}),
+        ...(inheritedThisYear !== undefined ? { inherited: inheritedThisYear.draw } : {}),
       }
       const fundNet = (netTotal: number): GrossUpSolution => solveGrossWithdrawal(netTotal, grossUpCtx)
       let magiComponentsThisYear: MagiComponents
@@ -2800,8 +2891,18 @@ export function runTaxAwareDecumulation(
 
     // Per-bucket ledger: which buckets fund this withdrawal (consumed by the tax math). Allocated
     // against the CONVERSION-REDUCED drawPool, capped at what exists — exactly like the spine.
-    const totalBefore = totalAcrossBuckets(buckets) // === totalAcrossBuckets(drawPool)
-    const alloc = allocateWithdrawal(drawPool, grossWithdrawal, policy, bracketFillCeiling, customOrder)
+    // U12: the total counts each inherited ledger at the year's top (KTD22's one helper, `portfolioTotal`; with
+    // no ledger it is `totalAcrossBuckets` itself), and the settled gross splits through the SAME helper the
+    // gross-up's passes read: paced cash first, the general allocation, then the last source.
+    const totalBefore = portfolioTotal(buckets, inheritedThisYear?.top) // buckets: === totalAcrossBuckets(drawPool)
+    const inheritedSplitThisYear =
+      inheritedThisYear !== undefined
+        ? inheritedSplit(grossWithdrawal, inheritedThisYear.draw, drawPool, policy, bracketFillCeiling, customOrder)
+        : undefined
+    const alloc =
+      inheritedSplitThisYear !== undefined
+        ? inheritedSplitThisYear.alloc
+        : allocateWithdrawal(drawPool, grossWithdrawal, policy, bracketFillCeiling, customOrder)
     const drawn = alloc.taxable + alloc.pretax + alloc.roth
     // The pay check's probe-only draw observation (KTD20's pre-59½ count reads it): a checked year's
     // shortfall, its funded need, the converged gross, what the pre-tax bucket paid and what the HSA paid.
@@ -2870,11 +2971,20 @@ export function runTaxAwareDecumulation(
     // Gated on `hsaLive`, NEVER on the per-year balance: at hsa = 0 this branch does not exist, so
     // reduce-to-spine is untouched (the ledger and state totals are different float lineages, and an
     // ungated compare could disagree with stepYear's predicate by one ulp on a knife-edge path).
-    if (hsaLive && grossWithdrawal > generalDrawableTotal(drawPool)) {
+    // U12 (KTD22): the inherited ledgers are the year's last source, so with one riding the general pool counts
+    // everything they hold at the top after an exit — their paced cash funds the gross first, the rest above the
+    // pace funds what the general accounts cannot. Keyed on their presence.
+    if (
+      hsaLive &&
+      (inheritedThisYear !== undefined
+        ? grossWithdrawal > generalDrawableTotal(drawPool) + inheritedThisYear.draw.paced + inheritedThisYear.draw.tailRoom
+        : grossWithdrawal > generalDrawableTotal(drawPool))
+    ) {
       state = { stock: 0, bond: 0 }
       buckets = EMPTY_BUCKETS
       basis = 0
       if (pretaxLedger) pretaxLedger.fill(0)
+      if (ledgers) for (const l of ledgers) l.balance = 0
       depletionYear = t
       recordLedgerRow?.(true)
       break
@@ -2887,11 +2997,14 @@ export function runTaxAwareDecumulation(
     // #3): credited end-of-year, after the return step, `+ 0` exactly when nothing is contributed.
     // Build 2's left-over credit (site 1 of 4, KTD3) rides it too — never `contributionTotal` itself, which
     // also feeds the ACA empty-overlap throw — and a depleted year forfeits it with the deposits.
+    // U12: an inherited ledger left to someone else leaves the total in the year after the heir's death — an
+    // outflow beside the year's spending, never spending and never anyone's income (`+` only when one exits).
+    const inheritedExit = inheritedThisYear?.exit ?? 0
     const step = stepYear(
       state,
       rs,
       rb,
-      grossWithdrawal + hsaSpendThisYear,
+      inheritedExit > 0 ? grossWithdrawal + hsaSpendThisYear + inheritedExit : grossWithdrawal + hsaSpendThisYear,
       stockWeight,
       creditThisYear > 0 ? contributionTotal + creditThisYear : contributionTotal,
     )
@@ -2904,6 +3017,7 @@ export function runTaxAwareDecumulation(
       buckets = EMPTY_BUCKETS
       basis = 0
       if (pretaxLedger) pretaxLedger.fill(0)
+      if (ledgers) for (const l of ledgers) l.balance = 0
       depletionYear = t
       recordLedgerRow?.(true)
       break
@@ -2951,7 +3065,17 @@ export function runTaxAwareDecumulation(
     // contribution credited end-of-year the state total includes it, and a credit-inclusive
     // scale would SMEAR the contribution pro-rata across every bucket (asset-location) instead
     // of crediting its named destination below. At contribution = 0 the two are byte-identical.
-    const afterWithdrawal = totalBefore - drawn - hsaSpendThisYear
+    // U12: the inherited money that left this year — the exit, the paced cash the gross spent and the last-source
+    // draw; the paced cash beyond the gross moves to taxable and stays inside the total (KTD22).
+    const afterWithdrawal =
+      inheritedThisYear !== undefined && inheritedSplitThisYear !== undefined
+        ? totalBefore - drawn - hsaSpendThisYear - inheritedExit - inheritedSplitThisYear.spentFromPaced - inheritedSplitThisYear.tail
+        : totalBefore - drawn - hsaSpendThisYear
+    // The paced cash beyond the year's gross, moved to taxable at full basis (0 with no ledger; read only then).
+    const inheritedToTaxable =
+      inheritedThisYear !== undefined && inheritedSplitThisYear !== undefined
+        ? inheritedThisYear.draw.paced - inheritedSplitThisYear.spentFromPaced
+        : 0
     if (afterWithdrawal > 0) {
       const scale = step.growthOnlyTotal / afterWithdrawal
       probe?.growthScaled?.(t, scale)
@@ -2987,8 +3111,16 @@ export function runTaxAwareDecumulation(
         // C2 §2c (aggregate path): the pretax credit lands after the scale, at face value.
         pretaxPostScaled = (drawPool.pretax - alloc.pretax - forcedExcess) * scale + cPretaxTotal
       }
-      const taxablePost = drawPool.taxable - alloc.taxable + forcedExcess
+      const taxablePost =
+        inheritedToTaxable > 0
+          ? drawPool.taxable - alloc.taxable + forcedExcess + inheritedToTaxable
+          : drawPool.taxable - alloc.taxable + forcedExcess
       const rothPost = drawPool.roth - alloc.roth
+      // U12: each ledger keeps what it held at the top less its exit, its paced withdrawal and its share of the
+      // last-source draw, grown by the year's one shared factor (KTD22: no second line of growth arithmetic).
+      if (ledgers && inheritedThisYear && inheritedSplitThisYear) {
+        advanceInheritedLedgers(ledgers, inheritedThisYear, inheritedSplitThisYear.tail, scale)
+      }
       if (ledgerOut) {
         ledgerScale = scale
         ledgerRmdToTaxable = forcedExcess
@@ -3001,6 +3133,8 @@ export function runTaxAwareDecumulation(
       // contribution, UNSCALED), applied AFTER the pro-rata reduction — whose denominator
       // (`taxableValue` = the draw-time balance) correctly excludes the end-of-year arrival.
       basis = (taxableValue > 0 ? basis * (1 - alloc.taxable / taxableValue) : basis) + forcedExcess + cTaxable
+      // U12: the paced cash moved to taxable is already-taxed money, so it enters at FULL basis, like the RMD excess.
+      if (inheritedToTaxable > 0) basis += inheritedToTaxable
       // Build 2's left-over credit (site 2 of 4): after-tax pay, so it enters at FULL basis, after the
       // pro-rata reduction, exactly as a taxable deposit does.
       if (creditThisYear > 0) basis += creditThisYear
@@ -3032,6 +3166,8 @@ export function runTaxAwareDecumulation(
       // Build 2's left-over credit (site 4 of 4): stepYear credited it into the state too, so the fresh
       // buckets hold it in taxable at full basis — with or without a deposit this year.
       basis = creditThisYear > 0 ? cTaxable + creditThisYear : cTaxable
+      // U12: the fresh buckets hold only the year's inflows, so the inherited ledgers rebuild empty too.
+      if (ledgers) for (const l of ledgers) l.balance = 0
       if (pretaxLedger) {
         pretaxLedger.fill(0)
         // Dead-slot credits were already rejected loud at the rollover block above (C2 §7).
@@ -3062,5 +3198,143 @@ export function runTaxAwareDecumulation(
     totalMedicareCostReal,
     totalQualifiedHsaSpendReal,
     totalTaxPaidReal,
+    ...(ledgers ? { finalInherited: ledgers.reduce((acc, l) => acc + l.balance, 0) } : {}),
+  }
+}
+
+// =========================================================================
+// The inherited-IRA ledgers (the Act 5 plan's U12; KTD21 to KTD25)
+// =========================================================================
+
+/** One inherited IRA as the loop runs it: its facts, its heir, the producer's schedule and rows, and its balance
+ *  (mutated at each year end). */
+interface InheritedLedgerRun {
+  readonly facts: InheritedLedgerParams
+  readonly schedule: readonly InheritedYear[]
+  readonly rows: InheritedRows
+  readonly lawLastYear: number
+  balance: number
+}
+
+/** Build the run's ledgers. THROWS on any input `validateParams` refuses (the overlay's own backstop). */
+function buildInheritedLedgers(
+  input: readonly InheritedLedgerParams[],
+  config: TaxOverlayConfig,
+  people: readonly OverlayPerson[],
+  horizon: number,
+): InheritedLedgerRun[] {
+  if (!config.taxEnabled) {
+    throw new Error('[taxOverlay] an inherited IRA needs tax on — its withdrawals are taxed income (U12)')
+  }
+  const start = config.household.startCalendarYear
+  return input.map((facts, i) => {
+    if (!(Number.isFinite(facts.balance) && facts.balance >= 0)) {
+      throw new Error(`[taxOverlay] inherited IRA ${i}: the balance must be finite and at least 0 (insight 010)`)
+    }
+    for (const x of [facts.openYearFigure, facts.takenInOpenYear, facts.deathYearUntaken ?? 0]) {
+      if (!(Number.isFinite(x) && x >= 0)) throw new Error(`[taxOverlay] inherited IRA ${i}: every asked figure must be finite and at least 0`)
+    }
+    const heir = people[facts.heirIndex]
+    if (!Number.isInteger(facts.heirIndex) || heir === undefined) {
+      throw new Error(`[taxOverlay] inherited IRA ${i}: heirIndex ${facts.heirIndex} is not one of the household's people`)
+    }
+    if (people.length > 1 ? facts.leftTo === undefined : facts.leftTo !== undefined) {
+      throw new Error(`[taxOverlay] inherited IRA ${i}: who gets it if the heir dies first is required for a couple and absent for one person`)
+    }
+    const owner: InheritedAccountOwner = {
+      ownerBirthYear: facts.ownerBirthYear,
+      ...(facts.ownerBornFirstHalf !== undefined ? { ownerBornFirstHalf: facts.ownerBornFirstHalf } : {}),
+      ownerDeathYear: facts.ownerDeathYear,
+      ...(facts.ownerDiedBeforeApril1 !== undefined ? { ownerDiedBeforeApril1: facts.ownerDiedBeforeApril1 } : {}),
+      heirBirthYear: heir.birthYear,
+    }
+    const lawLastYear = inheritedLastYear(owner)
+    if (facts.openYear > lawLastYear) {
+      throw new Error(`[taxOverlay] inherited IRA ${i}: the asked year ${facts.openYear} is after the ten-year end ${lawLastYear}`)
+    }
+    if (facts.pace.kind === 'even-to-year' && !(Number.isInteger(facts.pace.lastYear) && facts.pace.lastYear >= facts.openYear && facts.pace.lastYear <= lawLastYear)) {
+      throw new Error(`[taxOverlay] inherited IRA ${i}: the chosen last year must fall from the asked year to the ten-year end`)
+    }
+    return {
+      facts,
+      schedule: inheritedSchedule(owner, start, horizon),
+      rows: inheritedRows(facts.openYear, facts.takenInOpenYear, facts.earlierWithdrawals, start, horizon),
+      lawLastYear,
+      balance: facts.balance,
+    }
+  })
+}
+
+/** One year's terms for the ledgers: each one's balance at the top, the year's summed draw terms, each one's paced
+ *  withdrawal and the room above it, and the summed exit. */
+interface InheritedYearTerms {
+  readonly top: readonly number[]
+  readonly paced: readonly number[]
+  readonly room: readonly number[]
+  readonly exitBy: readonly number[]
+  readonly exit: number
+  readonly draw: InheritedYearDraw
+}
+
+/**
+ * The ledgers' year at its top. A ledger left to someone else whose heir is no longer living EXITS (its whole
+ * balance leaves the total, nobody's income). Otherwise: a row before the open row books the custodian's
+ * reported withdrawal as income only; the open row books what already came out and pays out the asked figure
+ * still owed plus any untaken death-year amount (the whole balance in the ten-year end); a later row pays out the
+ * producer's minimum on the balance at the top — each through the pace (KTD21).
+ */
+function inheritedYearTerms(ledgers: readonly InheritedLedgerRun[], alive: readonly boolean[], calendarYear: number, t: number): InheritedYearTerms {
+  const top: number[] = []
+  const paced: number[] = []
+  const room: number[] = []
+  const exitBy: number[] = []
+  let booked = 0
+  for (const l of ledgers) {
+    const balance = l.balance
+    top.push(balance)
+    const f = l.facts
+    if (f.leftTo === 'someone-else' && alive[f.heirIndex] === false) {
+      exitBy.push(balance)
+      paced.push(0)
+      room.push(0)
+      continue
+    }
+    exitBy.push(0)
+    const { openRow, bookedByRow } = l.rows
+    if (t <= openRow) booked += bookedByRow[t] ?? 0
+    let w = 0
+    if (t >= openRow) {
+      const year = l.schedule[t]
+      if (year === undefined) throw new Error(`[taxOverlay] inherited IRA: no schedule entry for row ${t} — a defect`)
+      const required =
+        t === openRow
+          ? year.kind === 'last'
+            ? balance
+            : Math.max(0, f.openYearFigure - f.takenInOpenYear) + (f.deathYearUntaken ?? 0)
+          : inheritedMinimum(year, balance)
+      w = inheritedPacedWithdrawal(f.pace, balance, required, calendarYear, l.lawLastYear, t === openRow ? f.takenInOpenYear : 0)
+    }
+    paced.push(w)
+    room.push(balance - w)
+  }
+  const sum = (xs: readonly number[]) => xs.reduce((a, b) => a + b, 0)
+  return {
+    top,
+    paced,
+    room,
+    exitBy,
+    exit: sum(exitBy),
+    draw: { paced: sum(paced), booked, tailRoom: sum(room) },
+  }
+}
+
+/** Each ledger at the year end: its room after the paced withdrawal less its share of the last-source draw (in
+ *  proportion to that room, never more than it — KTD22), grown by the year's one shared factor. */
+function advanceInheritedLedgers(ledgers: InheritedLedgerRun[], year: InheritedYearTerms, tail: number, scale: number): void {
+  const roomSum = year.draw.tailRoom
+  for (let j = 0; j < ledgers.length; j++) {
+    const room = year.room[j] ?? 0
+    const share = tail <= 0 || roomSum <= 0 ? 0 : tail >= roomSum ? room : (tail * room) / roomSum
+    ledgers[j]!.balance = Math.max(0, room - share) * scale
   }
 }

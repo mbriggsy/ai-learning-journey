@@ -432,6 +432,76 @@ export interface IncomeParams {
   readonly incomeByPerson: readonly PersonIncomeStream[]
 }
 
+/** An inherited IRA's withdrawal pace (the Act 5 plan's KTD21): only what the law requires; even amounts over
+ *  the years left through the law's last year; or even amounts ending in a chosen earlier calendar year. Every
+ *  year takes at least the law's minimum and at most the balance. */
+export type InheritedPace =
+  | { readonly kind: 'law-minimum' }
+  | { readonly kind: 'even' }
+  | { readonly kind: 'even-to-year'; readonly lastYear: number }
+/** The pace kinds, the R19 membership vocabulary (`validateParams`). */
+export const INHERITED_PACE_KINDS = ['law-minimum', 'even', 'even-to-year'] as const satisfies readonly InheritedPace['kind'][]
+type _PaceKindsCover = InheritedPace['kind'] extends (typeof INHERITED_PACE_KINDS)[number] ? true : never
+const _paceKindsCovered: _PaceKindsCover = true
+void _paceKindsCovered
+
+/** Who gets an inherited IRA when the heir dies first (KTD22): the other member keeps its schedule and its
+ *  last year; someone else takes it out of the run in that year. */
+export const INHERITED_LEFT_TO = ['other-member', 'someone-else'] as const
+export type InheritedLeftTo = (typeof INHERITED_LEFT_TO)[number]
+
+/** One calendar year's withdrawal the custodian reported for a year before the asked year (KTD25). */
+export interface InheritedEarlierWithdrawal {
+  readonly calendarYear: number
+  readonly amount: number
+}
+
+/**
+ * One entered inherited traditional IRA, as the engine runs it (the Act 5 plan's U12; KTD21 to KTD25). Version 1's
+ * case only: a non-spouse heir who is not an eligible beneficiary, of an owner who died in 2020 or later (intake
+ * refuses every other case, KTD17). One per account, never pooled (26 CFR 1.408-8(e)).
+ *
+ * Its balance sits INSIDE the authoritative total (KTD22): it counts in `initialPortfolio` and the R19 sum gate
+ * beside the buckets, and grows by the year's one shared factor, but it is outside `AccountBuckets` and the
+ * withdrawal order, so no conversion, spending policy, owner RMD or first-death rollover can reach it. Each year it
+ * pays out its paced withdrawal, which counts toward the year's spending need first (any part beyond the need
+ * moves to taxable at full basis), and it is the year's last source when the general accounts run short.
+ *
+ * Every asked figure carries its calendar year (KTD25): the ledger takes its first paced withdrawal in the row of
+ * `openYear` (`openYear − startCalendarYear`). An earlier row (a plan aged past its build year) computes no
+ * minimum for a year already past and books the custodian's reported withdrawal as income only (its money is
+ * already in today's balances or spent); the same holds for what has already come out in `openYear`.
+ */
+export interface InheritedLedgerParams {
+  /** The dead owner's birth year. */
+  readonly ownerBirthYear: number
+  /** Born January to June: present only where the law draws its line by date (an owner born in 1948 or 1949). */
+  readonly ownerBornFirstHalf?: boolean
+  /** The dead owner's death year (2020 or later). */
+  readonly ownerDeathYear: number
+  /** Did the owner die before April 1? Present only when the death fell in the required-beginning year. */
+  readonly ownerDiedBeforeApril1?: boolean
+  /** The heir, an index into `people` (whose birth year the schedule reads). */
+  readonly heirIndex: number
+  /** The account's balance today — part of `initialPortfolio` (KTD22). */
+  readonly balance: number
+  /** The calendar year the asked figures belong to (KTD25). */
+  readonly openYear: number
+  /** That year's whole minimum: the custodian's figure, or the one computed from last December 31's balance. */
+  readonly openYearFigure: number
+  /** What has already come out in `openYear` (income in that row with no balance). */
+  readonly takenInOpenYear: number
+  /** The owner's own death-year minimum still untaken (KTD25; 54.4974-1(g)(3)): income from the ledger in
+   *  `openYear` beside that year's own minimum. Present only when the owner died the year before `openYear` on
+   *  or after the required beginning date. */
+  readonly deathYearUntaken?: number
+  /** The custodian's reported withdrawal for each calendar year from `startCalendarYear` to `openYear − 1`. */
+  readonly earlierWithdrawals: readonly InheritedEarlierWithdrawal[]
+  readonly pace: InheritedPace
+  /** Who gets it if the heir dies first — required for a couple, absent for one person. */
+  readonly leftTo?: InheritedLeftTo
+}
+
 /** The engine-side tax/accounts overlay input (U2). `taxEnabled` and `rmdEnabled` are INDEPENDENT
  *  switches (RMD is a forced-distribution mechanic, not a tax). `buckets` must sum to
  *  `initialPortfolio` (validated, R19); the >10yr-younger-spouse JLLS divisor (M6b·A) and the
@@ -571,6 +641,11 @@ export interface OverlayParams {
    *  IRMAA-MAGI all ride the single producer, KTD-1); the per-owner SURVIVOR variant is selected at the
    *  owner's sampled death (KTD-4/KTD-7). Income passes the date-sweep UN-truncated (Y-invariant, KTD-8a). */
   readonly income?: IncomeParams
+  // --- The Act 5 plan's U12: inherited IRAs (KTD21 to KTD25). ABSENT ⇒ the byte-identical engine
+  //     (presence-keyed, AE7): every term the ledgers add is structurally absent, never `+ 0`. ---
+  /** One ledger per entered inherited IRA. Requires `taxEnabled` (R19). Their balances count in
+   *  `initialPortfolio` beside `buckets` (the R19 sum gate reads both). */
+  readonly inheritedIras?: readonly InheritedLedgerParams[]
 }
 
 // ---------------------------------------------------------------------------
@@ -1050,9 +1125,13 @@ export interface TaxAwareDistribution {
    *  concentrates in the pre-65 ACA years and may barely move the portfolio median. */
   readonly lifetimeNetPremiumReal: readonly number[]
   /** Σ Medicare cost actually paid across the path's funded years (real $; base Part B + IRMAA +
-   *  the Part D / Medigap / MA extras, per enrolled person — `taxOverlay.ts:2922`; P3·U11), an
+   *  the Part D / Medigap / MA extras, per enrolled person — `taxOverlay.ts:3036`; P3·U11), an
    *  addend of the pay-less-tax all-in cost. Same accrual rule as its siblings. */
   readonly lifetimeMedicareCostReal: readonly number[]
+  /** The inherited IRAs' summed balance at the path's horizon end (real $; the Act 5 plan's U12) — counted
+   *  at the heirs' bracket in the after-tax bequest. PRESENT iff the run carried inherited ledgers
+   *  (presence-keyed: absent ⇒ the byte-identical shape). */
+  readonly terminalInheritedReal?: readonly number[]
 }
 
 /** One x-grid sample of the per-year portfolio-value percentile fan (the U6/U7 confidence

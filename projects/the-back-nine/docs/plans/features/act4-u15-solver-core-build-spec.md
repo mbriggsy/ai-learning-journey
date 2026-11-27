@@ -36,7 +36,7 @@ recommendation is validated" while proving only that SOME household passed —
 `mintedOver` bound no household and `RankingStabilityReport` carried counts/seeds only.
 U14's single in-line call site made that harmless; U15's solve entry was the second consumer
 being born (insight 020's shape). Both shapes carry a `fingerprint` field today
-(oracleToken.ts:258-269, rankingStability.ts:108) precisely because the veto fired.
+(oracleToken.ts:258-269, rankingStability.ts:113) precisely because the veto fired.
 
 1. **The COMPLETE run-derived fingerprint.** The pure `solverRunFingerprint(params,
    candidates, ranking, { seedA, tieTolerance })` lives in
@@ -56,7 +56,7 @@ being born (insight 020's shape). Both shapes carry a `fingerprint` field today
    NaN tolerance admits every candidate to the survival-top set, so it is refused before any
    identity is computed.
    **NOT `consumedConstantEntries`** — red-team-falsified as HOUSEHOLD-BLIND
-   (consumedConstants.ts:93-146 derives from overlay flags alone; two different households
+   (consumedConstants.ts:94-148 derives from overlay flags alone; two different households
    in one state fingerprint identically; the goal is not a constant at all).
 2. **Both reports carry it; the solve entry refuses a mismatch.** The fingerprint joins
    `mintedOver` AND `RankingStabilityReport`; `solve()` refuses a token/report whose

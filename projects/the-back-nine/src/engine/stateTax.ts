@@ -106,6 +106,12 @@ export interface StateTaxYearContext {
    *  OUT (the constants note's caveat). FL is the structural 0. The CALLER owns the subtraction
    *  (`taxOverlay.workingYearStateCharge`) — this function only prices the base it is handed. */
   readonly clampedOrdinaryBase?: number
+  /** An inherited IRA's withdrawals this pass (the Act 5 plan's U12/KTD23): the paced amount, the last-source
+   *  draw above it and any income the ledger books with no balance. Their OWN channel, priced by the profile's
+   *  `inheritedDistributionTreatment` (NC taxes them as ordinary income, PA exempts them at any age, FL is the
+   *  structural 0) — never `pretaxDistribution` (PA's 59½ gate) or `ongoingTaxable` (PA's flat base).
+   *  PRESENCE-keyed: absent ⇒ the literal base without it. */
+  readonly inheritedDistribution?: number
 }
 
 /** How much of the clamped working year's outside ordinary income enters the state's base, by its
@@ -176,7 +182,11 @@ export function stateIncomeTax(ctx: StateTaxYearContext): number {
     ctx.ongoingTaxable +
     // The working-year floor's outside income (KTD7) — `+ 0` exactly when absent or ignored by the
     // base system, so every pre-floor call and every PA / FL call prices the literal pre-floor base.
-    (ctx.clampedOrdinaryBase === undefined ? 0 : includeClampedBase(ctx.clampedOrdinaryBase, profile.baseSystem))
+    (ctx.clampedOrdinaryBase === undefined ? 0 : includeClampedBase(ctx.clampedOrdinaryBase, profile.baseSystem)) +
+    // An inherited IRA's withdrawals (U12) on their own channel — `+ 0` exactly when no ledger rides.
+    (ctx.inheritedDistribution === undefined
+      ? 0
+      : includeByTreatment(ctx.inheritedDistribution, profile.inheritedDistributionTreatment, qualified))
   // The statute's deduction is a FROZEN NOMINAL figure (NC: no COLA; PA: none at all), so in the
   // engine's real dollars it shrinks every year — deflated by the ONE price index for this CALENDAR
   // year (identity at the anchor, so year 0 is the statute figure). Subtracting it flat would index

@@ -50,6 +50,11 @@ export function decisionSurfaceIdentical(a: Distribution, b: Distribution): bool
   const tb = b.taxAware
   if ((ta === undefined) !== (tb === undefined)) return false
   if (ta === undefined || tb === undefined) return true
+  // The Act 5 plan's U12: the inherited terminal is ranked (the after-tax bequest reads it), so it is compared too.
+  const ia = ta.terminalInheritedReal
+  const ib = tb.terminalInheritedReal
+  if ((ia === undefined) !== (ib === undefined)) return false
+  if (ia !== undefined && ib !== undefined && !vec(ia, ib)) return false
   return (
     vec(ta.lifetimeTaxPaidReal, tb.lifetimeTaxPaidReal) &&
     vec(ta.terminalTaxableReal, tb.terminalTaxableReal) &&
@@ -120,12 +125,12 @@ export interface RankingStabilityReport {
  *  (`decisionSurfaceIdentical`). The criterion is whether the varied candidate's OWN surface moves —
  *  never whether the pool has room for the dollars — and two disjoint routes are known, so any
  *  sentence about the class must cover both: (i) CLAMP-inert — both arms clamp to the same post-RMD
- *  pre-tax headroom, `min(planned, pretax − rmd)` (`taxOverlay.ts:2407`): a pretax-0 world, or a rail
+ *  pre-tax headroom, `min(planned, pretax − rmd)` (`taxOverlay.ts:2497`): a pretax-0 world, or a rail
  *  amount sitting exactly on the headroom; (ii) EXHAUSTED-in-window — the household depletes inside
  *  the conversion window, so every recorded vector is identically zero whatever is converted:
  *  `?seed=failing` (a $60k IRA under a ~$72k year-one draw) converts $50,268 and its $51,268 variant
  *  UNCLAMPED inside the pool and still moves nothing, because every path depletes in year 0 and the
- *  depletion break (`taxOverlay.ts:2903`) precedes the year's tax accrual (`:2926`) — terminals,
+ *  depletion break (`taxOverlay.ts:3016`) precedes the year's tax accrual (`:3040`) — terminals,
  *  depletion years, lifetime tax and Medicare cost are all 0 for every amount from $0 to $200k
  *  (probed 2026-09-04). The bin is verdict-blind: a $900k household with pretax 0 reaches it by
  *  route (i) (solveEntry.test.ts) and a failing household whose surface still responds never does.

@@ -123,6 +123,68 @@ export function inheritedSchedule(o: InheritedAccountOwner, startCalendarYear: n
   return Array.from({ length: horizonYears }, (_, t) => inheritedYear(o, startCalendarYear + t))
 }
 
+/** The ledger's rows (KTD25), translated here once: the row the asked figures open at, and the income with no balance
+ *  each row books (an earlier row's reported withdrawal; the open row's amount already out). */
+export interface InheritedRows {
+  readonly openRow: number
+  readonly bookedByRow: readonly number[]
+}
+
+/** Translate the asked year and the custodian's earlier withdrawals to simulation rows. THROWS on a row outside
+ *  `[0, horizonYears)`, a duplicate year, an earlier withdrawal not before the asked year, or a non-finite or
+ *  negative amount (validateParams twins each). */
+export function inheritedRows(
+  openYear: number,
+  takenInOpenYear: number,
+  earlier: readonly { readonly calendarYear: number; readonly amount: number }[],
+  startCalendarYear: number,
+  horizonYears: number,
+): InheritedRows {
+  const okDollar = (x: number) => Number.isFinite(x) && x >= 0
+  if (!Number.isInteger(openYear)) throw new Error(`inheritedRmd: openYear must be a whole year (got ${openYear})`)
+  const openRow = openYear - startCalendarYear
+  if (openRow < 0 || openRow >= horizonYears) {
+    throw new Error(`inheritedRmd: the asked year ${openYear} is outside the plan's years ${startCalendarYear} to ${startCalendarYear + horizonYears - 1}`)
+  }
+  if (!okDollar(takenInOpenYear)) throw new Error(`inheritedRmd: takenInOpenYear must be finite and at least 0 (got ${takenInOpenYear})`)
+  const bookedByRow = new Array<number>(openRow + 1).fill(0)
+  const seen = new Set<number>()
+  for (const e of earlier) {
+    const row = e.calendarYear - startCalendarYear
+    if (!Number.isInteger(e.calendarYear) || row < 0 || row >= openRow) {
+      throw new Error(`inheritedRmd: an earlier withdrawal's year ${e.calendarYear} is not a plan year before the asked year ${openYear}`)
+    }
+    if (seen.has(row)) throw new Error(`inheritedRmd: two earlier withdrawals for ${e.calendarYear}`)
+    if (!okDollar(e.amount)) throw new Error(`inheritedRmd: an earlier withdrawal must be finite and at least 0 (got ${e.amount})`)
+    seen.add(row)
+    bookedByRow[row] = e.amount
+  }
+  bookedByRow[openRow] = takenInOpenYear
+  return { openRow, bookedByRow }
+}
+
+/**
+ * The year's paced withdrawal (KTD21) from the balance at the year's top: at least `required`, at most the balance.
+ * "Even amounts" divides the year's whole share over the years left, this year counted, through `endYear` (the law's
+ * last year, or the household's chosen one), and that year takes everything left. `alreadyOut` is what came out
+ * earlier this year (the open row's amount already out): the share counts it, so the year's total is the share.
+ */
+export function inheritedPacedWithdrawal(
+  pace: { readonly kind: 'law-minimum' } | { readonly kind: 'even' } | { readonly kind: 'even-to-year'; readonly lastYear: number },
+  balanceAtTop: number,
+  required: number,
+  calendarYear: number,
+  lawLastYear: number,
+  alreadyOut: number,
+): number {
+  const floor = Math.min(balanceAtTop, required)
+  if (pace.kind === 'law-minimum') return floor
+  const endYear = pace.kind === 'even' ? lawLastYear : pace.lastYear
+  if (calendarYear >= endYear) return balanceAtTop
+  const share = (balanceAtTop + alreadyOut) / (endYear - calendarYear + 1) - alreadyOut
+  return Math.min(balanceAtTop, Math.max(floor, share))
+}
+
 /**
  * The year's required withdrawal from the ledger's balance at the year's top (its prior December 31 balance): the
  * balance over the divisor; the whole balance in the last year, and wherever the stepped-down divisor is at or below 1,

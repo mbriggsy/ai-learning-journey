@@ -71,7 +71,8 @@ const NOT_RUN_CONSUMED: ReadonlySet<string> = new Set([
  * Family rules (each refined per-entry where the run's flags select within a family):
  *  - `tax.*` — consumed iff the tax overlay is ON (`overlay.taxEnabled`).
  *  - `state.*` — consumed iff `overlay.retirementState` is a PRICED state; only that state's
- *    entries (key prefix `state.<code>`), never a sibling state's.
+ *    entries (key prefix `state.<code>`), never a sibling state's. A state's inherited-IRA treatment
+ *    (`state.<code>InheritedDistribution`, the Act 5 plan's U12) requires the run to carry an inherited IRA.
  *  - `health.*` — consumed iff `overlay.healthcareEnabled`; the applicable-% table follows the
  *    run's regime flag (`enhancedSubsidies` selects the enhanced table, else the statutory
  *    cliff table — one regime per run); `medicareExtrasTypical` requires the priced extras
@@ -110,7 +111,8 @@ export function consumedConstantEntries(params: SimulationParams): readonly Cons
 
   const state = o?.retirementState
   if (state !== undefined && isPricedState(state)) {
-    includeFamily(`state.${state.toLowerCase()}`)
+    const inheritedRides = o?.inheritedIras !== undefined
+    includeFamily(`state.${state.toLowerCase()}`, (key) => !key.endsWith('InheritedDistribution') || inheritedRides)
   }
 
   if (o?.healthcareEnabled === true) {

@@ -95,6 +95,18 @@ describe('consumedConstantEntries — the derivation is the run, not the registr
     expect(keys.some((k) => k.startsWith('state.fl'))).toBe(false)
   })
 
+  it('a state’s inherited-IRA treatment is consumed only by a run carrying an inherited IRA (U12)', () => {
+    const ledger = {
+      ownerBirthYear: 1945, ownerDeathYear: 2023, heirIndex: 0, balance: 0, openYear: 2026, openYearFigure: 0,
+      takenInOpenYear: 0, earlierWithdrawals: [], pace: { kind: 'law-minimum' as const },
+    }
+    for (const state of ['NC', 'PA'] as const) {
+      const key = `state.${state.toLowerCase()}InheritedDistribution`
+      expect(keysOf(makeParams({ overlay: { ...baseOverlay, retirementState: state } }))).not.toContain(key)
+      expect(keysOf(makeParams({ overlay: { ...baseOverlay, retirementState: state, inheritedIras: [ledger] } }))).toContain(key)
+    }
+  })
+
   it("an 'elsewhere' / unpriced household consumes NO state entries (the disclosed-out posture)", () => {
     const keys = keysOf(makeParams({ overlay: { ...baseOverlay, retirementState: 'elsewhere' } }))
     expect(keys.some((k) => k.startsWith('state.'))).toBe(false)

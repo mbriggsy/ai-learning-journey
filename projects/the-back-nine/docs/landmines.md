@@ -582,6 +582,24 @@ said squeaky clears `temp/` UNCONDITIONALLY; its step 4 now deletes only the clo
   ACTION ITEMS handle below the frame by section 4.0's landed-what-if rule (`assertRc17Frame`'s `handleMayFollow`; the
   arm proves the handle reachable). A new line in that chart's notes column breaks the caveat; its six figures print
   at two decimals because three ("~$1.184mm") met their neighbour at that width.
+- **(b9-7, 11-27) Read a sticky-held table's offsets at rest.** A held (sticky) cell's `offsetLeft` includes its stuck
+  offset once the frame has scrolled, so a scroll target worked out after an earlier scroll lands short: the U13
+  group-name arm's first version measured the second group still wholly off the frame's right. Set `scrollLeft = 0`
+  and wait two frames before reading (`groupNamesHalfUnder` in `e2e/rc-screens.spec.ts`).
+- **(b9-7, 11-27) A flex item's own client rects are ONE box however many lines it wraps to.** The top bar's name spans
+  sit in a `flex-col` paragraph, so `span.getClientRects().length` read 1 under the bar that broke each name into five
+  lines. Count lines on a Range over the text (distinct tops), as RC2's phone names arm does.
+- **(b9-7, 11-27) Cash Flows → Accounts' table switcher stands outside `[data-cash-flows-controls]`** (only the market
+  and plan selects are inside): reach it by role and name, `copy.cashFlowsAccountsLabel`, on the page.
+- **(b9-7, 11-27) The Highcharts text audit fails a legend item paged past the chart's edge but reads no SVG clip:** a
+  paged legend ("1/2") cuts its last visible row in half and that row passes. Assert the pager hidden
+  (`.highcharts-legend-navigation`; Highcharts hides it once a legend stops overflowing, never removes it).
+- **(b9-7, 11-27) A source edit during a live look or fit run reloads the page under test.** A mid-edit syntax slip in
+  `cashFlowsView.ts` (Vite's transform error) reloaded the page six minutes into a Tax Strategies solve. Hold edits until
+  the run ends, or stop it, kill its `vite` on 4190 and run it again clean.
+- **(b9-7, 11-27) `?seed=inherited` holds Tax Strategies on both goals** (a converting winner over a non-converting
+  runner-up: the shape guard), so the withdrawal stacks never draw on it and no look or arm has seen them with the
+  inherited source. A look at those stacks needs a seed that solves to a winner.
 
 ## The mutation harness
 

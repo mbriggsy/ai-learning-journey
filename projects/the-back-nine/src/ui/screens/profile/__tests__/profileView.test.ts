@@ -160,10 +160,10 @@ describe('Net Worth', () => {
   // `ACCOUNT_KINDS` reds the first pin until Net Worth decides it, and the second until Savings does: Net Worth holds
   // every account, Savings only a kind that takes deposits (gap 3's inherited IRA will sit on the first list alone).
   const kindsOf = (add: AddMenuView) => leaves(add).map((t) => (t.kind === 'new-account' ? t.accountKind : null))
-  it('the Add account menu offers every account kind exactly once, under the four tax treatments; read-only has none', () => {
+  it('the Add account menu offers every account kind exactly once, under the four tax treatments, but the inherited IRA (U13 hold: its own entry lands with its drawer’s questions); read-only has none', () => {
     const add = netWorthView(retired, undefined, false).add!
     expect(add.items.map((i) => i.label)).toEqual([copy.investBucketPretax, copy.investBucketRoth, copy.investBucketTaxable, copy.investBucketHsa])
-    expect([...kindsOf(add)].sort()).toEqual([...ACCOUNT_KINDS].sort())
+    expect([...kindsOf(add)].sort()).toEqual(ACCOUNT_KINDS.filter((k) => k !== 'inherited-ira').sort())
     expect(netWorthView(retired, undefined, true).add).toBeNull()
   })
 

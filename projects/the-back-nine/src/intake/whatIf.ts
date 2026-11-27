@@ -46,6 +46,8 @@ import type {
   WhatIfLeverV6,
 } from '@shared/model'
 import { isDateRoute, isWorkingOwner } from './intakeMap'
+import { inheritedOwnerOf, isInheritedAccount } from './inheritedIra'
+import { inheritedLastYear } from '@engine/inheritedRmd'
 import { accountField, isEmployerPlanKind, takesDeposits, validateDraft } from './sanity'
 
 // ---------------------------------------------------------------------------
@@ -121,6 +123,8 @@ export type WhatIfRefusal =
   | { readonly kind: 'person-gone'; readonly personIndex: number }
   | { readonly kind: 'claim-age-already-claimed'; readonly personIndex: number }
   | { readonly kind: 'claim-age-in-the-past'; readonly personIndex: number; readonly claimAge: number }
+  | { readonly kind: 'pace-not-inherited'; readonly accountId: string }
+  | { readonly kind: 'pace-year-outside'; readonly accountId: string; readonly lastYear: number }
 
 /** An applied bundle: the copy, and the stop-year lever's offset (absent with no stop lever: the run uses the plan's
  *  own base offset). */
@@ -153,6 +157,7 @@ const TARGET: { readonly [K in WhatIfLeverKind]: (lever: LeverOf<K>) => string }
   'withdrawal-order': () => 'household',
   'claim-age': (l) => `person:${l.personIndex}`,
   'aca-subsidy': () => 'household',
+  'inherited-pace': (l) => `account:${l.accountId}`,
 }
 
 const ARMS: { readonly [K in WhatIfLeverKind]: Arm<K> } = {
@@ -249,6 +254,24 @@ const ARMS: { readonly [K in WhatIfLeverKind]: Arm<K> } = {
   },
   'aca-subsidy': (w, l) => {
     w.draft = withEnhancedSubsidies(w.draft, l.enhanced)
+    return null
+  },
+  // Schema version 7 (U13; U17's tray offers it): the pace on the named inherited IRA's facts, refused by name where the
+  // account is gone, is not an inherited IRA, or the chosen last year falls outside the asked year to the law's last.
+  'inherited-pace': (w, l) => {
+    const at = w.draft.enteredAccounts.findIndex((a) => a.id === l.accountId)
+    if (at === -1) return { kind: 'account-gone', accountId: l.accountId }
+    const account = w.draft.enteredAccounts[at]!
+    if (!isInheritedAccount(account)) return { kind: 'pace-not-inherited', accountId: l.accountId }
+    if (l.pace.kind === 'even-to-year') {
+      const owner = inheritedOwnerOf(w.draft, account)
+      const last = owner === undefined ? undefined : inheritedLastYear(owner)
+      if (last === undefined || l.pace.lastYear < account.inherited.askedYear || l.pace.lastYear > last) {
+        return { kind: 'pace-year-outside', accountId: l.accountId, lastYear: l.pace.lastYear }
+      }
+    }
+    const next: EnteredAccount = { ...account, inherited: { ...account.inherited, pace: l.pace } }
+    w.draft = { ...w.draft, enteredAccounts: w.draft.enteredAccounts.map((a, i) => (i === at ? next : a)) }
     return null
   },
 }

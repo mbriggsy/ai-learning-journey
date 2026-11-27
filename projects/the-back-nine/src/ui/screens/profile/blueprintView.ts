@@ -214,10 +214,13 @@ const TREATMENT_LEGEND: Readonly<Record<Treatment, LegendItem>> = {
   roth: { id: 'roth', label: copy.investBucketRoth, tone: 'green' },
   taxable: { id: 'taxable', label: copy.investBucketTaxable, tone: 'blue' },
   hsa: { id: 'hsa', label: copy.investBucketHsa, tone: 'sky' },
+  // The inherited IRA's tile names its kind in words (U13); slice 2 settles its tone with the legend below.
+  inherited: { id: 'inherited', label: copy.kindInheritedIra, tone: 'coral' },
 }
 /** The legend's order on the page: the table's own order, so a treatment named there is drawn (never a hand list beside
  *  it that could leave one out, KTD20). */
-const TREATMENTS: readonly LegendItem[] = Object.values(TREATMENT_LEGEND)
+// U13 HOLD (the inherited IRA, schema version 7): the legend does not list the inherited treatment yet. U13 slice 2 gives it its look (a pattern of its own, never hatch, and a hue measured in `RC_PAIRS`) and lifts this exclusion; until then no household can hold one (no drawer offers the kind and no seed holds one), and slice 2 must land before the drawer does.
+const TREATMENTS: readonly LegendItem[] = Object.values(TREATMENT_LEGEND).filter((t) => t.id !== 'inherited')
 
 function netWorthBody(d: ScenarioDraft): BlueprintBody {
   return {
@@ -469,7 +472,7 @@ function addFor(tab: BlueprintTab, d: ScenarioDraft, readOnly: boolean, agedBala
     label: copy.blueprintAdd,
     items: [
       { id: 'income', label: copy.blueprintAddIncome, items: INCOME_TYPES.map((type) => ({ id: type, label: incomeTypeLabel(type), target: { kind: 'new-income', type } as const })) },
-      { id: 'account', label: copy.blueprintAddAccount, items: ACCOUNT_KINDS.map((k) => ({ id: k, label: kindLabel(k), target: { kind: 'new-account', accountKind: k } as const })) },
+      { id: 'account', label: copy.blueprintAddAccount, items: ACCOUNT_KINDS.filter((k) => k !== 'inherited-ira').map((k) => ({ id: k, label: kindLabel(k), target: { kind: 'new-account', accountKind: k } as const })) }, // U13 HOLD: the inherited IRA's own entry comes with its drawer's questions
     ],
   }
 }

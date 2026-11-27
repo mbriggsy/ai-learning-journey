@@ -13,6 +13,7 @@ const KIND_LABELS: Readonly<Record<AccountKind, CopyKey>> = {
   'roth-ira': 'kindRothIra',
   brokerage: 'kindBrokerage',
   hsa: 'kindHsa',
+  'inherited-ira': 'kindInheritedIra',
 }
 
 export const kindLabel = (kind: AccountKind): string => copy[KIND_LABELS[kind]]

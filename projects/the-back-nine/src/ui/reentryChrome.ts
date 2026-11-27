@@ -84,7 +84,7 @@ export interface ReentryView {
   readonly elapsedLine: string | null
 }
 
-/** Each grouping's read-back label, in the read-back's order (pre-tax, Roth, taxable, HSA): the rows walk these keys in
+/** Each grouping's read-back label, in the read-back's order (pre-tax, Roth, taxable, HSA, inherited IRAs): the rows walk these keys in
  *  this order. Keyed by the engine's grouping vocabulary, so a grouping added to `KIND_BUCKETS` fails to compile here
  *  until it is named (the Act 5 plan's KTD20; the hand-typed list this replaced would have left its balances unread). */
 const BUCKET_LABEL_KEY: Readonly<Record<KindBucket, CopyKey>> = {
@@ -92,6 +92,7 @@ const BUCKET_LABEL_KEY: Readonly<Record<KindBucket, CopyKey>> = {
   roth: 'reentryBucketRoth',
   taxable: 'reentryBucketTaxable',
   hsa: 'reentryBucketHsa',
+  inherited: 'reentryBucketInherited',
 }
 const READBACK_ORDER = Object.keys(BUCKET_LABEL_KEY) as KindBucket[]
 
@@ -201,6 +202,7 @@ export function composeReentry(
     roth: 0,
     taxable: 0,
     hsa: 0,
+    inherited: 0,
   }
   for (const a of scenario.enteredAccounts) sums[KIND_TO_BUCKET[a.kind]] += a.valueToday
   const balanceRows = READBACK_ORDER.flatMap((bucket) =>

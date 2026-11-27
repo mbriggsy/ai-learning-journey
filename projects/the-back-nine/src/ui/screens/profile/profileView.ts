@@ -160,8 +160,8 @@ const STATE_LABEL: Readonly<Record<RetirementState, CopyKey>> = {
 }
 export const stateLabel = (s: RetirementState): string => copy[STATE_LABEL[s]]
 
-/** B9's four tax treatments, as the Investment pages name them. */
-export type Treatment = 'pretax' | 'roth' | 'taxable' | 'hsa'
+/** B9's tax treatments, as the Investment pages name them: the four, and the inherited IRA's own (U13, outside them). */
+export type Treatment = 'pretax' | 'roth' | 'taxable' | 'hsa' | 'inherited'
 
 /** Each account kind's treatment. Exhaustive, so a new kind fails to compile here until its treatment is decided (the
  *  Act 5 plan's KTD20, insight 147; the if-chain this replaced filed any unnamed kind as "Pre-tax"). Its own table, not
@@ -174,6 +174,7 @@ const KIND_TREATMENT: Readonly<Record<AccountKind, Treatment>> = {
   'roth-ira': 'roth',
   brokerage: 'taxable',
   hsa: 'hsa',
+  'inherited-ira': 'inherited',
 }
 
 const TREATMENT_WORDS: Readonly<Record<Treatment, string>> = {
@@ -181,6 +182,7 @@ const TREATMENT_WORDS: Readonly<Record<Treatment, string>> = {
   roth: copy.investBucketRoth,
   taxable: copy.investBucketTaxable,
   hsa: copy.investBucketHsa,
+  inherited: copy.kindInheritedIra,
 }
 
 /** An account kind's tax treatment, by id (Blueprint keys its legend on it). */

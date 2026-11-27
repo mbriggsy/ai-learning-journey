@@ -797,8 +797,8 @@ describe('the schema-v4, -v5 and -v6 bumps — a newer plan is refused before an
     if (!minted.ready) throw new Error(minted.detail)
     expect((await session.save(minted.scenario)).ok).toBe(true)
     const raw = await diskPlaintext(db, PASSPHRASE)
-    // The typed literal, read raw (insight 151): the bytes a version-6 build writes (5 until the schema-v6 bump).
-    expect(raw.schemaVersion).toBe(6)
+    // The typed literal, read raw (insight 151): the bytes a version-7 build writes (6 until the schema-v7 bump).
+    expect(raw.schemaVersion).toBe(7)
     expect(raw.schemaVersion).toBe(CURRENT_SCHEMA_VERSION)
     expect('workingYearLeftOver' in raw, 'an unanswered plan is written with no answer key').toBe(false)
     await session.lock()
@@ -806,7 +806,7 @@ describe('the schema-v4, -v5 and -v6 bumps — a newer plan is refused before an
 
   // The workbench plan's U9: the schema-v6 bump's own bytes. The version-5 plan is MADE UP (a dev seed's save with its
   // ids stripped, written at label 5 — firstSave encodes it as given), never a real plan.
-  it('THE VERSION-6 BYTES: a version-5 plan through the real path (unlock → draftFromScenario → scenarioFromDraft → save), read raw, holds label 6, an id on every account and budget line, and NO other new key', async () => {
+  it('THE VERSION-6 BYTES: a version-5 plan through the real path (unlock → draftFromScenario → scenarioFromDraft → save), read raw, holds the current label (7 since the schema-v7 bump; 6 at that bump), an id on every account and budget line, and NO other new key', async () => {
     const seeded = scenarioFromDraft(DEV_SEEDS.budget)
     if (!seeded.ready) throw new Error(seeded.detail)
     const v5 = {
@@ -829,7 +829,7 @@ describe('the schema-v4, -v5 and -v6 bumps — a newer plan is refused before an
     const raw = await diskPlaintext(db, PASSPHRASE)
     const before = v5 as unknown as Record<string, unknown>
     // The typed literal, read raw (insight 151).
-    expect(raw.schemaVersion).toBe(6)
+    expect(raw.schemaVersion).toBe(7)
     // An id on every account and line — and each entry is otherwise the version-5 entry, key for key.
     const rawAccounts = raw.enteredAccounts as Record<string, unknown>[]
     const rawLines = raw.budget as Record<string, unknown>[]

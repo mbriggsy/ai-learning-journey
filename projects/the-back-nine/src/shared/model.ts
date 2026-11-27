@@ -1963,17 +1963,22 @@ export interface ScenarioV2 {
 // optional field, the left-over answer (`workingYearLeftOver`), and relabels the shape 5: a
 // version-4 copy ignoring a "saved" answer would drop a left over the version-5 copy credits
 // (§7.3's rule (a)), so it must refuse the plan. The schema-v6 bump (the workbench plan's KTD16,
-// U9 — gap 2's saved shapes) adds three OPTIONAL shapes and relabels the shape 6
-// ({@link CURRENT_SCHEMA_VERSION}): a stable id on each entered account and budget line, the kept
-// what-ifs list (`keptWhatIfs`), and the saved recommendation's Roth conversion plan. A version-5
-// copy's account editor rebuilds an account without its id and its Add mints none, so one save
-// there would strip the targets every kept what-if names (§7.3's rule (c)) — it must refuse the
-// plan. Versions 3 to 5 carry every field version 6 requires and never the new ones; the codec
-// relabels 3 → 4 → 5 → 6 at decode, forever (`scenarioCodec.ts`). The sub-types keep their `V3`
+// U9 — gap 2's saved shapes) adds three OPTIONAL shapes and relabels the shape 6: a stable id on
+// each entered account and budget line, the kept what-ifs list (`keptWhatIfs`), and the saved
+// recommendation's Roth conversion plan. A version-5 copy's account editor rebuilds an account
+// without its id and its Add mints none, so one save there would strip the targets every kept
+// what-if names (§7.3's rule (c)) — it must refuse the plan. The schema-v7 bump (the workbench
+// plan's U13 — gap 3's saved shapes) adds three NESTED shapes and relabels the shape 7
+// ({@link CURRENT_SCHEMA_VERSION}): the `inherited-ira` account kind, the account's `inherited`
+// facts, and the `inherited-pace` lever kind. A version-6 copy refuses the new kind and lever kind
+// as damaged, and its account editor rebuilds an account from its form, dropping the nested facts
+// (§7.3's rules (a) to (c)) — it must refuse the plan. Versions 3 to 6 carry every field version 7
+// requires and never the new ones; the codec relabels 3 → 4 → 5 → 6 → 7 at decode, forever
+// (`scenarioCodec.ts`). The sub-types keep their `V3`
 // names (`PersonInputsV3`, `SavedRecommendationV3`, `WorkingYearCostV3`, the `*VintageV3` stamps,
 // `SCENARIO_V3_FIELDS`, the codec's `checkV3Fields`): they name this field GENERATION, which
-// versions 4 to 6 carry; a shape a later version added is named for its version
-// ({@link WorkingYearLeftOverV5}, {@link KeptWhatIfV6}). When a future field must bump the version:
+// versions 4 to 7 carry; a shape a later version added is named for its version
+// ({@link WorkingYearLeftOverV5}, {@link KeptWhatIfV6}, {@link InheritedIraV7}). When a future field must bump the version:
 // `docs/architecture.md` §7.3.
 //
 // What follows is the shape's history as first written (dated, kept as written):
@@ -2030,8 +2035,10 @@ export interface PersonInputsV3 extends Omit<PersonInputs, 'retirementAge'> {
 
 /** Account types the intake offers. The kind→bucket map is intakeMap's
  *  (`401k`/`403b`/`traditional-ira` → pretax · `roth-401k`/`roth-ira` → roth ·
- *  `brokerage` → taxable · `hsa` → hsa), as is the kind→catch-up-account-kind map
- *  for the C1 ceiling checks (employer plans vs IRA vs HSA). */
+ *  `brokerage` → taxable · `hsa` → hsa · `inherited-ira` → its own grouping, one engine ledger per
+ *  account, never pre-tax), as is the kind→catch-up-account-kind map for the C1 ceiling checks
+ *  (employer plans vs IRA vs HSA; an inherited IRA takes no deposits). `inherited-ira` joined at
+ *  schema version 7 (the Act 5 plan's U13): it carries {@link EnteredAccount.inherited}. */
 export const ACCOUNT_KINDS = [
   '401k',
   '403b',
@@ -2040,6 +2047,7 @@ export const ACCOUNT_KINDS = [
   'roth-ira',
   'brokerage',
   'hsa',
+  'inherited-ira',
 ] as const
 export type AccountKind = (typeof ACCOUNT_KINDS)[number]
 
@@ -2088,7 +2096,71 @@ export interface EnteredAccount {
    *  contribution against the single HSA family ceiling (employer + employee share
    *  one statutory limit). */
   readonly hsaEmployerAnnual?: number
+  /** An inherited IRA's own facts (schema version 7, the Act 5 plan's U13): PRESENT exactly when `kind` is
+   *  `'inherited-ira'` (codec-enforced both ways). The account's owner (`ownerIndex`) is the HEIR. An inherited IRA
+   *  carries no basis, deposit, match or HSA employer dollar (codec-refused on the kind). */
+  readonly inherited?: InheritedIraV7
 }
+
+/**
+ * The saved facts of one inherited traditional IRA (schema version 7; the Act 5 plan's U13, KTD17, KTD21 and KTD25).
+ * Version 1's one case: a non-spouse heir who is not an eligible beneficiary, of an owner who died in 2020 or later.
+ * Intake asks every fact and guesses none; each optional field is present exactly where the rule asks it, and a case
+ * version 1 does not model is refused at intake and never saved, so the refusal-only answers (a Roth, a spouse, money
+ * still in the owner's job's plan, a successor beneficiary, an eligible beneficiary, a missed minimum, a shared
+ * account) are not stored: a saved account is a served one. `intakeMap`'s inherited-IRA rules (`inheritedIra.ts`)
+ * re-check the stored facts against the household's later edits.
+ */
+export interface InheritedIraV7 {
+  /** The dead owner's birth year. */
+  readonly ownerBirthYear: number
+  /** Born January to June: present only where the law draws its line by date (an owner born in 1948 or 1949, where the
+   *  half moves the required beginning date across the death). */
+  readonly ownerBornFirstHalf?: boolean
+  /** The dead owner's death year (2020 or later). */
+  readonly ownerDeathYear: number
+  /** Did the owner die before April 1? Present only when the death fell in the required-beginning year. */
+  readonly ownerDiedBeforeApril1?: boolean
+  /** Present only when the owner's and the heir's birth years are exactly ten apart: the household's answer, by the
+   *  two birthdays, that the heir is MORE than ten years younger (IRC 401(a)(9)(E)(ii)(III)). Only `true` is ever
+   *  stored: an heir not more than ten years younger is an eligible beneficiary, refused (KTD17). */
+  readonly heirMoreThanTenYearsYounger?: true
+  /** The calendar year the asked figures belong to (KTD25): the year the account was entered. */
+  readonly askedYear: number
+  /** That year's figure, by the shape the rule asks for it (KTD25). */
+  readonly askedFigure: InheritedAskedFigureV7
+  /** What has already come out in `askedYear` (income in that year). */
+  readonly takenInAskedYear: number
+  /** The owner's own death-year minimum still untaken, the custodian's figure (54.4974-1(g)(3)): present only when the
+   *  owner died the year before `askedYear` on or after the required beginning date. */
+  readonly deathYearUntaken?: number
+  /** The custodian's withdrawal for each calendar year of the plan before `askedYear` (`startCalendarYear` to
+   *  `askedYear − 1`, ascending), empty when the account was entered in the plan's first year. */
+  readonly earlierWithdrawals: readonly InheritedEarlierWithdrawal[]
+  /** Who gets it if the heir dies first: required for a couple, absent for one person. */
+  readonly leftTo?: InheritedLeftTo
+  /** The plan's pace (KTD21). Required: intake writes "only what the law requires" at Add. */
+  readonly pace: InheritedPace
+}
+
+/** The asked year's figure (KTD25), by what the rule asks. */
+export type InheritedAskedFigureV7 =
+  /** The rule asks no figure this year: no yearly minimum is owed (the owner died before the required beginning date,
+   *  in a year before the last), or it is the ten-year end, when everything left comes out. */
+  | { readonly kind: 'not-asked' }
+  /** The custodian's figure for the year, with last December 31's balance, the cross-check (KTD25). */
+  | { readonly kind: 'custodian'; readonly figure: number; readonly decemberBalance: number }
+  /** The household could not give the custodian's figure: it is computed from last December 31's balance and labeled
+   *  as computed (the household said the account was not shared with another beneficiary). */
+  | { readonly kind: 'computed'; readonly decemberBalance: number }
+  /** The owner died in the asked year on or after the required beginning date: the owner's own death-year amount still
+   *  untaken is the year's one figure (never added twice). */
+  | { readonly kind: 'death-year'; readonly untaken: number }
+/** The asked-figure kinds, the codec's membership vocabulary. */
+export const INHERITED_ASKED_FIGURE_KINDS = ['not-asked', 'custodian', 'computed', 'death-year'] as const satisfies readonly InheritedAskedFigureV7['kind'][]
+type _AskedFigureKindsCover = InheritedAskedFigureV7['kind'] extends (typeof INHERITED_ASKED_FIGURE_KINDS)[number] ? true : never
+const _askedFigureKindsCovered: _AskedFigureKindsCover = true
+void _askedFigureKindsCovered
 
 /** The manual ticker classification (R37 fallback): the calm 3-choice answer, or
  *  the advanced exact-% split (intake enforces sum-to-100). Keyed by ticker in
@@ -2272,7 +2344,7 @@ export type IncomeStream = {
  * The version every save writes — the ONE home of the current `schemaVersion` (the schema-v4
  * plan's KTD1). The mint (`scenarioFromDraft`), the codec's top arm and its "newer" threshold,
  * and the hydrate gate (`IntakeApp`) all read it; no production file re-types it, except the
- * codec's label-only steps (3 → 4, 4 → 5 and 5 → 6), each of which names its LITERAL successor (a
+ * codec's label-only steps (3 → 4, 4 → 5, 5 → 6 and 6 → 7), each of which names its LITERAL successor (a
  * step that jumps to "current" would carry an old plan past whatever step a later bump adds), and
  * their refusals of an older-labeled plan carrying a field only a later version writes. Declared here, above the type
  * it discriminates, as {@link BACKUP_FORMAT_VERSION} is: `model.ts` is the only home without an
@@ -2283,12 +2355,12 @@ export type IncomeStream = {
  * this constant after a real save — roll forward (`docs/architecture.md` §7.3). Each bump raises
  * the version-floor test in its own follow-up commit.
  */
-export const CURRENT_SCHEMA_VERSION = 6
+export const CURRENT_SCHEMA_VERSION = 7
 
 /** The current plaintext scenario: the account-level intake truth, written as
- *  {@link CURRENT_SCHEMA_VERSION} (versions 3 to 5 carry the same fields less the optional ones a
+ *  {@link CURRENT_SCHEMA_VERSION} (versions 3 to 6 carry the same fields less the optional ones a
  *  later version added — the left-over answer at 5; the ids, the kept what-ifs and the record's
- *  Roth plan at 6 — and relabel at decode).
+ *  Roth plan at 6; the inherited-IRA kind, its facts and its pace lever at 7 — and relabel at decode).
  *  See the section comment above for the label history, the define-now/write-at-U8 contract
  *  and the deliberate fidelity-over-duplication shape change vs v2. */
 export interface CurrentScenario {
@@ -2860,9 +2932,10 @@ export type RothConversionChoiceV6 =
   | { readonly kind: 'none' }
   | { readonly kind: 'plan'; readonly plan: RothConversionPlan }
 
-/** The eight lever kinds a kept what-if can hold (KTD15, KTD16): the choices still open. A CLOSED
- *  vocabulary — every home that chooses by kind is an exhaustive `Record<WhatIfLeverKind, …>`
- *  (insight 147), so a kind added later fails to compile in each one. */
+/** The nine lever kinds a kept what-if can hold (KTD15, KTD16; `inherited-pace` joined at schema
+ *  version 7, U13): the choices still open. A CLOSED vocabulary — every home that chooses by kind
+ *  is an exhaustive `Record<WhatIfLeverKind, …>` (insight 147), so a kind added later fails to
+ *  compile in each one. */
 export const WHAT_IF_LEVER_KINDS = [
   'stop-year',
   'spending',
@@ -2872,6 +2945,7 @@ export const WHAT_IF_LEVER_KINDS = [
   'withdrawal-order',
   'claim-age',
   'aca-subsidy',
+  'inherited-pace',
 ] as const
 export type WhatIfLeverKind = (typeof WHAT_IF_LEVER_KINDS)[number]
 
@@ -2911,6 +2985,8 @@ export type WhatIfWithdrawalOrderV6 =
  *  - `claim-age`: one lever per person not yet claimed, by `personIndex` into `people`.
  *  - `aca-subsidy`: the enhanced-subsidy regime, on or off (`enhanced`) — both are real what-ifs,
  *    unlike the plan's presence-keyed `enhancedSubsidies: true`.
+ *  - `inherited-pace` (schema version 7, U13 — offered by U17's tray row): per inherited IRA, by
+ *    `accountId`, the pace its withdrawals follow (KTD21).
  */
 export interface WhatIfLeverFieldsV6 {
   readonly 'stop-year': { readonly calendarYear: number }
@@ -2929,6 +3005,7 @@ export interface WhatIfLeverFieldsV6 {
   readonly 'withdrawal-order': WhatIfWithdrawalOrderV6
   readonly 'claim-age': { readonly personIndex: number; readonly claimAge: number }
   readonly 'aca-subsidy': { readonly enhanced: boolean }
+  readonly 'inherited-pace': { readonly accountId: string; readonly pace: InheritedPace }
 }
 
 // Compile-time: the table's keys ARE the kind vocabulary (both directions) — a kind added to the array
@@ -3138,7 +3215,8 @@ export interface HealthcareVintageV3 {
 /** The exhaustive v3 field set — U8's `checkV3Fields` checklist (burned/063: the
  *  codec arm iterates THIS list, so a field added to the interface cannot
  *  silently skip validation — it fails the compile-time tie below first).
- *  Version 6 carries exactly this set; version 5 carries it less `keptWhatIfs`, the one top-level
+ *  Versions 6 and 7 carry exactly this set (version 7's new shapes are all nested: an account kind, an
+ *  account's `inherited` facts and a lever kind); version 5 carries it less `keptWhatIfs`, the one top-level
  *  field the schema-v6 bump added, and versions 3 and 4 less `workingYearLeftOver` too, the one the
  *  schema-v5 bump added (each step is label-only for that reason: a relabeled older plan lacks a key
  *  its type already calls optional). A new TOP-LEVEL field must join this

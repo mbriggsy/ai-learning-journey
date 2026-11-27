@@ -45,10 +45,14 @@ export type FactDisposition =
   | { readonly kind: 'nested'; readonly record: 'person' | 'health' | 'account' | 'income' }
   /** Not something the household told the tool: the why. */
   | { readonly kind: 'not-a-fact'; readonly why: string }
+  /** A saved fact whose editing home a unit still being built adds: no plan can carry it until that unit lands (its why
+   *  names the unit). Never stamped; the unit replaces it with its real disposition. */
+  | { readonly kind: 'pending'; readonly unit: string; readonly why: string }
 
 const shown = (...drawers: FactDrawerId[]): FactDisposition => ({ kind: 'shown', drawers })
 const elsewhere = (home: FactElsewhereId, why: string): FactDisposition => ({ kind: 'elsewhere', home, why })
 const notAFact = (why: string): FactDisposition => ({ kind: 'not-a-fact', why })
+const pending = (unit: string, why: string): FactDisposition => ({ kind: 'pending', unit, why })
 
 /** The stamp a field carries: a top-level key bare, a container's field prefixed by its record. */
 export type FactStamp =
@@ -135,6 +139,9 @@ export const ACCOUNT_FACTS: Record<keyof EnteredAccount, FactDisposition> = {
   annualContribution: shown(...ACCOUNT_DRAWERS),
   employerMatchAnnual: shown(...ACCOUNT_DRAWERS),
   hsaEmployerAnnual: shown(...ACCOUNT_DRAWERS),
+  // The inherited IRA's own facts (schema version 7). The drawer's questions (U13 slice 1) make this the nested record
+  // `INHERITED_FACTS` (by the registry's gate-scope rule, the pace `elsewhere('tray', …)`) and give the FULL draft one.
+  inherited: pending('U13 slice 1', 'An inherited IRA’s facts: no drawer asks them yet, so no account can carry them until the drawer’s questions land.'),
   ticker: shown(...ACCOUNT_DRAWERS),
 }
 

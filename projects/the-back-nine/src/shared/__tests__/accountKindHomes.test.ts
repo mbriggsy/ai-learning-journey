@@ -143,6 +143,11 @@ const ALLOWED: Readonly<Record<string, { readonly reason: string; readonly count
   "src/ui/screens/retirement/healthCareView.ts | compare | a.kind === 'hsa'": { reason: 'safe: an HSA check (the HSA note when the household holds one)' },
   "src/ui/screens/profile/drawers/AccountDrawer.tsx | compare | kind === 'hsa'": { reason: 'safe: HSA checks (the HSA icon and the HSA employer field)', count: 2 },
   "src/ui/screens/profile/drawers/AccountDrawer.tsx | compare | kind === 'brokerage'": { reason: 'safe: the brokerage-only basis field' },
+  // U13 (schema version 7): each singles out the inherited kind itself, so no other kind is decided by its absence.
+  "src/intake/inheritedIra.ts | compare | a.kind === 'inherited-ira'": { reason: 'safe: the inherited-account guard (the kind itself, with its facts)' },
+  "src/intake/intakeMap.ts | compare | a.kind !== 'inherited-ira'": { reason: 'safe: the missing-facts arm reads only inherited accounts' },
+  "src/ui/screens/profile/blueprintView.ts | compare | k !== 'inherited-ira'": { reason: 'safe: the Add menu keeps the inherited kind out until its own entry lands (U13 hold)' },
+  "src/ui/screens/profile/drawers/AccountDrawer.tsx | compare | k !== 'inherited-ira'": { reason: 'safe: no ordinary account can become an inherited IRA (its kind is locked)' },
 }
 
 const keyOf = (f: Finding): string => `${f.file} | ${f.shape} | ${f.text}`

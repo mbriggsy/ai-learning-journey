@@ -78,6 +78,9 @@ import {
   WORKING_YEAR_COST_KINDS,
   WORKING_YEAR_LEFT_OVER_KINDS,
   WORKING_YEAR_STATE_TAX_READINGS,
+  INHERITED_ASKED_FIGURE_KINDS,
+  INHERITED_LEFT_TO,
+  INHERITED_PACE_KINDS,
   CURRENT_SCHEMA_VERSION,
   type AnyScenario,
   type Scenario,
@@ -226,7 +229,7 @@ function needUnitFraction(o: Obj, field: string, path: string): void {
 function needColaRate(o: Obj, field: string, path: string): void {
   needFinite(o, field, path)
   const n = o[field] as number
-  // Reuse the ONE shared predicate the two intake gates use (sanity.ts:601, incomeForm.ts:124)
+  // Reuse the ONE shared predicate the two intake gates use (sanity.ts:603, incomeForm.ts:124)
   // so all THREE gates run byte-identical range logic — the band's inclusivity can never silently
   // desync via a hand-copied comparison (insight 020). needFinite ran first (colaRateInRange assumes a
   // finite caller — a NaN passes every relational compare, insights 008/010).
@@ -432,6 +435,15 @@ function checkEnteredAccount(v: unknown, peopleCount: number, path: string): voi
     throw new Corrupt(`${path}.ownerIndex: expected an index into people [0, ${peopleCount})`)
   }
   needVocab(v, 'kind', ACCOUNT_KINDS, path)
+  // The inherited-IRA kind and its facts (schema version 7, U13): present exactly together, both directions (as a
+  // custom withdrawal order is checked against its order). The kind takes no basis and no deposits (KTD20): a stored
+  // one would be a writer bug the account form refuses (`buildAccount`).
+  if (v.kind === 'inherited-ira') {
+    refuseFields(v, ['basis', 'annualContribution', 'employerMatchAnnual', 'hsaEmployerAnnual'], path, 'an inherited IRA takes no basis and no deposits')
+    checkInheritedIraV7(v.inherited, peopleCount, `${path}.inherited`)
+  } else {
+    refuseFields(v, ['inherited'], path, "only an 'inherited-ira' account carries inherited facts")
+  }
   if (v.ticker !== undefined) needString(v, 'ticker', path)
   if (v.manualBlend !== undefined) checkTickerClassification(v.manualBlend, `${path}.manualBlend`)
   // P3·U11 (the filed insight-046 follow-up): every account dollar gets the full RANGE gate,
@@ -446,6 +458,78 @@ function checkEnteredAccount(v: unknown, peopleCount: number, path: string): voi
       needNonNegativeDollar(v, field, path)
     }
   }
+}
+
+/** A finite real-$ amount ≥ 0 within the computable-domain ceiling (insight 046), in one call. */
+function needDollar(o: Obj, field: string, path: string): void {
+  needFinite(o, field, path)
+  needNonNegativeDollar(o, field, path)
+}
+
+/**
+ * An inherited IRA's saved facts ({@link InheritedIraV7}, schema version 7, U13): their SHAPES. Every year is an integer
+ * and every dollar finite, ≥ 0 and inside the computable domain (insight 046: a computed figure's December balance is
+ * divided away before the engine sees it, so the codec is its only range gate on restore). The owner was born no later
+ * than the death. The optional answers are real booleans, and the ten-years-younger answer is stored only as `true`
+ * (a "no" is refused at intake, never saved). Each asked-figure kind carries exactly its own fields. The earlier
+ * withdrawals run in strictly ascending calendar years, all before the asked year. Who gets the account if the heir dies
+ * first is required for a couple and absent for one person (the engine's own gate). The pace is in its vocabulary, with
+ * a chosen last year exactly on `even-to-year`.
+ *
+ * What the codec does NOT judge: whether each optional answer is present exactly where the rule asks it, a death
+ * before 2020, or the cross-check. Those read the law's required beginning date and the heir's age (the engine's
+ * producer, `src/engine/inheritedRmd.ts`), which this leaf layer cannot import; intake's inherited-IRA rules re-check
+ * the stored facts on every read (`src/intake/inheritedIra.ts`), and a plan that fails them is refused by name there,
+ * never called damaged here.
+ */
+function checkInheritedIraV7(v: unknown, peopleCount: number, path: string): void {
+  needObject(v, path)
+  needInteger(v, 'ownerBirthYear', path)
+  needInteger(v, 'ownerDeathYear', path)
+  if ((v.ownerDeathYear as number) < (v.ownerBirthYear as number)) {
+    throw new Corrupt(`${path}.ownerDeathYear: the owner cannot die before being born`)
+  }
+  optBoolean(v, 'ownerBornFirstHalf', path)
+  optBoolean(v, 'ownerDiedBeforeApril1', path)
+  if (v.heirMoreThanTenYearsYounger !== undefined && v.heirMoreThanTenYearsYounger !== true) {
+    throw new Corrupt(`${path}.heirMoreThanTenYearsYounger: stored only as true (a "no" is refused at intake, never saved)`)
+  }
+  needInteger(v, 'askedYear', path)
+  const askedYear = v.askedYear as number
+  needObject(v.askedFigure, `${path}.askedFigure`)
+  const figure = v.askedFigure
+  const fp = `${path}.askedFigure`
+  needVocab(figure, 'kind', INHERITED_ASKED_FIGURE_KINDS, fp)
+  const FIGURE_FIELDS = { 'not-asked': [], custodian: ['figure', 'decemberBalance'], computed: ['decemberBalance'], 'death-year': ['untaken'] } as const
+  const own: readonly string[] = FIGURE_FIELDS[figure.kind as keyof typeof FIGURE_FIELDS]
+  for (const f of own) needDollar(figure, f, fp)
+  refuseFields(figure, ['figure', 'decemberBalance', 'untaken'].filter((f) => !own.includes(f)), fp, `not part of a '${String(figure.kind)}' figure`)
+  needDollar(v, 'takenInAskedYear', path)
+  if (v.deathYearUntaken !== undefined) needDollar(v, 'deathYearUntaken', path)
+  needArray(v.earlierWithdrawals, `${path}.earlierWithdrawals`)
+  let before = -Infinity
+  v.earlierWithdrawals.forEach((e, i) => {
+    const ep = `${path}.earlierWithdrawals[${i}]`
+    needObject(e, ep)
+    needInteger(e, 'calendarYear', ep)
+    const year = e.calendarYear as number
+    if (year <= before) throw new Corrupt(`${ep}.calendarYear: the earlier withdrawals run in strictly ascending years`)
+    if (year >= askedYear) throw new Corrupt(`${ep}.calendarYear: an earlier withdrawal is for a year before the asked year ${askedYear}`)
+    before = year
+    needDollar(e, 'amount', ep)
+  })
+  if (peopleCount > 1) needVocab(v, 'leftTo', INHERITED_LEFT_TO, path)
+  else refuseFields(v, ['leftTo'], path, 'who gets it if the heir dies first is asked of a couple only')
+  checkInheritedPaceV7(v.pace, `${path}.pace`)
+}
+
+/** An inherited IRA's pace ({@link InheritedPace}): the kind in its vocabulary, and a chosen last year (an integer)
+ *  exactly on `even-to-year`, both directions. Read by the account's facts and by the pace lever. */
+function checkInheritedPaceV7(v: unknown, path: string): void {
+  needObject(v, path)
+  needVocab(v, 'kind', INHERITED_PACE_KINDS, path)
+  if (v.kind === 'even-to-year') needInteger(v, 'lastYear', path)
+  else refuseFields(v, ['lastYear'], path, "only an 'even-to-year' pace carries a chosen last year")
 }
 
 /** A real-$ amount that must be ≥ 0 AND within the computable-domain ceiling (assumes
@@ -709,6 +793,13 @@ const LEVER_ARMS: Record<WhatIfLeverKind, LeverArm> = {
   'aca-subsidy': (v, p) => {
     needBoolean(v, 'enhanced', p)
     return 'household'
+  },
+  // Schema version 7 (U13; offered by U17's tray row): per inherited IRA, by id, the pace the account's own facts carry
+  // (the same check). Its target never collides with a deposits lever's on the same id: the kind prefixes the key.
+  'inherited-pace': (v, p) => {
+    const accountId = needId(v, 'accountId', p)
+    checkInheritedPaceV7(v.pace, `${p}.pace`)
+    return `account:${accountId}`
   },
 }
 
@@ -1266,6 +1357,28 @@ function versionSixFieldIn(o: Obj): string | undefined {
   return firstWithId(o.enteredAccounts, 'enteredAccounts') ?? firstWithId(o.budget, 'budget')
 }
 
+/** The path of the first field only version 7 writes (an `inherited-ira` account, an account's `inherited` facts, an
+ *  `inherited-pace` lever in a kept what-if) — `undefined` when the plan carries none. Read by the 6 → 7 step BEFORE any
+ *  field is checked, so every access is guarded; the arms judge the shapes afterwards. */
+function versionSevenFieldIn(o: Obj): string | undefined {
+  if (Array.isArray(o.enteredAccounts)) {
+    const i = o.enteredAccounts.findIndex((a) => isObj(a) && (a.kind === 'inherited-ira' || a.inherited !== undefined))
+    if (i !== -1) {
+      const a = o.enteredAccounts[i] as Obj
+      return a.kind === 'inherited-ira' ? `enteredAccounts[${i}].kind` : `enteredAccounts[${i}].inherited`
+    }
+  }
+  if (Array.isArray(o.keptWhatIfs)) {
+    for (let k = 0; k < o.keptWhatIfs.length; k++) {
+      const kept = o.keptWhatIfs[k]
+      if (!isObj(kept) || !Array.isArray(kept.levers)) continue
+      const j = kept.levers.findIndex((l) => isObj(l) && l.kind === 'inherited-pace')
+      if (j !== -1) return `keptWhatIfs[${k}].levers[${j}].kind`
+    }
+  }
+  return undefined
+}
+
 /**
  * Decode + structurally validate plaintext vault/export bytes. Never throws on bad DATA:
  * every data failure is a typed result the store maps to its calm states ("data damaged" /
@@ -1357,6 +1470,22 @@ export function decodeScenario(bytes: Uint8Array): ScenarioDecode {
       }
       parsed.schemaVersion = 6
       version = 6
+    }
+    // 6 → 7, LABEL ONLY (the schema-v7 bump, the workbench plan's U13 — gap 3's saved shapes): version 7 adds three
+    // NESTED shapes — the `inherited-ira` account kind, an account's `inherited` facts, and the `inherited-pace` lever
+    // kind — so a version-6 plan is a version-7 plan holding none of them, and the step writes nothing into it. Before
+    // the relabel, a plan whose DISK label is 3 to 6 and that carries any of the three is refused: no build writing
+    // those labels writes one, and after the relabel the kind vocabularies would accept it, so such a plan is a writer
+    // bug, named (§7.3). The LITERAL successor again, never `CURRENT_SCHEMA_VERSION` (the 3 → 4 note above). Read forever.
+    if (version === 6) {
+      const newer = versionSevenFieldIn(parsed)
+      if (newer !== undefined) {
+        throw new Corrupt(
+          `${newer}: a plan saved as version ${onDisk} cannot carry it — no build that writes version ${onDisk} writes it (writer bug)`,
+        )
+      }
+      parsed.schemaVersion = 7
+      version = 7
     }
     if (version === CURRENT_SCHEMA_VERSION) {
       const droppedAtoms = [...stepDrops, ...checkV3Fields(parsed)]

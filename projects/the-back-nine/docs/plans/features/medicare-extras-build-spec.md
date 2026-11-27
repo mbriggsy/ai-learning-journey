@@ -49,7 +49,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
 - **Optional-with-average, never a required fact** (a required fact strands the non-finance
   survivor and blocks the calm first pass — U12 doctrine; R5 never-gate). Nothing on the step
   blocks advance except the self-contradictory entered-with-no-dollar half-answer, which the R19
-  sanity rule `medicare-extras-entered-blank` (`src/intake/sanity.ts:370-385`) names at the field.
+  sanity rule `medicare-extras-entered-blank` (`src/intake/sanity.ts:372-387`) names at the field.
 - **WHO:** the step is gated on `anyNearMedicare` (`src/intake/steps.ts:97-98`) — any
   member aged 64 or older, the same cohort gate as the IRMAA seed
   (`src/intake/steps.ts:121` pushes both under the one predicate). That covers the all-65+
@@ -61,7 +61,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   `src/engine/__tests__/medicareExtras.test.ts:191-225`), never a silent $0; and the F5 disclosure
   homes key off the run's built params, not ages, so the never-asked household is still TOLD the
   typical is being funded. Widening the gate is a live option, not a correction.
-- **Degradation:** `resolveMedicareExtrasMonthly` (`src/intake/intakeMap.ts:1217`) is the ONE
+- **Degradation:** `resolveMedicareExtrasMonthly` (`src/intake/intakeMap.ts:1244`) is the ONE
   fork→dollar owner. An absent field, an `'unanswered'` entry, a `'typical'` entry, and a
   half-entered `'entered'` with no committed dollar ALL fund the conservative-HIGH typical;
   only the affirmed `'none'` arm resolves to $0. Absent-means-$0 would delete a real recurring
@@ -70,7 +70,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   council `wf_7eb3303c-7f3`, built `c1ada867` — its blank is no longer one-directional: it
   disables the HSA cap AND the budgetless survivor lean, the most pessimistic reading for an HSA
   household and the less cautious for a budgetless couple without an HSA;
-  `src/shared/model.ts:2122-2131`). Nothing is pre-selected, so the MA plurality actively lands
+  `src/shared/model.ts:2194-2203`). Nothing is pre-selected, so the MA plurality actively lands
   on $0. An AFFIRMED $0 is honest; a SILENT $0 is the sin.
 
 ## F2 — anchor + provenance
@@ -90,7 +90,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   adopted the old figure. No official national Medigap average exists to pin to; the constant's
   `pinTo` says so explicitly rather than naming a source that isn't published.
 - **Per-person explicit persisted provenance stamp.** `MedicareExtrasEntryV3`
-  (`src/shared/model.ts:2755`) discriminates on `kind` — `'none' | 'entered' | 'typical' |
+  (`src/shared/model.ts:2827`) discriminates on `kind` — `'none' | 'entered' | 'typical' |
   'unanswered'` — with `adoptionVintage` recording the era adopted, keyed to the SAVED era and
   never re-derived from `value == current-typical` (the `src/shared/appDefaults.ts:8-15`
   saved-era inversion trap). `'unanswered'` is the honest persisted hole: it funds the typical
@@ -220,7 +220,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
     per-person fact line carries the provenance as its load-bearing content: whose number, and
     whether it was entered, affirmed, or typical.
 - Both homes consume ONE assembly, `medicareExtrasDisclosureView`
-  (`src/intake/intakeMap.ts:1274`), which keys off the run's route-aware **BUILT-params output**
+  (`src/intake/intakeMap.ts:1301`), which keys off the run's route-aware **BUILT-params output**
   (`buildParams(d)?.overlay`) — never ages or inputs — and returns NULL when the run prices no
   Medicare-bearing overlay at all, so no claim is made. The three-way provenance
   (`'entered' | 'affirmed-zero' | 'typical'`) is read from the draft, which is honest: who chose
@@ -235,8 +235,8 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
 
 ## Ship gates (all met at close)
 
-- **Codec.** The persisted per-person entry is range-gated in `src/shared/scenarioCodec.ts:998-1027`:
-  the `'entered'` dollar runs `needFinite` → `needNonNegativeDollar` (`scenarioCodec.ts:455`,
+- **Codec.** The persisted per-person entry is range-gated in `src/shared/scenarioCodec.ts:1089-1118`:
+  the `'entered'` dollar runs `needFinite` → `needNonNegativeDollar` (`scenarioCodec.ts:539`,
   throws `Corrupt`) — deliberately NOT the siblings' `optFinite` / finite-only
   `checkFiniteArray`, because a negative extras premium inside the funding sum is the insight-046
   optimistic class the engine cannot backstop. Both biconditionals are enforced in both

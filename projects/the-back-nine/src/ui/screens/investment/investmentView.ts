@@ -107,8 +107,9 @@ const money = (v: number): string => slots.workbenchFactDollars(formatMoney(Math
 
 /** The engine's own grouping vocabulary and its order, never a hand-typed copy: a grouping added to `KIND_BUCKETS` reaches
  *  every part, picker and colour here, and each table below fails to compile until it is named (the Act 5 plan's KTD20). */
-export const TAX_BUCKETS = KIND_BUCKETS
-export type TaxBucketId = KindBucket
+export type TaxBucketId = Exclude<KindBucket, 'inherited'>
+/** U13 HOLD (the inherited IRA, schema version 7): this page does not draw the inherited grouping yet. U13 slice 2 gives it its look (a pattern of its own, never hatch, and a hue measured in `RC_PAIRS`) and lifts this exclusion; until then no household can hold one (no drawer offers the kind and no seed holds one), and slice 2 must land before the drawer does. */
+export const TAX_BUCKETS: readonly TaxBucketId[] = KIND_BUCKETS.filter((b): b is TaxBucketId => b !== 'inherited')
 
 const BUCKET_NAME: Readonly<Record<TaxBucketId, string>> = {
   taxable: copy.investBucketTaxable,

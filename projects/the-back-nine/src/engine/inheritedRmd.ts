@@ -74,25 +74,43 @@ export function inheritedLastYear(o: InheritedAccountOwner): number {
   return o.ownerDeathYear + 10
 }
 
+/** Which of the two date answers the rule reads for this owner, given the answers so far: the birth half where it moves
+ *  the required beginning date across the death, and "before April 1?" where the death fell in the required-beginning
+ *  year. `beforeApril1` is false while a needed half is still unknown (the year it would ask about is not known yet).
+ *  The ONE home of when each is asked: `diedBeforeRequiredBeginningDate` reads it, and so do intake's questions (U13). */
+export function inheritedOwnerAsks(o: Pick<InheritedAccountOwner, 'ownerBirthYear' | 'ownerBornFirstHalf' | 'ownerDeathYear'>): {
+  readonly birthHalf: boolean
+  readonly beforeApril1: boolean
+} {
+  const b = o.ownerBirthYear
+  const death = o.ownerDeathYear
+  // The half is read only where it moves the date: with it unknown, the date under each half bounds the answer.
+  const years = [requiredBeginningYear(b, true), requiredBeginningYear(b, false)]
+  const earliest = Math.min(...years)
+  const latest = Math.max(...years)
+  const birthHalf = earliest !== latest && death >= earliest && death <= latest
+  if (birthHalf && o.ownerBornFirstHalf === undefined) return { birthHalf, beforeApril1: false }
+  const year = birthHalf ? requiredBeginningYear(b, o.ownerBornFirstHalf) : earliest
+  return { birthHalf, beforeApril1: !(death < earliest || death > latest) && death === year }
+}
+
 /** Did the owner die before their required beginning date (April 1 of `requiredBeginningYear`)? */
 export function diedBeforeRequiredBeginningDate(o: InheritedAccountOwner): boolean {
   checkOwner(o)
   const b = o.ownerBirthYear
-  // The half is read only where it moves the date: with it unknown, the date under each half bounds the answer.
-  const years =
-    o.ownerBornFirstHalf === undefined ? [requiredBeginningYear(b, true), requiredBeginningYear(b, false)] : [requiredBeginningYear(b, o.ownerBornFirstHalf)]
-  const earliest = Math.min(...years)
-  const latest = Math.max(...years)
   const death = o.ownerDeathYear
-  if (death < earliest) return true
-  if (death > latest) return false
-  if (earliest !== latest) {
+  const asks = inheritedOwnerAsks(o)
+  if (asks.birthHalf && o.ownerBornFirstHalf === undefined) {
     throw new Error(`inheritedRmd: an owner born in ${b} who died in ${death} needs the birth half (it moves the required beginning date)`)
   }
-  if (o.ownerDiedBeforeApril1 === undefined) {
-    throw new Error(`inheritedRmd: a death in ${death}, the required-beginning year, needs whether it fell before April 1`)
+  if (asks.beforeApril1) {
+    if (o.ownerDiedBeforeApril1 === undefined) {
+      throw new Error(`inheritedRmd: a death in ${death}, the required-beginning year, needs whether it fell before April 1`)
+    }
+    return o.ownerDiedBeforeApril1
   }
-  return o.ownerDiedBeforeApril1
+  const year = asks.birthHalf ? requiredBeginningYear(b, o.ownerBornFirstHalf) : requiredBeginningYear(b, true)
+  return death < year
 }
 
 /** A divisor on the table's own grain (tenths): whole years are subtracted, so this only clears float dust. */

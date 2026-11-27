@@ -392,7 +392,8 @@ export const PAIRED_COLUMNS = [
 ] as const
 export type PairedColumnId = (typeof PAIRED_COLUMNS)[number]
 
-const PUT_IN: Readonly<Record<KindBucket, PairedColumnId>> = {
+/** A deposit's column by grouping. An inherited IRA takes no deposits (U13), so it has none. */
+const PUT_IN: Readonly<Record<Exclude<KindBucket, 'inherited'>, PairedColumnId>> = {
   pretax: 'put-in-pretax',
   roth: 'put-in-roth',
   taxable: 'put-in-taxable',
@@ -405,13 +406,17 @@ const KIND_COLUMNS: { readonly [K in WhatIfLeverKind]: (lever: Extract<WhatIfLev
   spending: () => ['spending'],
   deposits: (l, d) => {
     const a = d.enteredAccounts.find((x) => x.id === l.accountId)
-    return a === undefined ? [] : [PUT_IN[KIND_TO_BUCKET[a.kind]]]
+    const bucket = a === undefined ? undefined : KIND_TO_BUCKET[a.kind]
+    return bucket === undefined || bucket === 'inherited' ? [] : [PUT_IN[bucket]]
   },
   mix: () => [],
   roth: () => ['to-roth', 'required'],
   'withdrawal-order': () => ['taken-taxable', 'taken-pretax', 'taken-roth'],
   'claim-age': () => ['social-security'],
   'aca-subsidy': () => ['marketplace'],
+  // U17 widens this to each ledger's taken and required columns; until then the pace pairs income tax and the year's end
+  // total, which already counts the inherited ledgers (U12's row total).
+  'inherited-pace': () => [],
 }
 
 /** The paired column set for a bundle: the union of its kinds' own columns, then income tax and the year's end total,
@@ -585,6 +590,8 @@ const REFUSAL_KEYS: Readonly<Record<Exclude<WhatIfRunRefusal['kind'], 'stop-year
   'person-gone': 'workbenchRailRefusedPersonGone',
   'claim-age-already-claimed': 'workbenchRailRefusedClaimed',
   'claim-age-in-the-past': 'workbenchRailRefusedClaimPast',
+  'pace-not-inherited': 'workbenchRailRefusedPaceNotInherited',
+  'pace-year-outside': 'workbenchRailRefusedPaceYear',
   'no-seed': 'workbenchRailRefusedNoSeed',
   'futures-differ': 'workbenchRailRefusedFutures',
 }

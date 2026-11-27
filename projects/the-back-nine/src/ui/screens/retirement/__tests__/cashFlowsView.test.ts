@@ -45,6 +45,7 @@ const META: TableMeta = {
     hsa: [acct(3, 'hsa', 1)],
     pretax: [acct(4, '401k', 0), acct(5, 'traditional-ira', 1)],
     pretaxByPerson: [[acct(4, '401k', 0)], [acct(5, 'traditional-ira', 1)]],
+    inherited: [],
   },
   track: 'full',
   route: 'spine',

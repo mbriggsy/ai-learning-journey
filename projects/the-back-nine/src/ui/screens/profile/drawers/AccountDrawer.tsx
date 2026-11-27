@@ -37,7 +37,9 @@ import { Fact } from './Fact'
 import { ProfileDrawer } from './ProfileDrawer'
 import { useDrawerEdit } from './useDrawerBuffer'
 
-const KIND_ITEMS = ACCOUNT_KINDS.map((k) => ({ value: k, label: kindLabel(k) }))
+// An inherited IRA is never one an ordinary account can become, or the other way (U13: its kind is locked, and it is added
+// from its own Add entry), so the kind select offers it to no account.
+const KIND_ITEMS = ACCOUNT_KINDS.filter((k) => k !== 'inherited-ira').map((k) => ({ value: k, label: kindLabel(k) }))
 const MIX_ITEMS = [
   { value: 'hand', label: copy.profileMixByHand },
   { value: 'fund', label: copy.profileMixByTicker },

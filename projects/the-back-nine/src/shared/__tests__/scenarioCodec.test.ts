@@ -47,6 +47,10 @@ import {
   ROTH_CONVERSION_CHOICE_KINDS,
   WHAT_IF_LEVER_KINDS,
   WHAT_IF_SPENDING_OPS,
+  INHERITED_ASKED_FIGURE_KINDS,
+  INHERITED_LEFT_TO,
+  INHERITED_PACE_KINDS,
+  type EnteredAccount,
   type SavedRecommendationV3,
   type Scenario,
   type ScenarioV2,
@@ -210,6 +214,35 @@ const WITH_V6: CurrentScenario = {
       ],
     },
     { id: 'wi-empty', name: 'The plan itself', levers: [] },
+  ],
+}
+
+/** Schema version 7 (U13): an inherited IRA with every fact a custodian-figure year carries, and a kept what-if holding
+ *  the pace lever on it. The facts are AE5's (an heir born 1968, an owner born 1945 who died in 2023 on or after the
+ *  date: $100,000 on December 31, 2025 over 28.6 is $3,496.50); the codec judges only their shapes. */
+const INHERITED_ACCOUNT: EnteredAccount = {
+  id: 'acct-inherited',
+  ownerIndex: 0,
+  kind: 'inherited-ira',
+  valueToday: 100_000,
+  manualBlend: { kind: 'simple', choice: 'stocks' },
+  inherited: {
+    ownerBirthYear: 1945,
+    ownerDeathYear: 2023,
+    askedYear: 2026,
+    askedFigure: { kind: 'custodian', figure: 3_496.5, decemberBalance: 100_000 },
+    takenInAskedYear: 0,
+    earlierWithdrawals: [],
+    leftTo: 'other-member',
+    pace: { kind: 'law-minimum' },
+  },
+}
+const WITH_V7: CurrentScenario = {
+  ...WITH_V6,
+  enteredAccounts: [...WITH_V6.enteredAccounts, INHERITED_ACCOUNT],
+  keptWhatIfs: [
+    ...WITH_V6.keptWhatIfs!,
+    { id: 'wi-pace', name: 'Even to 2030', levers: [{ kind: 'inherited-pace', accountId: 'acct-inherited', pace: { kind: 'even-to-year', lastYear: 2030 } }] },
   ],
 }
 
@@ -394,13 +427,15 @@ describe('versions 3 to 5 relabel to their successors; the ladder stays honest f
     expect({ ...decoded.scenario, schemaVersion: 4 }).toEqual(onDisk)
   })
 
-  it('the maximal version-4 plan holds every top-level field this build knows except those a later version added (the version-5 answer, the version-6 kept what-ifs) — a sample of the surface a version-4 build could write, never the §7.3 rule', () => {
+  it('the maximal version-4 plan holds every top-level field this build knows except those a later version added (the version-5 answer, the version-6 kept what-ifs), and every account kind but the version-7 one — a sample of the surface a version-4 build could write, never the §7.3 rule', () => {
     const onDisk = JSON.parse(new TextDecoder().decode(frozenBytes('scenario-v4-maximal.json'))) as Obj
     const laterFields: readonly string[] = ['workingYearLeftOver', 'keptWhatIfs']
     expect(Object.keys(onDisk).sort()).toEqual(SCENARIO_V3_FIELDS.filter((k) => !laterFields.includes(k)).sort())
     const arms = (onDisk.incomeStreams as Obj[]).map((x) => `${String(x.type)}${x.type === 'annuity' ? (x.qualified === true ? '-q' : '-nq') : ''}`)
     expect(arms.sort(), 'every income-stream arm').toEqual(['alimony', 'annuity-nq', 'annuity-q', 'other', 'pension', 'rental'])
-    expect(new Set((onDisk.enteredAccounts as Obj[]).map((a) => a.kind)), 'every account kind').toEqual(new Set(ACCOUNT_KINDS))
+    // Never re-minted: a later kind is excluded, not added (the inherited IRA joined at version 7, U13).
+    const laterKinds: readonly string[] = ['inherited-ira']
+    expect(new Set((onDisk.enteredAccounts as Obj[]).map((a) => a.kind)), 'every account kind').toEqual(new Set(ACCOUNT_KINDS.filter((k) => !laterKinds.includes(k))))
   })
 
   it('THE ABSOLUTE PIN AT 4: a plan labeled with the literal 4 decodes as the current version — a version-4 save opens in this build and in every later one (the schema-v4 bump’s typed literal; it stays)', () => {
@@ -423,12 +458,39 @@ describe('versions 3 to 5 relabel to their successors; the ladder stays honest f
 
   // The schema-v6 bump's own literal. Under a reverted constant (5) every save fails its round trip and the floor
   // test reds on its own message once U9's follow-up commit raises FLOOR to 6.
-  it('THE ABSOLUTE PIN AT 6: a plan labeled with the literal 6 decodes as version 6 (the schema-v6 bump’s one typed literal here — every derived pin moves with the constant, so a reverted constant reds this pin)', () => {
+  it('THE ABSOLUTE PIN AT 6: a plan labeled with the literal 6 decodes as the current version — a version-6 save opens in this build and in every later one (the schema-v6 bump’s typed literal; it stays)', () => {
     const decoded = decodeScenario(asVersion(WITH_V6, 6))
     expect(decoded.ok, 'a version-6 save must open in this build and in every later one').toBe(true)
     if (!decoded.ok) return
-    expect(decoded.scenario.schemaVersion).toBe(6)
+    expect(decoded.scenario.schemaVersion).toBe(CURRENT_SCHEMA_VERSION)
     expect(decoded.droppedAtoms).toEqual([])
+  })
+
+  // The schema-v7 bump's own literal (U13). Under a reverted constant (6) every save fails its round trip and the floor
+  // test reds on its own message once the follow-up commit raises FLOOR to 7.
+  it('THE ABSOLUTE PIN AT 7: a plan labeled with the literal 7 decodes as version 7 (the schema-v7 bump’s one typed literal here — every derived pin moves with the constant, so a reverted constant reds this pin)', () => {
+    const decoded = decodeScenario(asVersion(WITH_V7, 7))
+    expect(decoded.ok, 'a version-7 save must open in this build and in every later one').toBe(true)
+    if (!decoded.ok) return
+    expect(decoded.scenario.schemaVersion).toBe(7)
+    expect(decoded.droppedAtoms).toEqual([])
+  })
+
+  it('a plan whose DISK label is 3 to 6 and that carries an inherited IRA or its pace lever is refused as a writer bug naming the field — its version-7 twin opens, so the version clause alone refuses it (insight 152)', () => {
+    // Labels 3 to 5 carry no version-6 field (no id, no kept what-if), so only the 6 → 7 step can refuse.
+    const { id: _id, ...noId } = INHERITED_ACCOUNT
+    const bare: CurrentScenario = { ...CURRENT, enteredAccounts: [...CURRENT.enteredAccounts, noId] }
+    expect(decodeScenario(asVersion(bare, 7)).ok, 'the version-7 twin opens').toBe(true)
+    const named = (label: number, field: string) => ({
+      ok: false,
+      reason: 'corrupt',
+      detail: `${field}: a plan saved as version ${label} cannot carry it — no build that writes version ${label} writes it (writer bug)`,
+    })
+    for (const label of [3, 4, 5, 6]) expect(decodeScenario(asVersion(bare, label)), `labeled ${label}`).toEqual(named(label, 'enteredAccounts[3].kind'))
+    // The pace lever alone, on a version-6 plan (ids and kept what-ifs are version 6's own).
+    const paceOnly: CurrentScenario = { ...WITH_V6, keptWhatIfs: [...WITH_V6.keptWhatIfs!, WITH_V7.keptWhatIfs![3]!] }
+    expect(decodeScenario(asVersion(paceOnly, 7)).ok, 'the pace lever’s version-7 twin opens').toBe(true)
+    expect(decodeScenario(asVersion(paceOnly, 6))).toEqual(named(6, 'keptWhatIfs[3].levers[0].kind'))
   })
 
   it('a plan whose DISK label is 3 or 4 and that carries the left-over answer is refused as a writer bug naming the field — its version-5 twin opens, so the version clause alone refuses it (insight 152)', () => {
@@ -480,7 +542,7 @@ describe('versions 3 to 5 relabel to their successors; the ladder stays honest f
     expect(start, '[test setup] decodeScenario is in the codec').toBeGreaterThan(-1)
     const body = source.slice(start, source.indexOf('\n}\n', start))
     const steps = [...body.matchAll(/if \(version === (\d+)\) \{([\s\S]*?)\n {4}\}/g)].filter(([, , block]) => block!.includes('version ='))
-    expect(steps.map(([, n]) => Number(n)), 'the label-only steps, in ladder order').toEqual([3, 4, 5])
+    expect(steps.map(([, n]) => Number(n)), 'the label-only steps, in ladder order').toEqual([3, 4, 5, 6])
     for (const [, n, block] of steps) {
       const next = Number(n) + 1
       expect([...block!.matchAll(/parsed\.schemaVersion = ([^\n]+)/g)].map((m) => m[1]!.trim()), `step ${n}: the label it writes`).toEqual([String(next)])
@@ -519,7 +581,7 @@ describe('the schema surface — docs/architecture.md §7.3 rules (b) and (c), h
    * sub-object) is listed in §7.3 as the author's call.
    */
   const RECORDED_VOCABULARIES: Readonly<Record<string, readonly string[]>> = {
-    ACCOUNT_KINDS: ['401k', '403b', 'traditional-ira', 'roth-401k', 'roth-ira', 'brokerage', 'hsa'],
+    ACCOUNT_KINDS: ['401k', '403b', 'traditional-ira', 'roth-401k', 'roth-ira', 'brokerage', 'hsa', 'inherited-ira'],
     BUDGET_CATEGORIES: ['housing', 'utilities', 'food', 'transportation', 'travel', 'gifts', 'other'],
     BUDGET_TIERS: ['essentials', 'discretionary'],
     COLA_MODES: ['real-flat', 'nominal-flat', 'fixed-pct'],
@@ -536,13 +598,18 @@ describe('the schema surface — docs/architecture.md §7.3 rules (b) and (c), h
     SPEND_ENTRY_PERIODS: ['month', 'year'],
     STATE_ROSTER: ['NC', 'PA', 'FL', 'SC', 'GA', 'DE', 'elsewhere'],
     TICKER_CLASSIFICATION_CHOICES: ['stocks', 'bonds', 'cash'],
-    WHAT_IF_LEVER_KINDS: ['stop-year', 'spending', 'deposits', 'mix', 'roth', 'withdrawal-order', 'claim-age', 'aca-subsidy'],
+    WHAT_IF_LEVER_KINDS: ['stop-year', 'spending', 'deposits', 'mix', 'roth', 'withdrawal-order', 'claim-age', 'aca-subsidy', 'inherited-pace'],
     WHAT_IF_SPENDING_OPS: ['add', 'replace', 'remove', 'total'],
     WORK_STATUSES: ['working', 'retired'],
     WORKING_YEAR_COST_KINDS: ['confirmed', 'entered'],
     // Build 2's left-over answer — recorded in the schema-v5 bump's own commit (the bump §7.3 rule (a) owes).
     WORKING_YEAR_LEFT_OVER_KINDS: ['saved', 'spent', 'not-sure'],
     WORKING_YEAR_STATE_TAX_READINGS: ['agi-derived', 'class-based', 'none', 'unpriced'],
+    // The schema-v7 bump's three new vocabularies (U13's inherited IRA), beside its new kind and lever kind above —
+    // recorded in the bump's own commit (rules (b) and (c)'s bump covers them).
+    INHERITED_ASKED_FIGURE_KINDS: ['not-asked', 'custodian', 'computed', 'death-year'],
+    INHERITED_LEFT_TO: ['other-member', 'someone-else'],
+    INHERITED_PACE_KINDS: ['law-minimum', 'even', 'even-to-year'],
   }
   /** The one vocabulary the codec spells inline (the ticker classification's `kind`), as it spells it. */
   const RECORDED_INLINE_VOCABULARY = "['simple', 'exact']"
@@ -584,6 +651,9 @@ describe('the schema surface — docs/architecture.md §7.3 rules (b) and (c), h
     WORKING_YEAR_COST_KINDS,
     WORKING_YEAR_LEFT_OVER_KINDS,
     WORKING_YEAR_STATE_TAX_READINGS,
+    INHERITED_ASKED_FIGURE_KINDS,
+    INHERITED_LEFT_TO,
+    INHERITED_PACE_KINDS,
   }
   const why = (what: string): string =>
     `${what} changed while CURRENT_SCHEMA_VERSION is ${CURRENT_SCHEMA_VERSION}: an older copy would ` +
@@ -1603,8 +1673,8 @@ describe('the current shape — the v3 field set (U8, the first v3 writer), writ
 
   it('a NON-Corrupt throw from INSIDE a validator ESCAPES decodeScenario — a programming defect is never laundered into a calm dropped atom', () => {
     // THE TWO RE-THROWS THIS COVERS, and they CHAIN, so one arm holds both:
-    //   `scenarioCodec.ts:1248`  `if (!(e instanceof Corrupt)) throw e`  (the record's try/catch)
-    //   `scenarioCodec.ts:1367`  `throw e`                              (decodeScenario's outer catch)
+    //   `scenarioCodec.ts:1339`  `if (!(e instanceof Corrupt)) throw e`  (the record's try/catch)
+    //   `scenarioCodec.ts:1496`  `throw e`                              (decodeScenario's outer catch)
     // Both were UNEXERCISED. They were filed as "correct-by-inspection but SEAM-LESS" on the
     // reasoning that decodeScenario builds its input from `JSON.parse` — data properties only,
     // no getters — and that no validator here recurses or calls a method on an unchecked value.
@@ -1924,17 +1994,77 @@ const recordWith = (rothConversion: unknown): SavedRecommendationV3 => ({
   },
 })
 
+describe('schema version 7 — an inherited IRA’s facts and its pace lever (the workbench plan’s U13, KTD17, KTD21, KTD25)', () => {
+  const inheritedAt = 3
+  const withInherited = (mutate: (facts: Obj, account: Obj) => void): Uint8Array =>
+    mutated(WITH_V7, (o) => {
+      const account = (o.enteredAccounts as Obj[])[inheritedAt]!
+      mutate(account.inherited as Obj, account)
+    })
+  const detailOf = (bytes: Uint8Array): string => {
+    const d = decodeScenario(bytes)
+    return d.ok ? 'opened' : d.reason === 'corrupt' ? d.detail : d.reason
+  }
+  const p = `enteredAccounts[${inheritedAt}]`
+
+  it('every optional answer, the other figure kinds and an earlier withdrawal open (the arms are not over-strict)', () => {
+    const open = (m: (facts: Obj) => void) => expect(detailOf(withInherited(m))).toBe('opened')
+    open((f) => Object.assign(f, { ownerBornFirstHalf: true, ownerDiedBeforeApril1: false, heirMoreThanTenYearsYounger: true, deathYearUntaken: 0 }))
+    open((f) => (f.askedFigure = { kind: 'not-asked' }))
+    open((f) => (f.askedFigure = { kind: 'computed', decemberBalance: 100_000 }))
+    open((f) => (f.askedFigure = { kind: 'death-year', untaken: 1_200 }))
+    open((f) => (f.earlierWithdrawals = [{ calendarYear: 2024, amount: 0 }, { calendarYear: 2025, amount: 4_000 }]))
+    open((f) => (f.pace = { kind: 'even' }))
+  })
+
+  it.each([
+    ['the facts missing on the kind', (_f: Obj, a: Obj) => delete a.inherited, `${p}.inherited: expected an object`],
+    ['facts on another kind', (_f: Obj, a: Obj) => (a.kind = 'traditional-ira'), `${p}.inherited: only an 'inherited-ira' account carries inherited facts (writer bug)`],
+    ['a basis on the kind', (_f: Obj, a: Obj) => (a.basis = 1), `${p}.basis: an inherited IRA takes no basis and no deposits (writer bug)`],
+    ['a deposit on the kind', (_f: Obj, a: Obj) => (a.annualContribution = 1), `${p}.annualContribution: an inherited IRA takes no basis and no deposits (writer bug)`],
+    ['a fractional birth year', (f: Obj) => (f.ownerBirthYear = 1945.5), `${p}.inherited.ownerBirthYear: expected an integer`],
+    ['a death before the birth', (f: Obj) => (f.ownerDeathYear = 1944), `${p}.inherited.ownerDeathYear: the owner cannot die before being born`],
+    ['a non-boolean birth half', (f: Obj) => (f.ownerBornFirstHalf = 'yes'), `${p}.inherited.ownerBornFirstHalf: expected a boolean`],
+    ['a stored "no" to ten years younger', (f: Obj) => (f.heirMoreThanTenYearsYounger = false), `${p}.inherited.heirMoreThanTenYearsYounger: stored only as true (a "no" is refused at intake, never saved)`],
+    ['an unknown figure kind', (f: Obj) => (f.askedFigure = { kind: 'guessed' }), `${p}.inherited.askedFigure.kind: expected one of [not-asked, custodian, computed, death-year]`],
+    ['a negative custodian figure', (f: Obj) => ((f.askedFigure as Obj).figure = -1), `${p}.inherited.askedFigure.figure: expected a non-negative real-$ amount (corruption)`],
+    ['a December balance past the ceiling', (f: Obj) => ((f.askedFigure as Obj).decemberBalance = ENGINE_MAX_DOLLAR * 2), `${p}.inherited.askedFigure.decemberBalance: exceeds the ${ENGINE_MAX_DOLLAR} real-$ computable-domain ceiling (corruption)`],
+    ['a stray field on a figure kind', (f: Obj) => (f.askedFigure = { kind: 'computed', decemberBalance: 1, figure: 2 }), `${p}.inherited.askedFigure.figure: not part of a 'computed' figure (writer bug)`],
+    ['a negative amount taken this year', (f: Obj) => (f.takenInAskedYear = -5), `${p}.inherited.takenInAskedYear: expected a non-negative real-$ amount (corruption)`],
+    ['a negative death-year amount', (f: Obj) => (f.deathYearUntaken = -5), `${p}.inherited.deathYearUntaken: expected a non-negative real-$ amount (corruption)`],
+    ['earlier withdrawals out of order', (f: Obj) => (f.earlierWithdrawals = [{ calendarYear: 2025, amount: 1 }, { calendarYear: 2024, amount: 1 }]), `${p}.inherited.earlierWithdrawals[1].calendarYear: the earlier withdrawals run in strictly ascending years`],
+    ['an earlier withdrawal not before the asked year', (f: Obj) => (f.earlierWithdrawals = [{ calendarYear: 2026, amount: 1 }]), `${p}.inherited.earlierWithdrawals[0].calendarYear: an earlier withdrawal is for a year before the asked year 2026`],
+    ['a negative earlier withdrawal', (f: Obj) => (f.earlierWithdrawals = [{ calendarYear: 2025, amount: -1 }]), `${p}.inherited.earlierWithdrawals[0].amount: expected a non-negative real-$ amount (corruption)`],
+    ['no answer to who gets it, for a couple', (f: Obj) => delete f.leftTo, `${p}.inherited.leftTo: expected one of [other-member, someone-else]`],
+    ['an unknown pace', (f: Obj) => (f.pace = { kind: 'fast' }), `${p}.inherited.pace.kind: expected one of [law-minimum, even, even-to-year]`],
+    ['a chosen year on another pace', (f: Obj) => (f.pace = { kind: 'even', lastYear: 2030 }), `${p}.inherited.pace.lastYear: only an 'even-to-year' pace carries a chosen last year (writer bug)`],
+    ['no chosen year on even-to-year', (f: Obj) => (f.pace = { kind: 'even-to-year' }), `${p}.inherited.pace.lastYear: expected an integer`],
+  ])('refused: %s', (_name, mutate, detail) => {
+    expect(detailOf(withInherited(mutate))).toBe(detail)
+  })
+
+  it('the pace lever is refused with a bad pace, and two pace levers on one account are one too many', () => {
+    const lever = (pace: Obj) => mutated(WITH_V7, (o) => (((o.keptWhatIfs as Obj[])[3]!.levers as Obj[])[0]!.pace = pace))
+    expect(detailOf(lever({ kind: 'even-to-year', lastYear: 2030.5 }))).toBe('keptWhatIfs[3].levers[0].pace.lastYear: expected an integer')
+    const twice = mutated(WITH_V7, (o) => {
+      const levers = (o.keptWhatIfs as Obj[])[3]!.levers as Obj[]
+      levers.push({ kind: 'inherited-pace', accountId: 'acct-inherited', pace: { kind: 'even' } })
+    })
+    expect(detailOf(twice)).toBe('keptWhatIfs[3].levers[1]: a second inherited-pace lever on the same target (one lever per kind and target)')
+  })
+})
+
 describe('schema version 6 — ids, the kept what-ifs and the record’s Roth plan (the workbench plan’s U9, KTD16, KTD18)', () => {
-  it('a plan holding every lever kind, every spending op and both Roth choices round-trips byte for byte, nothing dropped', () => {
-    const levers = WITH_V6.keptWhatIfs!.flatMap((k) => k.levers)
+  it('a plan holding every lever kind (the version-7 pace lever included), every spending op and both Roth choices round-trips byte for byte, nothing dropped', () => {
+    const levers = WITH_V7.keptWhatIfs!.flatMap((k) => k.levers)
     expect([...new Set(levers.map((l) => l.kind))].sort(), '[non-vacuity] every lever kind is held').toEqual([...WHAT_IF_LEVER_KINDS].sort())
     const ops = new Set(levers.flatMap((l) => (l.kind === 'spending' ? [l.op] : [])))
     expect([...ops].sort(), '[non-vacuity] every spending op is held').toEqual([...WHAT_IF_SPENDING_OPS].sort())
     const choices = new Set(levers.flatMap((l) => (l.kind === 'roth' ? [l.conversion.kind] : [])))
     expect([...choices].sort(), '[non-vacuity] both Roth choices are held').toEqual([...ROTH_CONVERSION_CHOICE_KINDS].sort())
-    const bytes = encodeScenario(WITH_V6)
+    const bytes = encodeScenario(WITH_V7)
     const decoded = decodeScenario(bytes)
-    expect(decoded).toEqual({ ok: true, scenario: WITH_V6, droppedAtoms: [] })
+    expect(decoded).toEqual({ ok: true, scenario: WITH_V7, droppedAtoms: [] })
     if (decoded.ok) expect(Array.from(encodeScenario(decoded.scenario))).toEqual(Array.from(bytes))
   })
 

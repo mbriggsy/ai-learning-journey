@@ -257,11 +257,13 @@ const roundedBalance = (accounts: readonly SourceAccount[]): number =>
   accounts.reduce((s, a) => s + (Number.isFinite(a.valueToday) ? Math.round(a.valueToday) : 0), 0)
 
 /** The groupings the card splits by: the engine's own (`KIND_BUCKETS`), in its order. */
-export type InvestedKindId = KindBucket
+export type InvestedKindId = Exclude<KindBucket, 'inherited'>
+/** U13 HOLD (the inherited IRA, schema version 7): this page does not draw the inherited grouping yet. U13 slice 2 gives it its look (a pattern of its own, never hatch, and a hue measured in `RC_PAIRS`) and lifts this exclusion; until then no household can hold one (no drawer offers the kind and no seed holds one), and slice 2 must land before the drawer does. (Dashboard → Balance Sheet reads this same split.) */
+const INVESTED_KINDS: readonly InvestedKindId[] = KIND_BUCKETS.filter((b): b is InvestedKindId => b !== 'inherited')
 
 /** Each grouping's row name. Exhaustive, so a grouping added to the engine's vocabulary fails to compile here until it is
  *  named (the Act 5 plan's KTD20; the four hand-typed rows this replaced would have left its accounts out of the total). */
-const INVESTED_LABEL: Readonly<Record<KindBucket, CopyKey>> = {
+const INVESTED_LABEL: Readonly<Record<InvestedKindId, CopyKey>> = {
   taxable: 'snapshotInvestedTaxable',
   pretax: 'snapshotInvestedPretax',
   roth: 'snapshotInvestedRoth',
@@ -275,7 +277,7 @@ export function investedKinds(draft: MemoryModelSnapshot['draft']): {
   readonly total: number
 } {
   const src = accountSources(draft)
-  const kinds = KIND_BUCKETS.map((id) => ({ id, label: copy[INVESTED_LABEL[id]], value: roundedBalance(src[id]) }))
+  const kinds = INVESTED_KINDS.map((id) => ({ id, label: copy[INVESTED_LABEL[id]], value: roundedBalance(src[id]) }))
   return { kinds, total: kinds.reduce((s, k) => s + k.value, 0) }
 }
 

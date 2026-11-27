@@ -128,7 +128,7 @@ export const WORKING_COST_PERIOD_FIELD: FieldPath = 'workingYearCost.entryPeriod
  *  (deposits with no statutory ceiling); or `'takes-no-deposits'`, a kind no deposit may go into at all. The last two are
  *  never one answer (the Act 5 plan's KTD20): an uncapped kind skips every ceiling check, while a kind that takes no
  *  deposits is refused by every deposit path (`buildAccount`, the rail's offers, the what-if's deposits arm, the rule
- *  below). No kind takes none until gap 3's inherited IRA (U13). */
+ *  below). The inherited IRA (U13) takes none. */
 export type DepositCeiling = CatchUpAccountKind | null | 'takes-no-deposits'
 
 /** THE one kind→deposit-ceiling table: exhaustive, so a new kind fails to compile here until its deposits are decided
@@ -141,6 +141,8 @@ const KIND_TO_CATCHUP: Readonly<Record<AccountKind, DepositCeiling>> = {
   'roth-ira': 'ira',
   hsa: 'hsa',
   brokerage: null, // no statutory ceiling
+  // An heir never adds money to an inherited IRA: it takes no deposits (U13, KTD20).
+  'inherited-ira': 'takes-no-deposits',
 }
 
 /** A kind's deposit ceiling, as the one table holds it. */

@@ -36,7 +36,7 @@ import type { ScenarioDraft } from '@store/memoryModel'
 const person = (label: string): TablePerson => ({ label, mid: label, possessive: `${label}’s`, pronoun: `${label}’s`, you: false, currentAge: 60, lastAge: 88 })
 
 const META: TableMeta = {
-  sources: { taxable: [], roth: [], hsa: [], pretax: [], pretaxByPerson: [[], []] },
+  sources: { taxable: [], roth: [], hsa: [], pretax: [], pretaxByPerson: [[], []], inherited: [] },
   track: 'full',
   route: 'dated',
   startCalendarYear: 2026,

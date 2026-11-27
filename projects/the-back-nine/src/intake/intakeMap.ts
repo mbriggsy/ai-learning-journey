@@ -66,6 +66,7 @@ import type { ExposureRead } from '@store/staleness'
 import { compileBudget } from '@budget/budgetToSpending'
 import { annualAdditionsCeilingFor, contributionCeilingFor, contributionCeilingInYear, depositCeilingOf, isEmployerPlanKind } from './sanity'
 import { compileIncomeStreams } from './otherIncome'
+import { inheritedFactsProblems, inheritedLedgerParams, isInheritedAccount, type InheritedAccount } from './inheritedIra'
 // One way only (build 2's KTD2): `workingYearQuote` imports nothing from this module, and the shown-state
 // leaf imports no intake module, so neither edge closes a loop.
 import { isWorkingYearCostStale, workingYearCostFigure } from './workingYearQuote'
@@ -80,10 +81,10 @@ export { workingYearCostFigure } from './workingYearQuote'
 // ---------------------------------------------------------------------------
 
 /** The groupings `KIND_TO_BUCKET` files an account kind in, in the order the Dashboard and Investment pages draw them
- *  (taxable, then the tax-deferred, then the tax-free). THE one bucket vocabulary, as `ACCOUNT_KINDS` is the kinds': every
+ *  (taxable, then the tax-deferred, then the tax-free, then the inherited IRAs, U13). THE one bucket vocabulary, as `ACCOUNT_KINDS` is the kinds': every
  *  home that chooses by bucket keys a `Record<KindBucket, …>` or walks this list, so a grouping added here fails to
  *  compile in each home until it is named (the Act 5 plan's KTD20, insight 147). */
-export const KIND_BUCKETS = ['taxable', 'pretax', 'roth', 'hsa'] as const
+export const KIND_BUCKETS = ['taxable', 'pretax', 'roth', 'hsa', 'inherited'] as const
 export type KindBucket = (typeof KIND_BUCKETS)[number]
 
 /** Exported for the U13 re-entry read-back (ui) — the ONE kind→bucket map; the balance
@@ -97,6 +98,7 @@ export const KIND_TO_BUCKET: Readonly<Record<AccountKind, KindBucket>> = {
   'roth-ira': 'roth',
   brokerage: 'taxable',
   hsa: 'hsa',
+  'inherited-ira': 'inherited',
 }
 
 /** One entered account inside an engine ledger: its place in the draft's account list, its kind, its owner
@@ -125,6 +127,9 @@ export interface AccountSources extends Readonly<Record<KindBucket, readonly Sou
   readonly pretax: readonly SourceAccount[]
   /** Each person's own pre-tax accounts, in the people's order — the per-person ledgers the run keeps. */
   readonly pretaxByPerson: readonly (readonly SourceAccount[])[]
+  /** Every inherited IRA, in the draft's order: EACH ITS OWN LEDGER (KTD22, never pooled; 26 CFR 1.408-8(e)), so this
+   *  list is a list of sources, never one source's accounts. Never pre-tax: an inherited IRA opens no Roth row (R24). */
+  readonly inherited: readonly SourceAccount[]
 }
 
 export function accountSources(d: ScenarioDraft): AccountSources {
@@ -139,6 +144,7 @@ export function accountSources(d: ScenarioDraft): AccountSources {
     hsa: pick(inBucket('hsa')),
     pretax: pick(inBucket('pretax')),
     pretaxByPerson: d.people.map((_, i) => pick((a) => a.ownerIndex === i && inBucket('pretax')(a))),
+    inherited: pick(inBucket('inherited')),
   }
 }
 
@@ -323,6 +329,17 @@ export function missingRequiredFacts(d: ScenarioDraft): readonly MissingFact[] {
   // promising the tool prices what you enter. The block is real; only its frame was wrong.
   const hsaOwners = new Set(d.enteredAccounts.filter((a) => a.kind === 'hsa').map((a) => a.ownerIndex))
   if (hsaOwners.size > 1) out.push({ labelKey: 'kindHsaBothSpouses', kind: 'unrepresentable' })
+
+  // An inherited IRA's facts, re-judged against the live draft (U13): a fact still owed, or a case version 1 refuses
+  // (`inheritedFactsProblems` names which, and the heir it concerns).
+  d.enteredAccounts.forEach((a) => {
+    if (a.kind !== 'inherited-ira') return
+    if (!isInheritedAccount(a)) {
+      out.push({ labelKey: 'inheritedFigureLabel', personIndex: a.ownerIndex as 0 | 1 })
+      return
+    }
+    for (const p of inheritedFactsProblems(d, a)) out.push({ labelKey: p.labelKey, personIndex: a.ownerIndex as 0 | 1, kind: p.kind })
+  })
 
   return out
 }
@@ -593,9 +610,13 @@ function contributionChannelsFor(
     let employerHsaT = 0
     for (const a of d.enteredAccounts) {
       if (a.ownerIndex !== ownerIndex) continue
+      const bucket = KIND_TO_BUCKET[a.kind]
+      // An inherited IRA takes no deposits (U13, KTD20: the codec and the account form refuse one), and its ledger is not
+      // a deposit channel, so it adds nothing here.
+      if (bucket === 'inherited') continue
       const family = familyOf(a.kind)
       const scale = family === null ? 1 : familyScaleAt(d, ownerIndex, family, t, 'runway')
-      sums[KIND_TO_BUCKET[a.kind]] += (a.annualContribution ?? 0) * scale
+      sums[bucket] += (a.annualContribution ?? 0) * scale
       if (a.kind === 'hsa' && a.hsaEmployerAnnual !== undefined) {
         // Employer HSA money joins the owner's OWN hsa inflow (same bucket, same
         // family scale) — never the pretax employer-match channel. The combined
@@ -772,6 +793,11 @@ function buildOverlay(d: ScenarioDraft, horizonYears: number): OverlayParams | u
   const conversions =
     d.rothConversion !== undefined ? expandRothConversion(d.rothConversion, horizonYears) : undefined
 
+  // The Act 5 plan's U13 — one engine ledger per inherited IRA (KTD22), from the ONE grouping, in the draft's order.
+  // PRESENCE-keyed: a household holding none writes no field (the engine refuses an empty list: one OFF shape). Their
+  // balances stay in `buildParams`' kind-blind portfolio sum, which is exactly the R19 gate's buckets plus the ledgers.
+  const inheritedIras = sources.inherited.map((s) => inheritedLedgerParams(d, d.enteredAccounts[s.index] as InheritedAccount))
+
   return {
     taxEnabled: true,
     rmdEnabled: true,
@@ -817,6 +843,7 @@ function buildOverlay(d: ScenarioDraft, horizonYears: number): OverlayParams | u
     ...(accumulation !== undefined ? { accumulation } : {}),
     ...(income !== undefined ? { income } : {}),
     ...(conversions !== undefined ? { conversions } : {}),
+    ...(inheritedIras.length > 0 ? { inheritedIras } : {}),
   }
 }
 

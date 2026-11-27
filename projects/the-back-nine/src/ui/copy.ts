@@ -281,6 +281,7 @@ export const copy = {
   kindRothIra: 'Roth IRA',
   kindBrokerage: 'Brokerage / taxable',
   kindHsa: 'HSA',
+  kindInheritedIra: 'Inherited IRA',
   accountValueLabel: 'Balance today',
   accountBasisLabel: 'Cost basis',
   accountBasisHelp:
@@ -634,6 +635,23 @@ export const copy = {
   // The two unrepresentable fact names. Each has to read as the object of `answerCannotPrice`.
   employerCoverageUnpriced: 'Coverage bought on your own while the other one still works',
   kindHsaBothSpouses: 'Two HSAs, one for each of you',
+  // An inherited IRA's facts, as the missing-fact lists name them (the Act 5 plan's U13; `inheritedFactsProblems` in
+  // `src/intake/inheritedIra.ts`). The first eight follow "Still needed:" (the household can give them); the last four
+  // follow "Outside what this version can price:" (answered, and version 1 can't run the case). Shipped flagged for
+  // Briggsy's later read (his 2026-11-22 rulings).
+  inheritedBirthdaysLabel: 'Inherited IRA: both birthdays, since the two birth years are ten apart',
+  inheritedBirthHalfLabel: 'Inherited IRA: which half of the year its owner was born in',
+  inheritedBeforeApril1Label: 'Inherited IRA: whether its owner died before April 1',
+  inheritedFigureLabel: 'Inherited IRA: this year’s required withdrawal',
+  inheritedDeathYearUntakenLabel: 'Inherited IRA: how much of its owner’s last required withdrawal is still owed',
+  inheritedEarlierLabel: 'Inherited IRA: what came out in each earlier year of the plan',
+  inheritedLeftToLabel: 'Inherited IRA: who gets it if the one who inherited it dies first',
+  inheritedPaceYearLabel: 'Inherited IRA: a last year between this year and the law’s last year',
+  inheritedRefusedPre2020: 'An inherited IRA whose owner died before 2020',
+  inheritedRefusedEligible: 'An inherited IRA left to someone not more than ten years younger than its owner',
+  inheritedRefusedPastEnd: 'An inherited IRA still holding money after the year the law says it must be empty',
+  inheritedRefusedFigureMismatch:
+    'An inherited IRA whose required withdrawal doesn’t match its heir’s age: the custodian may be using another person’s life, which this version can’t price, or the birth year in Family is a year off',
   answerPending: 'Working it out…',
   answerProvisionalTag: 'Provisional — with what you’ve entered so far',
   // --- W9-R7 (`docs/plans/features/answered-draft-build-spec.md`, KTD6): THE RE-FIGURING TELL. An
@@ -1226,7 +1244,7 @@ export const copy = {
     'That figure doesn’t count what you’d pay for drug and supplement plans — you answered about nothing for them, so the lines below add none.',
   // ⚠️ "the benchmark premium itself" WAS IN BOTH LISTS AND WAS FALSE — struck 2026-08-03.
   // The benchmark (SLCSP) is not merely counted, it is the ANCHOR of the whole credit:
-  // `intakeMap.ts:801` builds `slcsp` into the overlay params, `taxOverlay.ts:312` calls it "the
+  // `intakeMap.ts:827` builds `slcsp` into the overlay params, `taxOverlay.ts:312` calls it "the
   // §36B PTC basis", and `slidingScalePtc` (healthOverlay.ts:222-232) computes
   // `max(0, slcsp − applicable% × MAGI)` FROM it. Telling the reader the tool ignores the one
   // figure the discount is calculated from is the same false-negation shape O16 fixed on the Roth
@@ -1235,7 +1253,7 @@ export const copy = {
   // STRUCK, NOT REPLACED WITH AN AFFIRMATION, and that is deliberate. The O16 house pattern is
   // affirm-with-residual, but these two strings are gated on `statePriced` ALONE
   // (`stateTaxDisclosure.ts:145`) — they carry no ACA-priced axis, so the identical sentence also
-  // ships to a Medicare-only household (`intakeMap.ts:806-809`) that has no benchmark at all.
+  // ships to a Medicare-only household (`intakeMap.ts:832-835`) that has no benchmark at all.
   // "The benchmark is already in these numbers" would be a NEW false claim for that population.
   // Affirming here needs the three-state gate the Roth strings have; until then, silence is true.
   //
@@ -1684,6 +1702,7 @@ export const copy = {
   reentryBucketRoth: 'Roth accounts',
   reentryBucketTaxable: 'Brokerage',
   reentryBucketHsa: 'HSA',
+  reentryBucketInherited: 'Inherited IRAs',
   // "Balances" names what the button affirms (council `wf_22858e04-f7a`, hunter F7 at U11 walk 6: A and S would press
   // "Still about right" as if it confirmed the W row's "Yes, that’s about right"; it affirms the read-back alone).
   reentryAffirmCta: 'Balances still about right — show my answer',
@@ -1895,7 +1914,7 @@ export const copy = {
   // the gesture returns before `appModel.update` and before the write, so on BOTH routes nothing
   // reached the device. The obligation as originally filed — "we saved your plan, we could not save
   // the recommendation" — was drafted for a save-proceeds-then-drops-the-atom flow that
-  // scenarioCodec.ts:901-905 instructs S5 to make UNREACHABLE. Shipping that sentence would have
+  // scenarioCodec.ts:992-996 instructs S5 to make UNREACHABLE. Shipping that sentence would have
   // been the cardinal sin pointed the other way: a save reported that never happened.
   // R1 AND R2, both named BEFORE the tap. The no-vault route escalates a "keep this" tap into vault
   // setup, and the write is whole-plan either way (`session.save()` commits the entire scenario) —
@@ -2909,6 +2928,8 @@ export const copy = {
   workbenchRailRefusedOwnerRetired: 'Deposits are changed only for someone still working, so this what-if isn’t run.',
   workbenchRailRefusedEmployerField: 'An employer figure doesn’t apply to that account, so this what-if isn’t run.',
   workbenchRailRefusedTakesNoDeposits: 'That account can’t take new deposits, so this what-if isn’t run.',
+  workbenchRailRefusedPaceNotInherited: 'That account isn’t an inherited IRA, so this what-if isn’t run.',
+  workbenchRailRefusedPaceYear: 'The chosen last year falls outside this year to the year the law says the inherited IRA must be empty, so this what-if isn’t run.',
   workbenchRailRefusedOverLimit:
     'These deposits go over the yearly limit for one person’s accounts together, so the tool would trim them. Lower one of them to try it.',
   workbenchRailRefusedPersonGone: 'A person this what-if changes is no longer in your plan, so it isn’t run.',

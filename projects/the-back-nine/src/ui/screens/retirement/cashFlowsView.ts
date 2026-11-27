@@ -282,7 +282,14 @@ function summarySpecs(meta: TableMeta, rows: readonly LedgerYearRow[]): BandSpec
             { id: 'hsa-spend', header: copy.cashFlowsColHsaSpent, read: (r) => r.hsaSpend },
             // Each inherited IRA's own withdrawal (the Act 5 plan's U13): one column per account, never pooled (KTD22).
             ...meta.inherited.map((inh, k): FieldSpec => ({ id: `draw-inherited-${k}`, header: slots.workbenchPairTakenFrom(inh.label), read: (r) => r.inherited?.[k]?.taken })),
-            { id: 'rmd', header: copy.workbenchPairRequired, read: (r) => r.rmd, drillOnly: true },
+            // Beside an inherited IRA's columns the household's own required column names its source, as Accounts →
+            // Required withdrawals does, so it never reads as the year's whole required amount (gap 3's review).
+            {
+              id: 'rmd',
+              header: meta.inherited.length > 0 ? slots.workbenchPairRequiredOf(copy.workbenchSourcePretax) : copy.workbenchPairRequired,
+              read: (r) => r.rmd,
+              drillOnly: true,
+            },
             { id: 'rmd-to-taxable', header: copy.cashFlowsColRmdMoved, read: (r) => r.rmdToTaxable, drillOnly: true },
             ...meta.inherited.flatMap((inh, k): FieldSpec[] => [
               { id: `inherited-${k}-already-out`, header: slots.cashFlowsInheritedAlreadyOut(inh.label), read: (r) => r.inherited?.[k]?.booked, drillOnly: true },

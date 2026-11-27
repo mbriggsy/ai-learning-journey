@@ -12,7 +12,7 @@ import { investedKinds } from '../../dashboard/snapshotView'
 import { balanceSheetView } from '../../dashboard/balanceSheetView'
 import { taxAllocationView } from '../../investment/investmentView'
 import { netWorthView } from '../../profile/profileView'
-import { cashFlowsView, leavesOf, type AccountsTable, type CashFlowsInput, type CashFlowsTab } from '../cashFlowsView'
+import { cashFlowsView, leavesOf, type AccountsTable, type CashFlowsInput, type CashFlowsTab, type SummaryDrill } from '../cashFlowsView'
 
 /**
  * The inherited-IRA screens (the Act 5 plan's U13, slice 2) on the two-inherited dev seed (`?seed=inherited`): Alex's IRA
@@ -34,17 +34,17 @@ function steadyRows(d: ScenarioDraft): { readonly rows: readonly LedgerYearRow[]
 }
 const { rows, meta } = steadyRows(draft)
 
-const view = (tab: CashFlowsTab, accounts: AccountsTable = 'end') =>
+const view = (tab: CashFlowsTab, accounts: AccountsTable = 'end', drill: SummaryDrill | null = null, tableMeta: TableMeta = meta) =>
   cashFlowsView({
     tab,
-    drill: null,
+    drill,
     maps: { t: null, choice: 'flow' },
     readOnly: false,
     accounts,
     future: 'steady',
     pick: 'plan',
     offers: { working: null, kept: [], recommended: false, paired: null },
-    plan: { kind: 'ready', rows, meta, updating: false, answerKey: 'k' },
+    plan: { kind: 'ready', rows, meta: tableMeta, updating: false, answerKey: 'k' },
     roughYears: { start: 1966, end: 1995, years: 30 },
     wallCalendarYear: draft.startCalendarYear,
     stateClause: null,
@@ -129,6 +129,16 @@ describe('the two-inherited seed', () => {
     expect(leaves.find((l) => l.id === 'draw-inherited-1')?.header).toBe(slots.workbenchPairTakenFrom(NAMES[1]))
     expect(v.stopgaps, 'the stopgap names only bank accounts now that the table carries inherited IRAs').toContain(copy.workbenchKindsMissing)
     expect(copy.workbenchKindsMissing).not.toMatch(/inherited/i)
+  })
+
+  it('Cash Flows → Summary / Planned distribution: beside the inherited IRAs the household’s own required column names its source; with none it keeps its plain name', () => {
+    const requiredHeader = (m: TableMeta) => {
+      const v = view('summary', 'end', 'distribution', m)
+      if (v.body.kind !== 'table') throw new Error(v.body.kind)
+      return leavesOf(v.body.columns).find((l) => l.id === 'rmd')?.header
+    }
+    expect(requiredHeader(meta)).toBe(slots.workbenchPairRequiredOf(copy.workbenchSourcePretax))
+    expect(requiredHeader({ ...meta, inherited: [] })).toBe(copy.workbenchPairRequired)
   })
 
   it('Net Worth’s, Snapshot’s, Balance Sheet’s and Tax Allocation’s totals agree to the dollar, and Tax Allocation’s parts sum to its total, the inherited IRA its own part', () => {

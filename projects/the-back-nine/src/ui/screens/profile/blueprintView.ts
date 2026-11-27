@@ -215,8 +215,9 @@ const TREATMENT_LEGEND: Readonly<Record<Treatment, LegendItem>> = {
   taxable: { id: 'taxable', label: copy.investBucketTaxable, tone: 'blue' },
   hsa: { id: 'hsa', label: copy.investBucketHsa, tone: 'sky' },
 }
-/** The legend's order on the page. */
-const TREATMENTS: readonly LegendItem[] = [TREATMENT_LEGEND.pretax, TREATMENT_LEGEND.roth, TREATMENT_LEGEND.taxable, TREATMENT_LEGEND.hsa]
+/** The legend's order on the page: the table's own order, so a treatment named there is drawn (never a hand list beside
+ *  it that could leave one out, KTD20). */
+const TREATMENTS: readonly LegendItem[] = Object.values(TREATMENT_LEGEND)
 
 function netWorthBody(d: ScenarioDraft): BlueprintBody {
   return {

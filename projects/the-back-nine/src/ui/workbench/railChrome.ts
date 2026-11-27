@@ -28,8 +28,9 @@ import {
   isWorkingOwner,
   KIND_TO_BUCKET,
   workingYearLeftOverShownState,
+  type KindBucket,
 } from '@intake/intakeMap'
-import { isEmployerPlanKind } from '@intake/sanity'
+import { isEmployerPlanKind, takesDeposits } from '@intake/sanity'
 import { applyBundle, type WhatIfRefusal } from '@intake/whatIf'
 import { LEFT_OVER_CARRIES } from '@intake/workingYearLeftOverState'
 import { lineDisplayName } from '@intake/budgetLines'
@@ -134,7 +135,8 @@ export function railOffers(draft: ScenarioDraft, planStopYear: number | undefine
       : { kind: 'total', plan: draft.annualSpendingReal }
   const deposits: DepositOffer[] = []
   for (const a of draft.enteredAccounts) {
-    if (a.id === undefined || !isWorkingOwner(draft, a.ownerIndex)) continue
+    // No deposits lever on a kind that takes none (KTD20; `applyBundle` refuses one by name).
+    if (a.id === undefined || !isWorkingOwner(draft, a.ownerIndex) || !takesDeposits(a.kind)) continue
     const field = isEmployerPlanKind(a.kind) ? 'employerMatchAnnual' : a.kind === 'hsa' ? 'hsaEmployerAnnual' : undefined
     const planEmployer = field === undefined ? undefined : (a[field] ?? 0)
     deposits.push({
@@ -390,8 +392,7 @@ export const PAIRED_COLUMNS = [
 ] as const
 export type PairedColumnId = (typeof PAIRED_COLUMNS)[number]
 
-type Bucket = 'pretax' | 'roth' | 'taxable' | 'hsa'
-const PUT_IN: Readonly<Record<Bucket, PairedColumnId>> = {
+const PUT_IN: Readonly<Record<KindBucket, PairedColumnId>> = {
   pretax: 'put-in-pretax',
   roth: 'put-in-roth',
   taxable: 'put-in-taxable',
@@ -578,6 +579,7 @@ const REFUSAL_KEYS: Readonly<Record<Exclude<WhatIfRunRefusal['kind'], 'stop-year
   'spending-total-on-budget': 'workbenchRailRefusedTotalOnBudget',
   'budget-dropped': 'workbenchRailRefusedBudgetDropped',
   'account-gone': 'workbenchRailRefusedAccountGone',
+  'deposits-kind-takes-none': 'workbenchRailRefusedTakesNoDeposits',
   'deposits-owner-not-working': 'workbenchRailRefusedOwnerRetired',
   'deposits-field-not-on-kind': 'workbenchRailRefusedEmployerField',
   'person-gone': 'workbenchRailRefusedPersonGone',

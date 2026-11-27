@@ -303,6 +303,9 @@ export const copy = {
   // a silent no-op on a missing kind or balance.
   errAccountKindRequired: 'Still need the kind of account.',
   errAccountValueRequired: 'Still need the balance today.',
+  // A kind that takes no deposits (sanity.ts's `takesDeposits`; none until gap 3's inherited IRA): ONE sentence for the
+  // deposit drawer's limit line, its refused deposit and the contribution rule's refusal (the Act 5 plan's KTD20).
+  accountTakesNoDeposits: 'This kind of account can’t take new deposits.',
   // --- other income in retirement (R40 — pension/rental/alimony/annuity/other;
   //     opt-in off the 5-minute path; session-only until the vault is saved) ---
   incomeOwnerLegend: 'Whose income is this?',
@@ -1223,7 +1226,7 @@ export const copy = {
     'That figure doesn’t count what you’d pay for drug and supplement plans — you answered about nothing for them, so the lines below add none.',
   // ⚠️ "the benchmark premium itself" WAS IN BOTH LISTS AND WAS FALSE — struck 2026-08-03.
   // The benchmark (SLCSP) is not merely counted, it is the ANCHOR of the whole credit:
-  // `intakeMap.ts:795` builds `slcsp` into the overlay params, `taxOverlay.ts:297` calls it "the
+  // `intakeMap.ts:801` builds `slcsp` into the overlay params, `taxOverlay.ts:297` calls it "the
   // §36B PTC basis", and `slidingScalePtc` (healthOverlay.ts:222-232) computes
   // `max(0, slcsp − applicable% × MAGI)` FROM it. Telling the reader the tool ignores the one
   // figure the discount is calculated from is the same false-negation shape O16 fixed on the Roth
@@ -1232,7 +1235,7 @@ export const copy = {
   // STRUCK, NOT REPLACED WITH AN AFFIRMATION, and that is deliberate. The O16 house pattern is
   // affirm-with-residual, but these two strings are gated on `statePriced` ALONE
   // (`stateTaxDisclosure.ts:145`) — they carry no ACA-priced axis, so the identical sentence also
-  // ships to a Medicare-only household (`intakeMap.ts:800-803`) that has no benchmark at all.
+  // ships to a Medicare-only household (`intakeMap.ts:806-809`) that has no benchmark at all.
   // "The benchmark is already in these numbers" would be a NEW false claim for that population.
   // Affirming here needs the three-state gate the Roth strings have; until then, silence is true.
   //
@@ -2905,6 +2908,7 @@ export const copy = {
   workbenchRailRefusedAccountGone: 'An account this what-if changes is no longer in your plan, so it isn’t run.',
   workbenchRailRefusedOwnerRetired: 'Deposits are changed only for someone still working, so this what-if isn’t run.',
   workbenchRailRefusedEmployerField: 'An employer figure doesn’t apply to that account, so this what-if isn’t run.',
+  workbenchRailRefusedTakesNoDeposits: 'That account can’t take new deposits, so this what-if isn’t run.',
   workbenchRailRefusedOverLimit:
     'These deposits go over the yearly limit for one person’s accounts together, so the tool would trim them. Lower one of them to try it.',
   workbenchRailRefusedPersonGone: 'A person this what-if changes is no longer in your plan, so it isn’t run.',

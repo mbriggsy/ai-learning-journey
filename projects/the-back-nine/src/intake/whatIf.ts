@@ -46,7 +46,7 @@ import type {
   WhatIfLeverV6,
 } from '@shared/model'
 import { isDateRoute, isWorkingOwner } from './intakeMap'
-import { accountField, isEmployerPlanKind, validateDraft } from './sanity'
+import { accountField, isEmployerPlanKind, takesDeposits, validateDraft } from './sanity'
 
 // ---------------------------------------------------------------------------
 // The lever writers — the one write of each lever, shared by the front-room sheets (`src/ui/editorSheets.tsx`),
@@ -114,6 +114,7 @@ export type WhatIfRefusal =
   | { readonly kind: 'spending-total-on-budget' }
   | { readonly kind: 'budget-dropped' }
   | { readonly kind: 'account-gone'; readonly accountId: string }
+  | { readonly kind: 'deposits-kind-takes-none'; readonly accountId: string }
   | { readonly kind: 'deposits-owner-not-working'; readonly accountId: string }
   | { readonly kind: 'deposits-field-not-on-kind'; readonly accountId: string; readonly field: 'employerMatchAnnual' | 'hsaEmployerAnnual' }
   | { readonly kind: 'deposits-over-limit'; readonly accountId: string; readonly rule: string }
@@ -192,6 +193,9 @@ const ARMS: { readonly [K in WhatIfLeverKind]: Arm<K> } = {
     const at = w.draft.enteredAccounts.findIndex((a) => a.id === l.accountId)
     if (at === -1) return { kind: 'account-gone', accountId: l.accountId }
     const account = w.draft.enteredAccounts[at]!
+    // KTD20: a kind that takes no deposits refuses the lever by its kind (a kept what-if can name an account whose kind
+    // was changed since, so the rail's offers skipping it is not enough).
+    if (!takesDeposits(account.kind)) return { kind: 'deposits-kind-takes-none', accountId: l.accountId }
     // KTD15: a retired owner's deposits compile to nothing, so no deposits lever applies to their accounts.
     if (!isWorkingOwner(w.draft, account.ownerIndex)) return { kind: 'deposits-owner-not-working', accountId: l.accountId }
     // An override the account's kind cannot carry would be silently inert in the run (the builder reads the match on

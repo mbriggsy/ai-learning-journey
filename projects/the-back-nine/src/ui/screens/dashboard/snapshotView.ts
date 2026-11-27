@@ -30,11 +30,20 @@ import type { SavedRecommendationStatus } from '@store/savedRecommendation'
 import type { BandFan, LedgerYearRow, SavedRecommendationV3 } from '@shared/model'
 import type { XAnnotation } from '@viz/bandData'
 import type { FanLabels } from '@viz/charts/fanOptions'
-import { isDateRoute, missingRequiredFacts, pricedStateForRun, spineMedicarePriced, accountSources, type SourceAccount } from '@intake/intakeMap'
+import {
+  isDateRoute,
+  missingRequiredFacts,
+  pricedStateForRun,
+  spineMedicarePriced,
+  accountSources,
+  KIND_BUCKETS,
+  type KindBucket,
+  type SourceAccount,
+} from '@intake/intakeMap'
 import { blockedLeadFor, missingFactLines } from '@intake/missingFacts'
 import { selectElevatedAnswer } from '../../answerView'
 import { planClockAnchor, type BandPlanClockAnchor } from '../../bandAnnotations'
-import { copy, slots } from '../../copy'
+import { copy, slots, type CopyKey } from '../../copy'
 import { staticDisclosures } from '../../entryCopy'
 import { bandTrackNote, fanPremise, type FanPremise } from '../../fanNotes'
 import { formatEnteredDollar, formatMmDollar, mmAxisFormatterFor } from '../../money'
@@ -246,7 +255,17 @@ const dollars = (v: number): string => `$${formatEnteredDollar(v)}`
 const roundedBalance = (accounts: readonly SourceAccount[]): number =>
   accounts.reduce((s, a) => s + (Number.isFinite(a.valueToday) ? Math.round(a.valueToday) : 0), 0)
 
-export type InvestedKindId = 'taxable' | 'pretax' | 'roth' | 'hsa'
+/** The groupings the card splits by: the engine's own (`KIND_BUCKETS`), in its order. */
+export type InvestedKindId = KindBucket
+
+/** Each grouping's row name. Exhaustive, so a grouping added to the engine's vocabulary fails to compile here until it is
+ *  named (the Act 5 plan's KTD20; the four hand-typed rows this replaced would have left its accounts out of the total). */
+const INVESTED_LABEL: Readonly<Record<KindBucket, CopyKey>> = {
+  taxable: 'snapshotInvestedTaxable',
+  pretax: 'snapshotInvestedPretax',
+  roth: 'snapshotInvestedRoth',
+  hsa: 'snapshotInvestedHsa',
+}
 
 /** The entered balances by kind (taxable, pre-tax, Roth, HSA, in that order) and their total: the ONE split Snapshot's
  *  Invested accounts card and Dashboard → Balance Sheet (RC16) both print, so the two can never disagree. */
@@ -255,12 +274,7 @@ export function investedKinds(draft: MemoryModelSnapshot['draft']): {
   readonly total: number
 } {
   const src = accountSources(draft)
-  const kinds = [
-    { id: 'taxable' as const, label: copy.snapshotInvestedTaxable, value: roundedBalance(src.taxable) },
-    { id: 'pretax' as const, label: copy.snapshotInvestedPretax, value: roundedBalance(src.pretax) },
-    { id: 'roth' as const, label: copy.snapshotInvestedRoth, value: roundedBalance(src.roth) },
-    { id: 'hsa' as const, label: copy.snapshotInvestedHsa, value: roundedBalance(src.hsa) },
-  ]
+  const kinds = KIND_BUCKETS.map((id) => ({ id, label: copy[INVESTED_LABEL[id]], value: roundedBalance(src[id]) }))
   return { kinds, total: kinds.reduce((s, k) => s + k.value, 0) }
 }
 

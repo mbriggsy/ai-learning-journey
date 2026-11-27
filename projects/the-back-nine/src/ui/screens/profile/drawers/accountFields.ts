@@ -139,6 +139,7 @@ export function buildAccountEdit(
     const b = built.block
     if (b.kind === 'missing') return { ok: false, fields: b.error === 'errAccountKindRequired' ? { kind: copy[b.error] } : { value: copy[b.error] } }
     if (b.kind === 'allocation') return { ok: false, fields: { mix: legsRefusal(form.legs) ?? copy.errClassifierSum } }
+    if (b.kind === 'no-deposits') return { ok: false, fields: { deposit: copy.accountTakesNoDeposits } }
     const words = fieldErrorText({ messageKey: b.messageKey, params: b.params })
     if (b.messageKey === 'errAdditionsCeiling') return { ok: false, fields: { match: words } }
     return { ok: false, fields: form.kind === 'hsa' ? { deposit: words, hsaEmployer: words } : { deposit: words } }

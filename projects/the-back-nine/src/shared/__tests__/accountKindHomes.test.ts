@@ -11,10 +11,16 @@
  *   - switch:       a `switch` on a kind with a `default` arm;
  *   - conditional:  a conditional that picks a kind literal (`x ? 'roth-ira' : 'traditional-ira'`).
  *
- * An allowed finding carries its reason, in one of two classes: `safe:` (KTD20's "safe equality checks": the new kind
- * is simply excluded, which is right) or `U10: convert` (a home U10's first commit turns into an exhaustive Record).
- * The list is matched as a multiset, both ways: a new finding reds, and so does an entry no longer found, so the list
- * only shrinks. The planted file below proves each shape reds (a new kind of check owes its planted guard).
+ * An allowed finding carries its reason, `safe:` (KTD20's "safe equality checks": the new kind is simply excluded, which
+ * is right). U10's first commit (2026-11-27) converted every other finding into an exhaustive Record or a read of one, so
+ * the list holds safe checks only. It is matched as a multiset, both ways: a new finding reds, and so does an entry no
+ * longer found, so the list only shrinks. The planted file below proves each shape reds (a new kind of check owes its
+ * planted guard).
+ *
+ * The scan sees comparisons; the homes that are Records it cannot see. The last arm proves those: the same program with
+ * an eighth kind, a fifth grouping and a fifth treatment added must fail to compile inside every home's own declaration
+ * (the plan's type-level test), and the tree as it stands compiles clean in the same places (so a program that cannot
+ * resolve a module, which would red everywhere, never passes).
  */
 import { readFileSync } from 'node:fs'
 import { join, relative, sep } from 'node:path'
@@ -114,24 +120,15 @@ function scan(program: ts.Program, files: readonly ts.SourceFile[]): Finding[] {
 }
 
 /** The allowed findings, keyed `file | shape | text`, with how many times that exact text may occur in that file.
- *  Classified 2026-11-27 (b9-1) against KTD20. One key can hold sites of both classes (a count over one text): it is
- *  filed under U10 while any of its sites is U10's, and the count drop that converting one forces re-opens it.
- *  KTD20 also names homes no scan can see, because they choose by tax bucket or label rather than by kind
- *  (`investedKinds`, Balance Sheet's grouping, `bucketAccounts`, `reentryChrome`'s four buckets, `treatmentLegend`,
- *  `accountAddItems`, `ARMS.deposits`' and `railOffers`' deposit loops, `buildAccount`'s deposit): its list governs those. */
+ *  Classified 2026-11-27 (b9-1) against KTD20; every `U10: convert` entry was converted and deleted the same day (b9-2).
+ *  The homes no scan can see, because they choose by grouping, treatment or deposits rather than by comparing a kind,
+ *  are proved by the last arm's `RECORD_HOMES` (a Record) or read the one table (`takesDeposits`, `depositCeilingOf`). */
 const ALLOWED: Readonly<Record<string, { readonly reason: string; readonly count?: number }>> = {
-  // --- U10's first commit converts these (KTD20, "silent today, and wrong for a new kind") ---
-  "src/intake/intakeMap.ts | compare | kind === 'brokerage'": { reason: 'U10: convert `familyOf` (a ternary that files any unnamed kind in the IRA family, sharing its deposit ceiling)' },
-  "src/intake/intakeMap.ts | compare | kind === 'hsa'": { reason: 'U10: convert `familyOf` (its HSA arm; the same ternary)' },
-  "src/ui/screens/profile/profileView.ts | compare | a.kind === 'brokerage'": {
-    reason: 'U10: convert `limitLines` and `savingsView` (brokerage-or-not: any unnamed kind reads as having a deposit limit)',
-    count: 3,
-  },
-  "src/ui/screens/profile/profileView.ts | compare | a.kind === 'hsa'": {
-    reason: 'U10: convert `limitLines`\' family pick (ends on the IRA family); its other two sites, `savingsView`\'s HSA employer row and HSA icon, are safe',
-    count: 3,
-  },
   // --- KTD20's "safe equality checks": a new kind is simply excluded, which is right ---
+  "src/ui/screens/profile/profileView.ts | compare | a.kind === 'hsa'": {
+    reason: 'safe: HSA checks (`savingsView`\'s HSA employer row and its HSA icon)',
+    count: 2,
+  },
   "src/intake/intakeMap.ts | compare | a.kind === 'brokerage'": { reason: 'safe: the brokerage-only basis (the missing-basis check and the basis sum)', count: 2 },
   "src/intake/intakeMap.ts | compare | a.kind === 'hsa'": { reason: 'safe: the HSA checks (HSA owners, the HSA employer stream, the HSA accounts)', count: 3 },
   "src/intake/intakeMap.ts | conditional | family === 'employerPlan' ? '401k' : family === 'hsa' ? 'hsa' : 'traditional-ira'": {
@@ -150,31 +147,104 @@ const ALLOWED: Readonly<Record<string, { readonly reason: string; readonly count
 
 const keyOf = (f: Finding): string => `${f.file} | ${f.shape} | ${f.text}`
 
+const relOf = (f: string): string => relative(ROOT, f).split(sep).join('/')
+const scanned = (f: string): boolean => {
+  const rel = relOf(f)
+  return rel.startsWith('src/') && /\.tsx?$/.test(rel) && !rel.endsWith('.d.ts') && !rel.includes('/__tests__/')
+}
+
+/** One program over `src` (tests aside), with some files' text replaced in memory and extra root files added. */
+function programOf(overrides: ReadonlyMap<string, string>, extraRoots: readonly string[]): ts.Program {
+  const config = ts.readConfigFile(join(ROOT, 'tsconfig.json'), ts.sys.readFile)
+  const parsed = ts.parseJsonConfigFileContent(config.config, ts.sys, ROOT)
+  const host = ts.createCompilerHost(parsed.options, true)
+  const baseGet = host.getSourceFile.bind(host)
+  const baseExists = host.fileExists.bind(host)
+  const baseRead = host.readFile.bind(host)
+  const textOf = (f: string): string | undefined => overrides.get(join(f))
+  host.getSourceFile = (f, lang, onError, shouldCreate) => {
+    const text = textOf(f)
+    return text !== undefined ? ts.createSourceFile(f, text, lang, true) : baseGet(f, lang, onError, shouldCreate)
+  }
+  host.fileExists = (f) => textOf(f) !== undefined || baseExists(f)
+  host.readFile = (f) => textOf(f) ?? baseRead(f)
+  return ts.createProgram({ rootNames: [...parsed.fileNames.filter(scanned), ...extraRoots], options: parsed.options, host })
+}
+
+/** Each source edit that adds one member to a vocabulary; it must apply exactly once (else the arm proves nothing). */
+const VOCABULARY_EDITS: readonly { readonly file: string; readonly from: RegExp; readonly to: string }[] = [
+  { file: 'src/shared/model.ts', from: /(export const ACCOUNT_KINDS = \[[^\]]*'hsa',)/, to: "$1\n  'eighth-kind'," },
+  { file: 'src/intake/intakeMap.ts', from: /(export const KIND_BUCKETS = \[[^\]]*'hsa')/, to: "$1, 'eighth-bucket'" },
+  { file: 'src/ui/screens/profile/profileView.ts', from: /(export type Treatment = 'pretax' \| 'roth' \| 'taxable' \| 'hsa')/, to: "$1 | 'eighth-treatment'" },
+]
+
+/** Every home that chooses by kind, by grouping or by treatment through a Record (or an object literal the vocabulary
+ *  indexes), by the declaration that must stop compiling when its vocabulary gains a member. */
+const RECORD_HOMES: readonly { readonly file: string; readonly name: string }[] = [
+  // An eighth kind.
+  { file: 'src/intake/intakeMap.ts', name: 'KIND_TO_BUCKET' },
+  { file: 'src/intake/sanity.ts', name: 'KIND_TO_CATCHUP' },
+  { file: 'src/intake/accountKinds.ts', name: 'KIND_LABELS' },
+  { file: 'src/ui/screens/profile/profileView.ts', name: 'KIND_TREATMENT' },
+  // A fifth grouping.
+  { file: 'src/intake/intakeMap.ts', name: 'accountSources' },
+  { file: 'src/intake/intakeMap.ts', name: 'contributionChannelsFor' },
+  { file: 'src/ui/screens/dashboard/snapshotView.ts', name: 'INVESTED_LABEL' },
+  { file: 'src/ui/screens/investment/investmentView.ts', name: 'BUCKET_NAME' },
+  { file: 'src/ui/screens/investment/investmentView.ts', name: 'BUCKET_LOOK' },
+  { file: 'src/ui/reentryChrome.ts', name: 'BUCKET_LABEL_KEY' },
+  { file: 'src/ui/reentryChrome.ts', name: 'composeReentry' },
+  { file: 'src/ui/workbench/railChrome.ts', name: 'PUT_IN' },
+  // A fifth treatment.
+  { file: 'src/ui/screens/profile/profileView.ts', name: 'TREATMENT_WORDS' },
+  { file: 'src/ui/screens/profile/blueprintView.ts', name: 'TREATMENT_LEGEND' },
+]
+
+/** The homes whose own declaration holds a type error in `program`. Throws on a home it cannot find (a renamed home must
+ *  be re-listed, never silently dropped). */
+function homesInError(program: ts.Program): string[] {
+  const out: string[] = []
+  for (const home of RECORD_HOMES) {
+    const sf = program.getSourceFiles().find((s) => relOf(s.fileName) === home.file)
+    if (sf === undefined) throw new Error(`no source file ${home.file}`)
+    let span: { start: number; end: number } | undefined
+    const visit = (n: ts.Node): void => {
+      if (span !== undefined) return
+      if ((ts.isVariableDeclaration(n) || ts.isFunctionDeclaration(n)) && n.name !== undefined && ts.isIdentifier(n.name) && n.name.text === home.name) {
+        span = { start: n.getStart(sf), end: n.getEnd() }
+        return
+      }
+      ts.forEachChild(n, visit)
+    }
+    visit(sf)
+    if (span === undefined) throw new Error(`no declaration ${home.name} in ${home.file}`)
+    const { start, end } = span
+    if (program.getSemanticDiagnostics(sf).some((d) => d.start !== undefined && d.start >= start && d.start < end)) out.push(`${home.file} ${home.name}`)
+  }
+  return out
+}
+
 describe('account kinds are never decided by omission (U10, KTD20, insight 147)', () => {
   let tree: Finding[] = []
   let planted: Finding[] = []
+  let treeProgram: ts.Program
+  let grownProgram: ts.Program
 
   beforeAll(() => {
-    const config = ts.readConfigFile(join(ROOT, 'tsconfig.json'), ts.sys.readFile)
-    const parsed = ts.parseJsonConfigFileContent(config.config, ts.sys, ROOT)
-    const scanned = (f: string): boolean => {
-      const rel = relative(ROOT, f).split(sep).join('/')
-      return rel.startsWith('src/') && /\.tsx?$/.test(rel) && !rel.endsWith('.d.ts') && !rel.includes('/__tests__/')
-    }
-    const host = ts.createCompilerHost(parsed.options, true)
-    const baseGet = host.getSourceFile.bind(host)
-    const baseExists = host.fileExists.bind(host)
-    const baseRead = host.readFile.bind(host)
     const isPlanted = (f: string): boolean => join(f) === PLANTED
-    host.getSourceFile = (f, lang, onError, shouldCreate) =>
-      isPlanted(f) ? ts.createSourceFile(f, PLANTED_TEXT, lang, true) : baseGet(f, lang, onError, shouldCreate)
-    host.fileExists = (f) => isPlanted(f) || baseExists(f)
-    host.readFile = (f) => (isPlanted(f) ? PLANTED_TEXT : baseRead(f))
-    const roots = [...parsed.fileNames.filter(scanned), PLANTED]
-    const program = ts.createProgram({ rootNames: roots, options: parsed.options, host })
-    const files = program.getSourceFiles()
-    tree = scan(program, files.filter((sf) => scanned(sf.fileName) && !isPlanted(sf.fileName)))
-    planted = scan(program, files.filter((sf) => isPlanted(sf.fileName)))
+    treeProgram = programOf(new Map([[PLANTED, PLANTED_TEXT]]), [PLANTED])
+    const files = treeProgram.getSourceFiles()
+    tree = scan(treeProgram, files.filter((sf) => scanned(sf.fileName) && !isPlanted(sf.fileName)))
+    planted = scan(treeProgram, files.filter((sf) => isPlanted(sf.fileName)))
+    const grown = new Map<string, string>()
+    for (const edit of VOCABULARY_EDITS) {
+      const path = join(ROOT, edit.file)
+      const before = grown.get(path) ?? readFileSync(path, 'utf8')
+      const after = before.replace(edit.from, edit.to)
+      if (after === before || before.match(new RegExp(edit.from.source, 'g'))?.length !== 1) throw new Error(`the vocabulary edit did not apply once in ${edit.file}`)
+      grown.set(path, after)
+    }
+    grownProgram = programOf(grown, [])
   }, 180_000)
 
   it('the scan is not vacuous: each shape in the planted file reds, and a bucket sharing a kind literal stays quiet', () => {
@@ -206,11 +276,16 @@ describe('account kinds are never decided by omission (U10, KTD20, insight 147)'
     expect(stale, 'an allowed entry is no longer found: delete it (the list only shrinks)').toEqual([])
   })
 
-  it('every allowed entry names its class: safe, or U10’s conversion', () => {
+  it('every allowed entry is a safe check, with its reason', () => {
     for (const [key, a] of Object.entries(ALLOWED)) {
-      expect(a.reason, key).toMatch(/^(safe: |U10: convert )\S/)
+      expect(a.reason, key).toMatch(/^safe: \S/)
     }
   })
+
+  it('an eighth kind, a fifth grouping and a fifth treatment fail to compile in every Record home; the tree compiles clean there', () => {
+    expect(homesInError(treeProgram), 'the tree as it stands: no home in error').toEqual([])
+    expect(homesInError(grownProgram)).toEqual(RECORD_HOMES.map((h) => `${h.file} ${h.name}`))
+  }, 180_000)
 
   it('reads the real source (the scan covers the intake and the screens)', () => {
     expect(tree.some((f) => f.file.startsWith('src/intake/'))).toBe(true)

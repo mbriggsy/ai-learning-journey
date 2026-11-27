@@ -14,7 +14,7 @@
  * not be laundered into a freshness claim (R19).
  */
 import type { CurrentScenario } from '@shared/model'
-import { KIND_TO_BUCKET } from '@intake/intakeMap'
+import { KIND_TO_BUCKET, type KindBucket } from '@intake/intakeMap'
 import type { StalenessReport } from '@store/staleness'
 import type { PricingFamily } from '@engine/pricingVersion'
 import { copy, slots, type CopyKey } from './copy'
@@ -84,12 +84,16 @@ export interface ReentryView {
   readonly elapsedLine: string | null
 }
 
-const BUCKET_LABEL_KEY: Readonly<Record<'pretax' | 'roth' | 'taxable' | 'hsa', CopyKey>> = {
+/** Each grouping's read-back label, in the read-back's order (pre-tax, Roth, taxable, HSA): the rows walk these keys in
+ *  this order. Keyed by the engine's grouping vocabulary, so a grouping added to `KIND_BUCKETS` fails to compile here
+ *  until it is named (the Act 5 plan's KTD20; the hand-typed list this replaced would have left its balances unread). */
+const BUCKET_LABEL_KEY: Readonly<Record<KindBucket, CopyKey>> = {
   pretax: 'reentryBucketPretax',
   roth: 'reentryBucketRoth',
   taxable: 'reentryBucketTaxable',
   hsa: 'reentryBucketHsa',
 }
+const READBACK_ORDER = Object.keys(BUCKET_LABEL_KEY) as KindBucket[]
 
 /** The gate's KTD21 sentence, composed by the caller from the HYDRATED draft this report describes
  *  (`workingYearCostStaleLine`: the W step's own note, `workingYearCostStaleNote`, plus build 2's R12
@@ -192,14 +196,14 @@ export function composeReentry(
   const allRetired = scenario.people.every((p) => p.workStatus === 'retired')
 
   // ── the per-bucket read-back ─────────────────────────────────────────────────────────
-  const sums: Record<'pretax' | 'roth' | 'taxable' | 'hsa', number> = {
+  const sums: Record<KindBucket, number> = {
     pretax: 0,
     roth: 0,
     taxable: 0,
     hsa: 0,
   }
   for (const a of scenario.enteredAccounts) sums[KIND_TO_BUCKET[a.kind]] += a.valueToday
-  const balanceRows = (['pretax', 'roth', 'taxable', 'hsa'] as const).flatMap((bucket) =>
+  const balanceRows = READBACK_ORDER.flatMap((bucket) =>
     scenario.enteredAccounts.some((a) => KIND_TO_BUCKET[a.kind] === bucket)
       ? [{ label: copy[BUCKET_LABEL_KEY[bucket]], value: `$${formatDollar(sums[bucket])}` }]
       : [],

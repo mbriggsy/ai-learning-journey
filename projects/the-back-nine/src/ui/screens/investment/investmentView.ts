@@ -20,7 +20,7 @@
  * AN ACCOUNT WITH NO MIX: `householdStockWeight` is null, the plan names the missing mix and the run does not run, so the
  * page draws no donut and names each such account (never a default split).
  */
-import { blendOf, blendSourceOf, KIND_TO_BUCKET } from '@intake/intakeMap'
+import { blendOf, blendSourceOf, KIND_BUCKETS, KIND_TO_BUCKET, type KindBucket } from '@intake/intakeMap'
 import { kindLabel } from '@intake/accountKinds'
 import { formatMoney } from '@intake/moneyFormat'
 import type { EnteredAccount, WhatIfLeverV6 } from '@shared/model'
@@ -105,8 +105,10 @@ const money = (v: number): string => slots.workbenchFactDollars(formatMoney(Math
 
 // ── The tax buckets (`KIND_TO_BUCKET`, the engine's one grouping) ───────────────────────────────────────────────────
 
-export const TAX_BUCKETS = ['taxable', 'pretax', 'roth', 'hsa'] as const
-export type TaxBucketId = (typeof TAX_BUCKETS)[number]
+/** The engine's own grouping vocabulary and its order, never a hand-typed copy: a grouping added to `KIND_BUCKETS` reaches
+ *  every part, picker and colour here, and each table below fails to compile until it is named (the Act 5 plan's KTD20). */
+export const TAX_BUCKETS = KIND_BUCKETS
+export type TaxBucketId = KindBucket
 
 const BUCKET_NAME: Readonly<Record<TaxBucketId, string>> = {
   taxable: copy.investBucketTaxable,

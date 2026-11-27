@@ -64,7 +64,7 @@ import { isPricedState, type PricedState } from '@engine/constants/stateTax'
 import type { ScenarioDraft } from '@store/memoryModel'
 import type { ExposureRead } from '@store/staleness'
 import { compileBudget } from '@budget/budgetToSpending'
-import { annualAdditionsCeilingFor, contributionCeilingFor, contributionCeilingInYear, isEmployerPlanKind } from './sanity'
+import { annualAdditionsCeilingFor, contributionCeilingFor, contributionCeilingInYear, depositCeilingOf, isEmployerPlanKind } from './sanity'
 import { compileIncomeStreams } from './otherIncome'
 // One way only (build 2's KTD2): `workingYearQuote` imports nothing from this module, and the shown-state
 // leaf imports no intake module, so neither edge closes a loop.
@@ -79,12 +79,17 @@ export { workingYearCostFigure } from './workingYearQuote'
 // kind → bucket / family maps
 // ---------------------------------------------------------------------------
 
-type Bucket = 'pretax' | 'roth' | 'taxable' | 'hsa'
+/** The groupings `KIND_TO_BUCKET` files an account kind in, in the order the Dashboard and Investment pages draw them
+ *  (taxable, then the tax-deferred, then the tax-free). THE one bucket vocabulary, as `ACCOUNT_KINDS` is the kinds': every
+ *  home that chooses by bucket keys a `Record<KindBucket, …>` or walks this list, so a grouping added here fails to
+ *  compile in each home until it is named (the Act 5 plan's KTD20, insight 147). */
+export const KIND_BUCKETS = ['taxable', 'pretax', 'roth', 'hsa'] as const
+export type KindBucket = (typeof KIND_BUCKETS)[number]
 
 /** Exported for the U13 re-entry read-back (ui) — the ONE kind→bucket map; the balance
  *  confirm's per-bucket sums must group exactly the way the engine's buckets do, or the
  *  read-back would disagree with the plan it fronts. */
-export const KIND_TO_BUCKET: Readonly<Record<AccountKind, Bucket>> = {
+export const KIND_TO_BUCKET: Readonly<Record<AccountKind, KindBucket>> = {
   '401k': 'pretax',
   '403b': 'pretax',
   'traditional-ira': 'pretax',
@@ -109,8 +114,10 @@ export interface SourceAccount {
  * from the same call, captured with the run it describes (never from the live draft), so the table's "this source
  * holds these accounts" can never disagree with the balance the engine opened that ledger at (insight 081).
  * Each list keeps the draft's account order: the sums below add in exactly the order they always did.
+ * One list per grouping, by the bucket vocabulary itself, so a grouping added to `KIND_BUCKETS` fails to compile here
+ * until its accounts have a home (KTD20).
  */
-export interface AccountSources {
+export interface AccountSources extends Readonly<Record<KindBucket, readonly SourceAccount[]>> {
   readonly taxable: readonly SourceAccount[]
   readonly roth: readonly SourceAccount[]
   readonly hsa: readonly SourceAccount[]
@@ -125,7 +132,7 @@ export function accountSources(d: ScenarioDraft): AccountSources {
     d.enteredAccounts.flatMap((a, index) =>
       keep(a) ? [{ index, kind: a.kind, ownerIndex: a.ownerIndex, valueToday: a.valueToday }] : [],
     )
-  const inBucket = (bucket: Bucket) => (a: EnteredAccount) => KIND_TO_BUCKET[a.kind] === bucket
+  const inBucket = (bucket: KindBucket) => (a: EnteredAccount) => KIND_TO_BUCKET[a.kind] === bucket
   return {
     taxable: pick(inBucket('taxable')),
     roth: pick(inBucket('roth')),
@@ -450,14 +457,13 @@ interface OwnerFamilyKey {
   readonly family: 'employerPlan' | 'ira' | 'hsa'
 }
 
-const familyOf = (kind: AccountKind): OwnerFamilyKey['family'] | null =>
-  kind === 'brokerage'
-    ? null
-    : isEmployerPlanKind(kind)
-      ? 'employerPlan'
-      : kind === 'hsa'
-        ? 'hsa'
-        : 'ira'
+/** The deposit-ceiling family a kind's deposits share, read from sanity's one table (`depositCeilingOf`), never re-typed;
+ *  null where they share none: an uncapped kind, and a kind that takes no deposits (the Act 5 plan's KTD20; the ternary
+ *  this replaced copied the table by hand and filed any kind it did not name in the IRA family, under that ceiling). */
+const familyOf = (kind: AccountKind): OwnerFamilyKey['family'] | null => {
+  const ceiling = depositCeilingOf(kind)
+  return ceiling === null || ceiling === 'takes-no-deposits' ? null : ceiling
+}
 
 /** A contribution is built ONLY for a working owner — a retired owner's stale
  *  stream (an account added while working, then flipped to retired) is engine-

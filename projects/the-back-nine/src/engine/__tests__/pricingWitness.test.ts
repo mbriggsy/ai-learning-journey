@@ -67,7 +67,7 @@ import {
 } from '@engine/healthOverlay'
 import { nextIrmaaStep } from '@engine/magiLandscape'
 import { acaApplicablePercentage, acaApplicablePercentageEnhanced, irmaa, PRICED_STATES } from '@engine/constants'
-import { ACCOUNT_KINDS, FILING_STATUSES, type FilingStatus, type MarketAssumptions, type PersonInputs, type SimulationParams } from '@shared/model'
+import { FILING_STATUSES, type AccountKind, type FilingStatus, type MarketAssumptions, type PersonInputs, type SimulationParams } from '@shared/model'
 import { cashTermsForYear } from '@engine/simulate'
 import { prepareWorkingYearFloor, workingYearFederalCharge, workingYearStateCharge } from '@engine/taxOverlay'
 import { annualAdditionsCeilingFor, contributionCeilingInYear } from '@intake/sanity'
@@ -481,6 +481,10 @@ interface ContributionGrid {
   readonly ages: readonly number[]
   readonly years: readonly number[]
 }
+/** The kinds the contributions grid prices: the seven that existed when its digest was pinned, as literals, in
+ *  `ACCOUNT_KINDS`' order. Frozen (the Act 5 plan's KTD20): looping over `ACCOUNT_KINDS` itself, a new kind would add
+ *  probes and move the digest with no saved ledger repriced; a new kind's deposit ceiling is probed on its own. */
+const PRICED_KINDS = ['401k', '403b', 'traditional-ira', 'roth-401k', 'roth-ira', 'brokerage', 'hsa'] as const satisfies readonly AccountKind[]
 const CONTRIBUTIONS: FamilyProbe<ContributionGrid> = {
   grid: {
     ages: [30, 49, 50, 54, 55, 58, 60, 62, 63, 64, 67],
@@ -490,7 +494,7 @@ const CONTRIBUTIONS: FamilyProbe<ContributionGrid> = {
   },
   run: (g) => {
     const out: Array<readonly [string, number]> = []
-    for (const kind of ACCOUNT_KINDS) {
+    for (const kind of PRICED_KINDS) {
       for (const age of g.ages) {
         for (const y of g.years) out.push([`ceiling ${kind} age ${age} ${y}`, contributionCeilingInYear(kind, age, y) ?? NONE])
       }

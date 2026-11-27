@@ -10,7 +10,7 @@ import type { AccountKind, EnteredAccount, TickerClassification } from '@shared/
 import type { ScenarioDraft } from '@store/memoryModel'
 import { freshStableId, idsInUse } from '@shared/stableIds'
 import { classifyLegs, legsOf } from './allocation'
-import { annualAdditionsCeilingFor, ceilingParams, contributionCeilingFor, isEmployerPlanKind } from './sanity'
+import { annualAdditionsCeilingFor, ceilingParams, contributionCeilingFor, isEmployerPlanKind, takesDeposits } from './sanity'
 
 export interface AccountFormState {
   ownerIndex: 0 | 1
@@ -29,6 +29,8 @@ export interface AccountFormState {
 export type AccountBlock =
   | { readonly kind: 'missing'; readonly error: 'errAccountKindRequired' | 'errAccountValueRequired' }
   | { readonly kind: 'allocation' }
+  /** A deposit typed on a kind that takes none (sanity's `takesDeposits`; the Act 5 plan's KTD20). */
+  | { readonly kind: 'no-deposits' }
   | { readonly kind: 'ceiling'; readonly messageKey: SlottedErrorKey; readonly params: SlottedErrorParams }
 
 /** The form as seeded from a committed account (or blank for a new one): ONE producer, read by the form's initial state
@@ -69,6 +71,11 @@ export function buildAccount(
   // to "no blend" either (that was the 2026-08-20 discard). Blank legs are not this
   // arm: they commit blend-less and the missing-fact gate names them.
   if (form.allocationInvalid) return { ok: false, block: { kind: 'allocation' } }
+  // A kind that takes no deposits refuses one by its kind, never by a $0 ceiling's words (KTD20). Only a working owner's
+  // deposit is kept below, so only theirs can be refused.
+  if (ownerWorking && !takesDeposits(form.kind) && (form.annualContribution ?? 0) > 0) {
+    return { ok: false, block: { kind: 'no-deposits' } }
+  }
   // Ceiling pre-check at Add time (same helpers as the sanity rules — the
   // advance-time rules remain the backstop for combined-across-accounts).
   if (

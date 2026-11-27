@@ -15,7 +15,8 @@
  */
 import type { AccountKind, EnteredAccount, IncomeStream, IncomeType, RetirementState, TickerClassification } from '@shared/model'
 import { budgetGoverns } from '@budget/budgetModel'
-import { ACCOUNT_KINDS, INCOME_TYPES } from '@shared/model'
+import { INCOME_TYPES } from '@shared/model'
+import type { CatchUpAccountKind } from '@engine/constants/contributions'
 import type { ScenarioDraft } from '@store/memoryModel'
 import { formatMoney } from '@intake/moneyFormat'
 import { kindLabel } from '@intake/accountKinds'
@@ -30,7 +31,7 @@ import { laterRow, ledgerUnknownLines } from '@intake/workingYearLedgerRows'
 import { formatPercent } from '@intake/moneyFormat'
 import { leftOverLineKey } from '../../assumptionRegistry'
 import { incomeTypeLabel, survivorNoteFor } from '@intake/otherIncome'
-import { annualAdditionsCeilingFor, contributionCeilingFor, isEmployerPlanKind } from '@intake/sanity'
+import { annualAdditionsCeilingFor, contributionCeilingFor, depositCeilingOf, isEmployerPlanKind, takesDeposits } from '@intake/sanity'
 import { findBlendRow } from '@engine/reference/tickerBlend'
 import type { CopyKey } from '../../copy'
 import { copy, slots } from '../../copy'
@@ -339,51 +340,79 @@ export function incomeView(d: ScenarioDraft, readOnly: boolean): CardsPageView {
 
 // ── Savings ──────────────────────────────────────────────────────────────────────────────────────────────────────────
 
+/** The page an Add menu sits on: Net Worth holds every account; Savings holds the deposits, so it offers only a kind
+ *  that takes them (the Act 5 plan's KTD20: the one hand list, split per page). */
+export type AccountAddPage = 'net-worth' | 'savings'
+
 /** The account kinds in RightCapital's Add-menu shape over B9's four tax treatments: Pre-tax and Roth open their kinds,
- *  Taxable and HSA are one kind each. */
-function accountAddItems(): readonly AddItem[] {
+ *  Taxable and HSA are one kind each. A hand list: `profileView.test.ts` pins each page's kinds, so a new kind reds there
+ *  rather than compiling through. A group left with no kind on a page is dropped from it. */
+function accountAddItems(page: AccountAddPage): readonly AddItem[] {
+  const offered = (k: AccountKind): boolean => page === 'net-worth' || takesDeposits(k)
   const leaf = (k: AccountKind) => ({ id: k, label: kindLabel(k), target: { kind: 'new-account', accountKind: k } as const })
+  const group = (id: string, label: string, kinds: readonly AccountKind[]): AddItem[] => {
+    const items = kinds.filter(offered).map(leaf)
+    return items.length === 0 ? [] : [{ id, label, items }]
+  }
+  const single = (k: AccountKind, label: string): AddItem[] =>
+    offered(k) ? [{ id: k, label, target: { kind: 'new-account', accountKind: k } }] : []
   return [
-    { id: 'pretax', label: copy.investBucketPretax, items: (['401k', '403b', 'traditional-ira'] as const).map(leaf) },
-    { id: 'roth', label: copy.investBucketRoth, items: (['roth-401k', 'roth-ira'] as const).map(leaf) },
-    { id: 'brokerage', label: copy.investBucketTaxable, target: { kind: 'new-account', accountKind: 'brokerage' } },
-    { id: 'hsa', label: copy.investBucketHsa, target: { kind: 'new-account', accountKind: 'hsa' } },
+    ...group('pretax', copy.investBucketPretax, ['401k', '403b', 'traditional-ira']),
+    ...group('roth', copy.investBucketRoth, ['roth-401k', 'roth-ira']),
+    ...single('brokerage', copy.investBucketTaxable),
+    ...single('hsa', copy.investBucketHsa),
   ]
 }
-// Every kind is offered once (a test pins it).
-export const ADD_ACCOUNT_KINDS: readonly AccountKind[] = ACCOUNT_KINDS
 
 /** The legal limit on one account's deposits this year (its owner's age; shared across that person's accounts of one
- *  kind), or null for a kind with none or an owner whose age is unknown. */
+ *  kind), or null for an uncapped kind or an owner whose age is unknown; 0 for a kind that takes no deposits. */
 export function depositLimit(d: ScenarioDraft, a: Pick<EnteredAccount, 'kind' | 'ownerIndex'>): number | null {
   const age = d.people[a.ownerIndex]?.currentAge
   if (age === undefined || !Number.isInteger(age) || age < 0 || age > 120) return null
   return contributionCeilingFor(a.kind, age)
 }
 
-/** The lines a deposit drawer prints about the legal limits (computed from the one ceiling table, never typed). */
+/** The words for each deposit-ceiling family a limit is shared across. */
+const LIMIT_FAMILY: Readonly<Record<CatchUpAccountKind, () => string>> = {
+  employerPlan: slots.profileLimitFamilyPlan,
+  ira: slots.profileLimitFamilyIra,
+  hsa: slots.profileLimitFamilyHsa,
+}
+
+/** The lines a deposit drawer prints about the legal limits (computed from the one ceiling table, never typed). Each of
+ *  the table's answers is named: uncapped, takes no deposits, or a family's shared limit (KTD20; the literals this
+ *  replaced read any kind they did not name as an IRA under the IRA limit). */
 export function limitLines(d: ScenarioDraft, a: Pick<EnteredAccount, 'kind' | 'ownerIndex'>): readonly string[] {
-  if (a.kind === 'brokerage') return [slots.profileLimitNone()]
+  const ceiling = depositCeilingOf(a.kind)
+  if (ceiling === null) return [slots.profileLimitNone()]
+  if (ceiling === 'takes-no-deposits') return [copy.accountTakesNoDeposits]
   const limit = depositLimit(d, a)
   if (limit === null) return []
-  const family = isEmployerPlanKind(a.kind) ? slots.profileLimitFamilyPlan() : a.kind === 'hsa' ? slots.profileLimitFamilyHsa() : slots.profileLimitFamilyIra()
   const owner = person(d, a.ownerIndex).label
-  const lines = [slots.profileLimitShared(owner === copy.personYou ? copy.personYouMid : owner, dollars(limit), family)]
+  const lines = [slots.profileLimitShared(owner === copy.personYou ? copy.personYouMid : owner, dollars(limit), LIMIT_FAMILY[ceiling]())]
   const age = d.people[a.ownerIndex]?.currentAge
   if (isEmployerPlanKind(a.kind) && age !== undefined) lines.push(slots.profileLimitAdditions(dollars(annualAdditionsCeilingFor(age))))
   return lines
+}
+
+/** A Savings card's Limit row: "No legal limit" for an uncapped kind, else the limit this year, or not answered where the
+ *  owner's age is unknown. Savings never draws a kind that takes no deposits. */
+function limitRowValue(d: ScenarioDraft, a: EnteredAccount): string {
+  if (depositCeilingOf(a.kind) === null) return copy.profileNoLimit
+  const limit = depositLimit(d, a)
+  return limit === null ? copy.profileNotAnswered : dollars(limit)
 }
 
 export function savingsView(d: ScenarioDraft, readOnly: boolean): CardsPageView {
   const anyWorking = BOTH.some((i) => working(d, i))
   const cards: CardView[] = []
   d.enteredAccounts.forEach((a, index) => {
-    if (!working(d, a.ownerIndex)) return
-    const limit = a.kind === 'brokerage' ? null : depositLimit(d, a)
+    // The deposits page: a working owner's accounts that take deposits (KTD20).
+    if (!working(d, a.ownerIndex) || !takesDeposits(a.kind)) return
     const rows: { label: string; value: string }[] = [{ label: copy.accountContributionLabel, value: a.annualContribution === undefined ? copy.profileNone : dollars(a.annualContribution) }]
     if (isEmployerPlanKind(a.kind)) rows.push({ label: copy.accountMatchLabel, value: a.employerMatchAnnual === undefined ? copy.profileNone : dollars(a.employerMatchAnnual) })
     if (a.kind === 'hsa') rows.push({ label: copy.accountHsaEmployerLabel, value: a.hsaEmployerAnnual === undefined ? copy.profileNone : dollars(a.hsaEmployerAnnual) })
-    rows.push({ label: copy.profileRowLimit, value: a.kind === 'brokerage' ? copy.profileNoLimit : limit === null ? copy.profileNotAnswered : dollars(limit) })
+    rows.push({ label: copy.profileRowLimit, value: limitRowValue(d, a) })
     cards.push({
       id: `account-${index}`,
       kind: kindLabel(a.kind),
@@ -407,7 +436,7 @@ export function savingsView(d: ScenarioDraft, readOnly: boolean): CardsPageView 
     intro: cards.length > 0 ? copy.profileSavingsIntro : copy.profileSavingsIntroNoCards,
     cards,
     // Deposits go only into a working person's account: with nobody working there is nothing to add here.
-    add: readOnly || !anyWorking ? null : { label: copy.profileAddSaving, items: accountAddItems() },
+    add: readOnly || !anyWorking ? null : { label: copy.profileAddSaving, items: accountAddItems('savings') },
     lines,
   }
 }
@@ -618,7 +647,7 @@ export function netWorthView(d: ScenarioDraft, agedBalancesYear: number | undefi
     header: slots.profileInvestmentTotal(copy.profileNetWorthInvestment, dollars(total)),
     rows,
     empty: rows.length === 0 ? (readOnly ? copy.profileNetWorthNoAccountsReadOnly : copy.profileNetWorthNoAccounts) : null,
-    add: readOnly ? null : { label: copy.profileAddAccount, items: accountAddItems() },
+    add: readOnly ? null : { label: copy.profileAddAccount, items: accountAddItems('net-worth') },
     notes: [
       agedBalancesYear === undefined ? copy.snapshotInvestedAsEntered : slots.snapshotInvestedAsEnteredIn(agedBalancesYear),
       copy.snapshotInvestedStopgap,

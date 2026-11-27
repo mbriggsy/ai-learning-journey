@@ -124,7 +124,16 @@ export const WORKING_COST_PERIOD_FIELD: FieldPath = 'workingYearCost.entryPeriod
 // year step-down is intakeMap's stream expansion, slice (e)).
 // ---------------------------------------------------------------------------
 
-const KIND_TO_CATCHUP: Readonly<Record<AccountKind, CatchUpAccountKind | null>> = {
+/** Which deposit ceiling an account kind's deposits fall under: one of the three statutory families; `null`, uncapped
+ *  (deposits with no statutory ceiling); or `'takes-no-deposits'`, a kind no deposit may go into at all. The last two are
+ *  never one answer (the Act 5 plan's KTD20): an uncapped kind skips every ceiling check, while a kind that takes no
+ *  deposits is refused by every deposit path (`buildAccount`, the rail's offers, the what-if's deposits arm, the rule
+ *  below). No kind takes none until gap 3's inherited IRA (U13). */
+export type DepositCeiling = CatchUpAccountKind | null | 'takes-no-deposits'
+
+/** THE one kind→deposit-ceiling table: exhaustive, so a new kind fails to compile here until its deposits are decided
+ *  (insight 147). `familyOf` (`intakeMap.ts`) and the limit lines read it, never a copy. */
+const KIND_TO_CATCHUP: Readonly<Record<AccountKind, DepositCeiling>> = {
   '401k': 'employerPlan',
   '403b': 'employerPlan',
   'roth-401k': 'employerPlan',
@@ -134,6 +143,12 @@ const KIND_TO_CATCHUP: Readonly<Record<AccountKind, CatchUpAccountKind | null>> 
   brokerage: null, // no statutory ceiling
 }
 
+/** A kind's deposit ceiling, as the one table holds it. */
+export const depositCeilingOf = (kind: AccountKind): DepositCeiling => KIND_TO_CATCHUP[kind]
+
+/** Can money be deposited into an account of this kind at all? */
+export const takesDeposits = (kind: AccountKind): boolean => KIND_TO_CATCHUP[kind] !== 'takes-no-deposits'
+
 export const isEmployerPlanKind = (kind: AccountKind): boolean =>
   KIND_TO_CATCHUP[kind] === 'employerPlan'
 
@@ -141,10 +156,11 @@ export const isEmployerPlanKind = (kind: AccountKind): boolean =>
  *  an age (combined across that person's accounts of the same family — §402(g)
  *  is per person across plans; the IRA limit is traditional+Roth combined).
  *  HSA uses the FAMILY figure (coverage tier is unasked — block only the true
- *  impossibility). Brokerage → null (uncapped). */
+ *  impossibility). Brokerage → null (uncapped). A kind that takes no deposits → 0: nothing may go in. */
 export function contributionCeilingFor(kind: AccountKind, age: number): number | null {
   const catchUpKind = KIND_TO_CATCHUP[kind]
   if (catchUpKind === null) return null
+  if (catchUpKind === 'takes-no-deposits') return 0
   const catchUp = catchUpForAge(age, catchUpKind)
   if (catchUpKind === 'employerPlan') return employerPlan2026.value.electiveDeferral + catchUp
   if (catchUpKind === 'ira') return ira2026.value.contributionLimit + catchUp
@@ -428,11 +444,18 @@ const RULES: readonly SanityRule[] = [
     check: (d) => {
       const out: SanityViolation[] = []
       d.enteredAccounts.forEach((a, i) => {
+        const family = KIND_TO_CATCHUP[a.kind]
+        if (family === null) return // uncapped
+        if (family === 'takes-no-deposits') {
+          // Refused whatever the owner's age: nothing may go into this kind of account (KTD20).
+          if (Number.isFinite(a.annualContribution ?? NaN) && a.annualContribution! > 0) {
+            out.push({ rule: 'contribution-over-ceiling', field: accountField(i, 'annualContribution'), messageKey: 'accountTakesNoDeposits' })
+          }
+          return
+        }
         const owner = d.people[a.ownerIndex]
         if (owner?.currentAge === undefined || !Number.isFinite(owner.currentAge)) return
         if (!Number.isInteger(owner.currentAge) || owner.currentAge < 0 || owner.currentAge > 120) return
-        const family = KIND_TO_CATCHUP[a.kind]
-        if (family === null) return
         const ceiling = contributionCeilingFor(a.kind, owner.currentAge)
         if (ceiling !== null && combinedContribution(d, a.ownerIndex, family) > ceiling) {
           out.push({

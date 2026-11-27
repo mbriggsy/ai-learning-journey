@@ -605,6 +605,18 @@ Every unit's tests live in the module's sibling `__tests__/` folder. Build 2's c
   - The pricing witness's digest is unchanged by the frozen grid.
 - **Verification.** A committed scan test, keyed on the type checker's `AccountKind` and not on a variable's name, fails on any code outside tests that compares a kind to a member, tests membership in a Set or list of members, switches on a kind with a default, or picks between kind literals in a conditional. An allowed line carries its reason. A planted guard turns the test red.
 - **The scan landed first (2026-11-27, b9-1, the pilot's call), before the conversion:** `src/shared/__tests__/accountKindHomes.test.ts` (one TypeScript program over `src`, about 4 seconds). Its allowed list holds every finding today: 13 distinct `safe:` entries (KTD20's brokerage-basis and HSA checks, and `sampleKind`) and 7 `U10: convert` entries (`familyOf`, `treatmentOf`, `limitLines`, `savingsView`), matched as a multiset both ways, so a new kind comparison reds from now on and a converted site reds until its entry goes. A planted file proves each of the four shapes reds and a bucket vocabulary sharing the literal `'hsa'` stays quiet; a comparison planted in `whatIf.ts` turned it red. U10's first commit converts the `U10: convert` entries and deletes them, and converts the homes KTD20 lists that no scan can see because they choose by tax bucket or label (`investedKinds`, Balance Sheet's grouping, `bucketAccounts` and `taxAllocationView`, `reentryChrome`'s `sums` and `balanceRows`, `treatmentLegend`, `accountAddItems`' split, and the deposit loops in `ARMS.deposits`, `railOffers` and `buildAccount`), then freezes the pricing witness's grid.
+- **The first commit landed (2026-11-27, b9-2), no output changed:**
+  - The scan's `U10: convert` entries are gone (its allowed list holds `safe:` checks only).
+  - The bucket vocabulary is one exported tuple, `KIND_BUCKETS` (`src/intake/intakeMap.ts`), the way `ACCOUNT_KINDS` is the kinds'. `AccountSources`, `investedKinds` (and through it Balance Sheet's grouping), the Investment pages' `TAX_BUCKETS`, the re-entry read-back's sums and rows and the rail's `PUT_IN` key on it.
+  - `familyOf` reads `KIND_TO_CATCHUP` through `depositCeilingOf` instead of copying it.
+  - `KIND_TO_CATCHUP` gains `'takes-no-deposits'`, read by `takesDeposits` and by `contributionCeilingFor`, which returns 0 for it.
+  - Blueprint's legend order is its table's own order.
+  - The pricing witness prices the seven kinds' literals (`PRICED_KINDS`).
+  - The scan test's last arm is the type-level test. It builds the program with an eighth kind, a fifth grouping and a fifth treatment added, and each of 14 homes must fail to compile inside its own declaration, while the tree compiles clean there. A hand-typed union planted in one home reds it.
+  - Two calls were the pilot's. Savings (its cards and its Add menu) holds only a kind that takes deposits, and Net Worth holds every kind. A kind that takes no deposits is refused on each deposit path by its kind, in its own words: `accountTakesNoDeposits` on the drawer and the contribution rule, and `workbenchRailRefusedTakesNoDeposits` for a kept what-if. It is never refused by a $0 ceiling's "at this age" sentence.
+  - **U13 owes:**
+    - Tests for those arms with the real kind: `buildAccount`'s `no-deposits`, the rule, `ARMS.deposits`' `deposits-kind-takes-none`, `railOffers` skipping it, `limitLines`, and Savings leaving it out.
+    - The inherited grouping value added to `KIND_BUCKETS`, which turns each bucket home red until it is decided.
 
 #### U11. The 70½ band and the Single Life Table
 

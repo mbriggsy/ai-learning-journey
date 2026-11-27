@@ -156,12 +156,21 @@ describe('Net Worth', () => {
     expect(netWorthView({ ...retired, enteredAccounts: [bare] }, undefined, false).rows[0]!.mix).toBe(copy.profileMixNone)
   })
 
+  // Each page's Add menu pinned to its own kinds (the Act 5 plan's KTD20: the hand list split per page). A kind added to
+  // `ACCOUNT_KINDS` reds the first pin until Net Worth decides it, and the second until Savings does: Net Worth holds
+  // every account, Savings only a kind that takes deposits (gap 3's inherited IRA will sit on the first list alone).
+  const kindsOf = (add: AddMenuView) => leaves(add).map((t) => (t.kind === 'new-account' ? t.accountKind : null))
   it('the Add account menu offers every account kind exactly once, under the four tax treatments; read-only has none', () => {
     const add = netWorthView(retired, undefined, false).add!
     expect(add.items.map((i) => i.label)).toEqual([copy.investBucketPretax, copy.investBucketRoth, copy.investBucketTaxable, copy.investBucketHsa])
-    const kinds = leaves(add).map((t) => (t.kind === 'new-account' ? t.accountKind : null))
-    expect([...kinds].sort()).toEqual([...ACCOUNT_KINDS].sort())
+    expect([...kindsOf(add)].sort()).toEqual([...ACCOUNT_KINDS].sort())
     expect(netWorthView(retired, undefined, true).add).toBeNull()
+  })
+
+  it('the Add saving menu offers each kind that takes deposits exactly once (all seven today), under the same four groups', () => {
+    const add = savingsView(working, false).add!
+    expect(add.items.map((i) => i.label)).toEqual([copy.investBucketPretax, copy.investBucketRoth, copy.investBucketTaxable, copy.investBucketHsa])
+    expect([...kindsOf(add)].sort()).toEqual(['401k', '403b', 'brokerage', 'hsa', 'roth-401k', 'roth-ira', 'traditional-ira'])
   })
 })
 

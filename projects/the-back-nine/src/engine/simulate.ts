@@ -40,6 +40,7 @@ import { workingYearBottomLine } from '@engine/moneyGrain'
 import { irmaa } from '@engine/constants'
 import { isPricedState, earliestPricedRateYear } from '@engine/constants/stateTax'
 import {
+  BUDGET_ROUTES,
   DRAWDOWN_ORDER_KEYS,
   DRAWDOWN_POLICIES,
   INHERITED_LEFT_TO,
@@ -47,6 +48,7 @@ import {
   NEVER_DEPLETED,
   isRetirementState,
   type AccumulationParams,
+  type CompiledBudget,
   type InheritedLedgerParams,
   type OverlayParams,
   type BandFan,
@@ -582,8 +584,22 @@ export function cashTermsForYear(
     for (const o of offsets) if (o.retire > anchor) anchor = o.retire
     const k = Math.max(0, t - anchor)
     const r = allAlive ? 1 : params.survivorSpendingRatio
-    essentialsSpending = (budget.sticky[k] ?? 0) + r * (budget.scalableEssentials[k] ?? 0)
-    spending = essentialsSpending + r * (budget.discretionary[k] ?? 0)
+    let sticky = budget.sticky[k] ?? 0
+    let scalableEssentials = budget.scalableEssentials[k] ?? 0
+    let discretionary = budget.discretionary[k] ?? 0
+    // Gap 4's U4 (KTD1, KTD6): a line that changes at its own rate joins its route's term here, its typed amount at k
+    // (its window and repeat, counted from the stop) times its price factor at t (its calendar year's, the same on every
+    // tested stop). Absent, the three terms are the profiles' own entries and the sums below are the same as before.
+    if (budget.rated !== undefined) {
+      for (const track of budget.rated) {
+        const charge = (track.factorByT[t] ?? 0) * (track.amountByK[k] ?? 0)
+        if (track.route === 'sticky') sticky += charge
+        else if (track.route === 'scalableEssentials') scalableEssentials += charge
+        else discretionary += charge
+      }
+    }
+    essentialsSpending = sticky + r * scalableEssentials
+    spending = essentialsSpending + r * discretionary
   } else {
     spending = allAlive
       ? params.annualSpendingReal
@@ -790,7 +806,10 @@ function ledgerYearRow(row: LedgerLoopRow, cash: LedgerYearCash, floorPass: bool
  * the run's OWN compiled profile, read live (never saved with the answer):
  *  - a budget: `budget.sticky[0]` — every sticky line active at k = 0 (a working year is always k = 0:
  *    some living member works, so t is before the work-stop anchor), finite-ended ones included, with
- *    the out-of-pocket medical M already injected by the compile;
+ *    the out-of-pocket medical M already injected by the compile — plus each rated sticky track's TYPED
+ *    `amountByK[0]` (gap 4's KTD6: W is one flat figure that counts a rated line at its typed amount, so
+ *    the share held out of it is that amount too, never a factor read; leaving it out would scale a fixed
+ *    housing line away on a survivor working year, the rosy side);
  *  - no budget: M (`survivorOopMedicalReal`, 0 when absent) — so the budgetless arm IS
  *    {@link budgetlessSurvivorSpending}(W, r, M), bit for bit (absent M: 0 + r·W is r·W).
  * S > W is CLAMPED by the min (W + r·0 is W), never refused — the `budgetlessSurvivorSpending`
@@ -798,9 +817,17 @@ function ledgerYearRow(row: LedgerLoopRow, cash: LedgerYearCash, floorPass: bool
  */
 export function workingYearCostForYear(params: SimulationParams, workingYearCost: number, allAlive: boolean): number {
   if (allAlive) return workingYearCost
-  const held = params.budget !== undefined ? (params.budget.sticky[0] ?? 0) : (params.survivorOopMedicalReal ?? 0)
+  const held = params.budget !== undefined ? typedStickyAtYearZero(params.budget) : (params.survivorOopMedicalReal ?? 0)
   const s = Math.min(workingYearCost, held)
   return s + params.survivorSpendingRatio * (workingYearCost - s)
+}
+
+/** The sticky dollars the budget charges at k = 0 at their TYPED amounts: the sticky profile's entry plus each rated
+ *  sticky track's `amountByK[0]` (gap 4's KTD6). With no rated track it is `sticky[0]` itself. */
+function typedStickyAtYearZero(budget: CompiledBudget): number {
+  let held = budget.sticky[0] ?? 0
+  if (budget.rated !== undefined) for (const track of budget.rated) if (track.route === 'sticky') held += track.amountByK[0] ?? 0
+  return held
 }
 
 /**
@@ -1574,6 +1601,21 @@ export function validateParams(params: SimulationParams): string | null {
       if (!profile.every(finiteNonNeg))
         return 'budget profile invalid (every entry must be a finite dollar ≥ 0)'
     }
+    // Gap 4's U4 — the rated tracks. PRESENCE-KEYED, one OFF shape (the key absent, never an empty list); each track's
+    // route is one of the three, and its amounts and factors cover the horizon, every entry finite ≥ 0 (NaN first:
+    // a missing factor would read 0 and drop the line's cost, the rosy side).
+    if (bud.rated !== undefined) {
+      if (!Array.isArray(bud.rated) || bud.rated.length === 0)
+        return 'budget rated tracks invalid (absent when the plan has none, never an empty list)'
+      for (const track of bud.rated) {
+        if (!BUDGET_ROUTES.includes(track.route))
+          return `budget rated track invalid (route must be one of ${BUDGET_ROUTES.join(', ')})`
+        if (track.amountByK.length < params.maxHorizonYears || track.factorByT.length < params.maxHorizonYears)
+          return 'budget rated track invalid (its amounts and factors must cover every sim year of the horizon)'
+        if (!track.amountByK.every(finiteNonNeg) || !track.factorByT.every(finiteNonNeg))
+          return 'budget rated track invalid (every amount and factor must be finite and ≥ 0)'
+      }
+    }
     // THE CONTAINMENT GATE (council 2026-07-02, build-gate a — FAIL-LOUD, replacing the HSA
     // cap's silent fundingNeed clamp as the defense): the FLOOR track's essentials spend must
     // dominate the overlay's oopMedical[t] in EVERY year — the qualified-medical dollars the
@@ -1610,8 +1652,11 @@ export function validateParams(params: SimulationParams): string | null {
     // spend the budget never funds: the cardinal direction, invisible to every other gate.
     // Fail loud to the calm indeterminate instead (the buckets-sum-to-portfolio precedent).
     // Relative tolerance absorbs float summation-order dust between the compile's slot adds
-    // and the reconciliation helper's running total.
-    const yearZeroFull = (bud.sticky[0] ?? 0) + (bud.scalableEssentials[0] ?? 0) + (bud.discretionary[0] ?? 0)
+    // and the reconciliation helper's running total. A rated line (gap 4's KTD6) counts at its
+    // TYPED amount, `amountByK[0]`, exactly as `budgetYearZeroFullTotal` counts it: the scalar is
+    // the year-0 total of what the household typed, never a factor read.
+    let yearZeroFull = (bud.sticky[0] ?? 0) + (bud.scalableEssentials[0] ?? 0) + (bud.discretionary[0] ?? 0)
+    if (bud.rated !== undefined) for (const track of bud.rated) yearZeroFull += track.amountByK[0] ?? 0
     if (
       Math.abs(yearZeroFull - params.annualSpendingReal) >
       1e-6 * Math.max(1, Math.abs(params.annualSpendingReal))

@@ -741,7 +741,12 @@ export interface BudgetLineItem {
  *  calm-but-wrong direction (council 2026-07-02: ratio-on-total in the engine is VETOED;
  *  r is never baked into these profiles). Containment premise: the injected medical keeps
  *  the floor track's essentials ≥ the overlay's `oopMedical[t]` — the engine's
- *  `validateParams` enforces it fail-loud per year. */
+ *  `validateParams` enforces it fail-loud per year.
+ *
+ *  A line that changes at its own rate (`BudgetLineItem.growthRate`, gap 4's KTD1 and KTD6) never joins the three
+ *  profiles: it rides {@link CompiledBudget.rated} as its own track, its typed amounts by k beside its price factors by
+ *  sim year t, and the engine adds factor[t] × amount[k] to its route's term above. So a profile entry is always a
+ *  typed amount, and a budget with no rated line compiles exactly as before. */
 export interface CompiledBudget {
   /** Survivor-sticky essentials dollars per retirement-year (never scaled by r). */
   readonly sticky: readonly number[]
@@ -749,6 +754,31 @@ export interface CompiledBudget {
   readonly scalableEssentials: readonly number[]
   /** Ratio-scaled discretionary (lifestyle-surplus) dollars per retirement-year. */
   readonly discretionary: readonly number[]
+  /** The lines that change at their own rate (gap 4's U4), one track each, in the plan's line order. PRESENCE-KEYED:
+   *  absent when the plan has none (never an empty list, which `validateParams` refuses: one OFF shape), so every run
+   *  without one is byte-identical to the run before the field existed. */
+  readonly rated?: readonly RatedBudgetTrack[]
+}
+
+/** Which of the three compiled profiles a line's dollars join: its tier and category decide it, the same rule
+ *  (`compileBudget`) for a rated line as for any other. */
+export type BudgetRoute = 'sticky' | 'scalableEssentials' | 'discretionary'
+
+/** The three routes, for the engine's domain check. */
+export const BUDGET_ROUTES: readonly BudgetRoute[] = ['sticky', 'scalableEssentials', 'discretionary']
+
+/** One line that changes at its own rate, in the two frames its cost needs (gap 4's KTD1; insight 167): its window and
+ *  repeat count from the stop (k), its price from the plan's first year (t, so a calendar year costs the same whatever
+ *  stop the date search tests). In sim year t its charge is `factorByT[t] × amountByK[k]`, on its route. */
+export interface RatedBudgetTrack {
+  readonly route: BudgetRoute
+  /** The line's TYPED dollars by k, its window and repeat applied, never grown or deflated (the year-0 readers, the
+   *  reconciliation check and the survivor's held share of W, read `amountByK[0]` as the typed amount: KTD6). At least
+   *  the horizon long. */
+  readonly amountByK: readonly number[]
+  /** Its price factor by sim year t, built at intake (`src/intake/priceFrame.ts`): (1 + its rate)^t ÷ the deflator of t
+   *  (KTD3, KTD4). The engine only multiplies by it; at least the horizon long. */
+  readonly factorByT: readonly number[]
 }
 
 // ---------------------------------------------------------------------------

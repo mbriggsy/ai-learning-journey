@@ -58,12 +58,13 @@ export function budgetGoverns(
   return budget !== undefined
 }
 
-/** RAMPED = any line's window departs from lifelong-at-year-0 (a later start, any
- *  finite end, or a repeat — gap 4's U3: a repeat charges some years and not others). For a ramped budget the year-0 reconciled total is an ANCHOR — the figure
- *  the answer is reconciled through — not a steady-state spend, and the surfaces quoting
- *  it must label it so (council 2026-07-02, the anchor-not-steady-state carry-forward). */
+/** RAMPED = any line departs from the same cost in every year from year 0: a later start, any finite end, a repeat
+ *  (gap 4's U3: it charges some years and not others) or its own rate (gap 4's U4: a line that doesn't go up with
+ *  prices costs something else in today's dollars every later year, even a lifelong one). For a ramped budget the
+ *  year-0 reconciled total is an ANCHOR — the figure the answer is reconciled through — not a steady-state spend, and
+ *  the surfaces quoting it must label it so (council 2026-07-02, the anchor-not-steady-state carry-forward). */
 export function isRampedBudget(items: readonly BudgetLineItem[]): boolean {
-  return items.some((i) => i.startYear > 0 || i.endYear !== undefined || i.everyYears !== undefined)
+  return items.some((i) => i.startYear > 0 || i.endYear !== undefined || i.everyYears !== undefined || i.growthRate !== undefined)
 }
 
 /** A blocking R19 problem on one line (calm inline message material — U9b renders). */

@@ -30,10 +30,22 @@
  * "faithfully" would silently drop the line, so it throws. Domain-bad AMOUNTS
  * (negative/non-finite) compile faithfully and are the ENGINE's to reject to a calm
  * indeterminate (`validateParams` — the engine, never the UI, decides).
+ *
+ * A LINE THAT CHANGES AT ITS OWN RATE (gap 4's U4, KTD1 and KTD6): its price depends on the sim year, which this layer
+ * cannot know (it imports @shared only, and the date search compiles once for every tested stop), so the line leaves the
+ * three profiles for its own track: its route, its TYPED amounts by k (window and repeat applied) and the factors by t
+ * the caller's builder hands back (`src/intake/priceFrame.ts`). The profiles therefore hold typed amounts only, and a
+ * budget with no rated line compiles to exactly the same three arrays and no `rated` key.
  */
-import type { BudgetLineItem, CompiledBudget } from '@shared/model'
-import { everyYearsInRange } from '@shared/spendingBounds'
+import type { BudgetLineItem, BudgetRoute, CompiledBudget, RatedBudgetTrack } from '@shared/model'
+import { everyYearsInRange, growthRateInRange } from '@shared/spendingBounds'
 import { isActiveAt, isSurvivorSticky } from './budgetModel'
+
+/** The profile a line's dollars join: discretionary by tier, else sticky or scalable by category (the sticky rule,
+ *  `budgetModel.ts`). One rule for a rated line and any other. */
+function routeOf(item: BudgetLineItem): BudgetRoute {
+  return item.tier === 'discretionary' ? 'discretionary' : isSurvivorSticky(item) ? 'sticky' : 'scalableEssentials'
+}
 
 /**
  * Compile the itemized budget into the engine construct.
@@ -45,11 +57,15 @@ import { isActiveAt, isSurvivorSticky } from './budgetModel'
  *                         one — never a default).
  * @param maxHorizonYears  Profile length — the engine's `maxHorizonYears`, so any
  *                         anchor ≥ 0 stays in range (k = t − anchor ≤ t < horizon).
+ * @param ratedFactors     A line's price factors by sim year for its rate (gap 4's U4), `maxHorizonYears` long:
+ *                         intake's `ratedLineFactors` bound to the plan's build year. Needed only when a line carries
+ *                         `growthRate`; a rated line without it throws (never a quiet factor of 1).
  */
 export function compileBudget(
   items: readonly BudgetLineItem[],
   oopMedicalAnnual: number | undefined,
   maxHorizonYears: number,
+  ratedFactors?: (growthRate: number) => readonly number[],
 ): CompiledBudget {
   if (!Number.isInteger(maxHorizonYears) || maxHorizonYears <= 0) {
     throw new Error(`[budget] compileBudget requires a positive integer horizon (got ${maxHorizonYears})`)
@@ -68,15 +84,34 @@ export function compileBudget(
         `[budget] items[${i}].everyYears must be a whole number from 2 to 50 (got ${item.everyYears}) — compiling it would charge the wrong years`,
       )
     }
+    if (item.growthRate !== undefined && !(Number.isFinite(item.growthRate) && growthRateInRange(item.growthRate))) {
+      throw new Error(
+        `[budget] items[${i}].growthRate must be a finite fraction from 0 to 0.15 (got ${item.growthRate}) — compiling it would price the wrong dollars`,
+      )
+    }
   }
 
   const sticky = new Array<number>(maxHorizonYears).fill(0)
   const scalableEssentials = new Array<number>(maxHorizonYears).fill(0)
   const discretionary = new Array<number>(maxHorizonYears).fill(0)
+  const rated: RatedBudgetTrack[] = []
 
-  for (const item of items) {
-    const target =
-      item.tier === 'discretionary' ? discretionary : isSurvivorSticky(item) ? sticky : scalableEssentials
+  for (const [i, item] of items.entries()) {
+    const route = routeOf(item)
+    if (item.growthRate !== undefined) {
+      // Its own track (KTD6): the typed amount in each year the window and repeat charge it, never grown here.
+      const factorByT = ratedFactors?.(item.growthRate)
+      if (factorByT === undefined || factorByT.length < maxHorizonYears) {
+        throw new Error(
+          `[budget] items[${i}] changes at its own rate, so it needs its price factors for every sim year (${maxHorizonYears}; got ${factorByT?.length ?? 'no factor builder'}) — never a quiet factor of 1`,
+        )
+      }
+      const amountByK = new Array<number>(maxHorizonYears).fill(0)
+      for (let k = item.startYear; k < maxHorizonYears; k++) if (isActiveAt(item, k)) amountByK[k] = item.annualAmountReal
+      rated.push({ route, amountByK, factorByT })
+      continue
+    }
+    const target = route === 'discretionary' ? discretionary : route === 'sticky' ? sticky : scalableEssentials
     // The line's years come from the one window helper (gap 4's KTD5, the workbench plan's KTD27): its window and,
     // since schema version 8, its repeat. The sum per year runs in the same item order as before, so a budget with no
     // repeat compiles byte-identically.
@@ -90,7 +125,8 @@ export function compileBudget(
     for (let k = 0; k < maxHorizonYears; k++) sticky[k]! += oopMedicalAnnual
   }
 
-  return { sticky, scalableEssentials, discretionary }
+  // PRESENCE-KEYED (insight 055): no rated line, no `rated` key, so the construct is the same object shape as before.
+  return rated.length > 0 ? { sticky, scalableEssentials, discretionary, rated } : { sticky, scalableEssentials, discretionary }
 }
 
 /** The reconciliation figure: the FULL-track total at retirement-year 0 — typed
@@ -117,7 +153,7 @@ export function budgetYearZeroFullTotal(
  *  obvious computation — sum the user's typed lines — is WRONG in two independent ways, and both
  *  fail SILENTLY toward a rosier or a scarier number.
  *    1. It omits the INJECTED out-of-pocket medical. `compileBudget` adds `oopMedicalAnnual` to the
- *       STICKY floor on top of the typed lines (see :81-83), held whole at widowhood (a disclosed
+ *       STICKY floor on top of the typed lines (its injection loop), held whole at widowhood (a disclosed
  *       conservative lean, insight 055) and lifelong. A raw line-sum therefore UNDERSTATES essentials
  *       by exactly M — the mirror of the double-count `anchorTarget` exists to prevent.
  *    2. It ignores tiering. Essentials is everything NOT discretionary — `compileBudget` routes a

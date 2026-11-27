@@ -165,7 +165,7 @@ export const copy = {
     'Counted from the first retirement year — year 0. Leave “through” blank for always.',
   // The ramped-budget anchor disclosure (shared: the sheet readout + the governed spend step).
   budgetAnchorRampNote:
-    'With lines that start later, end or repeat, the first-year figure is an anchor for the math — not every year’s spending.',
+    'With lines that start later, end, repeat or don’t go up with prices, the first-year figure is an anchor for the math — not every year’s spending.',
   // R19 line errors — calm advisor voice, blocking (validate-before-mutate), one per defect kind.
   errBudgetAmountNonFinite: 'That amount didn’t read as a number — mind checking it?',
   errBudgetAmountNegative: 'An amount below zero can’t work here.',
@@ -1313,7 +1313,7 @@ export const copy = {
     'That figure doesn’t count what you’d pay for drug and supplement plans — you answered about nothing for them, so the lines below add none.',
   // ⚠️ "the benchmark premium itself" WAS IN BOTH LISTS AND WAS FALSE — struck 2026-08-03.
   // The benchmark (SLCSP) is not merely counted, it is the ANCHOR of the whole credit:
-  // `intakeMap.ts:827` builds `slcsp` into the overlay params, `taxOverlay.ts:312` calls it "the
+  // `intakeMap.ts:828` builds `slcsp` into the overlay params, `taxOverlay.ts:312` calls it "the
   // §36B PTC basis", and `slidingScalePtc` (healthOverlay.ts:222-232) computes
   // `max(0, slcsp − applicable% × MAGI)` FROM it. Telling the reader the tool ignores the one
   // figure the discount is calculated from is the same false-negation shape O16 fixed on the Roth
@@ -1322,7 +1322,7 @@ export const copy = {
   // STRUCK, NOT REPLACED WITH AN AFFIRMATION, and that is deliberate. The O16 house pattern is
   // affirm-with-residual, but these two strings are gated on `statePriced` ALONE
   // (`stateTaxDisclosure.ts:145`) — they carry no ACA-priced axis, so the identical sentence also
-  // ships to a Medicare-only household (`intakeMap.ts:832-835`) that has no benchmark at all.
+  // ships to a Medicare-only household (`intakeMap.ts:833-836`) that has no benchmark at all.
   // "The benchmark is already in these numbers" would be a NEW false claim for that population.
   // Affirming here needs the three-state gate the Roth strings have; until then, silence is true.
   //

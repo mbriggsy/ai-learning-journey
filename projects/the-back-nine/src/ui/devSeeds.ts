@@ -766,6 +766,30 @@ const dateRepeatSeed: ScenarioDraft = {
 }
 
 /**
+ * THE FIXED-DOLLAR WITNESS — `?seed=datefixed` (gap 4's U4): `dip`'s household with its $20,000 Home line marked "stays
+ * the same dollar amount" (`growthRate: 0`, a fixed mortgage-like payment). The line rides its own rated track, so in a
+ * later calendar year it costs $20,000 ÷ prices' growth since 2026 whatever stop the date search tests (about $14,710 in
+ * 2036, sim year 10). Nothing typed moves: the year-0 total is still $78,000 (the typed amounts) and the W quote still
+ * $36,000 (it counts a rated line at its typed amount, KTD4). A date-route seed with a confirmed W minted on its own
+ * draft, fact-complete.
+ */
+const dateFixedSeed: ScenarioDraft = {
+  ...dateDipSeed,
+  budget: dateDipSeed.budget!.map((l) => (l.label === 'Home' ? { ...l, growthRate: 0 } : l)),
+}
+
+/**
+ * THE RISING-LINE WITNESS — `?seed=daterising` (gap 4's U4): `dip`'s household with its $16,000 Living line going up 5 %
+ * a year in dollars (`growthRate: 0.05`, faster than the price index's 3.2 % then 2.4 %), so in 2036 it costs $16,000 ×
+ * 1.05^10 ÷ prices' growth since 2026, about $19,169 in today's dollars, on every tested stop. Year-0 total $78,000 and
+ * W quote $36,000, as `dip`'s. A date-route seed with a confirmed W minted on its own draft, fact-complete.
+ */
+const dateRisingSeed: ScenarioDraft = {
+  ...dateDipSeed,
+  budget: dateDipSeed.budget!.map((l) => (l.label === 'Living' ? { ...l, growthRate: 0.05 } : l)),
+}
+
+/**
  * THE CUSTOM-DRAWDOWN-ORDER round-trip seed (U10 — the persisted 'custom' policy + `drawdownOrder`).
  * Every other seed rides the `proportional` default; this one is the ONLY seed that drives the
  * 'custom' policy and an explicit bucket order through `plantDevVault`'s scenarioFromDraft → codec
@@ -2142,6 +2166,9 @@ export const DEV_SEEDS = {
   dipkept: dipKept,
   // Gap 4's U3: a budget line that repeats (a car every five years from the first year).
   daterepeat: withConfirmedW(dateRepeatSeed),
+  // Gap 4's U4: budget lines that change at their own rate (a fixed-dollar Home line; a Living line up 5 % a year).
+  datefixed: withConfirmedW(dateFixedSeed),
+  daterising: withConfirmedW(dateRisingSeed),
 } satisfies Record<string, ScenarioDraft>
 
 export type DevSeedKey = keyof typeof DEV_SEEDS
@@ -2223,7 +2250,7 @@ export function plantDevVault(key: string): Promise<PlantResult> {
  *
  * NEVER wire a PRICED-STATE base to this doctor (the state-tax unit; F2 supersession 2026-07-16):
  * the −2y `startCalendarYear` aging (→ 2024) precedes NC/PA's earliest rate row (2026), and the
- * engine's priced-state lower bound (`simulate.ts:1192-1195`, the 2026-07-15 ultramode fold whose
+ * engine's priced-state lower bound (`simulate.ts:1219-1222`, the 2026-07-15 ultramode fold whose
  * comment names "an aged dev plant" as the exact anticipated caller) REFUSES it — the recompute
  * demotes to the R19 calm indeterminate and no verdict renders. A priced-state stale plant rides
  * {@link doctorStateStaleVault} (savedAt-only, startCalendarYear + all vintages UNTOUCHED, ONLY the
@@ -2236,7 +2263,7 @@ export function doctorStaleVault(s: CurrentScenario, todayEpochDay: number): Cur
     throw new Error(
       `doctorStaleVault must never take a priced-state base (got ${s.retirementState}): its -2y ` +
         `startCalendarYear aging precedes the state's earliest rate row, and the engine's ` +
-        `priced-state lower bound (simulate.ts:1192) demotes the recompute to the R19 calm ` +
+        `priced-state lower bound (simulate.ts:1219) demotes the recompute to the R19 calm ` +
         `indeterminate — no verdict renders. Use doctorStateStaleVault (the F2 supersession).`,
     )
   }
@@ -2307,7 +2334,7 @@ function agedStateProfile(state: PricedState): string {
  * profile one rate-step back ({@link agedStateProfile}). Everything else stays FRESH.
  *
  * WHY NOT {@link doctorStaleVault} (the whole reason this exists): that doctor ages `startCalendarYear`
- * −2 (→ 2024), and the engine's priced-state lower bound (`simulate.ts:1192-1195`) REFUSES a priced-NC
+ * −2 (→ 2024), and the engine's priced-state lower bound (`simulate.ts:1219-1222`) REFUSES a priced-NC
  * household whose year-0 precedes NC's earliest rate row (2026) — the recompute demotes to the R19
  * calm indeterminate and no verdict renders (S2's insight-033 live drive caught exactly this). It was
  * also organically impossible: `retirementState` shipped 2026-07-15, so no genuinely-old save could
@@ -2411,14 +2438,14 @@ const ARRIVED_SAVED_DAYS_AGO = 30
  * the hero's arrived arm needs `yearsSincePlanBuilt` to EXCEED the lifestyle crown, and `datesplit`
  * crowns at 10. `dip` crowns at 5 and HOLDS there under aging — it does not chase its own tail —
  * so depth 6 clears it. The base must also be STATELESS: a priced-state base rejects at any depth
- * ≥1 on the engine's priced-state year bound (`simulate.ts:1192-1195`), which is the real constraint
+ * ≥1 on the engine's priced-state year bound (`simulate.ts:1219-1222`), which is the real constraint
  * the spec's `earliestPricedRateYear` probe was reaching for. `dip` carries no `retirementState`.
  *
  * IT AGES `birthYear` ALONGSIDE `startCalendarYear`, AND THAT IS LOAD-BEARING. `PersonInputs`
  * (`model.ts:99`) documents `currentAge === startCalendarYear − birthYear` as a model invariant, and
  * the engine reads a birth year through TWO paths that must agree: the SS sub-engine's stated
  * `p.birthYear` (FRA / DRC / deemed-filing lookups) and the tax overlay's DERIVED
- * `startCalendarYear − currentAge` (`simulate.ts:445`). Aging the build clock ALONE forks them by
+ * `startCalendarYear − currentAge` (`simulate.ts:447`). Aging the build clock ALONE forks them by
  * the full depth and fabricates a household that is organically impossible — in 2020 this couple
  * would have been 51, not 57. Aging `birthYear` by the same depth restores the invariant exactly,
  * keeps `currentAge` (so the engine sees the SAME household and the crown does not move — MEASURED:
@@ -2443,7 +2470,7 @@ export function doctorArrivedVault(s: CurrentScenario, todayEpochDay: number): C
     throw new Error(
       `doctorArrivedVault must never take a priced-state base (got ${s.retirementState}): its ` +
         `-${ARRIVED_PLAN_YEARS}y startCalendarYear aging precedes the state's earliest rate row, and ` +
-        `the engine's priced-state lower bound (simulate.ts:1192) demotes the recompute to the R19 ` +
+        `the engine's priced-state lower bound (simulate.ts:1219) demotes the recompute to the R19 ` +
         `calm indeterminate — no verdict renders, and the arrived hero never draws.`,
     )
   }
@@ -2457,7 +2484,7 @@ export function doctorArrivedVault(s: CurrentScenario, todayEpochDay: number): C
           `− birthYear (${p.currentAge} !== ${s.startCalendarYear} − ${p.birthYear}) BEFORE aging. ` +
           `This doctor shifts both clocks to KEEP that invariant; over a base that already violates ` +
           `it, the engine's two birth-year reads (p.birthYear for the SS FRA lookup vs ` +
-          `simulate.ts:445's derived startCalendarYear − currentAge) stay forked and nothing says so.`,
+          `simulate.ts:447's derived startCalendarYear − currentAge) stay forked and nothing says so.`,
       )
     }
   }
@@ -2810,7 +2837,7 @@ export function doctorYearlyReturnRecord(s: CurrentScenario, todayEpochDay: numb
  *  and it lights ONE arrived arm rather than two, because a floor crown of 0 short-circuits past
  *  the three-way split at `dateHero.ts:66`). The base must be STATELESS: `datenc` rejects at
  *  any depth ≥1 with "startCalendarYear precedes the priced state rate schedule"
- *  (`simulate.ts:1192-1195`), which is the real bound the S6 spec's `earliestPricedRateYear` probe
+ *  (`simulate.ts:1219-1222`), which is the real bound the S6 spec's `earliestPricedRateYear` probe
  *  was reaching for — and that probe is VACUOUS on a stateless base (the gate is `isPricedState`-
  *  gated), so the honest constructibility probe is the date search itself, which is what the
  *  `datearrived` engine-acceptance arm runs on every suite.
@@ -2862,7 +2889,7 @@ export const AGED_PLANTS: Readonly<Partial<Record<string, AgedPlant>>> = {
   // `controls.stateTaxMoved` clock is route-gated to the household's own priced state, so a stateless
   // base could never fire it; NC not FL because FL's constitutional $0 never stales. The full
   // doctorStaleVault's −2y aging (→ 2024) would trip the engine's priced-state year bound
-  // (simulate.ts:1192) → R19 indeterminate, so this plant rides `doctorStateStaleVault` (savedAt-only,
+  // (simulate.ts:1219) → R19 indeterminate, so this plant rides `doctorStateStaleVault` (savedAt-only,
   // startCalendarYear + all vintages fresh) → the `stalenessStateTax` gate note fires in ISOLATION.
   statestale: { base: 'nc', doctor: doctorStateStaleVault },
   // U17 §S5 — the two record-bearing plants, over the retired SPINE spine household (a saved

@@ -86,6 +86,11 @@ describe('isRampedBudget — the anchor-not-steady-state label gate (U9b)', () =
   it('a repeat makes the budget ramped, even one from year 0 with no end (it charges some years and not others; gap 4’s U3)', () => {
     expect(isRampedBudget([line({}), line({ everyYears: 5 })])).toBe(true)
   })
+
+  it('a line that changes at its own rate makes the budget ramped, even a lifelong one from year 0 (its later years cost something else in today’s dollars; gap 4’s U4)', () => {
+    expect(isRampedBudget([line({}), line({ growthRate: 0 })])).toBe(true)
+    expect(isRampedBudget([line({ growthRate: 0.05 })])).toBe(true)
+  })
 })
 
 describe('a line’s repeat — the window helper and the validator (gap 4’s U3, KTD5)', () => {

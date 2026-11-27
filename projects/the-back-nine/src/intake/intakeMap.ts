@@ -64,6 +64,7 @@ import { isPricedState, type PricedState } from '@engine/constants/stateTax'
 import type { ScenarioDraft } from '@store/memoryModel'
 import type { ExposureRead } from '@store/staleness'
 import { compileBudget } from '@budget/budgetToSpending'
+import { ratedLineFactors } from './priceFrame'
 import { annualAdditionsCeilingFor, contributionCeilingFor, contributionCeilingInYear, depositCeilingOf, isEmployerPlanKind } from './sanity'
 import { compileIncomeStreams } from './otherIncome'
 import { inheritedFactsProblems, inheritedLedgerParams, isInheritedAccount, type InheritedAccount } from './inheritedIra'
@@ -891,9 +892,20 @@ function buildParams(d: ScenarioDraft): SimulationParams | null {
     // The OOP-medical injection reads the SAME intake scalar `buildOverlay` fills the
     // overlay's oopMedical stream from — the single-source that makes the engine's
     // containment gate true by construction. Absent budget ⇒ absent construct ⇒ the
-    // un-itemized scalar path, byte-identical to pre-U9.
+    // un-itemized scalar path, byte-identical to pre-U9. A line that changes at its own rate (gap 4's
+    // U4) gets its price factors by sim year here, where the build year lives (`priceFrame.ts`, KTD3
+    // and KTD4); the compile asks only for a rated line, so a plan without one never reaches the throw.
     ...(d.budget !== undefined
-      ? { budget: compileBudget(d.budget, d.health.oopMedicalAnnual, horizonYears) }
+      ? {
+          budget: compileBudget(d.budget, d.health.oopMedicalAnnual, horizonYears, (growthRate) => {
+            if (d.startCalendarYear === undefined) {
+              throw new Error(
+                '[intakeMap] a budget line that changes at its own rate is priced from the plan’s build year, and the draft carries no startCalendarYear (no silent flat default, burned/062)',
+              )
+            }
+            return ratedLineFactors(growthRate, d.startCalendarYear, horizonYears)
+          }),
+        }
       : {}),
   }
 }

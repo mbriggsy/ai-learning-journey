@@ -383,7 +383,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    to the Caddie or Briggsy's eye; do not re-file it as a copy defect without a read.
 
 2. **Pre-65 ACA premiums are priced real-flat — the sin the Medicare council ruled solver-BLOCKING.**
-   `intakeMap.ts:446-466` (`escalateQuote`) builds both the enrolled premium and the SLCSP benchmark from
+   `intakeMap.ts:447-467` (`escalateQuote`) builds both the enrolled premium and the SLCSP benchmark from
    `acaAgeRatingCurve` factors alone — **no cost-trend term**. Part B was fixed for exactly this reason;
    `oracleToken.ts:112-133` writes the argument out (*"disclose-and-ship is FORBIDDEN — a disclosure fixes
    a number, never a mis-ranking"*). The same argument holds at the 400%-FPL cliff, where the household
@@ -397,7 +397,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    (`adjacentButSharp` at `:90`, `needProse` at `:169`, since 2026-08-03) — **the gate is presence-only**: nothing checks that the prose models the uncapped clawback.
    ⚑ **STRUCTURAL — this is why it isn't a Part B copy-paste:** Part B's schedule is built INSIDE the
    engine, which is why the oracle token can witness it. The ACA escalator lives in **intake**
-   (`intakeMap.ts:446-466`), which the engine cannot import — so an `ACA_PRICING_MODE` flag bolted onto
+   (`intakeMap.ts:447-467`), which the engine cannot import — so an `ACA_PRICING_MODE` flag bolted onto
    intakeMap would be the exact lying-mirror `oracleToken.ts:114-122` warns about. The honest fix moves the
    schedule build to an engine-owned `buildAcaPricingSchedule` beside `partBPricingByT` (`taxOverlay.ts:2142`).
    ⚑ **Re-tag: BLOCKED ON RESEARCH.** No sourced ACA cost-trend primary exists in the repo, so a solver
@@ -413,7 +413,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    claim on this surface. (c) the editable strings are **`copy.ts:1125` and `:1127`** (the key names sit one line
    above), and both must move together.
    ⚑ **The direction claim must be CLIFF-SCOPED, never blanket.** `healthOverlay.ts:231`+`:303` give
-   under-cliff net = `enrolled − slcsp + contribution`, and `intakeMap.ts:826-827` scale **both** streams by
+   under-cliff net = `enrolled − slcsp + contribution`, and `intakeMap.ts:827-828` scale **both** streams by
    the same `escalateQuote` factor — so under the cliff a missing trend is **zero** when E=S
    (`devSeeds.ts:731-732` = 4200/4200) and **reversed (pessimistic)** when E<S, which `copy.ts:195` invites.
    It bites one-way optimistic **only over the cliff** (`healthOverlay.ts:308-312`, full enrolled premium).
@@ -440,7 +440,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      gate; the scoping error was looking inside `projects/the-back-nine/` when the git root is
      `ai-learning-journey`. See the CI note under "Standing cadences".
    - **A false negation on the health sheet (XS).** `copy.ts:1155/960` list *"the benchmark premium itself"*
-     under "Not counted here" while the entered benchmark **is** priced (`intakeMap.ts:827` →
+     under "Not counted here" while the entered benchmark **is** priced (`intakeMap.ts:828` →
      `healthOverlay.ts:222-232`) — the same false-negation shape O16 fixed on the Roth strings.
    </details>
 
@@ -450,7 +450,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    conversion ranking **with** the new disclosure (what the BLOCKED-ON-RESEARCH tag silently assumes), or
    does the token gain an **ACA pricing-mode clause** that withholds the ranking — as Medicare's did — until
    a sourced trend lands?
-   ⚑ **2026-09-04 anchors + two unfiled facts:** `escalateQuote` is `intakeMap.ts:446-466` (not `:271-291`);
+   ⚑ **2026-09-04 anchors + two unfiled facts:** `escalateQuote` is `intakeMap.ts:447-467` (not `:271-291`);
    the "Not counted here" pair is `copy.ts:1106` / `:1111` (not `:895/:897`) and the surface is SIX strings
    (`copy.ts:1106`, `:1111, :1163, :1117, :1125, :1127` — selected by `composeRothOmissionsNote`'s 2×3 matrix, whose
    ACA-priced arm already AFFIRMS the subsidy is counted, so a trend sentence must reconcile with that
@@ -487,7 +487,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    `tsc` until written) · `recommendationView.ts:349-353` · the intake picker **4 → 11 vertical arms**
    against `verify:fit`. Engine cost is genuinely near-zero (`stateTax.ts:163` structural early return).
    ⚑ **The filed "every saved vault decodes Corrupt" blocker is FALSE — do not act on it, and do NOT loosen
-   the compile tie.** `_V3FieldsCover` (`model.ts:3286-3288`) covers only `keyof CurrentScenario`;
+   the compile tie.** `_V3FieldsCover` (`model.ts:3316-3318`) covers only `keyof CurrentScenario`;
    `checkStateTaxVintageV3` (`scenarioCodec.ts:906-911`) is hand-written and compels no `needString`. Safe
    because `scenarioCodec.ts:1158-1159` gates `retirementState` via `needVocab(STATE_ROSTER)`, so no
    pre-widening vault can *be* a household in a newly-priced state. The prescribed remedy — loosening
@@ -550,7 +550,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      **and** `scrollHeight > clientHeight` — content growth makes the second assertion *more* true.
      ⚑ **The drafted HSA sentence would have DENIED the very forfeit it discloses — do not ship "stays
      put" / "simply sits."** The balance is not parked, it is **destroyed**: `taxOverlay.ts:2997-2998` sets
-     `buckets = EMPTY_BUCKETS` (hsa: 0) → `simulate.ts:2447` `terminalHsaReal = 0` →
+     `buckets = EMPTY_BUCKETS` (hsa: 0) → `simulate.ts:2492` `terminalHsaReal = 0` →
      `objectiveHeadline.ts:65` bequest contribution **$0**. On the exact path the sentence names, the HSA
      adds nothing to the leave-more dollar the reader sees. **The sentence must say the balance is DROPPED.**
      ⚑ **Sweep BOTH stale comments in the same commit** — `healthOverlay.ts:912-915` (which says
@@ -631,7 +631,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    "~89px headroom" — that is the SPINE idle frame's figure; the date arms of `verify:fit` assert ORDER + REACHABILITY only — never fit
    (spec header `vertical-fit.spec.ts line 53-54 at 1c08f2288`). `Result.tsx line 270-272 at 95c715e19`'s "covers the date route honestly" comment was FALSE (never
    minted there; a route-flip render is dropped) — swept 2026-09-04. A crowned-offset params builder ALREADY
-   exists (`buildControlPreviewParams`, `intakeMap.ts:1328-1337`), so parity's base shape is not from zero.
+   exists (`buildControlPreviewParams`, `intakeMap.ts:1340-1349`), so parity's base shape is not from zero.
    Build shape: the ⚑ Folded 2026-09-06 block directly below.
    ⚑ **Folded 2026-09-06 from the superseded b9-3 plan (its item 6, the date-route one-liner) — its 2026-09-04 re-verify clause, still live:** Date-route one-liner (S) via a Caddie card — words must be true on all FOUR date-hero framings
    (anchor on WORK STATUS, never "a date ahead of you"); the one token yours: does it promise parity.
@@ -699,7 +699,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     (same bytes, `backup.ts:84-93`). No build ever wrote either. *(Re-scoped 2026-10-31, b9-3: this bullet
     said a future v4 would push today's v3 vaults into that arm. The schema-v4 bump did not: version 3
     relabels to 4 at decode, a label-only step — `docs/architecture.md` §7.3.)* · there is **no way to delete the vault** (`clearVault` exists; its only PRODUCTION
-    caller is the dev seed planter, `devSeeds.ts:2979` — eight test/e2e files also call it).
+    caller is the dev seed planter, `devSeeds.ts:3006` — eight test/e2e files also call it).
     ⚑ **Folded 2026-09-06 from the superseded b9-3 plan (its item 9 — the aged note, the v2→v3 ladder, the leaves-out section) — its 2026-09-04 re-verify clause, still live:** Aged-window disclosure note (S; the ranking fork stays yours, three arms with corrected costs, due
     before 2027-01-01) · migration ladder scaffold (S; the honest legacy state names NO remedy — the
     backup carries the same bytes) · HSA-forfeit + LTC "What this leaves out" section (M; pilot per the
@@ -712,7 +712,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     `rothPlanRanked` hardcoded the plural "Those years are counted from…" after a correctly-singular "for 1 year" —
     live for any at/past-RMD household on an aged vault (the 1-year clamp, `solveAnchor.ts:271-272`) — and no test
     covered `years: 1, passed: true`. (b) THE LADDER is register `L` · **pilot**, and the v2→v3 ALGORITHM IS
-    PRESCRIBED: `model.ts:2019-2021` mints synthetic entered accounts from the old aggregates "so the ladder
+    PRESCRIBED: `model.ts:2049-2051` mints synthetic entered accounts from the old aggregates "so the ladder
     stays total"; the write primitive exists (`db.ts:232 rewriteModel`, pinned `db.test.ts:180`); today's
     ladder is decode-and-return with NO migrate step (`scenarioCodec.ts:1478-1485`, the v1/v2 arms), and a v1 vault survives
     every store seam on real IndexedDB (`e2e/vaultHarness.ts:24-25`) to die only at `IntakeApp.tsx:818`.
@@ -791,9 +791,9 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     riders, the open copy obligations, the deferred richer market draw, and the `dateinvert` (c) mint —
     its own session, a size-L parameter hunt.
     ⚑ **2026-09-04:** two bullets were half-dead and are closed — the `partBTrendVintage` "no exposure gate"
-    clause was swept in `staleness.ts:747-750` but still lived verbatim at `model.ts:3229` (swept), and
+    clause was swept in `staleness.ts:747-750` but still lived verbatim at `model.ts:3259` (swept), and
     Plan 4's "the record carries `seedA`/`seedB`" (`plans/4-recommendation.md:283`) had outlived its own
-    "kill BEFORE S5 mints" deadline — the shipped `SavedRecommendationV3` (`model.ts:2655-2677`) has no seed
+    "kill BEFORE S5 mints" deadline — the shipped `SavedRecommendationV3` (`model.ts:2685-2707`) has no seed
     field (struck in the plan). ⚑ (b)'s SOURCE twin outlived that close — `heldOutSeed.ts:13-14` still said
     the U17 record stores the seed — and was swept 2026-09-25 (the register bullet is closed with it).
     ✅ **NC's RETIRED CERTIFICATION CHECKPOINT — SWEPT 2026-08-14.** Six shipped surfaces (not the
@@ -836,7 +836,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     flag) and BOTH candidate fixes cost something — "mint through `update()`" turns a deferred false-arm
     into an immediate one; an eager mint in `createMemoryModel` breaks the WRITTEN contract #1b (mint at the
     FIRST ENGINE RUN, `plans/2-first-answer.md:57`) with no test that would catch it. His ruling, framed as
-    those two arms. Two half-swept false comments closed 2026-09-04: `model.ts:3229` and
+    those two arms. Two half-swept false comments closed 2026-09-04: `model.ts:3259` and
     `plans/4-recommendation.md:283`.
 
 ---
@@ -888,7 +888,7 @@ line keeps the facts `/distill` needs; its source line is in this file as it sto
 ## Driving the app
 
 `pnpm dev`, then a `?seed=` or `?vault=` param. DEV-only, DCE'd from prod. Source of truth:
-`src/ui/devSeeds.ts` — `DEV_SEEDS` at `devSeeds.ts:2067`, `AGED_PLANTS` at `devSeeds.ts:2857`.
+`src/ui/devSeeds.ts` — `DEV_SEEDS` at `devSeeds.ts:2091`, `AGED_PLANTS` at `devSeeds.ts:2884`.
 
 **Scenario seeds** — jump straight to a worded result + band:
 
@@ -931,7 +931,7 @@ like prod; re-planting is an explicit re-entry of the URL, never a refresh side 
 
 ⚑ **NO-SOLVE DRIVE RECIPE, so the next walk costs minutes not hours.** `?vault=rec` → Unlock
 (passphrase pre-filled) → *"Use your recovery word"* → RecoveryFlow. Recovery word for every plant
-is **`lattice harbor cinder vellum 48 thicket`** (`devSeeds.ts:2166`). For RestoreFlow you need a
+is **`lattice harbor cinder vellum 48 thicket`** (`devSeeds.ts:2193`). For RestoreFlow you need a
 real backup FILE and no full intake is required: unlock any plant → Result → **"Save a backup
 file"** → *Download backup* (an `<a>` with a blob URL, **not** a button — a `button:has-text()`
 selector misses it) → then delete the DB and reload. **`indexedDB.deleteDatabase` is BLOCKED while

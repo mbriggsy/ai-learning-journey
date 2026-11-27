@@ -134,7 +134,7 @@ status: shipped
    arms: absent field, `'elsewhere'`, and each unbuilt roster state, all against the golden
    spine.
 6. **validateParams / R19:** the state code is an ENUM-MEMBERSHIP gate (the `filing` idiom,
-   simulate.ts:1174) — an out-of-union value crossing the worker boundary returns the calm
+   simulate.ts:1201) — an out-of-union value crossing the worker boundary returns the calm
    indeterminate, never a silently-selected branch; mirrored fail-loud backstop in
    `runTaxAwareDecumulation` for direct callers.
 7. **Survivor transition (insight 014):** the NC standard deduction moves $25,500 → $12,750
@@ -216,7 +216,7 @@ status: shipped
    "no state income tax" words.
 3. **FIVE disclosure homes, not the four this plan first named** (SIX since 2026-09-11 — the standalone verdict note, see the S5 note below) — `verdictMedicareResidual`
    (copy.ts:1315), `rothOmissionsNote` (copy.ts:1105), `controlHealthOmissionsNote`
-   (copy.ts:1246), the spendHelp branch (`spendHelpKeyFor`, intakeMap.ts:1224), and the
+   (copy.ts:1246), the spendHelp branch (`spendHelpKeyFor`, intakeMap.ts:1236), and the
    RECOMMENDATION surface's disclosure rail (`recDiscStateTax`). The fifth was born unguarded:
    it shipped as the only household-DEPENDENT builder with no condition, so an NC household
    would read "this compares federal tax only" three inches under a spine that had just named
@@ -228,7 +228,7 @@ status: shipped
    pin that the view actually FORWARDS `pricedStateForRun` to the disclosure builder (the defect
    was never a wrong decision — the predicate was computed and simply never handed down).
 4. **The statePriced predicate is PRODUCER'S-OUTPUT ONLY, roster-gated (red-team fold):**
-   `pricedStateForRun` (intakeMap.ts:1006) reads the state-pricing answer off the route's own BUILT
+   `pricedStateForRun` (intakeMap.ts:1018) reads the state-pricing answer off the route's own BUILT
    params (the `spineMedicarePriced` shape — buildSpineParams' overlay output; the date route
    reads its own builder's output), never geography and never ages. It returns a `PricedState`
    or `undefined`, so every one of the five homes swaps its clause by the SAME rule (six since 2026-09-11 — the verdict's STANDALONE state note, `composeVerdictStateNote`, is the sixth: home #1 renders only for the all-65+ no-door household, so a pre-65 household's verdict carried no clause on either route until the four-faces walk's Card 4 caught it; same predicate, own gate). **The bare `isDateRoute` disjunct is STRIPPED for state** —

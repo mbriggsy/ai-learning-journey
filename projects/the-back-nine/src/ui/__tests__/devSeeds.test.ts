@@ -1054,7 +1054,7 @@ describe('the state-tax seed faces (the state-carrying seed increment)', () => {
 //
 // WHY THE LIGHT DOCTOR (the bug this shape supersedes): routing `statestale` through the FULL
 // doctorStaleVault aged `startCalendarYear` −2 (→ 2024), and the engine's priced-state lower bound
-// (simulate.ts:1192-1195) correctly REFUSES a priced-NC household whose year-0 precedes NC's earliest
+// (simulate.ts:1219-1222) correctly REFUSES a priced-NC household whose year-0 precedes NC's earliest
 // rate row (2026) → the affirm recompute demoted to the R19 calm indeterminate (S2's live drive
 // caught it). The engine-acceptance arm below is the pin that would have caught it up front.
 // ===========================================================================
@@ -1605,7 +1605,7 @@ describe('the stale aged plant (the re-entry gate notes, exposure-gated)', () =>
     // ⚑ PINNED AS FOUND, NOT AS EXPECTED — and the difference is the point. Fresh `retired` is
     // ON-TRACK (0.8555, the documented knife-edge sitting on the 0.85 band edge); this plant reads
     // BORDERLINE. The cause is MEASURED: `doctorStaleVault` ages `startCalendarYear` alone, so the
-    // overlay's DERIVED birth year (`startCalendarYear − currentAge`, simulate.ts:445) forks from
+    // overlay's DERIVED birth year (`startCalendarYear − currentAge`, simulate.ts:447) forks from
     // each person's STATED `birthYear` — here 1958/1959 derived against 1960/1961 stated, which
     // straddles the SECURE-2.0 RMD band edge (`bornThrough: 1959 → 73` vs `null → 75`) for BOTH
     // people. The doctored household is therefore forced into RMDs two years earlier than the
@@ -2085,7 +2085,7 @@ describe('the arrived aged plant (the first live route to the hero\'s dateInYear
   // Arm 1 — THE MODEL INVARIANT THIS DOCTOR EXISTS TO HOLD. `PersonInputs` (model.ts:99) documents
   // `currentAge === startCalendarYear − birthYear`, and the engine reads a birth year through TWO
   // paths that must agree: the SS sub-engine's stated `p.birthYear` (FRA / DRC / deemed-filing) and
-  // the tax overlay's DERIVED `startCalendarYear − currentAge` (simulate.ts:445). Aging the build
+  // the tax overlay's DERIVED `startCalendarYear − currentAge` (simulate.ts:447). Aging the build
   // clock ALONE forks them by the full depth — silently, because nothing in the codec, the hydrator
   // or the sanity layer enforces the invariant. The arm pins all three halves: currentAge frozen
   // (so the engine sees the same household), birthYear moved by the SAME depth, invariant intact.
@@ -2195,7 +2195,7 @@ describe('the arrived aged plant (the first live route to the hero\'s dateInYear
   })
 
   // Arm 5 — THE STATELESS REQUIREMENT IS ENFORCED, not merely documented. A priced-state base
-  // rejects at any depth ≥1 on the engine's priced-state year bound (simulate.ts:1192-1195), which is
+  // rejects at any depth ≥1 on the engine's priced-state year bound (simulate.ts:1219-1222), which is
   // insight 085's own origin story — so the doctor fail-louds at the plant instead of shipping a
   // fixture that renders the R19 calm indeterminate and reads as a broken feature.
   it('REFUSES a priced-state base (the insight-085 bound), rather than minting an R19 fixture', () => {
@@ -2387,7 +2387,7 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
     expect(carrying).toEqual(keys.filter((k) => isDateRoute(DEV_SEEDS[k])).sort())
     // Named, so a seed that falls off the date route cannot take its W with it unseen.
     expect(carrying).toEqual([
-      'atceiling', 'date', 'date65', 'dateborder', 'datecoststale', 'datelateleftover', 'datemixed', 'datenc', 'daterepeat', 'datesaved',
+      'atceiling', 'date', 'date65', 'dateborder', 'datecoststale', 'datefixed', 'datelateleftover', 'datemixed', 'datenc', 'daterepeat', 'daterising', 'datesaved',
       'datesavedfourbuckets', 'datesavedmoved', 'datesavedrisen', 'datesavedrisenlater', 'datesavedrisenshort', 'datesavedstale', 'datesavedtyped',
       'datesavedtypedcrowned', 'datesavedtypedmoved', 'datesavedtypednearline', 'datesavedtypedpension', 'datesavedtypedsticky', 'dateshort',
       'datesolo',
@@ -2511,9 +2511,9 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
     // (short at the quote, a later year short at the quote), U11 walk 6's retype (R1: a typed W, fresh), the
     // four-bucket twin (council (6)), the retype after a move (the walk-6 round review's pair), the whole-window
     // rebuild's two (the pension household and the crowned one), the tax rider's two walk-8 twins (the near-line
-    // household and the all-sticky one), the year-by-year table's widest household (the workbench's U7) and gap 4's
-    // repeat witness (`daterepeat`, U3) included.
-    expect(swept, 'the sweep reached every buildable W-carrying seed').toBe(27)
+    // household and the all-sticky one), the year-by-year table's widest household (the workbench's U7), gap 4's
+    // repeat witness (`daterepeat`, U3) and its two rated-line witnesses (`datefixed`, `daterising`, U4) included.
+    expect(swept, 'the sweep reached every buildable W-carrying seed').toBe(29)
   })
 
   // The whole-window rebuild's every-year field (KTD1) on two witnesses the typed-below line reads. A (`datesavedtyped`):
@@ -2570,7 +2570,7 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
       if (key === 'dateshort') expect(credits.every((c) => c === 0), 'dateshort: short in year 0, so nothing in any year').toBe(true)
       swept++
     }
-    expect(swept, 'the sweep reached every buildable W-carrying seed (the twenty-seven above)').toBe(27)
+    expect(swept, 'the sweep reached every buildable W-carrying seed (the twenty-nine above)').toBe(29)
   })
 
   // Build 2's U9 (KTD14): the three saved witnesses, each minted through the shipped write. Every figure typed by

@@ -115,6 +115,53 @@ describe('compileBudget — a line that repeats (gap 4’s U3, KTD5)', () => {
   })
 })
 
+describe('compileBudget — a line that changes at its own rate (gap 4’s U4, KTD1 and KTD6)', () => {
+  // The compile knows no calendar year (it imports `@shared` only), so the caller hands it the factor builder; a stub
+  // that tags each factor with the rate it was asked for shows which line got which factors.
+  const stub = (growthRate: number): readonly number[] => new Array<number>(H).fill(1 + growthRate)
+
+  it('a rated line leaves the three base arrays for its own track: its route, its raw amounts by k (window and repeat applied), its factors by t', () => {
+    const c = compileBudget(
+      [
+        line({ category: 'housing', annualAmountReal: 20_000, growthRate: 0 }),
+        line({ annualAmountReal: 12_000 }),
+        line({ tier: 'discretionary', annualAmountReal: 5_000, startYear: 2, endYear: 6, everyYears: 2, growthRate: 0.05, label: 'Trips' }),
+      ],
+      3_000,
+      H,
+      stub,
+    )
+    expect(c.sticky).toEqual(new Array(H).fill(3_000)) // the medical alone: the rated housing line never joins it
+    expect(c.scalableEssentials).toEqual(new Array(H).fill(12_000))
+    expect(c.discretionary).toEqual(new Array(H).fill(0))
+    expect(c.rated).toEqual([
+      { route: 'sticky', amountByK: new Array(H).fill(20_000), factorByT: new Array(H).fill(1) },
+      { route: 'discretionary', amountByK: [0, 0, 5_000, 0, 5_000, 0, 5_000, 0, 0, 0], factorByT: new Array(H).fill(1.05) },
+    ])
+  })
+
+  it('a scalable essentials line routes as its tier and category say, exactly as an unrated one would', () => {
+    const c = compileBudget([line({ annualAmountReal: 8_000, growthRate: 0.03 })], undefined, H, stub)
+    expect(c.rated?.map((t) => t.route)).toEqual(['scalableEssentials'])
+  })
+
+  it('a budget with no rated line writes no `rated` key at all (the presence key: absent, the run is byte-identical)', () => {
+    const c = compileBudget([line({}), line({ category: 'housing' })], 1_000, H, stub)
+    expect(Object.keys(c).sort()).toEqual(['discretionary', 'scalableEssentials', 'sticky'])
+  })
+
+  it('the year-0 total holds a rated line at its typed amount (KTD6: the reconcilers never see a factor)', () => {
+    expect(budgetYearZeroFullTotal([line({ category: 'housing', annualAmountReal: 20_000, growthRate: 0 }), line({})], 3_000)).toBe(35_000)
+  })
+
+  it('throws loud on a rated line with no factor builder, a builder whose factors miss the horizon, and a rate the bounds module refuses', () => {
+    expect(() => compileBudget([line({ growthRate: 0 })], undefined, H)).toThrow(/factor/)
+    expect(() => compileBudget([line({ growthRate: 0 })], undefined, H, () => [1, 1])).toThrow(/factor/)
+    expect(() => compileBudget([line({ growthRate: 0.2 })], undefined, H, stub)).toThrow(/growthRate/)
+    expect(() => compileBudget([line({ growthRate: Number.NaN })], undefined, H, stub)).toThrow(/growthRate/)
+  })
+})
+
 describe('compileBudget — structural throws vs faithful domain-bad values', () => {
   it('throws loud on a reversed window (compiling it faithfully would silently drop the line)', () => {
     expect(() => compileBudget([line({ startYear: 5, endYear: 2 })], undefined, H)).toThrow(/reversed window/)

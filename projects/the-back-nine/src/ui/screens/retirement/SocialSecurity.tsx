@@ -91,7 +91,7 @@ function Lines({ lines, hook, className = 'text-label text-stone-600' }: { reado
 function Metric({ hero, line, more }: { readonly hero: string; readonly line: string; readonly more?: ReactNode }) {
   return (
     <div className="flex flex-col gap-2 text-center compact:gap-1" data-metrics="">
-      <p className="text-[1.75rem] leading-tight font-semibold text-stone-900 tabular-nums compact:text-[1.5rem]" data-claims-hero="">
+      <p className="text-[1.75rem] font-semibold text-stone-900 tabular-nums compact:text-[1.5rem]" data-claims-hero="">
         {hero}
       </p>
       {line !== '' ? (
@@ -222,7 +222,7 @@ function Steps({ steps }: { readonly steps: ClaimsSteps }) {
   return (
     <div className="flex flex-col gap-4 laptop:col-span-2" data-claims-steps="">
       <h3 className="text-body font-semibold text-stone-900">{steps.heading}</h3>
-      <ol className="flex max-w-3xl flex-col">
+      <ol className="flex flex-col">
         {steps.steps.map((s, i) => (
           <li key={s} className="border-b border-stone-300 py-3 text-body text-stone-900 tabular-nums" data-claims-step="">
             {`${i + 1}. ${s}`}

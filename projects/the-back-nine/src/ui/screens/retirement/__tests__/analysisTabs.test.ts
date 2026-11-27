@@ -1,10 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import { simulate } from '@engine/simulate'
-import type { LedgerWorkingYear, LedgerYearRow } from '@shared/model'
+import { DATE_OFFSET_WINDOW_TOP } from '@engine/dateSearch'
+import { buildTableBase, carriedWorkingYearLeftOver, isDateRoute, workingYearLeftOverShownState } from '@intake/intakeMap'
+import { applyBundle } from '@intake/whatIf'
+import type { DateSearchOutcome, LedgerWorkingYear, LedgerYearRow, WhatIfLeverV6 } from '@shared/model'
+import type { ScenarioDraft } from '@store/memoryModel'
 import { DEV_SEEDS } from '../../../devSeeds'
 import { copy, slots } from '../../../copy'
-import { formatDeltaDollar } from '../../../money'
-import { tableRunFor, type TableMeta } from '../../../workbench/tableRun'
+import { formatDeltaDollar, formatEnteredDollar } from '../../../money'
+import { tableRequestsOn, tableRunFor, type TableMeta } from '../../../workbench/tableRun'
 import { headlineAnswer } from '../../tax/__tests__/fixtures'
 import type { RunRows } from '../cashFlowsView'
 import { analysisSides, endTotal, premiumsOf, startTotal, withdrawn, type AnalysisInput, type RunSide } from '../analysisRuns'
@@ -131,10 +135,10 @@ describe('Comparisons', () => {
     expect(tax.notes, 'all retired: no working year to set apart').not.toContain(copy.cmpTaxWorkingNote)
   })
 
-  it('income tax compares the years after work stops only: a stop-year lever whose working-year tax would flip the direction totals the retired years both share, named', () => {
+  it('income tax: a stop-year lever’s years where only one side works are left out, the window starting after them, named; a working year’s large savings tax can’t flip the direction', () => {
     // Your plan stops in START + 3 and pays a large tax on savings' income in its working years; the what-if stops in
-    // START + 5 and pays $1,000 more in each retired year. Over every row the what-if pays LESS; over the retired years
-    // both share it pays more, which is the comparison of like with like.
+    // START + 5 and pays $1,000 more in each retired year. Over every row the what-if pays LESS; START + 3 and + 4 hold a
+    // working year on one side beside a retired year on the other, so the window starts after them, at START + 5.
     const later: TableMeta = { ...WORKING_META, stopYear: START + 5, stopFrom: 'lever' }
     const planRows = withPay(true).map((r) => (r.t < STOP_T ? { ...r, taxPaid: r.taxPaid + 50_000 } : r))
     const leverRows = withPay(true).map((r) => (r.t >= 5 ? { ...r, taxPaid: r.taxPaid + 1_000 } : r))
@@ -147,42 +151,132 @@ describe('Comparisons', () => {
     const d = inWindow(leverRows) - inWindow(planRows)
     expect(d).toBe(1_000 * RETIRED.rows.filter((r) => r.t >= 5).length)
     expect(v.metric).toBe(slots.cmpTaxMore('new what-if', formatDeltaDollar(d), 'more', START + 5, last, 'your plan', true))
-    // Each line runs over its own retired years.
-    expect(v.series[0]!.points[0]!.year).toBe(START + 5)
-    expect(v.series[1]!.points[0]!.year).toBe(START + STOP_T)
-    expect(v.series[1]!.points.map((p) => p.value)).toEqual(planRows.filter((r) => r.t >= STOP_T).map((r) => r.taxPaid))
-    // Their working years differ, so the tax on pay differs too: said once, with where it shows.
-    expect(v.notes).toContain(copy.cmpTaxPayDiffers)
-    expect(v.notes).not.toContain(copy.cmpTaxWorkingNote)
-    // Your plan alone, working: the chart starts when work stops, said; its total names its own retired years.
+    // Both lines draw exactly the years the total counts.
+    for (const s of v.series) expect(s.points.map((p) => p.year)).toEqual(RETIRED.rows.filter((r) => r.t >= 5).map((r) => START + r.t))
+    expect(v.series[1]!.points.map((p) => p.value)).toEqual(planRows.filter((r) => r.t >= 5).map((r) => r.taxPaid))
+    // The years left out, named with their reason; no working year counted, so no working-year note.
+    expect(v.notes).toContain(slots.cmpTaxStartsAfter(START + 5, `${START + 3} and ${START + 4}, when only one of them works`))
+    expect(v.notes.some((n) => n.includes('while both still work'))).toBe(false)
+    expect(v.notes).not.toContain(copy.cmpTaxPayDiffers)
+    // The dated route says a stop-year lever's own year (A6).
+    expect(v.notes).toContain(slots.cashFlowsRunStopsLever('New what-if', START + 5))
+    // Your plan alone, working: the chart starts when work stops, where the tax on pay shows, and the income tax its
+    // savings add while it still works, which its total leaves out (X1, rule 5).
     const one = cmp('tax', { compared: side('compared', ready(planRows, WORKING_META)) })
     if (one.kind !== 'pair') throw new Error(one.kind)
     expect(one.notes).toContain(copy.cmpTaxWorkingNote)
+    expect(one.notes).toContain(copy.cmpPayTaxShown)
+    const workingTax = planRows.filter((r) => r.t < STOP_T).reduce((s, r) => s + r.taxPaid, 0)
+    expect(one.notes).toContain(slots.cmpTaxOneWorkingSavings('your plan', formatDeltaDollar(workingTax), `${START} through ${START + 2}`, true))
     expect(one.metric).toBe(slots.cmpTaxOne('your plan', formatDeltaDollar(inWindowFrom(planRows, STOP_T)), START + STOP_T, last, true))
   })
 
-  it('income tax with no retired year both sides share: words, never a total', () => {
-    // The what-if's money runs out in START + 4, before the plan's first retired year (START + 5): no shared window.
+  it('income tax: working years on the same pay check count beside each other; a year their deposits differ is left out, said with where the tax on pay shows', () => {
+    // Both stop in START + 3. The what-if pays $2,000 more savings tax in every working year and $500 more in every
+    // retired year: same pay check, so every year counts.
+    const plan = withPay(true)
+    const more = plan.map((r) => ({ ...r, taxPaid: r.taxPaid + (r.t < STOP_T ? 2_000 : 500) }))
+    const v = cmp('tax', { compared: side('compared', ready(plan, WORKING_META)), alternative: side('alternative', ready(more, WORKING_META)) })
+    if (v.kind !== 'pair') throw new Error(v.kind)
+    const last = START + RETIRED.rows.at(-1)!.t
+    const d = 2_000 * STOP_T + 500 * (RETIRED.rows.length - STOP_T)
+    expect(v.metric).toBe(slots.cmpTaxMore('new what-if', formatDeltaDollar(d), 'more', START, last, 'your plan', true))
+    expect(v.notes).toContain(slots.cmpTaxWorkingCounted(`${START} through ${START + 2}`))
+    expect(v.series[0]!.points[0]!.year).toBe(START)
+    // The what-if puts $1,000 more into pre-tax in START: that year's pay check differs, so it is left out, said with
+    // why and where the tax on pay shows (A4: this run's pay check carries income tax).
+    const deposits = more.map((r) => (r.t === 0 ? { ...r, contribution: { ...r.contribution, pretax: r.contribution.pretax + 1_000 } } : r))
+    const p = cmp('tax', { compared: side('compared', ready(plan, WORKING_META)), alternative: side('alternative', ready(deposits, WORKING_META)) })
+    if (p.kind !== 'pair') throw new Error(p.kind)
+    expect(p.metric).toBe(slots.cmpTaxMore('new what-if', formatDeltaDollar(d - 2_000), 'more', START + 1, last, 'your plan', true))
+    expect(p.notes).toContain(slots.cmpTaxStartsAfter(START + 1, `${START}, when their pay or deposits differ`))
+    expect(p.notes).toContain(copy.cmpTaxPayDiffers)
+    expect(p.notes).toContain(copy.cmpPayTaxShown)
+    // A Roth conversion in that left-out year: no total, and the words say why (X1, rule 2).
+    const converted = deposits.map((r) => (r.t === 0 ? { ...r, conversion: 30_000 } : r))
+    expect(cmp('tax', { compared: side('compared', ready(plan, WORKING_META)), alternative: side('alternative', ready(converted, WORKING_META)) })).toMatchObject({
+      kind: 'words',
+      words: slots.cmpTaxConversionBefore(START + 1, `${START}, when their pay or deposits differ`, true),
+    })
+    // The same conversion on both sides in a comparable year the window cuts off (START, before START + 1's differing
+    // deposits), paying the same tax on both: leaving it out hides no difference, so the total stands.
+    const sameConv = (rows: readonly LedgerYearRow[]) => rows.map((r) => (r.t === 0 ? { ...r, conversion: 30_000, taxPaid: r.taxPaid + 4_000 } : r))
+    const later = more.map((r) => (r.t === 1 ? { ...r, contribution: { ...r.contribution, roth: r.contribution.roth + 1_000 } } : r))
+    const cut = cmp('tax', { compared: side('compared', ready(sameConv(plan), WORKING_META)), alternative: side('alternative', ready(sameConv(later.map((r) => (r.t === 0 ? { ...r, taxPaid: plan[0]!.taxPaid } : r))), WORKING_META)) })
+    if (cut.kind !== 'pair') throw new Error(cut.kind)
+    expect(cut.metric.startsWith(`From ${START + 2} through `)).toBe(true)
+    expect(cut.notes).toContain(slots.cmpTaxStartsAfter(START + 2, `${START + 1}, when their pay or deposits differ`))
+  })
+
+  it('income tax: the pointer to the tax on pay is the one Cash Flows can back (A4)', () => {
+    const one = (rows: readonly LedgerYearRow[]) => {
+      const v = cmp('tax', { compared: side('compared', ready(rows, WORKING_META)) })
+      if (v.kind !== 'pair') throw new Error(v.kind)
+      return v.notes
+    }
+    expect(one(withPay(true))).toContain(copy.cmpPayTaxShown)
+    // No W: no row carries a pay check, so Cash Flows draws no column for it.
+    expect(one(withPay(false))).toContain(copy.cmpPayTaxUnasked)
+    // W given, but the pay checks carry no income tax: the column isn't drawn either.
+    const noTax = withPay(true).map((r) => (r.workingYear !== undefined ? { ...r, workingYear: { ...r.workingYear, taxOnOutsideIncome: 0 } } : r))
+    expect(one(noTax)).toContain(copy.cmpPayTaxNone)
+    for (const notes of [one(withPay(false)), one(noTax)]) expect(notes).not.toContain(copy.cmpPayTaxShown)
+  })
+
+  it('income tax with no year whose tax compares: words, never a total, with the ran-out note', () => {
+    // The what-if (retired from row one) runs out in START + 4, before the plan's first retired year (START + 5): every
+    // year both paid holds a working year beside a retired one.
     const late: TableMeta = { ...WORKING_META, stopYear: START + 5 }
     const v = cmp('tax', { compared: side('compared', ready(RETIRED.rows, late)), alternative: side('alternative', ready(ranOutAt(RETIRED.rows, 4))) })
-    if (v.kind !== 'pair') throw new Error(v.kind)
-    expect(v.metric).toBe(slots.cmpTaxNoShared(true))
+    expect(v).toMatchObject({ kind: 'words', words: `${slots.cmpTaxNoShared(true)} ${slots.analysisRanOut([{ name: 'new what-if', year: START + 4 }], true, null)}` })
   })
 
   it('as retirement begins: each bar is its side’s OPENING total in its own first retired year, on one scale; equal bars say nothing moved', () => {
-    const spine = cmp('at-retirement', { alternative: side('alternative', ready(RETIRED.rows)) })
-    if (spine.kind !== 'bars') throw new Error(spine.kind)
-    expect(spine.bars.map((b) => b.value)).toEqual([startTotal(RETIRED.rows[0]!), startTotal(RETIRED.rows[0]!)])
-    expect(spine.bars.map((b) => [b.colorIndex, b.pattern])).toEqual([[1, 'solid'], [0, 'hatch']])
-    expect(spine.metric).toBe(slots.cmpAtRetirementSame(formatDeltaDollar(startTotal(RETIRED.rows[0]!)), true))
     const later: TableMeta = { ...WORKING_META, stopYear: START + 5 }
     const v = cmp('at-retirement', { compared: side('compared', ready(RETIRED.rows, WORKING_META)), alternative: side('alternative', ready(RETIRED.rows, later)) })
     if (v.kind !== 'bars') throw new Error(v.kind)
     expect(v.bars[0]!.value).toBe(startTotal(RETIRED.rows[5]!))
     expect(v.bars[1]!.value).toBe(startTotal(RETIRED.rows[STOP_T]!))
+    expect(v.bars.map((b) => [b.colorIndex, b.pattern])).toEqual([[1, 'solid'], [0, 'hatch']])
     expect(v.bars[0]!.name).toContain(`${START + 5} (`)
     expect(v.bars[1]!.name).toContain(`${START + STOP_T} (`)
     expect(v.ticks[0]!.dollars).toBe(0)
+    expect(v.title).toBe(copy.cmpChartAtRetirement)
+    const same = cmp('at-retirement', { compared: side('compared', ready(RETIRED.rows, WORKING_META)), alternative: side('alternative', ready(RETIRED.rows, WORKING_META)) })
+    if (same.kind !== 'bars') throw new Error(same.kind)
+    expect(same.metric).toBe(slots.cmpAtRetirementSame(formatDeltaDollar(startTotal(RETIRED.rows[STOP_T]!)), true))
+  })
+
+  it('the all-retired route: the third chart is what each side holds today, the entered balance exact, with no "~", no market and no "retirement" (X4)', () => {
+    const spine = cmp('at-retirement', { alternative: side('alternative', ready(RETIRED.rows)) })
+    if (spine.kind !== 'bars') throw new Error(spine.kind)
+    const opening = startTotal(RETIRED.rows[0]!)
+    expect(spine.bars.map((b) => b.value)).toEqual([opening, opening])
+    expect(spine.title).toBe(copy.cmpChartToday)
+    expect(spine.charts.find((c) => c.id === 'at-retirement')!.label).toBe(copy.cmpChartToday)
+    expect(spine.metric).toBe(slots.cmpTodaySame(formatEnteredDollar(opening)))
+    expect(spine.bars[1]!.figure).toBe(`$${formatEnteredDollar(opening)}`)
+    expect(spine.notes).toContain(copy.cmpTodayNote)
+    const words = [spine.metric, ...spine.bars.flatMap((b) => [b.name, b.figure, b.point])].join(' ')
+    expect(words).not.toMatch(/~|retirement|market/)
+    const one = cmp('at-retirement')
+    if (one.kind !== 'bars') throw new Error(one.kind)
+    expect(one.metric).toBe(slots.cmpTodayOne('Your plan', formatEnteredDollar(opening)))
+  })
+
+  it('as retirement begins: a side whose money runs out says so in the notes (O2), and a side with no opening to show speaks its words, never "~$0" (A7)', () => {
+    // Your plan alone, run out in its first year: the bar is its real opening; the note says the money runs out.
+    const failing = cmp('at-retirement', { compared: side('compared', ready(ranOutAt(RETIRED.rows, 0))) })
+    if (failing.kind !== 'bars') throw new Error(failing.kind)
+    expect(failing.notes).toContain(slots.analysisRanOut([{ name: 'your plan', year: START }], true, null))
+    expect(failing.metric).toBe(slots.cmpTodayOne('Your plan', formatEnteredDollar(startTotal(RETIRED.rows[0]!))))
+    // A what-if that runs out in START + 1, before its first retired year (START + 3): its bar names the year in words.
+    const v = cmp('at-retirement', { compared: side('compared', ready(RETIRED.rows, WORKING_META)), alternative: side('alternative', ready(ranOutAt(RETIRED.rows, 1), WORKING_META)) })
+    if (v.kind !== 'bars') throw new Error(v.kind)
+    expect(v.bars[0]!.figure).toBe(slots.analysisEndWord(START + 1))
+    expect(v.bars[0]!.point).toBe(slots.cmpBarWordPoint('New what-if', slots.analysisEndWord(START + 1)))
+    expect(v.bars[0]!.point).not.toContain('~$0')
+    expect(v.notes).toContain(slots.analysisRanOut([{ name: 'new what-if', year: START + 1 }], true, null))
   })
 
   it('your plan alone, run out: the metric says the money ran out in that year, never "holds ~$0"', () => {
@@ -206,8 +300,9 @@ describe('Comparisons', () => {
   })
 
   it('the rough market is named in every metric and its words replace the steady line', () => {
+    // A working household (the all-retired route's third chart is the entered balance, the same in every market).
     for (const chart of ['assets', 'tax', 'at-retirement'] as const) {
-      const v = cmp(chart, { future: 'rough' })
+      const v = cmp(chart, { future: 'rough', compared: side('compared', ready(withPay(true), WORKING_META)) })
       if (v.kind === 'words') throw new Error('words')
       expect(v.metric, chart).toContain('in the rough market')
       expect(v.notes, chart).toContain('ROUGH WHAT')
@@ -425,7 +520,12 @@ describe('Savings', () => {
     const credited = rows.map((r) => (r.t < STOP_T && r.workingYear!.leftOver > 0 ? { ...r, leftOverCredit: 4_000 } : r))
     const kept = sav('left-over:compared', true, { compared: side('compared', ready(credited, WORKING_META)) })
     if (kept.kind !== 'years') throw new Error(kept.kind)
-    expect(kept.metrics[1]).toBe(slots.savLeftOverKept(formatDeltaDollar(8_000)))
+    expect(kept.metrics[1]).toBe(slots.savLeftOverKept('your plan', formatDeltaDollar(8_000)))
+    // Every dollar left over kept (the rest prints as $0): "all of it", never a rest that isn't there (O5).
+    const allKept = rows.map((r) => (r.t < STOP_T && r.workingYear!.leftOver > 0 ? { ...r, leftOverCredit: r.workingYear!.leftOver } : r))
+    const whole = sav('left-over:compared', true, { compared: side('compared', ready(allKept, WORKING_META)) })
+    if (whole.kind !== 'years') throw new Error(whole.kind)
+    expect(whole.metrics[1]).toBe(slots.savLeftOverAllKept('Your plan'))
     // Every year short: no left-over line and no kept line, only what the short years draw.
     const allShort = rows.map((r) => (r.t < STOP_T ? { ...r, workingYear: { ...r.workingYear!, leftOver: -2_000, shortfall: 2_000 } } : r))
     const short = sav('left-over:compared', true, { compared: side('compared', ready(allShort, WORKING_META)) })
@@ -466,6 +566,149 @@ describe('Savings', () => {
   it('the year-end total the comparisons read is the engine’s own sum', () => {
     const r = RETIRED.rows[3]!
     expect(endTotal(r)).toBe(r.end.taxable + r.end.pretax + r.end.roth + r.end.hsa)
+  })
+})
+
+/**
+ * The real witnesses (milestone 4's review): each side's rows built the way the shell's slots build them (the plan's
+ * table base; a what-if's bundle applied to the plan's draft through `applyBundle`, then the same table base, as
+ * `copyRunFor` does), each run through the engine once per future. A working seed sits at a band `offset` years out.
+ */
+type RealRuns = { readonly meta: TableMeta; readonly rows: Readonly<Record<'steady' | 'rough', readonly LedgerYearRow[]>> }
+const bandAt = (offsetYears: number): DateSearchOutcome =>
+  ({ kind: 'dates', tier: 'final', windowTopYears: DATE_OFFSET_WINDOW_TOP, seed: 1, band: { offsetYears, track: 'lifestyle' } }) as unknown as DateSearchOutcome
+function realRuns(draft: ScenarioDraft, offsetYears: number, bundle?: readonly WhatIfLeverV6[]): RealRuns {
+  const outcome = isDateRoute(draft) ? bandAt(offsetYears) : undefined
+  const applied = bundle === undefined ? undefined : applyBundle(draft, bundle)
+  if (applied !== undefined && !applied.ok) throw new Error(`refused: ${JSON.stringify(applied.refusal)}`)
+  const base =
+    applied === undefined
+      ? buildTableBase(draft, outcome)
+      : buildTableBase(applied.draft, outcome, {
+          ...(applied.stopOffsetYears !== undefined ? { offsetYears: applied.stopOffsetYears } : {}),
+          leftOver: { fromPlan: carriedWorkingYearLeftOver(draft) },
+        })
+  if (base.kind !== 'run') throw new Error(`no table base: ${base.reason}`)
+  const { meta, views } = tableRequestsOn(applied?.draft ?? draft, base, workingYearLeftOverShownState(draft))
+  const run = (v: 'steady' | 'rough'): readonly LedgerYearRow[] => {
+    const ask = views[v]
+    if (ask.kind !== 'run') throw new Error(`no ${v} run`)
+    const out = simulate(ask.request.params, ask.request.seed, ask.request.options)
+    if (out.indeterminate || out.infeasible) throw new Error(`the ${v} run failed`)
+    return out.distribution.ledgerRows ?? []
+  }
+  return { meta, rows: { steady: run('steady'), rough: run('rough') } }
+}
+const realInput = (future: 'steady' | 'rough', plan: RealRuns, whatIf: RealRuns | null): AnalysisInput =>
+  input({
+    future,
+    compared: side('compared', ready(plan.rows[future], plan.meta)),
+    alternative: whatIf === null ? null : side('alternative', ready(whatIf.rows[future], whatIf.meta)),
+  })
+const roth = (amount: number, years: number): WhatIfLeverV6 =>
+  ({ kind: 'roth', conversion: { kind: 'plan', plan: { annualAmountReal: amount, startYearOffset: 0, years } } }) as unknown as WhatIfLeverV6
+const stopIn = (calendarYear: number): WhatIfLeverV6 => ({ kind: 'stop-year', calendarYear }) as unknown as WhatIfLeverV6
+const taxThrough = (rows: readonly LedgerYearRow[], meta: TableMeta, from: number, through: number): number =>
+  rows.filter((r) => !r.ranOut && meta.startCalendarYear + r.t >= from && meta.startCalendarYear + r.t <= through).reduce((s, r) => s + Math.max(0, r.taxPaid), 0)
+
+describe('the real witnesses (milestone 4’s review)', () => {
+  it('X1 · `date` + a Roth conversion in every working year, rough market: the total counts the working years, so the what-if pays MORE income tax, never less', () => {
+    const plan = realRuns(DEV_SEEDS.date, 4)
+    const whatIf = realRuns(DEV_SEEDS.date, 4, [roth(60_000, 4)])
+    const start = plan.meta.startCalendarYear
+    const stop = plan.meta.stopYear!
+    const W = whatIf.rows.rough
+    expect(W.filter((r) => r.conversion > 0).map((r) => start + r.t), '[test setup] the conversions fall in the working years').toEqual([start, start + 1, start + 2, start + 3])
+    expect(stop, '[test setup] both stop in the fifth year').toBe(start + 4)
+    const v = comparisonsView({ ...realInput('rough', plan, whatIf), chart: 'tax' })
+    if (v.kind !== 'pair') throw new Error(v.kind)
+    const through = Math.min(...[plan.rows.rough, W].map((rows) => start + rows.filter((r) => !r.ranOut).at(-1)!.t))
+    const d = taxThrough(W, whatIf.meta, start, through) - taxThrough(plan.rows.rough, plan.meta, start, through)
+    expect(d, '[test setup] across every year both pay, the what-if pays more').toBeGreaterThan(20_000)
+    expect(v.metric).toBe(slots.cmpTaxMore('new what-if', formatDeltaDollar(d), 'more', start, through, 'your plan', false))
+    expect(v.notes).toContain(slots.cmpTaxWorkingCounted(`${start} through ${stop - 1}`))
+    for (const s of v.series) expect(s.points[0]!.year).toBe(start)
+    // Retirement Details keeps its retired window, and names the what-if's working-year tax beside it.
+    const rd = retirementDetailsView({ ...realInput('rough', plan, whatIf), chart: 'spending-comparison' })
+    if (rd.kind !== 'grouped') throw new Error(rd.kind)
+    const working = (rows: readonly LedgerYearRow[]) => rows.filter((r) => !r.ranOut && start + r.t < stop).reduce((s, r) => s + Math.max(0, r.taxPaid), 0)
+    expect(working(plan.rows.rough), '[test setup] the plan pays no savings tax while working').toBe(0)
+    expect(rd.notes).toContain(slots.rdWorkingTax('new what-if', formatDeltaDollar(working(W)), true, false))
+    expect(rd.notes.some((n) => n.includes('your plan also pays'))).toBe(false)
+  })
+
+  it('X1 · `date` + a stop-year what-if (work stops in 2028): the years only one side works are named and left out, the window after them; with a Roth conversion before it, no total', () => {
+    const plan = realRuns(DEV_SEEDS.date, 4)
+    const whatIf = realRuns(DEV_SEEDS.date, 4, [stopIn(plan.meta.startCalendarYear + 2)])
+    const start = plan.meta.startCalendarYear
+    const v = comparisonsView({ ...realInput('steady', plan, whatIf), chart: 'tax' })
+    if (v.kind !== 'pair') throw new Error(v.kind)
+    expect(v.metric.startsWith(`From ${start + 4} through `)).toBe(true)
+    expect(v.notes).toContain(slots.cmpTaxStartsAfter(start + 4, `${start + 2} and ${start + 3}, when only one of them works`))
+    for (const s of v.series) expect(s.points[0]!.year).toBe(start + 4)
+    // The dated route says the lever's own year (A6).
+    expect(v.notes).toContain(slots.cashFlowsRunStopsLever('New what-if', start + 2))
+    // Retirement Details' comparisons say a side ran out (A1): the what-if's money runs out in the steady market.
+    const whatIfEnd = whatIf.rows.steady.at(-1)!
+    expect(whatIfEnd.ranOut, '[test setup] the what-if runs out in the steady market').toBe(true)
+    for (const chart of ['spending-comparison', 'income-comparison'] as const) {
+      const rd = retirementDetailsView({ ...realInput('steady', plan, whatIf), chart })
+      if (rd.kind === 'words') throw new Error(rd.words)
+      expect(rd.notes, chart).toContain(slots.analysisRanOut([{ name: 'new what-if', year: start + whatIfEnd.t }], true, start + whatIfEnd.t - 1))
+    }
+    // The same stop with a Roth conversion from this year: the conversion falls before the window, so no total.
+    const both = realRuns(DEV_SEEDS.date, 4, [stopIn(start + 2), roth(40_000, 5)])
+    expect(comparisonsView({ ...realInput('steady', plan, both), chart: 'tax' })).toMatchObject({
+      kind: 'words',
+      words: slots.cmpTaxConversionBefore(start + 4, `${start + 2} and ${start + 3}, when only one of them works`, true),
+    })
+  })
+
+  it('X1 · `dip` alone at its stop year: its own 2030 conversion’s tax is named beside the total that leaves it out', () => {
+    const plan = realRuns(DEV_SEEDS.dip, 5)
+    const start = plan.meta.startCalendarYear
+    const working = plan.rows.steady.filter((r) => !r.ranOut && start + r.t < plan.meta.stopYear!)
+    const taxed = working.filter((r) => r.taxPaid >= 0.5)
+    expect(taxed.map((r) => start + r.t), '[test setup] one working year pays savings tax').toEqual([start + 4])
+    expect(taxed[0]!.conversion, '[test setup] a conversion that year').toBeGreaterThan(0)
+    const v = comparisonsView({ ...realInput('steady', plan, null), chart: 'tax' })
+    if (v.kind !== 'pair') throw new Error(v.kind)
+    expect(v.notes).toContain(slots.cmpTaxOneWorkingSavings('your plan', formatDeltaDollar(taxed[0]!.taxPaid), `${start + 4}`, true))
+    expect(v.metric).toBe(slots.cmpTaxOne('your plan', formatDeltaDollar(taxThrough(plan.rows.steady, plan.meta, plan.meta.stopYear!, 9999)), plan.meta.stopYear!, start + plan.rows.steady.at(-1)!.t, true))
+  })
+
+  it('O3 · `date` + a what-if stopping now and spending $250,000 a year: each side has retired years but none in common, said so with the ran-out note', () => {
+    const plan = realRuns(DEV_SEEDS.date, 4)
+    const start = plan.meta.startCalendarYear
+    const whatIf = realRuns(DEV_SEEDS.date, 4, [stopIn(start), { kind: 'spending', op: 'total', annualSpendingReal: 250_000 } as unknown as WhatIfLeverV6])
+    const out = whatIf.rows.steady.at(-1)!
+    expect(out.ranOut && start + out.t < plan.meta.stopYear!, '[test setup] the what-if runs out before the plan stops work').toBe(true)
+    const rd = retirementDetailsView({ ...realInput('steady', plan, whatIf), chart: 'spending-comparison' })
+    expect(rd).toMatchObject({ kind: 'words', words: `${slots.rdShareNoneShared(true)} ${slots.analysisRanOut([{ name: 'new what-if', year: start + out.t }], true, null)}` })
+  })
+
+  it('X3 · `datesaved` + a what-if stopping in 2033: each side’s left-over line credits its own side with its own kept figure', () => {
+    const plan = realRuns(DEV_SEEDS.datesaved, 4)
+    const whatIf = realRuns(DEV_SEEDS.datesaved, 4, [stopIn(plan.meta.startCalendarYear + 7)])
+    const lines = (id: 'alternative' | 'compared') => {
+      const v = savingsView({ ...realInput('steady', plan, whatIf), chart: `left-over:${id}`, working: true })
+      if (v.kind !== 'years') throw new Error(v.kind)
+      return v.metrics
+    }
+    const kept = (r: RealRuns) => r.rows.steady.filter((x) => !x.ranOut && r.meta.startCalendarYear + x.t < r.meta.stopYear!).reduce((s, x) => s + x.leftOverCredit, 0)
+    expect(formatDeltaDollar(kept(whatIf)), '[test setup] the two keep different figures').not.toBe(formatDeltaDollar(kept(plan)))
+    expect(lines('alternative')).toContain(slots.savLeftOverKept('new what-if', formatDeltaDollar(kept(whatIf))))
+    // Your plan keeps every dollar left over: "all of it" (O5).
+    expect(lines('compared')).toContain(slots.savLeftOverAllKept('Your plan'))
+    expect(lines('compared').join(' ')).not.toContain('new what-if')
+  })
+
+  it('X5 · `dateborder` deposits nothing: the per-year and share charts say so in words, never an all-$0 chart', () => {
+    const plan = realRuns(DEV_SEEDS.dateborder, 4)
+    const start = plan.meta.startCalendarYear
+    const through = plan.meta.stopYear! - 1
+    expect(savingsView({ ...realInput('steady', plan, null), chart: 'per-year:compared', working: true })).toMatchObject({ kind: 'words', words: slots.savNoDepositsYears(start, through, true) })
+    expect(savingsView({ ...realInput('steady', plan, null), chart: 'share:compared', working: true })).toMatchObject({ kind: 'words', words: slots.savNoOwnDeposits(start, through, true) })
   })
 })
 

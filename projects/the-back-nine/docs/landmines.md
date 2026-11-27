@@ -479,11 +479,9 @@ tests
   whole `verify:fit` redded it at both sizes (run 43375528470) while the eight unlock arms had run green locally. Before
   committing a change to what a slot shows, grep `e2e/` for every arm that reads that slot (`.cs-paycheck-note`,
   `.reentry-notes`), and run each one whose draft reaches the new predicate, or the whole `verify:fit`.
-- **(b9-3, 11-09) The whole `e2e/` folder does not typecheck under a scratch tsconfig that adds it:** pre-existing errors (at filing, eight
-  `Node.remove` errors in the old `chart-text.spec.ts` and the deleted `held/assumptions-row-look.spec.ts`, the DOM lib);
-  filter them before reading an edited spec's result (Playwright compiles with esbuild and never sees them). The scratch tsconfig must name its
-  `types` by absolute path (`<project>/node_modules/@types/node`, `<project>/node_modules/vite/client`) when it lives in the
-  scratchpad (b9-4).
+- **(b9-3, 11-09) To typecheck `e2e/` (Playwright compiles with esbuild and never typechecks), use a scratch tsconfig that adds
+  it**, and when it lives in the scratchpad it must name its `types` by absolute path (`<project>/node_modules/@types/node`,
+  `<project>/node_modules/vite/client`) (b9-4).
 - **(b9-5, 11-05) Never run an e2e harness while anyone edits `src`.** An HMR reload mid-wait reds arms falsely (the fit and caddie
   lanes saw final-tier timeouts and a vanished `[data-caddie-scroller]`); run the whole gates on a quiet tree, or a no-HMR server
   (the fit verifier wrapped `vite.config.ts` with its own `cacheDir` in the scratchpad, so the shared `node_modules/.vite` was never

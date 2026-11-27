@@ -63,12 +63,12 @@ export function AnalysisRunsFrame<Id extends string>({ tab, charts, chart, onCha
       {body === null ? (
         <div className="flex flex-col items-center gap-3 py-10 text-center" data-analysis-words="">
           {/* The words stand for the chart's reading, so they name the R13 caveat as the chart would (plan 4.0). */}
-          <p className="max-w-2xl text-body text-stone-900" aria-describedby={verdictDescribedBy()}>
+          <p className="text-body text-stone-900" aria-describedby={verdictDescribedBy()}>
             {words}
           </p>
           {doorButton}
           {notes.map((n) => (
-            <p key={n} className="max-w-2xl text-label text-stone-600" data-analysis-note="">
+            <p key={n} className="text-label text-stone-600" data-analysis-note="">
               {n}
             </p>
           ))}

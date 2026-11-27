@@ -29,7 +29,8 @@ export interface SankeyNodeInput {
   readonly column: 0 | 1 | 2 | 3
   /** The node's colour class (`b9-map-<group>`). */
   readonly className: string
-  /** What a screen reader and the hover say for it. */
+  /** What the hover says for it. Never a screen reader: the accessibility module describes only a sankey's points
+   *  (its links), never its nodes; a screen reader hears each link's `spoken` and the chart's description. */
   readonly spoken: string
 }
 
@@ -38,6 +39,7 @@ export interface SankeyLinkInput {
   readonly to: string
   readonly weight: number
   readonly className: string
+  /** What a screen reader hears for the flow (the accessibility module's point description) and the hover says. */
   readonly spoken: string
 }
 
@@ -135,6 +137,8 @@ export function sankeyOptions(input: SankeyInput): Options {
     lang: spoken.lang,
     accessibility: {
       ...spoken.accessibility,
+      // Highcharts 13's accessibility module describes `series.points`, which for a sankey are the LINKS; its nodes
+      // (`series.nodes`) are never described. So this speaks each link's own sentence; a node's words reach the hover.
       point: { descriptionFormatter: (p) => spokenOf(p.options)?.spoken ?? '' },
     },
     credits: { enabled: true, position: { align: 'right', verticalAlign: 'bottom', x: -4, y: -4 } },

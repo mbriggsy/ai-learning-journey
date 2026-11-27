@@ -233,7 +233,7 @@ real plan.
 State at close:
 - Act 6 is built, RC0 to RC21; milestone 4's whole-file review and its `/distill` are the act's last open items (START HERE). CI green on `e992e9d6` (RC20's fix), all four jobs, and on `c4ef15d7`. Gates on the final code tree (`d12fbe49`): `pnpm typecheck` 0, `pnpm lint` 0, the full vitest suite green (its count lives under `verify:doc-stats`), `pnpm build` 0, `pnpm verify:csp` 22 passed + 1 skip (the two old-font arms left with RC21a), the look instrument 94/94 into `temp/rc-shots/RC21/`, `pnpm verify:doc-stats` OK.
 - **Check at start:** CI on `d12fbe49` (RC21a; suite run 45908078205, quick job green) and on `527529f0` (RC21b; runs 45910437317 and 45910437219) were running at close: read both by full sha, `gh run list --commit $(git rev-parse d12fbe49)`. `pnpm verify:aca` goes stale ~2026-12-12. U14's timing was borderline: re-time on a quiet machine with `e2e/held/whatif-timing.spec.ts`; clearly over 2 s flips the plan's U14 branch to a plan-base lane.
-- Open for milestone 4's review (none prints a wrong figure; put them in the contract brief): RC16's: the retired axis's "$0.25mm, $0.5mm" (the shared `mmAxisFormatterFor` dialect), no look shot with an HSA column, the Current tab and the DETAILS handle both "Details", two accounts of one owner and kind read alike. RC17's: dip's income comparison holds its frame by 5.9 px (handle 725.1 of 731, both OSes: any new line on Retirement Details' per-side charts breaks it); Savings' left-over metric can run three lines and no arm fit-tests it; two sides run out in one year print identical end words stacked. RC19's: the kit's Tooltip and ScrollArea are drawn by no screen and the Toast shows only for a waiting service worker (no CSP visit; the update toast unshot, the PWA is off in dev); the view-only banner's "Reload this page to make changes here" has no Reload control (insight 100); the refused unlock's "your backup is the way in" with no door stays the register's ⚑ item; the damaged-vault page has no way out without a backup (a one-way door: the register's no-way-to-delete-the-vault entry). RC20's: the Maps source key names pre-tax per person ("Pre-tax, Alex: Alex's 401(k)") beside the map's one combined "Pre-tax, taken out" node; a year can show "Income not kept" while savings pay premiums and tax (filed on the register's *The money picture's later years name a change…*). RC21's: stale code comments that name deleted files or retired units — `src/ui/shell/TopBar.tsx:8-9` and `:31` ("until RC18's settings"), `e2e/hcTextAudit.ts:6-7` and `:150-151` (chartTextAudit.ts "until RC4"), `e2e/rc-screens.spec.ts:5695` (names `assertResolvedDate` and `assertNoDateReading`, which don't exist), `src/intake/__tests__/gestureHold.test.tsx:126` and `:168`, `src/ui/copy.ts:1987`, `src/ui/devSeeds.ts:1719` and `:2409`, `src/ui/__tests__/devSeeds.test.ts:1567` and `:1581`, `src/ui/__tests__/planClockSeam.test.ts:365`, `src/ui/__tests__/stalenessExposure.test.ts:431` (each names `e2e/vertical-fit.spec.ts`, whose arms live in `e2e/rc-screens.spec.ts` now); RC21a's global preflight and the leave ask's restyle (`src/ui/shell/Shell.tsx`) are new code no reviewer has read. The landmine "the e2e folder doesn't typecheck (Node.remove errors)" says "at filing": re-check it under a scratch tsconfig.
+- Open for milestone 4's review (none prints a wrong figure; put them in the contract brief): RC16's: the retired axis's "$0.25mm, $0.5mm" (the shared `mmAxisFormatterFor` dialect), no look shot with an HSA column, the Current tab and the DETAILS handle both "Details", two accounts of one owner and kind read alike. RC17's: dip's income comparison holds its frame by 5.9 px (handle 725.1 of 731, both OSes: any new line on Retirement Details' per-side charts breaks it); Savings' left-over metric can run three lines and no arm fit-tests it; two sides run out in one year print identical end words stacked. RC19's: the kit's Tooltip and ScrollArea are drawn by no screen and the Toast shows only for a waiting service worker (no CSP visit; the update toast unshot, the PWA is off in dev); the view-only banner's "Reload this page to make changes here" has no Reload control (insight 100); the refused unlock's "your backup is the way in" with no door stays the register's ⚑ item; the damaged-vault page has no way out without a backup (a one-way door: the register's no-way-to-delete-the-vault entry). RC20's: the Maps source key names pre-tax per person ("Pre-tax, Alex: Alex's 401(k)") beside the map's one combined "Pre-tax, taken out" node; a year can show "Income not kept" while savings pay premiums and tax (filed on the register's *The money picture's later years name a change…*). RC21's: the stale code comments and the e2e-typecheck landmine were fixed by milestone 4's review, round 1; RC21a's global preflight and the leave ask's restyle were read by its cleanup seat (sound).
 - Open for Act 6 (unchanged): `held/solve-timing` was re-pointed by RC8 and not run; the Tier 1 *Stress Test's out-of-pocket stress, refused on a plan with no out-of-pocket figure…* stays open; Cash Flows' table carries no R13 tie (the Tier 4 leftovers entry); milestone 2's round-3 findings and milestone 3's leftovers stay in their Tier 1 entries; Blueprint's connector elbows draw square corners (cosmetic); seven register entries naming deleted surfaces carry RC21b's "⚑ Act 6 · RC21, for re-triage" line (each may now be moot; closing one changes the register's count, so the next tier sweep owns it).
 - For Briggsy: `temp/rc-shots/RC20/` (Maps: the flow on `retired`, `dip`, `dip` 2030 and `datesavedtypedpension` 2031, every bar to scale; the Breakdown tiles at 1440, 900 and the phone; the rough market's run-out year) and `temp/rc-shots/RC21/` (every screen after the old style layer left; 776 of 820 shots pixel-identical to before, the leave ask restyled); `RC16/`, `RC17/`, `RC19/`, `M3R1/` to `M3R3/` are still there.
 
@@ -415,7 +415,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    the same `escalateQuote` factor — so under the cliff a missing trend is **zero** when E=S
    (`devSeeds.ts:731-732` = 4200/4200) and **reversed (pessimistic)** when E<S, which `copy.ts:194` invites.
    It bites one-way optimistic **only over the cliff** (`healthOverlay.ts:308-312`, full enrolled premium).
-   The shipped sibling `recDiscAcaSlcsp` (`copy.ts:2246-2247`) hedges bidirectionally on this exact fact and
+   The shipped sibling `recDiscAcaSlcsp` (`copy.ts:2248-2249`) hedges bidirectionally on this exact fact and
    `medicare-pricing-build-spec.md:43` bans the false unidirectional. Draft to append to BOTH strings:
    *"One modeling choice: these prices step up with your ages, not with the way plan prices themselves climb
    — so a conversion that crosses the income line could cost more than shown."*
@@ -453,7 +453,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    (`copy.ts:1075`, `:1080, :1132, :1086, :1094, :1096` — selected by `composeRothOmissionsNote`'s 2×3 matrix, whose
    ACA-priced arm already AFFIRMS the subsidy is counted, so a trend sentence must reconcile with that
    affirmation, not append to it) + the two health-control siblings (`copy.ts:1216`, `:1222`), which CANNOT take it
-   (gated on `statePriced` alone — `copy.ts:1208-1210`). Unfiled: `shadowRateHeadroom` (`copy.ts:4991`)
+   (gated on `statePriced` alone — `copy.ts:1208-1210`). Unfiled: `shadowRateHeadroom` (`copy.ts:5005`)
    quotes cliff headroom against an SLCSP that never trends — the headroom figure inherits the held-price
    optimism; and there is NO ACA cost-trend constant at all (`health.ts` carries only `medicareCostTrend`)
    — ACA premiums are the one health channel with no trend, no clause AND no disclosure, in the
@@ -485,7 +485,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    `tsc` until written) · `recommendationView.ts:339-343` · the intake picker **4 → 11 vertical arms**
    against `verify:fit`. Engine cost is genuinely near-zero (`stateTax.ts:163` structural early return).
    ⚑ **The filed "every saved vault decodes Corrupt" blocker is FALSE — do not act on it, and do NOT loosen
-   the compile tie.** `_V3FieldsCover` (`model.ts:3073-3075`) covers only `keyof CurrentScenario`;
+   the compile tie.** `_V3FieldsCover` (`model.ts:3074-3076`) covers only `keyof CurrentScenario`;
    `checkStateTaxVintageV3` (`scenarioCodec.ts:784-789`) is hand-written and compels no `needString`. Safe
    because `scenarioCodec.ts:1036-1037` gates `retirementState` via `needVocab(STATE_ROSTER)`, so no
    pre-widening vault can *be* a household in a newly-priced state. The prescribed remedy — loosening
@@ -661,7 +661,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     **Briggsy's words, or ship the engine half first.**
     ⚑ **2026-09-04 anchors:** the described arm is `solveDispatch.ts:102` (`:89` is the separate no-tax-overlay
     arm; `~:79` was mis-pointed at filing — the file is untouched since 2026-08-14); the refusal string is
-    `copy.ts:2042-2043` with its three-rewrite comment `:2019-2041` (`line 2041-2045 at b69c28483` now holds an unrelated
+    `copy.ts:2044-2045` with its three-rewrite comment `:2021-2043` (`line 2041-2045 at b69c28483` now holds an unrelated
     save-refusal block).
 
 10. ✅ **SHIPPED 2026-08-14 (`2816d036`) — the heir bracket is the household's now.** Register Tier 1 records the closure and the three swept comments.
@@ -697,7 +697,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     (same bytes, `backup.ts:84-93`). No build ever wrote either. *(Re-scoped 2026-10-31, b9-3: this bullet
     said a future v4 would push today's v3 vaults into that arm. The schema-v4 bump did not: version 3
     relabels to 4 at decode, a label-only step — `docs/architecture.md` §7.3.)* · there is **no way to delete the vault** (`clearVault` exists; its only PRODUCTION
-    caller is the dev seed planter, `devSeeds.ts:2894` — eight test/e2e files also call it).
+    caller is the dev seed planter, `devSeeds.ts:2896` — eight test/e2e files also call it).
     ⚑ **Folded 2026-09-06 from the superseded b9-3 plan (its item 9 — the aged note, the v2→v3 ladder, the leaves-out section) — its 2026-09-04 re-verify clause, still live:** Aged-window disclosure note (S; the ranking fork stays yours, three arms with corrected costs, due
     before 2027-01-01) · migration ladder scaffold (S; the honest legacy state names NO remedy — the
     backup carries the same bytes) · HSA-forfeit + LTC "What this leaves out" section (M; pilot per the
@@ -706,11 +706,11 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     copy" and both nearest register entries — *The aged surface — every 2026 plan changes wording on 2027-01-01, unreviewed* and *Unscored Caddie tape rows plus the four aged-surface tone calls due before 2027-01-01* — are owned **briggsy**; neither is a copy fix; the "three arms with
     corrected costs" existed NOWHERE — they are now written, with sizes, under the register's "The aged
     surface" entry. A shipped copy defect on the SAME cohort WAS pilot and is FIXED (2026-09-04: the singular arm ships at
-    `copy.ts:4898-4900` under the NUMBER AGREEMENT post-mortem at `copy.ts:4884`, covered by `copyGuard.test.ts:1071`):
+    `copy.ts:4912-4914` under the NUMBER AGREEMENT post-mortem at `copy.ts:4898`, covered by `copyGuard.test.ts:1071`):
     `rothPlanRanked` hardcoded the plural "Those years are counted from…" after a correctly-singular "for 1 year" —
     live for any at/past-RMD household on an aged vault (the 1-year clamp, `solveAnchor.ts:263-264`) — and no test
     covered `years: 1, passed: true`. (b) THE LADDER is register `L` · **pilot**, and the v2→v3 ALGORITHM IS
-    PRESCRIBED: `model.ts:1882-1884` mints synthetic entered accounts from the old aggregates "so the ladder
+    PRESCRIBED: `model.ts:1883-1885` mints synthetic entered accounts from the old aggregates "so the ladder
     stays total"; the write primitive exists (`db.ts:232 rewriteModel`, pinned `db.test.ts:180`); today's
     ladder is decode-and-return with NO migrate step (`scenarioCodec.ts:1301-1308`, the v1/v2 arms), and a v1 vault survives
     every store seam on real IndexedDB (`e2e/vaultHarness.ts:24-25`) to die only at `IntakeApp.tsx:818`.
@@ -734,7 +734,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     · **no document a friend reads** — the in-app honest-limits total is two sentences, and the app tells
     them to "validate with a professional" while handing that professional nothing readable · ✅ the solve
     lane's EDIT-TIME cancel shipped 2026-09-03 (`engineClient.ts:279 createResettableEngine` +
-    `memoryModel.ts:785-788`); what remains is the interactive tier and the MAIN-THREAD FALLBACK, which still
+    `memoryModel.ts:783-786`); what remains is the interactive tier and the MAIN-THREAD FALLBACK, which still
     freezes the tab for the whole solve and says nothing — its `reset` is a documented no-op
     (`engineClient.ts:51-63`; the old `:55` anchor named nothing about freezing).
     ⚑ **Folded 2026-09-06 from the superseded b9-3 plan (its item 8 — icons · WebKit arm · enlarged-text arm) — its 2026-09-04 re-verify clause, still live:** ✅ PWA icons DONE 2026-09-08 (his eye audits the silhouette sheet — path in the register's device entry) · ✅ WebKit e2e
@@ -742,7 +742,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     eight PROTECTED reds, so the council fired: ✅ RULED + BUILT 2026-09-10 (the reds measured the stacked tier — register *The app on someone else's device*); the clauses below were the build recipe, kept for that arm's CDP notes.
     ⚑ **2026-09-04:** INDEPENDENT, not a chain — the text arm rides CDP (Chromium-only) so it can never share
     the WebKit project; all three are pilot (register `M` · **pilot**; "his eye audits" is the post-hoc
-    batched-oracle read, not a gate). ICONS: `manifest: false` (`vite.config.ts:45`) disables the plugin's
+    batched-oracle read, not a gate). ICONS: `manifest: false` (`vite.config.ts:46`) disables the plugin's
     icon precache, so ship `includeAssets` (or image globs) WITH the files or the installed PWA has no
     offline icon (proven against `dist/sw.js`); the favicon 404 is GONE since 2026-09-08 (`public/favicon.ico` plus
     the three link tags in `index.html`); no brand mark existed to quarry — the color-blind-safe
@@ -789,9 +789,9 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     riders, the open copy obligations, the deferred richer market draw, and the `dateinvert` (c) mint —
     its own session, a size-L parameter hunt.
     ⚑ **2026-09-04:** two bullets were half-dead and are closed — the `partBTrendVintage` "no exposure gate"
-    clause was swept in `staleness.ts:747-750` but still lived verbatim at `model.ts:3017` (swept), and
+    clause was swept in `staleness.ts:747-750` but still lived verbatim at `model.ts:3018` (swept), and
     Plan 4's "the record carries `seedA`/`seedB`" (`plans/4-recommendation.md:283`) had outlived its own
-    "kill BEFORE S5 mints" deadline — the shipped `SavedRecommendationV3` (`model.ts:2448-2470`) has no seed
+    "kill BEFORE S5 mints" deadline — the shipped `SavedRecommendationV3` (`model.ts:2449-2471`) has no seed
     field (struck in the plan). ⚑ (b)'s SOURCE twin outlived that close — `heldOutSeed.ts:13-14` still said
     the U17 record stores the seed — and was swept 2026-09-25 (the register bullet is closed with it).
     ✅ **NC's RETIRED CERTIFICATION CHECKPOINT — SWEPT 2026-08-14.** Six shipped surfaces (not the
@@ -807,7 +807,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     page and the codified G.S. page both still show the struck "after 2025 — 3.99%", so they read as
     CONTRADICTING the pinned record until they recompile — **session law wins, do not "correct" the
     engine table back to a flat 3.99%.** Comment-only; typecheck · lint · 3289 tests · state-tax gate
-    all green. (`copy.ts:5283` and `caseStateCompanions.ts` were already correct — swept 2026-08-02.)
+    all green. (`copy.ts:5297` and `caseStateCompanions.ts` were already correct — swept 2026-08-02.)
     ⚑ **The CVD half of this cluster is PARKED, not owed — do not re-propose it.** The filed gap ("the CVD
     crops prove PRESENCE only") is real, and a `verify:cvd` pixel-regression gate was designed for it on
     2026-08-02. **Briggsy declined it on the only authority that can:** *"I'm pretty color blind and I think
@@ -834,7 +834,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     flag) and BOTH candidate fixes cost something — "mint through `update()`" turns a deferred false-arm
     into an immediate one; an eager mint in `createMemoryModel` breaks the WRITTEN contract #1b (mint at the
     FIRST ENGINE RUN, `plans/2-first-answer.md:57`) with no test that would catch it. His ruling, framed as
-    those two arms. Two half-swept false comments closed 2026-09-04: `model.ts:3017` and
+    those two arms. Two half-swept false comments closed 2026-09-04: `model.ts:3018` and
     `plans/4-recommendation.md:283`.
 
 ---
@@ -885,7 +885,7 @@ line keeps the facts `/distill` needs; its source line is in this file as it sto
 ## Driving the app
 
 `pnpm dev`, then a `?seed=` or `?vault=` param. DEV-only, DCE'd from prod. Source of truth:
-`src/ui/devSeeds.ts` — `DEV_SEEDS` at `devSeeds.ts:1987`, `AGED_PLANTS` at `devSeeds.ts:2772`.
+`src/ui/devSeeds.ts` — `DEV_SEEDS` at `devSeeds.ts:1988`, `AGED_PLANTS` at `devSeeds.ts:2774`.
 
 **Scenario seeds** — jump straight to a worded result + band:
 
@@ -928,7 +928,7 @@ like prod; re-planting is an explicit re-entry of the URL, never a refresh side 
 
 ⚑ **NO-SOLVE DRIVE RECIPE, so the next walk costs minutes not hours.** `?vault=rec` → Unlock
 (passphrase pre-filled) → *"Use your recovery word"* → RecoveryFlow. Recovery word for every plant
-is **`lattice harbor cinder vellum 48 thicket`** (`devSeeds.ts:2082`). For RestoreFlow you need a
+is **`lattice harbor cinder vellum 48 thicket`** (`devSeeds.ts:2083`). For RestoreFlow you need a
 real backup FILE and no full intake is required: unlock any plant → Result → **"Save a backup
 file"** → *Download backup* (an `<a>` with a blob URL, **not** a button — a `button:has-text()`
 selector misses it) → then delete the DB and reload. **`indexedDB.deleteDatabase` is BLOCKED while

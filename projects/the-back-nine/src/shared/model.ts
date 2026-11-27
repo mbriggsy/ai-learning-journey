@@ -892,10 +892,10 @@ export interface SimulationParams {
 // Engine result (the contract the worker boundary, confidence.ts, and viz read).
 // ---------------------------------------------------------------------------
 
-/** A reading's value + the raw distance to its next rounding edge. The HEADLINE's margins (`xOfTen`'s,
- *  beside {@link Headline.stateMarginToEdge}) are the sticky seam's input — memoryModel holds the count and
- *  the word on them; confidence.ts only emits them. The dollar's `perMonthReal` wears the shape too, but its
- *  margin has NO production reader: phase C deleted the sticky dollar, and the magnitude renders nowhere. */
+/** A reading's value + the raw distance to its next rounding edge. confidence.ts emits it; NO production code
+ *  reads a margin. The HEADLINE's (`xOfTen`'s, beside {@link Headline.stateMarginToEdge}) fed the store's sticky
+ *  seam, deleted at Act 6 · RC21 with no reader left (every printed count reads the raw headline since RC4); the
+ *  dollar's `perMonthReal` wears the shape too, its margin unread since phase C deleted the sticky dollar. */
 export interface WithMargin<T> {
   readonly value: T
   /** Raw distance to the nearest band/step edge (in the underlying continuous unit). */
@@ -913,7 +913,8 @@ export interface Headline {
   /** Raw distance of the QUANTIZED survival fraction to the nearest outcome-state band
    *  edge (min over the engine's exported `BANDS` edges, in survival-fraction units) —
    *  the third stateless margin, emitted for the P3 sticky STATE gate (memoryModel's
-   *  cross-edit hysteresis over the verb-tense/copy-state flip, architecture §9).
+   *  cross-edit hysteresis over the verb-tense/copy-state flip). That gate left with the sticky seam
+   *  at Act 6 · RC21: the margin is still emitted, with no production reader (architecture §9).
    *  `xOfTen.marginToEdge` cannot stand in for it: the x-of-10 display lattice
    *  coincides with the onTrack/borderline edges but NOT the over-funded edge.
    *  Computed on the SAME quantized value the band compare reads (the margin and the
@@ -2471,7 +2472,7 @@ export interface SavedRecommendationV3 {
    *  2026-09-03 edit-time kill the pending arm does too; produced by the private `fingerprintOf` at
    *  `:698`) — the identity of the run this record actually describes — and NEVER from a fresh
    *  recompute taken at save time. The trichotomy's `freshFingerprint` is the OTHER operand,
-   *  `MemoryModel.currentDraftFingerprint()` (`memoryModel.ts:720`): what the draft WOULD solve
+   *  `MemoryModel.currentDraftFingerprint()` (`memoryModel.ts:718`): what the draft WOULD solve
    *  now. The two are equal at the mint and diverge afterwards, and that divergence IS the mechanism
    *  — so minting from the fresh side instead would stamp the record with inputs the recommendation
    *  was never computed against, which on a stale draft is a calm-but-wrong memory rather than a

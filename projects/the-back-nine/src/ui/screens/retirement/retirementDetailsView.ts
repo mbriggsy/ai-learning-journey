@@ -15,7 +15,11 @@
  *   (`taxPaid`) and health premiums (`premiums.acaNet + medicare + medicareExtras`; the surcharge is part of `medicare`).
  * - the income comparison: one donut per side, the share of what the retired years live on, by source, with the share
  *   that is not a withdrawal in the hole; and the spending comparison: grouped bars of the three spending parts in all.
- *   Both count ONE window, the retired years both sides share (`sharedRetiredWindow`), named in the sentence.
+ *   Both count ONE window, the retired years both sides share (`sharedRetiredWindow`), named in the sentence, with the
+ *   ran-out note where a side's money runs out (A1), and words, never a total, where they share none (O3). Beside the
+ *   spending comparison, a side's income tax on its savings while it still works (a Roth conversion made then, say),
+ *   which the retired window leaves out, is named where it differs between the two (milestone 4's review, X1), so
+ *   "spends less in all" never reads as a saving the working years paid for.
  *
  * THE YEAR THE MONEY RAN OUT draws no column (its row is what the year asked for): a cross-hatched band over it with
  * "Money ran out this year" and no dollar figure, the rows ending there, both said in the key-metric column.
@@ -45,10 +49,12 @@ import {
   keptIncome,
   pctWords,
   premiumsOf,
+  ranOutNote,
   retiredPaidRows,
   sharedRetiredWindow,
   startTotal,
   withdrawn,
+  workingPaidRows,
   yearOf,
   type AnalysisInput,
   type ReadySide,
@@ -198,9 +204,16 @@ export function retirementDetailsView(input: AnalysisInput & { readonly chart: R
     const alt = sides[0]!
     const cmp = sides[1]!
     const window = sharedRetiredWindow(sides)
-    if (window === null) return { ...menu, kind: 'words', words: slots.rdShareNone(steady) }
+    if (window === null) {
+      // Each side may have retired years, but none in common (O3): said so, with the ran-out note where one ran out.
+      const out = ranOutNote(sides, steady, null)
+      return { ...menu, kind: 'words', words: [slots.rdShareNoneShared(steady), ...(out !== undefined ? [out] : [])].join(' ') }
+    }
     const inWindow = (s: ReadySide) => retiredPaidRows(s).filter((r) => yearOf(s.meta, r) >= window.from && yearOf(s.meta, r) <= window.through)
     const windowNote = slots.rdWindowNote(window.from, window.through)
+    // A side's money runs out: said, so "spends less" never reads as a saving (A1).
+    const out = ranOutNote(sides, steady, window.through)
+    const outNotes = out !== undefined ? [out] : []
     if (chart === 'income-comparison') {
       // Each side's kept income split over Social Security and other income in proportion (the part past spending that
       // the tool does not keep comes off both), then each withdrawal source: the slices and the hole's share add up.
@@ -241,7 +254,7 @@ export function retirementDetailsView(input: AnalysisInput & { readonly chart: R
           shares: sums.map((x) => slots.analysisPercent(pctWords(x.total > 0 ? x.parts[i]! / x.total : 0))),
         })).filter((_, i) => sums.some((x) => x.parts[i]! > 0)),
         metric: slots.rdIncomeComparison(alt.mid, pctWords(sums[0]!.share ?? 0), cmp.mid, pctWords(sums[1]!.share ?? 0), window.from, window.through, steady),
-        notes: [windowNote, ...(sides.some((s) => inWindow(s).some((r) => r.incomeNotKept > 0)) ? [copy.rdNotKeptShares] : []), ...tail],
+        notes: [windowNote, ...outNotes, ...(sides.some((s) => inWindow(s).some((r) => r.incomeNotKept > 0)) ? [copy.rdNotKeptShares] : []), ...tail],
         updating: gate.updating,
       }
     }
@@ -249,6 +262,14 @@ export function retirementDetailsView(input: AnalysisInput & { readonly chart: R
     const lattice = niceLattice(Math.max(1_000, ...totals.flat()))
     const all = totals.map((t) => t.reduce((a, b) => a + b, 0))
     const d = direction(all[0]!, all[1]!, formatDeltaDollar)
+    // Each side's income tax on its savings while it still works, outside the retired window: named where the two differ
+    // as printed (a conversion on one side), so the window's total never hides it.
+    const working = sides.map((s) => {
+      const rows = workingPaidRows(s)
+      return { s, fig: formatDeltaDollar(rows.reduce((sum, r) => sum + Math.max(0, r.taxPaid), 0)), conversion: rows.some((r) => r.conversion > 0.5) }
+    })
+    const workingNotes =
+      working[0]!.fig === working[1]!.fig ? [] : working.filter((w) => w.fig !== '0').map((w) => slots.rdWorkingTax(w.s.mid, w.fig, w.conversion, steady))
     return {
       ...menu,
       kind: 'grouped',
@@ -267,7 +288,7 @@ export function retirementDetailsView(input: AnalysisInput & { readonly chart: R
       lattice,
       axisDollar: mmAxisFormatterFor(lattice.ceiling),
       metric: slots.rdSpendingComparison(alt.mid, d.fig, d.dir, cmp.mid, window.from, window.through, steady),
-      notes: [windowNote, copy.rdSpendNote, ...tail],
+      notes: [windowNote, ...outNotes, copy.rdSpendNote, ...workingNotes, ...tail],
       updating: gate.updating,
     }
   }

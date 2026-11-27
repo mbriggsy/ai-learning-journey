@@ -133,6 +133,12 @@ export const retiredPaidRows = (side: ReadySide): readonly LedgerYearRow[] => {
   return side.rows.filter((r) => !r.ranOut && r.t >= from)
 }
 
+/** The working rows a figure may count as paid: before the first retired year, never the money-ran-out row. */
+export const workingPaidRows = (side: ReadySide): readonly LedgerYearRow[] => {
+  const before = firstRetiredT(side.meta)
+  return side.rows.filter((r) => !r.ranOut && r.t < before)
+}
+
 /** The ran-out note over the sides shown: every run whose money ran out, named with its year, and, where a figure counts
  *  only the years every side reaches, `through` (that last year, said in the note). Absent where no side ran out. */
 export function ranOutNote(sides: readonly ReadySide[], steady: boolean, through: number | null): string | undefined {
@@ -177,17 +183,19 @@ export const pctWords = (fraction: number): string => {
 /** Whose stop year the rows run at, where the answer found no date (plan 4.0's disclosure map, Cash Flows' `stopLine`):
  *  the tabs then run at the window's last year, which the answer never found, so a side's stop is never read as its date.
  *  One line where every side stops in the same year; where they differ, each side's, named, a stop-year lever's own year
- *  included unless the chart already prints each side's year (`yearsShown`). The dated route says nothing here: the
- *  page's intro already names the date. */
+ *  included unless the chart already prints each side's year (`yearsShown`). On the dated route the page's intro
+ *  already names the answer's date, so only a stop-year lever's own year is said (milestone 4's review, A6), as Cash
+ *  Flows' `stopLine` says it on every route. */
 export function stopNotes(sides: readonly ReadySide[], yearsShown: boolean): string[] {
   const noDate = (s: ReadySide) => s.meta.route === 'no-date' && s.meta.stopFrom === 'answer' && s.meta.stopYear !== undefined
+  const lever = (s: ReadySide): string[] =>
+    !yearsShown && s.meta.stopFrom === 'lever' && s.meta.stopYear !== undefined ? [slots.cashFlowsRunStopsLever(s.title, s.meta.stopYear)] : []
   const first = sides.find(noDate)
-  if (first === undefined) return []
+  if (first === undefined) return sides.flatMap(lever)
   if (new Set(sides.map((s) => s.meta.stopYear)).size === 1) return [slots.healthNoDate(first.meta.stopYear!)]
   return sides.flatMap((s) => {
     if (noDate(s)) return [slots.cashFlowsRunStopsNoDate(s.title, s.meta.stopYear!)]
-    if (!yearsShown && s.meta.stopFrom === 'lever' && s.meta.stopYear !== undefined) return [slots.cashFlowsRunStopsLever(s.title, s.meta.stopYear)]
-    return []
+    return lever(s)
   })
 }
 

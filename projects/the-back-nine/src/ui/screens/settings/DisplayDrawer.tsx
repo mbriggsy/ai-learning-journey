@@ -51,7 +51,7 @@ function DisplayBody({ open, settings, onSave, onClose }: DisplayDrawerProps) {
       focusTitle
     >
       {/* One column, as RightCapital's list of switches: the kit's two-column field grid scattered it. */}
-      <div className="flex max-w-2xl flex-col gap-6" data-display-body="">
+      <div className="flex flex-col gap-6" data-display-body="">
         <h3 className="text-intro font-regular text-stone-900">{copy.displayLead}</h3>
         <div className="flex flex-col gap-1.5" data-display-dollars="">
           <p className="text-body font-semibold text-stone-900">{copy.displayTodaysDollars}</p>

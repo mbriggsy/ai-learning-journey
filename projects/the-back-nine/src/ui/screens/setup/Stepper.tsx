@@ -229,7 +229,7 @@ export function Stepper({ model, periodConfirmed, askNames, onCancelNewPlan, onC
               <span className="sr-only laptop:not-sr-only">{copy.appTitle}</span>
             </span>
             {names2.length > 0 ? (
-              <p className="flex min-w-0 flex-col justify-center text-label leading-tight text-stone-600" data-setup-names="">
+              <p className="flex min-w-0 flex-col justify-center text-label text-stone-600" data-setup-names="">
                 {names2.map((n, i) => (
                   <span key={i} className="wrap-anywhere">
                     {n}
@@ -243,7 +243,7 @@ export function Stepper({ model, periodConfirmed, askNames, onCancelNewPlan, onC
           <div className="mx-auto w-full max-w-[90rem] px-4 pt-6 wide:px-10 wide:pt-10 compact:pt-5">
             <StepBar index={index} owes={owes} onGo={go} />
           </div>
-          <div key={step} className="flex flex-1 flex-col transition-opacity duration-200 ease-out starting:opacity-0 motion-reduce:duration-100">
+          <div key={step} className="flex flex-1 flex-col transition-opacity duration-200 starting:opacity-0 motion-reduce:duration-100">
             {page.kind === 'cards' ? (
               <CardsPage screen={`setup-${step}`} title={setupTitle(step)} headingRef={headingRef} view={page.view} selected={host.selected} onOpen={host.open} />
             ) : (

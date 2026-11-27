@@ -1716,7 +1716,8 @@ const dateSavedRisenWitness: ScenarioDraft = {
  * left over. A stale W still rides at $84,000, so year 0 still prints $16,985 ("waiting on W") and nothing is
  * carried (R7). A check at today's quote leaves year 0 short: pay 150,000 − payroll tax 11,475 − tax on outside
  * income 17,540 − deposits 20,000 − W 105,000 = −4,015 (`date`'s year-0 sum, hand-derived in
- * `e2e/vertical-fit.spec.ts`'s stale-W block, with W at the quote: W comes off year 0's cash dollar for dollar).
+ * `src/ui/__tests__/devSeeds.test.ts` and beside `e2e/rc-screens.spec.ts`'s risen W lines, with W at the quote: W comes
+ * off year 0's cash dollar for dollar; it was `e2e/vertical-fit.spec.ts`'s stale-W block until that file left).
  * So its checked twin carries nothing either, at a higher cost, and W's line says a check adds none of the
  * $16,985 and that this answer can look better than it really is (`workingYearCheckAtQuote`'s `firstShort`).
  * A "mint, then move" witness: minted once (`dateSavedWitness`), then moved.
@@ -2405,8 +2406,9 @@ export function doctorArrivedVault(s: CurrentScenario, todayEpochDay: number): C
 // path runs, so a malformed fixture fails at the plant, loudly, instead of vanishing at unlock.
 //
 // WHAT IS STILL DEV-AUTHORED, AND WHY IT MUST BE: the RANKING facts (the winning arm's id/policy,
-// the grade word, the two verdict flags). Only a real solve can produce those, and a live solve is
-// 80–200s (measured — `vertical-fit.spec.ts` records it), so a plant that ran one would never land.
+// the grade word, the two verdict flags). Only a real solve can produce those, and a live solve takes
+// from about 30 s to about 3 min (`e2e/rc-screens.spec.ts`'s `WINNER_MS` note; 80–200 s when the deleted
+// `vertical-fit.spec.ts` measured it), so a plant that ran one would never land.
 // They are the same tier of dev-authored fact as every household number in this file — and the card
 // quotes NONE of them (`savedRecordCardView` reads only `mintedAt`; the standing comes from the
 // store's trichotomy), so no fabricated figure can reach a screen through this seam.

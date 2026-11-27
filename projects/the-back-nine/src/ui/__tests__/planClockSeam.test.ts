@@ -361,8 +361,9 @@ describe('U17 §S6 — the aged premise and the Today tick must not contradict e
 
   it('the contradiction is REAL — the Today label the premise must not contest still ships', () => {
     // The other half of the pair. If this ever goes away the premise wording is no longer the
-    // constraint it is here — and losing the wall clock is itself the U13/§S0 defect
-    // (`bandAnnotations.ts:51-56`), which `e2e/vertical-fit.spec.ts` forbids by name. Asserting it
+    // constraint it is here — and losing the wall clock is itself the U13/§S0 defect (once
+    // `bandAnnotations.ts:51-56`, which left with the old band), which `e2e/rc-screens.spec.ts`'s aged-return fan arm
+    // (`?vault=stale`, `?vault=datestale`) forbids by name: `copy.bandClockTodayLabel` among the fan's moments. Asserting it
     // here keeps the two halves from drifting apart silently in either direction.
     expect(copy.bandClockTodayLabel).toBe('Today')
   })

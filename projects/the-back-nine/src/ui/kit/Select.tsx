@@ -7,8 +7,9 @@
  * A fact not answered yet (Act 6 · RC13a: a Profile drawer's home state, a new record's kind) is `value: null` with the
  * caller's `placeholder` words shown in the box: never a picked default.
  *
- * The list portals out of the page, so its portal element carries `.rc-root` (the scoped preflight and the browser
- * surfaces reach it). Its motion is a 150 ms fade and settle from the trigger (`--transform-origin`), fade only under
+ * The list portals out of the page, so its portal element carries `.rc-root`, the hook a few kit rules key on (theme.css's
+ * `.rc-root [data-row-actions]`) and the e2e selectors read; the preflight and the browser surfaces are global since
+ * RC21a. Its motion is a 150 ms fade and settle from the trigger (`--transform-origin`), fade only under
  * reduced motion.
  */
 import { useId } from 'react'

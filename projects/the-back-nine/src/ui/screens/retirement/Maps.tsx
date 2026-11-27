@@ -8,7 +8,8 @@
  * tick named "Work stops" (a shape and a word, never a colour; an already-retired household's line is solid end to
  * end), and the readout between the two ends prints the chosen year, both ages and what kind of year it is. It is a
  * slider (Base UI's): the arrow keys move a year, Home and End go to the ends, and its value text names the year and
- * each person with their age.
+ * each person with their age. A run of one year (a plan already running out in its first) has nowhere to move: no
+ * slider, only that year's label with its "Runs out" mark and the readout.
  *
  * THE MAP: the flow (a Sankey, `@viz/charts/Sankey`, lazily loaded with the other charts) or the tiles (Breakdown: the
  * two totals as header bars over the groups' tiles, each with a 4 px bar in its group's colour and its word and amount,
@@ -56,6 +57,24 @@ function EndLabel({ year, ages, mark, align }: { readonly year: number; readonly
   )
 }
 
+/** The readout: the chosen year and both ages, then the year's one-path sentence (the future named). Past the phone tier
+ *  it sits between the two ends (`'wide'`); on the phone both take their own lines under the ends (`'phone'`). */
+function Readout({ heading, keyLine, tier }: { readonly heading: string; readonly keyLine: string | null; readonly tier: 'wide' | 'phone' }) {
+  const wide = tier === 'wide'
+  return (
+    <div className={wide ? 'hidden flex-col items-center gap-0.5 text-center wide:flex' : 'flex flex-col gap-1 wide:hidden'}>
+      <p className="text-body font-semibold text-stone-900" {...(wide ? { 'data-maps-year': '' } : { 'data-maps-year-phone': '' })}>
+        {heading}
+      </p>
+      {keyLine !== null ? (
+        <p className="text-body text-stone-900" aria-describedby={verdictDescribedBy()} {...(wide ? { 'data-maps-key': '' } : { 'data-maps-key-phone': '' })}>
+          {keyLine}
+        </p>
+      ) : null}
+    </div>
+  )
+}
+
 function YearScrubber({ scrubber, heading, keyLine, onYear }: { readonly scrubber: MapsScrubber; readonly heading: string; readonly keyLine: string | null; readonly onYear: (t: number) => void }) {
   const { years, index } = scrubber
   const first = years[0]
@@ -66,6 +85,20 @@ function YearScrubber({ scrubber, heading, keyLine, onYear }: { readonly scrubbe
   const word = useRef<HTMLSpanElement>(null)
   const place = useStopWordPlace(word, stopPct, pinPct)
   if (first === undefined || last === undefined) return null
+  // A run of one year (a plan already running out in its first year, every `failing*` seed): there is no year to move
+  // to, so no slider (a 0-to-1 range would be inert, the same year at both caps). That year's label, with its "Runs
+  // out" mark, and the readout stand in its place (milestone 4's review, M3).
+  if (years.length < 2) {
+    return (
+      <div className="flex w-full flex-col gap-1" data-maps-scrubber="" data-maps-one-year="">
+        <div className="grid grid-cols-[auto_1fr_auto] items-start gap-3">
+          <EndLabel year={first.year} ages={first.ages} mark={scrubber.endMark} align="left" />
+          <Readout heading={heading} keyLine={keyLine} tier="wide" />
+        </div>
+        <Readout heading={heading} keyLine={keyLine} tier="phone" />
+      </div>
+    )
+  }
   // An already-retired household has no working year: its line is solid end to end.
   const allRetired = years.every((y) => !y.working)
   return (
@@ -114,37 +147,19 @@ function YearScrubber({ scrubber, heading, keyLine, onYear }: { readonly scrubbe
       </SliderPrimitive.Control>
       <div className="relative grid grid-cols-[auto_1fr_auto] items-start gap-3">
         <EndLabel year={first.year} ages={first.ages} align="left" />
-        {/* Between the two ends: the chosen year and both ages, then the year's one-path sentence (the future named). On
-            the phone both take their own lines under the ends. */}
-        <div className="hidden flex-col items-center gap-0.5 text-center wide:flex">
-          <p className="text-body font-semibold text-stone-900" data-maps-year="">
-            {heading}
-          </p>
-          {keyLine !== null ? (
-            <p className="text-body text-stone-900" aria-describedby={verdictDescribedBy()} data-maps-key="">
-              {keyLine}
-            </p>
-          ) : null}
-        </div>
+        <Readout heading={heading} keyLine={keyLine} tier="wide" />
         <EndLabel year={last.year} ages={last.ages} mark={scrubber.endMark} align="right" />
       </div>
-      <div className="flex flex-col gap-1 wide:hidden">
-        <p className="text-body font-semibold text-stone-900" data-maps-year-phone="">
-          {heading}
-        </p>
-        {keyLine !== null ? (
-          <p className="text-body text-stone-900" aria-describedby={verdictDescribedBy()} data-maps-key-phone="">
-            {keyLine}
-          </p>
-        ) : null}
-      </div>
+      <Readout heading={heading} keyLine={keyLine} tier="phone" />
     </SliderPrimitive.Root>
   )
 }
 
-/** Where the "Work stops" word prints above the line: right of its tick, unless the pin stands there; then left of the
- *  tick where the word fits between the tick and the panel's left edge; else right of the pin, clear of it. Measured
- *  in px (the word's width against the track's), so the word never crosses the panel's edge or touches the pin. */
+/** Where the "Work stops" word prints above the line: right of its tick, unless the pin stands there or the word would
+ *  run past the panel's right edge (a late tick); then left of the tick where the word fits between the tick and the
+ *  panel's left edge; else right of the pin, clear of it, held inside the right edge. Measured in px (the word's width
+ *  against the track's), so the word never crosses either edge of the panel, and never touches the pin wherever the
+ *  track has room for both (milestone 4's review, O12: the right edge was never checked). */
 function useStopWordPlace(word: RefObject<HTMLSpanElement | null>, stopPct: number | null, pinPct: number): { readonly side: 'right' | 'left' | 'pin'; readonly px: number | null } {
   const [place, setPlace] = useState<{ side: 'right' | 'left' | 'pin'; px: number | null }>({ side: 'right', px: null })
   useLayoutEffect(() => {
@@ -159,14 +174,15 @@ function useStopWordPlace(word: RefObject<HTMLSpanElement | null>, stopPct: numb
       const wordPx = el.offsetWidth
       const PIN_HALF = 12
       const GAP = 8
-      const clashRight = pinPx + PIN_HALF > stopPx && pinPx - PIN_HALF < stopPx + wordPx
+      const pinClash = pinPx + PIN_HALF > stopPx && pinPx - PIN_HALF < stopPx + wordPx
+      const clashRight = pinClash || stopPx + wordPx > width
       // Left of the tick only where the word fits inside the panel and the pin stands clear of the word's text.
       const fitsLeft = wordPx <= stopPx && pinPx - PIN_HALF >= stopPx - GAP
       const next = !clashRight
         ? { side: 'right' as const, px: stopPx }
         : fitsLeft
           ? { side: 'left' as const, px: stopPx }
-          : { side: 'pin' as const, px: Math.max(stopPx, pinPx + PIN_HALF) }
+          : { side: 'pin' as const, px: Math.max(0, Math.min(Math.max(stopPx, pinPx + PIN_HALF), width - wordPx)) }
       setPlace((p) => (p.side === next.side && p.px === next.px ? p : next))
     }
     measure()

@@ -550,7 +550,7 @@ for (const size of SIZES) {
           // The what-if's own copies left out on `dip` (its names run in the sentence's lower case). On the phone each tab's
           // first chart, and Comparisons' bars too (they turn sideways with long names).
           const isNew = (l: string) => l.toLowerCase().includes(copy.probabilityPickNew.toLowerCase())
-          const phoneWanted = t.id === 'comparisons' && seed !== 'failing' ? [labels[0]!, ...labels.filter((l) => l === copy.cmpChartAtRetirement)] : labels.slice(0, 1)
+          const phoneWanted = t.id === 'comparisons' && seed !== 'failing' ? [labels[0]!, ...labels.filter((l) => l === copy.cmpChartAtRetirement || l === copy.cmpChartToday)] : labels.slice(0, 1)
           const wanted = size.phone ? phoneWanted : seed === 'failing' ? labels.slice(0, 1) : seed === 'dip' ? labels.filter((l) => !isNew(l)) : labels
           for (const [i, label] of wanted.entries()) {
             if (i > 0 || label !== labels[0]) {

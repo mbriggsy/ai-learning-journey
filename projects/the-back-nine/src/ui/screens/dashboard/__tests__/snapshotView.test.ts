@@ -7,6 +7,7 @@ import type { SavedRecommendationStatus } from '@store/savedRecommendation'
 import type { DateSearchOutcome, DateTrackOutcome, LedgerYearRow, SavedRecommendationV3 } from '@shared/model'
 import { DEV_SEEDS } from '../../../devSeeds'
 import { copy, slots } from '../../../copy'
+import { formatMmDollar } from '../../../money'
 import { ringFace } from '../../../ringReading'
 import { tableRunFor, type TableMeta } from '../../../workbench/tableRun'
 import { planReadingFor, whatIfRunFor } from '../../../workbench/whatIfRun'
@@ -143,10 +144,11 @@ describe('Snapshot: the stat rings read the steady future, each on the populatio
     expect(view.stats.tax.label).toMatch(/in the steady future/)
   })
 
-  it('retired: the tax ring is the sum of taxPaid over EVERY row, labelled lifetime', () => {
+  it('retired: the tax ring is the sum of taxPaid over EVERY paid row, labelled lifetime', () => {
     const answer = headlineAnswer(RETIRED)
     const { rows, meta } = steadyFor(answer)
     const view = snapshotView(input(snap(RETIRED, answer), { steady: { kind: 'rows', rows, meta } }))
+    expect(rows.some((r) => r.ranOut), '[test setup] this run never runs out').toBe(false)
     const sum = rows.reduce((s, r) => s + r.taxPaid, 0)
     expect(sum).toBeGreaterThan(0)
     expect(steadyStats(rows, meta).taxPaid).toBe(sum)
@@ -174,6 +176,25 @@ describe('Snapshot: the stat rings read the steady future, each on the populatio
     const first = after[0]!
     const rate = ((first.draw.taxable + first.draw.pretax + first.draw.roth + first.hsaSpend) / (first.start.taxable + first.start.pretax + first.start.roth + first.start.hsa)) * 100
     expect(view.stats.rate.value).toBe(slots.snapshotRate(rate))
+  })
+
+  it('a run whose money runs out (`offtracktypical`): the ran-out year’s tax was only asked for, so the ring leaves it out, as Comparisons does (A3)', () => {
+    const draft = DEV_SEEDS.offtracktypical
+    const answer = headlineAnswer(draft)
+    const { rows, meta } = steadyFor(answer)
+    const out = rows.at(-1)!
+    expect(out.ranOut && out.taxPaid > 0, '[test setup] the steady run runs out, its last row asking for tax').toBe(true)
+    const paid = rows.filter((r) => !r.ranOut).reduce((s, r) => s + r.taxPaid, 0)
+    expect(steadyStats(rows, meta).taxPaid).toBe(paid)
+    const view = snapshotView(input(snap(draft, answer), { steady: { kind: 'rows', rows, meta } }))
+    if (view.stats.kind !== 'figures') throw new Error(view.stats.kind)
+    expect(view.stats.tax.value).toBe(slots.snapshotApprox(formatMmDollar(paid)))
+    // Run out in its first year: no year it counts was paid, so the dial prints no figure and says why, never "~$0".
+    const first = [{ ...rows[0]!, ranOut: true }]
+    const none = snapshotView(input(snap(draft, answer), { steady: { kind: 'rows', rows: first, meta } }))
+    if (none.stats.kind !== 'figures') throw new Error(none.stats.kind)
+    expect(none.stats.tax.value).toBeUndefined()
+    expect(none.stats.tax.note).toBe(copy.snapshotStatNoTaxRetired)
   })
 
   it('a year the run prices no pay check for still counts as a working year until the run’s stop offset', () => {

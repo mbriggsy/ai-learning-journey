@@ -542,6 +542,19 @@ describe('cashFlowsView — the paired view keeps the pay check’s taxes (the m
     expect(given.footnotes).toEqual([copy.workbenchApproxNote, copy.cashFlowsPairedNote])
   })
 
+  it('a pair that owes payroll tax and no income tax on pay (an unpriced state) keeps the pay check’s notes beside the payroll column alone (milestone 4’s review, M2)', () => {
+    // `dateshort` at a lifestyle offset of 1 to 3 years: both runs work, the tax on pay is $0 every year, so the
+    // paired table drops that column (empty on both runs) and keeps payroll tax. Its notes still ride, as under one
+    // run's table (`singleFootnotes`) and on Maps.
+    const payrollOnly = ROWS.map((r) => ({ ...r, workingYear: { ...r.workingYear!, taxOnOutsideIncome: 0 } }))
+    const unpriced = ready(payrollOnly, { ...META, stateTaxReading: 'unpriced', statePriced: false })
+    const v = cashFlowsView(input({ offers, pick: 'paired', plan: unpriced, other: unpriced, otherName: 'Work to 63' }))
+    const ids = leafIds(tableOf(v).columns)
+    expect(ids).toContain('payroll')
+    expect(ids).not.toContain('tax-on-pay')
+    expect(v.footnotes).toEqual(expect.arrayContaining([copy.workbenchPayCheckNoteFederal, copy.workbenchPayCheckStateInW]))
+  })
+
   it('two retired runs: no pay check columns and no pay check notes', () => {
     const v = cashFlowsView(input({ offers, pick: 'paired', plan: ready(retired(ROWS)), other: ready(retired(ROWS)), otherName: 'Work to 63' }))
     expect(leafIds(tableOf(v).columns)).toEqual(['year', 'run', 'income-tax', 'end-total'])

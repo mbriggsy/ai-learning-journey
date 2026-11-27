@@ -19,6 +19,10 @@
  * pay and the left over have no honest figure: they say "not asked yet" with the door to the Pre-retirement living
  * expenses drawer (absent on a read-only tab), never an empty or zeroed chart.
  *
+ * NOTHING DEPOSITED: where the working years put in nothing, the per-year chart says so in words, and where the household's
+ * own deposits come to nothing, the share chart does too, never an all-$0 picture (milestone 4's review, X5; RC16's rule
+ * for an all-$0 picture, as this year's chart already does).
+ *
  * The money-ran-out row forfeits its deposits (`LedgerLoopRow`), so it counts in nothing here.
  */
 import { buildYTicks, niceLattice } from '@viz/bandData'
@@ -29,7 +33,7 @@ import { copy, slots } from '../../copy'
 import { formatDeltaDollar, mmAxisFormatterFor } from '../../money'
 import { formatTableDollars, tableFigure } from '../../workbench/yearTableChrome'
 import { comparisonAxis, type ComparisonAxis } from '../tax/taxRunsView'
-import { firstRetiredT, futureNotes, gateSides, paidRows, pctWords, ranOutNote, yearOf, type AnalysisInput, type ReadySide, type SideId } from './analysisRuns'
+import { firstRetiredT, futureNotes, gateSides, pctWords, ranOutNote, workingPaidRows, yearOf, type AnalysisInput, type ReadySide, type SideId } from './analysisRuns'
 import { cmpFigure } from './comparisonsView'
 
 export type SavingsKind = 'this-year' | 'per-year' | 'share' | 'left-over'
@@ -107,9 +111,6 @@ export function shownSavingsChart(asked: SavingsChart, menu: readonly SavingsMen
 
 const depositsOf = (r: LedgerYearRow): number => r.contribution.taxable + r.contribution.pretax + r.contribution.roth + r.contribution.hsa
 
-/** The working rows a figure may count: before the first retired year, never the money-ran-out row. */
-const workingRows = (side: ReadySide): readonly LedgerYearRow[] => paidRows(side).filter((r) => r.t < firstRetiredT(side.meta))
-
 export function savingsView(input: AnalysisInput & { readonly chart: SavingsChart; readonly working: boolean }): SavingsView {
   const declared = input.alternative === null ? [input.compared] : [input.alternative, input.compared]
   const charts = savingsMenu(declared, input.working)
@@ -164,7 +165,7 @@ export function savingsView(input: AnalysisInput & { readonly chart: SavingsChar
     }
   }
 
-  const rows = workingRows(side)
+  const rows = workingPaidRows(side)
   const first = rows[0]
   const last = rows.at(-1)
   if (first === undefined || last === undefined) return { ...menu, kind: 'words', words: slots.savNoWorkingYears(steady), metrics: [], notes: tail }
@@ -184,13 +185,16 @@ export function savingsView(input: AnalysisInput & { readonly chart: SavingsChar
       points: rows.map((r) => ({ year: yearOf(side.meta, r), value: Math.max(0, r.contribution[k.id]) })),
     }))
     const tops = rows.map(depositsOf)
+    const all = tops.reduce((a, b) => a + b, 0)
+    // Nothing goes in, in any working year: the words, never an all-$0 chart (X5).
+    if (formatDeltaDollar(all) === '0') return { ...menu, kind: 'words', words: slots.savNoDepositsYears(from, through, steady), metrics: [], notes: [...outNotes, ...tail] }
     const lattice = niceLattice(Math.max(1_000, ...tops))
     return {
       ...base,
       sources,
       ticks: buildYTicks(lattice, mmAxisFormatterFor(lattice.ceiling)).map((t) => ({ value: t.dollars, label: t.label })),
       percent: false,
-      metrics: [slots.savPerYear(formatDeltaDollar(tops.reduce((a, b) => a + b, 0)), from, through, steady)],
+      metrics: [slots.savPerYear(formatDeltaDollar(all), from, through, steady)],
       notes: [copy.savMatchNote, ...outNotes, ...tail],
     }
   }
@@ -204,6 +208,8 @@ export function savingsView(input: AnalysisInput & { readonly chart: SavingsChar
     const lattice = niceLattice(Math.max(1.5, ...pts.map((p) => p.value)))
     const own = rows.reduce((s, r) => s + r.workingYear!.ownDeposits, 0)
     const pay = rows.reduce((s, r) => s + r.workingYear!.pay, 0)
+    // None of the pay goes in as the household's own deposits: the words, never "about 0.0% of your pay" (X5).
+    if (formatDeltaDollar(own) === '0') return { ...menu, kind: 'words', words: slots.savNoOwnDeposits(from, through, steady), metrics: [], notes: [...outNotes, ...tail] }
     return {
       ...base,
       sources: [{ id: 'share', name: copy.savShareName, colorIndex: 0, pattern: 'solid', points: pts }],
@@ -230,13 +236,20 @@ export function savingsView(input: AnalysisInput & { readonly chart: SavingsChar
   }
   // The left over and the short years stated apart, never netted: the engine credits only a year with money left
   // (`workingYearCredit`), so a net would set a kept figure beside a smaller "in all" and under-state what was drawn.
-  const leftFig = formatDeltaDollar(rows.reduce((s, r) => s + Math.max(0, r.workingYear!.leftOver), 0))
+  const leftSum = rows.reduce((s, r) => s + Math.max(0, r.workingYear!.leftOver), 0)
+  const leftFig = formatDeltaDollar(leftSum)
   const shortFig = formatDeltaDollar(rows.reduce((s, r) => s + Math.max(0, r.workingYear!.shortfall), 0))
   // What the run keeps of a left over (`leftOverCredit`, landed in taxable; each year's at most its cash): said, so a
-  // left over is never read as saved.
+  // left over is never read as saved, credited to the side whose chart this is (X3), and, where the rest prints as $0,
+  // "all of it" rather than a rest that isn't there (O5).
   const kept = rows.reduce((s, r) => s + r.leftOverCredit, 0)
-  const leftLines =
-    leftFig === '0' ? [] : [slots.savLeftOver(leftFig, from, through, steady), kept > 0 ? slots.savLeftOverKept(formatDeltaDollar(kept)) : copy.savLeftOverNoneKept]
+  const keptLine =
+    kept <= 0
+      ? copy.savLeftOverNoneKept
+      : formatDeltaDollar(leftSum - kept) === '0'
+        ? slots.savLeftOverAllKept(side.title)
+        : slots.savLeftOverKept(side.mid, formatDeltaDollar(kept))
+  const leftLines = leftFig === '0' ? [] : [slots.savLeftOver(leftFig, from, through, steady), keptLine]
   const shortLines = shortFig === '0' ? [] : [slots.savShortDrawn(shortFig, from, through, steady)]
   const lines = leftLines.length + shortLines.length === 0 ? [slots.savEven(from, through, steady)] : [...leftLines, ...shortLines]
   return {

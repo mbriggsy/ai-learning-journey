@@ -81,10 +81,18 @@ describe('sankeyOptions', () => {
     expect((s.dataLabels as { formatter: () => string }).formatter()).toBe('')
   })
 
-  it('speaks the composer’s words: the chart’s name and description, each node and flow its own sentence', () => {
+  it('speaks the composer’s words: the chart’s description, and each LINK its own sentence (the accessibility module describes a sankey’s points, its links, never its nodes)', () => {
     const o = sankeyOptions(input())
+    const s = seriesOf()
     expect(o.accessibility?.description).toBe(words.description)
     const describe = o.accessibility!.point!.descriptionFormatter!
-    expect(describe({ options: seriesOf().nodes![3] } as never)).toBe('Spending: $80')
+    // A flow into Total inflows speaks its own words, never the total's (RC20's P0: it once spoke the total's figure).
+    const intoTotal = (s.data as object[])[1]!
+    expect(describe({ options: intoTotal } as never)).toBe('b')
+    const tooltip = (o.tooltip as { formatter: (this: unknown) => string }).formatter
+    expect(tooltip.call({ options: intoTotal })).toBe('b')
+    expect(tooltip.call({ point: { options: intoTotal } })).toBe('b')
+    // A node's words reach the hover.
+    expect(tooltip.call({ options: s.nodes!.find((n) => n.id === 'spending') })).toBe('Spending: $80')
   })
 })

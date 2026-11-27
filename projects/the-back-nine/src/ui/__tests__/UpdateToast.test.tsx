@@ -19,9 +19,9 @@ import { copy } from '../copy'
  * save-ceremony hold is raised (commit→export is a no-reload window) — leaving the prompt up.
  *
  * Act 6 · RC19: the toast is the kit's (Base UI's Toast). Its region is Base UI's viewport (`role="region"`,
- * `aria-live="polite"`, named by `updateRegionLabel`), and Base UI keeps a toast's dismiss out of the accessibility
- * tree until the stack is hovered or focused (it expands), so the "Later" arms hover the region first, as a pointer
- * does.
+ * `aria-live="polite"`, named by `updateRegionLabel`). Base UI would keep a toast's dismiss out of the accessibility
+ * tree until the stack is hovered or focused (it expands); the kit passes `aria-hidden={false}` so "Later" is named
+ * from the first frame, and the "Later" arms find it WITHOUT hovering first (milestone 4's review, V3).
  */
 
 // The SW hook's mutable state, shared with the hoisted mock factory. `needRefresh` is toggled per
@@ -59,11 +59,8 @@ afterEach(cleanup)
 
 const reloadBtn = () => screen.getByRole('button', { name: copy.updateReload })
 const region = () => screen.getByRole('region', { name: copy.updateRegionLabel })
-/** "Later", reached as a pointer reaches it: the stack expands on hover, and its dismiss joins the accessibility tree. */
-const laterBtn = async () => {
-  fireEvent.mouseEnter(region())
-  return screen.findByRole('button', { name: copy.updateLater })
-}
+/** "Later", found by its name with no hover first: a screen reader meets it in the collapsed stack. */
+const laterBtn = async () => screen.findByRole('button', { name: copy.updateLater })
 
 describe('UpdateToast — the update-ready prompt and its apply gate', () => {
   it('renders the live region EMPTY (zero footprint) when no update is ready — mounted, never populated', () => {

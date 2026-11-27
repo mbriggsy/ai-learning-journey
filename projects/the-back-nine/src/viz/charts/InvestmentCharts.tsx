@@ -20,7 +20,7 @@ export function Donut(props: DonutInput & { readonly chartId: string; readonly c
   const held = useRef<{ readonly key: string; readonly options: Options } | null>(null)
   if (held.current === null || held.current.key !== key) held.current = { key, options: donutOptions(input, (id) => pick.current?.(id)) }
   return (
-    <div className="relative mx-auto w-fit" data-donut={chartId}>
+    <div className="relative mx-auto" data-donut={chartId}>
       <Chart key={key} options={held.current.options} chartId={chartId} className={className} />
       {/* The hole's words, centred over the ring (above the credit's 16 px band, `DONUT_CREDIT_PX`); they never take a
           click meant for a slice. */}

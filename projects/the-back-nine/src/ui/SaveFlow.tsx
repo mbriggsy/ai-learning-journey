@@ -24,10 +24,12 @@
  * the live shell: the shell unmounts across the ceremony by design (the leave asks before it, `IntakeApp`'s
  * `toCeremony`, name what that drops), and this unit moves no such seam. WHAT A CLOSE MEANS, per step (insights 031 and
  * 049: every way out keeps every guard the old path held): before the commit (passphrase, recovery, the error) the X,
- * Escape and the scrim are the old Back to the answer (`onCancel`: nothing was written); across `securing` (the commit
- * in flight) and `export` (the mandatory backup, its leave-page guard and update hold up) the drawer cannot close, the X
- * is gone and every close request is refused, so the minted credential's backup step can never be skipped by a close;
- * at `complete` a close is Done (`onComplete`: the plan is saved, and the drawer says so until it goes).
+ * Escape and the scrim leave the save (`onCancel`: nothing was written). On the passphrase step and the error that is
+ * the old Back to the answer; on the recovery step it is a new way out (the old page had none there), while that step's
+ * Back button still goes to the passphrase step, as before. Across `securing` (the commit in flight) and `export` (the
+ * mandatory backup, its leave-page guard and update hold up) the drawer cannot close, the X is gone and every close
+ * request is refused, so the minted credential's backup step can never be skipped by a close; at `complete` a close is
+ * Done (`onComplete`: the plan is saved, and the drawer says so until it goes).
  */
 import { useEffect, useRef, useState } from 'react'
 import { Check, Lock } from 'lucide-react'

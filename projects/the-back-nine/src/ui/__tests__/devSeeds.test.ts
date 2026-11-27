@@ -1564,8 +1564,8 @@ describe('the stale aged plant (the re-entry gate notes, exposure-gated)', () =>
     expect(report.pricing.namedFamilies).toEqual([...(crossed.has('tax') ? ['tax'] : []), ...(crossed.has('medicare') ? ['medicare'] : [])])
     expect(report.pricing.reconfirmMedicareSpending, 'the stripped extras marker always asks').toBe(true)
     expect(report.rulesMoved, 'the ledger never feeds the rules register — the echo rides the TWO vintage clocks only').toBe(true)
-    // THE FIT ARM'S NUMBER, derived rather than decreed. `e2e/vertical-fit.spec.ts` pins
-    // `.reentry-notes p` at exactly this length for `?vault=stale` (off the same ledger oracle).
+    // THE FIT ARM'S NUMBER, derived rather than decreed. `e2e/rc-screens.spec.ts`'s `?vault=stale` arm pins
+    // `.reentry-notes p` at exactly this length (off the same ledger oracle; `vertical-fit.spec.ts`'s until RC21a).
     expect(view.noteLines).toEqual([
       copy.stalenessTax,
       copy.stalenessMedicare,
@@ -1578,8 +1578,8 @@ describe('the stale aged plant (the re-entry gate notes, exposure-gated)', () =>
   // THE ENGINE-ACCEPTANCE PIN (insight 085) — and until now the ONE aged plant that lacked a fast
   // one. `statestale` got this arm the day the −2y aging demoted it to the R19 calm indeterminate;
   // its SPINE sibling, which rides the very doctor that caused that bug, never did. Its only
-  // witnesses were a ~90-second Chromium fit arm (`vertical-fit.spec.ts` drives `?vault=stale`
-  // through a real unlock and asserts a resolved spine) and a DIFFERENT plant's date-route arm over
+  // witnesses were a ~90-second Chromium fit arm (`e2e/rc-screens.spec.ts` drives `?vault=stale`
+  // through a real unlock to a settled home; `vertical-fit.spec.ts`'s until RC21a) and a DIFFERENT plant's date-route arm over
   // a DIFFERENT base — `retired` is all-retired and `dateSearch.ts:590` refuses such a household
   // outright, so no date-route arm can ever cover it. This is the insight-051 tell: the plant
   // shipped its fit pin before it had a unit source. Now a doctored shape the engine would refuse

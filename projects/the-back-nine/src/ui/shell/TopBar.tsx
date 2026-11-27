@@ -1,12 +1,12 @@
 /**
  * src/ui/shell/TopBar.tsx: the shell's top bar (plan docs/plans/6-rightcapital-ui-plan.md, section 3.1; ref 2.0
  * "Top bar"; `rc-shell/planoverview-05.gif`). White, 50 px (48 in compact mode): the B9 wordmark (ours; it returns to
- * the answer page), the two names stacked, then the modules in RightCapital's order, each only where a screen exists.
+ * the home, Snapshot, through `onHome`, asking first over an open drawer's edit), the two names stacked, then the modules in RightCapital's order, each only where a screen exists.
  * The module you are in sits on a `--stone-200` block the full height of the bar that joins the sub-nav below, so it
  * reads as a tab; its words are also heavier and it carries `aria-current` (never colour alone: the block is near
  * white). At the right, the lock menu: the plan's save state in words beside the lock, and what that state allows
- * (`lockMenu.ts`), and the gear, which since RC4 opens the assumptions behind the plan in the old panel (RC18 rebuilds it
- * as Settings); its word sits beside it on a laptop and its name is its accessible label everywhere.
+ * (`lockMenu.ts`), and the gear, which opens Settings (RC18; from RC4 until then it opened the assumptions in the old
+ * panel); its word sits beside it on a laptop and its name is its accessible label everywhere.
  *
  * Below the 48rem phone tier the modules leave the bar for the phone menu (`PhoneMenu.tsx`). The bar's height is a floor,
  * never a cap: two long names wrap (and break inside a word only when a word alone is wider than their room) and the bar
@@ -28,7 +28,7 @@ export interface TopBarProps {
   readonly onHome: () => void
   readonly lock: LockMenuView
   readonly onLockAction: (action: LockMenuAction) => void
-  /** The gear: today it opens the assumptions behind the plan (the old panel, until RC18's settings). Absent: no gear. */
+  /** The gear: it opens Settings (RC18), on every tab. Absent: no gear. */
   readonly onGear?: () => void
 }
 
@@ -114,7 +114,7 @@ export function TopBar({ names, modules, route, onNavigate, onHome, lock, onLock
           </span>
         </a>
         {names.length > 0 ? (
-          <p className="flex min-w-0 flex-col justify-center text-label leading-tight text-stone-600" data-shell-names="">
+          <p className="flex min-w-0 flex-col justify-center text-label text-stone-600" data-shell-names="">
             {names.map((name, i) => (
               <span key={i} className="wrap-anywhere">
                 {name}

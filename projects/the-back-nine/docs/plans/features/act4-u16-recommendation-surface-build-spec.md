@@ -169,7 +169,7 @@ standing valve; the §7 triggers in `docs/decisions/market-model.md` stay live a
 - The pre-dispatch `blocked` arm stays DISTINCT from the committed withheld payload — two calm
   renders, both naming the true reason (§Q5). The gap vocabulary shipped as
   `SolvePreconditionGap = 'goal-unset' | SolveBlockReason` over `SolveBlockReason = 'no-pretax' |
-  'spine-unready'` (`memoryModel.ts:313`, `:318`):
+  'spine-unready'` (`memoryModel.ts:311`, `:316`):
   `goal-unset` steers to the GoalPicker, and the single `buckets-defaulted` gap this spec first
   prescribed became the builder's TYPED refusal `no-pretax` | `spine-unready` landing verbatim as
   the gap, each with its own true note (the steer-seed increment, 2026-07-23, commits `8b9cab61` +
@@ -222,7 +222,7 @@ standing valve; the §7 triggers in `docs/decisions/market-model.md` stay live a
   duration phrase must be TRUE: the 2026-10-01 production build measured it FALSE at 8.9–26.0 min,
   and since the worker pool (`225d8da4`) it holds at his laptop — `retired` 36.5 s · `nc` 39.8 s ·
   `healthnc` 150.9 s on the 2026-10-03 build; still untrue on a ≤ 3-core device and unmeasured on
-  his phone — the string is `copy.ts:2062`, its timings `copy.ts:2054-2059`, the open half the
+  his phone — the string is `copy.ts:2064`, its timings `copy.ts:2056-2061`, the open half the
   register's *The recommendation's pending line promises "a few minutes"…*) —
   `aria-busy` on the panel (the `PendingPanel` grammar) with the label spoken through the surface's
   own persistent `role="status"` / `aria-live="polite"` announcer rather than the panel line, so a
@@ -291,7 +291,7 @@ to a single commit.
   the 2026-08-02 pin**, because it promised a month tied to NC's own certification that no longer
   gates anything, and a withhold that names a date it cannot keep is exactly the promise this
   product must not make. A future state's pin event may have any timing, so the shipped slot commits
-  to none (`copy.ts:5286`).
+  to none (`copy.ts:5300`).
 - **No live household fires the withheld render today, and that is a CLEARED clause, not a
   regression.** Both blocking clauses cleared after U16 shipped: S.L. 2026-41 § 44.1(a) pinned
   `ncRateSchedule` to an enacted statutory schedule on 2026-08-02, retiring the last directional

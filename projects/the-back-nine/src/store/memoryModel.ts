@@ -93,8 +93,6 @@ import { shouldCommitSolve } from '@engine/solver/cancel'
 // magiLandscape/taxCore imports are unreachable from that path — tree-shaken). The store computes BOTH the dispatched run's identity AND the fresh-vs-committed diff
 // with this one function, so the comparison is apples-to-apples.
 import { solverRunFingerprint, type SolverRunFingerprint } from '@engine/validation/solverRunFingerprint'
-// The display-geometry constants the sticky gates read — the engine's OWN exported values
-// (never re-typed; the same objects confidence.ts computes the emitted margins against).
 import { isEngineReset, type EngineClient } from './engineClient'
 
 // ---------------------------------------------------------------------------

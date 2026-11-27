@@ -83,7 +83,9 @@ export function TextInput({ label, value, onCommit, maxLength, autoComplete = 'o
         }}
         onKeyDown={onKeyDown}
         className={cn(
-          'h-10 min-w-0 rounded-control border border-stone-300 bg-bg px-3 text-body text-stone-900 outline-none',
+          // No `outline-none` beside the focus ring: it sets `--tw-outline-style: none`, which `focus:outline-2` reads, so
+          // the ring would resolve to none (milestone 4's review, C1).
+          'h-10 min-w-0 rounded-control border border-stone-300 bg-bg px-3 text-body text-stone-900',
           'focus:outline-2 focus:outline-offset-2 focus:outline-blue-ink',
           readOnly && 'cursor-default bg-stone-200',
           refused && 'border-stone-900',

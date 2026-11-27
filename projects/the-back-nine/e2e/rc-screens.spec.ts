@@ -4741,8 +4741,10 @@ async function assertRc17Frame(page: Page, who: string): Promise<void> {
   expect(frame.handle, `${who}: the ACTION ITEMS handle inside the first frame`).toBeLessThanOrEqual(REAL.height)
 }
 
-/** The shown chart's words: every axis tick and legend item visible, unclipped and at the floor size; no word cut. */
-async function auditRc17Text(page: Page, who: string, counts: Partial<Record<'axis-label' | 'legend-item' | 'data-label', number>>, texts: readonly string[] = []): Promise<void> {
+/** The shown chart's words: every axis tick and legend item visible, unclipped and at the floor size; no word cut; and
+ *  no chart word over another (`assertChartTextApart`: RC17's own Verification, "labels pass the audit", plan :2048,
+ *  which the text audit alone never checked; milestone 4's review, T3). */
+async function auditRc17Text(page: Page, who: string, counts: Partial<Record<'axis-label' | 'legend-item' | 'data-label' | 'plot-band-label', number>>, texts: readonly string[] = []): Promise<void> {
   const charts = await page.locator('[data-analysis-body] [data-chart]').evaluateAll((els) => els.map((el) => el.getAttribute('data-chart')!))
   expect(charts.length, `${who}: a chart drew`).toBeGreaterThan(0)
   const floor = await hcFloorPx(page)
@@ -4750,6 +4752,7 @@ async function auditRc17Text(page: Page, who: string, counts: Partial<Record<'ax
     expect(hcTextFailures(await hcAudit(page, `[data-chart="${c}"]`, '[data-analysis-body]'), floor, { texts: c === charts[0] ? texts : [], counts }), `${who} ${c}: the chart’s text`).toEqual([])
     const cut = (await page.locator(`[data-chart="${c}"] svg text`).allTextContents()).filter((t) => t.includes('…'))
     expect(cut, `${who} ${c}: no chart word cut short`).toEqual([])
+    await assertChartTextApart(page, `[data-chart="${c}"]`, `${who} ${c}`)
   }
 }
 
@@ -4790,12 +4793,14 @@ test.describe(`RC17 · Comparisons, Savings and Retirement Details at his window
     await pickRc17Chart(page, copy.cmpChartTax)
     await auditRc17Text(page, 'retired tax', { 'axis-label': 4 })
     await assertRc17Frame(page, 'retired tax')
-    await pickRc17Chart(page, copy.cmpChartAtRetirement)
-    await auditRc17Text(page, 'retired at retirement', { 'axis-label': 3, 'data-label': 1 })
     // The rough market: every metric names it.
     await pickRc17Future(page, copy.workbenchViewRough)
     for (const m of await rc17Metrics(page)) expect(m, 'retired rough: the metric names the rough market').toContain('in the rough market')
     await pickRc17Future(page, copy.workbenchViewSteady)
+    // An already-retired couple's third chart is what they hold today, as entered: the same in every market, so its
+    // metric names none (milestone 4's review, X4).
+    await pickRc17Chart(page, copy.cmpChartToday)
+    await auditRc17Text(page, 'retired today', { 'axis-label': 3, 'data-label': 1 })
     // Savings: an all-retired household's one chart.
     await toAnalysisTab(page, 'retired', RC17_TABS[1])
     // One chart: its title is a plain heading, no menu (`ChartTitle` with one item).
@@ -4815,6 +4820,9 @@ test.describe(`RC17 · Comparisons, Savings and Retirement Details at his window
     // unless given its own).
     await pickRc17Chart(page, slots.rdIncomeSourcesOf(copy.probabilityPlanTitle.toLowerCase()))
     await pickRc17Future(page, copy.workbenchViewRough)
+    // The band's words are the only words where the ran-out year prints no figure: the text audit reads them too
+    // (milestone 4's review, T4).
+    await auditRc17Text(page, 'retired rough income', { 'axis-label': 4, 'plot-band-label': 1 }, [copy.rdRanOutBand])
     const band = await page.evaluate(() => {
       const c = document.querySelector('[data-chart="rd-years"]')!
       const b = c.querySelector('.b9-ranout-band')!.getBoundingClientRect()
@@ -4881,6 +4889,12 @@ test.describe(`RC17 · Comparisons, Savings and Retirement Details at his window
     await pickRc17Chart(page, copy.rdChartIncomeComparison)
     await expect(page.locator('[data-rd-donut]')).toHaveCount(2)
     await assertRc17Frame(page, 'dip income comparison')
+    // The spending comparison (it needs two sides, so this arm's what-if is its only gated drawing): drawn, in one
+    // frame, every word audited and apart (milestone 4's review, T3).
+    await pickRc17Chart(page, copy.rdChartSpendingComparison)
+    await expect(page.locator('[data-analysis-body] [data-chart="rd-grouped"]'), 'dip: the spending comparison drew').toBeAttached()
+    await assertRc17Frame(page, 'dip spending comparison')
+    await auditRc17Text(page, 'dip spending comparison', { 'axis-label': 3 })
   })
 
   test('?seed=dateshort: every working year runs short, drawn below the zero line; Savings and Retirement Details in one frame and audited', async ({ page }) => {
@@ -5295,7 +5309,7 @@ for (const vp of PAY_CHECK_VIEWPORTS) {
       const line = page.locator('[data-stale-banner] div.note-parts.cs-paycheck-note')
       await expect(line, 'the standing line renders in the lead').toHaveCount(1)
       await assertStandingBlock(line, 'datesavedrisenlater', `${copy.stalenessPayCheckNote} ${RISEN_LATER_LINE}`, risenResultDoor('105,000'))
-      await assertStandingInBanner(page, line, vp.use.viewport.width === PHONE.width)
+      await assertStandingInBanner(page, line)
     })
   })
 
@@ -5322,7 +5336,7 @@ for (const vp of PAY_CHECK_VIEWPORTS) {
       )
       // ONE CAUSE, ONE LINE: the moved line's own lead never shares the slot this line holds.
       await expect(line).not.toContainText(copy.stalenessLeftOverNote)
-      await assertStandingInBanner(page, line, vp.use.viewport.width === PHONE.width)
+      await assertStandingInBanner(page, line)
     })
   })
 
@@ -5692,7 +5706,9 @@ const TYPED_MOVED_GATE_DOOR: GateDoorWords = {
  *  dt/dd (the block), or `null` where the slot is its old `<p>` with the button inline — or, with `standingRuns`, a
  *  block with NO door (the typed-below line at two or more runs: its runs' labels in order in the ordered list, each
  *  with its paragraph count, the survivor part's paragraph after it, its button the block's last child). `dated` — whether the affirm
- *  lands a crowned date (`assertResolvedDate`) or the no-date reading (`assertNoDateReading`). `sheet` — the Result
+ *  lands a crowned date or the no-date reading: a record only, read by no assertion since RC4a deleted the old answer
+ *  page and its `assertResolvedDate` / `assertNoDateReading` (the affirm lands on the home either way, which the arm
+ *  checks, `main.result[data-shell-screen="snapshot"]`). `sheet` — the Result
  *  door that opens the panel at the W row, and the Keep door's label there (`null` where none is drawn), or `null`
  *  where the slot opens no W row. `readback` — the gate's read-back labels in order, where the arm pins them. */
 const PAY_CHECK_UNLOCKS: readonly {
@@ -5936,7 +5952,6 @@ async function assertTypedBelowParts(block: Locator, who: string, runShapes: rea
   // gate too: `ReEntry.tsx` moved off the old face, which kept lining numerals) Act 6's law is Figtree with
   // `tabular-nums` on every number, lining by design.
   expect(css.labelNumeric, `${who}: the label keeps its surface's figure law`).toMatch(/tabular-nums/)
-  expect(css.labelNumeric, `${who}: …and its tabular ones`).toMatch(/\btabular-nums\b/)
 }
 
 /** The standing slot drawn as a block with NO door (the typed-below line at two or more runs, the whole-window
@@ -6037,7 +6052,7 @@ async function assertTappableInSheet(target: Locator, who: string): Promise<void
  *  and the home's one R13 caveat is reachable below it. While the StaleBanner holds lines, any shell page may scroll:
  *  order, one visible caveat and reach, never the one-frame law (plan 6, RC4's fit decision: the pilot's call,
  *  2026-11-24, b9-5; measured: `?vault=datesavedrisen`'s caveat at 1302 px, the door's cost list in the banner). */
-async function assertStandingInBanner(page: Page, line: Locator, phone: boolean): Promise<void> {
+async function assertStandingInBanner(page: Page, line: Locator): Promise<void> {
   await expect(page.locator('main.result[data-shell-screen="snapshot"]'), 'the standing line rides the home').toBeAttached()
   await expect(line).toBeVisible()
   const order = await page.evaluate(() => {
@@ -6054,7 +6069,6 @@ async function assertStandingInBanner(page: Page, line: Locator, phone: boolean)
   expect(order.aboveHeading, 'the banner stack sits above the page’s heading').toBe(true)
   const caveat = page.locator('main.result [data-caveat]')
   await expect(caveat, 'the home’s one R13 caveat').toHaveCount(1)
-  expect(phone ? 'phone' : 'laptop').toBeTruthy()
   await caveat.scrollIntoViewIfNeeded()
   await expect(caveat, 'the R13 caveat is reachable').toBeInViewport()
 }

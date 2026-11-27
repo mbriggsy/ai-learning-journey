@@ -41,7 +41,15 @@ function ToastStack({ dismissLabel }: { readonly dismissLabel: string }) {
       <Toast.Description className="text-label text-stone-600 empty:hidden" />
       <div className="mt-1 flex flex-wrap items-center gap-3">
         {toast.actionProps !== undefined ? <Toast.Action className={buttonClasses('primary', 'sm')} /> : null}
-        <Toast.Close className="min-h-8 cursor-pointer text-label text-blue-ink underline underline-offset-4">{dismissLabel}</Toast.Close>
+        {/* aria-hidden={false}: Base UI hides the dismiss from the accessibility tree until the stack expands (hover or
+            focus), so a screen reader met a visible "Later" it could not name. Base UI merges the caller's props after
+            its own, so this wins and its closeToast and onClose stay (milestone 4's review, V3). */}
+        <Toast.Close
+          aria-hidden={false}
+          className="min-h-8 cursor-pointer text-label text-blue-ink underline underline-offset-4"
+        >
+          {dismissLabel}
+        </Toast.Close>
       </div>
     </Toast.Root>
   ))

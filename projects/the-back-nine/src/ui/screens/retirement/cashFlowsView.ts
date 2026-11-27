@@ -690,9 +690,12 @@ export function cashFlowsView(input: CashFlowsInput): CashFlowsView {
         : [stopLine(planMeta, copy.workbenchRailPlanLabel, true), stopLine(other.meta, whatIfName, true)]
     // The notes ride beside the columns they explain, as under one run's table (`singleFootnotes`).
     const kept = new Set<string>(table.columns.map((c) => c.id))
-    const payCheck = kept.has('tax-on-pay')
-      ? [...new Set([...payCheckNotes(planMeta.stateTaxReading), ...payCheckNotes(other.meta.stateTaxReading)])]
-      : []
+    // Either of the pay check's two taxes brings its notes (a pair can owe payroll tax and no income tax on pay, and
+    // `composePaired` drops a column empty on both runs).
+    const payCheck =
+      kept.has('tax-on-pay') || kept.has('payroll')
+        ? [...new Set([...payCheckNotes(planMeta.stateTaxReading), ...payCheckNotes(other.meta.stateTaxReading)])]
+        : []
     const blankSpending = [...input.plan.rows, ...other.rows].some((r) => r.spending === undefined)
     const footnotes = [
       copy.workbenchApproxNote,

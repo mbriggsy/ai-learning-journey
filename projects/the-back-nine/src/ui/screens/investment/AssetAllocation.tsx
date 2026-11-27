@@ -48,7 +48,7 @@ export interface AssetAllocationProps {
 
 function Centre({ donut }: { readonly donut: MixDonut }) {
   return (
-    <p className="text-[1.125rem] leading-tight font-semibold text-stone-900 tabular-nums" data-asset-centre="">
+    <p className="text-[1.125rem] font-semibold text-stone-900 tabular-nums" data-asset-centre="">
       {donut.centre}
     </p>
   )

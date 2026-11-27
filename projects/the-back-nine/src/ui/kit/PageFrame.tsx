@@ -15,7 +15,8 @@
  * A Profile page (Act 6 · RC13a; ref 2.4, 2.5) has no panel: its card grid or master-detail sits straight under the page
  * head (`bare`), with the Add menu at the head's right.
  *
- * The frame's root carries `.rc-root` (the scoped preflight). Every word is a prop.
+ * The frame's root carries `.rc-root`: no longer a preflight scope (the preflight is global since RC21a), but a hook that
+ * theme.css's `.rc-root [data-row-actions]` rule and the e2e selectors (`main.rc-root`) read. Every word is a prop.
  */
 import type { ReactNode, Ref } from 'react'
 import { Menu } from '@base-ui/react/menu'

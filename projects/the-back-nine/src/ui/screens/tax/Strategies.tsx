@@ -105,10 +105,10 @@ function Ask({ ask, onPickGoal, onBracket, onFind, announce }: { readonly ask: S
   const heldInSteer = held?.kind === 'no-pretax' && ask.steer !== undefined
   return (
     <section className="flex flex-col items-center gap-6 px-0 py-6 text-center wide:py-10" data-ask="">
-      <p className="max-w-3xl text-chart-title font-semibold text-stone-900" data-ask-sentence="">
+      <p className="text-chart-title font-semibold text-stone-900" data-ask-sentence="">
         {ask.sentence}
       </p>
-      <div className="flex w-full max-w-3xl flex-col gap-4 text-left laptop:flex-row laptop:items-start laptop:gap-6">
+      <div className="flex w-full flex-col gap-4 text-left laptop:flex-row laptop:items-start laptop:gap-6">
         <fieldset className="flex min-w-0 flex-1 flex-col gap-3" aria-labelledby={legendId}>
           <legend id={legendId} className="text-body font-semibold text-stone-900">
             {ask.legend}
@@ -161,7 +161,7 @@ function Ask({ ask, onPickGoal, onBracket, onFind, announce }: { readonly ask: S
         ) : null}
       </div>
       {ask.steer !== undefined ? (
-        <p id={steerId} role="status" className="max-w-3xl border-l-4 border-plum bg-stone-100 px-4 py-3 text-left text-body text-stone-900" data-steer={ask.steer.kind}>
+        <p id={steerId} role="status" className="border-l-4 border-plum bg-stone-100 px-4 py-3 text-left text-body text-stone-900" data-steer={ask.steer.kind}>
           {ask.steer.words}
         </p>
       ) : null}
@@ -280,7 +280,7 @@ function Winner({ w, onKeep, onTry }: { readonly w: WinnerView } & Pick<Strategi
         <div className="flex min-w-0 flex-col gap-3">
           <div className="flex flex-col gap-1">
             <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-              <span className="text-[1.75rem] leading-tight font-semibold text-stone-900 tabular-nums wide:text-[2rem]" data-winner-hero="">
+              <span className="text-[1.75rem] font-semibold text-stone-900 tabular-nums wide:text-[2rem]" data-winner-hero="">
                 {w.hero}
               </span>
               {w.average !== undefined ? <span className="text-label text-stone-600">{w.average}</span> : null}
@@ -407,7 +407,7 @@ export function StrategiesPanel({ view, caveat, onPickGoal, onBracket, onFind, o
       {view.notice !== undefined ? <Notice notice={view.notice} /> : null}
       {view.calculating !== undefined ? (
         <section aria-busy="true" className="flex flex-col items-center gap-4 px-4 py-16 text-center" data-calculating="">
-          <p className="max-w-2xl text-chart-title font-semibold text-stone-900">{view.calculating.sentence}</p>
+          <p className="text-chart-title font-semibold text-stone-900">{view.calculating.sentence}</p>
           <p className="flex items-center gap-2 text-body text-stone-900">
             <LoaderCircle size={18} strokeWidth={1.5} aria-hidden="true" className="motion-safe:animate-spin" />
             {view.calculating.label}

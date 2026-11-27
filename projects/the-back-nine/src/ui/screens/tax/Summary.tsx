@@ -26,7 +26,7 @@ export function SummaryPanel({ view, caveat, onStrategies }: { readonly view: Su
     return (
       <div className="flex flex-col gap-6" data-summary={view.kind}>
         <div className="flex flex-col items-center gap-4 px-4 py-12 text-center">
-          <p className="max-w-2xl text-body text-stone-900">{view.words}</p>
+          <p className="text-body text-stone-900">{view.words}</p>
           {view.kind === 'waiting' ? (
             <Button variant="secondary" size="sm" onClick={onStrategies}>
               {view.action}
@@ -60,7 +60,7 @@ export function SummaryPanel({ view, caveat, onStrategies }: { readonly view: Su
           </ChartBoundary>
         </div>
         <div className="flex flex-col gap-2 text-center" data-metrics="">
-          <p className="text-[1.5rem] leading-tight font-semibold text-stone-900 tabular-nums" data-summary-hero="">
+          <p className="text-[1.5rem] font-semibold text-stone-900 tabular-nums" data-summary-hero="">
             {view.hero}
           </p>
           {view.average !== undefined ? <p className="text-label text-stone-600">{view.average}</p> : null}

@@ -648,7 +648,7 @@ Each entry below states 1536×791, 2.5 DPR or the 800 px law as a live instructi
 - `src/ui/styles/app.css` lines 37-44 and 35 at e992e9d69: the "800px" law and the "1536 px laptop" example.
 - `src/ui/styles/result.css line 203-207 at b69c28483`: the "800px" law.
 - `src/ui/styles/confidence.css line 253 at 95c715e19`, `src/ui/styles/confidence.css line 260 at 95c715e19`: the "--laptop-fit-height" and "800px" law notes.
-- `src/ui/copy.ts:1984-1988`: the standing line's length note ("774px with 17px of frame left").
+- `src/ui/copy.ts:1984-1990`: the standing line's length note ("774px with 17px of frame left").
 - The Caddie: the skill's frontmatter description and its crop, DPR and full-frame lines; the taste corpus's Layout & density heading; the reader-panel prompt line in `.claude/workflows/caddie.js` and `.claude/workflows/caddie-ab.js`.
 - Docs: `docs/glossary.md`'s Caddie entry; `docs/roadmap.md`'s Validation-gates "Vertical fit + chart text" row; `docs/landmines.md`'s "manual 1536×791 measure" line; `docs/architecture.md` §12's 20 px fork premise and its "his 1536 px laptop renders the sub-68rem STACKED layout" example; `docs/backlog.md`'s tall-tap premise ("At his laptop's 1536 px width…"), the survivor prescription ("rec's standing line sits at 777 of 791"), the two "manual 1536×791 measure" lines, the 20 px fork entry, and the date-route and committed-recommendation empty-column entries framed "at 1536×791"; `docs/plans/5-workbench-plan.md`'s forward fit arms at 1536×791; `docs/plans/features/working-year-surplus-build-spec.md`'s owed Caddie walk at 1536×791 @ 2.5×; `TODO.md`'s b9-3 block note that the spec hard-codes `deviceScaleFactor: 2.5` (already fixed by `c1ef71da`).
 

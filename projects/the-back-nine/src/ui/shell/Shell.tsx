@@ -979,7 +979,7 @@ export default function Shell({
       const waiting = (
         <div className="flex flex-col gap-6" data-tax-runs="words">
           <div className="flex flex-col items-center gap-4 px-4 py-12 text-center">
-            <p className="max-w-2xl text-body text-stone-900">{taxGate.words}</p>
+            <p className="text-body text-stone-900">{taxGate.words}</p>
             {taxGate.toStrategies ? (
               <Button variant="secondary" size="sm" onClick={toStrategies}>
                 {copy.taxStratToStrategies}

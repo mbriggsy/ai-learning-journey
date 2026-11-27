@@ -655,9 +655,12 @@ stay (as today: the rail withholds only Apply, `WhatIfPage`'s `!readOnly`). Each
 labels carry none (they are scale). Axes abbreviate (`$500k`, `$2.5mm`). Table cells drop `$`, negatives in
 parentheses. "X of 10", never a percent, for odds. Every printed odds count goes through the copy slots.
 
-**Tax figures say only what they hold.** `taxPaid` is the income tax the portfolio's own income adds (federal, plus
+**Tax figures say only what they hold.** `taxPaid` is a year's income tax as the overlay solves it (federal, plus
 state only where the state is priced: an `elsewhere` household's state part is a structural $0,
-`taxOverlay.ts`); in a working year the tax on pay is not in it, and payroll tax is never income tax. So no tax label
+`taxOverlay.ts`): in a retired year, the tax on the year's Social Security, other income, withdrawals and any Roth
+conversion together; in a working year, only what the portfolio's own income adds on top of pay, since the tax on pay
+is not in it; and payroll tax is never income tax. *(Retired-year wording corrected 2026-11-26, b9-8, by milestone 4's
+review: it said "what the portfolio's own income adds" for every year.)* So no tax label
 states a scope ("federal and state together" appears nowhere); a tax figure is labelled "Income tax" and the page's
 one state clause (`composeVerdictStateNote`, which already speaks for a priced state, Florida's $0 and the unpriced
 monolith) says the scope; payroll tax keeps its own column. *(the pilot's call, 2026-11-24, b9-3 (Briggsy pre-approved
@@ -2038,6 +2041,30 @@ years, the total over the retired years both sides share, named in the sentence.
 only what the portfolio's own income adds, so summing it beside a retired year let a stop-year or deposits what-if
 print the wrong direction; where the two sides' working years differ, a note points to Cash Flows' pay check column.
 Every two-run total says its window (insight 175).
+
+**Amendment (2026-11-26, b9-8, milestone 4's review).** *(the pilot's call, 2026-11-26, b9-8: milestone 4's review)*
+The "retired years only" rule above dropped a Roth conversion made while working: `date` with a what-if converting
+$60,000 a year in its four working years paid about $30,000 MORE income tax in the rough market, yet Comparisons printed
+"~$32,000 less", because the conversion's tax sits in working-year `taxPaid`. Its reasoning was half right: a working
+year's `taxPaid` is only what savings add on top of pay, so it compares only beside a working year ON THE SAME PAY CHECK
+(pay, taxable pay, deposits, Social Security, other income and filing match: then the tax on pay is the same on both,
+and the gap in `taxPaid` is the whole income-tax gap). The rule now (`comparisonsView.ts`'s `taxYears`): a year counts
+where both sides are retired, or both work on the same pay check; a year where only one side works, or both work on
+different pay or deposits (the direction flip the first rule named), can't be compared. The total and both lines run
+over one unbroken window, the comparable years after the last one that can't be (Highcharts would draw a line across a
+gap it never counted), named in the sentence, with a note naming the years before it and why. A Roth conversion before
+the window, on either side, prints words and no total (unless it falls in a comparable year that pays the same tax
+on both sides, where leaving it out hides nothing). A conversion never sets a year apart (it never moves the pay
+check), so the pay-differs note stays true. Where working years count, a note says each line holds only the tax savings
+add on top of the same pay; where the tax on pay is spoken of, the pointer follows Cash Flows' own test for drawing its
+"Pay check's income tax" column (shown there; not asked yet with no W; none where the pay checks carry no income tax).
+"The years after work stops" is gone from the sentences (wrong for the side that stopped first). Your plan alone keeps
+its years after work stops, with a note naming any income tax its savings add while it still works (`dip`'s 2030
+conversion). Retirement Details keeps its shared retired window, and beside the spending comparison names each side's
+working-year income tax where the two differ, so "spends less in all" can't read as a saving the working years paid
+for; both its comparisons carry the ran-out note. On the all-retired route the third Comparisons chart is "Invested
+assets today": row one's opening is the balance the household entered, so its figures are exact (no "~") and name no
+market, and a side whose money runs out says so in that chart's notes.
 
 **Files.** `src/ui/screens/retirement/Comparisons.tsx`, `RetirementDetails.tsx`, `Savings.tsx`, their `*View.ts`
 composers, `src/viz/charts/overlapAreasOptions.ts`, `incomeSourcesOptions.ts`.

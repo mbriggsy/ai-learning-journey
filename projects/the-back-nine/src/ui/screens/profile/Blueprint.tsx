@@ -139,8 +139,8 @@ function NetWorthBody({ body, ...h }: { readonly body: Extract<BlueprintView['bo
           ))}
         </div>
         <div className="mt-4 grid grid-cols-2">
-          <span className="ml-[50%] h-10 rounded-tl-2xl border-t-2 border-l-2 border-plum" />
-          <span className="mr-[50%] h-10 rounded-tr-2xl border-t-2 border-r-2 border-plum" />
+          <span className="ml-[50%] h-10 rounded-tl-card border-t-2 border-l-2 border-plum" />
+          <span className="mr-[50%] h-10 rounded-tr-card border-t-2 border-r-2 border-plum" />
         </div>
         <div className="grid grid-cols-2">
           <ArrowDown size={20} strokeWidth={2} className="-mt-2 justify-self-center text-plum" />

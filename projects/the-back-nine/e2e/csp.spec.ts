@@ -371,8 +371,9 @@ test.describe('CSP — real browser enforcement', () => {
     }
     await page.getByRole('tab', { name: copy.comparisonsTab, exact: true }).click()
     await page.locator('[data-analysis-panel="comparisons"] h2 button').click()
-    await page.getByRole('menuitemradio', { name: copy.cmpChartAtRetirement }).click()
-    await expect(page.locator('[data-chart="cmp-bars"] .highcharts-series-group, [data-analysis-words]').first(), 'the bars as retirement begins').toBeAttached({ timeout: 30_000 })
+    // This intake is an already-retired couple, so the third chart is what they hold today (milestone 4's review, X4).
+    await page.getByRole('menuitemradio', { name: copy.cmpChartToday }).click()
+    await expect(page.locator('[data-chart="cmp-bars"] .highcharts-series-group, [data-analysis-words]').first(), 'the bars of what each side holds today').toBeAttached({ timeout: 30_000 })
     await expect(page.locator('[data-analysis-words]', { hasText: copy.analysisRunsWaiting }), 'the bars: still working out the plans').toHaveCount(0, { timeout: 30_000 })
     expect(await page.evaluate(() => document.querySelectorAll('style').length), 'the chart menu injected a <style> element').toBe(0)
     await page.getByRole('tab', { name: copy.probabilityTab }).click()

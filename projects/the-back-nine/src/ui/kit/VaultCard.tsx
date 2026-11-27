@@ -175,7 +175,9 @@ export function PassphraseField({
           onBlur={onBlur}
           onKeyDown={onEnter !== undefined ? (e) => { if (e.key === 'Enter') onEnter() } : undefined}
           className={cn(
-            'h-11 min-w-0 flex-1 rounded-control border border-stone-300 bg-bg px-3 text-body text-stone-900 outline-none',
+            // No `outline-none` beside the focus ring: it sets `--tw-outline-style: none`, which `focus:outline-2` reads, so
+            // the ring would resolve to none (milestone 4's review, C1).
+            'h-11 min-w-0 flex-1 rounded-control border border-stone-300 bg-bg px-3 text-body text-stone-900',
             'focus:outline-2 focus:outline-offset-2 focus:outline-blue-ink disabled:bg-stone-200',
             invalid && 'border-stone-900',
           )}

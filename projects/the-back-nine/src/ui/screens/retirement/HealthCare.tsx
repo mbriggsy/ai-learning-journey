@@ -124,7 +124,7 @@ function Charts({ view, caveat }: { readonly view: HealthChartsView; readonly ca
           </div>
           <div className="flex flex-col gap-2 text-center compact:gap-1" data-metrics="">
             {view.hero !== '' ? (
-              <p className="text-[1.75rem] leading-tight font-semibold text-stone-900 tabular-nums compact:text-[1.5rem]" data-health-hero="">
+              <p className="text-[1.75rem] font-semibold text-stone-900 tabular-nums compact:text-[1.5rem]" data-health-hero="">
                 {view.hero}
               </p>
             ) : null}

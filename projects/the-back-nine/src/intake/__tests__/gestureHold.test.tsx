@@ -123,7 +123,8 @@ describe('useGestureHold — what a face showed at a press stands until that pre
   it('the click releases in the BUBBLE phase, on window — never capture, which would detach a held control before React dispatched its click', () => {
     // jsdom's synchronous dispatch runs no microtask between listeners, so the held door's click below
     // runs under either phase here; the phase itself is pinned structurally. The real-browser gate is the
-    // two Keep-door arms of `e2e/vertical-fit.spec.ts`.
+    // Keep-door arms of `e2e/rc-screens.spec.ts` (RC13b's, the drawer at his window by mouse and on the phone by touch;
+    // they were `e2e/vertical-fit.spec.ts`'s until that file left at RC21a).
     const add = vi.spyOn(window, 'addEventListener')
     render(<Probe value="a" />)
     fireEvent.pointerDown(inside())
@@ -165,7 +166,8 @@ describe('useGestureHold — what a face showed at a press stands until that pre
     // fireEvent's act() holds React's render until the event returns, so here the forwarded click runs from
     // the held render whatever the release does. What this arm can pin is the release's timing: still held
     // once the click's dispatch (the forwarded click included) has returned, let go one task later. Only a
-    // coordinate tap in a real browser can gate the race itself; that arm belongs in `e2e/vertical-fit.spec.ts`.
+    // coordinate tap in a real browser can gate the race itself: `e2e/rc-screens.spec.ts`'s gesture-hold arms (the Keep door
+    // and "All of it" tapped by coordinate right after typing, ported from `e2e/vertical-fit.spec.ts` at RC21a).
     const stored: string[] = []
     function Radio({ value }: { readonly value: string }) {
       const ref = useRef<HTMLDivElement | null>(null)

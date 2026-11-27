@@ -183,13 +183,17 @@ export function retiredRows(rows: readonly LedgerYearRow[], meta: Pick<TableMeta
 /** The two steady-future figures, each on the population its label names. */
 export function steadyStats(rows: readonly LedgerYearRow[], meta: Pick<TableMeta, 'route' | 'stopYear' | 'startCalendarYear'>): {
   readonly taxPaid: number
+  /** How many of the years it counts were paid (0: the money ran out first, so the dial prints no figure). */
+  readonly taxPaidYears: number
   /** The first retired year's withdrawal rate, as a percent; null where that year opens with no invested money. */
   readonly ratePercent: number | null
   readonly working: boolean
 } {
   const working = meta.route !== 'spine'
   const after = retiredRows(rows, meta)
-  const taxPaid = after.reduce((s, r) => s + r.taxPaid, 0)
+  // The money-ran-out row's tax is what the year ASKED for, never paid (`LedgerLoopRow`): it counts in no total, as on
+  // Comparisons (`retiredPaidRows`; milestone 4's review, A3).
+  const taxPaid = after.reduce((s, r) => (r.ranOut ? s : s + r.taxPaid), 0)
   const first = after[0]
   let ratePercent: number | null = null
   if (first !== undefined) {
@@ -197,7 +201,7 @@ export function steadyStats(rows: readonly LedgerYearRow[], meta: Pick<TableMeta
     const start = first.start.taxable + first.start.pretax + first.start.roth + first.start.hsa
     ratePercent = start > 0 ? (draws / start) * 100 : null
   }
-  return { taxPaid, ratePercent, working }
+  return { taxPaid, taxPaidYears: after.filter((r) => !r.ranOut).length, ratePercent, working }
 }
 
 function statsView(steady: SteadyRows, working: boolean): StatsView {
@@ -214,7 +218,10 @@ function statsView(steady: SteadyRows, working: boolean): StatsView {
     return {
       kind: 'figures',
       rate: s.ratePercent === null ? { ...rate, note: copy.snapshotStatNoRate } : { ...rate, value: slots.snapshotRate(s.ratePercent) },
-      tax: { short: copy.snapshotStatTaxShort, label: taxLabel, value: slots.snapshotApprox(formatMmDollar(s.taxPaid)) },
+      tax:
+        s.taxPaidYears === 0
+          ? { short: copy.snapshotStatTaxShort, label: taxLabel, note: s.working ? copy.snapshotStatNoTaxWorking : copy.snapshotStatNoTaxRetired }
+          : { short: copy.snapshotStatTaxShort, label: taxLabel, value: slots.snapshotApprox(formatMmDollar(s.taxPaid)) },
       ...(steady.meta.track === 'floor' ? { trackNote: copy.snapshotStatFloorTrack } : {}),
     }
   }

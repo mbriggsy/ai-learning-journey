@@ -59,7 +59,9 @@ export interface MapNode {
   readonly column: 0 | 1 | 2 | 3
   readonly group: MapGroup
   readonly value: number | null
-  /** What a screen reader and the hover say: "Name: ~$amount". */
+  /** What the hover says: "Name: ~$amount". Only the hover: Highcharts' accessibility module describes a sankey's
+   *  points, which are its LINKS (`series.points`), never its nodes (`series.nodes`), so a screen reader hears each
+   *  link's sentence (`MapLink.spoken`) and the chart's description, which between them carry every figure. */
   readonly spoken: string
 }
 
@@ -71,7 +73,7 @@ export interface MapLink {
   readonly weight: number
   /** The group of the node the flow runs to: its tint. */
   readonly group: MapGroup
-  /** "From to To: ~$amount". */
+  /** "From to To: ~$amount": what a screen reader hears for the flow, and the hover over it. */
   readonly spoken: string
 }
 

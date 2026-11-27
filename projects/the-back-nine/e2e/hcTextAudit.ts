@@ -4,9 +4,9 @@ import { FINAL_TIER_MS, SETTLED_RESULT, gotoSeedFinal, settleLayout } from './re
 /**
  * THE HIGHCHARTS TEXT AUDIT (Act 6 · RC3; plan 6, section 5.2's chart-text row; `docs/architecture.md` §12). Highcharts
  * draws its words as SVG text at real pixel size (no viewBox scaling), so the old HTML-layer audit (`chartTextAudit.ts`,
- * still run on the old answer page's charts until RC4, RC7 and RC8 retire them) cannot read it. This one reads every
- * text a Highcharts chart prints: data labels (the fan's band words), axis labels and titles, plot-line labels (the
- * named moments), legend items. Each REQUIRED label must exist, be visible (not `display:none`, not `visibility:hidden`,
+ * which read the old answer page's charts, deleted with them at RC10) could not read it. This one reads every text a
+ * Highcharts chart prints: data labels (the fan's band words), axis labels and titles, plot-line labels (the named
+ * moments), plot-band labels, legend items. Each REQUIRED label must exist, be visible (not `display:none`, not `visibility:hidden`,
  * and not faded: its effective opacity up the tree at least 0.9, so an inactive-state fade or a collision hide both
  * fail), be unclipped (inside the chart's container, inside its card and inside the page's width), and be at least the
  * leaf floor size measured in the real browser (insight 115: the smallest size among the element and its tspans).
@@ -15,7 +15,7 @@ import { FINAL_TIER_MS, SETTLED_RESULT, gotoSeedFinal, settleLayout } from './re
  * failures come back as a list, so a planted-fail control can assert the exact message a plant must produce.
  */
 
-export type HcKind = 'data-label' | 'axis-label' | 'axis-title' | 'plot-line-label' | 'legend-item'
+export type HcKind = 'data-label' | 'axis-label' | 'axis-title' | 'plot-line-label' | 'plot-band-label' | 'legend-item'
 
 export type HcLabel = {
   readonly kind: HcKind
@@ -56,6 +56,8 @@ export async function hcAudit(page: Page, chartSelector: string, boundSelector: 
         ['axis-label', '.highcharts-axis-labels text'],
         ['axis-title', '.highcharts-axis-title'],
         ['plot-line-label', '.highcharts-plot-line-label'],
+        // A plot band's words (Retirement Details' "Money ran out this year", where a ran-out year prints no figure).
+        ['plot-band-label', '.highcharts-plot-band-label'],
         ['legend-item', '.highcharts-legend-item text'],
       ]
       const labels = groups.flatMap(([kind, q]) =>
@@ -148,7 +150,7 @@ export async function settleFan(page: Page): Promise<void> {
 
 /** THE CLONE'S FLOOR, read from the live stylesheet: the computed size of the smallest role token the chart CSS uses,
  *  `--text-axis` (`theme.css`; ref 3.5's 12 px axis labels). The old charts' floor, `--text-xs` (`chartTextAudit.ts`'s
- *  `floorPx`), is the legacy sheet's and stays theirs. */
+ *  `floorPx`), left with them: that audit at RC10, the legacy sheet at RC21. */
 export async function hcFloorPx(page: Page): Promise<number> {
   return page.evaluate(() => {
     const p = document.createElement('span')

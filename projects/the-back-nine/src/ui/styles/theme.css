@@ -123,6 +123,14 @@
   /* ── Motion: the drawer and tray ride Base UI's CSS transitions (plan 2.1 decision 8) ── */
   --ease-settle: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1); /* the drawer and the tray sheet: quick out, long settle */
+  /* The loader's turn (Tax Strategies' "working it out" line, as `motion-safe:animate-spin`): `--*: initial` above
+     empties Tailwind's own `animate-*` scale, so the one animation in use is declared here (milestone 4's review, C2). */
+  --animate-spin: spin 1s linear infinite;
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
 
   /* ── Breakpoints (plan 3.1): rem, so a raised browser font picks the tier. `wide:` is past the phone shape
      (the phone tier, the one new tier RC2 adds); `laptop:` is the two-pane seam, `--bp-laptop` below, where the
@@ -268,11 +276,9 @@
     flex-direction: column;
     gap: var(--spacing);
   }
-  /* The door's button: a block of its own under the door's sentences, at the 44 px touch floor. */
+  /* The door's button: on its own line at the 44 px touch floor (its layout is the door's own utilities). */
   .note-parts__cta {
-    display: block;
     min-height: 2.75rem;
-    text-align: start;
   }
 }
 

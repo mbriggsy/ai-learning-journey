@@ -55,7 +55,7 @@ function Parts({ view, onPick }: { readonly view: Extract<TaxAllocationView, { k
                 centre={
                   <>
                     <p className="text-label text-stone-600">{copy.taxAllocCentre}</p>
-                    <p className="text-[1.125rem] leading-tight font-semibold text-stone-900 tabular-nums" data-taxalloc-total="">
+                    <p className="text-[1.125rem] font-semibold text-stone-900 tabular-nums" data-taxalloc-total="">
                       {view.total}
                     </p>
                   </>

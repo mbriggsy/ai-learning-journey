@@ -61,7 +61,7 @@ export interface EmptyStateProps {
 export function EmptyState({ sentence, action, className }: EmptyStateProps) {
   return (
     <div className={cn('flex flex-col items-center justify-center gap-6 px-4 py-16 text-center', className)}>
-      <p className="max-w-2xl text-chart-title font-semibold text-stone-900">{sentence}</p>
+      <p className="text-chart-title font-semibold text-stone-900">{sentence}</p>
       {action !== undefined ? <Button onClick={action.onSelect}>{action.label}</Button> : null}
     </div>
   )

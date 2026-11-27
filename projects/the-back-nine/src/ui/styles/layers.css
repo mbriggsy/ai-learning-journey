@@ -2,8 +2,10 @@
  * The cascade-layer order for Act 6 (plan docs/plans/6-rightcapital-ui-plan.md, section 2.1 decision 2). Imported FIRST
  * by the entry (src/main.tsx), so this statement fixes the order before any layer block is seen: the charts' sheet
  * (`chartTheme.css`) rides a lazy chunk and would otherwise declare its layer last of all, and Tailwind's own imports in
- * theme.css would put `utilities` before the `base` and `kit` blocks that follow them in that file.
+ * theme.css would put `utilities` before the `base` and `kit` blocks that follow them in that file. Tailwind's own
+ * `properties` layer (the `@property` fallbacks it emits for browsers without `@property`: Safari before 16.4, Firefox
+ * before 128) is named first, so it can never land above `utilities` and undo a utility there.
  * A later layer beats an earlier one whatever the specificity: the preflight (`base`) under the kit's own rules, the
  * kit's under the charts', and the utilities over everything. The `legacy` layer that held the old sheets left at RC21.
  */
-@layer theme, base, kit, charts, utilities;
+@layer properties, theme, base, kit, charts, utilities;

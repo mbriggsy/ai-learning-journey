@@ -23,8 +23,9 @@ export default defineConfig(({ mode }) => ({
     // every other mode byte-identical.
     ...(mode === 'phone' ? [basicSsl()] : []),
     react(),
-    // Tailwind v4 (Act 6): compiles src/ui/styles/theme.css to static CSS at build time (CSP clean). Its preflight is
-    // NOT imported; theme.css carries a copy scoped under .rc-root and names its own sources (plan 6, section 2.1).
+    // Tailwind v4 (Act 6): compiles src/ui/styles/theme.css to static CSS at build time (CSP clean). theme.css imports
+    // Tailwind's theme, its preflight (globally, into the `base` layer, since RC21a) and its utilities, and names its own
+    // sources (plan 6, section 2.1).
     tailwindcss(),
     // `vite build` only: refuses a module that must never ship in the first-load JS (the copy catalog — the
     // entry graph reads `src/ui/entryCopy.ts` instead). Names the module and the fix; scripts/entryChunkGuard.ts.

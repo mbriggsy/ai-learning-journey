@@ -428,7 +428,7 @@ describe('exposureForDraft — the pay check’s W (the working-years clock’s 
 // F6, verbatim: mutating `IntakeApp.tsx`'s third argument to `{ ...exposureForDraft(draft), aca:
 // 'priced' }` left EVERY test green. No vitest arm renders the gate's notes through the
 // component, and no dev vault moves the ACA stamps (`acaStatus`/`fplGuidelineYear` appear in
-// neither `devSeeds.ts`'s doctors nor `vertical-fit.spec.ts`), so the whole ACA half of §S4 had
+// neither `devSeeds.ts`'s doctors nor any e2e spec, `e2e/rc-screens.spec.ts` included), so the whole ACA half of §S4 had
 // no end-to-end proof — and the shipped defect would return silently the day the
 // `reVerifyEveryBuild` ACA constant flips. Testing `exposureForDraft` proves the FUNCTION is
 // right; it proves nothing about whether the component still routes through it unaltered.

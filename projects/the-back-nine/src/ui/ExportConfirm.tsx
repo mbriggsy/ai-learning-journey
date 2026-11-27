@@ -25,6 +25,7 @@ export function ExportConfirm({
   onFinish,
   announcer,
   onCancel,
+  onExported,
 }: {
   readonly onFinish: () => void
   readonly announcer: Announcer
@@ -32,6 +33,9 @@ export function ExportConfirm({
    *  without exporting or recording. The mandatory first-save ceremony passes nothing — its gate
    *  stays un-skippable by construction (ultramode 2026-07-03: an optional door must never trap). */
   readonly onCancel?: () => void
+  /** OPTIONAL: told once a channel is confirmed (the note is already recorded by then). The backup drawer reads it so a
+   *  close after a confirmed export finishes the step instead of declining it (milestone 4's review, V2). */
+  readonly onExported?: () => void
 }) {
   const headingRef = useRef<HTMLHeadingElement | null>(null)
   useEffect(() => focusHeading(headingRef.current), [])
@@ -91,6 +95,7 @@ export function ExportConfirm({
     // and the same click already clears the mandatory gate identically. Show-text is the guaranteed
     // fallback channel; do not "fix" this by trusting the click less without a real completion signal.
     void recordBackupMade().catch(() => undefined)
+    onExported?.()
   }
 
   async function handleCopy() {
@@ -167,7 +172,7 @@ export function ExportConfirm({
               </label>
               <textarea
                 id={textId}
-                className="min-h-32 w-full rounded-control border border-stone-300 bg-stone-100 p-3 font-mono text-label break-all text-stone-900 outline-none focus:outline-2 focus:outline-offset-2 focus:outline-blue-ink"
+                className="min-h-32 w-full rounded-control border border-stone-300 bg-stone-100 p-3 text-label break-all text-stone-900 focus:outline-2 focus:outline-offset-2 focus:outline-blue-ink"
                 readOnly
                 value={fileText}
                 rows={6}

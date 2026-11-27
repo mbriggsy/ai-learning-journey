@@ -86,6 +86,10 @@ describe('the ledger the engine runs (KTD22, KTD25)', () => {
     }
     expect(run({ askedFigure: { kind: 'custodian', figure: 3_496.5, decemberBalance: 100_000 } }).openYearFigure).toBe(3_496.5)
     expect(run({ ownerDeathYear: 2026, askedFigure: { kind: 'death-year', untaken: 2_000 } }).openYearFigure).toBe(2_000)
+    // A death this year: the custodian's live figure is already net of what came out, so intake adds it back for the
+    // engine's open row (which takes what came out off the whole): the row owes the live $2,000, never $2,000 − $1,200.
+    const live = run({ ownerDeathYear: 2026, askedFigure: { kind: 'death-year', untaken: 2_000 }, takenInAskedYear: 1_200 })
+    expect([live.openYearFigure, live.takenInOpenYear]).toEqual([3_200, 1_200])
     const owedLastYear = run({ ownerDeathYear: 2025, deathYearUntaken: 1_500 })
     expect(owedLastYear.deathYearUntaken, 'a 2025 death after the date owes its untaken amount in 2026').toBe(1_500)
     expect(run({ askedYear: 2033, askedFigure: { kind: 'not-asked' } }).openYearFigure, 'the ten-year end asks no figure: the engine takes the balance').toBe(0)

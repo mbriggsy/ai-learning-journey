@@ -21,7 +21,7 @@
  * WINDOWS (insight 175): two runs can end in different years (a run whose money runs out stops there). Each figure picks
  * its years here and its sentence names them; nothing sums each run to its own end.
  */
-import { ledgerRowEndTotal, ledgerRowStartTotal } from '@engine/sequencing'
+import { ledgerRowEndTotal, ledgerRowInheritedSpent, ledgerRowStartTotal } from '@engine/sequencing'
 import type { LedgerYearRow } from '@shared/model'
 import type { TableMeta } from '../../workbench/tableRun'
 import { copy, slots } from '../../copy'
@@ -116,7 +116,7 @@ export const startTotal = (r: LedgerYearRow): number => ledgerRowStartTotal(r)
  *  spending too (the Act 5 plan's U12). */
 export const withdrawn = (r: LedgerYearRow): number => {
   const general = r.draw.taxable + r.draw.pretax + r.draw.roth + r.hsaSpend
-  return r.inherited === undefined ? general : r.inherited.reduce((s, e) => s + (e.taken - e.movedToTaxable), general)
+  return r.inherited === undefined ? general : general + ledgerRowInheritedSpent(r)
 }
 
 /** The year's health premiums: the marketplace premium after its credit, the Medicare bill (its surcharge already in it,

@@ -1974,7 +1974,7 @@ export const copy = {
   // the gesture returns before `appModel.update` and before the write, so on BOTH routes nothing
   // reached the device. The obligation as originally filed — "we saved your plan, we could not save
   // the recommendation" — was drafted for a save-proceeds-then-drops-the-atom flow that
-  // scenarioCodec.ts:992-996 instructs S5 to make UNREACHABLE. Shipping that sentence would have
+  // scenarioCodec.ts:995-999 instructs S5 to make UNREACHABLE. Shipping that sentence would have
   // been the cardinal sin pointed the other way: a save reported that never happened.
   // R1 AND R2, both named BEFORE the tap. The no-vault route escalates a "keep this" tap into vault
   // setup, and the write is whole-plan either way (`session.save()` commits the entire scenario) —
@@ -2156,6 +2156,10 @@ export const copy = {
   // stumble (two spouse lenses).
   recommendNoPretaxNote:
     'A withdrawal strategy needs more pre-tax savings — a traditional IRA or a pre-tax workplace plan — than this plan has entered. With more in the picture, we can work one out.',
+  // The same refusal where the only pre-tax money is inherited (R24, KTD22): it sits outside the withdrawal order and
+  // can't be converted, so "with more in the picture" would send the household to enter what is already there.
+  recommendNoPretaxInheritedNote:
+    'A withdrawal strategy needs pre-tax savings of your own — a traditional IRA or a pre-tax workplace plan. An inherited IRA can’t be converted and keeps its own pace, so it doesn’t count here.',
   // The `blocked{spine-unready}` sibling (the steer-seed increment): the strategy read FOLLOWS the
   // main answer, and on a facts-broken re-dispatch (a committed rec goes stale, a fact is cleared,
   // the stale card's re-open control survives) the old note blamed the ACCOUNTS — a false diagnosis.
@@ -2523,6 +2527,9 @@ export const copy = {
   // No reading yet, so no action items to try one in (milestone 3's review, round 2).
   settingsRothNoneLineNoTray: 'No money moves from pre-tax savings to Roth. A conversion pays some tax now so less is taxed later.',
   settingsRothNoneNoPretax: 'No money moves to Roth: a conversion moves pre-tax savings, and the plan holds no pre-tax savings today.',
+  // A household whose only pre-tax money is inherited (R24: an heir can't convert inherited money): "holds no pre-tax
+  // savings" would be false beside the inherited IRA, and entering more of it could not help.
+  settingsRothNoneInheritedOnly: 'No money moves to Roth: a conversion moves your own pre-tax savings, and an inherited IRA can’t be converted.',
   settingsRothPlanNoPretax:
     'Each year of the conversion, that much would go from pre-tax savings to Roth, but the plan holds no pre-tax savings today, so nothing converts until it holds some.',
   settingsRothPlanLine:
@@ -3116,6 +3123,15 @@ export const copy = {
   taxStratColTaxableEnd: 'Taxable at year’s end',
   taxStratColPretaxEnd: 'Pre-tax at year’s end',
   taxStratColRothEnd: 'Roth at year’s end',
+  // Gap 3's review: a household holding an inherited IRA. Without these the table showed near-zero withdrawals in years
+  // the inherited IRA paid, and taxable rising from nothing in the year the law emptied it.
+  taxStratColFromInherited: 'From inherited IRAs',
+  taxStratColInheritedEnd: 'Inherited IRAs at year’s end',
+  taxStratDetailsInheritedNote:
+    'From inherited IRAs counts what they paid toward the year. Any part of a withdrawal the year didn’t need moved to taxable savings.',
+  // The comparison's required-withdrawals line is the household's own: each inherited IRA keeps its pace on both sides.
+  taxStratRmdInheritedNote:
+    'This counts the required withdrawals from your own pre-tax savings. The inherited IRAs’ required withdrawals aren’t in it; Retirement → Cash Flows shows them.',
   // The ledger records each year's income for the Medicare bill two years later (the lookback, `irmaaIncome`), so the row's
   // income never sets the same row's bill.
   taxStratColIrmaaIncome: 'This year’s income, which sets the Medicare bill two years later',
@@ -5827,7 +5843,7 @@ export const slots = {
   inheritedDisabledLegend: (mid: string, you: boolean): string => `When they died, ${you ? 'were you' : `was ${mid}`} disabled or chronically ill?`,
   inheritedChildLegend: (mid: string, you: boolean): string => `When they died, ${you ? 'were you' : `was ${mid}`} their child and under 21?`,
   inheritedTenYearsLegend: (mid: string, you: boolean): string =>
-    `Their birth years are ten apart. By the two birthdays, ${you ? 'are you' : `is ${mid}`} more than ten years younger?`,
+    `The person who left it was born ten years before ${you ? 'you' : mid}. By the two birthdays, ${you ? 'are you' : `is ${mid}`} more than ten years younger?`,
   inheritedBirthHalfLegend: (year: number): string => `Were they born in the first half of ${year} or the second?`,
   inheritedBeforeApril1Legend: (year: number): string => `Did they die before April 1, ${year}?`,
   inheritedDecemberLabel: (year: number): string => `Its balance on December 31, ${year}`,

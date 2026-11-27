@@ -1054,7 +1054,7 @@ describe('the state-tax seed faces (the state-carrying seed increment)', () => {
 //
 // WHY THE LIGHT DOCTOR (the bug this shape supersedes): routing `statestale` through the FULL
 // doctorStaleVault aged `startCalendarYear` −2 (→ 2024), and the engine's priced-state lower bound
-// (simulate.ts:1179-1182) correctly REFUSES a priced-NC household whose year-0 precedes NC's earliest
+// (simulate.ts:1185-1188) correctly REFUSES a priced-NC household whose year-0 precedes NC's earliest
 // rate row (2026) → the affirm recompute demoted to the R19 calm indeterminate (S2's live drive
 // caught it). The engine-acceptance arm below is the pin that would have caught it up front.
 // ===========================================================================
@@ -2195,7 +2195,7 @@ describe('the arrived aged plant (the first live route to the hero\'s dateInYear
   })
 
   // Arm 5 — THE STATELESS REQUIREMENT IS ENFORCED, not merely documented. A priced-state base
-  // rejects at any depth ≥1 on the engine's priced-state year bound (simulate.ts:1179-1182), which is
+  // rejects at any depth ≥1 on the engine's priced-state year bound (simulate.ts:1185-1188), which is
   // insight 085's own origin story — so the doctor fail-louds at the plant instead of shipping a
   // fixture that renders the R19 calm indeterminate and reads as a broken feature.
   it('REFUSES a priced-state base (the insight-085 bound), rather than minting an R19 fixture', () => {

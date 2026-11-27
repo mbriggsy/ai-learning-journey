@@ -37,6 +37,7 @@ import { solverAssumedHeirBracket } from '@engine/constants'
 import { ordinaryBracketsMFJ } from '@engine/constants/tax'
 import type { SolveArm, SolveRecommendation } from '@engine/solver/solve'
 import { isDateRoute, pricedStateForRun, spineInheritedHeld, spineMedicarePriced } from '@intake/intakeMap'
+import { isInheritedAccount } from '@intake/inheritedIra'
 import { rawDisplayed, type MemoryModelSnapshot } from '@store/memoryModel'
 import type { SavedRecommendationStatus } from '@store/savedRecommendation'
 import { RECOMMENDATION_GOALS, type RecommendationGoal, type SavedRecommendationV3 } from '@shared/model'
@@ -351,17 +352,18 @@ function askFor(input: StrategiesInput): StrategiesAsk {
     return lines.second !== undefined ? `${lines.lead} ${lines.second}` : lines.lead
   }
   const solve = snapshot.solve
+  const noPretaxWords = snapshot.draft.enteredAccounts.some(isInheritedAccount) ? copy.recommendNoPretaxInheritedNote : copy.recommendNoPretaxNote
   const held: StrategiesAsk['find']['held'] =
     picked.goal === undefined
       ? { kind: 'goal', words: copy.goalPickerConfirmBlocked }
       : !answerReady
         ? { kind: 'answer', words: answerWorking ? copy.taxStratAnswerWaiting : elevated.kind === 'fallback' ? fallbackWords() : copy.recommendSpineUnreadyNote }
         : solve.kind === 'blocked' && solve.gap === 'no-pretax'
-          ? { kind: 'no-pretax', words: copy.recommendNoPretaxNote }
+          ? { kind: 'no-pretax', words: noPretaxWords }
           : undefined
   const steer: StrategiesAsk['steer'] =
     solve.kind === 'blocked' && solve.gap === 'no-pretax'
-      ? { kind: 'no-pretax', words: copy.recommendNoPretaxNote }
+      ? { kind: 'no-pretax', words: noPretaxWords }
       : solve.kind === 'blocked' && solve.gap === 'spine-unready' && held?.kind !== 'answer'
         ? { kind: 'unready', words: copy.recommendSpineUnreadyNote }
         : undefined

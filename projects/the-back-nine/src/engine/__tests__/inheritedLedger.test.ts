@@ -147,6 +147,25 @@ describe('the ledger’s schedule through the loop (AE5; KTD21, KTD25)', () => {
     expect(r.finalInherited).toBeCloseTo(95_000, 9)
   })
 
+  it('what came out this year counts against the year’s minimum and the death-year amount together: a make-up taken this year never shrinks the year’s own minimum (gap 3’s review)', () => {
+    // $3,000 owed for the year and $2,000 left of the owner's last minimum on December 31; $4,000 already out this year
+    // ($2,000 of it the make-up). $1,000 is still owed, never $0 (the old max(0, 3,000 − 4,000) + what was left).
+    const r = run({ years: 1, net: 0, ledgers: [ae5({ ownerDeathYear: 2025, openYearFigure: 3_000, deathYearUntaken: 2_000, takenInOpenYear: 4_000 })] })
+    expect(r.finalInherited).toBeCloseTo(99_000, 9)
+  })
+
+  it('a death this year: the open row owes the custodian’s live figure, intake passing it with what already came out added back', () => {
+    // The owner's $20,000 death-year minimum, $8,000 taken by the heir after the death, $12,000 still to come out:
+    // intake's figure is 12,000 + 8,000, so the row owes $12,000 (the old reading owed $4,000).
+    const r = run({ years: 1, net: 0, ledgers: [ae5({ ownerDeathYear: START, openYearFigure: 20_000, takenInOpenYear: 8_000 })] })
+    expect(r.finalInherited).toBeCloseTo(88_000, 9)
+  })
+
+  it('a path that ends before the asked year (a plan opened a year after it was built, sampled lifespans) carries the ledger unopened instead of refusing the run', () => {
+    const r = run({ years: 1, net: 0, ledgers: [ae5({ openYear: START + 1 })] })
+    expect(r.finalInherited).toBe(100_000)
+  })
+
   it('an asked year that is the ten-year end empties the account, whatever the asked figure says', () => {
     const household = singleHousehold(person(1968), undefined, 2030)
     const r = run({ years: 1, net: 0, household, ledgers: [ae5({ ownerDeathYear: 2020, openYear: 2030, openYearFigure: 500 })] })

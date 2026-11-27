@@ -18,7 +18,7 @@
  * (`src/ui/__tests__/draftFromScenario.test.ts` pins the built params byte-identical across the mint).
  * Not imported by `src/engine` (it reads entropy, which engine purity bans).
  */
-import type { BudgetLineItem, EnteredAccount, KeptWhatIfV6 } from './model'
+import type { BudgetLineItem, EnteredAccount, KeptWhatIfV6, WhatIfLeverKind, WhatIfLeverV6 } from './model'
 
 /** The plan fields ids live in or name — a structural slice both the persisted plan and the draft fit
  *  (`src/shared` may not import the store's draft type). */
@@ -26,6 +26,20 @@ export interface IdBearingPlan {
   readonly enteredAccounts: readonly EnteredAccount[]
   readonly budget?: readonly BudgetLineItem[]
   readonly keptWhatIfs?: readonly KeptWhatIfV6[]
+}
+
+/** The ids each lever kind points at. Exhaustive over the kinds (insight 147): a kind added later names its ids
+ *  here, or fails to compile, never left out by omission (the inherited-IRA pace's account id was, gap 3's review). */
+const LEVER_IDS: { readonly [K in WhatIfLeverKind]: (lever: Extract<WhatIfLeverV6, { kind: K }>) => readonly string[] } = {
+  'stop-year': () => [],
+  spending: (l) => (l.op === 'remove' ? [l.lineId] : l.op === 'add' || l.op === 'replace' ? [l.line.id] : []),
+  deposits: (l) => [l.accountId],
+  mix: () => [],
+  roth: () => [],
+  'withdrawal-order': () => [],
+  'claim-age': () => [],
+  'aca-subsidy': () => [],
+  'inherited-pace': (l) => [l.accountId],
 }
 
 /** Every id the plan holds or names: each account's and line's, each kept what-if's own, and each id a
@@ -38,11 +52,7 @@ export function idsInUse(plan: IdBearingPlan): Set<string> {
   for (const k of plan.keptWhatIfs ?? []) {
     out.add(k.id)
     for (const lever of k.levers) {
-      if (lever.kind === 'deposits') out.add(lever.accountId)
-      else if (lever.kind === 'spending') {
-        if (lever.op === 'remove') out.add(lever.lineId)
-        else if (lever.op === 'add' || lever.op === 'replace') out.add(lever.line.id)
-      }
+      for (const id of (LEVER_IDS[lever.kind] as (l: WhatIfLeverV6) => readonly string[])(lever)) out.add(id)
     }
   }
   return out

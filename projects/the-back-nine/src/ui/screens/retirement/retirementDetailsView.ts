@@ -31,6 +31,7 @@
  *
  * READ-ONLY: no door here writes; the view carries no write action.
  */
+import { ledgerRowInheritedSpent } from '@engine/sequencing'
 import { buildYTicks, niceLattice, type DollarLattice } from '@viz/bandData'
 import type { DonutPart } from '@viz/charts/donutOptions'
 import type { GroupedBarSeries } from '@viz/charts/groupedBarsOptions'
@@ -94,7 +95,7 @@ export const INCOME_PARTS: readonly Part[] = [
     name: copy.rdSourceInherited,
     colorIndex: INHERITED_COLOR_INDEX,
     pattern: 'zigzag',
-    read: (r) => (r.inherited ?? []).reduce((s, e) => s + e.taken - e.movedToTaxable, 0),
+    read: ledgerRowInheritedSpent,
     whenDrawn: true,
   },
 ]

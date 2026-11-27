@@ -35,6 +35,7 @@ import { LEFT_OVER_FACE } from '@intake/workingYearLeftOverState'
 import { workingYearStateTaxReading } from '@intake/workingYearQuote'
 import { composeMedicareExtrasTypicalNote } from '../../healthSheetChrome'
 import { medicareExtrasDisclosureView } from '@intake/intakeMap'
+import { isInheritedAccount } from '@intake/inheritedIra'
 import { METHODOLOGY_DISCLOSURES, leftOverLineKey, methodologyLines, type AssumptionSeat, type MethodologyDisclosure } from '../../assumptionRegistry'
 import { rothPlanStartFor, type BandPlanClockAnchor } from '../../bandAnnotations'
 import { copy, slots, type CopyKey } from '../../copy'
@@ -171,7 +172,9 @@ export function settingsRows(
       draftPretaxTotal(d) <= 0
         ? roth !== undefined
           ? copy.settingsRothPlanNoPretax
-          : copy.settingsRothNoneNoPretax
+          : d.enteredAccounts.some(isInheritedAccount)
+            ? copy.settingsRothNoneInheritedOnly
+            : copy.settingsRothNoneNoPretax
         : roth !== undefined
           ? copy.settingsRothPlanLine
           : trayDraft === null || !rothDoorOpen(trayDraft)

@@ -147,8 +147,9 @@ export function inheritedFactsProblems(d: ScenarioDraft, a: InheritedAccount): r
 }
 
 /** The asked year's whole figure, as the engine's `openYearFigure` reads it (KTD25): 0 where the rule asks none (the
- *  ten-year end takes the whole balance in the engine itself), the custodian's figure, the computed one, or the owner's
- *  untaken death-year amount. */
+ *  ten-year end takes the whole balance in the engine itself), the custodian's figure, the computed one, or, for a death
+ *  this year, the owner's amount still to come out plus what already came out: the custodian's live figure is net of it,
+ *  and the engine's open row takes what came out off the whole (gap 3's review: subtracted twice, the year read short). */
 function openYearFigureOf(owner: InheritedAccountOwner, f: InheritedIraV7): number {
   const figure = f.askedFigure
   switch (figure.kind) {
@@ -159,7 +160,7 @@ function openYearFigureOf(owner: InheritedAccountOwner, f: InheritedIraV7): numb
     case 'computed':
       return computedAskedFigure(owner, f.askedYear, figure.decemberBalance)
     case 'death-year':
-      return figure.untaken
+      return figure.untaken + f.takenInAskedYear
   }
 }
 

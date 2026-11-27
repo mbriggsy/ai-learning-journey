@@ -29,9 +29,9 @@ here exists because the aged surface that record lands on was not honest before 
    via the persisted seed when no clock fired is what keeps the screenshot promise. U17's real content is
    the **action-warning copy register**, not a re-presentation mechanism.
 2. **The "Act-4 `schemaVersion` 3 bump" is counterfactual.** v3 is the shipped forward-written shape
-   (`model.ts:2360-2368`; codec `> 3` = newer-version). `savedRecommendation?` landed **additive-optional
+   (`model.ts:2364-2372`; codec `> 3` = newer-version). `savedRecommendation?` landed **additive-optional
    within v3**, presence-keyed, following the `rothConversion` / `savedAt` / `retirementState` precedents
-   (`scenarioCodec.ts:1065-1068` was the pattern copied).
+   (`scenarioCodec.ts:1068-1071` was the pattern copied).
 
 ---
 
@@ -75,7 +75,7 @@ refusal (`RothLever.tsx line 49 at 7f56682e9`).
 
 `Result.tsx` derives the anchor from `startCalendarYear`, which is the plan's **BUILD** year (written once
 at `memoryModel.ts:523`, never re-anchored, survives every re-save). Four separate comments already forbade
-attributing that quantity to the save (`staleness.ts:29`, `resultSave.ts:172`, `copy.ts:5229`,
+attributing that quantity to the save (`staleness.ts:29`, `resultSave.ts:172`, `copy.ts:5245`,
 `FuckOffDate.tsx line 112 at 95c715e19`) — and the band's `'saved'` label did exactly that.
 
 - **Renamed** `elapsedPlanYears` → **`yearsSincePlanBuilt`**, with zero orphans left behind, and every
@@ -154,7 +154,7 @@ Shipped 2026-07-25, commit `e4754134`, CI green by explicit run id 30136387827.
   `offsetHasPassed(year − startCalendarYear, yearsSincePlanBuilt)` (`RothLever.tsx lines 47-49 at 7f56682e9`) — one strict
   compare covers both "before the build year" and "already passed", and no second comparator was
   authored. It renders through the R19 `FieldError` grammar with the earliest startable year QUOTED
-  (`errRothStartPast`, `RothLever.tsx line 275 at 7f56682e9`, joined `SlottedErrorKey` at `copy.ts:2441`). The fresh default
+  (`errRothStartPast`, `RothLever.tsx line 275 at 7f56682e9`, joined `SlottedErrorKey` at `copy.ts:2445`). The fresh default
   start seeds the WALL year (build + clock), so an aged vault never pre-fills the exact start the write
   side refuses.
 - **"Suppress when unanchored" was satisfied STRUCTURALLY, not by a dead arm.** `savedAnchor` is REQUIRED
@@ -275,10 +275,10 @@ headline, where it would read as current).
   stays green. The identity consumers were enumerated first: `resultSave.ts`'s two compares and the
   round-trip guard.
 - **The `JSON.stringify` accident was removed, not documented.** `resultSave.ts` justified its compare with
-  *"decodeScenario builds every object."* It does **not** — `scenarioCodec.ts:1490-1492` is a validated
+  *"decodeScenario builds every object."* It does **not** — `scenarioCodec.ts:1493-1495` is a validated
   pass-through cast, and the behavior was safe only because `JSON.parse` preserves `encodeScenario`'s
   insertion order, so a future field reorder would have broken dirty-detection silently. The fix is
-  `scenarioIdentityKey` (`model.ts:3140`), which rebuilds plain objects with SORTED keys and throws on a
+  `scenarioIdentityKey` (`model.ts:3144`), which rebuilds plain objects with SORTED keys and throws on a
   non-serializable value, so key order and absent-vs-undefined can never read as a change.
 
 **Shipped 2026-07-25, commit `374299c9`, CI green by explicit run id 30163571502**, carrying one ruling
@@ -396,7 +396,7 @@ verdict prefix, unlike `staleness*`, so they clear the scoped gates rather than 
 
 **The four mint obligations**, all discharged in `src/store/savedRecommendationMint.ts`:
 
-1. `validateSavedRecommendation` (`scenarioCodec.ts:1014`) is called BEFORE the record touches the draft
+1. `validateSavedRecommendation` (`scenarioCodec.ts:1017`) is called BEFORE the record touches the draft
    (`savedRecommendationMint.ts:148`) — the SAME validator the decode path runs, never a parallel copy. It
    had ZERO product callers before this stage.
 2. A non-empty `droppedAtoms` at the gesture **refuses aloud** and never reports a saved recommendation
@@ -529,7 +529,7 @@ as the council admitted it, and the reasons are the material the re-filed unit s
 
 Verified at council time: the bars carry arm **names** at their ends plus the delta hero and the
 `$0`/ceiling axis frame; each bar's own dollar value renders **only** in `ariaSummary`
-(`recommendationView.ts line 744-750 at b69c28483`, `copy.ts:5393` — the slot was renamed `recDeltaVizAria` 2026-09-08; re-anchored 2026-09-10). The
+(`recommendationView.ts line 744-750 at b69c28483`, `copy.ts:5409` — the slot was renamed `recDeltaVizAria` 2026-09-08; re-anchored 2026-09-10). The
 AT-over-sighted inversion is real and nobody disputed it.
 
 The admission was gated on a **deliberate dialect split** in `recommendationView.ts` — endpoints humane

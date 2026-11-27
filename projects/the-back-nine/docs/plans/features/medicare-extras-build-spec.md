@@ -70,7 +70,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   council `wf_7eb3303c-7f3`, built `c1ada867` — its blank is no longer one-directional: it
   disables the HSA cap AND the budgetless survivor lean, the most pessimistic reading for an HSA
   household and the less cautious for a budgetless couple without an HSA;
-  `src/shared/model.ts:2194-2203`). Nothing is pre-selected, so the MA plurality actively lands
+  `src/shared/model.ts:2198-2207`). Nothing is pre-selected, so the MA plurality actively lands
   on $0. An AFFIRMED $0 is honest; a SILENT $0 is the sin.
 
 ## F2 — anchor + provenance
@@ -90,7 +90,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   adopted the old figure. No official national Medigap average exists to pin to; the constant's
   `pinTo` says so explicitly rather than naming a source that isn't published.
 - **Per-person explicit persisted provenance stamp.** `MedicareExtrasEntryV3`
-  (`src/shared/model.ts:2827`) discriminates on `kind` — `'none' | 'entered' | 'typical' |
+  (`src/shared/model.ts:2831`) discriminates on `kind` — `'none' | 'entered' | 'typical' |
   'unanswered'` — with `adoptionVintage` recording the era adopted, keyed to the SAVED era and
   never re-derived from `value == current-typical` (the `src/shared/appDefaults.ts:8-15`
   saved-era inversion trap). `'unanswered'` is the honest persisted hole: it funds the typical
@@ -148,8 +148,8 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   edited to accommodate the vector: a superset, not a perturbation.
 - The vector is validated like its per-person siblings: `validateParams` rejects a negative
   entry (the insight-046 netted-away optimistic class), a NaN entry, and a length mismatch
-  (`src/engine/simulate.ts:1270-1273`), and the overlay's direct callers get their own up-front
-  length backstop (`src/engine/taxOverlay.ts:2282-2286`) so a short vector on a two-person
+  (`src/engine/simulate.ts:1276-1279`), and the overlay's direct callers get their own up-front
+  length backstop (`src/engine/taxOverlay.ts:2286-2290`) so a short vector on a two-person
   household throws rather than under-charging.
 - Extras are **real-flat**, and deliberately NOT ridden on the Part B trend: Medigap/Part D plan
   premiums are user-entered market figures with no sourced trend. The 2026-07-19 trend sourcing
@@ -235,8 +235,8 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
 
 ## Ship gates (all met at close)
 
-- **Codec.** The persisted per-person entry is range-gated in `src/shared/scenarioCodec.ts:1089-1118`:
-  the `'entered'` dollar runs `needFinite` → `needNonNegativeDollar` (`scenarioCodec.ts:539`,
+- **Codec.** The persisted per-person entry is range-gated in `src/shared/scenarioCodec.ts:1092-1121`:
+  the `'entered'` dollar runs `needFinite` → `needNonNegativeDollar` (`scenarioCodec.ts:542`,
   throws `Corrupt`) — deliberately NOT the siblings' `optFinite` / finite-only
   `checkFiniteArray`, because a negative extras premium inside the funding sum is the insight-046
   optimistic class the engine cannot backstop. Both biconditionals are enforced in both
@@ -256,7 +256,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   optional-with-average by design, so there is no red-asterisk state to encode.
 - **Insight-076 re-audit of `validateParams`.** The overlay length backstop that was added is
   purely downstream of the existing gate, so it narrows no contract — noted in place at
-  `src/engine/taxOverlay.ts:2280-2281`.
+  `src/engine/taxOverlay.ts:2284-2285`.
 - **Dev-seed drift recorded before any re-tune.** The flagship `retiredOnTrack` seed carries the
   mixed-provenance showcase — one entered dollar, one affirmed MA-$0
   (`src/ui/devSeeds.ts:186-187`) — and the `borderline` / `?seed=dip` seeds were re-probed under

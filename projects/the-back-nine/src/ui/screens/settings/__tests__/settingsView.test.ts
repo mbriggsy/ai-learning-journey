@@ -101,6 +101,14 @@ describe('each line follows its value', () => {
     expect(row(RETIRED, 'roth-conversion').door).toMatchObject({ kind: 'tray', lever: 'roth' })
   })
 
+  it('a household whose only pre-tax money is inherited is told an inherited IRA can’t be converted, never that it holds no pre-tax savings', () => {
+    const steer = DEV_SEEDS.steer
+    const inherited = DEV_SEEDS.inherited.enteredAccounts.find((a) => a.kind === 'inherited-ira')!
+    const d = { ...steer, rothConversion: undefined, enteredAccounts: [...steer.enteredAccounts, { ...inherited, ownerIndex: 0 as const }] }
+    expect(draftPretaxTotal(d), '[test setup] no pre-tax money of its own').toBe(0)
+    expect(row(d, 'roth-conversion').lines).toEqual([copy.settingsRothNoneInheritedOnly])
+  })
+
   it('read-only: the Roth none-line names the action items but never "apply it there"', () => {
     const ro = rowsOf({ ...RETIRED, rothConversion: undefined }, true).methodology.find((x) => x.seat === 'roth-conversion')!
     expect(ro.lines).toEqual([copy.settingsRothNoneLineReadOnly])

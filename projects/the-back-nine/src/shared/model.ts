@@ -487,12 +487,14 @@ export interface InheritedLedgerParams {
   readonly balance: number
   /** The calendar year the asked figures belong to (KTD25). */
   readonly openYear: number
-  /** That year's whole minimum: the custodian's figure, or the one computed from last December 31's balance. */
+  /** That year's whole minimum: the custodian's figure, or the one computed from last December 31's balance; for a
+   *  death in that year, the owner's amount still to come out plus `takenInOpenYear` (intake's `openYearFigureOf`). */
   readonly openYearFigure: number
   /** What has already come out in `openYear` (income in that row with no balance). */
   readonly takenInOpenYear: number
-  /** The owner's own death-year minimum still untaken (KTD25; 54.4974-1(g)(3)): income from the ledger in
-   *  `openYear` beside that year's own minimum. Present only when the owner died the year before `openYear` on
+  /** The owner's own death-year minimum left on December 31 of the death year (KTD25; 54.4974-1(g)(3)): owed in
+   *  `openYear` beside that year's own minimum, and `takenInOpenYear` counts against the two together (gap 3's
+   *  review: a make-up taken this year sits in it). Present only when the owner died the year before `openYear` on
    *  or after the required beginning date. */
   readonly deathYearUntaken?: number
   /** The custodian's reported withdrawal for each calendar year from `startCalendarYear` to `openYear − 1`. */
@@ -1158,7 +1160,7 @@ export interface TaxAwareDistribution {
    *  concentrates in the pre-65 ACA years and may barely move the portfolio median. */
   readonly lifetimeNetPremiumReal: readonly number[]
   /** Σ Medicare cost actually paid across the path's funded years (real $; base Part B + IRMAA +
-   *  the Part D / Medigap / MA extras, per enrolled person — `taxOverlay.ts:3046`; P3·U11), an
+   *  the Part D / Medigap / MA extras, per enrolled person — `taxOverlay.ts:3050`; P3·U11), an
    *  addend of the pay-less-tax all-in cost. Same accrual rule as its siblings. */
   readonly lifetimeMedicareCostReal: readonly number[]
   /** The inherited IRAs' summed balance at the path's horizon end (real $; the Act 5 plan's U12) — counted
@@ -2131,8 +2133,9 @@ export interface InheritedIraV7 {
   readonly askedFigure: InheritedAskedFigureV7
   /** What has already come out in `askedYear` (income in that year). */
   readonly takenInAskedYear: number
-  /** The owner's own death-year minimum still untaken, the custodian's figure (54.4974-1(g)(3)): present only when the
-   *  owner died the year before `askedYear` on or after the required beginning date. */
+  /** The owner's own death-year minimum left on December 31 of the death year, the custodian's figure (54.4974-1(g)(3)):
+   *  present only when the owner died the year before `askedYear` on or after the required beginning date. A fixed
+   *  figure, so `takenInAskedYear` (which may hold a make-up of it) counts against it and the year's own minimum together. */
   readonly deathYearUntaken?: number
   /** The custodian's withdrawal for each calendar year of the plan before `askedYear` (`startCalendarYear` to
    *  `askedYear − 1`, ascending), empty when the account was entered in the plan's first year. */
@@ -2154,7 +2157,8 @@ export type InheritedAskedFigureV7 =
    *  as computed (the household said the account was not shared with another beneficiary). */
   | { readonly kind: 'computed'; readonly decemberBalance: number }
   /** The owner died in the asked year on or after the required beginning date: the owner's own death-year amount still
-   *  untaken is the year's one figure (never added twice). */
+   *  to come out now (the custodian's live figure, already net of `takenInAskedYear`) is the year's one figure (never
+   *  added twice). */
   | { readonly kind: 'death-year'; readonly untaken: number }
 /** The asked-figure kinds, the codec's membership vocabulary. */
 export const INHERITED_ASKED_FIGURE_KINDS = ['not-asked', 'custodian', 'computed', 'death-year'] as const satisfies readonly InheritedAskedFigureV7['kind'][]

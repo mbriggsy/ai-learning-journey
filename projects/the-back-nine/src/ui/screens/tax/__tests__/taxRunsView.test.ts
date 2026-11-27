@@ -256,6 +256,31 @@ describe('Details', () => {
     ])
     expect(v.rows).toHaveLength(steady.rows.length)
     expect(v.rows[0]!.cells.year).toBe(String(steady.meta.startCalendarYear))
+    expect(v.notes, 'no inherited IRA, no inherited note').not.toContain(copy.taxStratDetailsInheritedNote)
+  })
+
+  it('a household holding an inherited IRA: its withdrawal and its balance get columns, and the required-withdrawals chart says it counts the household’s own', () => {
+    const inh = steadyFor(headlineAnswer(DEV_SEEDS.inherited))
+    const run: RunRows = { kind: 'ready', rows: inh.rows, meta: inh.meta, updating: false, answerKey: 'k1' }
+    const v = detailsView({ table: 'withdrawals', pick: 'plan', future: 'steady', rows: run })
+    if (v.kind !== 'table') throw new Error(v.kind)
+    const headers = v.columns.map((c) => c.header)
+    expect(headers.indexOf(copy.taxStratColFromInherited)).toBe(headers.indexOf(copy.taxStratColFromRoth) + 1)
+    expect(headers.at(-1)).toBe(copy.taxStratColInheritedEnd)
+    // Each year's figures are the sink's own: what the ledgers paid toward the year and their year-end balances.
+    inh.rows.forEach((r, i) => {
+      const spent = (r.inherited ?? []).reduce((s, e) => s + e.taken - e.movedToTaxable, 0)
+      expect(v.rows[i]!.cells['from-inherited']).toBeCloseTo(spent, 6)
+      expect(v.rows[i]!.cells['inherited-end']).toBeCloseTo((r.inherited ?? []).reduce((s, e) => s + e.end, 0), 6)
+    })
+    expect(inh.rows.some((r) => (r.inherited ?? []).some((e) => e.taken > 0)), '[test setup] the ledgers pay something').toBe(true)
+    expect(v.notes).toContain(copy.taxStratDetailsInheritedNote)
+    const rmd = comparisonView({ timeAxis: 'ages', chart: 'rmd', future: 'steady', winner: run, baseline: run, stateClause: null })
+    if (rmd.kind !== 'pair') throw new Error(rmd.kind)
+    expect(rmd.notes).toContain(copy.taxStratRmdInheritedNote)
+    const plain = comparisonView({ timeAxis: 'ages', chart: 'rmd', future: 'steady', winner: ready(), baseline: ready(), stateClause: null })
+    if (plain.kind !== 'pair') throw new Error(plain.kind)
+    expect(plain.notes).not.toContain(copy.taxStratRmdInheritedNote)
   })
 
   it('Medicare: the income it reads, the premium before the surcharge, the surcharge and the total, which add up; no Medicare years says so', () => {

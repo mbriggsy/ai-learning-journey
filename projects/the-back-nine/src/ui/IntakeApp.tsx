@@ -692,7 +692,7 @@ export default function IntakeApp({
    * U17 §S5 — THE SAVE GESTURE FOR THE RECOMMENDATION ON SCREEN.
    *
    * THE ORDER IS THE WHOLE DESIGN: the mint is PROBED AND REFUSED BEFORE THE STORE IS TOUCHED, and
-   * the store is touched before anything reaches disk. `scenarioCodec.ts:1003-1006` names this
+   * the store is touched before anything reaches disk. `scenarioCodec.ts:1006-1009` names this
    * function as the seam that "MUST validate its own mint HERE, before the record ever touches the
    * draft", and the reason is a DATA-LOSS case, not tidiness: if the disk already holds a VALID
    * record and a new mint is invalid, the codec deletes the bad record from the LIVE operand only,

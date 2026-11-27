@@ -79,6 +79,12 @@ export const ledgerRowStartTotal = (r: Pick<LedgerLoopRow, 'start' | 'inherited'
 export const ledgerRowEndTotal = (r: Pick<LedgerLoopRow, 'end' | 'inherited'>): number =>
   portfolioTotal(r.end, r.inherited?.map((e) => e.end))
 
+/** What a sink row's inherited ledgers paid toward the year (KTD22, U12): each one's withdrawal less the part moved to
+ *  taxable, as pre-tax's draw leaves out a required withdrawal moved to taxable. 0 with no ledger on the row. The one
+ *  figure every reader of the year's inherited spending reads. */
+export const ledgerRowInheritedSpent = (r: Pick<LedgerLoopRow, 'inherited'>): number =>
+  (r.inherited ?? []).reduce((s, e) => s + (e.taken - e.movedToTaxable), 0)
+
 /** The GENERAL-drawable total (taxable + pretax + roth) — what a year's spending withdrawal can
  *  actually be funded from. The `hsa` bucket is excluded: it pays only the qualified-medical cap
  *  (U3 · M5), never general spending. */

@@ -15,8 +15,10 @@
  *  - The waivers move nothing (KTD23): Notices 2022-53, 2023-54 and 2024-35 waived the excise only, so the count runs
  *    through the waived years ("each calendar year that has elapsed") and the end stays the death year plus ten.
  *  - The greater-of rule is ASSERTED: in version 1's case the heir is more than ten years younger and the table never
- *    rises with age, so the heir's figure always wins. A later build for an eligible beneficiary fails loudly here
- *    rather than inheriting the assumption.
+ *    rises with age, so the heir's figure always wins. The assertion fires only for an heir OLDER than the owner (for
+ *    one born the same year or later the heir's figure is never the smaller: the table never drops more than 1.0 a
+ *    year), so it is no guard on an eligible beneficiary not more than ten years younger: intake refuses that one
+ *    (`inheritedFactsProblems`, KTD17), and a build that serves it must add its own (gap 3's review).
  *  - The required beginning date is April 1 of `requiredBeginningYear` (U11), so a death in that year needs the
  *    household's "before April 1?" answer, and an owner born in 1948 or 1949 needs the birth half only where the half
  *    moves the answer. Missing where it decides, the call throws: a guess moves the schedule either way.

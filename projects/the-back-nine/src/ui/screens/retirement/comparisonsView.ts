@@ -5,7 +5,7 @@
  * what this returns and decides nothing.
  *
  * THREE CHARTS, picked by the chart title's menu, each over the two sides' rows in one named future (`analysisRuns.ts`):
- * - invested assets over time: each row's year-end total (the engine's own `totalAcrossBuckets`), the two sides as
+ * - invested assets over time: each row's year-end total (the engine's own `ledgerRowEndTotal`, the buckets plus each inherited IRA), the two sides as
  *   overlapping areas (the alternative solid green, the compared plan an outline with a dashed top line, each line ending
  *   in its figure). A run whose money ran out ends at its zero close, labelled "Money ran out in <year>", never "~$0".
  *   The metric compares the two at the last year BOTH rows reach (a ran-out run's close there is zero: the money gone),

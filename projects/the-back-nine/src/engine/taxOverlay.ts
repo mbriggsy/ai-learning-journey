@@ -1858,6 +1858,10 @@ export const PART_B_PRICING_MODE: 'real-flat' | 'trended' = 'trended'
  *   3. Spending draw (M3/M4): the gross-up fixed point over the conversion-reduced pool.
  * Both the RMD relocation and the conversion are intra-portfolio, so the only money that LEAVES is
  * the grossed-up spending+tax `drawn` (via stepYear); the bucket sum always reconciles to the total.
+ * With an inherited IRA ledger riding (the Act 5 plan's U12), its paced withdrawal and its last-source
+ * draw fund the year first, its excess moves to taxable inside the total, and a balance left to
+ * someone else at the heir's death leaves as its own outflow: the buckets PLUS the ledgers reconcile
+ * to the total, never the buckets alone.
  *
  * (When M6 wires the overlay into `simulate.ts`, the spine supplies `netWithdrawals` — spending net
  * of SS — alongside these inputs as independent per-year streams.)
@@ -3095,7 +3099,8 @@ export function runTaxAwareDecumulation(
       // forces a MINIMUM pre-tax distribution, so only the EXCESS beyond that is force-relocated to
       // taxable (unspent, reinvested). The RMD relocation AND the conversion are both intra-portfolio
       // (pre-tax↔taxable, pre-tax↔roth), so their ± pairs cancel in the bucket sum: pretaxPost +
-      // taxablePost + rothPost = totalBefore − drawn = afterWithdrawal exactly. Allocating on drawPool
+      // taxablePost + rothPost = totalBefore − drawn = afterWithdrawal exactly, with no inherited
+      // ledger riding (with one, the ledgers' after-withdrawal balances complete the sum, U12). Allocating on drawPool
       // guarantees alloc.pretax ≤ drawPool.pretax, so every bucket stays ≥ 0.
       let forcedExcess: number
       let pretaxPostScaled: number
@@ -3265,10 +3270,15 @@ function buildInheritedLedgers(
     if (facts.pace.kind === 'even-to-year' && !(Number.isInteger(facts.pace.lastYear) && facts.pace.lastYear >= facts.openYear && facts.pace.lastYear <= lawLastYear)) {
       throw new Error(`[taxOverlay] inherited IRA ${i}: the chosen last year must fall from the asked year to the ten-year end`)
     }
+    // A sampled path can end (its last death) before the asked year on a plan opened a year or more after it was built:
+    // the ledger then never opens on it, so its rows reach at least the asked year. `validateParams` judges the asked
+    // year against the plan's whole horizon; against the path's own, one short path threw and the whole run came back
+    // infeasible (gap 3's review).
+    const rowsHorizon = Math.max(horizon, facts.openYear - start + 1)
     return {
       facts,
-      schedule: inheritedSchedule(owner, start, horizon),
-      rows: inheritedRows(facts.openYear, facts.takenInOpenYear, facts.earlierWithdrawals, start, horizon),
+      schedule: inheritedSchedule(owner, start, rowsHorizon),
+      rows: inheritedRows(facts.openYear, facts.takenInOpenYear, facts.earlierWithdrawals, start, rowsHorizon),
       lawLastYear,
       balance: facts.balance,
     }
@@ -3338,7 +3348,9 @@ function inheritedYearTerms(ledgers: readonly InheritedLedgerRun[], alive: reado
         t === openRow
           ? year.kind === 'last'
             ? balance
-            : Math.max(0, f.openYearFigure - f.takenInOpenYear) + (f.deathYearUntaken ?? 0)
+            : // The year's own minimum and the owner's death-year amount left on December 31 are owed together, and
+              // what came out this year counts against both (a make-up taken this year sits in it: gap 3's review).
+              Math.max(0, f.openYearFigure + (f.deathYearUntaken ?? 0) - f.takenInOpenYear)
           : inheritedMinimum(year, balance)
       floor = Math.min(balance, required)
       w = inheritedPacedWithdrawal(f.pace, balance, required, calendarYear, l.lawLastYear, t === openRow ? f.takenInOpenYear : 0)

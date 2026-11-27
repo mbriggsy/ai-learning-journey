@@ -19,7 +19,7 @@
  * sentence names the axis's number with that title.
  */
 import type { SolveRecommendation } from '@engine/solver/solve'
-import { ledgerRowEndTotal } from '@engine/sequencing'
+import { ledgerRowEndTotal, ledgerRowInheritedSpent } from '@engine/sequencing'
 import { irmaa } from '@engine/constants/health'
 import { irmaaScheduleAsCompared } from '@engine/healthOverlay'
 import { niceLattice, type DollarLattice } from '@viz/bandData'
@@ -224,7 +224,7 @@ export function comparisonView(input: ComparisonInput): ComparisonView {
   const axis = comparisonAxis(baseline.meta, input.timeAxis)
 
   const out = ranOutWindow(winner, baseline, steady)
-  const inheritedPaid = (r: LedgerYearRow): number => (r.inherited ?? []).reduce((s, e) => s + e.taken - e.movedToTaxable, 0)
+  const inheritedPaid = ledgerRowInheritedSpent
 
   if (chart === 'withdrawals') {
     const stack = (name: string, run: typeof winner): StackPicture => ({
@@ -274,7 +274,15 @@ export function comparisonView(input: ComparisonInput): ComparisonView {
     const d = direction(total(ours), total(theirs))
     metric = chart === 'tax' ? slots.taxStratCompareTax(d.fig, d.dir, steady, out?.through) : slots.taxStratCompareRmd(d.fig, d.dir, steady, out?.through)
   }
-  const chartNotes = chart === 'tax' && input.stateClause !== null ? [input.stateClause] : chart === 'assets' ? [copy.taxStratAssetsNote] : []
+  const heldInherited = [winner, baseline].some((run) => run.rows.some((r) => (r.inherited?.length ?? 0) > 0))
+  const chartNotes =
+    chart === 'tax' && input.stateClause !== null
+      ? [input.stateClause]
+      : chart === 'assets'
+        ? [copy.taxStratAssetsNote]
+        : chart === 'rmd' && heldInherited
+          ? [copy.taxStratRmdInheritedNote]
+          : []
   return {
     kind: 'pair',
     ...axis,
@@ -359,6 +367,9 @@ export function detailsView(input: DetailsInput): DetailsView {
   const end = endOf(run)
   const ranOut = end.ranOut ? [slots.taxStratDetailsRanOut(end.year, future === 'steady')] : []
   if (table === 'withdrawals') {
+    // An inherited IRA's withdrawals and balance (gap 3's review), only where the run holds one, so a household without
+    // one keeps its table.
+    const inherited = run.rows.some((r) => (r.inherited?.length ?? 0) > 0)
     return {
       kind: 'table',
       heading,
@@ -368,9 +379,11 @@ export function detailsView(input: DetailsInput): DetailsView {
         { id: 'from-taxable', header: copy.taxStratColFromTaxable, numeric: true },
         { id: 'from-pretax', header: copy.taxStratColFromPretax, numeric: true },
         { id: 'from-roth', header: copy.taxStratColFromRoth, numeric: true },
+        ...(inherited ? [{ id: 'from-inherited', header: copy.taxStratColFromInherited, numeric: true }] : []),
         { id: 'taxable-end', header: copy.taxStratColTaxableEnd, numeric: true },
         { id: 'pretax-end', header: copy.taxStratColPretaxEnd, numeric: true },
         { id: 'roth-end', header: copy.taxStratColRothEnd, numeric: true },
+        ...(inherited ? [{ id: 'inherited-end', header: copy.taxStratColInheritedEnd, numeric: true }] : []),
       ],
       rows: run.rows.map((r) => ({
         key: String(r.t),
@@ -383,9 +396,10 @@ export function detailsView(input: DetailsInput): DetailsView {
           'taxable-end': r.end.taxable,
           'pretax-end': r.end.pretax,
           'roth-end': r.end.roth,
+          ...(inherited ? { 'from-inherited': ledgerRowInheritedSpent(r), 'inherited-end': (r.inherited ?? []).reduce((t, e) => t + e.end, 0) } : {}),
         },
       })),
-      notes: ranOut,
+      notes: inherited ? [...ranOut, copy.taxStratDetailsInheritedNote] : ranOut,
       updating: run.updating,
     }
   }

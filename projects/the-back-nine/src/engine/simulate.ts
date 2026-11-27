@@ -989,14 +989,20 @@ function inheritedIrasRefusal(
   params: SimulationParams,
   finiteNonNeg: (x: number) => boolean,
 ): string | null {
+  // The worker hands params over by structured clone, so a malformed list must refuse by name, never throw a TypeError
+  // past this arm (gap 3's review): the shapes are checked before anything reads them.
+  if (!Array.isArray(ledgers)) return 'overlay inheritedIras must be a list'
   if (ledgers.length === 0) return 'overlay inheritedIras must be absent when the household holds none (one OFF shape)'
   if (!o.taxEnabled) return 'overlay inheritedIras need taxEnabled (an inherited IRA’s withdrawals are taxed income)'
   for (let i = 0; i < ledgers.length; i++) {
     const l = ledgers[i]!
     const at = `overlay inheritedIras[${i}]`
+    if (typeof l !== 'object' || l === null || !Array.isArray(l.earlierWithdrawals) || typeof l.pace !== 'object' || l.pace === null) {
+      return `${at} shape invalid`
+    }
     if (!finiteNonNeg(l.balance)) return `${at} balance invalid`
     if (![l.openYearFigure, l.takenInOpenYear, l.deathYearUntaken ?? 0].every(finiteNonNeg)) return `${at} asked figure invalid`
-    if (!l.earlierWithdrawals.every((e) => finiteNonNeg(e.amount))) return `${at} earlier withdrawal invalid`
+    if (!l.earlierWithdrawals.every((e: InheritedLedgerParams['earlierWithdrawals'][number]) => finiteNonNeg(e.amount))) return `${at} earlier withdrawal invalid`
     if (!Number.isInteger(l.heirIndex) || l.heirIndex < 0 || l.heirIndex >= params.people.length)
       return `${at} heirIndex invalid (must index the household people)`
     if (params.people.length > 1) {

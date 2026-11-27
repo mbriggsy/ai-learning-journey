@@ -6,25 +6,32 @@
 > handoffs) was pruned 2026-09-27 and lives at commit **`af491a71`** — `git show af491a71:projects/family-feud/TODO.md`.
 > Read it before the 2027 draft, not before.
 
-## ▶ START HERE — as of Sun 2026-11-15 (week 10, game day)
+## ▶ START HERE — as of Fri 2026-11-27 (week 12, after the Thursday games)
 
 **We are PoppaBriggsy, roster 3, *Saquon Deez Nuts*. `briggsy007` is HUNTER** (CLAUDE.md landmine).
 
-- 🚨 **WEEK 12 STARTS EARLY (ESPN schedule, pulled 11-23).** Wed 11-25 8:00 PM GB@LAR (none of ours; Ryan's GB guys) ·
-  **Thu 11-26 1:00 PM CHI@DET: Swift, Goff, CHI DEF** · Thu 4:30 PHI@DAL (Birds, Thanksgiving) · **Thu 8:20 KC@BUF:
-  Mahomes** · Fri 11-27 3:00 DEN@PIT (none of ours) · everyone else Sun/Mon. **So the week-12 lineup is due Thu 12:55 PM.**
-  - **Wed 11-25 ~06:00 ET: check Maye's Sleeper tag** (in IR since 11-22, fractured fibula). An Out tag can revert at the
-    early-Wednesday rollover; if it's no longer Out/IR, the IR lock silently blocks every lineup swap. Fix: drop the CHI
-    DEF (week-11 rental; @DET Thursday, Sleeper 6.6) and move Maye IR → BN. Either way CHI comes out of DEF for JAX
-    (home vs TEN Sunday, Sleeper 9.9) — CHI's DEF slot locks at Thu 1:00, so that swap is due by Thu 12:55 too.
-  - **QB: Goff (1:00) vs Mahomes (8:20) must be decided by Thu 12:55** — once Goff's game starts, he can't come in.
-    Run `external_projections.py --week 12` Wednesday.
-  - Roster after 11-22: Mahomes, Goff · Taylor, Brown, Swift, Stevenson · London, Collins, Flowers, Tate, Deebo ·
-    Fannin, Hockenson · Shrader · CHI, JAX · IR Maye. Trade deadline closed at the end of MNF 11-23.
+- **Record 7-4**, tied 2nd-4th on wins and 4th on points (1480.96). Playoffs: 6 of 8 teams, weeks 15-17. Left:
+  wk12 MattiICE23 (3-8) · **wk13 BuschLight420 (7-4, 2nd on points)** · wk14 Cltchiefs (4-7). Trade deadline closed 11-23.
+- **Week 12, live pull Fri 11-27 09:21:** up **46.0–42.2** after Thursday (Swift 29.2, Goff 16.8); expected
+  **153.6–114.6**; no starter of ours tagged. Lineup: Goff · Taylor, C. Brown · London, Collins · Fannin · FLEX Swift,
+  Flowers · K Little · JAX. Bench Mahomes, Stevenson, Tate, Hockenson, Deebo, CHI. IR Maye (Out, fractured fibula).
+  Shrader → Cam Little was done Thu 11-26 11:18 from Briggsy's account (no drop owed for week 13's K any more).
+  - **Sun 11-29 ~11:30 ET: inactives for the 1:00 games.** Taylor, Brown, London, Collins, Flowers, Little and the JAX
+    DEF all kick off at 1:00. `python scripts/gameday_check.py --stdout` reads it live; no scheduled task runs it.
+  - **Sun ~6:50 PM: Fannin (CLE, SNF 8:20 vs LV).** Every bench body plays at 1:00-4:25 and is locked by then, so a
+    Fannin scratch can only be covered by a free agent from LV/CLE/CAR/TB (an add needs a drop: Briggsy names it).
+- **Week 13 (ESPN, pulled 11-27): byes BAL, IND, LV, NYJ, so Taylor and Flowers sit.** Covered with no add: RB Brown,
+  Swift · WR London, Collins · TE Fannin · FLEX Stevenson + one of Tate/Deebo/Hockenson · K Little (JAX @ CHI). **Our two
+  DEFs play EACH OTHER** (JAX @ CHI, Sun 1:00); a stream is worth a look. **QB: Mahomes plays Thu 12-03 8:15 PM @LAR**,
+  Goff Sun 1:00 @ATL. If Mahomes is the call, he goes in before Thu 8:15. Waivers clear Wed ~03:15 ET, so claims go in
+  Tuesday: run `external_projections.py --week 13` then. Week 14 byes ARI, DAL: none of ours.
 
-- 🚨 **NEW LAPTOP (2026-11-19): NONE of the four scheduled tasks exist here** (`Get-ScheduledTask` showed no Family Feud task), and the
-  Dell is dead, so nothing has run since Mon 11-16 night. **Install them when Briggsy says go ("not just yet, we will shortly",
-  11-19), and before Sat 11-21 20:00 (game day's first check).** In order: (1) bring back the three Dell files never committed: `DRAFT_ALERTS.md`,
+- 🚨 **NEW LAPTOP (2026-11-19): NONE of the four scheduled tasks exist here** (`Get-ScheduledTask`, re-checked 11-27), and the
+  Dell is dead, so nothing has run since Mon 11-16 night; `GAMEDAY.md`'s newest entry is 11-15. **Install them when Briggsy
+  says go ("not just yet, we will shortly", 11-19).** Checked 11-27: `gameday_check.py --stdout` runs live with no cargo;
+  sleep on AC is already never (`powercfg`); `jinja2` is still missing; **there is no G: drive** (the Google Drive app is
+  gone since 11-23), so `DRIVE_DIR` in `scripts/build_newsletter.py` points nowhere: settle that before the newsletter
+  goes in. In order: (1) bring back the three Dell files never committed: `DRAFT_ALERTS.md`,
   `GAMEDAY.md` and `family-feud-newsletter.html`, from `~/.claude/wip/ai-learning-journey-uncommitted-2026-11-16.patch` (apply ONLY
   its `projects/family-feud/` hunks; its B9 hunks were committed on 11-16); (2) the git-ignored cargo is in Drive `Claude backup -
   project assets\ai-learning-journey-ignored-assets-2026-11-16.tar` (`projects/family-feud/newsletter`, 1,521 files, as of 11-16
@@ -32,27 +39,11 @@
   a second Python: the installers bake in whichever `python` resolves first). **`tzdata` was also missing and is now
   installed (11-22):** without it `gameday_check.py` dies at import on `ZoneInfo("America/New_York")`, because Windows has
   no time-zone database of its own; (4) `scripts\install-mule.ps1`, `-watcher`,
-  `-newsletter`, `-gameday`, each from PowerShell with `-NoProfile -ExecutionPolicy Bypass -File`; (5) check sleep-on-AC: the Dell
-  was set to never sleep, the Lenovo is likely at the Windows default, and a sleeping laptop skips game day. The 11-17 to 11-19
+  `-newsletter`, `-gameday`, each from PowerShell with `-NoProfile -ExecutionPolicy Bypass -File`. The 11-17 to 11-19
   Daily Feuds were never printed (Drive `Daily Feud`'s newest is `2026-11-16-edition-95.html`).
 
-- **Record 5-4 (4th)**; week 9 beat kblizzy23 120.78–118.76. **Week 10 vs Kaeperni.** Remaining: wk11 RMonk9 ·
-  wk12 MattiICE23 · wk13 BuschLight420 · wk14 Cltchiefs.
-- **Sun 11-15 09:20–09:35 ET, on Briggsy's word, verified on `/rosters`:** Tate and Hockenson (both Out) to IR; added
-  Deebo Samuel Sr. and the BAL DEF with no drops. **Lineup: Maye · Taylor, C. Brown · London, Collins · Fannin ·
-  FLEX Deebo, Flowers · Shrader · BAL.** Bench Goff, Mahomes, Swift (bye), Stevenson, Strange, JAX. 16 active + 2 IR,
-  full. Sleeper expected 143.0 vs Kaeperni 122.5 at 09:35. (Fri 11-13: claimed Hockenson, dropped White.) Research
-  and its refutations: workflow `wf_37f8e94e-fc4`, four seats.
-- 🚨 **Maye hurt his ankle in week 10** (sacked by Hutchinson, 1st quarter, ESPN play-by-play; ruled out per a
-  grounding summary, unverified at a primary source). NE's bye is week 11, when Mahomes starts anyway. **Before week 12:
-  re-pull Maye's status**; if he's Out, he goes to IR (that needs an open IR slot) and Mahomes or Goff starts.
-- 🚨 **Today ~2:55 PM ET: SF inactives.** If Deebo is inactive, drop him and add Ryan Flournoy (DAL WR, 4:25; DAL TE
-  Ferguson is out) before 4:25. The 15:00 gameday check writes it to GAMEDAY.md; **a session has to look.**
-- 🚨 **IR exit, week 11:** when Tate's or Hockenson's tag changes from Out, Sleeper silently blocks EVERY lineup swap
-  until he leaves IR (skill: *An ineligible man in an IR slot*), and leaving IR needs an open bench spot. The roster is
-  full, so **drop the BAL DEF after MNF** (a one-week rental; JAX is the week-11 DEF at NYG). Briggsy names the drop.
-- **Kaeperni's offer (A.J. Brown + Tucker Kraft for Zay Flowers) was DECLINED 10-22**; the Kittle hold is in Ranked
-  next.
+- 🚨 **IR lock:** if Maye's tag ever changes from Out, Sleeper silently blocks EVERY lineup swap until he leaves IR
+  (skill: *An ineligible man in an IR slot*), and the roster is full (16 + 1 IR), so leaving IR needs a drop first.
 - **`scripts/trade_eval.py`:** the fixture `tests/fixtures/trade_eval_kaeperni_20261022.json.gz` can never be
   re-made — it holds the 10-22 projections `TestThePublishedNumber` pins. Don't delete or regenerate it.
 - **`tests/fixtures/gameday_tnf_wk8.json` and `gameday_espn_status.json`'s `tnf_wk8` are one-time captures that can
@@ -65,16 +56,8 @@
 
 ## Ranked next
 
-1. **Week 10 (Thu 11-12 through Mon 11-16), then the trade deadline (week 11).**
-   - **Sunday:** the 2:55 Deebo check in START HERE. **Tuesday:** BAL off, Tate/Hockenson out of IR when cleared.
-   - **Kittle from Kaeperni — the 10-28 HOLD STANDS until Briggsy lifts it** (shown the finding 11-08). The 11-08
-     opener was **Zay Flowers + Brenton Strange for Kittle** (us +13.4 / +14.8 three-site / Sleeper, Kaeperni
-     +2.6 / +4.4). **Those numbers are stale**: Stevenson is hurt, Wilson and McGowan are gone, Tate is back. Re-price
-     on a fresh snapshot (`temp/te_capture.py`) before any offer. **Floor: never Chase Brown + Flowers for Kittle.**
-     To count for week 10 it must be accepted by about Sat 11-14 (and we play Kaeperni this week). League deadline: week 11. Hunter is
-     commissioner and may be able to veto alone (unconfirmed).
-   - **Week 13:** swap the spare QB for a K stream (Fairbairn / Little / Bates on Sleeper; re-pull three sites in wk 12).
-   - **Keep the laptop on the charger** Sat–Mon (dead-battery landmine below).
+1. **Week 12 Sunday, then week 13's Tuesday prep** (both in START HERE). **Keep the laptop on the charger** Sat–Mon
+   (dead-battery landmine below).
 2. **Optional: make `--search` fast again without moving a number.** It takes 355-373 s for 2,736
    packages on the frozen night (72 s before swaps repeated) and peaks at **2.7 GB** even with the
    memos emptied per give (measured 10-23; a reviewer measured ~1 GB on the one-swap code). Fine on
@@ -93,16 +76,11 @@
    check is §2 and done). Inputs are all in the inbox (`sleeper_transactions.json`,
    `sleeper_rosters.json`, `sleeper_state.json`, trending add/drop). Waivers clear **Wed ~03:15 ET**,
    measured twice (09-16, 09-23). Read Hunter's transaction log first, every Wednesday.
-4. **Byes — plan the week before** (re-derived 2026-10-23 from live `/rosters` and Sleeper's weekly
-   projections: a team whose DEF row has no opponent is on bye, `trade_eval.bye_teams`' rule.
-   Re-derive after any roster move):
-   - **Never trade Hunter a RB or any flex body.** The 10-27 trade search left him out on purpose.
-   - **Week 10:** Swift. · **Week 12:** nobody.
-   - **Week 11 is the big one:** Maye, London, Fannin, Stevenson. Mahomes (added 11-08) starts at QB; Deebo (SF, added
-     11-15) covers WR; Strange covers TE; the JAX DEF (added 11-04 for this week, at NYG) covers DEF. Hunter loses Stafford and Myers.
-   - **Week 13:** Taylor, Flowers, Shrader (stream a K). · **Week 14:** nobody (Wilson and McGowan dropped 11-11).
-   - Hunter later: wk 10 D. Smith · wk 13 G. Wilson, B. Allen, BAL DEF · wk 14 McBride, Allgeier.
-   - Trade deadline **week 11**. Playoffs 6 of 8, weeks 15-17.
+4. **Byes — plan the week before** (re-derived 2026-11-27 from ESPN's weeks 12-14 schedule against live `/rosters`;
+   re-derive after any roster move):
+   - **Week 13** (BAL, IND, LV, NYJ): Taylor, Flowers; covered without an add (START HERE). · **Week 14** (ARI, DAL): nobody.
+   - Hunter later (10-23 read, not re-derived): wk 13 G. Wilson, B. Allen, BAL DEF · wk 14 McBride, Allgeier.
+   - Playoffs 6 of 8, weeks 15-17.
 5. **Next August, before the 2027 draft:** the draft-era payloads still owed at the board refresh
    (long-TD curve fold; the Wan'Dale / Michael Wilson board-membership look) and the five draft-era
    tests re-arm on their own (`draft_era_cache_or_skip`, `draft_era_pool_or_skip`). Start from

@@ -8,6 +8,7 @@ import { describe, it, expect } from 'vitest'
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { endTotal, startTotal, withdrawn } from '../screens/retirement/analysisRuns'
+import { ledgerRowStartTotal } from '@engine/sequencing'
 import { steadyStats } from '../screens/dashboard/snapshotView'
 import type { LedgerInheritedEntry, LedgerYearRow } from '@shared/model'
 
@@ -57,8 +58,12 @@ const row = (t: number, inherited?: readonly LedgerInheritedEntry[]): LedgerYear
 const TWO = [entry({ start: 100_000, taken: 12_000, required: 3_000, aboveRequired: 9_000, movedToTaxable: 4_000, end: 88_000 }), entry({ start: 30_000, leftTheRun: 30_000 })]
 
 describe('the analysis readers (analysisRuns): Comparisons, Retirement Details, Snapshot', () => {
-  it('the opening and closing totals count each inherited ledger; a row without one reads the four buckets', () => {
-    expect(startTotal(row(0, TWO))).toBe(400_000 + 100_000 + 30_000)
+  it('the opening and closing totals count each inherited ledger, less a balance leaving at the year’s top; a row without one reads the four buckets', () => {
+    // The second IRA's $30,000 leaves the run at the year's top (left to someone else, the year after its heir's death):
+    // never the household's that year, so the opening total leaves it out (gap 3's review, round 3, `7927693f`), while
+    // the engine's own helper keeps it for the reconciliation.
+    expect(startTotal(row(0, TWO))).toBe(400_000 + 100_000)
+    expect(ledgerRowStartTotal(row(0, TWO))).toBe(400_000 + 100_000 + 30_000)
     expect(endTotal(row(0, TWO))).toBe(368_000 + 88_000)
     expect(startTotal(row(0))).toBe(400_000)
     expect(endTotal(row(0))).toBe(368_000)
@@ -69,9 +74,9 @@ describe('the analysis readers (analysisRuns): Comparisons, Retirement Details, 
     expect(withdrawn(row(0))).toBe(32_000)
   })
 
-  it('Snapshot’s first-year withdrawal rate counts the inherited ledgers in both parts of its fraction', () => {
+  it('Snapshot’s first-year withdrawal rate counts the inherited ledgers in both parts of its fraction, never a balance leaving the run', () => {
     const meta = { route: 'spine' as const, stopYear: undefined, startCalendarYear: 2026 }
-    expect(steadyStats([row(0, TWO)], meta).ratePercent).toBeCloseTo((40_000 / 530_000) * 100, 12)
+    expect(steadyStats([row(0, TWO)], meta).ratePercent).toBeCloseTo((40_000 / 500_000) * 100, 12)
     expect(steadyStats([row(0)], meta).ratePercent).toBeCloseTo((32_000 / 400_000) * 100, 12)
   })
 })

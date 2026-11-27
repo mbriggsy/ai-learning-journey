@@ -77,6 +77,16 @@ const isGroup = <Row,>(c: DataTableColumn<Row>): c is DataColumnGroup<Row> => 'c
 /** The sticky offsets of the first two lead columns (each lead column is 5rem wide). */
 const LEAD_OFFSET = ['left-0', 'left-20'] as const
 
+/** A group's name, by how many lead columns are held: it sticks just right of them (and short of the frame's right edge)
+ *  while any of its group is in view, and it wraps to the part of the frame the leads leave, so a group scrolled under
+ *  the held Year and Age still names its columns (U13's phone look: "Alex's IRA inherited in 2021" read "A inherited
+ *  in 2021" under them, its three figures named by nothing). Inside the cell's 0.75rem padding; `100cqw` is the frame. */
+const GROUP_NAME_HELD = [
+  'left-3 max-w-[calc(100cqw_-_1.5rem)]',
+  'left-[5.75rem] max-w-[calc(100cqw_-_6.5rem)]',
+  'left-[10.75rem] max-w-[calc(100cqw_-_11.5rem)]',
+] as const
+
 const DRILL_CLASSES = 'cursor-pointer underline underline-offset-4 hover:text-stone-900'
 
 /** The white gutters between header groups, drawn inside each cell (inset shadows), never as side borders: a collapsed
@@ -130,6 +140,7 @@ export function DataTable<Row extends RowData>({
 
   const headerGroups = table.getHeaderGroups()
   const lastRow = headerGroups.length - 1
+  const leadCount = Math.min(LEAD_OFFSET.length, leaves.filter((s) => s.lead).length)
 
   // The body's row groups: each run of rows sharing a key (or each row alone).
   const bodies = useMemo(() => {
@@ -193,7 +204,7 @@ export function DataTable<Row extends RowData>({
         tabIndex={0}
         data-table-frame=""
         data-busy={busy || undefined}
-        className={cn('max-w-full overflow-x-auto border-l-2 border-dashed', busy ? 'border-stone-600' : 'border-transparent')}
+        className={cn('@container max-w-full overflow-x-auto border-l-2 border-dashed', busy ? 'border-stone-600' : 'border-transparent')}
       >
         <table
           aria-labelledby={labelledBy}
@@ -230,13 +241,15 @@ export function DataTable<Row extends RowData>({
                         data-group={id}
                         className={cn(BAND_GUTTERS, 'bg-stone-250 px-3 py-2 text-center font-regular text-stone-900')}
                       >
-                        {g?.onDrill !== undefined ? (
-                          <button type="button" onClick={g.onDrill} className={DRILL_CLASSES}>
-                            {g.header}
-                          </button>
-                        ) : (
-                          <table.FlexRender header={header} />
-                        )}
+                        <span className={cn('sticky right-3 inline-block', GROUP_NAME_HELD[leadCount])} data-group-name="">
+                          {g?.onDrill !== undefined ? (
+                            <button type="button" onClick={g.onDrill} className={DRILL_CLASSES}>
+                              {g.header}
+                            </button>
+                          ) : (
+                            <table.FlexRender header={header} />
+                          )}
+                        </span>
                       </th>
                     )
                   }

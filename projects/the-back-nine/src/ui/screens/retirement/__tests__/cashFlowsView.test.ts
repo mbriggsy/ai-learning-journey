@@ -337,6 +337,8 @@ describe('cashFlowsView — Accounts', () => {
       expect(leafIds(tableOf(v).columns).slice(2), table).toEqual(Object.keys(accountsOracle(table, ROWS[0]!)))
       expectOneFieldPerCell(v, (r) => accountsOracle(table, r))
       expect(v.footnotes.includes(copy.cashFlowsEndTotalNote), table).toBe(table === 'end')
+      // With no inherited IRA beside them, the bucket columns are the whole table and sit under no group's name.
+      expect(tableOf(v).columns.some((c) => c.kind === 'group'), table).toBe(false)
     }
   })
 })

@@ -2038,6 +2038,142 @@ for (const size of [
   })
 }
 
+// ── U13 · Cash Flows → Accounts on the two-inherited seed (the Act 5 plan's U13, slice 2; its test scenario "fits by Act 6
+// §4.0's rules at 1440×731, 1280×800 and a raised font, and reads on a phone, on the made-up seed holding two inherited
+// IRAs with their own columns"). `?seed=inherited` holds two inherited IRAs of one heir, so Ending balance and Withdrawals
+// gain a column per account and Required withdrawals a group per account over its own columns. On each of the three:
+//  - the page never scrolls sideways; the table scrolls inside its own frame, Year and Age held scrolled to its end;
+//  - each account's columns are named by the account (on Required withdrawals its name spans exactly its own columns);
+//  - at the laptop sizes the first frame holds the title, the selects and every header row (§4.0's rule for a table);
+//  - wherever the frame scrolls (the phone always: the law then reads something), each account's name reads whole
+//    beside the held Year and Age with its group scrolled half under them (U13's phone look found "A inherited in 2021");
+//  - one caveat, reached on the phone.
+// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+const INHERITED_NAMES = [slots.inheritedIraOf('Alex’s', 2023), slots.inheritedIraOf('Alex’s', 2021)] as const
+const U13_TABLES = [
+  { id: 'end', table: copy.cashFlowsAccountsEnd, grouped: false },
+  { id: 'withdrawals', table: copy.cashFlowsAccountsWithdrawals, grouped: false },
+  { id: 'rmd', table: copy.cashFlowsAccountsRmd, grouped: true },
+] as const
+
+/** Each inherited group, scrolled half under the held lead columns: its name's box against the leads' right edge and the
+ *  frame's right edge, and what a hit test at the name's middle lands on. */
+async function groupNamesHalfUnder(page: Page) {
+  return cfFrame(page).evaluate(async (frame) => {
+    const raf = () => new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())))
+    const out: { name: string; left: number; right: number; leadsRight: number; frameRight: number; hit: boolean }[] = []
+    for (const th of frame.querySelectorAll<HTMLElement>('th[data-group^="inherited-"]')) {
+      const lead = frame.querySelector<HTMLElement>('tbody tr:first-child > :nth-child(2)')!
+      // Measured at rest: a held cell's offsetLeft includes its stuck offset once the frame has scrolled.
+      frame.scrollLeft = 0
+      await raf()
+      frame.scrollLeft = th.offsetLeft - (lead.offsetLeft + lead.offsetWidth) + th.offsetWidth / 2
+      await raf()
+      const name = th.querySelector<HTMLElement>('[data-group-name]')!
+      const r = name.getBoundingClientRect()
+      const hitEl = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)
+      out.push({
+        name: (name.textContent ?? '').trim(),
+        left: r.left,
+        right: r.right,
+        leadsRight: lead.getBoundingClientRect().right,
+        frameRight: frame.getBoundingClientRect().right,
+        hit: hitEl !== null && (hitEl === name || name.contains(hitEl)),
+      })
+    }
+    frame.scrollLeft = 0
+    await raf()
+    return out
+  })
+}
+
+for (const size of [
+  { title: `at his window (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr)`, use: { viewport: REAL, deviceScaleFactor: REAL_DPR }, phone: false, font: null },
+  { title: 'at 1280×800 @ 2dpr', use: { viewport: { width: 1280, height: 800 }, deviceScaleFactor: 2 }, phone: false, font: null },
+  { title: `at a 20 px browser default (${REAL.width}×${REAL.height})`, use: { viewport: REAL, deviceScaleFactor: REAL_DPR }, phone: false, font: 20 },
+  { title: `on the phone (${PHONE.width}×${PHONE.height} @ ${PHONE_DPR}dpr)`, use: { viewport: PHONE, deviceScaleFactor: PHONE_DPR, isMobile: true, hasTouch: true }, phone: true, font: null },
+] as const) {
+  test.describe(`U13 · Cash Flows → Accounts, the inherited IRAs ${size.title}`, () => {
+    test.use(size.use)
+    test('?seed=inherited: Ending balance, Withdrawals and Required withdrawals — each account’s own columns by name, no sideways page scroll, the table in its own frame with Year and Age held, the header rows in the first frame, each name whole beside the held columns', async ({ page, context }) => {
+      test.setTimeout(FINAL_TIER_MS + 120_000)
+      if (size.font !== null) {
+        const cdp = await context.newCDPSession(page)
+        await cdp.send('Page.setFontSizes', { fontSizes: { standard: size.font, fixed: size.font } })
+      }
+      await toCashFlows(page, 'inherited', size.phone)
+      await page.getByRole('tab', { name: copy.cashFlowsTabAccounts }).click()
+      await cfLanded(page)
+      for (const t of U13_TABLES) {
+        const who = `inherited ${t.id} ${size.title}`
+        // The table switcher stands apart from the market and plan selects (outside `[data-cash-flows-controls]`).
+        await page.getByRole('combobox', { name: copy.cashFlowsAccountsLabel }).click()
+        await page.getByRole('option', { name: t.table, exact: true }).click()
+        await expect(page.getByRole('listbox')).toHaveCount(0)
+        await cfLanded(page)
+        await page.evaluate(() => window.scrollTo(0, 0))
+        await noSidewaysScroll(page, who)
+        // Each account named over its own columns.
+        if (t.grouped) {
+          const spans = await cfFrame(page).evaluate((frame) =>
+            [...frame.querySelectorAll<HTMLElement>('th[data-group^="inherited-"]')].map((g) => {
+              const k = g.dataset.group!
+              const leaves = [...frame.querySelectorAll<HTMLElement>(`thead th[data-col^="${k}-"]`)].map((l) => l.getBoundingClientRect())
+              const r = g.getBoundingClientRect()
+              return {
+                name: (g.querySelector('[data-group-name]')?.textContent ?? '').trim(),
+                required: frame.querySelector(`thead th[data-col="${k}-required"]`) !== null,
+                leaves: leaves.length,
+                leftGap: Math.abs(r.left - Math.min(...leaves.map((l) => l.left))),
+                rightGap: Math.abs(r.right - Math.max(...leaves.map((l) => l.right))),
+              }
+            }),
+          )
+          console.log(`[u13 ${who} groups] ${JSON.stringify(spans)}`)
+          expect(spans.map((s) => s.name), `${who}: a group per account, each named by it`).toEqual([...INHERITED_NAMES])
+          for (const s of spans) {
+            expect(s.required, `${who}: ${s.name} carries its required column`).toBe(true)
+            expect(s.leaves, `${who}: ${s.name} spans more than its required column`).toBeGreaterThan(1)
+            expect(Math.max(s.leftGap, s.rightGap), `${who}: ${s.name} spans exactly its own columns`).toBeLessThanOrEqual(1)
+          }
+        } else {
+          const names = await Promise.all([0, 1].map((k) => cfFrame(page).locator(`thead th[data-col="inherited-${k}"]`).innerText()))
+          expect(names.map((n) => n.replace(/\s+/g, ' ').trim()), `${who}: a column per account, each named by it`).toEqual([...INHERITED_NAMES])
+        }
+        const f = await frameReading(page)
+        console.log(`[u13 ${who}] ${JSON.stringify(f)}`)
+        expect(f.overflowX, `${who}: the table scrolls inside its own frame`).toBe('auto')
+        if (size.phone) expect(f.scroll, `${who}: the table outgrows the phone’s frame, so the law reads something`).toBeGreaterThan(f.client)
+        if (f.scrolled > 0) expect(f.atEnd, `${who}: Year and Age stay at the frame’s left edge scrolled to its end`).toEqual(f.atStart)
+        if (!size.phone) {
+          const head = await page.evaluate(() => ({
+            title: document.querySelector('main.result h1')!.getBoundingClientRect().bottom,
+            // Every select on the page: the table switcher and the market and plan selects.
+            selects: Math.max(...[...document.querySelectorAll('main.result [role="combobox"]')].map((el) => el.getBoundingClientRect().bottom)),
+            thead: document.querySelector('[data-table-frame] thead')!.getBoundingClientRect().bottom,
+            firstRow: document.querySelector('[data-table-frame] tbody tr')!.getBoundingClientRect().bottom,
+          }))
+          console.log(`[u13 ${who} first frame] ${JSON.stringify(head)} of ${page.viewportSize()!.height}`)
+          expect(Math.max(head.title, head.selects, head.thead), `${who}: the header rows sit in the first frame`).toBeLessThanOrEqual(page.viewportSize()!.height)
+        }
+        if (t.grouped && f.scroll > f.client) {
+          const named = await groupNamesHalfUnder(page)
+          console.log(`[u13 ${who} names half under] ${JSON.stringify(named)}`)
+          expect(named.map((n) => n.name), `${who}: every account's name read`).toEqual([...INHERITED_NAMES])
+          for (const n of named) {
+            expect(n.left, `${who}: ${n.name} starts right of the held Year and Age`).toBeGreaterThanOrEqual(n.leadsRight - 0.5)
+            expect(n.right, `${who}: ${n.name} ends inside the frame`).toBeLessThanOrEqual(n.frameRight + 0.5)
+            expect(n.hit, `${who}: ${n.name} is on top where it reads, never under the held columns`).toBe(true)
+          }
+        }
+      }
+      await assertOneVisibleCaveat(page, null, false) // Cash Flows: its table carries no tie today
+      if (size.phone) await assertCaveatReachable(page, 'inherited PHONE Accounts')
+    })
+  })
+}
+
 test.describe(`RC6 · Cash Flows: the rows landing move no tap target (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr)`, () => {
   test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
 
@@ -4938,6 +5074,22 @@ test.describe(`RC17 · Comparisons, Savings and Retirement Details on the phone 
       await assertOneVisibleCaveat(page, null)
       await assertCaveatReachable(page, who)
     }
+  })
+
+  // The Act 5 plan's U13: seven sources, the inherited IRAs' the longest name. Aligned in columns, the legend took that
+  // name's width per column, so one column fit, and seven rows ran past the half of the chart Highcharts gives a legend:
+  // it paged ("1/2") and cut "From Roth" in half (U13's phone look; no arm had run a seven-source seed here). The text
+  // audit fails a name paged past the chart's edge (planted: "From inherited IRAs" leaves the chart) but reads no SVG
+  // clip, so the half-cut name would pass it; the pager's own check covers that.
+  test('?seed=inherited: Retirement Details’ income chart names all seven sources, the inherited IRAs among them, on a legend that never pages', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 180_000)
+    await gotoSeedFinal(page, 'inherited')
+    await toAnalysisTab(page, 'inherited', RC17_TABS[2])
+    const who = 'inherited PHONE income'
+    await noSidewaysScroll(page, who)
+    await auditRc17Text(page, who, { 'axis-label': 3, 'legend-item': 7 }, [copy.rdSourceInherited])
+    // Highcharts hides its pager rather than removing it once a legend stops overflowing, so the law is "not shown".
+    await expect(page.locator('[data-chart="rd-years"] .highcharts-legend-navigation'), `${who}: the legend never pages`).toBeHidden()
   })
 })
 

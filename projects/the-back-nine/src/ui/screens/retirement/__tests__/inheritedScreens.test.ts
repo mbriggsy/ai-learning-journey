@@ -72,7 +72,9 @@ describe('the two-inherited seed', () => {
     const v = view('accounts', 'rmd')
     if (v.body.kind !== 'table') throw new Error(v.body.kind)
     const groups = v.body.columns.filter((c) => c.kind === 'group')
-    expect(groups.map((g) => g.header)).toEqual(NAMES)
+    // The household's own pre-tax pair is named too, so no Required column reads as the year's whole required amount.
+    expect(groups.map((g) => g.header)).toEqual([copy.workbenchSourcePretax, ...NAMES])
+    expect(leavesOf([groups[0]!]).map((l) => l.id)[0]).toBe('rmd')
     v.body.rows.forEach((row, k) => {
       const e = rows[k]!.inherited!
       for (const i of [0, 1]) {

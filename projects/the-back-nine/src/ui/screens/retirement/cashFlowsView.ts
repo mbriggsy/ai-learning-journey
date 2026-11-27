@@ -395,10 +395,16 @@ function accountsFields(table: AccountsTable, meta: TableMeta, rows: readonly Le
           { id: `inherited-${k}-already-out`, header: slots.cashFlowsInheritedAlreadyOut(inh.label), read: (r) => r.inherited?.[k]?.booked },
         ]),
       ]
-    case 'rmd':
-      return [
+    case 'rmd': {
+      const own: FieldSpec[] = [
         { id: 'rmd', header: copy.workbenchPairRequired, read: (r) => r.rmd, always: true },
         { id: 'rmd-to-taxable', header: copy.cashFlowsColRmdMoved, read: (r) => r.rmdToTaxable },
+      ]
+      return [
+        // Beside an inherited IRA's group the household's own pair is named too, so no Required column reads as the
+        // year's whole required amount (U13's look: "Required withdrawal" blank in 2026, unnamed, beside the ~8,755 the
+        // law required from the inherited IRA). Alone, the pair is the table and needs no name.
+        ...(meta.inherited.length > 0 ? [{ id: 'pretax', header: copy.workbenchSourcePretax, fields: own }] : own),
         ...meta.inherited.map(
           (inh, k): GroupSpec => ({
             id: `inherited-${k}`,
@@ -412,6 +418,7 @@ function accountsFields(table: AccountsTable, meta: TableMeta, rows: readonly Le
           }),
         ),
       ]
+    }
     case 'conversions':
       return [{ id: 'conversion', header: copy.workbenchPairToRoth, read: (r) => r.conversion, always: true }]
   }

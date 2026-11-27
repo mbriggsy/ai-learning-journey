@@ -28,7 +28,8 @@ import { copy, slots } from '../../src/ui/copy'
  * cold start, the unlock card and a refused unlock, recovery, restore, the damaged-vault notice, the save drawer step by step,
  * the backup drawer, the re-entry gate, a second tab's view-only banner and the error boundary (filter
  * `-g "the vault and session screens"`); since RC20 Cash Flows → Maps: the flow by year, the tiles and the rough market's last
- * year (filter `-g "Cash Flows Maps"`). Screenshots land in the repo's gitignored `temp/rc-shots/<unit>/`, named
+ * year (filter `-g "Cash Flows Maps"`); since the Act 5 plan's U13 the inherited IRA (`?seed=inherited`) on Cash Flows' tables,
+ * Maps and Retirement Details (filter `-g "the inherited IRA"`). Screenshots land in the repo's gitignored `temp/rc-shots/<unit>/`, named
  * `<screen>-<seed>-<size>.png`, for Briggsy to review the output.
  *
  *     RC_UNIT=RC2 pnpm exec playwright test --config e2e/held/shots.config.ts rc-look
@@ -974,6 +975,87 @@ test.describe(`${UNIT} look, Cash Flows Maps, the tiles at 900x800`, () => {
     }
   })
 })
+
+// The Act 5 plan's U13 (slice 2): the inherited IRA on the screens a general seed list never reaches, on `?seed=inherited`
+// (two inherited IRAs of one heir): Cash Flows' Summary and its Planned distribution drill, the three Accounts tables that
+// carry an inherited column (each at the frame's start, scrolled to its end, and each account's group scrolled half under
+// the held Year and Age; Required withdrawals' notes whole), Maps on the first year and on the first year a withdrawal
+// moves money to taxable, and Retirement Details' income chart. Reduced motion, as the Maps block. Filter with
+// `-g "the inherited IRA"`.
+for (const size of SIZES) {
+  test.describe(`${UNIT} look, the inherited IRA at ${size.tag}`, () => {
+    test.use({ ...size.use, reducedMotion: 'reduce' })
+    test('?seed=inherited: Cash Flows (Summary, the distribution drill, Accounts), Maps and Retirement Details', async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 360_000)
+      const seed = 'inherited'
+      await enterShell(page, seed)
+      const findings: Record<string, Audit> = {}
+      await showScreen(page, CASH_FLOWS, size.phone)
+      await tableLanded(page)
+      await shot(page, findings, 'inh-summary', seed, size.tag)
+      await page.locator('[data-table-frame] thead button', { hasText: copy.cashFlowsGroupDistribution }).click()
+      await shot(page, findings, 'inh-distribution', seed, size.tag)
+      await page.locator('[data-cash-flows-title] button').first().click()
+      await page.getByRole('tab', { name: copy.cashFlowsTabAccounts }).click()
+      await tableLanded(page)
+      for (const [id, table] of [
+        ['inh-end', copy.cashFlowsAccountsEnd],
+        ['inh-withdrawals', copy.cashFlowsAccountsWithdrawals],
+        ['inh-rmd', copy.cashFlowsAccountsRmd],
+      ] as const) {
+        await pickOn(page, copy.cashFlowsAccountsLabel, table)
+        await tableLanded(page)
+        await page.evaluate(() => window.scrollTo(0, 0))
+        await shot(page, findings, id, seed, size.tag)
+        const scrolls = await page.locator('[data-table-frame]').evaluate((f) => f.scrollWidth > f.clientWidth)
+        if (scrolls) {
+          await page.locator('[data-table-frame]').evaluate((f) => (f.scrollLeft = f.scrollWidth))
+          await shot(page, findings, `${id}-end`, seed, size.tag)
+          // Each account's group scrolled half under the held Year and Age: its name must still read whole.
+          const groups = await page.locator('[data-table-frame] th[data-group^="inherited-"]').count()
+          for (let g = 0; g < groups; g++) {
+            await page.locator('[data-table-frame]').evaluate(async (f, k) => {
+              const th = f.querySelectorAll<HTMLElement>('th[data-group^="inherited-"]')[k]!
+              const lead = f.querySelector<HTMLElement>('tbody tr:first-child > :nth-child(2)')!
+              // Measured at rest: a held cell's offsetLeft includes its stuck offset once the frame has scrolled.
+              f.scrollLeft = 0
+              await new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())))
+              f.scrollLeft = th.offsetLeft - (lead.offsetLeft + lead.offsetWidth) + th.offsetWidth / 2
+            }, g)
+            await shot(page, findings, `${id}-group${g}-half`, seed, size.tag)
+          }
+          await page.locator('[data-table-frame]').evaluate((f) => (f.scrollLeft = 0))
+        }
+      }
+      await page.screenshot({ path: `${OUT}/inh-rmd-${seed}-${size.tag}-full.png`, fullPage: true })
+      // Maps: the first year, then the first year a withdrawal moves money to taxable (its words line shows).
+      await page.evaluate(() => window.scrollTo(0, 0))
+      await page.getByRole('tab', { name: copy.cashFlowsTabMaps }).click()
+      await mapsShown(page)
+      const view = size.phone ? 'tiles' : 'flow'
+      await shot(page, findings, `inh-maps-${view}`, seed, size.tag)
+      // The year's notes sit under the panel, outside `[data-maps]`.
+      const moved = page.getByText(copy.mapsInheritedMoved, { exact: true })
+      for (let i = 0; i < 40 && (await moved.count()) === 0; i++) await mapsYearKeys(page, 'ArrowRight')
+      console.log(`[rc-look ${UNIT} inherited maps] moved-to-taxable year found: ${(await moved.count()) > 0}`)
+      await shot(page, findings, `inh-maps-${view}-moved`, seed, size.tag)
+      await page.screenshot({ path: `${OUT}/inh-maps-${view}-moved-${seed}-${size.tag}-full.png`, fullPage: true })
+      // Retirement Details: the plan's income chart and its notes.
+      await showScreen(page, PROBABILITY, size.phone)
+      await page.evaluate(() => window.scrollTo(0, 0))
+      await page.getByRole('tab', { name: copy.retirementDetailsTab, exact: true }).click()
+      await settleRuns(page)
+      await page.evaluate(() => window.scrollTo(0, 0))
+      if (!size.phone) await page.mouse.move(2, 2)
+      await shot(page, findings, 'inh-details', seed, size.tag)
+      await page.screenshot({ path: `${OUT}/inh-details-${seed}-${size.tag}-full.png`, fullPage: true })
+      // Not Tax Strategies' withdrawal stacks: on this seed both goals come back held (a converting winner over a
+      // non-converting runner-up, the shape guard; measured 2026-11-27), so the stacks never draw here.
+      console.log(`[rc-look ${UNIT} inherited ${size.tag}] ${JSON.stringify(findings)}`)
+      auditAll(findings)
+    })
+  })
+}
 
 // RC7: Retirement → Analysis → Confidence, on a retired and a working household and the aged spine (`?vault=stale`): the
 // tab, the legend with both ranges hidden (the axis zoomed to the median), and the run-out chart (scrolled to on the

@@ -80,6 +80,10 @@ export function yearBarsOptions(input: YearBarsInput): Options {
     lang: spoken.lang,
     accessibility: { ...spoken.accessibility, point: { descriptionFormatter: (p) => input.pointWords(Number(p.x), p.series.name, Number(p.y ?? 0)) } },
     legend: { enabled: input.legend, align: 'center', verticalAlign: 'bottom', reversed: true },
+    // On a narrow chart the legend's items flow by their own widths: aligned columns take the widest item's width, so a
+    // long name ("From inherited IRAs", U13) left room for one column, and seven rows ran past the half of the chart
+    // Highcharts gives a legend, which then paged ("1/2") and cut a name in half (U13's phone look).
+    responsive: { rules: [{ condition: { maxWidth: 480 }, chartOptions: { legend: { alignColumns: false } } }] },
     credits: { enabled: true, position: { align: 'right', verticalAlign: 'bottom', x: -4, y: -2 } },
     tooltip: {
       shared: true,

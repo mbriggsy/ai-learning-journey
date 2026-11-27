@@ -48,8 +48,12 @@ export interface InheritedAnswers {
   readonly fromSpouse?: Keyed<YesNo>
   readonly heldAtDeath?: Keyed<'own-ira' | 'job-plan'>
   readonly ownerInherited?: Keyed<YesNo>
-  /** Named on the account's own beneficiary form, or it came through a will, an estate or a trust. */
-  readonly named?: Keyed<'named' | 'estate-or-trust'>
+  /** Named on the account's own beneficiary form (alone, or beside other people), named beside an estate, a trust or a
+   *  charity, or it came through a will, an estate or a trust. */
+  readonly named?: Keyed<'named' | 'with-entity' | 'estate-or-trust'>
+  /** Has money moved into this account since last December 31 (a merge of IRAs inherited from the same owner, or an
+   *  account opened after the death)? Yes: the December balance asked is all of it, wherever it was held then. */
+  readonly movedInSince?: Keyed<YesNo>
   readonly ownerBirthYear?: number
   readonly ownerDeathYear?: number
   readonly disabledAtDeath?: Keyed<YesNo>
@@ -90,6 +94,7 @@ export const INHERITED_QUESTION_IDS = [
   'diedBeforeApril1',
   'hasDeathYearFigure',
   'deathYearUntaken',
+  'movedInSince',
   'decemberBalance',
   'hasCustodianFigure',
   'custodianFigure',
@@ -109,6 +114,7 @@ export type InheritedRefusal =
   | 'job-plan'
   | 'successor'
   | 'estate-or-trust'
+  | 'with-entity'
   | 'pre-2020'
   | 'eligible-age'
   | 'disabled'
@@ -122,7 +128,7 @@ export type InheritedRefusal =
   | 'split'
 
 /** A typed figure that cannot be. */
-export type InheritedInvalid = 'birth-year-range' | 'death-before-birth' | 'death-after-asked' | 'pace-year'
+export type InheritedInvalid = 'birth-year-range' | 'death-before-birth' | 'death-after-asked' | 'pace-year' | 'december-zero'
 
 /** The earliest owner birth year the drawer takes. */
 export const INHERITED_OWNER_BORN_FROM = 1900
@@ -138,6 +144,8 @@ export interface InheritedContext {
   readonly startCalendarYear: number
   /** The pace the account carries (a new account: "only what the law requires", KTD21; the tray changes it). */
   readonly pace: InheritedPace
+  /** The account's balance today, once entered: a $0 December 31 balance beside money today is refused. */
+  readonly balanceToday?: number
 }
 
 /** The years the questions' words name, for the drawer's words. */
@@ -155,6 +163,11 @@ export interface InheritedWords {
   readonly deathYearIsFigure?: boolean
   /** The year a shared account had to be split by (December 31), when the shared question is asked. */
   readonly sharedBy?: number
+  /** Money moved in since last December 31: the December balance asked is all of it, wherever it was held then. */
+  readonly decemberAll?: boolean
+  /** The owner died in their required beginning year, on or after April 1: their first required withdrawal (for this
+   *  year, the year before the death) was due by that April 1 and is owed beside the death year's own if it was missed. */
+  readonly firstYearToo?: number
 }
 
 export interface InheritedWalk {
@@ -249,7 +262,13 @@ export function walkInheritedQuestions(a: InheritedAnswers, c: InheritedContext)
   // beneficiary's schedule (26 CFR 1.401(a)(9)-3 and -5: five years before the required beginning date, the owner's
   // own remaining life after it; a trust under its own rules, -4). Run on the heir's ten-year rule and the heir's
   // divisor, it reads rosy (KTD17: "a trust or estate" is refused).
-  if (choice('named', heir, a.named) === 'estate-or-trust') return refuse('named', 'estate-or-trust')
+  // Named beside an estate, a trust or a charity: unless the account was split from it in time (-8(a)) or it was paid out
+  // by September 30 of the year after the death (-4(c)), there is no designated beneficiary (-4(b)), so the five-year
+  // rule or the owner's own remaining life applies, never the heir's ten years. Refused outright (gap 3's review, round 2):
+  // a split-in-time share is served by law, but the rare refusal of one errs gloomy, where running it would err rosy.
+  const named = choice('named', heir, a.named)
+  if (named === 'estate-or-trust') return refuse('named', 'estate-or-trust')
+  if (named === 'with-entity') return refuse('named', 'with-entity')
 
   const bornTyped = figure('ownerBirthYear', a.ownerBirthYear)
   const diedTyped = figure('ownerDeathYear', a.ownerDeathYear)
@@ -296,6 +315,10 @@ export function walkInheritedQuestions(a: InheritedAnswers, c: InheritedContext)
       asksApril = inheritedOwnerAsks({ ownerBirthYear: born, ...(firstHalf !== undefined ? { ownerBornFirstHalf: firstHalf } : {}), ownerDeathYear: died }).beforeApril1
       const april = asksApril ? choice('diedBeforeApril1', String(died), a.diedBeforeApril1) : undefined
       if (!asksApril || april !== undefined) owner = { born, firstHalf, died, beforeApril1: april === undefined ? undefined : april === 'yes' }
+      // A death in the required beginning year on or after April 1: the first required withdrawal (for the year before)
+      // was due by that April 1, so any of it not taken is owed with the death year's own (54.4974-1(f), (g)(3)). The
+      // engine takes the household's one figure; the words name both amounts (gap 3's review, round 3).
+      if (asksApril && april === 'no') words = { ...words, firstYearToo: died - 1 }
     }
   }
 
@@ -329,13 +352,33 @@ export function walkInheritedQuestions(a: InheritedAnswers, c: InheritedContext)
     else if (kinds[0] === 'death-year') {
       const u = untaken()
       if (u === 'refused') return refuse('hasDeathYearFigure', 'death-year-unknown')
-      if (u !== undefined) askedFigure = { kind: 'death-year', untaken: u }
+      if (u !== undefined) {
+        // The heir's first own minimum is next year's, on the oldest sharer's divisor unless the account is split by
+        // December 31 of next year (-5(f)(1)(i), -8(a)(1)(ii)), so a shared account is asked here as on the computed
+        // path; run on the heir's own divisor it would read rosy (gap 3's review, round 3).
+        words = { ...words, sharedBy: full.ownerDeathYear + 1 }
+        const shared = choice('sharedUnsplit', died, a.sharedUnsplit)
+        if (shared === 'yes') return refuse('sharedUnsplit', 'shared')
+        if (shared === 'no') askedFigure = { kind: 'death-year', untaken: u }
+      }
     } else {
-      const december = figure('decemberBalance', a.decemberBalance)
-      const has = choice('hasCustodianFigure', '', a.hasCustodianFigure)
+      // Money moved in since last December 31 (IRAs inherited from the same owner merged, or an account opened after the
+      // death): the law reads that money's December 31 balance wherever it was held (1.408-8(b)(2), (d)), and the
+      // custodian's figure covers this account's own balance only, so the figure is computed from the household's
+      // balance of all of it. Read as this account's own, a merged account's minimum reads short (gap 3's review, round 3).
+      const movedIn = choice('movedInSince', String(c.askedYear), a.movedInSince)
+      if (movedIn === 'yes') words = { ...words, decemberAll: true }
+      const december = movedIn === undefined ? undefined : figure('decemberBalance', a.decemberBalance)
+      // An inherited IRA takes no new money (IRC 408(d)(3)(C)), so a $0 balance last December 31 beside money today is
+      // the wrong balance: an account opened after the death, read before the money moved into it, where the law reads
+      // the IRA's balance wherever it was held (1.408-8(b)(2)). Computed from $0 the year would require nothing, rosy;
+      // checked against a custodian's figure it would refuse with the wrong cause (gap 3's review, round 2).
+      const decemberWrong = december === 0 && (c.balanceToday ?? 0) > 0
+      if (decemberWrong && invalid === null) invalid = { at: 'decemberBalance', why: 'december-zero' }
+      const has = movedIn === 'yes' ? 'no' : movedIn === 'no' ? choice('hasCustodianFigure', '', a.hasCustodianFigure) : undefined
       if (has === 'yes') {
         const fig = figure('custodianFigure', a.custodianFigure)
-        if (fig !== undefined && december !== undefined) {
+        if (fig !== undefined && december !== undefined && !decemberWrong) {
           if (!custodianFigureMatches(full, c.askedYear, fig, december)) {
             words = { ...words, computedFigure: Math.round(computedAskedFigure(full, c.askedYear, december)) }
             return refuse('custodianFigure', 'figure-mismatch')
@@ -348,7 +391,7 @@ export function walkInheritedQuestions(a: InheritedAnswers, c: InheritedContext)
         words = { ...words, sharedBy: full.ownerDeathYear + 1 }
         const shared = choice('sharedUnsplit', died, a.sharedUnsplit)
         if (shared === 'yes') return refuse('sharedUnsplit', 'shared')
-        if (shared === 'no' && december !== undefined) askedFigure = { kind: 'computed', decemberBalance: december }
+        if (shared === 'no' && december !== undefined && !decemberWrong) askedFigure = { kind: 'computed', decemberBalance: december }
       }
     }
     if (asksUntaken) {
@@ -446,11 +489,16 @@ export function inheritedAnswersFrom(f: InheritedIraV7 | undefined, c: Inherited
       : {}),
     ...(f.ownerBornFirstHalf !== undefined ? { bornFirstHalf: yes(f.ownerBornFirstHalf ? 'yes' : 'no', String(f.ownerBirthYear)) } : {}),
     ...(f.ownerDiedBeforeApril1 !== undefined ? { diedBeforeApril1: yes(f.ownerDiedBeforeApril1 ? 'yes' : 'no', died) } : {}),
+    // `movedInSince` is not stored: a computed figure is the same facts on either answer, so it seeds No.
     ...(sameYear && fig.kind === 'custodian'
-      ? { decemberBalance: fig.decemberBalance, hasCustodianFigure: yes('yes', ''), custodianFigure: fig.figure }
+      ? { movedInSince: yes('no', String(f.askedYear)), decemberBalance: fig.decemberBalance, hasCustodianFigure: yes('yes', ''), custodianFigure: fig.figure }
       : {}),
-    ...(sameYear && fig.kind === 'computed' ? { decemberBalance: fig.decemberBalance, hasCustodianFigure: yes('no', ''), sharedUnsplit: yes('no', died) } : {}),
-    ...(sameYear && fig.kind === 'death-year' ? { hasDeathYearFigure: yes('yes', died), deathYearUntaken: { value: fig.untaken, key: died } } : {}),
+    ...(sameYear && fig.kind === 'computed'
+      ? { movedInSince: yes('no', String(f.askedYear)), decemberBalance: fig.decemberBalance, hasCustodianFigure: yes('no', ''), sharedUnsplit: yes('no', died) }
+      : {}),
+    ...(sameYear && fig.kind === 'death-year'
+      ? { hasDeathYearFigure: yes('yes', died), deathYearUntaken: { value: fig.untaken, key: died }, sharedUnsplit: yes('no', died) }
+      : {}),
     ...(sameYear && f.deathYearUntaken !== undefined ? { hasDeathYearFigure: yes('yes', died), deathYearUntaken: { value: f.deathYearUntaken, key: died } } : {}),
     ...(sameYear ? { takenThisYear: f.takenInAskedYear } : {}),
     ...(sameYear && afterDate && minimumYears !== null

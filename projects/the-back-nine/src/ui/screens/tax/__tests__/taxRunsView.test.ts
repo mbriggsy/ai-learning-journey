@@ -275,6 +275,13 @@ describe('Details', () => {
     })
     expect(inh.rows.some((r) => (r.inherited ?? []).some((e) => e.taken > 0)), '[test setup] the ledgers pay something').toBe(true)
     expect(v.notes).toContain(copy.taxStratDetailsInheritedNote)
+    expect(v.notes.filter((n) => n.includes('outside this plan')), 'no account left the plan, no left note').toEqual([])
+    // An account left to someone outside the plan leaves it at the heir's death: the year is named (gap 3's review, round 2).
+    const t = 3
+    const leftRows = inh.rows.map((r) => (r.t === t ? { ...r, inherited: (r.inherited ?? []).map((e, k) => (k === 0 ? { ...e, leftTheRun: e.start, end: 0 } : e)) } : r))
+    const left = detailsView({ table: 'withdrawals', pick: 'plan', future: 'steady', rows: { ...run, rows: leftRows } })
+    if (left.kind !== 'table') throw new Error(left.kind)
+    expect(left.notes).toContain(slots.taxStratDetailsInheritedLeft(inh.meta.inherited[0]!.name, inh.meta.startCalendarYear + t))
     const rmd = comparisonView({ timeAxis: 'ages', chart: 'rmd', future: 'steady', winner: run, baseline: run, stateClause: null })
     if (rmd.kind !== 'pair') throw new Error(rmd.kind)
     expect(rmd.notes).toContain(copy.taxStratRmdInheritedNote)

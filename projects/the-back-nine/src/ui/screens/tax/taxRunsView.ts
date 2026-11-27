@@ -370,6 +370,14 @@ export function detailsView(input: DetailsInput): DetailsView {
     // An inherited IRA's withdrawals and balance (gap 3's review), only where the run holds one, so a household without
     // one keeps its table.
     const inherited = run.rows.some((r) => (r.inherited?.length ?? 0) > 0)
+    // An account left to someone outside the plan leaves it at the heir's death: its year-end column drops to 0 with no
+    // withdrawal and no rise in taxable, so the table says why (Cash Flows' `cashFlowsInheritedLeftNote`, by year).
+    const left = run.rows.flatMap((r) =>
+      (r.inherited ?? []).flatMap((e, k) => {
+        const name = run.meta.inherited[k]?.name
+        return e.leftTheRun > 0 && name !== undefined ? [slots.taxStratDetailsInheritedLeft(name, run.meta.startCalendarYear + r.t)] : []
+      }),
+    )
     return {
       kind: 'table',
       heading,
@@ -399,7 +407,7 @@ export function detailsView(input: DetailsInput): DetailsView {
           ...(inherited ? { 'from-inherited': ledgerRowInheritedSpent(r), 'inherited-end': (r.inherited ?? []).reduce((t, e) => t + e.end, 0) } : {}),
         },
       })),
-      notes: inherited ? [...ranOut, copy.taxStratDetailsInheritedNote] : ranOut,
+      notes: inherited ? [...ranOut, copy.taxStratDetailsInheritedNote, ...left] : ranOut,
       updating: run.updating,
     }
   }

@@ -38,6 +38,7 @@ import {
   type WorkingYearDraftEvent,
 } from '@engine/workingYearLedger'
 import { validationMarket } from '@engine/reference/methodology'
+import { stateRateForYear } from '@engine/constants'
 import type {
   AccountBalances,
   IncomeParams,
@@ -1198,6 +1199,7 @@ describe('the worded tax line shows exactly on KTD12’s trigger: year 0 bills M
     expect(at({ pace: { kind: 'even' } }).year0.savingsTaxLine).toBe(true) // the pace takes $8,000 (ten years left)
   })
 
+
   it('a required withdrawal: a 75-year-old still working with pre-tax money shows it (start age 73); at 72 it does not', () => {
     // Born 1951: the SECURE 2.0 start age is 73. Born 1954: also 73, so at 72 nothing is required yet. A worker's
     // Medicare waits for the stop, so neither year bills Medicare.
@@ -1238,6 +1240,43 @@ describe('the worded tax line shows exactly on KTD12’s trigger: year 0 bills M
       )
     expect(at([400_000, 0]).year0.savingsTaxLine).toBe(true)
     expect(at([0, 400_000]).year0.savingsTaxLine).toBe(false)
+  })
+})
+
+// The inherited IRA’s state channel in a working year (KTD23): the clamped year prices it through `workingYearStateCharge`,
+// not the retired gross-up, so it has its own arm (gap 3’s review, T1).
+describe('an inherited withdrawal in a working year: the state channel', () => {
+  it('North Carolina charges its rate on all of it; Pennsylvania exempts it, like Florida (KTD23; gap 3’s review, T1)', () => {
+    // The one earner's pay base ($34,000 after the deferral) is above NC's $12,750 deduction, so NC's rate falls on
+    // every inherited dollar: 2026's 3.99 % × $60,000 = $2,394. The owner died in 2020 before the required beginning
+    // date (no minimums) and the chosen last year is 2026, so all $60,000 comes out in year 0; the year's surplus pay
+    // needs nothing from savings, so the withdrawal's own cash pays its tax and no other draw moves the base.
+    const ledger: InheritedLedgerParams = {
+      ownerBirthYear: 1960,
+      ownerDeathYear: 2020,
+      heirIndex: 0,
+      balance: 60_000,
+      openYear: START,
+      openYearFigure: 0,
+      takenInOpenYear: 0,
+      earlierWithdrawals: [],
+      pace: { kind: 'even-to-year', lastYear: START },
+    }
+    const lifetimeTax = (state: RetirementState | undefined, withLedger: boolean): number => {
+      const base = candidateOf({ people: [EARNER], W: 20_000, contributionsByPerson: [{ pretax: flat(WINDOW, 6_000) }], ...(state !== undefined ? { state } : {}) })
+      const params: SimulationParams = withLedger
+        ? { ...base, initialPortfolio: base.initialPortfolio + ledger.balance, overlay: { ...base.overlay!, inheritedIras: [ledger] } }
+        : base
+      return dist(simulate(params, 11)).taxAware!.lifetimeTaxPaidReal[0]!
+    }
+    const added = (state: RetirementState) => lifetimeTax(state, true) - lifetimeTax(state, false)
+    const expected = stateRateForYear('NC', START) * 60_000
+    expect(expected).toBeCloseTo(2_394, 9) // the hand figure, so a moved constant reds here first
+    expect(added('NC') - added('FL')).toBeCloseTo(expected, 6)
+    expect(added('PA')).toBeCloseTo(added('FL'), 6)
+    // Non-vacuity: the withdrawal really is taxed in the working year (its federal tax), so a dropped channel cannot
+    // pass by moving nothing.
+    expect(added('FL')).toBeGreaterThan(0)
   })
 })
 

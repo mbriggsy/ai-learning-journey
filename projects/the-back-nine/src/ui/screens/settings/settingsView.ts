@@ -169,9 +169,13 @@ export function settingsRows(
     // none-line names the tray only where the tray draws the Roth row (a committed reading, and `rothDoorOpen` on its
     // draft), and "apply it there" only where the tab can apply.
     lines: [
+      // Beside an inherited IRA, "no pre-tax savings" would be false and "until it holds some" would point at money
+      // that can never convert (R24), so both arms name the household's own savings there.
       draftPretaxTotal(d) <= 0
         ? roth !== undefined
-          ? copy.settingsRothPlanNoPretax
+          ? d.enteredAccounts.some(isInheritedAccount)
+            ? copy.settingsRothPlanInheritedOnly
+            : copy.settingsRothPlanNoPretax
           : d.enteredAccounts.some(isInheritedAccount)
             ? copy.settingsRothNoneInheritedOnly
             : copy.settingsRothNoneNoPretax

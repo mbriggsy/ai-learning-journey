@@ -138,12 +138,13 @@ export function InheritedIraFields({
     ),
     ownerInherited: () => yesNo('ownerInherited', copy.inheritedOwnerInheritedLegend, copy.inheritedOwnerInheritedHelp),
     named: () => (
-      <ChoiceGroup<'named' | 'estate-or-trust'>
+      <ChoiceGroup<'named' | 'with-entity' | 'estate-or-trust'>
         legend={slots.inheritedNamedLegend(heir.mid, heir.you)}
         description={copy.inheritedNamedHelp}
         name="inherited-named"
         items={[
           { value: 'named', label: copy.inheritedNamedYes },
+          { value: 'with-entity', label: copy.inheritedNamedWithEntity },
           { value: 'estate-or-trust', label: copy.inheritedNamedEstate },
         ]}
         value={choiceValue('named')}
@@ -160,7 +161,13 @@ export function InheritedIraFields({
     disabledAtDeath: () => yesNo('disabledAtDeath', slots.inheritedDisabledLegend(heir.mid, heir.you)),
     childUnder21AtDeath: () => yesNo('childUnder21AtDeath', slots.inheritedChildLegend(heir.mid, heir.you)),
     moreThanTenYounger: () =>
-      stamped('inherited.heirMoreThanTenYearsYounger', yesNo('moreThanTenYounger', slots.inheritedTenYearsLegend(heir.mid, heir.you))),
+      // Asked only when both birth years are known and exactly ten apart (the walk's `apart === 10`).
+      answers.ownerBirthYear === undefined || draft.people[heirIndex]?.birthYear === undefined
+        ? null
+        : stamped(
+            'inherited.heirMoreThanTenYearsYounger',
+            yesNo('moreThanTenYounger', slots.inheritedTenYearsLegend(heir.mid, heir.you, answers.ownerBirthYear, draft.people[heirIndex].birthYear)),
+          ),
     bornFirstHalf: () =>
       stamped(
         'inherited.ownerBornFirstHalf',
@@ -180,7 +187,11 @@ export function InheritedIraFields({
       ),
     diedBeforeApril1: () => stamped('inherited.ownerDiedBeforeApril1', yesNo('diedBeforeApril1', slots.inheritedBeforeApril1Legend(deathYear))),
     hasDeathYearFigure: () =>
-      stamped(untakenStamp, yesNo('hasDeathYearFigure', slots.inheritedHasDeathYearLegend(deathYear, atYearEnd), slots.inheritedHasDeathYearHelp(atYearEnd))),
+      stamped(
+        untakenStamp,
+        yesNo('hasDeathYearFigure', slots.inheritedHasDeathYearLegend(deathYear, atYearEnd), slots.inheritedHasDeathYearHelp(deathYear, atYearEnd, w.firstYearToo)),
+      ),
+    movedInSince: () => stamped('inherited.askedFigure', yesNo('movedInSince', slots.inheritedMovedInLegend(w.askedYear - 1), copy.inheritedMovedInHelp)),
     deathYearUntaken: () =>
       stamped(
         untakenStamp,
@@ -193,14 +204,25 @@ export function InheritedIraFields({
           onCommit={(v) => onAnswers('deathYearUntaken', withAnswer(answers, 'deathYearUntaken', v === undefined ? undefined : { value: v, key: keyOf('deathYearUntaken') }))}
         />,
       ),
-    decemberBalance: () => stamped('inherited.askedFigure', money('decemberBalance', slots.inheritedDecemberLabel(w.askedYear - 1), copy.inheritedDecemberHelp)),
+    decemberBalance: () =>
+      stamped(
+        'inherited.askedFigure',
+        w.decemberAll === true
+          ? money('decemberBalance', slots.inheritedDecemberAllLabel(w.askedYear - 1), copy.inheritedDecemberAllHelp)
+          : money('decemberBalance', slots.inheritedDecemberLabel(w.askedYear - 1), copy.inheritedDecemberHelp),
+      ),
     hasCustodianFigure: () => stamped('inherited.askedFigure', yesNo('hasCustodianFigure', slots.inheritedHasFigureLegend(w.askedYear), copy.inheritedCustodianHelp)),
     custodianFigure: () => stamped('inherited.askedFigure', money('custodianFigure', slots.inheritedCustodianFigureLabel(w.askedYear))),
     sharedUnsplit: () => yesNo('sharedUnsplit', slots.inheritedSharedLegend(w.sharedBy ?? deathYear + 1, w.askedYear)),
     takenThisYear: () => stamped('inherited.takenInAskedYear', money('takenThisYear', slots.inheritedTakenLabel(w.askedYear))),
     minimumsTaken: () =>
       w.minimumYears === undefined ? null : yesNo('minimumsTaken', slots.inheritedMinimumsLegend(w.minimumYears.from, w.minimumYears.to), copy.inheritedMinimumsHelp),
-    deathYearTakenInTime: () => yesNo('deathYearTakenInTime', slots.inheritedDeathYearInTimeLegend(deathYear)),
+    deathYearTakenInTime: () =>
+      yesNo(
+        'deathYearTakenInTime',
+        slots.inheritedDeathYearInTimeLegend(deathYear),
+        ...(w.firstYearToo !== undefined ? [slots.inheritedFirstYearTooHelp(w.firstYearToo)] : []),
+      ),
     earlier: () => {
       const e = errorOf('earlier')
       return stamped(

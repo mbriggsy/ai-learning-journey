@@ -997,7 +997,14 @@ function inheritedIrasRefusal(
   for (let i = 0; i < ledgers.length; i++) {
     const l = ledgers[i]!
     const at = `overlay inheritedIras[${i}]`
-    if (typeof l !== 'object' || l === null || !Array.isArray(l.earlierWithdrawals) || typeof l.pace !== 'object' || l.pace === null) {
+    if (
+      typeof l !== 'object' ||
+      l === null ||
+      !Array.isArray(l.earlierWithdrawals) ||
+      l.earlierWithdrawals.some((e: unknown) => typeof e !== 'object' || e === null) ||
+      typeof l.pace !== 'object' ||
+      l.pace === null
+    ) {
       return `${at} shape invalid`
     }
     if (!finiteNonNeg(l.balance)) return `${at} balance invalid`

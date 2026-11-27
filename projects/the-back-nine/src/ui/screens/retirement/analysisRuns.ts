@@ -106,8 +106,13 @@ export function firstRetiredT(meta: TableMeta): number {
 
 /** A row's year-end invested total: the engine's own (`ledgerRowEndTotal`, the four buckets plus each inherited IRA). */
 export const endTotal = (r: LedgerYearRow): number => ledgerRowEndTotal(r)
-/** A row's opening invested total (`ledgerRowStartTotal`). */
-export const startTotal = (r: LedgerYearRow): number => ledgerRowStartTotal(r)
+/** A row's opening invested total (`ledgerRowStartTotal`), less any inherited balance leaving at the year's top (an
+ *  account left to someone else, the year after its heir's death): never the household's that year, so a rate over it
+ *  would read low (gap 3's review, round 3). The engine's helper keeps it, for the reconciliation the tests read. */
+export const startTotal = (r: LedgerYearRow): number => {
+  const start = ledgerRowStartTotal(r)
+  return r.inherited === undefined ? start : start - r.inherited.reduce((s, e) => s + e.leftTheRun, 0)
+}
 
 /** What a year takes from the accounts toward its need: the three draws, the HSA's spend and each inherited IRA's
  *  spent part (what it paid out less what moved to taxable). Never a conversion, never a required withdrawal moved to

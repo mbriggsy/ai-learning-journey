@@ -1067,15 +1067,20 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     inheritedFromSpouseLegend: slots.inheritedFromSpouseLegend('Alex'),
     inheritedDisabledLegend: slots.inheritedDisabledLegend('you', true),
     inheritedChildLegend: slots.inheritedChildLegend('Alex', false),
-    inheritedTenYearsLegend: slots.inheritedTenYearsLegend('Alex', false),
+    inheritedTenYearsLegend: slots.inheritedTenYearsLegend('Alex', false, 1955, 1965),
     inheritedBirthHalfLegend: slots.inheritedBirthHalfLegend(1949),
     inheritedBeforeApril1Legend: slots.inheritedBeforeApril1Legend(2020),
     inheritedDecemberLabel: slots.inheritedDecemberLabel(2025),
+    inheritedDecemberZero: slots.inheritedDecemberZero(2025),
     inheritedHasFigureLegend: slots.inheritedHasFigureLegend(2026),
     inheritedCustodianFigureLabel: slots.inheritedCustodianFigureLabel(2026),
     inheritedSharedLegend: slots.inheritedSharedLegend(2026, 2026),
     inheritedHasDeathYearLegend: slots.inheritedHasDeathYearLegend(2025, true),
-    inheritedHasDeathYearHelp: slots.inheritedHasDeathYearHelp(true),
+    inheritedHasDeathYearHelp: slots.inheritedHasDeathYearHelp(2025, true, 2024),
+    inheritedMovedInLegend: slots.inheritedMovedInLegend(2025),
+    inheritedDecemberAllLabel: slots.inheritedDecemberAllLabel(2025),
+    inheritedFirstYearTooHelp: slots.inheritedFirstYearTooHelp(2022),
+    inheritedRefuseDeathYearUnknown: slots.inheritedRefuseDeathYearUnknown(2025, true),
     inheritedDeathYearLabel: slots.inheritedDeathYearLabel(2025, true),
     inheritedNamedLegend: slots.inheritedNamedLegend('Alex', false),
     inheritedRefuseShared: slots.inheritedRefuseShared(2026, 2026),
@@ -1095,6 +1100,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     workbenchRowRmdMoved: slots.workbenchRowRmdMoved('4,210'),
     cashFlowsInheritedLastNote: slots.cashFlowsInheritedLastNote('Sam’s IRA inherited in 2023'),
     cashFlowsInheritedLeftNote: slots.cashFlowsInheritedLeftNote('your IRA inherited in 2023'),
+    taxStratDetailsInheritedLeft: slots.taxStratDetailsInheritedLeft('Sam’s IRA inherited in 2023', 2041),
     cashFlowsInheritedMovedNote: slots.cashFlowsInheritedMovedNote('4,210', 'Sam’s IRA inherited in 2023'),
     cashFlowsInheritedAlreadyOut: slots.cashFlowsInheritedAlreadyOut('Sam’s IRA inherited in 2023'),
     cashFlowsInheritedMoved: slots.cashFlowsInheritedMoved('Sam’s IRA inherited in 2023'),
@@ -2663,7 +2669,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
   // 2026-09-08 — THE rec* SCOPE CANARY. copyGuard's scopes are prefix ALLOWLISTS, so a NEW `rec*` key
   // lands in NEITHER scope silently — the hole that left the RecommendationViz aria sentence outside
   // require-hedge until it was renamed `recDeltaVizAria`. `/^rec(?!over)/` is the net: a bare `/^rec/`
-  // would sweep the 16 `recovery*`/`recover*` intake keys (copy.ts:909-922, :971-988), which are correctly
+  // would sweep the 16 `recovery*`/`recover*` intake keys (copy.ts:915-928, :977-994), which are correctly
   // unscoped. The two allowlists are SPLIT because the surfaces differ: an unscoped FLAT key rides only
   // the three universal gates (the `entries` loops at the top of this file — superlative and free-numeral
   // are verdict-scoped); an unscoped SLOT rides the four voice gates (survival-claim included) + catastrophe (the SLOT_RENDER loop

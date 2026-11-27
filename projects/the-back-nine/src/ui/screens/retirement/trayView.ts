@@ -221,7 +221,8 @@ export function trayView(input: TrayInput): TrayView {
         compared: dollars(offer.employer.plan),
         changed: held !== undefined,
         indent: true,
-        notes: held === undefined ? [copy.workbenchRailEmployerWaiting] : [],
+        // Its waiting words are the row's held words (`ActionItemsTray`'s employer case), so Refresh and Apply stop on it.
+        notes: [],
         control: { kind: 'employer', offer, deposit, value: held },
       })
     }
@@ -507,7 +508,8 @@ export function moveBucket(order: readonly DrawdownOrderKey[], key: DrawdownOrde
 /** An inherited IRA's pace (KTD21): a rule, and for "ending in a chosen year" its last year. That year waits while blank
  *  and is refused in words outside the asked year to the law's last (`applyBundle`'s bounds, carried by the offer), or
  *  when it has already gone on an aged plan (the ONE plan-clock producer, as the Roth row's first year), so no run
- *  starts on it; the plan's own pace is no lever. */
+ *  starts on it; the plan's own pace is no lever. On an aged plan whose asked year has gone, the words' first year is this
+ *  year, so they never name a year the row then refuses. */
 export function paceCommit(
   offer: PaceOffer,
   kind: InheritedPace['kind'],
@@ -518,9 +520,10 @@ export function paceCommit(
 ): { readonly kind: 'lever'; readonly lever: WhatIfLeverV6 | null } | { readonly kind: 'wait'; readonly words: string } {
   let pace: InheritedPace
   if (kind === 'even-to-year') {
-    if (year === undefined) return { kind: 'wait', words: slots.trayPaceNeedsYear(offer.firstYear, offer.lastYear) }
+    const from = rothPlanStartFor(anchor, offer.firstYear - draftStartCalendarYear).passed ? Math.max(offer.firstYear, wallCalendarYear) : offer.firstYear
+    if (year === undefined) return { kind: 'wait', words: slots.trayPaceNeedsYear(from, offer.lastYear) }
     if (!Number.isInteger(year) || year < offer.firstYear || year > offer.lastYear) {
-      return { kind: 'wait', words: slots.trayPaceYearRange(offer.firstYear, offer.lastYear) }
+      return { kind: 'wait', words: slots.trayPaceYearRange(from, offer.lastYear) }
     }
     if (rothPlanStartFor(anchor, year - draftStartCalendarYear).passed) return { kind: 'wait', words: slots.trayPaceYearPast(wallCalendarYear) }
     pace = { kind, lastYear: year }
@@ -536,10 +539,17 @@ export function acaCommit(plan: boolean, enhanced: boolean): WhatIfLeverV6 | nul
   return enhanced === plan ? null : { kind: 'aca-subsidy', enhanced }
 }
 
-/** The three parts of the mix: a lever once all three are typed and add to 100; words otherwise. */
-export function mixCommit(parts: { readonly stock?: number; readonly bond?: number; readonly cash?: number }): { readonly lever?: WhatIfLeverV6; readonly error?: string } {
+/** The three parts of the mix: a lever once all three are typed, each 0 to 100, and add to 100; words otherwise, so the
+ *  tray's Refresh and Apply stop on a mix it is not showing (a blank part beside an earlier mix lever would otherwise
+ *  run or write that lever: gap 3's review, round 2). Nothing typed and no lever held is no choice at all. */
+export function mixCommit(
+  parts: { readonly stock?: number; readonly bond?: number; readonly cash?: number },
+  leverHeld: boolean,
+): { readonly lever?: WhatIfLeverV6; readonly error?: string } {
   const { stock, bond, cash } = parts
-  if (stock === undefined || bond === undefined || cash === undefined) return {}
+  const typed = [stock, bond, cash].filter((v): v is number => v !== undefined)
+  if (typed.some((v) => v > 100)) return { error: copy.workbenchRailMixPartRange }
+  if (stock === undefined || bond === undefined || cash === undefined) return typed.length > 0 || leverHeld ? { error: copy.workbenchRailMixNeedsAll } : {}
   const total = stock + bond + cash
   if (total !== 100) return { error: slots.workbenchRailMixSum(String(total)) }
   return { lever: { kind: 'mix', stockPct: stock, bondPct: bond, cashPct: cash } }

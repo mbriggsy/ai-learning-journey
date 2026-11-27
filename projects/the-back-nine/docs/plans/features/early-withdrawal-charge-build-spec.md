@@ -51,7 +51,7 @@ The miss is rosy, so it is a cardinal-rule problem: every uncharged dollar is ta
 - The date search tests stops 0–10 years out (`src/engine/dateSearch.ts:61-70`), so a household in its late 50s draws pre-tax right after a tested stop.
 - Since the pay check (2026-10-30), a short working year is paid from savings through the withdrawal order, so an under-59½ owner's pre-tax money can pay part of it, uncharged like every other draw.
 
-The only words about the gap are K1 (`copy.assumptionWorkingYearCheckEarlyCharge`, `src/ui/copy.ts:1553-1554`), and they cover working years only. The retired route says nothing. D7 says a gap like this is a build item, never a sentence: K1 may stand only until the charge lands.
+The only words about the gap are K1 (`copy.assumptionWorkingYearCheckEarlyCharge`, `src/ui/copy.ts:1559-1560`), and they cover working years only. The retired route says nothing. D7 says a gap like this is a build item, never a sentence: K1 may stand only until the charge lands.
 
 ### Requirements
 
@@ -624,7 +624,7 @@ These are bets made without Briggsy's confirmation. Each can be overturned at U2
 - `src/intake/__tests__/intakeMap.test.ts`: the builder-side proof over every dev seed and candidate (KTD4)
 - `src/engine/pricingVersion.ts` and `src/engine/__tests__/pricingVersion.test.ts`; `src/store/staleness.ts` and its test; `src/ui/stalenessExposure.ts` and its test: the reach predicate U6 exported, wired in
 - `src/engine/solver/solverCodeVersion.ts`; `src/engine/__tests__/pricingWitness.test.ts`
-- K1's removal: `src/ui/copy.ts:1553-1554`, `src/ui/assumptionRegistry.ts:350-378`, `src/intake/__tests__/assumptionPanel.test.tsx`, `src/ui/__tests__/workingYearTaxDisclosure.test.ts`
+- K1's removal: `src/ui/copy.ts:1559-1560`, `src/ui/assumptionRegistry.ts:350-378`, `src/intake/__tests__/assumptionPanel.test.tsx`, `src/ui/__tests__/workingYearTaxDisclosure.test.ts`
 - the pins U7 marked moved: `src/ui/__tests__/devSeeds.test.ts`, `e2e/chart-text.spec.ts`, `src/ui/__tests__/healthSheetSeedGate.test.ts`, `src/ui/__tests__/allInWitnessHl50.test.ts`, `src/ui/__tests__/solvePayloadIdentity.health.test.ts`, `src/ui/__tests__/solvePoolIdentity.health.test.ts`, `src/ui/devSeeds.ts` docblocks
 - `src/ui/devSeeds.ts`: the amendment's household, if Briggsy said yes at U12
 - the words he picked at U12, in `src/ui/copy.ts` and their pins; if he ruled a line of the charge's own, the presence-keyed display sink System-Wide Impact describes, with its surface and test

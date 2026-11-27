@@ -107,6 +107,10 @@ describe('each line follows its value', () => {
     const d = { ...steer, rothConversion: undefined, enteredAccounts: [...steer.enteredAccounts, { ...inherited, ownerIndex: 0 as const }] }
     expect(draftPretaxTotal(d), '[test setup] no pre-tax money of its own').toBe(0)
     expect(row(d, 'roth-conversion').lines).toEqual([copy.settingsRothNoneInheritedOnly])
+    // …and with a conversion planned (applied, then the own pre-tax account removed), the same truth (gap 3's review,
+    // round 2): never "the plan holds no pre-tax savings … until it holds some".
+    const plan = { annualAmountReal: 30_000, startYearOffset: 1, years: 5 }
+    expect(row({ ...d, rothConversion: plan }, 'roth-conversion').lines).toEqual([copy.settingsRothPlanInheritedOnly])
   })
 
   it('read-only: the Roth none-line names the action items but never "apply it there"', () => {

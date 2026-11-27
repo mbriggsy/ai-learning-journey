@@ -643,7 +643,7 @@ export const copy = {
   inheritedBirthHalfLabel: 'Inherited IRA: which half of the year its owner was born in',
   inheritedBeforeApril1Label: 'Inherited IRA: whether its owner died before April 1',
   inheritedFigureLabel: 'Inherited IRA: this year’s required withdrawal',
-  inheritedDeathYearUntakenLabel: 'Inherited IRA: how much of its owner’s last required withdrawal is still owed',
+  inheritedDeathYearUntakenLabel: 'Inherited IRA: how much of its owner’s last required withdrawal was left untaken',
   inheritedEarlierLabel: 'Inherited IRA: what came out in each earlier year of the plan',
   inheritedLeftToLabel: 'Inherited IRA: who gets it if the one who inherited it dies first',
   inheritedPaceYearLabel: 'Inherited IRA: a last year between this year and the law’s last year',
@@ -672,11 +672,17 @@ export const copy = {
   // death, so it is not a successor's: the job-plan question's rollover line, for this question.
   inheritedOwnerInheritedHelp: 'If their husband or wife had left it to them and they made it their own IRA, answer No.',
   // KTD17: an heir who came to it through a will, an estate or a trust has no designated beneficiary's schedule.
-  inheritedNamedHelp: 'Named means listed on the account’s own beneficiary form.',
+  inheritedNamedHelp:
+    'Named means listed on the account’s own beneficiary form, or picked by the account’s own rules when no form was filled in. Money that went to the estate first came through an estate.',
   inheritedNamedYes: 'Named on the account',
+  inheritedNamedWithEntity: 'Named on the account beside an estate, a trust or a charity',
   inheritedNamedEstate: 'Through a will, an estate or a trust',
   // An account opened after the death: the December 31 balance was still in the dead owner's IRA, and the law reads it.
-  inheritedDecemberHelp: 'If it was still in the name of the person who left it then, use that balance, or the share of it this account got.',
+  inheritedDecemberHelp: 'If it was still in the name of the person who left it then, use that balance, or only this account’s share of it if it was split.',
+  // F1 (gap 3's review, round 3): money moved in since last December 31.
+  inheritedMovedInHelp: 'From an IRA of the person who left it, or from another IRA you inherited from them. An account opened after the death counts as Yes.',
+  inheritedDecemberAllHelp:
+    'Add up what all of the money now in this account held on that date, in every account it was in then, even one still in the name of the person who left it.',
   // KTD25: a late make-up still leaves the year's own minimum missed (refused), and "taken so far" must not hold it.
   inheritedMinimumsHelp: 'A withdrawal made up after that date counts as No.',
   // The two years under one heading, so the boxes sit level (a two-line label beside a one-line one did not).
@@ -697,7 +703,9 @@ export const copy = {
   inheritedRefuseSuccessor:
     'An IRA inherited a second time keeps the first owner’s schedule, which this version can’t plan yet, so it can’t be added here.',
   inheritedRefuseEstate:
-    'An IRA that came through a will, an estate or a trust follows other rules (it can have to be empty within five years), which this version can’t plan yet, so it can’t be added here.',
+    'An IRA that came through a will, an estate or a trust follows other rules (some must be emptied within five years), which this version can’t plan yet, so it can’t be added here.',
+  inheritedRefuseWithEntity:
+    'An IRA whose beneficiary form also named an estate, a trust or a charity can follow other rules (some must be emptied within five years), which this version can’t plan yet, so it can’t be added here.',
   inheritedRefusePre2020: 'An IRA left by someone who died before 2020 follows the older rules, which this version can’t plan, so it can’t be added here.',
   inheritedRefuseEligibleAge:
     'Someone not more than ten years younger than the person who left it can spread withdrawals over a lifetime, which this version can’t plan yet, so it can’t be added here.',
@@ -705,8 +713,6 @@ export const copy = {
     'Someone disabled or chronically ill when the owner died can spread withdrawals over a lifetime, which this version can’t plan yet, so it can’t be added here.',
   inheritedRefuseChild:
     'The owner’s child under 21 at the death follows other rules until 21, which this version can’t plan yet, so it can’t be added here.',
-  inheritedRefuseDeathYearUnknown:
-    'Only the custodian knows how much of that withdrawal is still to come out, and this version can’t plan it without that figure, so it can’t be added here.',
   inheritedRefuseMissedMinimum:
     'A required withdrawal that wasn’t taken can owe a make-up and a penalty, which this version doesn’t charge, so the plan would read too well. It can’t be added here.',
   inheritedRefuseDeathYearLate:
@@ -2156,10 +2162,11 @@ export const copy = {
   // stumble (two spouse lenses).
   recommendNoPretaxNote:
     'A withdrawal strategy needs more pre-tax savings — a traditional IRA or a pre-tax workplace plan — than this plan has entered. With more in the picture, we can work one out.',
-  // The same refusal where the only pre-tax money is inherited (R24, KTD22): it sits outside the withdrawal order and
-  // can't be converted, so "with more in the picture" would send the household to enter what is already there.
+  // The same refusal beside an inherited IRA (R24, KTD22): it sits outside the withdrawal order and can't be converted, so
+  // "with more in the picture" would send the household to enter what is already there. "More … than this plan has
+  // entered", as its sibling: the gap also fires on own pre-tax savings too small for any conversion (`solveDispatch.ts`).
   recommendNoPretaxInheritedNote:
-    'A withdrawal strategy needs pre-tax savings of your own — a traditional IRA or a pre-tax workplace plan. An inherited IRA can’t be converted and keeps its own pace, so it doesn’t count here.',
+    'A withdrawal strategy needs more pre-tax savings of your own — a traditional IRA or a pre-tax workplace plan — than this plan has entered. An inherited IRA can’t be converted and comes out on its own schedule, so it doesn’t count toward that.',
   // The `blocked{spine-unready}` sibling (the steer-seed increment): the strategy read FOLLOWS the
   // main answer, and on a facts-broken re-dispatch (a committed rec goes stale, a fact is cleared,
   // the stale card's re-open control survives) the old note blamed the ACCOUNTS — a false diagnosis.
@@ -2529,7 +2536,11 @@ export const copy = {
   settingsRothNoneNoPretax: 'No money moves to Roth: a conversion moves pre-tax savings, and the plan holds no pre-tax savings today.',
   // A household whose only pre-tax money is inherited (R24: an heir can't convert inherited money): "holds no pre-tax
   // savings" would be false beside the inherited IRA, and entering more of it could not help.
-  settingsRothNoneInheritedOnly: 'No money moves to Roth: a conversion moves your own pre-tax savings, and an inherited IRA can’t be converted.',
+  settingsRothNoneInheritedOnly:
+    'No money moves to Roth: a conversion moves your own pre-tax savings, the plan holds none today, and an inherited IRA can’t be converted.',
+  // Its planned-conversion twin (a conversion applied, then the household's own pre-tax account removed).
+  settingsRothPlanInheritedOnly:
+    'Each year of the conversion, that much would go from your own pre-tax savings to Roth, but the plan holds none of your own today and an inherited IRA can’t be converted, so nothing converts until the plan holds some of your own.',
   settingsRothPlanNoPretax:
     'Each year of the conversion, that much would go from pre-tax savings to Roth, but the plan holds no pre-tax savings today, so nothing converts until it holds some.',
   settingsRothPlanLine:
@@ -2974,6 +2985,9 @@ export const copy = {
   workbenchRailMixStocks: 'Stocks, %',
   workbenchRailMixBonds: 'Bonds, %',
   workbenchRailMixCash: 'Cash, %',
+  // A mix the tray holds and has not made a lever (`mixCommit`): Refresh and Apply stop on these words.
+  workbenchRailMixNeedsAll: 'Stocks, bonds and cash each need a figure.',
+  workbenchRailMixPartRange: 'Each part has to be from 0 to 100.',
   workbenchRailMixNote:
     'A mix can be tried here but not applied: each account’s own mix is set on Profile’s Net Worth page, and your plan runs on their blend.',
   // Roth conversions.
@@ -3128,10 +3142,10 @@ export const copy = {
   taxStratColFromInherited: 'From inherited IRAs',
   taxStratColInheritedEnd: 'Inherited IRAs at year’s end',
   taxStratDetailsInheritedNote:
-    'From inherited IRAs counts what they paid toward the year. Any part of a withdrawal the year didn’t need moved to taxable savings.',
+    'From inherited IRAs counts what they paid toward the year. Any part of a withdrawal the year doesn’t need moves to taxable savings, so Taxable at year’s end includes it.',
   // The comparison's required-withdrawals line is the household's own: each inherited IRA keeps its pace on both sides.
   taxStratRmdInheritedNote:
-    'This counts the required withdrawals from your own pre-tax savings. The inherited IRAs’ required withdrawals aren’t in it; Retirement → Cash Flows shows them.',
+    'This counts the required withdrawals from your own pre-tax savings. The inherited IRAs’ required withdrawals aren’t in it; Retirement → Cash Flows → Accounts → Required withdrawals shows them.',
   // The ledger records each year's income for the Medicare bill two years later (the lookback, `irmaaIncome`), so the row's
   // income never sets the same row's bill.
   taxStratColIrmaaIncome: 'This year’s income, which sets the Medicare bill two years later',
@@ -5393,7 +5407,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:2414` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:2420` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,
@@ -5842,11 +5856,23 @@ export const slots = {
   inheritedFromSpouseLegend: (mid: string): string => `Did ${mid} inherit it from a husband or wife?`,
   inheritedDisabledLegend: (mid: string, you: boolean): string => `When they died, ${you ? 'were you' : `was ${mid}`} disabled or chronically ill?`,
   inheritedChildLegend: (mid: string, you: boolean): string => `When they died, ${you ? 'were you' : `was ${mid}`} their child and under 21?`,
-  inheritedTenYearsLegend: (mid: string, you: boolean): string =>
-    `The person who left it was born ten years before ${you ? 'you' : mid}. By the two birthdays, ${you ? 'are you' : `is ${mid}`} more than ten years younger?`,
+  // Asked only when the two birth years are exactly ten apart: the years are named, never "ten years" stated as the gap,
+  // so a heir 10 years 9 months younger never reads the answer as settled No (gap 3's review, round 2).
+  inheritedTenYearsLegend: (mid: string, you: boolean, ownerBorn: number, heirBorn: number): string =>
+    `The person who left it was born in ${ownerBorn} and ${you ? 'you were' : `${mid} was`} born in ${heirBorn}. By the two exact birthdays, ${you ? 'are you' : `is ${mid}`} more than ten years younger?`,
   inheritedBirthHalfLegend: (year: number): string => `Were they born in the first half of ${year} or the second?`,
   inheritedBeforeApril1Legend: (year: number): string => `Did they die before April 1, ${year}?`,
   inheritedDecemberLabel: (year: number): string => `Its balance on December 31, ${year}`,
+  // F1: the question before it, and its label when money moved in.
+  inheritedMovedInLegend: (year: number): string => `Has any money moved into this account since December 31, ${year}?`,
+  inheritedDecemberAllLabel: (year: number): string => `The balance on December 31, ${year} of all the money in it now`,
+  // F3: an owner who died in their required beginning year, on or after April 1, owed their first required withdrawal
+  // (for the year before) by that April 1 too.
+  inheritedFirstYearTooHelp: (firstYear: number): string =>
+    `Count their ${firstYear} required withdrawal too, if any of it was not taken by April 1, ${firstYear + 1}.`,
+  // An inherited IRA takes no new money, so $0 then beside money today is the wrong balance (`december-zero`).
+  inheritedDecemberZero: (year: number): string =>
+    `It can’t have held $0 on December 31, ${year} and hold money today. Use the balance it had then wherever it was held, even if that was still in the name of the person who left it.`,
   inheritedHasFigureLegend: (year: number): string => `Do you have the custodian’s figure for its required withdrawal in ${year}?`,
   inheritedCustodianFigureLabel: (year: number): string => `The custodian’s required withdrawal for ${year}`,
   // The split's deadline (December 31 of the year after the death) can still be ahead in the asked year: then the
@@ -5860,12 +5886,20 @@ export const slots = {
   // this year counts against it and this year's own minimum together (`inheritedLedgerParams`, the engine's open row).
   inheritedHasDeathYearLegend: (year: number, atYearEnd: boolean): string =>
     atYearEnd
-      ? `Do you have the custodian’s figure for how much of their ${year} required withdrawal was still to come out on December 31, ${year}?`
+      ? `Do you have the custodian’s figure for how much of their ${year} required withdrawal had not come out by December 31, ${year}?`
       : `Do you have the custodian’s figure for how much of their ${year} required withdrawal is still to come out?`,
-  inheritedHasDeathYearHelp: (atYearEnd: boolean): string =>
-    `The custodian is the firm that holds the account. If all of it had come out${atYearEnd ? ' by then' : ''}, answer Yes and enter $0.`,
+  // A death last year: the figure as it stood at that year's end. A make-up taken this year is never taken off it here (it
+  // goes in the taken-so-far box, which the engine counts against the two together), or it would count twice, rosy.
+  inheritedHasDeathYearHelp: (year: number, atYearEnd: boolean, firstYear?: number): string =>
+    (atYearEnd
+      ? `The custodian is the firm that holds the account. Use what was left on December 31, ${year}: anything taken out in ${year + 1} goes under “Taken out so far in ${year + 1}”, not here. If all of it had come out by then, answer Yes and enter $0.`
+      : 'The custodian is the firm that holds the account. If all of it has already come out, answer Yes and enter $0.') +
+    (firstYear !== undefined ? ` Count their ${firstYear} required withdrawal too, if any of it was not taken by April 1, ${firstYear + 1}.` : ''),
   inheritedDeathYearLabel: (year: number, atYearEnd: boolean): string =>
-    atYearEnd ? `Still to come out of their ${year} required withdrawal on December 31, ${year}` : `Still to come out of their ${year} required withdrawal`,
+    atYearEnd ? `Not taken out of their ${year} required withdrawal by December 31, ${year}` : `Still to come out of their ${year} required withdrawal`,
+  // The "No" on the death-year figure question, naming the figure that question asked.
+  inheritedRefuseDeathYearUnknown: (year: number, atYearEnd: boolean): string =>
+    `Only the custodian knows how much of their ${year} required withdrawal ${atYearEnd ? `was left on December 31, ${year}` : 'is still to come out'}, and this version can’t plan it without that figure, so it can’t be added here.`,
   inheritedTakenLabel: (year: number): string => `Taken out so far in ${year}`,
   inheritedMinimumsLegend: (from: number, to: number): string =>
     from === to
@@ -5895,10 +5929,13 @@ export const slots = {
   inheritedBirthYearRange: (from: number, to: number): string => `That year has to be from ${from} to ${to}.`,
   inheritedDiedAfterAsked: (year: number): string => `The year they died can’t be later than ${year}.`,
   inheritedPaceYearOutside: (paceYear: number, from: number, to: number): string =>
-    `The withdrawal pace set for it ends in ${paceYear}, outside ${from} to ${to}, the years the law allows.`,
+    `The withdrawal pace set for it ends in ${paceYear}, outside ${from} to ${to}, the years the law allows. Change its pace first: Action Items → Strategies → Inherited IRA pace.`,
   workbenchRolledIn: (year: number, accounts: string): string => `from ${year}, also ${accounts}, rolled in`,
   // An inherited IRA's year sentences (the Act 5 plan's U13; `inheritedYearNotes`, `cashFlowsView.ts`).
   cashFlowsInheritedLastNote: (name: string): string => `The law’s last year for ${name}: everything left in it comes out.`,
+  // Tax Strategies' Details table, the same event by its year (`detailsView`).
+  taxStratDetailsInheritedLeft: (name: string, year: number): string =>
+    `${upperFirst(name)} goes to someone outside this plan, so its balance left the plan in ${year}.`,
   cashFlowsInheritedLeftNote: (name: string): string =>
     `${upperFirst(name)} goes to someone outside this plan, so its balance leaves the plan this year.`,
   cashFlowsInheritedMovedNote: (amount: string, name: string): string =>

@@ -20,7 +20,7 @@
  * line drawer (a budget household only: a line needs a budget to sit in). A line added only in this what-if wears the
  * green "+" dot with words, and its name is a link back to its drawer.
  */
-import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { Undo2 } from 'lucide-react'
 import type { ScenarioDraft } from '@store/memoryModel'
 import { canonicalIdentityToken, type BudgetTier, type DrawdownPolicy, type InheritedPace, type WhatIfBudgetLineV6, type WhatIfLeverKind, type WhatIfLeverV6 } from '@shared/model'
@@ -116,8 +116,41 @@ function Back({ label, pulled, onBack }: { readonly label: string; readonly pull
   )
 }
 
+/** Every row's words for a choice it holds and has not made a lever (a blank or refused year, a mix off 100), by row id.
+ *  Written in the same call as the row's own state, so a press whose blur makes a row wait finds it in the same task:
+ *  WebKit's click never focuses the button, so the blur and the press share one task and no render lands between them
+ *  (insight 149). A stamp drawn by React would be missing there, and Refresh or Apply would run or write the row's
+ *  earlier lever under it (gap 3's review, round 2). */
+const HeldWords = createContext<Map<string, string> | null>(null)
+
+/** A row's held words: its state for the drawing, and the tray's map for the press, written together; a row that
+ *  unmounts (an epoch remount, a Reset, an Edit hiding it) takes its entry with it. */
+function useHeldWords(key: string): readonly [string | undefined, (words: string | undefined) => void] {
+  const held = useContext(HeldWords)
+  const [words, setWords] = useState<string | undefined>(undefined)
+  useEffect(() => () => void held?.delete(key), [held, key])
+  const set = useCallback(
+    (w: string | undefined) => {
+      if (w === undefined) held?.delete(key)
+      else held?.set(key, w)
+      setWords(w)
+    },
+    [held, key],
+  )
+  return [words, set] as const
+}
+
 export function ActionItemsTray(props: ActionItemsTrayProps) {
-  const { id, open, onOpenChange, whatIf, draft, offers, editedLabel, anchor, crownedOffset, wallCalendarYear, readOnly, current, recommendation, hidden, onHidden, awaiting, onAwaiting, focus, announce } = props
+  const { id, open, onOpenChange, whatIf, draft, offers, editedLabel, anchor, crownedOffset, wallCalendarYear, readOnly, current, recommendation, hidden, onHidden, awaiting, focus, announce } = props
+  const held = useRef(new Map<string, string>()).current
+  // A lowered deposit waiting for the employer's figure is held too (it is no lever until that figure is given). Its map
+  // is the Shell's, so the press reads this mirror, written in the same call as the hand-off.
+  const awaitingNow = useRef(awaiting)
+  awaitingNow.current = awaiting
+  const onAwaiting = (next: ReadonlyMap<string, number>) => {
+    awaitingNow.current = next
+    props.onAwaiting(next)
+  }
   const view = trayView({ draft, offers, pending: whatIf.pending, committed: whatIf.own, hidden, awaitingEmployer: awaiting, anchor, ...(crownedOffset !== undefined ? { crownedOffset } : {}) })
   const apply = trayApply({ draft, committed: recommendation !== undefined ? whatIf.shown : whatIf.own, pendingDiffers: recommendation === undefined && view.pendingDiffers, current, readOnly })
   // What Apply last said, held for the state it was said in: a write's words for the bundle shown after it and the edits
@@ -166,13 +199,25 @@ export function ActionItemsTray(props: ActionItemsTrayProps) {
   }, [focus, id])
 
   /** Blur the box under focus (its commit, or its refusal, lands first), then whether any tray box holds text it could
-   *  not read, or any row holds a choice it has not made a lever (`data-tray-waiting`, `Notes`): Refresh and Apply stop
-   *  while one does, the box's or the row's own words saying why. */
+   *  not read (the kit's `data-typed-refused`, written in the blur's own task), any row holds a choice it has not made a
+   *  lever (`HeldWords`), or a lowered deposit waits for the employer's figure: Refresh and Apply stop while one does,
+   *  and focus goes to it once its words are drawn, so the press is never a dead button (the kit Drawer's rule). */
   const refusedBoxHeld = (): boolean => {
     const tray = document.getElementById(id)
     const active = document.activeElement
     if (active instanceof HTMLElement && tray?.contains(active) === true) active.blur()
-    return tray?.querySelector('[data-typed-refused], [data-tray-waiting]') != null
+    const blocked = tray?.querySelector('[data-typed-refused]') != null || held.size > 0 || awaitingNow.current.size > 0
+    if (blocked) {
+      requestAnimationFrame(() => {
+        const box = document.querySelector<HTMLElement>(`#${CSS.escape(id)} [data-typed-refused]`)
+        const row = box === null ? document.querySelector<HTMLElement>(`#${CSS.escape(id)} [data-tray-waiting]`)?.closest<HTMLElement>('[data-tray-row]') : null
+        const target = box ?? row?.querySelector<HTMLElement>('input, [role="combobox"], [role="slider"], button:not([inert])') ?? null
+        if (target === null) return
+        target.focus()
+        if (typeof target.scrollIntoView === 'function') target.scrollIntoView({ block: 'center' })
+      })
+    }
+    return blocked
   }
 
   const set = whatIf.setLever
@@ -232,7 +277,7 @@ export function ActionItemsTray(props: ActionItemsTrayProps) {
   )
 
   return (
-    <>
+    <HeldWords.Provider value={held}>
       <Tray id={id} open={open} onOpenChange={onOpenChange} title={copy.trayHandle} closeLabel={copy.trayClose} footer={footer}>
         {recommendation !== undefined ? (
           <div className="col-span-full flex flex-col items-start gap-3 laptop:col-span-2" data-tray-recommendation="">
@@ -300,7 +345,7 @@ export function ActionItemsTray(props: ActionItemsTrayProps) {
         onSave={(l) => set(`spending:line:${l.id}`, { kind: 'spending', op: 'add', line: l })}
         onDelete={(l) => set(`spending:line:${l.id}`, null)}
       />
-    </>
+    </HeldWords.Provider>
   )
 }
 
@@ -343,7 +388,7 @@ function Notes({ notes, error }: { readonly notes: readonly string[]; readonly e
 }
 
 function Row({ row, set, draft, anchor, wallCalendarYear, pending, awaiting, onAwaiting, onOpenLine }: RowProps) {
-  const [error, setError] = useState<string | undefined>(undefined)
+  const [error, setError] = useHeldWords(row.id)
   const c = row.control
   const back = (onBack: () => void) => <Back label={row.label} pulled={row.changed} onBack={onBack} />
   const lever = pending.find((l) => leverTarget(l) === row.id)
@@ -353,15 +398,23 @@ function Row({ row, set, draft, anchor, wallCalendarYear, pending, awaiting, onA
 
   switch (c.kind) {
     case 'stop': {
+      // A cleared box or Back takes the refusal with the lever, as the claim row's do: a refusal left standing under the
+      // plan's year would hold Refresh and Apply for the whole tray (gap 3's review, round 2).
       const commit = (y: number | undefined) => {
-        if (y === undefined) return set('stop-year', null)
+        if (y === undefined) {
+          setError(undefined)
+          return set('stop-year', null)
+        }
         if (y < c.min || y > c.max) return setError(slots.workbenchRailRefusedStopWindow(c.min, c.max))
         setError(undefined)
         set('stop-year', stopCommit(Number(row.compared), y))
       }
       return (
         <TrayRow
-          back={back(() => set('stop-year', null))}
+          back={back(() => {
+            setError(undefined)
+            set('stop-year', null)
+          })}
           {...common}
           {...withNotes(notes())}
           control={
@@ -416,7 +469,10 @@ function Row({ row, set, draft, anchor, wallCalendarYear, pending, awaiting, onA
       return (
         <TrayRow
           {...common}
-          {...withNotes(notes())}
+          // Waiting for the employer's figure, the lowered deposit is no lever: its words are the row's held words, so
+          // Refresh and Apply stop on it (the tray reads the awaiting map) instead of running or writing the rest
+          // without it (gap 3's review, round 2).
+          {...withNotes(notes(c.value === undefined ? copy.workbenchRailEmployerWaiting : undefined))}
           control={
             <MoneyInput
               label={row.label}
@@ -659,15 +715,21 @@ function RothRows({
   const shownPlan = held === 'none' ? undefined : (held ?? plan)
   const [mode, setMode] = useState<'none' | 'amount'>(shownPlan === undefined ? 'none' : 'amount')
   const [fields, setFields] = useState<RothFields>(() => rothFieldsFor(held, plan, draft.startCalendarYear, wallCalendarYear))
-  const [wait, setWait] = useState<string | undefined>(undefined)
-  // As the pace row's: after an Apply the plan's own conversion moves once the refigured answer lands; re-seed then.
+  const [wait, setWait] = useHeldWords(row.id)
+  // As the pace row's: after an Apply the plan's own conversion moves once the refigured answer lands; re-seed then, but
+  // only a row still showing the plan it was seeded from, so a choice made while the answer was being refigured stays.
   const planKey = JSON.stringify(plan ?? null)
-  const [seenPlan, setSeenPlan] = useState(planKey)
-  if (seenPlan !== planKey) {
-    setSeenPlan(planKey)
-    setMode(shownPlan === undefined ? 'none' : 'amount')
-    setFields(rothFieldsFor(held, plan, draft.startCalendarYear, wallCalendarYear))
-    setWait(undefined)
+  const [seen, setSeen] = useState({ key: planKey, plan })
+  if (seen.key !== planKey) {
+    const untouched =
+      mode === (seen.plan === undefined ? 'none' : 'amount') &&
+      JSON.stringify(fields) === JSON.stringify(rothFieldsFor(held, seen.plan, draft.startCalendarYear, wallCalendarYear))
+    setSeen({ key: planKey, plan })
+    if (untouched) {
+      setMode(shownPlan === undefined ? 'none' : 'amount')
+      setFields(rothFieldsFor(held, plan, draft.startCalendarYear, wallCalendarYear))
+      setWait(undefined)
+    }
   }
   const send = (m: 'none' | 'amount', f: RothFields) => {
     const out = rothCommit(plan, m, f, draft.startCalendarYear, anchor, wallCalendarYear)
@@ -754,16 +816,20 @@ function PaceRows({
   const yearOf = (p: InheritedPace) => (p.kind === 'even-to-year' ? p.lastYear : undefined)
   const [kind, setKind] = useState<InheritedPace['kind']>(value.kind)
   const [year, setYear] = useState<number | undefined>(yearOf(value))
-  const [wait, setWait] = useState<string | undefined>(undefined)
+  const [wait, setWait] = useHeldWords(row.id)
   // The plan's own pace moves after an Apply only once the refigured answer lands, after the rows remounted on the old
-  // one (the row key's epoch bumps at once): re-seed then, or the picker keeps the old rule, marked changed.
+  // one (the row key's epoch bumps at once): re-seed then, or the picker keeps the old rule, marked changed. Only a row
+  // still showing the plan it was seeded from re-seeds: a rule picked while the answer was being refigured stays.
   const planKey = `${offer.plan.kind}|${yearOf(offer.plan) ?? ''}`
-  const [seenPlan, setSeenPlan] = useState(planKey)
-  if (seenPlan !== planKey) {
-    setSeenPlan(planKey)
-    setKind(value.kind)
-    setYear(yearOf(value))
-    setWait(undefined)
+  const [seen, setSeen] = useState({ key: planKey, kind: offer.plan.kind, year: yearOf(offer.plan) })
+  if (seen.key !== planKey) {
+    const untouched = kind === seen.kind && year === seen.year
+    setSeen({ key: planKey, kind: offer.plan.kind, year: yearOf(offer.plan) })
+    if (untouched) {
+      setKind(value.kind)
+      setYear(yearOf(value))
+      setWait(undefined)
+    }
   }
   const send = (k: InheritedPace['kind'], y: number | undefined) => {
     const out = paceCommit(offer, k, y, start, anchor, wallCalendarYear)
@@ -849,10 +915,10 @@ function MixRows({
   readonly back: (onBack: () => void) => ReactNode
 }) {
   const [parts, setParts] = useState<{ stock?: number; bond?: number; cash?: number }>(held ?? {})
-  const [error, setError] = useState<string | undefined>(undefined)
+  const [error, setError] = useHeldWords(row.id)
   const commit = (next: typeof parts) => {
     setParts(next)
-    const out = mixCommit(next)
+    const out = mixCommit(next, held !== undefined)
     setError(out.error)
     if (out.lever !== undefined) set('mix', out.lever)
   }
@@ -872,7 +938,7 @@ function MixRows({
           changed={row.changed}
           invalidMessage={copy.trayInvalidWhole}
           className={NARROW_BOX}
-          onCommit={(v) => commit({ ...parts, [key]: v !== undefined && v <= 100 ? v : undefined })}
+          onCommit={(v) => commit({ ...parts, [key]: v })}
         />
       }
     />

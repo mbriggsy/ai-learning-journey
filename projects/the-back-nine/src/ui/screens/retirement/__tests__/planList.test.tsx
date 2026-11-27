@@ -417,12 +417,13 @@ describe('Keep, a changed kept what-if, and the ask before another drops it', ()
       fireEvent.change(field, { target: { value: text } })
       act(() => field.blur())
     }
-    // A lowered deposit waits for the employer's figure (it is in no bundle), and a spending change is run.
-    type(within(tray).getByLabelText(/^Into .*401\(k\), dollars a year$/), '6,000')
-    expect(within(tray).getByText(copy.workbenchRailEmployerWaiting)).toBeInTheDocument()
+    // A spending change is run; then a lowered deposit waits for the employer's figure (it is in no bundle, and while it
+    // waits Refresh and Apply stop on it, so it is lowered after the run lands).
     type(within(tray).getAllByLabelText(copy.workbenchRailSpendTotalLabel).find((el) => el instanceof HTMLInputElement && el.type === 'text')!, '30,000')
     fireEvent.click(within(tray).getByRole('button', { name: copy.trayRefresh }))
     await left.settle()
+    type(within(tray).getByLabelText(/^Into .*401\(k\), dollars a year$/), '6,000')
+    expect(within(tray).getByText(copy.workbenchRailEmployerWaiting)).toBeInTheDocument()
     const drawer = await openList()
     fireEvent.click(within(drawer).getByRole('button', { name: copy.planListKeep }))
     fireEvent.change(within(drawer).getByLabelText(copy.planListNameLabel), { target: { value: 'Lean years' } })

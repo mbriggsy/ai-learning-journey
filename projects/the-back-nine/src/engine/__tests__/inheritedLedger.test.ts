@@ -284,6 +284,36 @@ describe('the money: inside the total, paced cash first, the excess to taxable, 
     expect(short.finalBuckets.hsa).toBe(0) // forfeited, never drawn for spending
   })
 
+  it('…and counts the paced cash too: a ledger in its ten-year end (all of it paced, no room) funds a year the general accounts are short of by less than that cash (gap 3’s review, T4)', () => {
+    // 2030 is the ten-year end of a 2020 death: the whole $2,000 is paced. General $1,000, so a $3,000 year is fundable
+    // and a $3,001 one is not. Tax 0 (under the deduction).
+    const household = singleHousehold(person(1968), undefined, 2030)
+    const ledger = ae5({ ownerDeathYear: 2020, openYear: 2030, openYearFigure: 0, balance: 2_000 })
+    const buckets: AccountBuckets = { taxable: 0, pretax: 0, roth: 1_000, hsa: 5_000 }
+    const inputs: TaxYearInputs = { hsaOwnerIndex: 0 }
+    const fundable = run({ years: 1, net: 3_000, household, buckets, ledgers: [ledger], inputs })
+    expect(fundable.depletionYear).toBe(-1)
+    expect(fundable.finalBuckets.hsa).toBeCloseTo(5_000, 9)
+    expect(fundable.finalInherited).toBe(0)
+    expect(run({ years: 1, net: 3_001, household, buckets, ledgers: [ledger], inputs }).depletionYear).toBe(0)
+  })
+
+  it('…but never counts a ledger leaving the run: in its exit year the general accounts alone fund the year, firing $1 short (gap 3’s review, T4)', () => {
+    // The heir is gone from the first year and the account was left to someone else, so its $50,000 leaves the run that
+    // year. The spouse's own $1,000 is all a spending withdrawal may reach.
+    const heir = person(1968)
+    const spouse = person(1970)
+    const household: Household = { startCalendarYear: START, filing: 'mfj', owner: heir, spouse }
+    const householdYears: HouseholdYear[] = [{ living: [spouse] }]
+    const ledger = ae5({ balance: 50_000, leftTo: 'someone-else' })
+    const buckets: AccountBuckets = { taxable: 0, pretax: 0, roth: 1_000, hsa: 5_000 }
+    const inputs: TaxYearInputs = { hsaOwnerIndex: 1, householdYears }
+    const fundable = run({ years: 1, net: 1_000, household, buckets, ledgers: [ledger], inputs })
+    expect(fundable.depletionYear).toBe(-1)
+    expect(fundable.finalInherited).toBe(0) // it left
+    expect(run({ years: 1, net: 1_001, household, buckets, ledgers: [ledger], inputs }).depletionYear).toBe(0)
+  })
+
   it('with two ledgers, one in its ten-year end, the top-up never draws that one below zero', () => {
     const start = 2030
     const household = singleHousehold(person(1968), undefined, start)
@@ -454,6 +484,15 @@ describe('the R19 arms (validateParams)', () => {
     expect(validateParams(params({ inheritedIras: [ae5({ pace: { kind: 'even-to-year', lastYear: 2040 } })] }))).toMatch(/chosen last year/)
     expect(validateParams(params({ inheritedIras: [ae5({ earlierWithdrawals: [{ calendarYear: 2026, amount: 1 }] })] }))).toMatch(/not a plan year before the asked year/)
     expect(validateParams(params({ inheritedIras: [ae5({ ownerDeathYear: 2019 })] }))).toMatch(/before the ten-year rule/)
+  })
+
+  it('a malformed list (params cross the worker by structured clone) refuses by name, never a TypeError', () => {
+    const bad = (inheritedIras: unknown) => () => validateParams(params({ inheritedIras: inheritedIras as InheritedLedgerParams[] }))
+    expect(bad({ length: 1 })()).toMatch(/must be a list/)
+    for (const item of [null, 7, { ...ae5(), earlierWithdrawals: undefined }, { ...ae5(), earlierWithdrawals: [null] }, { ...ae5(), pace: null }]) {
+      expect(bad([item]), JSON.stringify(item)).not.toThrow()
+      expect(bad([item])()).toMatch(/shape invalid/)
+    }
   })
 
   it('a Pennsylvania household with an inherited IRA is priced, never refused', () => {

@@ -119,6 +119,21 @@ describe('the rules re-judge the stored facts against the live draft (KTD17, KTD
     expect(problemsOf(ae5Draft({}))).toEqual([])
     expect(problemsOf(ae5Draft({ askedFigure: { kind: 'custodian', figure: 3_496.5, decemberBalance: 100_000 } }))).toEqual([])
   })
+  it('the custodian’s figure is served within half a percent of the computed one and refused a cent past it, with a $1 floor (gap 3’s review, T3)', () => {
+    // $100,000 / 28.6 = $3,496.5035; half a percent of it is $17.4825, so the band is $3,479.0210 to $3,513.9860.
+    const verdict = (figure: number, decemberBalance = 100_000) =>
+      problemsOf(ae5Draft({ askedFigure: { kind: 'custodian', figure, decemberBalance } })).length === 0 ? 'served' : 'refused'
+    expect(verdict(3_479.03)).toBe('served')
+    expect(verdict(3_479.02)).toBe('refused')
+    expect(verdict(3_513.98)).toBe('served')
+    expect(verdict(3_513.99)).toBe('refused')
+    // A divisor one year off either way (29.6 or 27.6: another person's life, or an age a year off) is refused.
+    expect(verdict(100_000 / 29.6)).toBe('refused') // $3,378.38
+    expect(verdict(100_000 / 27.6)).toBe('refused') // $3,623.19
+    // On a small balance the dollar floor rules: $100 / 28.6 = $3.4965, so up to $4.4965 is served.
+    expect(verdict(4.49, 100)).toBe('served')
+    expect(verdict(4.5, 100)).toBe('refused')
+  })
   it.each([
     ['a death before 2020', { ownerDeathYear: 2019 }, [{ labelKey: 'inheritedRefusedPre2020', kind: 'unrepresentable' }]],
     ['a custodian’s figure off the heir’s own divisor', { askedFigure: { kind: 'custodian', figure: 3_700, decemberBalance: 100_000 } }, [{ labelKey: 'inheritedRefusedFigureMismatch', kind: 'unrepresentable' }]],

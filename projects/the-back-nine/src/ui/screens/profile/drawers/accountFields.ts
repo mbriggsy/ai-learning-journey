@@ -146,7 +146,10 @@ export function accountFormFromDraft(
 }
 
 /** What the inherited IRA's walk reads besides the answers: the heir is the account's owner, as the form holds it. */
-export function inheritedContextOf(d: ScenarioDraft, form: Pick<AccountDrawerForm, 'ownerIndex' | 'inheritedYear' | 'inheritedPace'>): InheritedContext {
+export function inheritedContextOf(
+  d: ScenarioDraft,
+  form: Pick<AccountDrawerForm, 'ownerIndex' | 'inheritedYear' | 'inheritedPace'> & { readonly valueToday?: number | undefined },
+): InheritedContext {
   return {
     heirIndex: form.ownerIndex,
     heirBirthYear: d.people[form.ownerIndex]?.birthYear,
@@ -154,6 +157,7 @@ export function inheritedContextOf(d: ScenarioDraft, form: Pick<AccountDrawerFor
     askedYear: form.inheritedYear,
     startCalendarYear: d.startCalendarYear,
     pace: form.inheritedPace,
+    ...(form.valueToday !== undefined ? { balanceToday: form.valueToday } : {}),
   }
 }
 
@@ -167,12 +171,15 @@ const REFUSAL_WORDS: Readonly<Record<InheritedRefusal, (d: ScenarioDraft, heir: 
   'job-plan': () => copy.inheritedRefuseJobPlan,
   successor: () => copy.inheritedRefuseSuccessor,
   'estate-or-trust': () => copy.inheritedRefuseEstate,
+  'with-entity': () => copy.inheritedRefuseWithEntity,
   'pre-2020': () => copy.inheritedRefusePre2020,
   'eligible-age': () => copy.inheritedRefuseEligibleAge,
   disabled: () => copy.inheritedRefuseDisabled,
   'child-under-21': () => copy.inheritedRefuseChild,
   'past-end': (_d, _h, w) => slots.inheritedRefusePastEnd(w.lastYear ?? w.askedYear),
-  'death-year-unknown': () => copy.inheritedRefuseDeathYearUnknown,
+  // A death this year asks the custodian's live figure; a death last year, the figure left on December 31 of the death year.
+  'death-year-unknown': (_d, _h, w) =>
+    w.deathYearIsFigure === true ? slots.inheritedRefuseDeathYearUnknown(w.askedYear, false) : slots.inheritedRefuseDeathYearUnknown(w.askedYear - 1, true),
   'figure-mismatch': (d, h, w) => slots.inheritedRefuseFigureMismatch(formatMoney(w.computedFigure ?? 0), tablePerson(d, h, 0, 0).possessive),
   shared: (_d, _h, w) => slots.inheritedRefuseShared(w.sharedBy ?? w.askedYear - 1, w.askedYear),
   'missed-minimum': () => copy.inheritedRefuseMissedMinimum,
@@ -185,6 +192,7 @@ const INVALID_WORDS: Readonly<Record<InheritedInvalid, (form: AccountDrawerForm,
   'birth-year-range': (_f, w) => slots.inheritedBirthYearRange(INHERITED_OWNER_BORN_FROM, w.askedYear),
   'death-before-birth': () => copy.inheritedDiedBeforeBorn,
   'death-after-asked': (_f, w) => slots.inheritedDiedAfterAsked(w.askedYear),
+  'december-zero': (_f, w) => slots.inheritedDecemberZero(w.askedYear - 1),
   'pace-year': (f, w) =>
     slots.inheritedPaceYearOutside(f.inheritedPace.kind === 'even-to-year' ? f.inheritedPace.lastYear : w.askedYear, w.askedYear, w.lastYear ?? w.askedYear),
 }

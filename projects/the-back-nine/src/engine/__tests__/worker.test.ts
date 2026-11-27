@@ -138,6 +138,22 @@ describe('solve wire pack/unpack (§S5 (4))', () => {
     expect(view.payload.winner.distributionB.depletionYears).toContain(NEVER_DEPLETED)
   })
 
+  it('an arm whose run held an inherited IRA carries its terminal as a buffer and round-trips it (gap 3’s review, T5)', () => {
+    const withInherited = (arm: SolveArm): SolveArm => ({
+      ...arm,
+      distributionB: { ...arm.distributionB, taxAware: { ...arm.distributionB.taxAware!, terminalInheritedReal: [40_000, 0, 12_500.25] } },
+    })
+    const base = recFixture()
+    if (base.kind !== 'recommended') throw new Error('unreachable')
+    const rec: SolveRecommendation = { ...base, winner: withInherited(base.winner), runnerUp: withInherited(base.runnerUp!), noActionBaseline: withInherited(base.noActionBaseline) }
+    const wire = packSolveWire(rec)
+    if (wire.kind !== 'recommended') throw new Error('unreachable')
+    expect(wire.winner.taxAware?.terminalInheritedReal).toBeInstanceOf(Float64Array)
+    const view = solveFromWire(wire)
+    if (!view.ok) throw new Error('unreachable')
+    expect(view.payload).toEqual(rec)
+  })
+
   it('an undefined runner-up round-trips as undefined (a one-arm rankable set)', () => {
     const rec = recFixture({ runnerUp: undefined })
     const view = solveFromWire(packSolveWire(rec))
@@ -222,6 +238,31 @@ describe('M6 — taxAware across the wire (presence-keyed Float64 buffers) + the
     const r = fromWire(wire)
     expect(r.ok).toBe(true)
     if (!r.ok) return
+    expect(r.result.distribution.taxAware).toEqual(out.distribution.taxAware)
+  })
+
+  it('an inherited IRA still holding money at the horizon carries its terminal across the wire, a seventh Float64 surface (gap 3’s review, T5)', () => {
+    // AE5's ledger (an owner born 1945 who died in 2023; the 1961 heir is 16 years younger) empties in 2033, past this
+    // five-year run's last year, so every path ends with a balance in it.
+    const inheritedParams: SimulationParams = {
+      ...overlayParams,
+      initialPortfolio: overlayParams.initialPortfolio + 100_000,
+      maxHorizonYears: 5,
+      overlay: {
+        ...overlayParams.overlay!,
+        inheritedIras: [
+          { ownerBirthYear: 1945, ownerDeathYear: 2023, heirIndex: 0, balance: 100_000, openYear: 2026, openYearFigure: 3_496.5, takenInOpenYear: 0, earlierWithdrawals: [], pace: { kind: 'law-minimum' } },
+        ],
+      },
+    }
+    const wire = runEngine(inheritedParams, 24680)
+    if (wire.kind !== 'resolved') throw new Error(`expected resolved, got ${wire.kind}`)
+    expect(wire.taxAware?.terminalInheritedReal).toBeInstanceOf(Float64Array)
+    const out = simulate(inheritedParams, 24680)
+    if (out.indeterminate || out.infeasible) throw new Error('expected resolved')
+    expect(Math.min(...out.distribution.taxAware!.terminalInheritedReal!)).toBeGreaterThan(0) // non-vacuous: a balance on every path
+    const r = fromWire(wire)
+    if (!r.ok) throw new Error('expected ok')
     expect(r.result.distribution.taxAware).toEqual(out.distribution.taxAware)
   })
 

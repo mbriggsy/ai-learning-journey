@@ -220,3 +220,17 @@ describe('U17: an inherited IRA’s pace, tried beside the plan', () => {
     expect(v.footnotes).toContain(copy.cashFlowsInheritedRequiredNote)
   })
 })
+
+describe('the opening total a rate divides by (gap 3’s review, round 3)', () => {
+  it('leaves out an inherited balance leaving the plan at the year’s top: the rate is on the money the household keeps', async () => {
+    const { startTotal, withdrawn } = await import('../analysisRuns')
+    const { ledgerRowStartTotal } = await import('@engine/sequencing')
+    const row = rows.find((r) => (r.inherited?.[0]?.start ?? 0) > 0)!
+    const e = row.inherited![0]!
+    // The row the account leaves in: its whole opening balance exits, nobody's income and no withdrawal.
+    const exitRow: LedgerYearRow = { ...row, inherited: row.inherited!.map((x, k) => (k === 0 ? { ...x, leftTheRun: e.start, taken: 0, movedToTaxable: 0, end: 0 } : x)) }
+    expect(startTotal(exitRow)).toBeCloseTo(ledgerRowStartTotal(exitRow) - e.start, 6)
+    expect(startTotal(row), 'no exit: the engine’s own total').toBe(ledgerRowStartTotal(row))
+    expect(withdrawn(exitRow)).toBeLessThan(withdrawn(row) + 1e-9)
+  })
+})

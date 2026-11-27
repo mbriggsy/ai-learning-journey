@@ -461,6 +461,24 @@ describe('deposits — the employer’s figure at a lower deposit (D7)', () => {
     expect(within(tray()).queryByText(copy.workbenchRailEmployerWaiting)).toBeNull()
   })
 
+  it('with another edit beside it, Refresh and Apply stop on the wait: neither runs nor writes the rest without the lowered deposit (gap 3’s review, round 2)', async () => {
+    const draft = DEV_SEEDS.dip
+    const l = openTray(draft, { answer: dated({ ...draft, seed: SEED }, 5) })
+    const before = draftNow()
+    const own = depositField()
+    act(() => own.focus())
+    fireEvent.change(own, { target: { value: '6,000' } })
+    act(() => own.blur())
+    // Another edit beside it: the year work stops, one later.
+    const stopBox = within(tray()).getAllByLabelText(copy.workbenchRailStopLabel).find((el) => el instanceof HTMLInputElement && el.type === 'text') as HTMLInputElement
+    typeIn(copy.workbenchRailStopLabel, String(Number(stopBox.value) + 1))
+    expect(within(tray()).getByText(copy.workbenchRailEmployerWaiting)).toHaveAttribute('role', 'alert')
+    fireEvent.click(refresh())
+    expect(l.many.request, 'no run of the stop-year edit without the lowered deposit').not.toHaveBeenCalled()
+    fireEvent.click(applyButton())
+    expect(draftNow(), 'Apply writes nothing while the deposit waits').toEqual(before)
+  })
+
   it('a plan edit that removes the account takes its wait with it: nothing still says it waits for the employer', async () => {
     const draft = DEV_SEEDS.dip
     openTray(draft, { answer: dated({ ...draft, seed: SEED }, 5) })
@@ -736,5 +754,51 @@ describe('the inherited-IRA pace (U17)', () => {
     await waitFor(() => expect(within(paceRow()).getByRole('alert')).toBeInTheDocument())
     fireEvent.click(refresh())
     expect(l.many.request, 'no run on 2029 under a box showing 2040').not.toHaveBeenCalled()
+  })
+
+  it('a year refused by the press’s own blur, in one task (WebKit: the click never focuses the button), still stops Refresh and Apply (insight 149; gap 3’s review, round 2)', async () => {
+    const user = userEvent.setup()
+    const l = openTray(DEV_SEEDS.inherited)
+    const label = slots.trayPaceYearOf('Alex’s IRA inherited in 2023')
+    const paceOf = () => draftNow().enteredAccounts.find((a) => a.id === A)?.inherited?.pace
+    const before = paceOf()
+    await user.click(within(paceRow()).getByRole('combobox'))
+    await user.click(await screen.findByRole('option', { name: copy.trayPaceChosen }))
+    await within(tray()).findByLabelText(label)
+    typeIn(label, '2029')
+    fireEvent.click(refresh())
+    expect(l.many.request).toHaveBeenCalledTimes(1)
+    await l.settleWhatIf()
+    // 2040 typed, then the blur and the press in one task: no render lands between them.
+    const box = within(tray()).getByLabelText(label)
+    for (const press of [refresh, applyButton]) {
+      act(() => box.focus())
+      fireEvent.change(box, { target: { value: '2040' } })
+      act(() => {
+        box.blur()
+        press().click()
+      })
+    }
+    expect(l.many.request, 'no second run on 2029 under a box showing 2040').toHaveBeenCalledTimes(1)
+    expect(paceOf(), 'Apply writes nothing under a box showing 2040').toEqual(before)
+  })
+})
+
+describe('the stop row’s refusal goes with its value (gap 3’s review, round 2)', () => {
+  it('a refused stop year, then the box cleared (or Back), leaves no refusal to hold Refresh and Apply', async () => {
+    const draft = DEV_SEEDS.dip
+    const l = openTray(draft, { answer: dated({ ...draft, seed: SEED }, 5) })
+    const stopRow = () => within(tray()).getAllByLabelText(copy.workbenchRailStopLabel)[0]!.closest('[data-tray-row]') as HTMLElement
+    typeIn(copy.workbenchRailStopLabel, '2226')
+    await waitFor(() => expect(within(stopRow()).getByRole('alert')).toBeInTheDocument())
+    typeIn(copy.workbenchRailStopLabel, '')
+    await waitFor(() => expect(within(stopRow()).queryByRole('alert')).toBeNull())
+    // Another edit (a raised deposit asks nothing), then Refresh runs it.
+    const own = within(tray()).getByLabelText(/^Into .*401\(k\), dollars a year$/)
+    act(() => own.focus())
+    fireEvent.change(own, { target: { value: '20,000' } })
+    act(() => own.blur())
+    fireEvent.click(refresh())
+    expect(l.many.request, 'the deposit edit runs: no stale refusal holds the tray').toHaveBeenCalledTimes(1)
   })
 })

@@ -42,6 +42,7 @@ const SERVED: Served = {
   heldAtDeath: 'own-ira',
   ownerInherited: 'no',
   named: 'named',
+  movedInSince: 'no',
   disabledAtDeath: 'no',
   childUnder21AtDeath: 'no',
   moreThanTenYounger: 'yes',
@@ -139,6 +140,7 @@ describe('each refused case refuses on its own question, asks nothing after it, 
     ['money still in the job’s plan at the death', () => answerAll(ctx(), 1938, 2023, { heldAtDeath: 'job-plan' }).walk, 'job-plan'],
     ['a successor beneficiary', () => answerAll(ctx(), 1938, 2023, { ownerInherited: 'yes' }).walk, 'successor'],
     ['an heir not named on the account (a will, an estate or a trust)', () => answerAll(ctx(), 1938, 2023, { named: 'estate-or-trust' }).walk, 'estate-or-trust'],
+    ['an heir named beside an estate, a trust or a charity', () => answerAll(ctx(), 1938, 2023, { named: 'with-entity' }).walk, 'with-entity'],
     ['a death before 2020', () => answerAll(ctx(), 1938, 2019).walk, 'pre-2020'],
     ['an heir under ten years younger', () => answerAll(ctx(), HEIR_BORN - 9, 2023).walk, 'eligible-age'],
     ['an heir exactly ten apart, not more than ten younger', () => answerAll(ctx(), HEIR_BORN - 10, 2023, { moreThanTenYounger: 'no' }).walk, 'eligible-age'],
@@ -203,6 +205,39 @@ describe('a blank answer, an impossible year and the heir’s missing birth year
     expect(answerAll(ctx(), 1950, Y + 1).walk.invalid).toEqual({ at: 'ownerDeathYear', why: 'death-after-asked' })
     expect(answerAll(ctx(), 1850, 2023).walk.invalid).toEqual({ at: 'ownerBirthYear', why: 'birth-year-range' })
   })
+  it('money moved in since last December 31 (a merge, or an account opened after the death): the custodian’s figure is never asked, and the figure is computed from all of it (gap 3’s review, round 3)', () => {
+    const w = answerAll(ctx(), 1938, 2023, { movedInSince: 'yes', decemberBalance: 198_000 }).walk
+    expect(ids(w)).toContain('movedInSince')
+    expect(ids(w)).not.toContain('hasCustodianFigure')
+    expect(w.words.decemberAll).toBe(true)
+    expect(w.facts?.askedFigure).toEqual({ kind: 'computed', decemberBalance: 198_000 })
+    // Answered No, the custodian's figure is asked as before.
+    expect(ids(answerAll(ctx(), 1938, 2023, { movedInSince: 'no' }).walk)).toContain('hasCustodianFigure')
+  })
+  it('a death this year after the date asks whether the account is shared and not split: the heir’s first own minimum, next year, rides on it (gap 3’s review, round 3)', () => {
+    const shared = answerAll(ctx(), 1938, Y, { sharedUnsplit: 'yes' }).walk
+    expect(shared.refusal).toEqual({ at: 'sharedUnsplit', why: 'shared' })
+    expect(shared.words.sharedBy).toBe(Y + 1)
+    expect(answerAll(ctx(), 1938, Y).walk.facts?.askedFigure).toMatchObject({ kind: 'death-year' })
+  })
+  it('a death in the owner’s required beginning year, on or after April 1, names their first required withdrawal too; before April 1 it never does (gap 3’s review, round 3)', () => {
+    const born = Y - 74 // 73 in Y - 1, so the required beginning date is April 1, Y
+    const c = ctx({ heirBirthYear: born + 20 })
+    expect(answerAll(c, born, Y, { diedBeforeApril1: 'no' }).walk.words.firstYearToo).toBe(Y - 1)
+    expect(answerAll(c, born, Y, { diedBeforeApril1: 'yes' }).walk.words.firstYearToo).toBeUndefined()
+  })
+  it('a $0 balance last December 31 beside money today waits on that balance, on both figure paths; with nothing today it is served (gap 3’s review, round 2)', () => {
+    // A 1938 owner who died in 2023: the asked year has a yearly minimum, figured from last December 31's balance.
+    for (const hasCustodianFigure of ['no', 'yes'] as const) {
+      const over: Served = { decemberBalance: 0, hasCustodianFigure, custodianFigure: 0 }
+      const w = answerAll(ctx({ balanceToday: 150_000 }), 1938, 2023, over).walk
+      expect(w.invalid, hasCustodianFigure).toEqual({ at: 'decemberBalance', why: 'december-zero' })
+      expect(w.refusal, `${hasCustodianFigure}: never the custodian-figure refusal`).toBeNull()
+      expect(w.facts).toBeNull()
+    }
+    expect(answerAll(ctx({ balanceToday: 0 }), 1938, 2023, { decemberBalance: 0 }).walk.facts).not.toBeNull()
+    expect(answerAll(ctx({ balanceToday: 150_000 }), 1938, 2023, { decemberBalance: 140_000 }).walk.facts).not.toBeNull()
+  })
   it('with no heir birth year the age questions wait and nothing is built', () => {
     const w = answerAll(ctx({ heirBirthYear: undefined }), 1938, 2023).walk
     expect(w.needsHeirBirthYear).toBe(true)
@@ -266,6 +301,6 @@ describe('an answer counts only for the question it answered', () => {
   it('a plan moved past the saved year asks this year’s figures afresh', () => {
     const facts = answerAll(ctx(), 1938, 2023).walk.facts!
     const later = ctx({ askedYear: Y + 1 })
-    expect(walkInheritedQuestions(inheritedAnswersFrom(facts, later), later).blank).toEqual(expect.arrayContaining(['decemberBalance', 'takenThisYear', 'earlier']))
+    expect(walkInheritedQuestions(inheritedAnswersFrom(facts, later), later).blank).toEqual(expect.arrayContaining(['movedInSince', 'takenThisYear', 'earlier']))
   })
 })

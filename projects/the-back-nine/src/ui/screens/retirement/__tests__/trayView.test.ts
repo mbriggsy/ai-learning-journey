@@ -168,7 +168,7 @@ describe('deposits (D7; the plan’s U15): the employer figure at a lower deposi
     const v = trayView(input(dip, { awaitingEmployer: new Map([[withEmployer.accountId, lowered]]) }))
     const employer = row(v, `deposits:${withEmployer.accountId}:employer`)!
     expect(employer.control).toMatchObject({ kind: 'employer', value: undefined, deposit: lowered })
-    expect(employer.notes).toEqual([copy.workbenchRailEmployerWaiting])
+    expect(employer.notes, 'its waiting words are the row’s held words, drawn by the tray').toEqual([])
     expect(row(v, `deposits:${withEmployer.accountId}`)!.changed).toBe(true)
     // The figure given: the lever, whole, carrying both.
     const lever = employerCommit(withEmployer, lowered, 500)!
@@ -212,10 +212,15 @@ describe('the other levers’ commits', () => {
     expect(orderCommit(offer, 'custom', ['roth', 'taxable', 'pretax'])).toEqual({ kind: 'withdrawal-order', policy: 'custom', drawdownOrder: ['roth', 'taxable', 'pretax'] })
   })
 
-  it('the mix: a lever only when all three parts are typed and add to 100, words otherwise', () => {
-    expect(mixCommit({ stock: 60 })).toEqual({})
-    expect(mixCommit({ stock: 60, bond: 30, cash: 5 })).toEqual({ error: slots.workbenchRailMixSum('95') })
-    expect(mixCommit({ stock: 60, bond: 30, cash: 10 })).toEqual({ lever: { kind: 'mix', stockPct: 60, bondPct: 30, cashPct: 10 } })
+  it('the mix: a lever only when all three parts are typed, each 0 to 100, and add to 100, words otherwise', () => {
+    expect(mixCommit({}, false), 'nothing typed and no lever held: no choice at all').toEqual({})
+    expect(mixCommit({ stock: 60 }, false)).toEqual({ error: copy.workbenchRailMixNeedsAll })
+    // A part cleared beside an earlier mix lever waits with words, so Refresh and Apply never run that lever under it.
+    expect(mixCommit({ stock: 60, bond: 30 }, true)).toEqual({ error: copy.workbenchRailMixNeedsAll })
+    expect(mixCommit({}, true)).toEqual({ error: copy.workbenchRailMixNeedsAll })
+    expect(mixCommit({ stock: 120, bond: 0, cash: 0 }, false), 'a part over 100 is refused in words, never blanked').toEqual({ error: copy.workbenchRailMixPartRange })
+    expect(mixCommit({ stock: 60, bond: 30, cash: 5 }, false)).toEqual({ error: slots.workbenchRailMixSum('95') })
+    expect(mixCommit({ stock: 60, bond: 30, cash: 10 }, true)).toEqual({ lever: { kind: 'mix', stockPct: 60, bondPct: 30, cashPct: 10 } })
   })
 
   it('Roth conversions: none, or a plan whole in all three fields; a missing field and a passed first year each wait with words', () => {
@@ -394,6 +399,9 @@ describe('the inherited-IRA pace (U17, KTD21)', () => {
     const aged = [inh.startCalendarYear, planClockAnchor(inh.startCalendarYear, inh.startCalendarYear + 1), inh.startCalendarYear + 1] as const
     expect(paceCommit(a, 'even-to-year', a.firstYear, ...aged)).toEqual({ kind: 'wait', words: slots.trayPaceYearPast(inh.startCalendarYear + 1) })
     expect(paceCommit(a, 'even-to-year', a.firstYear + 1, ...aged)).toMatchObject({ kind: 'lever' })
+    // The waiting and range words start at this year, never naming the gone asked year the row would then refuse.
+    expect(paceCommit(a, 'even-to-year', undefined, ...aged)).toEqual({ kind: 'wait', words: slots.trayPaceNeedsYear(inh.startCalendarYear + 1, 2033) })
+    expect(paceCommit(a, 'even-to-year', 2034, ...aged)).toEqual({ kind: 'wait', words: slots.trayPaceYearRange(inh.startCalendarYear + 1, 2033) })
   })
 
   it('two accounts’ pace levers hold two targets: pulling one leaves the other', () => {

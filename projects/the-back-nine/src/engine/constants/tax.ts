@@ -20,9 +20,11 @@ import {
   type JointLifeLastSurvivorTable,
   type OrdinaryBracket,
   type RmdAgeBand,
+  type SingleLifeTable,
   type UniformLifetimeDivisor,
 } from './types'
 import { jointLifeLastSurvivorData } from './jointLifeLastSurvivor.data'
+import { singleLifeTableData } from './singleLifeTable.data'
 import type { TaxVintageV3 } from '@shared/model'
 
 export const TAX_YEAR = 2026
@@ -157,20 +159,57 @@ export const seniorBonus = sourced(
   },
 )
 
-/** RMD start age, keyed by birth-year cohort (SECURE 2.0). Never a flat 73. */
+/**
+ * RMD start age (the applicable age), keyed by birth date (SECURE 2.0; 26 CFR 1.401(a)(9)-2(b)(2)). Never a flat 73.
+ *
+ * The 70½ band (U11, 2026-11-27) is drawn by DATE, "born before July 1, 1949" (-2(b)(2)(ii)), so it ends at the first
+ * half of 1949 (`bornThroughFirstHalf`) and the next band takes 1949's second half. Its age, 70.5, is reached six
+ * calendar months after the 70th birthday (-6(g)(1)(iv)). A dead owner's required beginning date reads it through
+ * `requiredBeginningYear` (`src/engine/rmd.ts`), with a birth half; no living member can reach it (anyone born before
+ * 1950 is 77 or older in every plan year from 2026, past both 70½ and 72).
+ *
+ * LANDMINE: the 1959 row's 73 is NOT the final regulation's. (b)(2)(v) is [Reserved]; 73 rests on the 2024 proposed
+ * rule (89 FR 58644) and the IRS's own reading. The citation says so, so the gate-honesty tripwire still trips and its
+ * named exemption (`constants.shape.test.ts`, narrowed to the 1959 row) stays live. Never re-cite it to pass the
+ * tripwire while 1959 rests on the proposed rule (the register's ⚑ NEGATIVE on the `tax.rmdStartAge` entry).
+ */
 export const rmdStartAge = sourced<readonly RmdAgeBand[]>(
   [
+    { bornThrough: 1949, bornThroughFirstHalf: true, age: 70.5 },
     { bornThrough: 1950, age: 72 },
     { bornThrough: 1959, age: 73 },
     { bornThrough: null, age: 75, effectiveFrom: 2033 },
   ],
   {
-    citation: 'findings §Strand 5; SECURE 2.0 / IRS Pub 590-B',
+    citation:
+      '26 CFR 1.401(a)(9)-2(b)(2)(ii)–(vi), eCFR read 2026-11-27 (current 2026-11-24): born before 1949-07-01 → 70½ ' +
+      '(reached six calendar months after the 70th birthday, -6(g)(1)(iv)), 1949-07-01 through 1950 → 72, 1951–1958 → 73, ' +
+      '1960 on → 75. The 1959 row is not primary: (b)(2)(v) is [Reserved], and its 73 is the 2024 proposed rule, 89 FR 58644',
     directionalUntilPinned: false,
     legalBasis: 'SECURE 2.0',
-    note: 'The 1959 drafting glitch resolves to 73 (current interpretation). First RMD due by April 1 of the year after reaching RMD age. The age-75 step is effective 2033.',
+    note: 'The 1959 drafting glitch resolves to 73 (the proposed rule; the final reg reserves it). First RMD due by April 1 of the year after reaching RMD age. The age-75 step is effective 2033.',
   },
 )
+
+/**
+ * The IRS Single Life Table (26 CFR 1.401(a)(9)-9(b); Pub 590-B Appendix B Table I, "For Use by Beneficiaries"): one
+ * person's life expectancy at each age, the divisor an inherited IRA's yearly minimum reads (the heir's age in the year
+ * after the death, less one each year after, -5(d)(3)). Read through `singleLifeExpectancy` (`src/engine/rmd.ts`).
+ *
+ * PROVENANCE lives in the data module's header ({@link ./singleLifeTable.data}): parsed from the eCFR's XML keyed by age,
+ * diffed against Pub 590-B read with `pdftotext -raw`, 121 of 121 cells equal (insight 009's method). STABLE: mortality,
+ * not inflation (T.D. 9930's table, effective 2022-01-01), so no staleness clock. PINNED from birth: every `tax.*` entry
+ * counts as consumed by every tax-on run (`consumedConstantEntries`), so a directional table would withhold every
+ * household's token. The last row is the source's "120+"; older ages clamp to it, never extrapolate.
+ */
+export const singleLifeTable = sourced<SingleLifeTable>(singleLifeTableData, {
+  citation:
+    'eCFR 26 CFR 1.401(a)(9)-9(b), read 2026-11-27 (GPO XML, current 2026-11-24), verified against the parsed IRS Pub 590-B (2025) Table I: 121 of 121 cells equal',
+  directionalUntilPinned: false,
+  pinTo: 'IRS Pub 590-B Appendix B Table I (Single Life Expectancy)',
+  legalBasis: 'T.D. 9930 (effective 2022-01-01)',
+  note: 'Post-2022 table, STABLE (not inflation-indexed). Ages 0 to 119 and "120+"; clamp any older age to the last row.',
+})
 
 /**
  * IRS Uniform Lifetime Table (Pub 590-B Table III / Treas. Reg. §1.401(a)(9)-9(c)) —
@@ -411,6 +450,7 @@ export const taxConstants = {
   rmdStartAge,
   uniformLifetimeTableDivisors,
   jointLifeLastSurvivorTable,
+  singleLifeTable,
   ssProvisionalThresholds,
   capitalGainsBreakpoints,
   mfjToSingleTransition,

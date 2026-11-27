@@ -38,6 +38,10 @@ convergence beacon), every refuter voting confirm 3-0.
    display LESS optimistic than the raw reading (the lower count, the lower-ranked word,
    the lower dollar). Band order comes from the engine's own exported
    `STATE_OPTIMISM_RANK` (confidence.ts) — never re-derived UI/store-side.
+
+   > **Out of date (corrected 2026-11-27):** Act 6 · RC21 deleted the sticky seam (every printed count is raw since
+   > RC4), which left `STATE_OPTIMISM_RANK` with no reader, and gap 3's U11 deleted it. The seam's current state is
+   > `src/store/memoryModel.ts`'s header, item (d). A future hold would take its band order from the engine again.
 2. **The sibling sweep at fold time:** the DOLLAR hold had the same blindness and **no
    finder flagged it** — a falling `room` figure held the rosier dollar. Same law, same
    line. When a defect is a *shape*, grep the seam for every same-shape sibling before

@@ -949,8 +949,9 @@ describe('constants — a flag-false entry never self-describes as non-primary (
     'tax.inOutRule': "design ruling — the product's own IN/OUT scope rule (the findings §Strand 5 banner)",
     'tax.stateIncomeTax':
       'design ruling — the priced-roster scope sentinel (council wf_d04148cb-1e5); the priced figures pin in state.*',
+    // Narrowed 2026-11-27 (U11, gap 3): the 70½ band is built and re-cited to the eCFR read, so only the 1959 row is left.
     'tax.rmdStartAge':
-      'unverified — pending register entry: the 2026-09-30 read of IRC §401(a)(9)(C)(v) + 26 CFR 1.401(a)(9)-2(b)(2) (eCFR current 2026-09-28) confirms 1951–1958 → 73 and 1960+ → 75, but births before 1949-07-01 are 70½ where the value says 72, and 1959 is [Reserved] in the final reg (73 only in the 2024 proposed rule, 89 FR 58644)',
+      'unverified — pending register entry: the 2026-11-27 eCFR read of 26 CFR 1.401(a)(9)-2(b)(2) clears every row but 1959, which is [Reserved] in the final reg (its 73 rests only on the 2024 proposed rule, 89 FR 58644)',
   }
 
   /** The pinning walk's whole universe: the registry plus the methodology substrate it also walks. */

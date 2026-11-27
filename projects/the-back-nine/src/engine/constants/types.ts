@@ -113,10 +113,18 @@ export interface OrdinaryBracket {
   readonly upTo: number | null
 }
 
-/** RMD start-age schedule, keyed by the later of birth-year cohorts (SECURE 2.0). */
+/** RMD start-age schedule (the applicable age, 26 CFR 1.401(a)(9)-2(b)(2)), keyed by birth date: a birth year, and
+ *  for the 70½ band a birth half. */
 export interface RmdAgeBand {
   /** Inclusive upper birth year for this band; `null` = all later births. */
   readonly bornThrough: number | null
+  /** The band ends at the close of the FIRST half (June 30) of `bornThrough`'s year, not at its December 31: the
+   *  70½ band's date line, "born before July 1, 1949" (-2(b)(2)(ii)). A birth in that year's second half falls to the
+   *  next band. Read by `requiredBeginningYear` (`src/engine/rmd.ts`), which takes a birth half; the living member's
+   *  reader, `rmdStartAgeForBirthYear`, has none and reads every birth of that year as this band, which moves no
+   *  living result (its own docblock says why). */
+  readonly bornThroughFirstHalf?: true
+  /** The applicable age; 70.5 is the 70½ band (reached six calendar months after the 70th birthday, -6(g)(1)(iv)). */
   readonly age: number
   /** Tax year the band takes effect, when scheduled in the future. */
   readonly effectiveFrom?: number
@@ -164,6 +172,18 @@ export interface JointLifeLastSurvivorTable {
   /** Divisor rows keyed by owner age: `byOwnerThenSpouse[ownerAge][spouseAge −
    *  minSpouseAge]` for spouse ages `minSpouseAge..(ownerAge − 11)`. Finite 1-decimals. */
   readonly byOwnerThenSpouse: Readonly<Record<number, readonly number[]>>
+}
+
+/** The IRS Single Life Table (26 CFR 1.401(a)(9)-9(b); Pub 590-B Appendix B Table I, "For Use by Beneficiaries"): the
+ *  life expectancy of one person at each age, the divisor an inherited IRA's yearly minimum reads. `byAge[age]` for
+ *  ages 0 to {@link lastAge}; the last entry is the source's own "120+" row, so every older age clamps to it. */
+export interface SingleLifeTable {
+  /** The last age the source prints, as a number: its "120+" row. Older ages clamp to it (DND/009). */
+  readonly lastAge: number
+  /** How the source labels the last row ("120+"), kept beside it so no reader re-types it. */
+  readonly lastAgeLabel: string
+  /** Life expectancy by age, index = age, finite 1-decimals that never rise with age. */
+  readonly byAge: readonly number[]
 }
 
 // ---- State income-tax value shapes (the state-tax unit) ---------------------

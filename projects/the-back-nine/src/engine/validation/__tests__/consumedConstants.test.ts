@@ -192,6 +192,8 @@ const WITNESSES: ReadonlyArray<readonly [key: string, file: string, symbol: stri
   // the live solve anchor deriver); the mapping's witness moves with the consumption (source-bind law).
   ['tax.uniformLifetimeTableDivisors', 'src/engine/rmd.ts', 'uniformLifetimeTableDivisors'],
   ['tax.jointLifeLastSurvivorTable', 'src/engine/rmd.ts', 'jointLifeLastSurvivorTable'],
+  // U11 (gap 3): the inherited IRA's divisor, read by the producer's lookup (`singleLifeExpectancy`).
+  ['tax.singleLifeTable', 'src/engine/rmd.ts', 'singleLifeTable'],
   ['tax.seniorBonus', 'src/engine/taxCore.ts', 'seniorBonus'],
   ['tax.capitalGainsBreakpoints', 'src/engine/taxCore.ts', 'capitalGainsBreakpoints'],
   ['tax.ssProvisionalThresholds', 'src/engine/taxCore.ts', 'ssProvisionalThresholds'],

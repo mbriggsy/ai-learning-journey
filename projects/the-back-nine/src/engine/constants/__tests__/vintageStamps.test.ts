@@ -74,7 +74,12 @@ describe('taxVintageStamp — the controls-surface clock producer', () => {
       // (`src/engine/pricingVersion.ts`, row version 6, commit `e04823a4`) now discloses this
       // re-pricing, via `anyStale` only (a method change is never "the rules changed"), to every vault
       // saved before its 2026-09-25 ship day; see `src/store/staleness.ts:66-76`.]
-      contentDigest: 1_996_572_722,
+      // Re-pinned 2026-11-27 (gap 3's U11): `rmdStartAge` gained the 70½ band (born before July 1, 1949) and
+      // `singleLifeTable` joined the table (the inherited IRA's divisor). NO vintage bump: no living member can reach
+      // the band (77 or older in every plan year from 2026, past both 70½ and 72), nothing prices the Single Life Table
+      // until U12, and `pnpm engine:identity` read every seed and plant byte-identical (82 of 82). A bump would fire every
+      // saved vault's "the rules changed" note on an identical answer, which is alarm-when-fine. A conscious re-pin.
+      contentDigest: 1_216_567_413,
     })
   })
 })

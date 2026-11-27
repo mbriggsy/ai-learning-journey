@@ -2086,7 +2086,7 @@ two findings would stop his eye.
    Hero + echo at 1-of-10: *"About $7,300 a month less would move it toward steadier ground."*
    The couple just watched 6,500/mo read 9-of-10; the line prescribes ~2,700/mo — two on-surface
    numbers an attentive reader cannot reconcile ("this thing is broken"). **Chair-verified
-   mechanism** (`src/engine/confidence.ts:245-246`): the figure is the linear heuristic
+   mechanism** (`src/engine/confidence.ts:228-229`): the figure is the linear heuristic
    `monthlySpend × (onTrack − survival)`, near-saturated at deep gap — the engine's own comment
    concedes the saturation ("~zero state-specific signal"), which is why 0-of-10 forks to the
    figure-less rethink; 1-of-10 still gets the trim clause. The 2026-06-29 fork didn't
@@ -2160,7 +2160,7 @@ get my partner, talk to a real person" — the disclaimer landed). Trust verdict
 aggressively honest, which I actually trust"* — the against-interest lines ("never up",
 "reads easier than they may prove", "understated, never oversold") are what earned it.
 
-**routedToOracle (filed check/fix tasks):** O1 the trim-figure saturation (`confidence.ts:245`
+**routedToOracle (filed check/fix tasks):** O1 the trim-figure saturation (`confidence.ts:228`
 — #1's engine side) · O2 `verdictRoomClause` × `medicareUnpriced` interaction (#2's mechanism
 side) · O3 legend text vs the a11y tree (as-designed or lift out) · O4 ControlSheet
 Escape-close with real in-dialog focus (WAI-ARIA dialog pattern; found via the walk, synthetic

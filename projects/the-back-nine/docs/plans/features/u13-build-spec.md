@@ -55,12 +55,12 @@ atomic change with: `ScenarioV3` type + `SCENARIO_V3_FIELDS` + `checkV3Fields` +
      re-implements it.
    - **Absent `savedAt`** (every vault saved before U13): the "~N years since your save" claim is
      SUPPRESSED — never fabricated from `startCalendarYear`, never defaulted to "today".
-2. **`taxVintageDetail?: TaxVintageV3`** — atomic object minted by **`taxVintageStamp()`** (tax.ts:394),
+2. **`taxVintageDetail?: TaxVintageV3`** — atomic object minted by **`taxVintageStamp()`** (tax.ts:433),
    the `healthcareVintageStamp` mirror. Keyed on `TAX_YEAR` + the legal basis string. The legacy opaque
    `taxVintage: string` stayed untouched (add-only).
    - Neither the RMD-age rule nor the senior-bonus sunset is stamped, and **neither got a clock** — the
      ratified plan's "derived read-time note" for both was withdrawn during the build. The RMD banded table
-     (`rmdStartAge`, tax.ts:161 — the figures live there, never re-typed here) is birth-year-cohort-keyed
+     (`rmdStartAge`, tax.ts:176 — the figures live there, never re-typed here) is birth-year-cohort-keyed
      and STATIC, so a re-derivation under any wall-clock prices the identical rule; a change to the RULE
      arrives as a new `legalBasis`/`taxYear` and fires the tax clock instead. The senior-bonus ruling is the ultramode review's, recorded below.
 3. **`dateVintage?: DateVintageV3`** — `{ contributionYear, blendSnapshotAsOf }`, minted by

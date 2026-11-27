@@ -140,7 +140,7 @@ Sorted alphabetically; `§` and number-prefixed statutory terms are grouped at t
 
 **RIB-LIM** — the Retirement-Insurance-Benefit limit that caps a Social Security survivor benefit. → [architecture.md §7.7](architecture.md)
 
-**RMD (required minimum distribution)** — the forced annual pre-tax distribution; the age is **birth-year-derived (72 / 73 / 75)**, never a flat 73, and is **non-convertible** (must be taken before any conversion). → [architecture.md §7.1](architecture.md)
+**RMD (required minimum distribution)** — the forced annual pre-tax distribution; the age is **birth-date-derived (70½ / 72 / 73 / 75; 70½ for births before July 1, 1949)**, never a flat 73, and is **non-convertible** (must be taken before any conversion). → [architecture.md §7.1](architecture.md)
 
 **SAFEMAX** — see **Bengen**.
 

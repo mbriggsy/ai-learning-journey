@@ -243,10 +243,18 @@ describe('taxOverlay — M2 RMD forced distribution', () => {
     return runTaxAwareDecumulation(pretaxOnly(PRETAX), realStock, realBond, noSpend, STOCK_W, 'proportional', config)
   }
 
-  describe('RMD start age is birth-year-derived (SECURE 2.0 bands 72/73/75), never a flat 73', () => {
-    it('born ≤1950 → band 72: no RMD at age 71, fires at age 72 (pins the first band row)', () => {
-      expect(oneYear(1948, 1948 + 71).finalBuckets.taxable).toBe(0) // age 71 < band 72
-      expect(oneYear(1948, 1948 + 72).finalBuckets.taxable).toBeGreaterThan(0) // age 72
+  describe('RMD start age is birth-date-derived (SECURE 2.0 bands 70½/72/73/75), never a flat 73', () => {
+    // U11 (gap 3, 2026-11-27): the 72 band starts at July 1, 1949, so its whole-year witness is a 1950 birth. This test
+    // once pinned 72 on a 1948 birth at 71 in calendar 2019, a plan year no plan reaches: the final reg puts that birth
+    // in the 70½ band, and below the Uniform Lifetime Table's first row (72) the lookup throws.
+    it('born 1950 → band 72: no RMD at age 71, fires at age 72 (pins the 72 band row)', () => {
+      expect(oneYear(1950, 1950 + 71).finalBuckets.taxable).toBe(0) // age 71 < band 72
+      expect(oneYear(1950, 1950 + 72).finalBuckets.taxable).toBeGreaterThan(0) // age 72
+    })
+
+    it('born before July 1949 → the 70½ band: a living member meets it only at 77 or older (every plan year from 2026), where an RMD fires under either band', () => {
+      expect(oneYear(1948, 2026).finalBuckets.taxable).toBeGreaterThan(0) // age 78
+      expect(oneYear(1949, 2026).finalBuckets.taxable).toBeGreaterThan(0) // age 77
     })
 
     it('born 1955 → band 73: no RMD at age 72, fires at age 73', () => {

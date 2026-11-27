@@ -33,8 +33,8 @@
  *   confirms the SAME law is provenance, not drift — firing on it would stale every vault
  *   monthly (alarm-when-fine is a lie in the safe direction, still a lie). A real regime
  *   change moves `acaStatus`/`coverageYear`/the numbers, which DO fire.
- * - The RMD-age rule has NO derivable drift today: the banded table (72/73/75,
- *   effectiveFrom 2033) is birth-year-keyed and STATIC in the constants, so a re-derivation
+ * - The RMD-age rule has NO derivable drift today: the banded table (70½/72/73/75,
+ *   effectiveFrom 2033) is birth-date-keyed and STATIC in the constants, so a re-derivation
  *   under any wall-clock prices the identical rule. A change to the RULE ITSELF arrives as
  *   a new `legalBasis`/`taxYear` and fires the tax clock. (The plan's "RMD-age rule" clock
  *   is satisfied structurally, not by a boolean that can never be true.)

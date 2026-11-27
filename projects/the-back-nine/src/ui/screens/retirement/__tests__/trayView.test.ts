@@ -7,7 +7,7 @@ import { copy, slots } from '../../../copy'
 import { planClockAnchor } from '../../../bandAnnotations'
 import { railOffers, stopWords } from '../../../workbench/railChrome'
 import { composeRothOmissionsNote } from '../../../stateTaxDisclosure'
-import { acaPricedForRun, healthcarePriced, medicareOnlyPriced, pricedStateForRun } from '@intake/intakeMap'
+import { acaPricedForRun, draftPretaxTotal, healthcarePriced, medicareOnlyPriced, pricedStateForRun } from '@intake/intakeMap'
 import {
   acaCommit,
   claimCommit,
@@ -321,5 +321,18 @@ describe('the tray’s words never lean (R20)', () => {
       const texts = [...v.left, ...v.right].flatMap((s) => [s.title, ...s.notes, ...s.rows.flatMap((r) => [r.label, r.compared, ...r.notes.filter((n) => !ported.has(n))])])
       for (const t of texts) expect(LEAN.some((re) => re.test(t)), t).toBe(false)
     }
+  })
+})
+
+describe('an inherited IRA is never pre-tax money to the tray (the Act 5 plan’s U13, R24)', () => {
+  it('a household whose only pre-tax money is inherited gets no Roth row and no “Pre-tax first” order', () => {
+    const inherited = DEV_SEEDS.inherited.enteredAccounts.find((a) => a.kind === 'inherited-ira')!
+    const d: ScenarioDraft = { ...DEV_SEEDS.steer, enteredAccounts: [...DEV_SEEDS.steer.enteredAccounts, { ...inherited, ownerIndex: 0 }] }
+    expect(draftPretaxTotal(DEV_SEEDS.steer), '[test setup] the steer household holds no pre-tax money of its own').toBe(0)
+    expect(draftPretaxTotal(d)).toBe(0)
+    expect(railOffers(d, undefined).roth).toBeUndefined()
+    const order = row(trayView(input(d)), 'withdrawal-order')
+    expect(order, '[test setup] the order row is drawn').toBeDefined()
+    expect(order!.control.kind === 'order' && order!.control.offered).not.toContain('pre-tax-first')
   })
 })

@@ -61,6 +61,10 @@ working tree untouched; `fsck` proves nothing else was hit.
 
 ## Windows and the shell
 
+- **(b9-16, 11-27) `TaskStop` on a background `pnpm dev` stops pnpm and leaves its vite child holding the port.** Twice
+  on 4199 the `node …vite.js --port 4199` process kept listening after the stop. After stopping, read
+  `Get-NetTCPConnection -LocalPort <port> -State Listen`, confirm the owning process's command line is your own vite
+  (`Get-CimInstance Win32_Process -Filter "ProcessId=<pid>"`), then `Stop-Process -Id <pid> -Confirm:$false`.
 - **(b9-15, 11-27) The Edit tool writes a `\u00a0` typed in its replacement as the literal no-break character, not the
   six-letter escape.** `trayLineEvery`'s "every\u00a05\u00a0years" landed as U+00A0 bytes in `src/ui/copy.ts` and its test,
   so ESLint's `no-irregular-whitespace` redded CI's quick job on `653aee4e` (fixed in `004df90f`); a Python heredoc
@@ -394,6 +398,11 @@ tests
 
 ## The fit gate and e2e
 
+- **(b9-16, 11-27) An audit of "every box inside the row" catches the kit's hidden inputs first.** The ChoiceGroup's radios
+  are screen-reader-only (`sr-only`) and a Base UI Select carries a hidden form input; each is a 1 px box off the flow,
+  measured at x 0–1 outside the row. Measure what a person sees: `[data-choice]` labels and `input[type="text"]` (the U8
+  arm in `e2e/rc-screens.spec.ts`). And a Range word-split check over prose reads `/[^\s-]+/` parts, not `/\S+/`: a
+  hyphenated compound may break after its hyphen ("extra-coverage" in Probability's Medicare note).
 - **(b9-4, 11-26; moved from TODO by b9-5) The look instrument's Settings block fails on a seed with no date** (its locator
   waits for the fan chart; the page itself is right). Look at Settings on `retired` or `datecoststale`.
 
@@ -1163,6 +1172,11 @@ chair; chair from a digest script, never the raw result, and expect the window t
 
 ## Driving the app
 
+- **(b9-16, 11-27) The Playwright MCP browser saves only under the project or its `.playwright-mcp/` folder** (it refuses
+  the session scratchpad), and a drawer left dirty arms the leave guard: the next `goto` raises a `beforeunload` dialog
+  that blocks every call until `browser_handle_dialog` accepts it. Its files land in the gitignored `.playwright-mcp/`:
+  delete your own by exact name before the close. A `?seed=` reload also drops any edit made through a drawer, so an
+  edit to measure is made after the last navigation.
 - **(b9-2, 11-23) Playwright `fill()` on a `CurrencyField` that is not focused lands after its `onFocus` swaps in the raw
   figure**: "7000" plus the shown "7,600" reads "70007,600", parses to nothing and clears the value. Click the field first.
 - **(b9-2) The Playwright MCP writes only under the project** (its allowed roots: the project and `.playwright-mcp\`, which is

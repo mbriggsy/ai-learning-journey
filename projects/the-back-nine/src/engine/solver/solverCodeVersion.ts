@@ -165,5 +165,15 @@
  * pricer moved and no saved plan can hold an inherited IRA before U13, so `ENGINE_PRICING_LEDGER` appends no row
  * (pricingVersion.test pins the split). The stamp is global, so every record re-stales (the when-in-doubt
  * over-re-run; no real save exists).
+ *
+ * VERSION 14 (2026-11-28) — gap 5's U9: a home sale's federally taxed slice is a committed long-term gain in every
+ * frame the anchors read (`solveAnchor.committedIncomeForYear`, through `simulate.homeSaleCommittedGainAllLiving`:
+ * everyone living, 0 in a year with none) and in the engine's bracket-fill rails (`CommittedYearIncome`'s
+ * `committedGain`, read by `magiLandscape`'s two MAGIs, §86's provisional, the deduction's MAGI and the ACA-cliff
+ * closed form, never the ordinary income the bracket edge compares). A household selling a home gets a different
+ * conversion roster and, under bracket-fill, a different fill. Ranking logic for a run with a sale only: a run without
+ * one prices byte for byte and no saved plan can hold a sale's figures before U10, so `ENGINE_PRICING_LEDGER` appends
+ * no row (pricingVersion.test pins the split). The stamp is global, so every record re-stales (the when-in-doubt
+ * over-re-run; no real save exists).
  */
-export const SOLVER_CODE_VERSION = 13
+export const SOLVER_CODE_VERSION = 14

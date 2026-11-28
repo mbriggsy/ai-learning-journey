@@ -20,7 +20,8 @@
  * (`alloc.pretax` under `bracket-fill`). Ordinary income at fill `f` is
  * `max(f, rmd) + conversion + ongoingTaxable` (a fill below the forced RMD adds nothing —
  * the RMD is distributed regardless), plus an inherited IRA's booked and paced withdrawal where
- * the run carries one (U12). The realized-gain term is modeled 0 AT THE CAP:
+ * the run carries one (U12). A home sale's taxed slice (gap 5's U9, `committedGain`) is a committed long-term gain in
+ * every MAGI read but never ordinary income. The draws' own realized-gain term is modeled 0 AT THE CAP:
  * bracket-fill draws pre-tax FIRST, so the taxable bucket is untouched until the pre-tax
  * room exhausts — the DISCRETIONARY draw this ceiling caps respects the rail by
  * construction, while income the fill does not control (a taxable-bucket realization
@@ -77,6 +78,13 @@ export interface CommittedYearIncome {
    *  fill reaches it, and never fill. PRESENT only when the run carries an inherited ledger, so every frame without
    *  one keeps its literal pre-U12 arithmetic (AE7). */
   readonly inheritedDistribution?: number
+  /** Gap 5's U9 (KTD8): the year's home-sale slice, a long-term gain the fill does not control. It lifts ACA-MAGI,
+   *  IRMAA-MAGI (the sum and §86's provisional), the ACA-cliff closed form, and the deduction's MAGI and provisional
+   *  inside {@link taxableIncomeAtFill} — never {@link ordinaryAtFill} nor the ordinary taxable income the bracket edge
+   *  compares, because a long-term gain stacks ABOVE the ordinary brackets (`taxCore.ordinaryPlusCapitalGainsTax`).
+   *  PRESENT only when the run carries a sale (the solver's anchor: every frame, 0 in a year with none; the engine's
+   *  fill: a year with one), so every other frame keeps its literal pre-U9 arithmetic. */
+  readonly committedGain?: number
 }
 
 // Bisection controls — the fail-loud discipline mirrors the ACA solver's (burned/062):
@@ -97,7 +105,7 @@ function ordinaryAtFill(c: CommittedYearIncome, f: number): number {
  *  benefit) — LINEAR in `f` above the RMD, no Pub-915 coupling. Realized gain modeled 0 at
  *  the cap (the fill model above). */
 export function acaMagiAtFill(c: CommittedYearIncome, f: number): number {
-  return ordinaryAtFill(c, f) + c.ssBenefit
+  return c.committedGain === undefined ? ordinaryAtFill(c, f) + c.ssBenefit : ordinaryAtFill(c, f) + c.ssBenefit + c.committedGain
 }
 
 /** IRMAA-MAGI at fill `f`: ordinary + the TAXABLE SS portion (Pub 915 — no full-benefit
@@ -105,7 +113,9 @@ export function acaMagiAtFill(c: CommittedYearIncome, f: number): number {
  *  smoothness the gross-up contraction rests on). */
 export function irmaaMagiAtFill(c: CommittedYearIncome, f: number): number {
   const ord = ordinaryAtFill(c, f)
-  return ord + taxableSocialSecurity(ord, c.ssBenefit, c.filing, c.calendarYear)
+  if (c.committedGain === undefined) return ord + taxableSocialSecurity(ord, c.ssBenefit, c.filing, c.calendarYear)
+  // U9: the gain is in AGI and in §86's other income (Pub 915 Worksheet 1, line 3).
+  return ord + taxableSocialSecurity(ord + c.committedGain, c.ssBenefit, c.filing, c.calendarYear) + c.committedGain
 }
 
 /** Federal TAXABLE income at fill `f`: AGI (= IRMAA-MAGI at gain 0) less the full deduction
@@ -114,8 +124,15 @@ export function irmaaMagiAtFill(c: CommittedYearIncome, f: number): number {
  *  while the deduction still shelters everything; OUTSIDE the window the stack is flat —
  *  std + age-65 only). Monotone non-decreasing in `f` in every year. */
 export function taxableIncomeAtFill(c: CommittedYearIncome, f: number): number {
-  const agi = irmaaMagiAtFill(c, f)
-  return Math.max(0, agi - deductionStack(c.filing, c.count65, agi, c.calendarYear))
+  if (c.committedGain === undefined) {
+    const agi = irmaaMagiAtFill(c, f)
+    return Math.max(0, agi - deductionStack(c.filing, c.count65, agi, c.calendarYear))
+  }
+  // U9: the ORDINARY taxable income (the figure the brackets read): the ordinary part of AGI, with the gain lifting §86's
+  // provisional and the deduction's MAGI only — `ordinaryPlusCapitalGainsTax`'s own `ordinaryTaxable`.
+  const ord = ordinaryAtFill(c, f)
+  const ordinaryAgi = ord + taxableSocialSecurity(ord + c.committedGain, c.ssBenefit, c.filing, c.calendarYear)
+  return Math.max(0, ordinaryAgi - deductionStack(c.filing, c.count65, ordinaryAgi + c.committedGain, c.calendarYear))
 }
 
 /**
@@ -152,7 +169,7 @@ function largestFillWithin(metric: (f: number) => number, rail: number, hi: numb
  * under the cliff regime; insight 027 — the predicate lives with the hazard creator).
  *
  * CLOSED FORM (ACA counts the FULL SS benefit, so the metric is linear above the RMD):
- * `K = cliffMagi − conversion − ongoingTaxable − ssBenefit` (less any inherited withdrawal, U12);
+ * `K = cliffMagi − conversion − ongoingTaxable − ssBenefit` (less any inherited withdrawal, U12, and any home-sale slice, gap 5's U9);
  * committed-over (even a zero fill lands over, `rmd > K`) ⇒ 0; else the headroom IS `K`. Sitting exactly AT the cliff is
  * eligible (IRC §36B is 100–400% INCLUSIVE; the engine's CEIL-quantized compare admits an
  * integer-cliff-exact MAGI — insight 012, `ceil(x) > N ⟺ x > N` on the integer grid).
@@ -161,10 +178,12 @@ export function acaCliffFillHeadroom(c: CommittedYearIncome, cliffMagi: number):
   if (!Number.isFinite(cliffMagi) || cliffMagi <= 0) {
     throw new Error(`[magiLandscape] acaCliffFillHeadroom: cliffMagi must be finite > 0 (got ${cliffMagi}) — insight 010`)
   }
-  const k =
+  const kBeforeGain =
     c.inheritedDistribution === undefined
       ? cliffMagi - c.conversion - c.ongoingTaxable - c.ssBenefit
       : cliffMagi - c.conversion - c.ongoingTaxable - c.ssBenefit - c.inheritedDistribution
+  // U9: a home-sale slice sits in ACA-MAGI one for one, so it comes off K too (absent ⇒ K unchanged).
+  const k = c.committedGain === undefined ? kBeforeGain : kBeforeGain - c.committedGain
   if (c.rmd > k) return 0 // committed income alone is over — nothing discretionary fits
   return k
 }

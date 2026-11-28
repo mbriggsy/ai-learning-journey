@@ -29,6 +29,7 @@
 import type { SimulationParams } from '@shared/model'
 import { ALL_CONSTANTS, isPricedState } from '@engine/constants'
 import { isUnsourced, type ConstantEntry } from '@engine/constants/types'
+import { carriesHomeSale } from '@engine/homeSale'
 import { productionMarket, survivorSpendingRatio } from '../reference/methodology'
 
 /** One consumed entry: the registry key (or `methodology.*` pseudo-key) + the entry itself. */
@@ -73,7 +74,7 @@ const NOT_RUN_CONSUMED: ReadonlySet<string> = new Set([
  *  - `state.*` — consumed iff `overlay.retirementState` is a PRICED state; only that state's
  *    entries (key prefix `state.<code>`), never a sibling state's. A state's inherited-IRA treatment
  *    (`state.<code>InheritedDistribution`, the Act 5 plan's U12) requires the run to carry an inherited IRA; its two
- *    home-sale treatments (`state.<code>HomeSaleGain(Not)Excludable`, gap 5's U8) a one-time item (U9: a sale).
+ *    home-sale treatments (`state.<code>HomeSaleGain(Not)Excludable`, gap 5's U8) a home sale on its one-time list (U9).
  *  - `health.*` — consumed iff `overlay.healthcareEnabled`; the applicable-% table follows the
  *    run's regime flag (`enhancedSubsidies` selects the enhanced table, else the statutory
  *    cliff table — one regime per run); `medicareExtrasTypical` requires the priced extras
@@ -113,12 +114,12 @@ export function consumedConstantEntries(params: SimulationParams): readonly Cons
   const state = o?.retirementState
   if (state !== undefined && isPricedState(state)) {
     const inheritedRides = o?.inheritedIras !== undefined
-    // A home sale's two treatments (gap 5's U8). The params carry no sale figures until U9, which narrows this
-    // to a run carrying a sale; until then any one-time item counts, the over-inclusive side (see the header).
-    const homeSaleMayRide = o?.oneTimeInflows !== undefined
+    // A home sale's two treatments (gap 5's U8): read only by a run whose list carries a sale (U9), never a gift-only
+    // run (the state channels ride only beside a sale's figures).
+    const homeSaleRides = carriesHomeSale(o?.oneTimeInflows)
     includeFamily(`state.${state.toLowerCase()}`, (key) => {
       if (key.endsWith('InheritedDistribution')) return inheritedRides
-      if (key.endsWith('HomeSaleGainExcludable') || key.endsWith('HomeSaleGainNotExcludable')) return homeSaleMayRide
+      if (key.endsWith('HomeSaleGainExcludable') || key.endsWith('HomeSaleGainNotExcludable')) return homeSaleRides
       return true
     })
   }

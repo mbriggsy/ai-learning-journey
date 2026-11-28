@@ -25,18 +25,11 @@
  * the sale is not counted, so no caller asks).
  */
 import { homeSaleExclusion } from './constants/tax'
+import type { HomeSaleGainInput, OneTimeInflowParams } from '@shared/model'
 
-/** One sale's figures, as intake hands them to the engine (KTD4). */
-export interface HomeSaleGainInput {
-  /** What the home sells for after agent fees and closing costs (the amount realized), in TODAY's dollars. */
-  readonly soldForReal: number
-  /** What was paid for it, plus buying costs and improvements, in the FIXED dollars it was paid in. */
-  readonly paidDollars: number
-  /** Whether any of the gain may be left out (KTD6: decided by intake from the main-home answer and the list). */
-  readonly excludable: boolean
-  /** The household-figure deflator for the sale year (fixed dollars ÷ this = today's dollars), at least 1. */
-  readonly deflator: number
-}
+/** One sale's figures, as intake hands them to the engine (KTD4). Declared in the shared model, where the engine's
+ *  params item carries it (`OneTimeInflowParams.homeSale`, U9), and re-exported here beside the rule that reads it. */
+export type { HomeSaleGainInput }
 
 /** A sale's gain in one path's sale year, in today's dollars. */
 export interface HomeSaleGain {
@@ -68,4 +61,61 @@ export function homeSaleTaxableGain(sale: HomeSaleGainInput, t: number, deathOff
   const figure = homeSaleJointExclusionAt(t, deathOffsets) ? homeSaleExclusion.value.joint : homeSaleExclusion.value.single
   const excludedReal = Math.min(wholeGainReal, figure / sale.deflator)
   return { wholeGainReal, excludedReal, taxedReal: wholeGainReal - excludedReal }
+}
+
+/** The state channels of one year's sales (KTD7), each PRESENT only when a sale of its kind is dated in the year. */
+export interface HomeSaleStateChannels {
+  /** The federally taxed slices of the year's excludable sales (NC taxes them; PA exempts a main-home gain whole). */
+  readonly homeSaleGainExcludable?: number
+  /** The whole gains of the year's other sales (with no exclusion that is their federal slice; NC and PA tax them). */
+  readonly homeSaleGainNotExcludable?: number
+}
+
+/** One sim year's home sales on one path (U9): the federal slice and the state channels, summed over the year's sales
+ *  with every sale's figures floored at $0 by {@link homeSaleTaxableGain} before summing (a loss on one home never
+ *  offsets another's gain). */
+export interface HomeSaleYear {
+  /** The federally taxed slice: the year's long-term gain from its sales (R8). */
+  readonly taxedReal: number
+  readonly stateChannels: HomeSaleStateChannels
+}
+
+/**
+ * The home sales dated in `calendarYear` (sim year `t`), on a path whose people's first sim years not living are
+ * `deathOffsets` (KTD6), or `undefined` when no sale is dated in it — so every caller keeps its literal no-sale
+ * expression in such a year (insight 093). Gifts are skipped. The caller asks only for a year someone is living (R6).
+ */
+export function homeSaleYear(
+  items: readonly OneTimeInflowParams[],
+  calendarYear: number,
+  t: number,
+  deathOffsets: readonly number[],
+): HomeSaleYear | undefined {
+  let any = false
+  let taxedReal = 0
+  let excludable: number | undefined
+  let notExcludable: number | undefined
+  for (const item of items) {
+    const sale = item.homeSale
+    if (sale === undefined || item.year !== calendarYear) continue
+    any = true
+    const gain = homeSaleTaxableGain(sale, t, deathOffsets)
+    taxedReal += gain.taxedReal
+    if (sale.excludable) excludable = (excludable ?? 0) + gain.taxedReal
+    else notExcludable = (notExcludable ?? 0) + gain.wholeGainReal
+  }
+  if (!any) return undefined
+  return {
+    taxedReal,
+    stateChannels: {
+      ...(excludable !== undefined ? { homeSaleGainExcludable: excludable } : {}),
+      ...(notExcludable !== undefined ? { homeSaleGainNotExcludable: notExcludable } : {}),
+    },
+  }
+}
+
+/** Does the run's list carry a home sale? (Every reader of a sale's tax keys on this, never on the list alone: a
+ *  gift-only run is byte-identical to the gift half, U9.) */
+export function carriesHomeSale(items: readonly OneTimeInflowParams[] | undefined): items is readonly OneTimeInflowParams[] {
+  return items !== undefined && items.some((item) => item.homeSale !== undefined)
 }

@@ -504,6 +504,19 @@ export interface InheritedLedgerParams {
   readonly leftTo?: InheritedLeftTo
 }
 
+/** One home sale's figures as intake hands them to the engine (gap 5's KTD4; the input `homeSaleTaxableGain` in
+ *  `src/engine/homeSale.ts` reads, re-exported there). */
+export interface HomeSaleGainInput {
+  /** What the home sells for after agent fees and closing costs (the amount realized), in TODAY's dollars. */
+  readonly soldForReal: number
+  /** What was paid for it, plus buying costs and improvements, in the FIXED dollars it was paid in. */
+  readonly paidDollars: number
+  /** Whether any of the gain may be left out (KTD6: decided by intake from the main-home answer and the list). */
+  readonly excludable: boolean
+  /** The household-figure deflator for the sale year (fixed dollars ÷ this = today's dollars): finite, above 0. */
+  readonly deflator: number
+}
+
 /**
  * One piece of one-time money in as the engine runs it (gap 5's plan, `docs/plans/features/one-time-money-in-build-
  * spec.md`, KTD1 to KTD3 and KTD12; the saved form is {@link OneTimeInflow}). Its cash joins the taxable account at
@@ -515,9 +528,14 @@ export interface OneTimeInflowParams {
   /** The CALENDAR year the money arrives; the engine reads it as sim year `year − startCalendarYear` (KTD1), so
    *  every stop the date search tests credits the same calendar year. */
   readonly year: number
-  /** The money that joins the taxable account, in today's dollars: a gift's amount (U9 adds a home sale's kept
-   *  figure). At least $0. */
+  /** The money that joins the taxable account, in today's dollars: a gift's amount, or a home sale's kept figure
+   *  ($0 for a sale that had closed by the save year, R17). At least $0. */
   readonly cashReal: number
+  /** Gap 5's U9: PRESENT exactly on a home sale (KTD4, KTD7): the figures its gain is computed from, the shape
+   *  `homeSaleTaxableGain` (`src/engine/homeSale.ts`) reads, so the run and intake's read-back share one input. The
+   *  sale's federally taxed slice is a long-term gain in its year (federal tax, §86, both MAGIs); its state channels
+   *  ride their own treatments. A sale carries no heir fields (a home is the household's, KTD10). ABSENT on a gift. */
+  readonly homeSale?: HomeSaleGainInput
   /** On a couple's plan only, for an item that is ONE person's: that person, an index into `people` (KTD12). Present
    *  exactly when {@link leftTo} is; both absent for an item that is both people's and on a one-person plan. */
   readonly heirIndex?: number
@@ -931,6 +949,12 @@ export interface LedgerLoopRow {
    *  item by it): 0 for an item of another year, an item whose heir has died (KTD12), and every item in the year
    *  the money runs out, so the drill never names money the run did not count. Present with `oneTimeIn`. */
   readonly oneTimeInByItem?: readonly number[]
+  /** Gap 5's U9 (KTD9): the federally taxed slice of the year's home sales, summed (each sale floored at $0 first),
+   *  in today's dollars: the long-term gain the year's federal tax, §86 and both MAGIs read. Income with no money
+   *  moved, so it is no term of the reconciliation above; its tax is inside `taxPaid`. PRESENT only in a FUNDED year
+   *  with a sale dated in it (0 when the exclusion covers the whole gain), never on the run-out row: a run without a
+   *  sale, and every other year, keeps its row shape byte for byte. */
+  readonly homeSaleTaxedGain?: number
   /** The one shared growth factor the year applied to every ledger's after-withdrawal balance. */
   readonly growthScale: number
   readonly end: LedgerBalances
@@ -1238,7 +1262,7 @@ export interface TaxAwareDistribution {
    *  concentrates in the pre-65 ACA years and may barely move the portfolio median. */
   readonly lifetimeNetPremiumReal: readonly number[]
   /** Σ Medicare cost actually paid across the path's funded years (real $; base Part B + IRMAA +
-   *  the Part D / Medigap / MA extras, per enrolled person — `taxOverlay.ts:3087`; P3·U11), an
+   *  the Part D / Medigap / MA extras, per enrolled person — `taxOverlay.ts:3146`; P3·U11), an
    *  addend of the pay-less-tax all-in cost. Same accrual rule as its siblings. */
   readonly lifetimeMedicareCostReal: readonly number[]
   /** The inherited IRAs' summed balance at the path's horizon end (real $; the Act 5 plan's U12) — counted

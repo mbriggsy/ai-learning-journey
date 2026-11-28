@@ -1199,6 +1199,21 @@ describe('the worded tax line shows exactly on KTD12’s trigger: year 0 bills M
     expect(at({ pace: { kind: 'even' } }).year0.savingsTaxLine).toBe(true) // the pace takes $8,000 (ten years left)
   })
 
+  it('a home sale in year 0 with a taxed slice shows it; one the exclusion covers whole, or one in a later year, does not (gap 5’s U9)', () => {
+    // The one earner (single) at W = 20,000 has no trigger (above). Pub 523: a main home sold for $600,000, paid
+    // $300,000, at deflator 1, gains $300,000; a single filer leaves out $250,000, so $50,000 is taxed. Sold for
+    // $500,000 the $200,000 gain is under the exclusion: nothing taxed. Not a main home, the whole gain is taxed.
+    const at = (year: number, soldForReal: number, excludable: boolean) => {
+      const base = earner(20_000)
+      const sale = { year, cashReal: 100_000, homeSale: { soldForReal, paidDollars: 300_000, excludable, deflator: 1 } }
+      return checked({ ...base, overlay: { ...base.overlay!, oneTimeInflows: [sale] } })
+    }
+    expect(at(START, 600_000, true).year0.savingsTaxLine).toBe(true)
+    expect(at(START, 500_000, true).year0.savingsTaxLine).toBe(false)
+    expect(at(START, 500_000, false).year0.savingsTaxLine).toBe(true)
+    expect(at(START + 1, 600_000, true).year0.savingsTaxLine).toBe(false)
+  })
+
 
   it('a required withdrawal: a 75-year-old still working with pre-tax money shows it (start age 73); at 72 it does not', () => {
     // Born 1951: the SECURE 2.0 start age is 73. Born 1954: also 73, so at 72 nothing is required yet. A worker's
@@ -1444,7 +1459,9 @@ const ALLOWED: Readonly<Record<string, readonly string[] | 'any'>> = {
   '@shared/model': 'any',
   // `inheritedCommittedIncomeSteady` (the Act 5 plan's U12, slice 2) is the overlay loop's own ledger functions on the
   // steady walk: the savings-tax line's inherited arm reads year 0 through it.
-  '@engine/simulate': ['cashTermsForYear', 'personOffsetsFor', 'overlayHouseholdFor', 'bothAliveYearBenefit', 'validateParams', 'inheritedCommittedIncomeSteady'],
+  // `homeSaleCommittedGainAllLiving` (gap 5's U9) is the year loop's own `homeSaleYear` with everyone living: the line's
+  // home-sale arm reads year 0 through it.
+  '@engine/simulate': ['cashTermsForYear', 'personOffsetsFor', 'overlayHouseholdFor', 'bothAliveYearBenefit', 'validateParams', 'inheritedCommittedIncomeSteady', 'homeSaleCommittedGainAllLiving'],
   '@engine/earningsTest': 'any',
   '@engine/payrollTax': 'any',
   '@engine/taxOverlay': [

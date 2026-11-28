@@ -37,6 +37,7 @@ import { householdBenefits, type BenefitPerson } from '@engine/socialSecurityBen
 import { bothAliveYearBenefit, survivorYearBenefit, type PersonOffsets } from '@engine/benefitYear'
 import { ENGINE_MAX_DOLLAR, ENGINE_MAX_HORIZON_YEARS, ENGINE_MAX_MOMENT } from '@engine/engineDomain'
 import { workingYearBottomLine } from '@engine/moneyGrain'
+import { carriesHomeSale, homeSaleYear } from '@engine/homeSale'
 import { irmaa } from '@engine/constants'
 import { isPricedState, earliestPricedRateYear } from '@engine/constants/stateTax'
 import {
@@ -50,6 +51,7 @@ import {
   type AccumulationParams,
   type CompiledBudget,
   type InheritedLedgerParams,
+  type HomeSaleGainInput,
   type OneTimeInflowParams,
   type OverlayParams,
   type BandFan,
@@ -186,6 +188,21 @@ export function inheritedCommittedIncomeSteady(params: SimulationParams, rows: n
   if (input === undefined) return undefined
   const { people, config } = overlayHouseholdFor(params)
   return inheritedCommittedIncome(input, config, people, params.maxHorizonYears, rows, steadyGrowthFactor(params))
+}
+
+/**
+ * Gap 5's U9 (KTD8): the federally taxed slice of the home sales dated in sim year `t` with everyone living (nobody
+ * dies within the horizon, the anchor's deterministic frame): a couple's joint exclusion, a one-person household's
+ * single one. 0 in a year with none; `undefined` when the run carries no sale at all (the readers then keep their
+ * literal pre-U9 arithmetic). Read by the solver's anchor (`solveAnchor.committedIncomeForYear`) and the money
+ * picture's savings-tax line (`workingYearLedger`), through the year loop's own `homeSaleYear`.
+ */
+export function homeSaleCommittedGainAllLiving(params: SimulationParams, t: number): number | undefined {
+  const overlay = params.overlay
+  const items = overlay?.oneTimeInflows
+  if (overlay === undefined || !carriesHomeSale(items)) return undefined
+  const living = params.people.map(() => params.maxHorizonYears)
+  return homeSaleYear(items, overlay.startCalendarYear + t, t, living)?.taxedReal ?? 0
 }
 
 /** A resolved simulation: the full distribution (with the tax-aware solver surfaces when
@@ -1100,6 +1117,19 @@ function oneTimeInflowsRefusal(
       if (!Number.isInteger(it.heirIndex) || it.heirIndex < 0 || it.heirIndex >= params.people.length)
         return `${at} heirIndex invalid (must index the household people)`
       if (!(INHERITED_LEFT_TO as readonly string[]).includes(it.leftTo!)) return `${at} leftTo invalid`
+    }
+    // Gap 5's U9 (KTD4): a home sale's figures, the twin of the overlay's sale arm. Every dollar figure inside the
+    // engine's domain (insight 028: finiteness alone does not bound the arithmetic) and the deflator finite above 0.
+    if (it.homeSale !== undefined) {
+      const sale: unknown = it.homeSale
+      if (typeof sale !== 'object' || sale === null) return `${at} homeSale shape invalid`
+      const s = sale as HomeSaleGainInput
+      if (!finiteNonNeg(s.soldForReal)) return `${at} homeSale soldForReal invalid`
+      if (!finiteNonNeg(s.paidDollars)) return `${at} homeSale paidDollars invalid`
+      if (typeof s.excludable !== 'boolean') return `${at} homeSale excludable must be true or false`
+      if (typeof s.deflator !== 'number' || !Number.isFinite(s.deflator) || !(s.deflator > 0))
+        return `${at} homeSale deflator must be finite and above 0`
+      if (it.heirIndex !== undefined || it.leftTo !== undefined) return `${at} a home sale is the household's: no heirIndex or leftTo`
     }
   }
   return null

@@ -91,9 +91,9 @@ line that changes at its own rate to the engine's yearly spending, and a plan wi
 byte-identical (the reduce-to-spine law; `engine:identity` compares bytes). Before U4 the sum was one line,
 `(budget.sticky[k] ?? 0) + r * (budget.scalableEssentials[k] ?? 0)`. Now `cashTermsForYear` reads each profile into a
 local, adds the rated tracks to the locals only inside `if (budget.rated !== undefined)`, and then runs the old
-`sticky + r * scalableEssentials` on the locals (`src/engine/simulate.ts:588-603`). The compile writes no `rated` key at
+`sticky + r * scalableEssentials` on the locals (`src/engine/simulate.ts:605-620`). The compile writes no `rated` key at
 all when no line carries a rate (`src/budget/budgetToSpending.ts:128-129`, pinned in its test), and `validateParams`
-refuses an empty list (`src/engine/simulate.ts:1648-1650`). `engine:identity` read IDENTICAL on 84 of 84 keys.
+refuses an empty list (`src/engine/simulate.ts:1678-1680`). `engine:identity` read IDENTICAL on 84 of 84 keys.
 
 Two shapes that keep the value but not the bytes would have failed. Every line on the rated path with a factor that
 "works out to 1": a factor computed by another path is not bit-identical to 1 (the price index's rate changes by year),

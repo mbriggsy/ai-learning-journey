@@ -54,13 +54,16 @@ export interface StepResult {
  * `contribution` is the accumulation plan's signed inflow term (C2). stepYear is the ONE
  * owner of the crediting convention (contract #3 — the order can never drift between the
  * spine and an overlay): the contribution is credited AFTER the return step, so a
- * contributed dollar earns NO growth in its arrival year. That is the CONSERVATIVE
- * direction — real payroll contributions arrive across the year (~half a year of growth
- * on average), so full-year crediting (the start-of-year mirror) would OVERSTATE the
- * retirement-onset balance → an earlier reported work-optional date → the calm-but-wrong-
- * OPTIMISTIC sin (R25); end-of-year crediting understates it → later/safer, never
- * optimistic (the same conservative-direction discipline as the survivor-SS gap in
- * `simulate.ts` cashTermsForYear). A DEPLETED year credits NOTHING — the path forfeits
+ * contributed dollar earns NO growth in its arrival year. Its lean is a PER-PATH fact, never
+ * one direction (insight 194, which refuted this docblock's old "never optimistic"): real
+ * payroll contributions arrive across the year (~half a year of growth), so end-of-year
+ * crediting reads LOW on a path whose arrival-year return is positive, and on a path whose
+ * year's draw empties savings before the dollar lands (it is forfeited, below); it reads
+ * HIGH on a path whose arrival-year return is negative, where the dollar skips that year's
+ * loss. Low on average (the mean return is positive), which is why it was chosen over
+ * full-year crediting (the start-of-year mirror), whose lean is high on every rising year
+ * (an earlier reported work-optional date, the calm-but-wrong-OPTIMISTIC sin, R25); gap 5's
+ * KTD3 measures both directions for a one-time inflow. A DEPLETED year credits NOTHING — the path forfeits
  * the arrival-year contribution along with all later ones (defined conservative outcome,
  * C2 §2: depletion is the per-path grammar; `indeterminate` stays input-failure-only).
  * At `contribution = 0` every added operation is an exact IEEE no-op (`0 × w = 0`,

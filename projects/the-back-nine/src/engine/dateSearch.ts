@@ -317,7 +317,10 @@ export type WorkingYearTaxReach = 'priced' | 'unpriced'
  *     biological-65 default where absent) under `healthcareEnabled` — the premium draw;
  *   - an inherited IRA's ledger (the Act 5 plan's U12) in any row up to its law's last year that it has not left
  *     (its heir dead, left to someone else): the row books, paces or tops up from it, each ordinary income. A row
- *     that books and paces nothing still reads it — the top-up is the gross's, never known here (the over-read).
+ *     that books and paces nothing still reads it — the top-up is the gross's, never known here (the over-read);
+ *   - a home sale dated in the year (gap 5's U9): its taxed slice is a long-term gain in the year's federal and state
+ *     charges and both MAGIs, on any living member's path; a slice the exclusion covers whole still reads it (the
+ *     over-read).
  * Otherwise the year's portfolio income P is 0, the charge is T(0, ss) — today's figure — and nothing
  * moves. There are NO standalone age, pension or I triggers: with P = 0 and SS = 0, B and I change nothing.
  * The ACA premium is not a channel: a candidate window-gates it to t ≥ Y, and a clamped year is t < Y.
@@ -393,11 +396,16 @@ export function workingYearTaxReachOfRun(params: SimulationParams): WorkingYearT
     heir: l.heirIndex,
     leavesAtDeath: l.leftTo === 'someone-else',
   }))
+  // Gap 5's U9 (KTD8): each home sale's sim year. Its taxed slice is a gain in that year's federal and state charges
+  // and both MAGIs, so the year is reached whatever the slice (one the exclusion covers whole is the over-read). A gift
+  // adds no taxable income and is not listed. Undefined with no one-time list: the channel below is never read.
+  const saleYears = overlay.oneTimeInflows?.flatMap((item) => (item.homeSale !== undefined ? [item.year - start] : []))
 
   /** Does clamped year t on this death timeline carry a portfolio income channel? */
   const portfolioIncomeIn = (t: number, deaths: readonly number[], ss: number): boolean => {
     if (ss > 0) return true
     if ((overlay.conversions?.[t] ?? 0) > 0) return true
+    if (saleYears !== undefined && saleYears.includes(t)) return true
     const alive = (i: number): boolean => t < (deaths[i] ?? 0)
     if (inherited !== undefined && inherited.some((l) => t <= l.lastRow && !(l.leavesAtDeath && !alive(l.heir)))) return true
     if (overlay.rmdEnabled) {

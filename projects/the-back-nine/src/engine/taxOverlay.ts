@@ -120,6 +120,7 @@ import {
   taxableSocialSecurity,
 } from '@engine/taxCore'
 import { stateIncomeTax } from '@engine/stateTax'
+import { carriesHomeSale, homeSaleYear, type HomeSaleStateChannels, type HomeSaleYear } from '@engine/homeSale'
 import {
   acaCliffFillHeadroom,
   bracketEdgeFillHeadroom,
@@ -470,7 +471,9 @@ export interface TaxYearInputs {
    *  the growth scale, the knife-edge branch) and never to `contributionTotal`, which feeds the ACA empty-overlap
    *  throw; a couple's one-person item left to someone else counts only while its heir is living; a year that runs
    *  the money out forfeits it. Needs tax on (it throws otherwise). ABSENT ⇒ every site reads build 2's credit alone
-   *  and no row carries a one-time field: byte-identical. */
+   *  and no row carries a one-time field: byte-identical. U9: an item carrying `homeSale` also charges its taxed slice
+   *  in its year (KTD6 to KTD8) — the federal gain, §86, both MAGIs, the state's own two channels, the working-year
+   *  charges, the bracket-fill rails and the row's `homeSaleTaxedGain`; a list with no sale runs none of that code. */
   readonly oneTimeInflows?: readonly OneTimeInflowParams[]
   /** PROBE-ONLY — the pay check's observation hook ({@link WorkingYearProbe}); never set by product code. */
   readonly _workingYearProbe?: WorkingYearProbe
@@ -648,6 +651,15 @@ const AGE_65_THRESHOLD = 65
 // increment at about ulp(T(base)) — roughly $1e-4 at B = $1e12, above GROSS_UP_EPSILON — but the map
 // stays monotone on that staircase, so the iteration still lands on an exact fixed point (|Δ| = 0):
 // measured converging to B = $2e12, I = $1e12, a sub-cent quantum, never a throw.
+//
+// A HOME SALE'S SLICE (gap 5's U9, insight 007's re-check): the slice is a gross-independent constant in the gain
+// argument and §86's other income — the preferential reading's I above, stacked the same way — and a flat-rate constant
+// on a priced state's own channel, so it adds no slope and k_sup ≈ 0.78 stands: it can only move WHICH regime a year
+// sits in (a big slice caps the torpedo or closes the senior-bonus band, both lowering k). What it does lift is the
+// tax carried AT the straddle corner, no longer the bounded ~$0.7M of corner (1) below: each slice is under
+// ENGINE_MAX_DOLLAR (validateParams), so a year's tax stays inside the ~$10^13 the unbounded tail (2) already budgets,
+// and past ~$4.5e8 of tax the float staircase (spacing ≈ 2.2e-16 of the gross, the FLOAT note above) caps the passes
+// near ln(4.5e15)/ln(1/0.78) ≈ 145 whatever the size — the U9 test runs a sale at the dollar ceiling to convergence.
 //
 // 192 passes SUFFICES at k_total ≈ 0.78 (geometric: n ≈ ln(tax/ε)/ln(1/k), ε = 10^-7). Two corners,
 // mirroring the federal derivation: (1) the self-limiting cap-gains-straddle corner k ≈ 0.78 pins a
@@ -1011,6 +1023,15 @@ function aliveCanonical(
   return people.map((p) => injected.living.includes(p))
 }
 
+/** Canonical person `i`'s first sim year NOT living on this path (gap 5's U9: the `deathOffset` `simulate.ts` builds the
+ *  household years from, read back off them through {@link aliveCanonical}); `horizon` for a person living through
+ *  every year the run reaches, where any later value reads the same (`homeSaleJointExclusionAt` compares it with a
+ *  year inside the horizon). */
+function firstYearNotLiving(people: readonly OverlayPerson[], householdYears: readonly HouseholdYear[], i: number, horizon: number): number {
+  for (let t = 0; t < horizon; t++) if (aliveCanonical(people, householdYears, t)[i] !== true) return t
+  return horizon
+}
+
 /** Each LIVING person's forced RMD on THEIR OWN prior-year-end pre-tax ÷ THEIR OWN divisor (own
  *  age + own sole-spouse beneficiary), once past their birth-year RMD age (else 0). A deceased
  *  person's pre-tax has already rolled to the survivor (see the loop), so only living holders
@@ -1182,6 +1203,11 @@ interface GrossUpContext {
   /** The year's inherited-IRA draws (the Act 5 plan's U12), year-constant like everything here. PRESENT only
    *  when the run carries an inherited ledger; ABSENT ⇒ the literal pre-U12 expressions below. */
   readonly inherited?: InheritedYearDraw
+  /** Gap 5's U9 (KTD7): the year's home sales — the federal slice, a gross-independent addend to the gain the federal
+   *  tax, §86 and the returned MAGI components read, and the two state channels, never the state's `realizedGain`
+   *  (Pennsylvania would tax an excluded gain). PRESENT only in a year with a sale dated in it; ABSENT ⇒ the literal
+   *  pre-U9 expressions below. */
+  readonly homeSale?: HomeSaleYear
 }
 
 /** One year's inherited-IRA terms, summed over the ledgers (U12; KTD21, KTD22, KTD25). */
@@ -1442,8 +1468,10 @@ export function workingYearFederalCharge(
   return { tax, ssTaxable }
 }
 
-/** The portfolio-sourced state channels of one pass (the same floored values the federal charge reads). */
-export interface WorkingYearStateChannels {
+/** The portfolio-sourced state channels of one pass (the same floored values the federal charge reads), plus a
+ *  year's home-sale channels (gap 5's U9, `HomeSaleStateChannels`: each present only when a sale of its kind is dated
+ *  in the year). */
+export interface WorkingYearStateChannels extends HomeSaleStateChannels {
   readonly pretaxDistribution: number
   readonly conversion: number
   readonly ongoingTaxable: number
@@ -1712,7 +1740,7 @@ export interface WorkingYearProbe {
 }
 
 function solveGrossWithdrawal(net: number, ctx: GrossUpContext): GrossUpSolution {
-  const { drawPool, policy, customOrder, rmd, conversion, taxableBasis, filing, count65, calendarYear, ssBenefit, bracketFillCeiling, ongoingTaxable, retirementState, minLivingAge, workingYear, inherited } = ctx
+  const { drawPool, policy, customOrder, rmd, conversion, taxableBasis, filing, count65, calendarYear, ssBenefit, bracketFillCeiling, ongoingTaxable, retirementState, minLivingAge, workingYear, inherited, homeSale } = ctx
   const taxableValue = drawPool.taxable
   // The working-year floor (2026-10-20), as the year loop prepared it — every baseline is
   // gross-independent. ABSENT (every unclamped / construct-absent / retired-route year) ⇒ undefined ⇒
@@ -1737,6 +1765,11 @@ function solveGrossWithdrawal(net: number, ctx: GrossUpContext): GrossUpSolution
     // provisional income (the §1211 loss offset is OUT-but-disclosed).
     const realizedGain =
       taxableValue > 0 ? Math.max(0, alloc.taxable * (1 - taxableBasis / taxableValue)) : 0
+    // Gap 5's U9 (KTD7): the year's home-sale slice joins the gain every FEDERAL read takes — the long-term brackets,
+    // §86's other income, the returned MAGI components (ACA; IRMAA, its history two years on) and the working-year
+    // charge — as a gross-independent addend. The state keeps the draws' own `realizedGain` and prices the sale on its
+    // own channels below. No sale this year ⇒ `gain` IS `realizedGain`, so every read is today's expression.
+    const gain = homeSale === undefined ? realizedGain : realizedGain + homeSale.taxedReal
     // Ordinary income = pre-tax distributed (spending-or-RMD, whichever binds) + the conversion
     // (ordinary income, non-RMD-satisfying) + the ongoing other-income taxable (R40 seam 2 — the
     // ONE producer SS-§86 / ACA-MAGI / IRMAA-MAGI all ride, KTD-1) + the taxable portion of SS. The
@@ -1758,7 +1791,7 @@ function solveGrossWithdrawal(net: number, ctx: GrossUpContext): GrossUpSolution
       // Surface the taxable-SS local (M3): the identical value + call as before, so `nextGross` stays
       // byte-identical — now also fed to the returned MagiComponents so acaMagi reads the FLOORED
       // converged locals (never recomputed off a raw-gain ledger; the named sign-inversion).
-      ssBenefitTaxable = taxableSocialSecurity(nonSSordinary + realizedGain, ssBenefit, filing, calendarYear)
+      ssBenefitTaxable = taxableSocialSecurity(nonSSordinary + gain, ssBenefit, filing, calendarYear)
       const ordinaryIncome = nonSSordinary + ssBenefitTaxable
       // The state income tax (the state-tax unit) folds in as a SECOND ADDEND beside the federal tax —
       // INSIDE the fixed point, so the gross is solved to net `net` AFTER both taxes jointly, never
@@ -1769,7 +1802,7 @@ function solveGrossWithdrawal(net: number, ctx: GrossUpContext): GrossUpSolution
       // these converged channels (NC folds SS out + gains into ordinary; PA age-gates the distribution +
       // conversion; FL is a structural 0) — the state term rides WITHOUT the SS torpedo (k re-derivation
       // above). The k_total ≈ 0.78 contraction still converges within GROSS_UP_MAX_PASSES.
-      const federalTax = ordinaryPlusCapitalGainsTax(ordinaryIncome, realizedGain, filing, count65, calendarYear)
+      const federalTax = ordinaryPlusCapitalGainsTax(ordinaryIncome, gain, filing, count65, calendarYear)
       nextGross = net + federalTax
       if (retirementState !== undefined && isPricedState(retirementState)) {
         nextGross += stateIncomeTax({
@@ -1784,13 +1817,15 @@ function solveGrossWithdrawal(net: number, ctx: GrossUpContext): GrossUpSolution
           minLivingAge,
           // U12: the inherited withdrawals' own state channel (KTD23), absent with no ledger.
           ...(inheritedIncome !== undefined ? { inheritedDistribution: inheritedIncome } : {}),
+          // Gap 5's U9: the year's home-sale channels (KTD7), absent in a year with no sale.
+          ...(homeSale !== undefined ? homeSale.stateChannels : {}),
         })
       }
     } else {
       // A clamped working year: the portfolio funds what its own income adds on top of the outside
       // income, plus SS's own tax (KTD1 × KTD11), federal and priced-state alike (KTD7). The taxable SS
       // the components carry rides the provisional that holds the year's whole AGI (KTD6).
-      const federal = workingYearFederalCharge(floor, nonSSordinary, realizedGain)
+      const federal = workingYearFederalCharge(floor, nonSSordinary, gain)
       ssBenefitTaxable = federal.ssTaxable
       nextGross = net + federal.tax
       if (floor.stateFloor !== undefined) {
@@ -1801,6 +1836,7 @@ function solveGrossWithdrawal(net: number, ctx: GrossUpContext): GrossUpSolution
           realizedGain,
           ssBenefitTaxable,
           ...(inheritedIncome !== undefined ? { inheritedDistribution: inheritedIncome } : {}),
+          ...(homeSale !== undefined ? homeSale.stateChannels : {}),
         })
       }
     }
@@ -1810,7 +1846,7 @@ function solveGrossWithdrawal(net: number, ctx: GrossUpContext): GrossUpSolution
       // recompute at nextGross (an extra pass whose .gross could be returned by mistake — byte risk).
       return {
         gross: nextGross,
-        components: { nonSSordinary, realizedGain, ssBenefitFull: ssBenefit, ssBenefitTaxable },
+        components: { nonSSordinary, realizedGain: gain, ssBenefitFull: ssBenefit, ssBenefitTaxable },
       }
     }
     gross = nextGross
@@ -1820,6 +1856,7 @@ function solveGrossWithdrawal(net: number, ctx: GrossUpContext): GrossUpSolution
       (workingYear !== undefined
         ? `, working-year ordinaryBase=${workingYear.outside.ordinaryBase}, investmentIncome=${workingYear.outside.investmentIncome}`
         : '') +
+      (homeSale !== undefined ? `, home-sale slice=${homeSale.taxedReal}` : '') +
       `) — refusing an unconverged tax (burned/062)`,
   )
 }
@@ -2341,6 +2378,13 @@ export function runTaxAwareDecumulation(
   // indeterminate instead). Absent ⇒ undefined, and no one-time code runs in the loop.
   const oneTimeItems = taxInputs.oneTimeInflows
   if (oneTimeItems !== undefined) checkOneTimeInflows(oneTimeItems, config, people)
+  // Gap 5's U9: a run whose list carries a home sale reads each sale's taxed slice in its year (KTD6, KTD7). The path's
+  // death years, read once off the household years (the first sim year each canonical person is not living; the
+  // horizon for one who lives through it), feed `homeSaleTaxableGain`'s joint-or-single rule. Undefined with no sale
+  // (a gift-only run included), and then no sale code runs in the loop.
+  const saleItems = carriesHomeSale(oneTimeItems) ? oneTimeItems : undefined
+  const saleDeathOffsets =
+    saleItems !== undefined ? people.map((_, i) => firstYearNotLiving(people, householdYears, i, netWithdrawals.length)) : undefined
 
   let buckets = initialBuckets
   let basis = initialTaxableBasis ?? 0
@@ -2516,6 +2560,15 @@ export function runTaxAwareDecumulation(
       oneTimeItems !== undefined && alive !== null && household !== undefined
         ? oneTimeYearTerms(oneTimeItems, alive, household.startCalendarYear + t)
         : undefined
+    // Gap 5's U9 (KTD6, KTD7): the year's home sales, computed ONCE here, before the gross-up — every term is
+    // gross-independent (the figures, the year, the path's death years), so it is a constant inside the fixed point and
+    // the ACA bisection. Only in a year someone is living (R6; the loop ends at the last death, so a direct caller's
+    // empty living set is the one case it guards). Undefined in a year with no sale dated in it, and in every year of a
+    // run without one: each reader below then keeps its literal pre-U9 expression.
+    const homeSaleThisYear =
+      saleItems !== undefined && saleDeathOffsets !== undefined && alive !== null && alive.includes(true) && household !== undefined
+        ? homeSaleYear(saleItems, household.startCalendarYear + t, t, saleDeathOffsets)
+        : undefined
 
     // Roth conversion (M5): clamp to feasibility AFTER reserving the non-convertible RMD, using the
     // prior-year-end pre-tax (gross-independent ⇒ constant inside the fixed point). Apply it to the
@@ -2557,6 +2610,9 @@ export function runTaxAwareDecumulation(
         // leaves room for it and never counts it as fill. Their last-source draw is not: it funds only what the
         // general accounts cannot, past the fill. Absent with no ledger (the literal pre-U12 frame).
         ...(inheritedThisYear !== undefined ? { inheritedDistribution: inheritedThisYear.draw.paced + inheritedThisYear.draw.booked } : {}),
+        // Gap 5's U9 (KTD8): the year's home-sale slice is committed too — a long-term gain, so it lifts both MAGIs,
+        // §86 and the deduction's MAGI, never the ordinary income the bracket edge compares. Absent with no sale.
+        ...(homeSaleThisYear !== undefined ? { committedGain: homeSaleThisYear.taxedReal } : {}),
       }
       // The tax-bracket rail — always active under bracket-fill.
       let ceiling = bracketEdgeFillHeadroom(committed)
@@ -2840,6 +2896,7 @@ export function runTaxAwareDecumulation(
         minLivingAge: regime.minLivingAge,
         ...(workingYear !== undefined ? { workingYear } : {}),
         ...(inheritedThisYear !== undefined ? { inherited: inheritedThisYear.draw } : {}),
+        ...(homeSaleThisYear !== undefined ? { homeSale: homeSaleThisYear } : {}),
       }
       const fundNet = (netTotal: number): GrossUpSolution => solveGrossWithdrawal(netTotal, grossUpCtx)
       let magiComponentsThisYear: MagiComponents
@@ -2975,6 +3032,8 @@ export function runTaxAwareDecumulation(
                     oneTimeInByItem: ranOut ? oneTimeThisYear.byItem.map(() => 0) : oneTimeThisYear.byItem,
                   }
                 : {}),
+              // Gap 5's U9 (KTD9): the year's federally taxed home-sale slice, only in a funded year with a sale.
+              ...(homeSaleThisYear !== undefined && !ranOut ? { homeSaleTaxedGain: homeSaleThisYear.taxedReal } : {}),
               growthScale: ledgerScale,
               end: { taxable: buckets.taxable, pretax: buckets.pretax, roth: buckets.roth, hsa: buckets.hsa ?? 0 },
               ...(pretaxLedger && ledgerPretaxStart ? { pretaxEndByPerson: [...pretaxLedger] } : {}),
@@ -3291,6 +3350,22 @@ function checkOneTimeInflows(items: readonly OneTimeInflowParams[], config: TaxO
       }
       if (!(INHERITED_LEFT_TO as readonly string[]).includes(item.leftTo!)) {
         throw new Error(`[taxOverlay] one-time item ${i}: leftTo must be one of ${INHERITED_LEFT_TO.join(', ')}`)
+      }
+    }
+    // Gap 5's U9: a home sale's figures (KTD4), finiteness first (insight 010: a NaN figure would sail through every
+    // compare into the year's gain), and a deflator above 0 (a 0 or negative one divides the fixed figures wrongly).
+    const sale = item.homeSale
+    if (sale !== undefined) {
+      if (typeof sale !== 'object' || sale === null) throw new Error(`[taxOverlay] one-time item ${i}: homeSale must be the sale's figures`)
+      if (!(Number.isFinite(sale.soldForReal) && sale.soldForReal >= 0) || !(Number.isFinite(sale.paidDollars) && sale.paidDollars >= 0)) {
+        throw new Error(`[taxOverlay] one-time item ${i}: a home sale's sold-for and paid figures must be finite and at least 0 (insight 010)`)
+      }
+      if (typeof sale.excludable !== 'boolean') throw new Error(`[taxOverlay] one-time item ${i}: a home sale's excludable flag must be true or false`)
+      if (!(Number.isFinite(sale.deflator) && sale.deflator > 0)) {
+        throw new Error(`[taxOverlay] one-time item ${i}: a home sale's deflator must be finite and above 0 (got ${sale.deflator})`)
+      }
+      if (item.heirIndex !== undefined || item.leftTo !== undefined) {
+        throw new Error(`[taxOverlay] one-time item ${i}: a home sale is the household's — it carries no heirIndex or leftTo (KTD10)`)
       }
     }
   })

@@ -48,7 +48,7 @@
  *     and the re-confirm lands here).
  *   - `'no-pretax'` — the run carries no tax overlay (no per-person buckets at all — the degenerate
  *     $0-accounts/no-income household), or no anchored conversion candidate. NOTE the second arm is
- *     WIDER than "zero pre-tax dollars" (review wf_6f89fe6f-35a P1): candidates.ts:654 rejects every
+ *     WIDER than "zero pre-tax dollars" (review wf_6f89fe6f-35a P1): candidates.ts:663 rejects every
  *     rail-anchored amount above the post-RMD headroom, so a small-IRA household below every rail
  *     ALSO lands here. The one user truth both arms share — and the one the note speaks — is that
  *     there is NOT ENOUGH pre-tax savings entered for a sequencing/conversion strategy to rank.
@@ -89,7 +89,7 @@ export function buildSolveRequest(draft: ScenarioDraft, todayEpochDay: number): 
   if (set === null) return 'no-pretax' // no tax overlay — no per-person split (no pre-tax dollars at all)
   // No anchored conversion candidate ⇒ ranking stability cannot run ⇒ the honest bucket precondition
   // (never a mint-failed{roster} surfaced live). WIDER than pretax===0: an entered-but-small pre-tax
-  // pool below every rail-anchored amount (candidates.ts:654) lands here too — the note speaks "not
+  // pool below every rail-anchored amount (candidates.ts:663) lands here too — the note speaks "not
   // enough entered", true on both.
   //
   // ⚠️ `anchoredRail !== undefined`, NOT merely `conversion !== null`, AND THAT IS NOT A TIGHTENING —

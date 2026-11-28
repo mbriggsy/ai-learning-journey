@@ -75,6 +75,7 @@ import { WORKING_YEAR_LEDGER_EVENT_CODES } from '@shared/model'
 import {
   bothAliveYearBenefit,
   cashTermsForYear,
+  homeSaleCommittedGainAllLiving,
   inheritedCommittedIncomeSteady,
   overlayHouseholdFor,
   personOffsetsFor,
@@ -334,11 +335,14 @@ export function workingYearLedger(input: WorkingYearLedgerInput): WorkingYearLed
   // asked figure still owed, any untaken death-year amount, what already came out, or what the pace takes — read
   // through the overlay loop's own ledger functions, so the line and the run can never disagree on year 0.
   const inheritedLands = (inheritedCommittedIncomeSteady(params, 1)?.[0] ?? 0) > 0
+  // A home sale dated in year 0 with a taxed slice (gap 5's U9): its tax is drawn from savings in that year, read
+  // through the year loop's own `homeSaleYear` with everyone living (the picture's no-death timeline).
+  const homeSaleLands = (homeSaleCommittedGainAllLiving(params, 0) ?? 0) > 0
   // Extras ride only beside an enrolled member, whose base Part B bill is already above $0. A draw is read at
   // the picture's own grain: a cash of −3.6e-12 (float dust on a hand $0.00) reads "Left over $0" and draws
   // nothing the line could speak of.
   const bottomLine0 = workingYearBottomLine(l0.cash)
-  const savingsTaxLine = medicare.cost > 0 || bottomLine0 < 0 || conversionLands || rmdLands || inheritedLands
+  const savingsTaxLine = medicare.cost > 0 || bottomLine0 < 0 || conversionLands || rmdLands || inheritedLands || homeSaleLands
 
   // ---- The later years. ----
   for (const e of draftEvents) {

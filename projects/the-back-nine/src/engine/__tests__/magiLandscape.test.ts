@@ -206,6 +206,71 @@ describe('bracketEdgeFillHeadroom (bisection through the deduction stack)', () =
   })
 })
 
+describe('a home sale’s committed gain (gap 5’s U9, KTD8): every MAGI read, never the ordinary income the bracket edge compares', () => {
+  it('the metrics: ACA-MAGI adds the gain whole; IRMAA-MAGI adds it and the §86 share it pulls in; ordinary taxable income takes only the §86 share', () => {
+    // 2026, MFJ, under 65, a $20,000 pension and $30,000 of Social Security. Without the gain: provisional 20,000 +
+    // 15,000 = 35,000, $3,000 into the 50 % band ⇒ 1,500 of SS taxed. With a $100,000 gain: provisional 135,000 ⇒ the
+    // 85 % cap, 25,500 taxed. Taxable income at fill 0 is the ORDINARY part only: 20,000 + 25,500 − 32,200 = 13,300 (the
+    // gain stacks on top in the cap-gains worksheet, never in the ordinary brackets).
+    const c = ctx({ ongoingTaxable: 20_000, ssBenefit: 30_000 })
+    const g = { ...c, committedGain: 100_000 }
+    expect(acaMagiAtFill(c, 0)).toBe(50_000)
+    expect(acaMagiAtFill(g, 0)).toBe(150_000)
+    expect(irmaaMagiAtFill(c, 0)).toBe(21_500)
+    expect(irmaaMagiAtFill(g, 0)).toBe(145_500)
+    expect(taxableIncomeAtFill(c, 0)).toBe(0) // 21,500 under the 32,200 deduction
+    expect(taxableIncomeAtFill(g, 0)).toBe(13_300)
+  })
+
+  it('the deduction reads the gain-inclusive MAGI: a both-65+ couple’s senior bonuses phase out on the gain though the gain is no ordinary income', () => {
+    // 2026, both 65+, $100,000 of ordinary income: D = 32,200 + 2 × 1,650 + 2 × 6,000 = 47,500 at MAGI 100,000 ⇒ taxable
+    // 52,500. A $200,000 gain puts MAGI at 300,000, past $250,000 where each bonus is gone ⇒ D = 35,500 ⇒ taxable 64,500.
+    const c = ctx({ ongoingTaxable: 100_000, count65: 2 })
+    expect(taxableIncomeAtFill(c, 0)).toBe(52_500)
+    expect(taxableIncomeAtFill({ ...c, committedGain: 200_000 }, 0)).toBe(64_500)
+  })
+
+  it('the bracket edge: the same headroom with and without the gain where neither the bonus nor §86 can move (2029, under 65, no benefit)', () => {
+    const c = ctx({ ongoingTaxable: 50_000, calendarYear: 2029 })
+    expect(bracketEdgeFillHeadroom({ ...c, committedGain: 250_000 })).toBe(bracketEdgeFillHeadroom(c))
+  })
+
+  it('the bracket edge moves through the senior-bonus phase-out: the headroom falls by exactly the two bonuses the gain phases out', () => {
+    // From the arm above: without the gain taxable(f) = 52,500 + f while MAGI stays under the $150,000 phase-out start,
+    // so the 100,800 edge is met at f = 48,300 (MAGI 148,300). With the $200,000 gain the bonus is gone at every fill:
+    // taxable(f) = 64,500 + f ⇒ f = 36,300. 12,000 apart.
+    const c = ctx({ ongoingTaxable: 100_000, count65: 2 })
+    expect(bracketEdgeFillHeadroom(c)).toBeCloseTo(48_300, 3)
+    expect(bracketEdgeFillHeadroom({ ...c, committedGain: 200_000 })).toBeCloseTo(36_300, 3)
+  })
+
+  it('the bracket edge moves through the §86 share: the gain pulls the benefit to its cap, and the headroom shrinks to the room the capped share leaves', () => {
+    // 2026, MFJ, under 65, $20,000 pension, $40,000 benefit. Without the gain: from f = 4,000 the provisional is past
+    // 44,000 and taxable(f) = 20,000 + f + 6,000 + 0.85 (f − 4,000) − 32,200 = 1.85 f − 9,600, so the 24,800 edge is met
+    // at f = 34,400 / 1.85 ≈ 18,594.59 (the share still under its 34,000 cap there). With a $100,000 gain the share sits
+    // at the 85 % cap (34,000) from f = 0: taxable(f) = 20,000 + f + 34,000 − 32,200 = 21,800 + f ⇒ f = 3,000.
+    const c = ctx({ ongoingTaxable: 20_000, ssBenefit: 40_000 })
+    expect(bracketEdgeFillHeadroom(c)).toBeCloseTo(34_400 / 1.85, 3)
+    expect(bracketEdgeFillHeadroom({ ...c, committedGain: 100_000 })).toBeCloseTo(3_000, 3)
+  })
+
+  it('the ACA cliff sits lower by the gain: K = cliff − conversion − other income − Social Security − the gain (29,600 − 10,000)', () => {
+    const c = ctx({ rmd: 10_000, conversion: 20_000, ongoingTaxable: 5_000, ssBenefit: 30_000 })
+    const g = { ...c, committedGain: 10_000 }
+    expect(acaCliffFillHeadroom(g, CLIFF_2)).toBe(19_600)
+    expect(acaMagiAtFill(g, 19_600)).toBe(CLIFF_2)
+    // Committed income over the cliff once the gain lands: an RMD of $25,000 beside a $10,000 gain leaves nothing.
+    expect(acaCliffFillHeadroom({ ...g, rmd: 25_000 }, CLIFF_2)).toBe(0)
+  })
+
+  it('the IRMAA step sits lower by the gain (no benefit, so the metric shifts by the gain exactly)', () => {
+    const c = ctx({ conversion: 150_000, calendarYear: 2030 })
+    const h = irmaaStepFillHeadroom(c, cmp(c))
+    const g = { ...c, committedGain: 20_000 }
+    expect(irmaaStepFillHeadroom(g, cmp(g))).toBeCloseTo(h - 20_000, 3)
+  })
+})
+
 describe('the readout geometry', () => {
   it('nextIrmaaStepLine: an EXCLUSIVE line — at-line returns it (the next dollar crosses), lastSafeMagi IS the line; above it, the next tier; above the top, null', () => {
     expect(nextIrmaaStepLine(TIER1_MFJ - 1, MFJ, ID)).toEqual({ threshold: TIER1_MFJ, lastSafeMagi: TIER1_MFJ })

@@ -514,6 +514,29 @@ describe('the ACA-cliff and bracket-edge window — one flat amount meets a diff
     expect(held, 'every edge keeps a point that holds across the window').toBe(edges.length)
   })
 
+  it('THE HOME-SALE WITNESS (gap 5’s U9): a sale year’s gain moves the ACA cliff by the whole slice and no bracket edge; frames that disagree on carrying it are refused', () => {
+    // Linear world (2030–2032, under 65, no benefit): a $100,000 slice in 2031, 0 in the other frames (one run carries it
+    // on every frame). ACA-MAGI = 50,000 + a + the gain, against one $200,000 cliff priced every year; taxable income =
+    // 50,000 + a − SD with the gain stacked above it, so every edge point is the no-sale window's.
+    const gainOf = (y: number): number => (y === 2031 ? 100_000 : 0)
+    const withSale = yearsOf({ ...linearWorld, committedGain: 0 }, 2030, 2032, (y) => ({ committedGain: gainOf(y) }))
+    const noSale = yearsOf(linearWorld, 2030, 2032)
+    const cliff = 200_000
+    const aca = anchoredConversionAmounts(withWindow(withSale, [2030, 2031, 2032], cliff)).filter((a) => a.rail.kind === 'aca-cliff')
+    expect(aca).toEqual([
+      { amountReal: cliff - 50_000 - 100_000, rail: { kind: 'aca-cliff', magi: cliff, calendarYear: 2031, firstCrossingYear: null } },
+      { amountReal: cliff - 50_000, rail: { kind: 'aca-cliff', magi: cliff, calendarYear: 2030, firstCrossingYear: 2031 } },
+    ])
+    for (const E of edges) expect(edgePoints(withWindow(withSale), E), `edge ${E}`).toEqual(edgePoints(withWindow(noSale), E))
+    // One run's frames: the gain on every frame or none; year 0's frame is the skeleton; finite ≥ 0.
+    const { committedGain: _dropped, ...bare } = withSale[2]!
+    expect(() => anchoredConversionAmounts(withWindow([withSale[0], withSale[1]!, bare]))).toThrow(/disagree on whether a home-sale gain rides/)
+    expect(() => anchoredConversionAmounts(anchorWith({ committed: withSale[0], window: { years: [{ ...withSale[0], committedGain: 1 }, ...withSale.slice(1)], acaPricedYears: [] } }))).toThrow(
+      /anchor skeleton/,
+    )
+    expect(() => anchoredConversionAmounts(withWindow([withSale[0], { ...withSale[1]!, committedGain: -1 }, withSale[2]!]))).toThrow(/committedGain must be finite/)
+  })
+
   it('the window is a contract, checked loud: starts AT the skeleton, ascending, priced years a subset, a cliff dollar iff a priced year', () => {
     const y = (calendarYear: number, over: Partial<CommittedYearIncome> = {}): CommittedYearIncome => ({ ...linearWorld, calendarYear, ...over })
     const at = (years: CommittedYearIncome[], priced: number[] = [], cliff: number | null = null) => () =>

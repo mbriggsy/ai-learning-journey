@@ -436,8 +436,8 @@ describe('deriveStaleness — the healthcare clocks (U17 §S4: the exposure thre
     ['part-b', { partBStandardMonthly: hv.partBStandardMonthly + 10 }],
     ['part-b-trend', { partBTrendVintage: 'part-b-trend-2025x' }],
     // THE F1 CORRECTION, pinned as an equal member of the family. `irmaaTopTierFrozenThrough`
-    // has no engine reader of its own; the table it DATES (`irmaa`) is read at simulate.ts:1547,
-    // solveAnchor.ts:229-239 and taxOverlay.ts:2144, and consumedConstants.ts:126 consumes the
+    // has no engine reader of its own; the table it DATES (`irmaa`) is read at simulate.ts:1577,
+    // solveAnchor.ts:236-246 and taxOverlay.ts:2181, and consumedConstants.ts:127 consumes the
     // whole `health.` family on `healthcareEnabled`. Re-bucketing it to the aggregate reds here.
     ['irmaa-freeze', { irmaaTopTierFrozenThrough: hv.irmaaTopTierFrozenThrough + 1 }],
   ] as const)(
@@ -451,7 +451,7 @@ describe('deriveStaleness — the healthcare clocks (U17 §S4: the exposure thre
       expect(named.rulesMoved).toBe(true)
       // The SWEPT part-b-trend comment claimed "no exposure gate: the trend prices every
       // Medicare-bearing year both routes reach". FALSE: `partBPricingByT` is built only under
-      // `healthcareEnabled && taxEnabled` (taxOverlay.ts:2152-2153). Reverting it to ungated
+      // `healthcareEnabled && taxEnabled` (taxOverlay.ts:2189-2190). Reverting it to ungated
       // reds this arm.
       const silent = deriveStaleness(moved, TODAY, NO_OVERLAY, ANSWERS_FRESH)
       expect(silent.healthcare.movedClocks).toEqual([])
@@ -496,7 +496,7 @@ describe('deriveStaleness — the healthcare clocks (U17 §S4: the exposure thre
     })
   })
 
-  it('`coverage-year` dates BOTH tables (model.ts:3361) — it names each family the run PRICED, and only those', () => {
+  it('`coverage-year` dates BOTH tables (model.ts:3385) — it names each family the run PRICED, and only those', () => {
     // It is the ONLY marker for every annually-re-indexed health figure with no stamp of its own
     // (the four interior IRMAA thresholds, the ACA applicable-percentage bands, the age-rating
     // curve), so bucketing it nameless hid the annual re-key from the pre-65 planner it hits
@@ -580,7 +580,7 @@ describe('deriveStaleness — the healthcare clocks (U17 §S4: the exposure thre
   it('extras-typical: the typical-exposed conjunct is NECESSARY BUT NOT SUFFICIENT — an ABSENT fork field on a run that priced no healthcare funds NO extras, so it must not name itself (U17 §S4)', () => {
     // The exact hole the ruling named: absence satisfies conjunct (c) while the run prices
     // nothing at all (`buildOverlay` resolves the extras vector only on `healthcareOn ||
-    // medicareOnly`; consumedConstants.ts:132 requires `medicareExtrasMonthly` present).
+    // medicareOnly`; consumedConstants.ts:133 requires `medicareExtrasMonthly` present).
     const exposedAbsent = {
       ...s,
       healthcareVintage: { ...hv, medicareExtrasTypicalVintage: 'extras-2024x' },
@@ -644,7 +644,7 @@ describe('deriveStaleness — every healthcare clock names exactly the families 
 
   /** WHICH SENTENCE each clock is allowed to speak — the law, restated by hand. */
   const FAMILY: Readonly<Record<HealthcareClock, { readonly aca: boolean; readonly medicare: boolean; readonly ratedSpending: boolean }>> = {
-    'coverage-year': { aca: true, medicare: true, ratedSpending: false }, // "the ACA/IRMAA tables" (model.ts:3361)
+    'coverage-year': { aca: true, medicare: true, ratedSpending: false }, // "the ACA/IRMAA tables" (model.ts:3385)
     'aca-status': { aca: true, medicare: false, ratedSpending: false },
     'fpl-guideline': { aca: true, medicare: false, ratedSpending: false },
     'irmaa-freeze': { aca: false, medicare: true, ratedSpending: false }, // dates the IRMAA schedule (the F1 ruling)

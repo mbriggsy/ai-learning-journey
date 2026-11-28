@@ -34,7 +34,7 @@ import { ENGINE_MAX_DOLLAR, cashTermsForYear, personOffsetsFor, simulate, valida
 import { dateSearchFromWire } from '@engine/engineWire'
 import { BANDS, SURVIVAL_GRID, quantizeSurvival } from '@engine/confidence'
 import { validationMarket } from '@engine/reference/methodology'
-import type { IncomeParams, OverlayParams, PersonContributionStreams, PersonInputs, SimulationParams } from '@shared/model'
+import type { IncomeParams, OneTimeInflowParams, OverlayParams, PersonContributionStreams, PersonInputs, SimulationParams } from '@shared/model'
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -1005,6 +1005,27 @@ describe('workingYearTaxReach — can the working-year tax floor move this house
     }
     expect(workingYearTaxReach(holding)).toBe('priced')
     expect(workingYearTaxReachOfRun(buildCandidateParams(holding, 6, 1))).toBe('priced')
+  })
+
+  it('a home sale is a channel (gap 5’s U9, KTD8): the unreached household reads `priced` with a sale dated in a clamped year, even one the exclusion covers whole; a sale in a year clamped for no stop, or a gift, reads nothing', () => {
+    const unreached = household()
+    expect(workingYearTaxReach(unreached), 'the control').toBe('unpriced')
+    const overlay = unreached.params.overlay!
+    const withItems = (items: readonly OneTimeInflowParams[]): DateSearchInput => ({
+      ...unreached,
+      params: { ...unreached.params, overlay: { ...overlay, oneTimeInflows: items } },
+    })
+    const saleIn = (t: number, soldForReal: number): OneTimeInflowParams => ({
+      year: overlay.startCalendarYear + t,
+      cashReal: 0,
+      homeSale: { soldForReal, paidDollars: 300_000, excludable: true, deflator: 1 },
+    })
+    // Sim year 2 is clamped on every stop from Y = 3; sim year 10 on none (the window tops out at Y = 10).
+    expect(workingYearTaxReach(withItems([saleIn(2, 900_000)]))).toBe('priced')
+    expect(workingYearTaxReachOfRun(buildCandidateParams(withItems([saleIn(2, 900_000)]), 6, 1))).toBe('priced')
+    expect(workingYearTaxReach(withItems([saleIn(2, 500_000)])), 'a $200,000 gain under the exclusion: the over-read').toBe('priced')
+    expect(workingYearTaxReach(withItems([saleIn(10, 900_000)]))).toBe('unpriced')
+    expect(workingYearTaxReach(withItems([{ year: overlay.startCalendarYear + 2, cashReal: 250_000 }])), 'a gift adds no taxable income').toBe('unpriced')
   })
 
   // The working-year pay check (docs/plans/features/working-year-pay-check-build-spec.md, KTD15): a run carrying

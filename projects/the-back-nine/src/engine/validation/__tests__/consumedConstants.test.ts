@@ -107,15 +107,18 @@ describe('consumedConstantEntries — the derivation is the run, not the registr
     }
   })
 
-  it('a state’s two home-sale treatments are consumed only by a run carrying one-time money (gap 5’s U8; U9 narrows it to a sale)', () => {
+  it('a state’s two home-sale treatments are consumed only by a run whose one-time list carries a home sale (gap 5’s U8, narrowed at U9): never with no list, never by a gift-only run', () => {
     const gift = { year: 2030, cashReal: 100_000 }
+    const sale = { year: 2031, cashReal: 200_000, homeSale: { soldForReal: 900_000, paidDollars: 300_000, excludable: true, deflator: 1 } }
     for (const state of ['NC', 'PA'] as const) {
       const keys = [`state.${state.toLowerCase()}HomeSaleGainExcludable`, `state.${state.toLowerCase()}HomeSaleGainNotExcludable`]
       const without = keysOf(makeParams({ overlay: { ...baseOverlay, retirementState: state } }))
-      const withItem = keysOf(makeParams({ overlay: { ...baseOverlay, retirementState: state, oneTimeInflows: [gift] } }))
+      const giftOnly = keysOf(makeParams({ overlay: { ...baseOverlay, retirementState: state, oneTimeInflows: [gift] } }))
+      const withSale = keysOf(makeParams({ overlay: { ...baseOverlay, retirementState: state, oneTimeInflows: [gift, sale] } }))
       for (const key of keys) {
         expect(without, key).not.toContain(key)
-        expect(withItem, key).toContain(key)
+        expect(giftOnly, key).not.toContain(key)
+        expect(withSale, key).toContain(key)
       }
     }
   })

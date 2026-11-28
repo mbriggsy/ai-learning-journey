@@ -775,7 +775,7 @@ said squeaky clears `temp/` UNCONDITIONALLY; its step 4 now deletes only the clo
   and put every recorded number back to HEAD.
 
 - **(b9-11, 10-27) `pnpm doc:reanchor` runs ONCE, LAST — and docs edited after it ran need hand moves.** A re-run against HEAD
-  double-shifts every token it already moved (its dry run proposed `solverCodeVersion.ts:154 → :171` for a citation
+  double-shifts every token it already moved (its dry run proposed `solverCodeVersion.ts:154 → :181` for a citation
   already at the right line). Move the later ones by hand from content, then run `content-check.mjs` (the re-anchor
   tools folder) — every DIFF it prints must be a construct this change edited on purpose. It also rewrote a HISTORICAL
   example inside a landmine below (the "two new register entries shifted `docs/backlog.md:1980`…" line) as if it were
@@ -783,7 +783,7 @@ said squeaky clears `temp/` UNCONDITIONALLY; its step 4 now deletes only the clo
 
 - **(b9-10, 10-22) `pnpm doc:reanchor` skips `index.ts` too** (two are tracked: `src/engine/constants/index.ts` and
   `src/engine/reference/solver-cases/index.ts`), the ambiguous-basename class. Run `git grep -n "index\.ts:[0-9]"` and fix
-  by content. Its missed-bare-token class recurred: backlog's `:401-407` sat ~90 characters after `simulate.ts:488-491`,
+  by content. Its missed-bare-token class recurred: backlog's `:401-407` sat ~90 characters after `simulate.ts:505-508`,
   and pair-check's DOCHUNK section caught it. It also never moves a doc's citations INTO ITSELF, and neither tool flagged
   it: two new register entries shifted `docs/backlog.md:1980`, `:2269`, `:2344` (cited from inside the register) by +36.
   After any edit that adds lines to a doc, run `git grep -n "<doc>:[0-9]"` across the repo, the doc itself included, and
@@ -792,7 +792,7 @@ said squeaky clears `temp/` UNCONDITIONALLY; its step 4 now deletes only the clo
 - **(b9-9, 10-21) The re-anchor after an engine edit.** `pnpm doc:reanchor HEAD` (dry run) then `--apply` made 148 edits, including
   dated logs and insights (the precedent `b4bbbd3e` accepted the same). Then: hand-fix each REVIEW token by content
   (a reworded cited line); run `pair-check.mjs` + `crossline-sweep.mjs` + `content-check.mjs` from the tools folder.
-  `pair-check` flags a HISTORICAL token as MISMATCH (TODO's "`model.ts`'s `:889` … had been stale") — a recorded
+  `pair-check` flags a HISTORICAL token as MISMATCH (TODO's "`model.ts`'s `:907` … had been stale") — a recorded
   number stays. `crossline-sweep` found two bare `:151-152` docstring tokens the tool cannot see (fixed by hand).
 
 - **(b9-9, 10-21) A plan doc under `docs/` must carry no line-numbered code citation and no count:** `verify:doc-stats` scans every

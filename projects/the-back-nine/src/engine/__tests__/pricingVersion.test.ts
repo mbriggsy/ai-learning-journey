@@ -147,7 +147,7 @@ describe('ENGINE_PRICING_LEDGER — the append-only shape the staleness reader l
     }
   })
 
-  it('PIN (moves with the next solver bump): the solver is at 13 with NO ledger row for 12 or 13 (12: the RIB-LIM order — Social Security income, which no family names; 13: U12’s inherited withdrawal in the anchors and rails, ranking logic only); the survivor-medical lean (v11) shipped WITH 11, and the working-year tax floor (v12) records 11 WITHOUT a bump — it is unscored', () => {
+  it('PIN (moves with the next solver bump): the solver is at 14 with NO ledger row for 12, 13 or 14 (12: the RIB-LIM order — Social Security income, which no family names; 13: U12’s inherited withdrawal in the anchors and rails, ranking logic only; 14: gap 5’s U9 home-sale gain in the anchors and rails, a run without a sale pricing byte for byte); the survivor-medical lean (v11) shipped WITH 11, and the working-year tax floor (v12) records 11 WITHOUT a bump — it is unscored', () => {
     const newestReprice = [...rows].reverse().find((r) => r.kind === 'reprice')!
     expect(
       {
@@ -172,8 +172,10 @@ describe('ENGINE_PRICING_LEDGER — the append-only shape the staleness reader l
         '*The engine-pricing ledger cannot name a date-route or spending-figure change…* carries it beside 8d4d4e58 and ' +
         '6e4c065d). It appends no row; only `solverCodeVersion` moved. SOLVER 13 (2026-11-27, the Act 5 plan’s U12 ' +
         'slice 2) is ranking logic only: an inherited IRA’s committed withdrawal reaches the anchors and the bracket-fill ' +
-        'rails, no pricer moved and no saved plan can hold one before U13 — no row.',
-    ).toEqual({ solverCodeVersion: 13, newestRepriceVersion: 12, newestRepriceRow: 11, survivorLeanRow: 11 })
+        'rails, no pricer moved and no saved plan can hold one before U13 — no row. SOLVER 14 (2026-11-28, gap 5’s U9) ' +
+        'is the same kind: a home sale’s taxed slice reaches the anchors and the bracket-fill rails as a committed gain; ' +
+        'a run without a sale prices byte for byte and no saved plan can hold a sale’s figures before U10 — no row.',
+    ).toEqual({ solverCodeVersion: 14, newestRepriceVersion: 12, newestRepriceRow: 11, survivorLeanRow: 11 })
   })
 
   it('the row-level `reach` is ABSENT on every row that shipped before it existed (v1–v11) — the reader takes those rows’ family reads verbatim', () => {

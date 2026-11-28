@@ -22,6 +22,9 @@
  *   - `inheritedDistribution` ← the overlay loop's own ledger functions (`simulate.inheritedCommittedIncomeSteady`,
  *                    the Act 5 plan's U12): year 0's asked figures, then each ledger carried by the steady path's
  *                    one growth factor (insight 143: the anchor must see every income the year commits);
+ *   - `committedGain` ← the year loop's own `homeSaleYear` (`simulate.homeSaleCommittedGainAllLiving`, gap 5's U9):
+ *                    the federally taxed slice of the year's home sales with everyone living, on every frame of a
+ *                    run that carries a sale (0 in a year with none), so the rails stop short of the true edge;
  *   - the ACA-cliff rail ← the engine's own per-year pricing predicate (`taxOverlay.ts` bracket-fill
  *                    site) + `cliffMagiFor(activeTable, fplForHousehold(livingCount))`;
  *   - the IRMAA rail ← the shipped `irmaa` schedule + the committed frame (`committedIncomeForYear`) of
@@ -41,7 +44,7 @@
  */
 import { expandRothConversion, type RothConversionPlan, type SimulationParams } from '@shared/model'
 import { householdBenefits } from '@engine/socialSecurityBenefit'
-import { inheritedCommittedIncomeSteady } from '@engine/simulate'
+import { homeSaleCommittedGainAllLiving, inheritedCommittedIncomeSteady } from '@engine/simulate'
 import { rmdStartAgeForBirthYear, selectRmdDivisor } from '@engine/rmd'
 import { cliffMagiFor, type CommittedYearIncome } from '@engine/magiLandscape'
 import { fplForHousehold } from '@engine/healthOverlay'
@@ -127,7 +130,9 @@ function rmdYear0(base: SimulationParams): number {
  * (`conversionWindowFor`), so no later window year can carry one (asserted, never assumed). Year 0's
  * frame IS the anchor skeleton every rail reads. An inherited IRA's withdrawal (U12) is its own term, on
  * every frame of a run that carries one: year 0's asked figures and the steady path's later rows, never the
- * owner's RMD rule, so the window's end does not bound it.
+ * owner's RMD rule, so the window's end does not bound it. A home sale's taxed slice (gap 5's U9) is a committed
+ * long-term gain on every frame of a run that carries a sale: everyone living (the joint exclusion for a couple), 0 in
+ * a year with none.
  */
 export function committedIncomeForYear(base: SimulationParams, t: number): CommittedYearIncome {
   const overlay = base.overlay
@@ -148,6 +153,7 @@ export function committedIncomeForYear(base: SimulationParams, t: number): Commi
   let ongoingTaxable = 0
   for (const leaf of overlay.income?.incomeByPerson ?? []) ongoingTaxable += leaf.taxableFull?.[t] ?? 0
   const inherited = inheritedCommittedIncomeSteady(base, t + 1)
+  const committedGain = homeSaleCommittedGainAllLiving(base, t)
   return {
     rmd: t === 0 ? rmdYear0(base) : 0,
     conversion: 0, // the baseline skeleton; the enumerator adds each trial amount
@@ -157,6 +163,7 @@ export function committedIncomeForYear(base: SimulationParams, t: number): Commi
     count65: people.filter((p) => simAge0(p.birthYear, calendarYear) >= 65).length,
     calendarYear,
     ...(inherited !== undefined ? { inheritedDistribution: inherited[t]! } : {}),
+    ...(committedGain !== undefined ? { committedGain } : {}),
   }
 }
 

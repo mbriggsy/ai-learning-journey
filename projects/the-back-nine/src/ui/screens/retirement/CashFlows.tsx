@@ -279,7 +279,12 @@ export function CashFlows({ view, headingRef, intro, caveat, onTab, onDrill, onA
                   {view.updating}
                 </p>
               ) : null}
+              {/* Keyed by where the reader is: a drill, a crumb or a table switch is a new table, drawn from its left edge.
+                  On the phone a header past the first screen is reached by scrolling the frame, and the old frame kept that
+                  scroll, so a drill opened with its first figures under the held Year and Age (gap 5's U5 look). The market
+                  switch keeps the key, and with it the scroll. */}
               <DataTable
+                key={where}
                 labelledBy={titleId}
                 columns={kitColumns(body.columns, (d) => onDrill(d))}
                 rows={body.rows}

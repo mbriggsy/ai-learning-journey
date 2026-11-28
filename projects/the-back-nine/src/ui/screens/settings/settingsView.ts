@@ -209,6 +209,17 @@ export function settingsRows(
       ...trayDoor((t) => paceOffers(t).length > 0, { kind: 'tray', lever: 'inherited-pace', label: copy.settingsPaceDoor } as const),
     })
   }
+  // How an inheritance or gift counts (gap 5's U5, R14): a line per item in its card's words, then the rule. No door:
+  // each item's one home is its Profile → Income drawer (insight 058). The heir line only where an item is one person's.
+  const oneTime = d.oneTimeInflows ?? []
+  if (oneTime.length > 0) {
+    methodology.push({
+      seat: 'one-time-money',
+      name: copy.assumptionOneTimeName,
+      values: oneTime.map((item) => `${item.name}: ${slots.oneTimeComesIn(formatMoney(item.amountReal), item.year)}`),
+      lines: [copy.settingsOneTimeLine, ...(oneTime.some((item) => item.heirIndex !== undefined) ? [copy.settingsOneTimeHeirLine] : [])],
+    })
+  }
   methodology.push(survivor)
   if (dateRoute) {
     // W: the value line is the sentence (it names the figure and where it came from, or that it is unanswered or stale).

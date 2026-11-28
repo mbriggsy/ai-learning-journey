@@ -30,8 +30,9 @@ import { mapsView, mapsViewSelect, type MapsChoice, type MapsView } from './maps
 
 /** Maps first, as RightCapital orders them (RC20); the Summary stays the page's first view (the builder's call, RC20). */
 export type CashFlowsTab = 'maps' | 'summary' | 'accounts'
-/** The Summary's drills: RightCapital's underlined headers B9 can break down. Income tax is never one (gap 10). */
-export type SummaryDrill = 'income' | 'distribution' | 'expenses' | 'saving'
+/** The Summary's drills: RightCapital's underlined headers B9 can break down. Income tax is never one (gap 10). `other`
+ *  is Other inflows (gap 5's U5): each inheritance or gift by name. */
+export type SummaryDrill = 'income' | 'distribution' | 'other' | 'expenses' | 'saving'
 export type AccountsTable = 'end' | 'deposits' | 'withdrawals' | 'rmd' | 'conversions'
 /** The plan select: your plan, the working what-if, a kept what-if, the recommendation, or your plan beside the
  *  what-if open on Analysis (U15's paired form). */
@@ -241,6 +242,13 @@ function fieldCell(f: FieldSpec, r: LedgerYearRow): CfCell {
 
 const leaf = (f: FieldSpec): CfLeaf => ({ kind: 'leaf', id: f.id, header: f.header, numeric: f.word === undefined })
 
+/** Gap 5's one-time money (KTD9): the year's total coming in (Other inflows) and the same total going into taxable
+ *  (Planned saving's drill), each the engine's one row field. An item's amount is the household's own, so year 0's
+ *  prints exact, as entered pay and other income do. */
+const oneTimeEntered = () => true
+const oneTimeInField: FieldSpec = { id: 'other-inflows', header: copy.cashFlowsColOneTime, read: (r) => r.oneTimeIn, entered: oneTimeEntered }
+const oneTimeKeptField: FieldSpec = { id: 'one-time-kept', header: copy.cashFlowsColOneTimeKept, read: (r) => r.oneTimeIn, entered: oneTimeEntered }
+
 /** The Summary's bands, groups and fields, in RightCapital's reading order. */
 function summarySpecs(meta: TableMeta, rows: readonly LedgerYearRow[]): BandSpec[] {
   const people = meta.people
@@ -297,6 +305,18 @@ function summarySpecs(meta: TableMeta, rows: readonly LedgerYearRow[]): BandSpec
             ]),
           ],
         },
+        // RightCapital's Other Inflows (gap 5's U5, KTD9): the year's one-time money (`oneTimeIn`, the engine's own
+        // total), each item by the household's name in its drill (`oneTimeInByItem`). It lands at the end of its year,
+        // so it goes straight back out under Planned saving (`one-time-kept`): the year still balances on single fields.
+        {
+          id: 'other',
+          header: copy.cashFlowsGroupOther,
+          drill: 'other',
+          fields: [
+            oneTimeInField,
+            ...(meta.oneTime ?? []).map((name, k): FieldSpec => ({ id: `other-inflows-${k}`, header: name, read: (r) => r.oneTimeInByItem?.[k], entered: enteredYear0, drillOnly: true })),
+          ],
+        },
       ],
     },
     {
@@ -339,6 +359,7 @@ function summarySpecs(meta: TableMeta, rows: readonly LedgerYearRow[]): BandSpec
             { id: 'into-savings', header: copy.workbenchLineIntoSavings, read: (r) => r.workingYear?.ownDeposits, drillOnly: true },
             { id: 'left-over', header: copy.workbenchLineLeftOver, read: (r) => r.workingYear?.leftOver, sign: 'signed', drillOnly: true },
             { id: 'kept-in-taxable', header: copy.workbenchLineKeptInTaxable, read: (r) => r.leftOverCredit, drillOnly: true },
+            { ...oneTimeKeptField, drillOnly: true },
           ],
         },
       ],
@@ -385,6 +406,9 @@ function accountsFields(table: AccountsTable, meta: TableMeta, rows: readonly Le
     case 'deposits':
       return [
         { id: 'taxable', header: copy.workbenchSourceTaxable, read: (r) => r.contribution.taxable },
+        // An inheritance or gift joins taxable at the end of its year (gap 5's U5): its own line, so the ending balance's
+        // jump that year has one.
+        { id: 'one-time-taxable', header: copy.cashFlowsColOneTimeTaxable, read: (r) => r.oneTimeIn, entered: oneTimeEntered },
         { id: 'pretax', header: copy.workbenchSourcePretax, read: (r) => r.contribution.pretax },
         { id: 'roth', header: copy.workbenchSourceRoth, read: (r) => r.contribution.roth },
         { id: 'hsa', header: copy.workbenchSourceHsa, read: (r) => r.contribution.hsa },
@@ -535,6 +559,7 @@ export function cashFlowsCsv(columns: readonly CfNode[], rows: readonly CfRow[])
 const DRILL_LABEL: Readonly<Record<SummaryDrill, string>> = {
   income: copy.cashFlowsGroupIncome,
   distribution: copy.cashFlowsGroupDistribution,
+  other: copy.cashFlowsGroupOther,
   expenses: copy.cashFlowsGroupExpenses,
   saving: copy.cashFlowsGroupSaving,
 }
@@ -604,6 +629,7 @@ function singleFootnotes(columns: readonly CfNode[], meta: TableMeta, rows: read
     ...(shown.has('rmd') ? [copy.workbenchRequiredNote] : []),
     ...([...shown].some((id) => /^inherited-\d+-required$/.test(id)) ? [copy.cashFlowsInheritedRequiredNote] : []),
     ...([...shown].some((id) => /^inherited-\d+-already-out$/.test(id)) ? [copy.cashFlowsInheritedBookedNote] : []),
+    ...([...shown].some((id) => id === 'one-time-kept' || id === 'one-time-taxable' || /^other-inflows(-\d+)?$/.test(id)) ? [copy.cashFlowsOneTimeNote] : []),
     ...(shown.has('spending') && rows.some((r) => r.spending === undefined) ? [copy.workbenchNoSpendingNote] : []),
     ...(showsTotal ? [copy.cashFlowsEndTotalNote] : []),
   ]

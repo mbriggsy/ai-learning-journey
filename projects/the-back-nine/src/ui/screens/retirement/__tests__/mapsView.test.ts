@@ -137,6 +137,11 @@ describe('mapsView — the balance over every dev seed, both futures', () => {
         expect(m.totalOutWords).toBe(slots.mapsTotalWords(copy.mapsTotalOut, m.totalOut))
         // A year that balances is called rounding only where the printed sides differ.
         expect(v.notes.includes(copy.mapsRoundingNote), `${who}: the rounding note`).toBe(dollarsOf(m.totalIn) !== dollarsOf(m.totalOut))
+        // A plan with no one-time money (gap 5's U5) draws no part of it, and says nothing of it.
+        if (run.meta.oneTime === undefined) {
+          expect(m.nodes.some((n) => n.group === 'other-inflows' || n.id === 'one-time-kept'), `${who}: no one-time money`).toBe(false)
+          expect(v.notes, `${who}: no one-time note`).not.toContain(copy.mapsOneTimeKept)
+        }
       }
     }
     expect(maps, '[test setup] maps drawn').toBeGreaterThan(1000)
@@ -199,10 +204,11 @@ describe('mapsView — the balance over every dev seed, both futures', () => {
 })
 
 describe('mapsView — one source of truth: every leaf is the Summary’s own cell for the same run, year and future', () => {
-  const DRILLS: readonly (SummaryDrill | null)[] = [null, 'income', 'distribution', 'expenses', 'saving']
-  // Lifestyle runs and a floor-band run (its spending after work the essentials, `meta.track === 'floor'`), and
-  // `surpluswidest` (its other income: leaf `other-0`).
-  for (const run of [...seedRuns(['retired', 'dip', 'tablewidest', 'surpluswidest']), ...seedRuns(['dip'], 'floor').map((r) => ({ ...r, name: `${r.name} floor` }))]) {
+  const DRILLS: readonly (SummaryDrill | null)[] = [null, 'income', 'distribution', 'other', 'expenses', 'saving']
+  // Lifestyle runs and a floor-band run (its spending after work the essentials, `meta.track === 'floor'`),
+  // `surpluswidest` (its other income: leaf `other-0`) and `dateinherit` (an inheritance: leaves `other-inflows-0` and
+  // `one-time-kept`, gap 5's U5).
+  for (const run of [...seedRuns(['retired', 'dip', 'tablewidest', 'surpluswidest', 'dateinherit']), ...seedRuns(['dip'], 'floor').map((r) => ({ ...r, name: `${r.name} floor` }))]) {
     it(`${run.name} ${run.view}: each leaf's id, field and printed words match the Summary's cell in every year`, () => {
       const input = (drill: SummaryDrill | null): CashFlowsInput => ({
         tab: 'summary',
@@ -248,6 +254,7 @@ describe('mapsView — one source of truth: every leaf is the Summary’s own ce
       }
       expect(checked, '[test setup] leaves checked').toBeGreaterThan(20)
       if (run.name === 'surpluswidest') expect(ids.has('other-0'), '[test setup] surpluswidest reaches other income').toBe(true)
+      if (run.name === 'dateinherit') expect(['other-inflows-0', 'one-time-kept'].every((id) => ids.has(id)), '[test setup] dateinherit reaches its inheritance').toBe(true)
     })
   }
 
@@ -386,6 +393,39 @@ describe('mapsView — the parts of a year', () => {
     expect(shown.has('payroll'), '[test setup] the Summary shows payroll').toBe(true)
     expect(shown.has('tax-on-pay'), '[test setup] and no income tax on pay').toBe(false)
     for (const n of payCheckNotes(run.meta.stateTaxReading)) expect(sv.footnotes).toContain(n)
+  })
+
+  it('an inheritance’s year (`dateinherit`, gap 5’s U5): it comes in under Other inflows by its own name and goes out under Planned saving, kept in taxable; the year balances, with its note; other years carry neither', () => {
+    for (const run of seedRuns(['dateinherit'])) {
+      const k = run.rows.findIndex((r) => (r.oneTimeIn ?? 0) > 0)
+      expect(k, `[test setup] ${run.view}: dateinherit credits its inheritance in some year`).toBeGreaterThanOrEqual(0)
+      const r = run.rows[k]!
+      const v = at(run, r.t)
+      const m = mapOf(v)
+      const item = m.nodes.find((n) => n.id === 'other-inflows-0')!
+      expect(item).toMatchObject({ name: run.meta.oneTime![0], column: 0, group: 'other-inflows', value: r.oneTimeInByItem![0] })
+      expect(m.nodes.find((n) => n.id === 'one-time-kept')).toMatchObject({ name: copy.cashFlowsColOneTimeKept, group: 'saving', value: r.oneTimeIn })
+      expect(m.gap).toBe(false)
+      // Its tile follows Planned distribution's on the money-in side, named as the Summary's group.
+      const tiles = m.inTiles.map((t) => t.id)
+      expect(tiles.at(-1)).toBe('other-inflows')
+      expect(m.inTiles.at(-1)!.name).toBe(copy.cashFlowsGroupOther)
+      expect(v.notes).toContain(copy.mapsOneTimeKept)
+      // The year before carries no part of it.
+      const before = at(run, run.rows[k - 1]!.t)
+      expect(mapOf(before).nodes.some((n) => n.group === 'other-inflows' || n.id === 'one-time-kept')).toBe(false)
+      expect(before.notes).not.toContain(copy.mapsOneTimeKept)
+      // The Summary's Other inflows cell, its drill's item column and the Additions table's taxable line, in that year.
+      const cell = (over: Partial<CashFlowsInput>, id: string) => {
+        const t = cashFlowsView(mapsInput(run, over)).body
+        if (t.kind !== 'table') throw new Error('no table')
+        return t.rows[k]!.cells[id]!.value
+      }
+      expect(cell({ tab: 'summary' }, 'other-inflows')).toBe(r.oneTimeIn)
+      expect(cell({ tab: 'summary', drill: 'other' }, 'other-inflows-0')).toBe(r.oneTimeIn)
+      expect(cell({ tab: 'summary', drill: 'saving' }, 'one-time-kept')).toBe(r.oneTimeIn)
+      expect(cell({ tab: 'accounts', accounts: 'deposits' }, 'one-time-taxable')).toBe(r.oneTimeIn)
+    }
   })
 
   it('a working year with no W gets the "not asked yet" words, never a map', () => {

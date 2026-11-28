@@ -286,3 +286,23 @@ describe('the inherited-IRA pace row (U17)', () => {
     expect(rowsOf(INH, false, RETIRED).methodology.find((x) => x.seat === 'inherited-pace')!.door).toBeUndefined()
   })
 })
+
+describe('how an inheritance or gift counts (gap 5’s U5, R14)', () => {
+  const INHERIT = DEV_SEEDS.dateinherit
+  const year = INHERIT.oneTimeInflows![0]!.year
+
+  it('one Methodology row names each item as its card does, says how it counts, and has no door (its home is Profile → Income)', () => {
+    const r = rowsOf(INHERIT).methodology.find((x) => x.seat === 'one-time-money')!
+    expect(r.name).toBe(copy.assumptionOneTimeName)
+    expect(r.values).toEqual([`Aunt Jo’s estate: ${slots.oneTimeComesIn('250,000', year)}`])
+    // A both-people item: no heir line.
+    expect(r.lines).toEqual([copy.settingsOneTimeLine])
+    expect(r.door).toBeUndefined()
+  })
+
+  it('an item that comes to one of you adds the heir line; a plan with none has no row', () => {
+    const oneOf: ScenarioDraft = { ...INHERIT, oneTimeInflows: [{ ...INHERIT.oneTimeInflows![0]!, heirIndex: 0, leftTo: 'someone-else' }] }
+    expect(rowsOf(oneOf).methodology.find((x) => x.seat === 'one-time-money')!.lines).toEqual([copy.settingsOneTimeLine, copy.settingsOneTimeHeirLine])
+    for (const d of [RETIRED, SAVED]) expect(allRows(d).some((x) => x.seat === 'one-time-money')).toBe(false)
+  })
+})

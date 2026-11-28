@@ -29,6 +29,9 @@
  * the part the year didn't need (`movedToTaxable`, a part of `taken`) goes out under Planned saving, each one field under
  * its Summary column's id, with a sentence; what the custodian reported before the entered balance (`booked`) is the
  * year's income with no money moved, so it is said in words and only its tax is on the map.
+ * An inheritance or gift (gap 5's U5) comes in under its own group, Other inflows, one leaf per item by the household's
+ * own name (`oneTimeInByItem`), and the year's whole (`oneTimeIn`, their exact sum) goes out under Planned saving, kept in
+ * taxable: the money lands at the year's end and pays none of its bills, so it is in and out in the same year, said so.
  * Where the two sides still differ by more than the grain, or the printed sides differ by more than a dollar of
  * flooring per part (a negative part, an ACA year's income tax below zero, prints unsigned), the difference is drawn as
  * its own labelled node on the short side ("Not explained by the year's figures") with a note, never absorbed into
@@ -50,7 +53,7 @@ import { formatTableDollars, inheritedYearNotes, payCheckNotes, rowNotesAt, tabl
 export type MapsChoice = 'flow' | 'breakdown'
 
 /** The map's groups: the colour slot, the tile and the words each node belongs to. */
-export type MapGroup = 'income' | 'distribution' | 'total' | 'expenses' | 'taxes' | 'saving' | 'not-kept' | 'gap'
+export type MapGroup = 'income' | 'distribution' | 'other-inflows' | 'total' | 'expenses' | 'taxes' | 'saving' | 'not-kept' | 'gap'
 
 /** One node of the Sankey: its name, its printed amount, its column (0 the money in, 1 the total, 2 the money out by
  *  group, 3 a group's parts). `value` is the row field it prints (a leaf), or null for a sum. */
@@ -186,7 +189,7 @@ interface LeafSpec {
   readonly entered?: (r: LedgerYearRow) => boolean
 }
 
-/** The money in, in the Summary's order: Income inflows, then Planned distribution. */
+/** The money in, in the Summary's order: Income inflows, Planned distribution, then Other inflows. */
 function inSpecs(meta: TableMeta): LeafSpec[] {
   const entered = () => true
   return [
@@ -200,6 +203,9 @@ function inSpecs(meta: TableMeta): LeafSpec[] {
     // Each inherited IRA's whole withdrawal (the Act 5 plan's U13), one leaf per account under its Summary column's id: the
     // part the year didn't need goes out again under Planned saving (`outSpecs`), so the year balances on single fields.
     ...meta.inherited.map((inh, k): LeafSpec => ({ id: `draw-inherited-${k}`, name: slots.workbenchPairTakenFrom(inh.label), group: 'distribution', read: (r) => r.inherited?.[k]?.taken })),
+    // Each inheritance or gift by the household's own name (gap 5's U5), under the Other inflows drill's id, so the flow
+    // names what came in; the whole goes out again under Planned saving (`one-time-kept`, `outSpecs`).
+    ...(meta.oneTime ?? []).map((name, k): LeafSpec => ({ id: `other-inflows-${k}`, name, group: 'other-inflows', read: (r) => r.oneTimeInByItem?.[k], entered })),
   ]
 }
 
@@ -223,6 +229,9 @@ function outSpecs(meta: TableMeta): LeafSpec[] {
     // An inherited IRA's withdrawal beyond the year's need, moved to taxable (U13): its sink field is part of `taken`, so it
     // leaves the map as saving (the Summary's distribution drill prints it under the same id).
     ...meta.inherited.map((inh, k): LeafSpec => ({ id: `inherited-${k}-moved`, name: slots.cashFlowsInheritedMoved(inh.label), group: 'saving', read: (r) => r.inherited?.[k]?.movedToTaxable })),
+    // The year's inheritances and gifts, landed in taxable at its end (gap 5's U5): the Summary's Planned saving drill
+    // prints it under the same id.
+    { id: 'one-time-kept', name: copy.cashFlowsColOneTimeKept, group: 'saving', read: (r) => r.oneTimeIn, entered: () => true },
     { id: 'not-kept', name: copy.cashFlowsColNotKept, group: 'not-kept', read: (r) => r.incomeNotKept },
   ]
 }
@@ -230,6 +239,7 @@ function outSpecs(meta: TableMeta): LeafSpec[] {
 const GROUP_NAME: Readonly<Record<MapGroup, string>> = {
   income: copy.cashFlowsGroupIncome,
   distribution: copy.cashFlowsGroupDistribution,
+  'other-inflows': copy.cashFlowsGroupOther,
   total: copy.mapsTotalIn,
   expenses: copy.cashFlowsGroupExpenses,
   taxes: copy.mapsGroupTaxes,
@@ -238,7 +248,7 @@ const GROUP_NAME: Readonly<Record<MapGroup, string>> = {
   gap: copy.mapsGap,
 }
 
-const IN_GROUPS: readonly MapGroup[] = ['income', 'distribution']
+const IN_GROUPS: readonly MapGroup[] = ['income', 'distribution', 'other-inflows']
 const OUT_GROUPS: readonly MapGroup[] = ['expenses', 'taxes', 'saving', 'not-kept']
 
 interface Printed {
@@ -416,6 +426,7 @@ export function mapsView(input: MapsInput): MapsView {
     ...(tableFigure(r.conversion, { sign: '', entered: false, t: r.t }) !== null ? [slots.mapsConversion(formatTableDollars(r.conversion))] : []),
     ...(tableFigure(r.rmdToTaxable, { sign: '', entered: false, t: r.t }) !== null ? [copy.mapsRmdOff] : []),
     ...((r.inherited ?? []).some((e) => tableFigure(e.movedToTaxable, { sign: '', entered: false, t: r.t }) !== null) ? [copy.mapsInheritedMoved] : []),
+    ...(shows('one-time-kept') ? [copy.mapsOneTimeKept] : []),
     ...(r.inherited ?? []).flatMap((e, k) => {
       const booked = tableFigure(e.booked, { sign: '', entered: false, t: r.t })
       const name = meta.inherited[k]?.name

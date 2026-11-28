@@ -222,7 +222,7 @@ standing valve; the §7 triggers in `docs/decisions/market-model.md` stay live a
   duration phrase must be TRUE: the 2026-10-01 production build measured it FALSE at 8.9–26.0 min,
   and since the worker pool (`225d8da4`) it holds at his laptop — `retired` 36.5 s · `nc` 39.8 s ·
   `healthnc` 150.9 s on the 2026-10-03 build; still untrue on a ≤ 3-core device and unmeasured on
-  his phone — the string is `copy.ts:2138`, its timings `copy.ts:2130-2135`, the open half the
+  his phone — the string is `copy.ts:2139`, its timings `copy.ts:2131-2136`, the open half the
   register's *The recommendation's pending line promises "a few minutes"…*) —
   `aria-busy` on the panel (the `PendingPanel` grammar) with the label spoken through the surface's
   own persistent `role="status"` / `aria-live="polite"` announcer rather than the panel line, so a
@@ -291,7 +291,7 @@ to a single commit.
   the 2026-08-02 pin**, because it promised a month tied to NC's own certification that no longer
   gates anything, and a withhold that names a date it cannot keep is exactly the promise this
   product must not make. A future state's pin event may have any timing, so the shipped slot commits
-  to none (`copy.ts:5567`).
+  to none (`copy.ts:5586`).
 - **No live household fires the withheld render today, and that is a CLEARED clause, not a
   regression.** Both blocking clauses cleared after U16 shipped: S.L. 2026-41 § 44.1(a) pinned
   `ncRateSchedule` to an enacted statutory schedule on 2026-08-02, retiring the last directional
@@ -399,7 +399,7 @@ to a single commit.
   `ScenarioDraft` key to ride, and the vocabulary cannot key on `keyof ScenarioDraft`. A new id
   fails `tsc` until its builder and its humane string are authored. Both dispositions render here
   as read-only notes — no inert editing affordance ships on this surface (wall #5). `heirBracket`
-  also holds a `row-editable` seat in `assumptionRegistry.ts:126`, and its editor is **NOT inline**:
+  also holds a `row-editable` seat in `assumptionRegistry.ts:127`, and its editor is **NOT inline**:
   it shipped 2026-08-14 as the AssumptionPanel `heir-bracket` seat, on Result.tsx's measured
   67–161px breach and insight 058's one-editor-home rule. `r7-editable` therefore means "an editable
   home exists somewhere", never "render a control right here".

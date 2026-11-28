@@ -92,6 +92,10 @@ export interface TableMeta {
   /** The saved left over this run carries (its own params; absent where nothing is carried): the stored half of the
    *  credit's cap, so a row can name the cap that binds. */
   readonly leftOverSaved?: number
+  /** Each inheritance or gift this run carries, by the household's own name (gap 5's U5, KTD9), index-aligned with
+   *  `OverlayParams.oneTimeInflows` and so with every row's `oneTimeInByItem`: the Summary's Other inflows drill and the
+   *  map name an item by it. PRESENT only when the run carries one-time money, as the row fields are. */
+  readonly oneTime?: readonly string[]
 }
 
 /** One view's request, or the rough market's refusal by name (a market whose correlation is not 0). */
@@ -205,6 +209,8 @@ export function tableRequestsOn(
   const accumulation = params.overlay?.accumulation
   const state = params.overlay?.retirementState
   const saved = accumulation?.workingYearLeftOverSavedReal
+  // The params list is built from the draft's items in their order (`buildOverlay`), so the names line up with it.
+  const oneTime = params.overlay?.oneTimeInflows !== undefined ? (draft.oneTimeInflows ?? []).map((item) => item.name) : undefined
   return {
     meta: {
       sources: base.sources,
@@ -223,6 +229,7 @@ export function tableRequestsOn(
       statePriced: state !== undefined && isPricedState(state),
       leftOverState,
       ...(saved !== undefined ? { leftOverSaved: saved } : {}),
+      ...(oneTime !== undefined ? { oneTime } : {}),
     },
     views: {
       steady: { kind: 'run', request: { params, seed: TABLE_SEED, options: options(steady) } },

@@ -38,6 +38,9 @@ export const MAP_MIN_NODE_PX = 1
 const TILE: Readonly<Record<MapGroup, string>> = {
   income: 'border-l-green bg-mint',
   distribution: 'border-l-orange bg-sand-tint',
+  // An inheritance or gift (gap 5's U5): deep indigo, series slot 9, which clears income green, distribution orange and
+  // the gap's stone under every simulation (RC_PAIRS); its tint is the saving tiles' (the tiles sit on opposite sides).
+  'other-inflows': 'border-l-(--highcharts-color-9) bg-blue-tint',
   total: 'border-l-green bg-mint',
   expenses: 'border-l-coral bg-blush',
   taxes: 'border-l-stone-400 bg-stone-100',

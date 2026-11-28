@@ -29,7 +29,8 @@ import { copy, slots } from '../../src/ui/copy'
  * the backup drawer, the re-entry gate, a second tab's view-only banner and the error boundary (filter
  * `-g "the vault and session screens"`); since RC20 Cash Flows → Maps: the flow by year, the tiles and the rough market's last
  * year (filter `-g "Cash Flows Maps"`); since the Act 5 plan's U13 the inherited IRA (`?seed=inherited`) on Cash Flows' tables,
- * Maps and Retirement Details (filter `-g "the inherited IRA"`). Screenshots land in the repo's gitignored `temp/rc-shots/<unit>/`, named
+ * Maps and Retirement Details (filter `-g "the inherited IRA"`); since gap 5's U5 an inheritance (`?seed=dateinherit`) on
+ * Cash Flows' tables and drills, Maps on its year and Settings (filter `-g "one-time money"`). Screenshots land in the repo's gitignored `temp/rc-shots/<unit>/`, named
  * `<screen>-<seed>-<size>.png`, for Briggsy to review the output.
  *
  *     RC_UNIT=RC2 pnpm exec playwright test --config e2e/held/shots.config.ts rc-look
@@ -1052,6 +1053,76 @@ for (const size of SIZES) {
       // Not Tax Strategies' withdrawal stacks: on this seed both goals come back held (a converting winner over a
       // non-converting runner-up, the shape guard; measured 2026-11-27), so the stacks never draw here.
       console.log(`[rc-look ${UNIT} inherited ${size.tag}] ${JSON.stringify(findings)}`)
+      auditAll(findings)
+    })
+  })
+}
+
+// Gap 5's U5: an inheritance or gift on the screens that show it, on `?seed=dateinherit` ($250,000, both people's, in
+// 2030): Cash Flows' Summary (and, on the phone, scrolled so Other inflows sits half under the held Year and Age), the
+// Other inflows and Planned saving drills, Accounts → Additions to accounts, Maps on the inheritance's year (the flow at
+// his window, the tiles on the phone and at his window), and Settings' Methodology tab with its row. Reduced motion, as
+// the Maps block. Filter with `-g "one-time money"`.
+for (const size of SIZES) {
+  test.describe(`${UNIT} look, one-time money at ${size.tag}`, () => {
+    test.use({ ...size.use, reducedMotion: 'reduce' })
+    test('?seed=dateinherit: Cash Flows (Summary, the Other inflows and Planned saving drills, Additions), Maps on its year, Settings', async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 300_000)
+      const seed = 'dateinherit'
+      await enterShell(page, seed)
+      const findings: Record<string, Audit> = {}
+      await showScreen(page, CASH_FLOWS, size.phone)
+      await tableLanded(page)
+      await shot(page, findings, 'once-summary', seed, size.tag)
+      const scrolls = await page.locator('[data-table-frame]').evaluate((f) => f.scrollWidth > f.clientWidth)
+      if (scrolls) {
+        await page.locator('[data-table-frame]').evaluate(async (f) => {
+          const th = f.querySelector<HTMLElement>('th[data-group="other"]')!
+          const lead = f.querySelector<HTMLElement>('tbody tr:first-child > :nth-child(2)')!
+          f.scrollLeft = 0
+          await new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())))
+          f.scrollLeft = th.offsetLeft - (lead.offsetLeft + lead.offsetWidth) + th.offsetWidth / 2
+        })
+        await shot(page, findings, 'once-summary-other-half', seed, size.tag)
+        await page.locator('[data-table-frame]').evaluate((f) => (f.scrollLeft = 0))
+      }
+      // Planned saving drills only where it holds more than its top shows (with no put-in, its kept lines are the top).
+      for (const [id, group] of [
+        ['once-other', copy.cashFlowsGroupOther],
+        ['once-saving', copy.cashFlowsGroupSaving],
+      ] as const) {
+        const drill = page.locator('[data-table-frame] thead button', { hasText: group })
+        if ((await drill.count()) === 0) continue
+        await drill.click()
+        await tableLanded(page)
+        await shot(page, findings, id, seed, size.tag)
+        await page.screenshot({ path: `${OUT}/${id}-${seed}-${size.tag}-full.png`, fullPage: true })
+        await page.locator('[data-cash-flows-title] button').first().click()
+      }
+      await page.getByRole('tab', { name: copy.cashFlowsTabAccounts }).click()
+      await tableLanded(page)
+      await pickOn(page, copy.cashFlowsAccountsLabel, copy.cashFlowsAccountsDeposits)
+      await tableLanded(page)
+      await page.evaluate(() => window.scrollTo(0, 0))
+      await shot(page, findings, 'once-additions', seed, size.tag)
+      await page.evaluate(() => window.scrollTo(0, 0))
+      await page.getByRole('tab', { name: copy.cashFlowsTabMaps }).click()
+      await mapsShown(page)
+      await mapsYearKeys(page, 'ArrowRight', 4)
+      const view = size.phone ? 'tiles' : 'flow'
+      await shot(page, findings, `once-maps-${view}`, seed, size.tag)
+      await page.screenshot({ path: `${OUT}/once-maps-${view}-${seed}-${size.tag}-full.png`, fullPage: true })
+      if (!size.phone) {
+        await page.getByRole('combobox', { name: copy.mapsViewLabel }).click()
+        await page.getByRole('option', { name: copy.mapsViewBreakdown, exact: true }).click()
+        await mapsShown(page)
+        await shot(page, findings, 'once-maps-tiles', seed, size.tag)
+      }
+      await showScreen(page, screenById('settings'), size.phone)
+      await page.evaluate(() => window.scrollTo(0, 0))
+      await shot(page, findings, 'once-settings', seed, size.tag)
+      await page.screenshot({ path: `${OUT}/once-settings-${seed}-${size.tag}-full.png`, fullPage: true })
+      console.log(`[rc-look ${UNIT} one-time ${size.tag}] ${JSON.stringify(findings)}`)
       auditAll(findings)
     })
   })

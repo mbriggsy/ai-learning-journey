@@ -221,19 +221,20 @@ describe('cashFlowsView — Summary: every shown figure is one field of the row'
   })
 
   it('each drill shows every field its group holds, and its breadcrumb names it', () => {
-    const want: Record<SummaryDrill, string[]> = {
+    // Other inflows' drill needs a run carrying one-time money (its own block below).
+    const want: Record<Exclude<SummaryDrill, 'other'>, string[]> = {
       income: ['pay-0', 'pay-1', 'social-security', 'other-0', 'other-1', 'pay-taxed-0', 'pay-taxed-1', 'other-taxed-0', 'other-taxed-1'],
       distribution: ['draw-taxable', 'draw-pretax', 'draw-pretax-0', 'draw-pretax-1', 'draw-roth', 'hsa-spend', 'rmd', 'rmd-to-taxable'],
       expenses: ['spending', 'aca-net', 'medicare', 'irmaa', 'medicare-extras'],
       saving: ['put-in-taxable', 'put-in-pretax', 'put-in-roth', 'put-in-hsa', 'into-savings', 'left-over', 'kept-in-taxable'],
     }
-    const label: Record<SummaryDrill, string> = {
+    const label: Record<Exclude<SummaryDrill, 'other'>, string> = {
       income: copy.cashFlowsGroupIncome,
       distribution: copy.cashFlowsGroupDistribution,
       expenses: copy.cashFlowsGroupExpenses,
       saving: copy.cashFlowsGroupSaving,
     }
-    for (const drill of Object.keys(want) as SummaryDrill[]) {
+    for (const drill of Object.keys(want) as Exclude<SummaryDrill, 'other'>[]) {
       const v = cashFlowsView(input({ drill }))
       expect(leafIds(tableOf(v).columns), drill).toEqual(['year', 'age', ...want[drill]])
       expectOneFieldPerCell(v, oracle)
@@ -266,7 +267,7 @@ describe('cashFlowsView — Summary: every shown figure is one field of the row'
     })
   })
 
-  it('no column B9 does not emit: no total, no goals, no other inflows, no federal/state split', () => {
+  it('no column B9 does not emit: no total, no goals, no federal/state split, and no Other inflows on a plan with no one-time money', () => {
     const headers = (columns: readonly CfNode[]): string[] => columns.flatMap((c) => [c.header, ...(c.kind === 'group' ? headers(c.columns) : [])])
     for (const drill of [null, 'income', 'distribution', 'expenses', 'saving'] as const) {
       const all = headers(tableOf(cashFlowsView(input({ drill }))).columns).join(' | ')
@@ -325,6 +326,80 @@ describe('cashFlowsView — Summary: every shown figure is one field of the row'
     const v = cashFlowsView(input({ plan: ready(noExtras), drill: 'expenses' }))
     expect(v.breadcrumb).toEqual([{ label: copy.cashFlowsTabSummary, drill: null }])
     expect(leafIds(tableOf(v).columns)).toContain('income-tax')
+  })
+})
+
+describe('cashFlowsView — an inheritance or gift (gap 5’s U5): Other inflows, kept in taxable, and the Additions line', () => {
+  // Two items: the first lands in year 1 ($250,000), the second in year 0 ($40,000); each year's total is its item's.
+  const ONE_TIME_META: TableMeta = { ...META, oneTime: ['Aunt Jo’s estate', 'Dad’s gift'] }
+  const rows = [distinctRow(0, { oneTimeIn: 40_000, oneTimeInByItem: [0, 40_000] }), distinctRow(1, { oneTimeIn: 250_000, oneTimeInByItem: [250_000, 0] })]
+  const withOneTime = (r: LedgerYearRow): Record<string, number> => ({
+    ...oracle(r),
+    'other-inflows': r.oneTimeIn!,
+    'other-inflows-0': r.oneTimeInByItem![0]!,
+    'other-inflows-1': r.oneTimeInByItem![1]!,
+    'one-time-kept': r.oneTimeIn!,
+  })
+  const view = (over: Partial<CashFlowsInput> = {}) => cashFlowsView(input({ plan: ready(rows, ONE_TIME_META), ...over }))
+
+  it('the top: Other inflows after Planned distribution in the in band, one column (`oneTimeIn`), drillable; its note under the table', () => {
+    const v = view()
+    const t = tableOf(v)
+    const band = t.columns.find((c) => c.kind === 'group' && c.id === 'in') as Extract<CfNode, { kind: 'group' }>
+    expect(band.columns.map((c) => c.id)).toEqual(['income', 'distribution', 'other'])
+    const other = band.columns[2] as Extract<CfNode, { kind: 'group' }>
+    expect([other.header, other.drill]).toEqual([copy.cashFlowsGroupOther, 'other'])
+    expect(leafIds(other.columns)).toEqual(['other-inflows'])
+    expect(leavesOf(other.columns)[0]!.header).toBe(copy.cashFlowsColOneTime)
+    expectOneFieldPerCell(v, withOneTime, rows)
+    // Year 0's amount is the household's own figure, exact; a later year's carries the projection mark.
+    expect(t.rows.map((r) => r.cells['other-inflows']!.text)).toEqual(['40,000', '~250,000'])
+    expect(v.footnotes).toContain(copy.cashFlowsOneTimeNote)
+  })
+
+  it('its drill names each item by the household’s own words, beside the total; the breadcrumb names Other inflows', () => {
+    const v = view({ drill: 'other' })
+    const t = tableOf(v)
+    expect(leafIds(t.columns)).toEqual(['year', 'age', 'other-inflows', 'other-inflows-0', 'other-inflows-1'])
+    expect(leavesOf(t.columns).slice(2).map((l) => l.header)).toEqual([copy.cashFlowsColOneTime, 'Aunt Jo’s estate', 'Dad’s gift'])
+    // Each item's own field in its own year; a year it doesn't come prints blank (a $0 is never zero-filled).
+    expect(t.rows.map((r) => [r.cells['other-inflows']!.value, r.cells['other-inflows-0']!.value, r.cells['other-inflows-1']!.value])).toEqual([
+      [40_000, null, 40_000],
+      [250_000, 250_000, null],
+    ])
+    expect(v.breadcrumb).toEqual([
+      { label: copy.cashFlowsTabSummary, drill: null },
+      { label: copy.cashFlowsGroupOther, drill: 'other' },
+    ])
+    expect(v.footnotes).toContain(copy.cashFlowsOneTimeNote)
+  })
+
+  it('Planned saving’s drill carries the same total kept in taxable (`one-time-kept`), after build 2’s credit', () => {
+    const v = view({ drill: 'saving' })
+    const ids = leafIds(tableOf(v).columns)
+    expect(ids.slice(-2)).toEqual(['kept-in-taxable', 'one-time-kept'])
+    expect(leavesOf(tableOf(v).columns).at(-1)!.header).toBe(copy.cashFlowsColOneTimeKept)
+    expectOneFieldPerCell(v, withOneTime, rows)
+  })
+
+  it('Accounts → Additions to accounts: a taxable line from inheritances and gifts, after the taxable deposits, with the note', () => {
+    const v = view({ tab: 'accounts', accounts: 'deposits' })
+    const t = tableOf(v)
+    expect(leafIds(t.columns)).toEqual(['year', 'age', 'taxable', 'one-time-taxable', 'pretax', 'roth', 'hsa'])
+    expect(leavesOf(t.columns)[3]!.header).toBe(copy.cashFlowsColOneTimeTaxable)
+    rows.forEach((r, k) => expect(t.rows[k]!.cells['one-time-taxable']!.value).toBe(r.oneTimeIn))
+    expect(v.footnotes).toContain(copy.cashFlowsOneTimeNote)
+  })
+
+  it('a run carrying items none of which count (every year 0, its heir dead or the money run out first): no column, no drill, no line, no note', () => {
+    const none = rows.map((r) => ({ ...r, oneTimeIn: 0, oneTimeInByItem: [0, 0] }))
+    for (const over of [{}, { drill: 'saving' as const }, { tab: 'accounts' as const, accounts: 'deposits' as const }]) {
+      const v = cashFlowsView(input({ plan: ready(none, ONE_TIME_META), ...over }))
+      expect(leafIds(tableOf(v).columns).filter((id) => /other-inflows|one-time/.test(id))).toEqual([])
+      expect(v.footnotes).not.toContain(copy.cashFlowsOneTimeNote)
+    }
+    // A drill the run cannot make reads the Summary.
+    expect(cashFlowsView(input({ plan: ready(none, ONE_TIME_META), drill: 'other' })).breadcrumb).toEqual([{ label: copy.cashFlowsTabSummary, drill: null }])
   })
 })
 

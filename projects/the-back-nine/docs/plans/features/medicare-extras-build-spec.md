@@ -107,10 +107,10 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   SLOT, never a digit in the string. Refine path = the assumption-panel
   seat + the U13 re-entry walk.
 - **R7 via a TOP-LEVEL draft key.** `medicareExtrasByPerson` sits at the top level of
-  `ScenarioDraft` by deliberate design (`src/ui/assumptionRegistry.ts:86`) — a nested `health.*`
-  sub-field would dodge the compile gate (the assumptionRegistry.ts:83 landmine) — and is
+  `ScenarioDraft` by deliberate design (`src/ui/assumptionRegistry.ts:87`) — a nested `health.*`
+  sub-field would dodge the compile gate (the assumptionRegistry.ts:84 landmine) — and is
   registered `{ kind: 'row-editable', seats: ['medicare-extras'] }` at
-  `src/ui/assumptionRegistry.ts:160`. The panel seat (`src/intake/AssumptionPanel.tsx` (lines 1140–1156 at `87e3c8070`; deleted by Act 6 · RC18))
+  `src/ui/assumptionRegistry.ts:161`. The panel seat (`src/intake/AssumptionPanel.tsx` (lines 1140–1156 at `87e3c8070`; deleted by Act 6 · RC18))
   re-hosts the SAME `MedicareExtrasFork` face over the same write shape, `onWrite` adapting to
   the host's commit seam — and passes `standingNote`, which the intake step does not: when the
   fork is UNANSWERED the panel shows the read-only line naming the typical the plan is funding

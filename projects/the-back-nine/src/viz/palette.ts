@@ -254,8 +254,8 @@ export const RC_PAIRS: readonly RcPair[] = [
   // ran out stands beside the last column as a red cross-hatched band with its words over it.
   { a: 'deepIndigo', b: 'lightGreen', where: 'Social Security beside other income', verdict: { kind: 'floor' } },
   { a: 'deepIndigo', b: 'blue', where: 'Social Security beside taxable withdrawals', verdict: { kind: 'floor' } },
-  { a: 'deepIndigo', b: 'orange', where: 'Social Security beside pre-tax withdrawals', verdict: { kind: 'floor' } },
-  { a: 'deepIndigo', b: 'green', where: 'Social Security beside Roth withdrawals', verdict: { kind: 'floor' } },
+  { a: 'deepIndigo', b: 'orange', where: 'Social Security beside pre-tax withdrawals; Maps: Other inflows beside what is taken from savings', verdict: { kind: 'floor' } },
+  { a: 'deepIndigo', b: 'green', where: 'Social Security beside Roth withdrawals; Maps: Other inflows beside an income and the total', verdict: { kind: 'floor' } },
   { a: 'deepIndigo', b: 'sky', where: 'Social Security beside HSA spending', verdict: { kind: 'floor' } },
   { a: 'lightGreen', b: 'blue', where: 'other income beside taxable withdrawals', verdict: { kind: 'floor' } },
   { a: 'lightGreen', b: 'green', where: 'other income beside Roth withdrawals', verdict: { kind: 'floor' } },
@@ -282,7 +282,9 @@ export const RC_PAIRS: readonly RcPair[] = [
     verdict: { kind: 'cue', cue: 'the band cross-hatched with "Money ran out this year" printed over it; Roth dotted' },
   },
   // Cash Flows → Maps (RC20): the year's flow and its tiles. Money in: income green, what is taken from savings orange
-  // (the stacks' green against orange row above). Money out, stacked in this order: Expenses red, Taxes stone grey,
+  // (the stacks' green against orange row above), and an inheritance or gift deep indigo under Other inflows (gap 5's
+  // U5: never orange beside distribution's orange; its rows against green and orange are Retirement Details' above, the
+  // gap's below). Money out, stacked in this order: Expenses red, Taxes stone grey,
   // Planned saving blue, Income not kept sand; any two can touch where a group has nothing that year (red against blue
   // is a row above). Every node and tile prints its name and amount. A gap the year's figures don't explain is stone-500,
   // hatched, named, on either side.
@@ -294,6 +296,7 @@ export const RC_PAIRS: readonly RcPair[] = [
   { a: 'stoneGap', b: 'sand', where: 'Maps: the gap beside Income not kept', verdict: { kind: 'floor' } },
   { a: 'stoneGap', b: 'stoneTax', where: 'Maps: the gap beside Taxes', verdict: { kind: 'floor' } },
   { a: 'stoneGap', b: 'orange', where: 'Maps: the gap beside what is taken from savings', verdict: { kind: 'floor' } },
+  { a: 'stoneGap', b: 'deepIndigo', where: 'Maps: the gap beside Other inflows', verdict: { kind: 'floor' } },
   { a: 'stoneGap', b: 'blue', where: 'Maps: the gap beside Planned saving', verdict: { kind: 'cue', cue: 'the gap hatched and named "Not explained by the year’s figures"; every node prints its name' } },
   { a: 'stoneGap', b: 'red', where: 'Maps: the gap beside Expenses', verdict: { kind: 'cue', cue: 'the gap hatched and named "Not explained by the year’s figures"; every node prints its name' } },
   { a: 'stoneGap', b: 'green', where: 'Maps: the gap beside an income', verdict: { kind: 'cue', cue: 'the gap hatched and named "Not explained by the year’s figures"; every node prints its name' } },

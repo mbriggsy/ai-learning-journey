@@ -1532,6 +1532,7 @@ export const copy = {
   assumptionDrawdownName: 'Withdrawal order',
   assumptionRothName: 'Roth conversions',
   assumptionInheritedPaceName: 'Inherited IRA pace',
+  assumptionOneTimeName: 'Inheritances and gifts',
   assumptionRegimeName: 'Health-subsidy rules',
   // The retirement-state row (the state-tax unit, S3): the editable "where you’ll retire" pick —
   // a changeable best guess, edit → re-run (the SC-vs-GA what-if lever). The picker's own legend
@@ -2604,6 +2605,12 @@ export const copy = {
   settingsPaceLine:
     'How fast money comes out of each inherited IRA. Each year takes at least what the law requires, and the law’s last year takes whatever is left.',
   settingsPaceDoor: 'Try another pace in the action items',
+  // How an inheritance or gift counts (gap 5's U5, R14): one row, a line per item, no door (each item's home is its
+  // Profile → Income drawer). The heir line only where an item is one person's (KTD12). Shipped flagged.
+  settingsOneTimeLine:
+    'Each is your own estimate, counted as you entered it. It joins your taxable savings at the end of its year, so none of it pays that year’s bills. It adds nothing to any tax, and none of the amount itself is taxed when it’s taken out later. In a future where your savings run out by its year, none of it is counted.',
+  settingsOneTimeHeirLine:
+    'One that comes to one of you counts only in futures where that person is living in its year, unless you said it would still come to the other.',
   settingsMedicareDoor: 'Change it in Medicare',
   settingsNotShownHere:
     'The facts you gave (your ages, savings, income and spending) live on the Profile pages, each in its own card.',
@@ -2957,6 +2964,15 @@ export const copy = {
     'An inherited IRA’s Required is the least the law says must come out of it in a year; in its last year, that is everything left. What is taken out follows the pace set for it and is never less. Any part the year doesn’t need moves to taxable.',
   cashFlowsInheritedBookedNote:
     'Already out is money that came out of an inherited IRA before the balance you entered for it. It counts as that year’s income, but it was no longer in the account.',
+  // An inheritance or gift (gap 5's U5, KTD9): RightCapital's Other Inflows, its total and each item by the household's
+  // own name in the drill (the item's name is its header there), the same total kept in taxable under Planned saving,
+  // and the Additions table's taxable line. Shipped flagged for Briggsy's read.
+  cashFlowsGroupOther: 'Other inflows',
+  cashFlowsColOneTime: 'Inheritances and gifts',
+  cashFlowsColOneTimeKept: 'Inheritances and gifts, kept in taxable',
+  cashFlowsColOneTimeTaxable: 'Taxable, from inheritances and gifts',
+  cashFlowsOneTimeNote:
+    'An inheritance or gift is counted as you entered it, at the end of its year: none of it pays that year’s bills. It goes into your taxable savings, so it shows again under Planned saving, kept in taxable. In a future where your savings run out first, none of it is counted.',
   cashFlowsPairedNote: 'Each year shows your plan’s row over the what-if’s, each named. The what-if is the one open on Analysis.',
   /** The steady sentence over a table that isn't your plan alone (a what-if's, or the paired form): the answer pinned
    *  above is your plan's, never this table's run. */
@@ -2990,6 +3006,9 @@ export const copy = {
   // An inherited IRA's withdrawal beyond the year's need (the Act 5 plan's U13): drawn, so the sentence says where.
   mapsInheritedMoved:
     'Part of an inherited IRA’s withdrawal was more than this year needed. It stays in your savings, so the map shows it going out again under Planned saving, moved to taxable.',
+  // An inheritance or gift's year (gap 5's U5): drawn coming in under Other inflows and going out under Planned saving.
+  mapsOneTimeKept:
+    'An inheritance or gift arrives at the end of its year, so none of it pays this year’s bills. It goes into your savings, so the map shows it going out again under Planned saving, kept in taxable.',
   mapsKindsMissing: 'Bank accounts aren’t in these figures yet: the tool doesn’t take them so far.',
   mapsPayCheckNoteFederal:
     'In a working year, the pay check’s income tax is the federal income tax on your pay, Social Security, other income and any investment income you entered. The Income tax figure holds only what drawing on your savings adds, money moved to Roth included.',

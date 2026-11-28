@@ -2199,13 +2199,13 @@ const U13_TABLES = [
   { id: 'rmd', table: copy.cashFlowsAccountsRmd, grouped: true },
 ] as const
 
-/** Each inherited group, scrolled half under the held lead columns: its name's box against the leads' right edge and the
- *  frame's right edge, and what a hit test at the name's middle lands on. */
-async function groupNamesHalfUnder(page: Page) {
-  return cfFrame(page).evaluate(async (frame) => {
+/** Each group the selector names (by default each inherited IRA's), scrolled half under the held lead columns: its name's
+ *  box against the leads' right edge and the frame's right edge, and what a hit test at the name's middle lands on. */
+async function groupNamesHalfUnder(page: Page, groups = 'th[data-group^="inherited-"]') {
+  return cfFrame(page).evaluate(async (frame, sel) => {
     const raf = () => new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())))
-    const out: { name: string; left: number; right: number; leadsRight: number; frameRight: number; hit: boolean }[] = []
-    for (const th of frame.querySelectorAll<HTMLElement>('th[data-group^="inherited-"]')) {
+    const out: { name: string; left: number; right: number; groupLeft: number; leadsRight: number; frameRight: number; hit: boolean }[] = []
+    for (const th of frame.querySelectorAll<HTMLElement>(sel)) {
       const lead = frame.querySelector<HTMLElement>('tbody tr:first-child > :nth-child(2)')!
       // Measured at rest: a held cell's offsetLeft includes its stuck offset once the frame has scrolled.
       frame.scrollLeft = 0
@@ -2219,6 +2219,7 @@ async function groupNamesHalfUnder(page: Page) {
         name: (name.textContent ?? '').trim(),
         left: r.left,
         right: r.right,
+        groupLeft: th.getBoundingClientRect().left,
         leadsRight: lead.getBoundingClientRect().right,
         frameRight: frame.getBoundingClientRect().right,
         hit: hitEl !== null && (hitEl === name || name.contains(hitEl)),
@@ -2227,7 +2228,7 @@ async function groupNamesHalfUnder(page: Page) {
     frame.scrollLeft = 0
     await raf()
     return out
-  })
+  }, groups)
 }
 
 for (const size of [
@@ -4287,6 +4288,111 @@ for (const size of RC12_SIZES) {
         expect(card.splits, `${who}: ${id}'s words broken across two lines`).toEqual([])
       }
       await noSidewaysScroll(page, who)
+    })
+  })
+}
+
+// ── Gap 5's U5 · Cash Flows for an inheritance or gift (b9-6, 2026-11-28): on `?seed=dateinherit` the Summary gains
+// Other inflows after Planned distribution (one column, its header a drill) and the drill names the item by the
+// household's own words. At his window and on the phone: no sideways page scroll; the table in its own frame with Year
+// and Age held; at his window the header rows in the first frame; wherever the frame scrolls, "Other inflows" reads whole
+// beside the held columns with its group scrolled half under them (insight 186); no new header breaks a word across two
+// lines; the drill round-trips; one caveat. Then Maps on the inheritance's year (2030, four years in): at his window the
+// flow with the item's node in its column, every name and amount audited, clear of every bar and drawn to one scale, the
+// whole map in his window (the item's $250,000 is the year's biggest flow, so it sets the scale every other bar reads); on
+// the phone the Other inflows tile with the item under it.
+for (const size of RC12_SIZES) {
+  test.describe(`Gap 5 · U5 · Cash Flows and Maps for an inheritance or gift ${size.title}`, () => {
+    test.use(size.use)
+    test('?seed=dateinherit: the Summary’s Other inflows and its drill fit, the name held beside Year and Age; the inheritance year’s map audited', async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 180_000)
+      const who = `dateinherit U5 ${size.phone ? 'phone' : 'window'}`
+      const ITEM = 'Aunt Jo’s estate'
+      await toCashFlows(page, 'dateinherit', size.phone)
+      await noSidewaysScroll(page, `${who} Summary`)
+      const group = cfFrame(page).locator('th[data-group="other"]')
+      await expect(group.getByRole('button', { name: copy.cashFlowsGroupOther, exact: true }), `${who}: Other inflows drills`).toBeAttached()
+      await expect(cfFrame(page).locator('thead th[data-col="other-inflows"]')).toHaveText(copy.cashFlowsColOneTime)
+      const f = await frameReading(page)
+      console.log(`[u5 ${who} frame] ${JSON.stringify(f)}`)
+      expect(f.overflowX, `${who}: the table scrolls inside its own frame`).toBe('auto')
+      if (f.scrolled > 0) expect(f.atEnd, `${who}: Year and Age stay at the frame’s left edge scrolled to its end`).toEqual(f.atStart)
+      if (!size.phone) {
+        const head = await page.evaluate(() => ({
+          title: document.querySelector('main.result h1')!.getBoundingClientRect().bottom,
+          selects: Math.max(...[...document.querySelectorAll('[data-cash-flows-controls] [role="combobox"]')].map((el) => el.getBoundingClientRect().bottom)),
+          thead: document.querySelector('[data-table-frame] thead')!.getBoundingClientRect().bottom,
+        }))
+        console.log(`[u5 ${who} first frame] ${JSON.stringify(head)}`)
+        expect(Math.max(head.title, head.selects, head.thead), `${who}: the header rows sit in the first frame`).toBeLessThanOrEqual(REAL.height)
+      }
+      // Other inflows spans exactly its one column, so its name moves with its figures: scrolled half under the held Year
+      // and Age, the name may slide under them only as far as its own column does (insight 186's hold needs a group wider
+      // than its name; a one-column group has no figures the name could leave unnamed). Its visible part stays on top.
+      const span = await group.evaluate((g) => {
+        const r = g.getBoundingClientRect()
+        const leaves = [...g.closest('thead')!.querySelectorAll<HTMLElement>('th[data-col]')].filter((l) => {
+          const b = l.getBoundingClientRect()
+          return b.left >= r.left - 1 && b.right <= r.right + 1
+        })
+        return leaves.map((l) => l.dataset.col)
+      })
+      expect(span, `${who}: Other inflows spans its one column`).toEqual(['other-inflows'])
+      if (f.scroll > f.client) {
+        const named = await groupNamesHalfUnder(page, 'th[data-group="other"]')
+        console.log(`[u5 ${who} name half under] ${JSON.stringify(named)}`)
+        expect(named.map((n) => n.name), `${who}: Other inflows read`).toEqual([copy.cashFlowsGroupOther])
+        for (const n of named) {
+          expect(n.left, `${who}: ${n.name} never further under the held columns than its own column`).toBeGreaterThanOrEqual(n.groupLeft - 0.5)
+          expect(n.right, `${who}: ${n.name} ends inside the frame`).toBeLessThanOrEqual(n.frameRight + 0.5)
+          expect(n.hit, `${who}: ${n.name}'s visible part is on top, never under the held columns`).toBe(true)
+        }
+      }
+      for (const sel of ['th[data-group="other"]', 'thead th[data-col="other-inflows"]']) {
+        expect((await oneTimeLayout(cfFrame(page).locator(sel))).splits, `${who}: ${sel}'s words broken across two lines`).toEqual([])
+      }
+      // The drill: the breadcrumb names it, the item's own column by its name, and back.
+      await group.getByRole('button', { name: copy.cashFlowsGroupOther, exact: true }).click()
+      await expect(page.locator('[data-cash-flows-title]')).toHaveText(`${copy.cashFlowsTabSummary}/${copy.cashFlowsGroupOther}`)
+      await expect(cfFrame(page).locator('thead th[data-col="other-inflows-0"]')).toHaveText(ITEM)
+      // A drill is a new table, drawn from its left edge: on the phone the header was reached by scrolling the frame, and
+      // a frame that kept that scroll opened the drill with its first column under Year and Age (U5's look).
+      expect(await cfFrame(page).evaluate((f) => f.scrollLeft), `${who}: the drill opens at its frame's left edge`).toBe(0)
+      expect((await oneTimeLayout(cfFrame(page).locator('thead'))).splits, `${who} drill: header words broken across two lines`).toEqual([])
+      await noSidewaysScroll(page, `${who} drill`)
+      await page.locator('[data-cash-flows-title]').getByRole('button', { name: copy.cashFlowsTabSummary }).click()
+      await expect(page.locator('[data-cash-flows-title]')).toHaveText(copy.cashFlowsTabSummary)
+      await assertOneVisibleCaveat(page, null, false) // Cash Flows: its table carries no tie today
+      if (size.phone) await assertCaveatReachable(page, `${who} Summary`)
+      // Maps, on the inheritance's year.
+      await page.evaluate(() => window.scrollTo(0, 0))
+      await toMaps(page)
+      await page.locator('[data-maps-thumb] input').focus()
+      for (let i = 0; i < 4; i++) await page.keyboard.press('ArrowRight')
+      await expect(page.locator('[data-maps-thumb] input'), `${who}: the scrubber on the inheritance's year`).toHaveAttribute('aria-valuetext', new RegExp(`^${SEED_BUILD_YEAR + 4}: `))
+      await expect(page.locator('[data-cash-flows-notes]'), `${who}: the map says where the money goes`).toContainText(copy.mapsOneTimeKept)
+      if (!size.phone) {
+        await mapsDrawn(page, who)
+        await assertMapIsChosenYear(page, who)
+        const labels = await page.locator(`${MAPS_CHART} .highcharts-data-label`).allTextContents()
+        expect(labels.some((t) => t.startsWith(`${ITEM}:`)), `${who}: the item's node, by its name`).toBe(true)
+        expect(labels.some((t) => t.startsWith(`${copy.cashFlowsColOneTimeKept}:`)), `${who}: kept in taxable, under Planned saving`).toBe(true)
+        console.log(`[u5 ${who} nodes] ${await auditMaps(page, who)}`)
+        await auditMapsProportion(page, who)
+        const frame = await page.evaluate((sel) => {
+          const chart = document.querySelector(sel)!
+          return { chart: chart.getBoundingClientRect().bottom, labels: Math.max(...[...chart.querySelectorAll('.highcharts-data-label')].map((l) => l.getBoundingClientRect().bottom)) }
+        }, MAPS_CHART)
+        console.log(`[u5 ${who} map frame] ${JSON.stringify(frame)} of ${REAL.height}`)
+        expect(Math.max(frame.chart, frame.labels), `${who}: the whole map inside his window`).toBeLessThanOrEqual(REAL.height)
+      } else {
+        await expect(page.locator('[data-maps-tiles]')).toBeVisible()
+        await expect(page.locator('[data-maps-tile="other-inflows"]')).toContainText(copy.cashFlowsGroupOther)
+        await expect(page.locator('[data-maps-tile="other-inflows"] [data-maps-leaf="other-inflows-0"]')).toContainText(ITEM)
+        await expect(page.locator('[data-maps-leaf="one-time-kept"]')).toContainText(copy.cashFlowsColOneTimeKept)
+        expect((await oneTimeLayout(page.locator('[data-maps-tiles]'))).splits, `${who}: tile words broken across two lines`).toEqual([])
+      }
+      await noSidewaysScroll(page, `${who} Maps`)
     })
   })
 }

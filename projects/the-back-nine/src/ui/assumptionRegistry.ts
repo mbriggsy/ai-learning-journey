@@ -51,6 +51,7 @@ export type AssumptionSeat =
   | 'roth-conversion' // the Roth plan — tried and applied in the Action Items tray
   | 'subsidy-regime' // the marketplace subsidy rules — tried and applied in the Action Items tray
   | 'inherited-pace' // each inherited IRA's withdrawal pace (U17) — tried and applied in the Action Items tray; a nested fact (`enteredAccounts[].inherited.pace`), so the fact registry's INHERITED_FACTS accounts for it, not a draft disposition
+  | 'one-time-money' // how an inheritance or gift counts (gap 5's U5, R14), present only when the plan holds one — a disclosure with no door: the items are facts whose one home is Profile → Income (`oneTimeInflows`' `profile` disposition), never a second editor here
   | 'working-year-cost' // W, what a year costs while someone still works (date route); its door is the W drawer
   | 'working-year-left-over' // build 2's left-over answer (date route, where the question is asked); the W drawer holds it
   | 'medicare-extras' // the per-person Medicare-extras answer (the details home for the funded typical); its door is the Medicare drawer

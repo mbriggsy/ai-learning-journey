@@ -423,7 +423,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    the same `escalateQuote` factor — so under the cliff a missing trend is **zero** when E=S
    (`devSeeds.ts:731-732` = 4200/4200) and **reversed (pessimistic)** when E<S, which `copy.ts:217` invites.
    It bites one-way optimistic **only over the cliff** (`healthOverlay.ts:308-312`, full enrolled premium).
-   The shipped sibling `recDiscAcaSlcsp` (`copy.ts:2327-2328`) hedges bidirectionally on this exact fact and
+   The shipped sibling `recDiscAcaSlcsp` (`copy.ts:2328-2329`) hedges bidirectionally on this exact fact and
    `medicare-pricing-build-spec.md:43` bans the false unidirectional. Draft to append to BOTH strings:
    *"One modeling choice: these prices step up with your ages, not with the way plan prices themselves climb
    — so a conversion that crosses the income line could cost more than shown."*
@@ -461,7 +461,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    (`copy.ts:1144`, `:1149, :1201, :1155, :1163, :1165` — selected by `composeRothOmissionsNote`'s 2×3 matrix, whose
    ACA-priced arm already AFFIRMS the subsidy is counted, so a trend sentence must reconcile with that
    affirmation, not append to it) + the two health-control siblings (`copy.ts:1285`, `:1291`), which CANNOT take it
-   (gated on `statePriced` alone — `copy.ts:1277-1279`). Unfiled: `shadowRateHeadroom` (`copy.ts:5201`)
+   (gated on `statePriced` alone — `copy.ts:1277-1279`). Unfiled: `shadowRateHeadroom` (`copy.ts:5220`)
    quotes cliff headroom against an SLCSP that never trends — the headroom figure inherits the held-price
    optimism; and there is NO ACA cost-trend constant at all (`health.ts` carries only `medicareCostTrend`)
    — ACA premiums are the one health channel with no trend, no clause AND no disclosure, in the
@@ -572,12 +572,12 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      ⚑ **2026-09-04 re-anchor (drifted AGAIN, +62/+101 in a month) + four traps the build must clear.** The
      panel is `src/intake/AssumptionPanel.tsx` — section a opens `:681` / closes `:849`, section b `:852` /
      `:851`, footer `:857`, the disclosures map `:533-565`; the `assumption*` prefix law is
-     `copy.ts:1426-1437` (keys `:1439-1667`); the panel fit arm is `vertical-fit.spec.ts line 2524-2553 at 95c715e19`;
+     `copy.ts:1426-1437` (keys `:1439-1668`); the panel fit arm is `vertical-fit.spec.ts line 2524-2553 at 95c715e19`;
      `sheetShell.css line 34-35 at 7933cf12e`/`line 94 at 7933cf12e`; the overlays are `src/engine/healthOverlay.ts:911-915` and
      `src/engine/taxOverlay.ts:3009-3012` (there is no `overlays/` dir). NIIT's two homes confirmed
      (`recommendationView.ts:103` unconditional; `copy.ts:1284-1285`) — the scope fork is self-resolving:
      HSA + LTC only. TRAP 1 — `Row` REQUIRES a `seat` from the CLOSED 22-member `AssumptionSeat` union
-     (`AssumptionPanel.tsx` (line 150 at `87e3c8070`; deleted by Act 6 · RC18), `assumptionRegistry.ts:41-56`): a leaves-out row is a hand-rolled
+     (`AssumptionPanel.tsx` (line 150 at `87e3c8070`; deleted by Act 6 · RC18), `assumptionRegistry.ts:41-57`): a leaves-out row is a hand-rolled
      `<li className="ap-row">` or a registry extension — "mirror the section" yields only the shell.
      TRAP 2 — a heading literally "What this leaves out" that names two items is ITSELF a completeness claim
      the constants falsify (`health.ts:72/:112/:120/:135/:319` declare four more OUT-but-disclosed facts) —
@@ -669,7 +669,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     **Briggsy's words, or ship the engine half first.**
     ⚑ **2026-09-04 anchors:** the described arm is `solveDispatch.ts:102` (`:89` is the separate no-tax-overlay
     arm; `~:79` was mis-pointed at filing — the file is untouched since 2026-08-14); the refusal string is
-    `copy.ts:2118-2119` with its three-rewrite comment `:2095-2117` (`line 2041-2045 at b69c28483` now holds an unrelated
+    `copy.ts:2119-2120` with its three-rewrite comment `:2096-2118` (`line 2041-2045 at b69c28483` now holds an unrelated
     save-refusal block).
 
 10. ✅ **SHIPPED 2026-08-14 (`2816d036`) — the heir bracket is the household's now.** Register Tier 1 records the closure and the three swept comments.
@@ -714,7 +714,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     copy" and both nearest register entries — *The aged surface — every 2026 plan changes wording on 2027-01-01, unreviewed* and *Unscored Caddie tape rows plus the four aged-surface tone calls due before 2027-01-01* — are owned **briggsy**; neither is a copy fix; the "three arms with
     corrected costs" existed NOWHERE — they are now written, with sizes, under the register's "The aged
     surface" entry. A shipped copy defect on the SAME cohort WAS pilot and is FIXED (2026-09-04: the singular arm ships at
-    `copy.ts:5108-5110` under the NUMBER AGREEMENT post-mortem at `copy.ts:5094`, covered by `copyGuard.test.ts:1129`):
+    `copy.ts:5127-5129` under the NUMBER AGREEMENT post-mortem at `copy.ts:5113`, covered by `copyGuard.test.ts:1129`):
     `rothPlanRanked` hardcoded the plural "Those years are counted from…" after a correctly-singular "for 1 year" —
     live for any at/past-RMD household on an aged vault (the 1-year clamp, `solveAnchor.ts:271-272`) — and no test
     covered `years: 1, passed: true`. (b) THE LADDER is register `L` · **pilot**, and the v2→v3 ALGORITHM IS
@@ -815,7 +815,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     page and the codified G.S. page both still show the struck "after 2025 — 3.99%", so they read as
     CONTRADICTING the pinned record until they recompile — **session law wins, do not "correct" the
     engine table back to a flat 3.99%.** Comment-only; typecheck · lint · 3289 tests · state-tax gate
-    all green. (`copy.ts:5564` and `caseStateCompanions.ts` were already correct — swept 2026-08-02.)
+    all green. (`copy.ts:5583` and `caseStateCompanions.ts` were already correct — swept 2026-08-02.)
     ⚑ **The CVD half of this cluster is PARKED, not owed — do not re-propose it.** The filed gap ("the CVD
     crops prove PRESENCE only") is real, and a `verify:cvd` pixel-regression gate was designed for it on
     2026-08-02. **Briggsy declined it on the only authority that can:** *"I'm pretty color blind and I think

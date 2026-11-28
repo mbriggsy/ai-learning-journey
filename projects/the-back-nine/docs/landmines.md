@@ -309,6 +309,11 @@ even when one exists; the plain `/` route is the Unlock check.
 
 ## The unit test suite
 
+- **(b9-18, 11-27) `ActionItemsTray.test.tsx`'s tray reads the ANSWERED draft, fixed when `openTray` renders** (its `answer`,
+  `spine(draft)` or `dated(...)`): an `appModel.update` made after it never reaches a row (a plan line's repeat moved from
+  5 to 4 years still printed "every 5 years" and Refresh ran). A test of a refusal that a later plan edit causes must
+  re-render the room with a new answer built from the edited draft, or load a kept what-if against a plan that already
+  carries the edit.
 - **(moved from TODO's distill list, b9-2, 11-23) A prop added to a component's TYPE but not to its destructure silently
   resolves to any same-named module binding** (`describedBy` in the walk's `src/intake/fields.tsx`, deleted at RC14, was a module function), and a
   `(s): s is string` filter guard then hides it from tsc. Destructure first, and name new props so they cannot collide

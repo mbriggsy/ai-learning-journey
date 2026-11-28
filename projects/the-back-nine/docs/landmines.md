@@ -661,6 +661,7 @@ said squeaky clears `temp/` UNCONDITIONALLY; its step 4 now deletes only the clo
 
 ## Citations and the doc gates
 
+- **(b9-2, 11-28) `node scripts/check-citation-pairs.mjs HEAD <file>` throws `Command failed: git grep -l -E <file>:[0-9]`** when no doc cites the file (git grep exits 1 on no match): that means nothing to pair, never a failure.
 - **(b9-15, 11-27) `pnpm doc:reanchor <BASE> --apply` a second time against the same base shifts every citation twice.**
   It maps each cited line through the diff BASE → tree, so after one apply the docs already hold the new numbers and a
   second pass moves them again (its dry run printed the first apply's count, 72, unchanged). An edit made after the
@@ -970,6 +971,7 @@ chair; chair from a digest script, never the raw result, and expect the window t
 
 ## Claude Code, workflows and sessions
 
+- **(b9-2, 11-28) `ce-doc-review` at full depth with six reviewers cost about 20% of the session's own window** (10% to 30%: its references, six JSON returns, the code checks behind each finding and the plan's rewrite) and about 1.45M helper tokens. Start it before 20%.
 - **(b9-3, 11-25) A lead's message that lands while a teammate's shell call is still waiting on auto mode's safety
   check cancels that call, and the teammate is told "User rejected tool use … STOP and wait for the user"** (the
   result's `toolUseResult` reads "User rejected tool use" and carries no `permissionDecision`; all 291 shell calls that
@@ -1173,6 +1175,7 @@ chair; chair from a digest script, never the raw result, and expect the window t
 
 ## Persistence and schema
 
+- **(b9-2, 11-28) Since gap 5's U1 (`4b59f034`) the codec refuses a one-time item's `heirIndex` / `leftTo` on a one-person plan**, as it refuses an inherited IRA's `leftTo` there: a writer that carries them onto a plan with one person fails the save's codec round trip. Write them only while `people.length > 1` (gap 3's spread in `src/intake/inheritedIra.ts`).
 - **(2026-09-27, b9-11)** a fixture or dev plant saved at the WALL CLOCK's today sits on the ledger's ambiguous ship day whenever a row lands — it reds CI on exactly that day and greens the next; stamp "saved by this build" at `FIRST_UNAMBIGUOUS_SAVE_DAY` (every existing fixture and plant already does); a date-derived pin (`?vault=stale`'s note count) is DERIVED from the ledger in both its unit arm and its fit arm, never hand-typed
 
 ## Driving the app

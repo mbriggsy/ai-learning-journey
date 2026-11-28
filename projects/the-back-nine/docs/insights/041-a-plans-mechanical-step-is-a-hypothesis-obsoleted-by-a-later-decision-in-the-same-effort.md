@@ -3,7 +3,7 @@ title: A plan's own mechanical step can be obsoleted by a decision made LATER in
 date: 2026-06-18
 phase: P2 (the doc-restructure close — M6 step 4/5)
 modules: [src/shared/model.ts, src/store/db.ts, docs/roadmap.md]
-tags: [doc-reconciliation, plan-staleness, ground-truth-first, restructure, blast-radius, deferred-obligation, code-comments, supersession, precedence, constraint-reason, static-legend, mechanical-limit, retired-step, template, plan-writing, verification-contract, caddie-walk, amended-plan, rulings, scope-seat, test-cadence]
+tags: [doc-reconciliation, plan-staleness, ground-truth-first, restructure, blast-radius, deferred-obligation, code-comments, supersession, precedence, constraint-reason, static-legend, mechanical-limit, retired-step, template, plan-writing, verification-contract, caddie-walk, amended-plan, rulings, scope-seat, test-cadence, file-list, sanity-rule, second-home, predicate-home, missing-fact]
 ---
 
 ## Problem
@@ -56,3 +56,16 @@ show Caddie walks, and the caddie skill's own trigger still says "pre-walk every
 (`.claude/skills/caddie/SKILL.md`). Before writing a plan's verification, read the newest amended plan's verification
 lines for steps his rulings retired, not the template or an older spec. See also [[154]] (a rule's authority is who
 ruled it, not the document it sits in).
+
+## Extended (2026-11-28, b9-4, gap 5's U3): a plan's file list is not a decision
+
+Gap 5's plan listed `src/intake/sanity.ts` for the gift ("the item fields for `validateDraft` and `allRuleFields`").
+The one predicate a stored gift can fail, its year falling outside the plan's years, already had its home in the same
+plan's KTD11: a missing fact, re-asked before the answer (`oneTimeInflowProblems`, read by `missingRequiredFacts`). A
+sanity rule over it would have been its second home ([[081]]'s fork, one level up), and through `allRuleFields` it
+would have refused a birth-year fix in Family over a gift at the horizon's edge, where KTD11 re-asks the year instead.
+U3 added no rule and recorded why in the plan's U3 ("As built (b9-4, 2026-11-28): no rule added").
+
+What it adds: a file list is written before the decisions it lists files for are settled, so it is a guess about where
+the work lands. Before building a planned rule, find the home its predicate already has. The home-sale half's U9 lists
+`sanity.ts` for the sale fields the same way: check each predicate's home first.

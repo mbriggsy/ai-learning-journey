@@ -3,7 +3,7 @@ title: An editor lifted out of its flow loses the flow's later checks — a shee
 date: 2026-11-23
 phase: The RightCapital mandate, gap 1 (the workbench's U8, the facts page)
 modules: [src/ui/workbench/StepSheet.tsx, src/intake/flow.tsx, src/intake/questions.tsx]
-tags: [hosted-editor, walk-step, continue-check, discardOnBack, dismiss, refused-value, validate-before-mutate, sanity-rules, calm-but-wrong, rosy-direction, flow-invariant, rollback, multi-edit-step, finished-work, leave-ask, ending-changed, reroute, putsBack, promise-sentence, step-sheet, re-host, reverse-direction, only-after, buffered-edit, leave-guard]
+tags: [hosted-editor, walk-step, continue-check, discardOnBack, dismiss, refused-value, validate-before-mutate, sanity-rules, calm-but-wrong, rosy-direction, flow-invariant, rollback, multi-edit-step, finished-work, leave-ask, ending-changed, reroute, putsBack, promise-sentence, step-sheet, re-host, reverse-direction, only-after, buffered-edit, leave-guard, question-tense, step-order, stepper, R17]
 ---
 
 ## Problem
@@ -87,3 +87,16 @@ narrower receipt was still wrong twice, is [[144]]'s 2026-11-26 extension.)
 drawer edits a copy, Save runs every check on the whole edit, and nothing refused reaches the store, so no run can
 sample a half-edit. The cost is two duties the walk never had: a dismiss over unsaved work must ask, and the shell's
 leave guard must hold while the buffer differs from the plan (and, since RC13b, while a box still holds typing).
+
+## Extended (2026-11-28, b9-7, the gift half's review, round 1, `11fa931f`): a question asked before the thing it names exists needs its own tense
+
+R17 asked "Had this money already come in when you entered your account balances in 2026?". On the first-run stepper
+the gift drawer opens from the Income step, two steps before Net Worth, so a household could truthfully answer "No, not
+yet" (no balances were entered yet) and then enter the money in its balances on Net Worth: counted twice. With the
+balances entered now (`enteredNow` from `balancesYearFor`, [[193]]) it asks "Has this money already come in?" ("Yes, it
+has"), and a yes is refused with "Money that's already come in belongs in your account balances, not here, or it would
+count twice."
+
+What it adds: the reverse direction above, on a question's words. A question written on the screen where its referent
+already exists reads differently on a step that comes before it. Read each question against the step order it renders
+in, not only the screen it was designed on.

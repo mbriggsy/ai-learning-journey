@@ -3,7 +3,7 @@ title: An asked figure must be the fact the law reads, at the moment it reads it
 date: 2026-11-27
 phase: The RightCapital mandate, gap 3 (the inherited IRA): the plan's review (b9-9) and the whole-file review's rounds 1 to 3 (b9-10, b9-11)
 modules: [src/intake/inheritedIraQuestions.ts, src/intake/inheritedIra.ts, src/engine/inheritedRmd.ts, src/ui/copy.ts]
-tags: [question-design, law-reads, moment, base, as-of-date, net-vs-gross, double-netting, refusal-question, rollover, merged-account, custodian-figure, cross-check, inherited-ira, 1.408-8, calm-but-wrong, d7]
+tags: [question-design, law-reads, moment, base, as-of-date, net-vs-gross, double-netting, refusal-question, rollover, merged-account, custodian-figure, cross-check, inherited-ira, 1.408-8, calm-but-wrong, d7, per-path, whose-life, inheritance, gift, heirIndex, leftTo, sampled-lifespans]
 ---
 
 ## Problem
@@ -58,3 +58,15 @@ proves nothing about the base.
   ([[101]]: refusal copy must describe the predicate's whole extension).
 - [[167]]: store an edit in the frame of the thing it edits. The same frame trap, on time and on scope.
 - [[146]]: money has a grain. Another way two figures that look comparable are not.
+
+## Extended (2026-11-27, b9-2, gap 5's plan check): with lifespans sampled, money tied to one person is a per-path fact
+
+Gap 5's plan, as drafted, credited a couple's inheritance on every path, including the paths where the spouse it was
+coming to had died first. In that case a will or an anti-lapse rule usually sends it to that spouse's children, not to
+the survivor. Gap 3 had already built the exact question for an inherited IRA (`heirIndex` and `leftTo` in
+`src/shared/model.ts`). The checked plan asks whose an inheritance is, and it counts only while that person is living,
+unless the household says it would still come to the other.
+
+What it adds: the rule above on the "who" axis. The fact the plan needs is who receives the money at the moment it
+comes, and in an engine that samples lifespans that is a different answer on different paths. Before planning an
+inflow, ask whose life it hangs on, and check whether the engine already asks that for a sibling kind.

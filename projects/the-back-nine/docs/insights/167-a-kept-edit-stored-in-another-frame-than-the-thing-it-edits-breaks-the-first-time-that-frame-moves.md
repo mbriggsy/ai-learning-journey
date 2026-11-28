@@ -3,7 +3,7 @@ title: A kept edit stored in another frame than the thing it edits breaks the fi
 date: 2026-11-25
 phase: The RightCapital mandate, gap 2's re-check (b9-3, 2026-11-23; the workbench plan's KTD18)
 modules: [docs/plans/5-workbench-plan.md, src/shared/model.ts]
-tags: [frame-of-reference, kept-what-if, calendar-year, years-from-stop, stop-year, budget-line, translator, anchor, date-answer, schema-design, adversary, plan-check, precompiled-array, compiled-budget, sim-year, date-search, price-factor, rated-line, to-start, quoted-figure, first-year, fan-note, sibling-host, phrase-sweep, review-round]
+tags: [frame-of-reference, kept-what-if, calendar-year, years-from-stop, stop-year, budget-line, translator, anchor, date-answer, schema-design, adversary, plan-check, precompiled-array, compiled-budget, sim-year, date-search, price-factor, rated-line, to-start, quoted-figure, first-year, fan-note, sibling-host, phrase-sweep, review-round, ktd-mechanism-change, plan-sweep, blind-readers]
 ---
 
 ## Problem
@@ -97,3 +97,13 @@ fed by the levels the fix re-priced and the fourth by its own figure), and re-re
 re-priced one, since a neighbour left at the old price now contradicts it in the same paragraph. A host with no year to price at names no
 figure rather than one from the wrong year. [[180]] is the same miss for a guard: fixed in one host, absent from its
 siblings.
+
+## Extended (2026-11-27, b9-1, gap 5's plan deepen): changing a decision's mechanism is the same sweep, through a plan
+
+A deepen edit changed gap 5's KTD7 from one state field to two channels (the federal slice through `realizedGain`, the
+state through its own presence-keyed channel). U2, U4 and the plan's chart kept the one-field version. Two of the three
+blind readers hit it first: the rules reader graded it as misleading, and the builder could not proceed past it.
+
+What it adds: the phrase sweep above holds for a plan too. Changing a KTD's mechanism is a sweep of every unit, test
+list and chart that restates it, exactly as changing what a phrase's figure means is a sweep of every host of the
+phrase. Grep the plan body for the old mechanism's words after the edit, not only the KTD itself.

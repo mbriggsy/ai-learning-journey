@@ -3,7 +3,7 @@ title: A stored rate's unit is a fact no range check can see — gap 4's draft p
 date: 2026-11-27
 phase: The RightCapital mandate, gap 4 (spending lines that repeat or change at their own rate): the plan's deepening, the saved-data reader (b9-13, before the plan's first commit `b3a68293`)
 modules: [src/shared/spendingBounds.ts, src/shared/model.ts, src/intake/moneyFormat.ts, src/shared/scenarioCodec.ts, src/budget/budgetModel.ts, src/ui/screens/profile/drawers/__tests__/livingLineRepeatRate.test.tsx]
-tags: [units, percent-vs-fraction, rate, growthRate, interestRate, growthPct, parsePercent, PercentInput, colaPct, range-check-blind, codec, spendingBounds, single-bounds-module, docblock, end-to-end-test, rosy-direction, calm-but-wrong, plan-deepening, loan]
+tags: [units, percent-vs-fraction, rate, growthRate, interestRate, growthPct, parsePercent, PercentInput, colaPct, range-check-blind, codec, spendingBounds, single-bounds-module, docblock, end-to-end-test, rosy-direction, calm-but-wrong, plan-deepening, loan, sentinel, zero-means-same, rounding, snap, nan-staging, lineChangeOf]
 ---
 
 ## Problem
@@ -48,3 +48,15 @@ uses. A test that builds the saved record by hand assumes the unit it should be 
 - Any future rate, share or ratio field: a fee, a return assumption, a withdrawal rate, a survivor percentage.
 - [[050]]: the same family, the range gate as the only defense for a fixed rate; this is the half a range gate cannot do.
 - [[046]]: finiteness is not range; here, range is not unit.
+
+## Extended (2026-11-28, b9-3, gap 4's leftover (e)): a value that also stands for another answer can never be a rounding result
+
+The same field's 0 is a sentinel. A line's `growthRate` of 0 means "stays the same dollar amount", not "goes up by 0%"
+(`lineChangeOf` in `src/intake/budgetForm.ts`: absent goes up with prices, 0 stays the same, anything else is the
+household's own rate). Snapping a typed 0.001% to the box's two decimals would have saved 0, flipped the line to "stays
+the same dollar amount" and hidden its percent box. A positive rate under the box's grain now stages NaN, which the
+validator refuses in words ("Type how much it goes up each year…"), while a rate the box can show saves as shown
+("15.004" saves as 15%).
+
+What it adds: a unit is one meaning a range check cannot see, and a sentinel is another. Before snapping, rounding or
+defaulting a field, check whether the value it could land on stands for a different choice.

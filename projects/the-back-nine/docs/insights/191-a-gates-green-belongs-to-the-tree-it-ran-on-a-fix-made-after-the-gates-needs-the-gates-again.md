@@ -3,7 +3,7 @@ title: A gate's green belongs to the tree it ran on — U9's eye fix (no-break s
 date: 2026-11-27
 phase: The RightCapital mandate, gap 4's line half (a spending line's repeat and rate): U9 (b9-15, `653aee4e`), and review round 2 (b9-18, `3598bae0f`)
 modules: [src/ui/copy.ts, src/ui/screens/retirement/__tests__/trayView.test.ts, eslint.config.js, docs/landmines.md]
-tags: [gate-order, last-edit, rerun-gates, commit-gate-line, stale-green, eye-fix, lint, no-irregular-whitespace, no-break-space, nbsp, U+00A0, escape-decoded, tool-parameter, byte-count, cat-A, look-alike-character, ci-quick-job, ci-red, trayLineEvery]
+tags: [gate-order, last-edit, rerun-gates, commit-gate-line, stale-green, eye-fix, lint, no-irregular-whitespace, no-break-space, nbsp, U+00A0, escape-decoded, tool-parameter, byte-count, cat-A, look-alike-character, ci-quick-job, ci-red, trayLineEvery, unread-fix, pin-each-hand-off, memo-deps, no-react-hooks-lint, mutants]
 ---
 
 ## Problem
@@ -52,3 +52,15 @@ no-break space, a curly quote, an escape a tool may have decoded), the eye canno
 - [[153]]: which tests a change reaches. This one is when the gates must run; that one is which tests they must run.
 - `pnpm verify:doc-stats` after a late code edit: a code line moved after the run moves the docs' cited line numbers,
   so the run's OK no longer holds.
+
+## Extended (2026-11-28, b9-7, the gift half's review, round 2, `3ef485d2`): a fix no test reads is green on any tree
+
+Round 2 (`wf_1a6c80c2-3df`) confirmed 8 findings, and all of them were one gap. Round 1's fix for the balances' year
+([[193]]) rested on a memo with the deps `[persist, enteredAccounts]` and on two hand-offs into the stepper, and none of
+them had a pin. This repo runs no react-hooks lint, so a dropped dep is silent. The headline rosy fix could have been
+reverted by one token with the whole suite green. Round 2 pinned each hand-off (the re-walk hands the stepper the frame;
+the real Stepper's Income card and gift drawer read it), added a test that changes each memo dep (a balance edit and
+back), then planted three mutants and saw each one killed.
+
+What it adds: a green run belongs to its tree, and it says nothing at all about a fix that no test reads. A fix that
+threads a value into a new host ships with a pin at each hand-off, and each memo dep gets a test that changes it.

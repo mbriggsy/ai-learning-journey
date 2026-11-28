@@ -3,7 +3,7 @@ title: In a table that scrolls sideways under held lead columns, a group header 
 date: 2026-11-27
 phase: The RightCapital mandate, gap 3 (the inherited IRA): U13's look (b9-7, `5a06e5d9`)
 modules: [src/ui/kit/DataTable.tsx, e2e/rc-screens.spec.ts]
-tags: [sticky-columns, horizontal-scroll, group-header, colspan, covered-text, hit-test, elementFromPoint, phone, cash-flows, inherited-ira, overflow-audit-blind, GROUP_NAME_HELD]
+tags: [sticky-columns, horizontal-scroll, group-header, colspan, covered-text, hit-test, elementFromPoint, phone, cash-flows, inherited-ira, overflow-audit-blind, GROUP_NAME_HELD, one-column-group, other-inflows, copied-check, premise]
 ---
 
 ## Problem
@@ -36,3 +36,15 @@ with an overflow audit, because a covered word is not an overflow.
 - Any sticky header above grouped columns, a pinned first row over grouped rows, or a frozen pane in a grid.
 - [[124]]: a reachability check must hit-test at the point, never trust a rect.
 - [[168]]: the defects nobody named are the ones only an eye finds; this one was the eye's.
+- [[195]]: the same table's drill inherited the old scroll.
+
+## Extended (2026-11-28, b9-6, gap 5's U5): a one-column group has no room to hold its name, and a check copied from a sibling carries its premise
+
+`GROUP_NAME_HELD` works only where the group cell is wider than its name. Other inflows (an inheritance or gift) is a
+one-column group, so half under Year and Age its name slides under as far as its column does. That is fine: the name
+moves with its figures, so it never names figures that are off screen. But U13's half-under check, copied over for the
+new group, failed on it. The check that fits a one-column group is "the name never starts left of its own cell" plus
+"the group spans its one column" (U5's arm in `e2e/rc-screens.spec.ts`).
+
+What it adds: the hold is for groups wider than their names, and a check copied from a sibling carries that sibling's
+premise ([[102]]). Before copying an arm to a new case, ask whether the case meets the premise the arm was written for.

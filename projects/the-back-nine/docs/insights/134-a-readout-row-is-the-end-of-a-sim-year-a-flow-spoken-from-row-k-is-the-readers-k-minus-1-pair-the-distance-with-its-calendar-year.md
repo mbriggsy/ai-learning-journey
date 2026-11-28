@@ -3,7 +3,7 @@ title: "A readout row is the END of a sim-year: a STOCK at row k is 'k years out
 date: 2026-09-24
 phase: Act 4 hardening (Briggsy's eye on the Medicare premium card — "seven years out — from what?")
 modules: [src/ui/copy.ts, src/ui/healthSheetChrome.ts, src/intake/HealthcareSheet.tsx, src/shared/model.ts, src/ui/__tests__/healthSheetChrome.test.ts, src/ui/__tests__/healthSheetSeedGate.test.ts]
-tags: [readout-clock, off-by-one, calendar-year, plan-clock, medicare, era-lines, copy-law, stock-vs-flow, single-producer]
+tags: [readout-clock, off-by-one, calendar-year, plan-clock, medicare, era-lines, copy-law, stock-vs-flow, single-producer, death-year, deathOffset, living-predicate, reviewer-disagreement, home-sale-exclusion]
 ---
 
 ## Problem
@@ -51,3 +51,17 @@ extras lines, any future "in year N the surcharge is …" sentence, the health s
 stock lines (`bandReadout*`, `bandAtRangeGone`'s "about N years out") are correct as rows. The fuck-off date's
 `offsetYears` is a sim-year index already — do not "correct" it. The tape/Caddie corpus: a prediction about a
 dated line should name the calendar it expects, so the tape can score the off-by-one class at all.
+
+## Extended (2026-11-27, b9-1, gap 5's plan): when two reviewers disagree on an off-by-one, read the predicate that builds the year
+
+Gap 5's plan leaves $500,000 of a main home's gain out of tax while both people are living (the year one dies
+included) and in the first year after a death (its R8). Two independent helpers read the engine's death timing
+opposite ways: the flow analyzer gave the survivor the $500,000 in the first two single years, the architecture pass
+only in the first. The predicate settled it: `simulate.ts` counts a person as living while `t < deathOffset`, so they
+are counted through the year they die, and the first single year is the year after. The flow analyzer's reading was
+rosy by a year. The plan's AE3 now pins all three cases (a sale in the death year, the year after, and the second year
+after).
+
+What it adds: an off-by-one in the year a person stops counting is the same class as this insight's row-versus-year
+slip, and two confident readings of it are a signal, not a vote. Read the predicate that builds the year, and never
+pick the reading that sounds right.

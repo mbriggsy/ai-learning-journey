@@ -3,7 +3,7 @@ title: A structural citation gate proves the cited LINE exists, not that it says
 date: 2026-09-25
 phase: post-Act-4 hardening (the 2026-09-24/25 doc audit)
 modules: [scripts/verify-doc-stats.ts, scripts/reanchor-citations.mjs, docs/**]
-tags: [doc-stats, citations, re-anchor, semantic-vs-structural, gates-that-dont-bite, doc-audit, pure-shift, wrong-before-the-edit, frozen-dated-number, then-marker, history-rewrite, range-diff-at-anchor-commit, bare-token-attribution, quoted-number, tier-reference, register-move, tierrefs, first-file-not-nearest, 60-character-reach, extraction, cross-file, edit-after-run, throwaway-base, temporary-index, skipped-reanchor, re-anchor-every-commit, check-reanchor-moves, attribution-unchecked, dry-run-before-apply, digits-only-diff, stale-lines-after-reanchor]
+tags: [doc-stats, citations, re-anchor, semantic-vs-structural, gates-that-dont-bite, doc-audit, pure-shift, wrong-before-the-edit, frozen-dated-number, then-marker, history-rewrite, range-diff-at-anchor-commit, bare-token-attribution, quoted-number, tier-reference, register-move, tierrefs, first-file-not-nearest, 60-character-reach, extraction, cross-file, edit-after-run, throwaway-base, temporary-index, skipped-reanchor, re-anchor-every-commit, check-reanchor-moves, attribution-unchecked, dry-run-before-apply, digits-only-diff, stale-lines-after-reanchor, en-dash-range, check-citation-pairs, diff-line-map, git-diff-U0, unmoved-continuations]
 ---
 
 ## Problem
@@ -150,3 +150,20 @@ brief with it. A builder never reads a rule kept in a file it was not pointed at
 
 **What it adds.** Dry-run, check, then apply, once. Read each bare token's owner by eye, because no tool checks the
 attribution. Read doc-stats' STALE lines after every re-anchor.
+
+## Extended (2026-11-28, b9-3, gap 5's U2 re-anchor at `b66b3f4a`): the tools' blind spots line up, so move what they leave through the diff's own line map
+
+U2 moved `src/engine/simulate.ts` by a large block, and two blind spots overlapped. The re-anchor links a bare `:N` to
+its file only within 60 characters (above), so 27 bare continuations past that reach stayed unmoved. And
+`scripts/check-citation-pairs.mjs`, the pair check that backs it, matches a range only with a hyphen (its `TOKEN`
+pattern reads `:N` and `:N-M`), so a range written with an en dash (`:2917–2926`) was checked as `:2917` alone. The
+pair check flags a missed start, but the end of an en-dash range is never checked, so that end stayed unmoved and only a
+hand read found it. (The re-anchor and `verify:doc-stats` both read en-dash ranges; the pair check alone does not.)
+
+The method that moved them: put each unmoved token through `git diff -U0 HEAD -- <code file>`'s line map, which keeps
+the citation on the code it cited at HEAD (an old line inside a changed hunk is a judgment, an old line outside every
+hunk is a pure shift), then grep the docs for en-dash ranges and move their ends by hand.
+
+**What it adds.** A gap no tool covers is the place two tools' blind spots overlap. After a large move, list what the
+re-anchor left unmoved and move it through the diff's line map; and grep for any range written with an en dash, whose
+end the pair check never reads.

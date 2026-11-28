@@ -2013,8 +2013,7 @@ export interface ScenarioV2 {
 // recommendation's Roth conversion plan. A version-5 copy's account editor rebuilds an account
 // without its id and its Add mints none, so one save there would strip the targets every kept
 // what-if names (§7.3's rule (c)) — it must refuse the plan. The schema-v7 bump (the workbench
-// plan's U13 — gap 3's saved shapes) adds three NESTED shapes and relabels the shape 7
-// ({@link CURRENT_SCHEMA_VERSION}): the `inherited-ira` account kind, the account's `inherited`
+// plan's U13 — gap 3's saved shapes) adds three NESTED shapes and relabels the shape 7: the `inherited-ira` account kind, the account's `inherited`
 // facts, and the `inherited-pace` lever kind. A version-6 copy refuses the new kind and lever kind
 // as damaged, and its account editor rebuilds an account from its form, dropping the nested facts
 // (§7.3's rules (a) to (c)) — it must refuse the plan. The schema-v8 bump (gap 4's U2) adds two

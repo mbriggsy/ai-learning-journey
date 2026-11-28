@@ -608,4 +608,19 @@ describe('selectElevatedAnswer — the spending levels with a repeat in the firs
     expect(plain.view.spendLevels?.firstYearRepeat).toBeUndefined()
     expect(bandTrackNote(plain.view)).not.toContain('comes back every')
   })
+
+  // The review of gap 4's line half: "a year to start" is the first year after work stops, the band's own offset, where
+  // the engine charges a rated line at its factor, never its typed amount.
+  it('on `daterising` the levels price the rising Living line at the band’s offset: $16,000 × 1.05^6 ÷ 1.032^6 at offset 6, hand-derived; `dip` reads its typed figures', () => {
+    const band = dateBandTo(40, 6)
+    const rising = selectElevatedAnswer(answeredAt(datesAnswer(confirmedAt(6), band), DEV_SEEDS.daterising, DEV_SEEDS.daterising), noop)
+    const plain = selectElevatedAnswer(answeredAt(datesAnswer(confirmedAt(6), band), DEV_SEEDS.dip, DEV_SEEDS.dip), noop)
+    if (rising.kind !== 'date' || rising.view.kind !== 'dates' || plain.kind !== 'date' || plain.view.kind !== 'dates') throw new Error('expected date dates views')
+    expect(plain.view.spendLevels?.full, '[test setup] dip’s year-0 total').toBe(78_000)
+    // 2027 to 2032 at the index's near-term 3.2 % (the price index's sourced path; `priceFrame.test.ts` pins it).
+    const extra = 16_000 * (1.05 ** 6 / 1.032 ** 6 - 1)
+    expect(rising.view.spendLevels?.full).toBeCloseTo(78_000 + extra, 6)
+    expect(rising.view.spendLevels?.essentials, 'Living is an essential').toBeCloseTo(plain.view.spendLevels!.essentials + extra, 6)
+    expect(extra, '[test setup] about $1,700 more').toBeGreaterThan(1_600)
+  })
 })

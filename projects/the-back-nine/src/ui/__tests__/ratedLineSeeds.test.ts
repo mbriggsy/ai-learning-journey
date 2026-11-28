@@ -34,6 +34,32 @@ function spendAt(draft: ScenarioDraft, stop: number, t: number): number {
 // 2036 is sim year 10 on a 2026 plan: nine years at the near-term 3.2 % (2027–2035) and one at the ultimate 2.4 %.
 const GROWTH_2026_TO_2036 = Math.pow(1.032, 9) * 1.024
 
+describe('a rated line’s two frames, pinned where they differ (the review of gap 4’s line half)', () => {
+  // A plan built away from the anchor year: intake must hand the compile the plan's OWN build year (KTD3), never the
+  // anchor or the wall clock. 2028 to 2038: seven years at 3.2 % (2029–2035) and three at the ultimate 2.4 % (2036–2038).
+  it('a fixed-dollar line on a plan built in 2028 charges its typed amount in year 0 and 1 ÷ (1.032^7 × 1.024^3) of it in 2038', () => {
+    const input = buildDateInput({ ...DEV_SEEDS.datefixed, startCalendarYear: 2028 })
+    if (input === null) throw new Error('fixture: the 2028 plan builds no date input')
+    const factors = input.params.budget?.rated?.[0]?.factorByT
+    expect(factors?.[0]).toBe(1)
+    expect(factors?.[10]).toBeCloseTo(1 / (Math.pow(1.032, 7) * Math.pow(1.024, 3)), 12)
+  })
+
+  // On the date route k and t part: a line on only in k 2..4 at a stop of 5 is charged in sim years 7..9 and no others,
+  // each at its calendar year's factor. On the all-retired route k ≡ t, so only this arm tells `amountByK[k]` from `[t]`.
+  it('a fixed-dollar Home line on in years 2 to 4 after a stop of 5 costs 20,000 ÷ 1.032^t in sim years 7, 8 and 9 only', () => {
+    const windowed = (d: ScenarioDraft): ScenarioDraft => ({
+      ...d,
+      annualSpendingReal: 58_000,
+      budget: d.budget!.map((l) => (l.label === 'Home' ? { ...l, startYear: 2, endYear: 4 } : l)),
+    })
+    for (let t = 6; t <= 10; t++) {
+      const charge = spendAt(windowed(DEV_SEEDS.datefixed), 5, t) - spendAt(windowed(DEV_SEEDS.dip), 5, t) + (t >= 7 && t <= 9 ? 20_000 : 0)
+      expect(charge, `sim year ${t}`).toBeCloseTo(t >= 7 && t <= 9 ? 20_000 / Math.pow(1.032, t) : 0, 6)
+    }
+  })
+})
+
 describe('a rated line on the date route (gap 4’s U4, AE2 and R4)', () => {
   it('the premises: both witnesses are `dip` with one field, built in 2026, reconciled at the typed $78,000, and every candidate stop validates', () => {
     for (const key of ['datefixed', 'daterising'] as const) {

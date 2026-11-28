@@ -953,7 +953,7 @@ Every unit's tests live in the module's sibling `__tests__/` folder. Build 2's c
 
 #### U18. Repeating spending lines
 
-*(Superseded 2026-11-27, b9-17: gap 4 was planned and built as its own plan, [spending-line-repeat-and-rate-build-spec.md](features/spending-line-repeat-and-rate-build-spec.md), which builds this unit's repeat (its U3) beside a per-line rate (U4) and, on a yes from Briggsy, a loan. This unit's file list predates Act 6 (`BudgetLineItem.tsx` left with the walk); its expired-line clock and its calendar-year display of a repeat's years were dropped there (that plan's System-Wide Impact). The unit below stays as written.)*
+*(Superseded 2026-11-27, b9-17: gap 4 was planned and built as its own plan, [spending-line-repeat-and-rate-build-spec.md](features/spending-line-repeat-and-rate-build-spec.md), which builds this unit's repeat (its U3) beside a per-line rate (U4) and, on a yes from Briggsy, a loan. This unit's file list predates Act 6 (`BudgetLineItem.tsx` left with the walk); its expired-line clock was dropped there (that plan's System-Wide Impact), and a repeat's years show as calendar years on the all-retired route only, counted from the stop on the date route (`repeatReadBack`). The unit below stays as written.)*
 
 - **Goal.** A spending line can repeat every N years.
 - **Requirements.** R30.

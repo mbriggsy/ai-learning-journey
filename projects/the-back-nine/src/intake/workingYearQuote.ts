@@ -61,6 +61,7 @@ import { budgetGoverns, isActiveAt } from '@budget/budgetModel'
 import type { ScenarioDraft } from '@store/memoryModel'
 import { slots, type CatalogMessage, type WorkingCostAct } from '@ui/copy'
 import { formatMoney, formatMoneyPair } from './moneyFormat'
+import { lineDisplayName } from './budgetLines'
 
 /** A W answer's yearly figure (annual real $), whichever way it was given — the ONE read of it. It lives
  *  here, not in `intakeMap` (build 2's KTD2): it was this module's only reason to import `intakeMap`, and
@@ -96,6 +97,9 @@ export interface WorkingYearQuote {
   /** The repeating lines the quote counts at their yearly average (gap 4's KTD5), in budget order — the question
    *  names each with its average: at most three, then "N more". Empty with no budget. */
   readonly repeats: readonly (Pick<BudgetLineItem, 'label' | 'annualAmountReal'> & { readonly everyYears: number })[]
+  /** The quote counts a line that changes at its own rate (gap 4's KTD4), at its typed price: the W question's rate note
+   *  reads this, never a second copy of which lines count (a later-start essential or a later repeat counts nothing). */
+  readonly countsRated: boolean
 }
 
 /** Is a budget line a retirement-only splurge the quote leaves out? A discretionary line that ends,
@@ -110,20 +114,26 @@ export function workingYearQuote(d: ScenarioDraft): WorkingYearQuote {
     let total = medical
     const leftOut: Pick<BudgetLineItem, 'label' | 'category'>[] = []
     const repeats: WorkingYearQuote['repeats'][number][] = []
+    let countsRated = false
+    // A line is named by its display name (a blank name reads as its category), never its raw label.
     for (const item of d.budget) {
       if (leftOutOfQuote(item)) {
-        leftOut.push({ label: item.label, category: item.category })
+        leftOut.push({ label: lineDisplayName(item), category: item.category })
         continue
       }
       const n = item.everyYears
       if (n !== undefined) {
         if (item.startYear < n) {
           total += item.annualAmountReal / n
-          repeats.push({ label: item.label, annualAmountReal: item.annualAmountReal, everyYears: n })
+          repeats.push({ label: lineDisplayName(item), annualAmountReal: item.annualAmountReal, everyYears: n })
+          if (item.growthRate !== undefined) countsRated = true
         }
         continue
       }
-      if (isActiveAt(item, 0)) total += item.annualAmountReal
+      if (isActiveAt(item, 0)) {
+        total += item.annualAmountReal
+        if (item.growthRate !== undefined) countsRated = true
+      }
     }
     return {
       annualReal: Number.isFinite(total) && total > 0 ? roundCents(total) : 0,
@@ -132,6 +142,7 @@ export function workingYearQuote(d: ScenarioDraft): WorkingYearQuote {
       medicalReal: medical,
       leftOut,
       repeats,
+      countsRated,
     }
   }
   const spending = d.annualSpendingReal
@@ -142,6 +153,7 @@ export function workingYearQuote(d: ScenarioDraft): WorkingYearQuote {
     medicalReal: 0,
     leftOut: [],
     repeats: [],
+    countsRated: false,
   }
 }
 

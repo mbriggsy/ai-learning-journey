@@ -21,7 +21,7 @@
 import type { MemoryModelSnapshot, SpendAnswer } from '@store/memoryModel'
 import { isDateRoute } from '@intake/intakeMap'
 import { workingYearFigureBesideQuote, type WorkingYearFigureBesideQuote } from '@intake/workingYearLeftOver'
-import { firstYearRepeatNote } from '@intake/budgetForm'
+import { firstYearRepeatNote, ratedLevelShiftAt } from '@intake/budgetForm'
 import type {
   BandFan,
   DateBand,
@@ -185,11 +185,18 @@ function dateBand(
   // in budgetToSpending.test.ts). Absent without a budget: a household with one spending level has
   // no gap to name, and inventing a second figure is worse than staying quiet.
   // Gap 4's U15: both levels are the first year's ("a year to start"); a repeat charged in it is named beside them.
+  // "To start" is the first year after work stops, the band's own crowned offset: a line that changes at its own rate
+  // costs its factor there, not its typed amount (the review of gap 4's line half), so each such line is priced at that
+  // offset through the run's own factor. Exactly + 0 without one, so every other plan reads the same figures.
   const firstYearRepeat = budgetGoverns(draft.budget) ? firstYearRepeatNote(draft.budget) : null
+  const shift =
+    budgetGoverns(draft.budget) && draft.startCalendarYear !== undefined
+      ? ratedLevelShiftAt(draft.budget, draft.startCalendarYear, band.offsetYears)
+      : { full: 0, essentials: 0 }
   const spendLevels = budgetGoverns(draft.budget)
     ? {
-        essentials: budgetYearZeroEssentialsTotal(draft.budget, draft.health.oopMedicalAnnual),
-        full: budgetYearZeroFullTotal(draft.budget, draft.health.oopMedicalAnnual),
+        essentials: budgetYearZeroEssentialsTotal(draft.budget, draft.health.oopMedicalAnnual) + shift.essentials,
+        full: budgetYearZeroFullTotal(draft.budget, draft.health.oopMedicalAnnual) + shift.full,
         ...(firstYearRepeat !== null ? { firstYearRepeat } : {}),
       }
     : undefined

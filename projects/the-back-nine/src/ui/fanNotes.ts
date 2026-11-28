@@ -34,14 +34,16 @@ export function bandTrackNote(view: Pick<DatesView, 'band' | 'spendLevels' | 'wo
   } else {
     const full = formatAbsoluteDollar(s.full)
     const essentials = formatAbsoluteDollar(s.essentials)
+    // Both levels are the first year's ("to start"); a repeat charged in it is named (gap 4's U15) right after the FULL
+    // figure, which holds it: after the essentials figure an extra's repeat would read as inside the essentials (the
+    // review of gap 4's line half). On the floor arm the full figure is the last sentence, so it follows it there.
+    const repeat = s.firstYearRepeat
     note =
       t === 'floor'
-        ? slots.bandPricesEssentialsWithLevels(essentials, full)
+        ? slots.bandPricesEssentialsWithLevels(essentials, full) + (repeat !== undefined ? ` ${repeat}` : '')
         : w === undefined
-          ? slots.bandPricesFullBudgetWithLevels(full, essentials)
-          : slots.bandCountsWorkingYearsWithLevels(w.figure, w.last, full, essentials)
-    // Both levels are the first year's ("to start"); a repeat charged in it is named (gap 4's U15).
-    if (s.firstYearRepeat !== undefined) note = `${note} ${s.firstYearRepeat}`
+          ? slots.bandPricesFullBudgetWithLevels(full, essentials, repeat)
+          : slots.bandCountsWorkingYearsWithLevels(w.figure, w.last, full, essentials, repeat)
   }
   return view.refiguring === true ? `${note} ${copy.answerRefiguringCaption}` : note
 }

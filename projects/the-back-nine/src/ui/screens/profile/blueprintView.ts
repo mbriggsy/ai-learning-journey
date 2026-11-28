@@ -31,7 +31,7 @@ import type { BudgetLineItem, DateTrackOutcome } from '@shared/model'
 import type { ModelAnswer, ScenarioDraft } from '@store/memoryModel'
 import { ACCOUNT_KINDS, INCOME_TYPES } from '@shared/model'
 import { budgetGoverns } from '@budget/budgetModel'
-import { formatMoney } from '@intake/moneyFormat'
+import { formatMoney, formatPercent } from '@intake/moneyFormat'
 import { kindLabel } from '@intake/accountKinds'
 import { takesDeposits } from '@intake/sanity'
 import { incomeTypeLabel } from '@intake/otherIncome'
@@ -300,23 +300,30 @@ function repeatValue(line: BudgetLineItem, everyYears: number, amount: string, s
   return times === 1 ? slots.bpLineOnce(amount) : slots.bpLineEveryTimesAfter(amount, everyYears, times)
 }
 
-function lineTile(line: BudgetLineItem, index: number, stop: StopAnchor): Placed {
+/** A line's value with how its cost changes (gap 4's review): a line that goes up with prices reads as before. */
+function withRate(value: string, line: BudgetLineItem, buildYear: number): string {
+  const g = line.growthRate
+  if (g === undefined || !Number.isFinite(g)) return value
+  return g === 0 ? slots.bpLineSameDollars(value, line.everyYears !== undefined) : slots.bpLineRising(value, buildYear, formatPercent(g))
+}
+
+function lineTile(line: BudgetLineItem, index: number, stop: StopAnchor, buildYear: number): Placed {
   const legend = goalsLegend('spending')
   const amount = formatMoney(Math.round(line.annualAmountReal))
   const years = line.endYear === undefined ? null : line.endYear - line.startYear + 1
   const base = { id: `bp-line-${index}`, legend: legend.id, category: legend.label, tone: legend.tone, name: lineDisplayName(line), target: { kind: 'living' } } as const
   if (!Number.isInteger(line.startYear) || line.startYear < 0) return { tile: { ...base, value: copy.profileNotAnswered }, at: { kind: 'none' }, rank: 3 }
   if (line.everyYears !== undefined) {
-    const tile = { ...base, value: repeatValue(line, line.everyYears, amount, stop), repeats: true }
+    const tile = { ...base, value: withRate(repeatValue(line, line.everyYears, amount, stop), line, buildYear), repeats: true }
     return { tile, at: stop.kind === 'calendar' ? { kind: 'year', year: stop.year + line.startYear } : { kind: 'after', years: line.startYear }, rank: 3 }
   }
   if (stop.kind === 'calendar') {
     const from = stop.year + line.startYear
     const value = years === null ? slots.bpLineFrom(amount, from) : slots.bpLineSpan(amount, years, stop.year + line.endYear!)
-    return { tile: { ...base, value }, at: { kind: 'year', year: from }, rank: 3 }
+    return { tile: { ...base, value: withRate(value, line, buildYear) }, at: { kind: 'year', year: from }, rank: 3 }
   }
   const value = years === null ? slots.bpLineOnward(amount) : slots.bpLineFor(amount, years)
-  return { tile: { ...base, value }, at: { kind: 'after', years: line.startYear }, rank: 3 }
+  return { tile: { ...base, value: withRate(value, line, buildYear) }, at: { kind: 'after', years: line.startYear }, rank: 3 }
 }
 
 function goalsBody(d: ScenarioDraft, stop: StopAnchor): { body: BlueprintBody; lines: string[] } {
@@ -393,7 +400,7 @@ function goalsBody(d: ScenarioDraft, stop: StopAnchor): { body: BlueprintBody; l
     })
   }
   const lines: string[] = []
-  if (budgetGoverns(d.budget) && d.budget !== undefined) d.budget.forEach((line, k) => placed.push(lineTile(line, k, stop)))
+  if (budgetGoverns(d.budget) && d.budget !== undefined) d.budget.forEach((line, k) => placed.push(lineTile(line, k, stop, start)))
   else lines.push(copy.blueprintSpendingOneFigure)
 
   const byRank = (a: Placed, b: Placed) => a.rank - b.rank

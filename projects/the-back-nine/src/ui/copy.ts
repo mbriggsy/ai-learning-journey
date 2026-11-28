@@ -4240,8 +4240,10 @@ export const slots = {
    *  Figures arrive PRE-FORMATTED from the compiled-budget producers (never re-typed, never summed
    *  at the call site — `budgetYearZeroEssentialsTotal` omits neither the injected OOP medical nor
    *  the scalable-essentials tier; both failure modes are mutation-pinned). */
-  bandPricesFullBudgetWithLevels: (fullFormatted: string, essentialsFormatted: string): string =>
-    `This range prices your full budget — about $${fullFormatted} a year to start. Your essentials alone, medical included, would be about $${essentialsFormatted}.`,
+  /** `afterFull` (gap 4's U15, moved by its review): a sentence about the full budget's first year (a repeat charged in
+   *  it) sits right after the full figure, never after the essentials one, which may not hold it. */
+  bandPricesFullBudgetWithLevels: (fullFormatted: string, essentialsFormatted: string, afterFull?: string): string =>
+    `This range prices your full budget — about $${fullFormatted} a year to start.${afterFull ? ` ${afterFull}` : ''} Your essentials alone, medical included, would be about $${essentialsFormatted}.`,
   /** U11 walk 8's W8-R7 (`docs/plans/features/typed-below-walk8-form-build-spec.md`, U3): the full-budget caption where
    *  the run counts a working year at a figure other than the spending (`workingYearFigureBesideQuote`: its own, or its
    *  last where W's answer is out of date). "This range prices your full budget" read there as the date measured at the
@@ -4250,8 +4252,8 @@ export const slots = {
    *  The levels twin keeps its own two figures and names the working-year figure first. Figures pre-formatted. */
   bandCountsWorkingYearsNote: (figureFormatted: string, quoteFormatted: string, last: boolean): string =>
     `This range counts each working year at your ${last ? 'last' : 'own'} figure of $${figureFormatted} a year, and your spending of $${quoteFormatted} a year once you’ve both stopped working. That is the same life your date is measured against.`,
-  bandCountsWorkingYearsWithLevels: (figureFormatted: string, last: boolean, fullFormatted: string, essentialsFormatted: string): string =>
-    `This range counts each working year at your ${last ? 'last' : 'own'} figure of $${figureFormatted} a year. Once you’ve both stopped working, it prices your full budget, about $${fullFormatted} a year to start. Your essentials alone, medical included, would be about $${essentialsFormatted}.`,
+  bandCountsWorkingYearsWithLevels: (figureFormatted: string, last: boolean, fullFormatted: string, essentialsFormatted: string, afterFull?: string): string =>
+    `This range counts each working year at your ${last ? 'last' : 'own'} figure of $${figureFormatted} a year. Once you’ve both stopped working, it prices your full budget, about $${fullFormatted} a year to start.${afterFull ? ` ${afterFull}` : ''} Your essentials alone, medical included, would be about $${essentialsFormatted}.`,
   bandPricesEssentialsWithLevels: (essentialsFormatted: string, fullFormatted: string): string =>
     `This range prices your essentials only — about $${essentialsFormatted} a year to start, medical included. Your full budget would be about $${fullFormatted}.`,
   /** The OLD-SAVE arm: the balances behind the fan were saved in a named past year. (Tightened
@@ -4465,6 +4467,11 @@ export const slots = {
     `Your budget’s first year after work stops comes to $${totalFormatted} a year.`,
   workingCostQuoteBudgetMedical: (totalFormatted: string, medicalFormatted: string): string =>
     `Your budget’s first year after work stops, with $${medicalFormatted} of out-of-pocket medical, comes to $${totalFormatted} a year.`,
+  /** The budget quote's lead where it counts a line that repeats at its yearly average (gap 4's KTD5): the figure is no
+   *  year's own total, so it never says "first year"; the repeat sentences after it say how each line counts. */
+  workingCostQuoteBudgetAveraged: (totalFormatted: string): string => `Your budget after work stops counts here as $${totalFormatted} a year.`,
+  workingCostQuoteBudgetAveragedMedical: (totalFormatted: string, medicalFormatted: string): string =>
+    `Your budget after work stops, with $${medicalFormatted} of out-of-pocket medical, counts here as $${totalFormatted} a year.`,
   /** The lines the quote left out (KTD5) — at most three names, then the rest counted. */
   workingCostLeftOut: (names: string): string =>
     `That leaves out extras that end or start in a later year, since those read as plans for after work: ${names}.`,
@@ -5159,6 +5166,10 @@ export const slots = {
    *  commit), so it carries no reward copy and no reconcile-to-target audit voice. */
   budgetLinesTarget: (targetFormatted: string): string =>
     `About $${targetFormatted} a year goes into the lines below.`,
+  /** Gap 4's review: with a line that repeats charged in the first year, the anchor and the lines' share are that year's
+   *  figures, never "a year" (the readout's repeat sentence names the line inside them). */
+  budgetAnchorLeadFirstYear: (totalFormatted: string): string => `Your answer uses about $${totalFormatted} in your first year.`,
+  budgetLinesTargetFirstYear: (targetFormatted: string): string => `About $${targetFormatted} of your first year goes into the lines below.`,
   budgetMedicalCarried: (medicalFormatted: string): string =>
     `About $${medicalFormatted} a year of out-of-pocket medical is carried automatically — it needs no line here.`,
   /** The M>S honesty branch (F10): the OOP-medical figure ALONE exceeds the total the answer
@@ -5475,7 +5486,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:2464` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:2472` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,
@@ -6584,6 +6595,11 @@ export const slots = {
   bpLineEveryOnward: (amount: string, everyYears: number): string => `$${amount} every ${everyYears} years from then on`,
   bpLineEveryTimesAfter: (amount: string, everyYears: number, times: number): string => `$${amount} every ${everyYears} years, ${times} times`,
   bpLineOnce: (amount: string): string => `$${amount} once`,
+  /** A line that doesn't go up with prices (gap 4's review): the tile names how its cost changes, so "$6,000 a year" is
+   *  never read as the same cost in today's dollars every year. A rising line's amount is its price in the plan's first
+   *  year (`buildYear`), the year its rate runs from. */
+  bpLineSameDollars: (value: string, eachTime: boolean): string => `${value}, the same dollar amount each ${eachTime ? 'time' : 'year'}`,
+  bpLineRising: (value: string, buildYear: number, percent: string): string => `${value}, at its ${buildYear} price, going up ${percent}% a year`,
   /** A group of the timeline counted from the year work stops (year 0, the first retirement year: the budget's own frame). */
   bpAfterStop: (years: number): string =>
     years === 0 ? 'The first retirement year' : `${years === 1 ? 'One year' : `${years} years`} after the first retirement year`,

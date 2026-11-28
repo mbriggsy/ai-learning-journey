@@ -12,7 +12,7 @@
  * SEMANTICS (ranges, sums, age ordering) and remains in the path of every decoded
  * scenario before an answer renders — the codec never re-implements a domain rule,
  * so the two gates cannot disagree. It moves no field, and it changes the parsed object in
- * exactly two ways: it relabels a version-3, -4, -5 or -6 plan (the steps below), and it deletes a
+ * exactly two ways: it relabels a version-3, -4, -5, -6 or -7 plan (the steps below), and it deletes a
  * savedRecommendation that fails its checks — the one tolerated atom, reported on
  * `droppedAtoms` (the bottom of `checkV3Fields`, and the 5 → 6 step). Anything else it returns is the disk's.
  *
@@ -338,8 +338,8 @@ function checkV2Fields(o: Obj): void {
   needString(o, 'appDefaultVersion', 'scenario')
 }
 
-// --- v3 (the current field set — first written at P2·U8 as version 3; written as version 4, 5, 6 and 7
-// since the schema-v4, -v5, -v6 and -v7 bumps, each label-only, so these checks judge them all) ---
+// --- v3 (the current field set — first written at P2·U8 as version 3; written as version 4, 5, 6, 7 and 8
+// since the schema-v4, -v5, -v6, -v7 and -v8 bumps, each label-only, so these checks judge them all) ---
 // The account-level intake truth. SEPARATE validators from the v1/v2 arm (the field shapes differ —
 // the live `pia`/`birthYear` person, entered accounts, two discriminated unions); the legacy
 // `checkPerson` is NEVER reused or mutated (plan §10). Same finiteness-first / vocab discipline.

@@ -114,6 +114,7 @@ function LineRow({
   const change = lineChangeOf(item)
   const rateId = useId()
   const readBackId = useId()
+  const endNoteId = useId()
   // The box's own blank refusal waits for the household to leave the box (or a refused Save): picking "Goes up by" moves
   // focus into the empty box, and words under it before a keystroke would scold a choice just made (silent while typing,
   // checked on leave).
@@ -213,7 +214,9 @@ function LineRow({
             value={change}
             vertical
             disabled={readOnly}
-            {...(rateWords !== null ? { describedByIds: readBackId } : {})}
+            {...(rateWords !== null || endNote
+              ? { describedByIds: [rateWords !== null ? readBackId : null, endNote ? endNoteId : null].filter(Boolean).join(' ') }
+              : {})}
             onValueChange={(next) => {
               if (next === change) return
               if (change === 'rate' && Number.isFinite(item.growthRate)) lastRate.current = item.growthRate
@@ -244,7 +247,7 @@ function LineRow({
         </p>
       ) : null}
       {endNote ? (
-        <p className="text-label text-stone-600" data-budget-end-note="">
+        <p id={endNoteId} className="text-label text-stone-600" data-budget-end-note="">
           {copy.budgetDateRouteEndNote}
         </p>
       ) : null}
@@ -288,8 +291,10 @@ export function LivingDrawer({ model, open, readOnly, leaveAsk, onClose, onClose
   // The all-retired route's year 0 is the plan's first year (`blueprintView.ts`'s `stopAnchor` places its lines the same
   // way), so each box can name its calendar year; the date route's year 0 is the retirement year the answer finds.
   const yearOf = dateRoute ? null : (offset: number) => draft.startCalendarYear + offset
-  // Back to one figure from lines that repeat or change at their own rate: the figure it keeps, charged every year (the
-  // plan's readers' minor finding: harsh, and said on screen).
+  // Back to one figure from lines that repeat or change at their own rate: the figure it keeps, charged every year, said
+  // on screen. Harsh for a repeat charged in year 0 or a line that stays the same dollar amount; rosy for a line rising
+  // faster than prices or a repeat first charged after year 0, which the kept first-year figure leaves out (the review of
+  // gap 4's line half corrected the plan readers' "harsh").
   const seedDeparts = seed.lines.some((l) => l.everyYears !== undefined || l.growthRate !== undefined)
   const backToSingleHint =
     seedDeparts && draft.annualSpendingReal !== undefined
@@ -386,6 +391,12 @@ export function LivingDrawer({ model, open, readOnly, leaveAsk, onClose, onClose
                   )
                 })}
               </ul>
+            ) : seed.approach === 'budget' && seedDeparts ? (
+              // Every line removed over a budget whose lines repeat or change at their own rate: the Save goes back to one
+              // figure, the same as the switch above, so it says the same (the review of gap 4's line half; insight 180).
+              <p className="text-label text-stone-600" data-budget-back-to-single="">
+                {backToSingleHint}
+              </p>
             ) : null}
             {readOnly ? null : (
               <div>

@@ -119,6 +119,10 @@ describe('a line that repeats or changes at its own rate, carried (gap 4’s U9;
     const rated = { ...car, growthRate: 0.03 }
     expect(lineCommit(rated, { ...rated, annualAmountReal: 45_000 })).toEqual({ kind: 'spending', op: 'replace', line: { ...rated, annualAmountReal: 45_000 } })
     expect(lineCommit(rated, { ...rated })).toBeNull()
+    // KTD13: `sameLine` compares only what the tray can edit, so a repeat or rate that differs alone is no change (the
+    // review of gap 4's line half: the arm above compared two identical lines and pinned nothing).
+    expect(lineCommit(rated, { ...rated, growthRate: 0.07, everyYears: 3 })).toBeNull()
+    expect(lineCommit({ ...car, growthRate: 0 }, car)).toBeNull()
   })
 
   it('an added line that repeats reads "$40,000 every 5 years" on its row too; one without reads "a year"', () => {

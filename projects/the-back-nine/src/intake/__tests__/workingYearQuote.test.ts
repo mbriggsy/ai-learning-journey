@@ -88,6 +88,7 @@ describe('the quote (KTD5)', () => {
       medicalReal: 0,
       leftOut: [],
       repeats: [],
+      countsRated: false,
     })
     expect(workingYearQuote(base({ annualSpendingReal: 60_000, spendEntryPeriod: 'year' }))).toEqual({
       annualReal: 60_000,
@@ -96,6 +97,7 @@ describe('the quote (KTD5)', () => {
       medicalReal: 0,
       leftOut: [],
       repeats: [],
+      countsRated: false,
     })
   })
 
@@ -110,6 +112,7 @@ describe('the quote (KTD5)', () => {
       medicalReal: 4_000,
       leftOut: [],
       repeats: [],
+      countsRated: false,
     })
   })
 
@@ -155,7 +158,7 @@ describe('the quote (KTD5)', () => {
   it('a budget with no first-year line and no M quotes $0 (the step then asks for a figure)', () => {
     // An essential that starts at k = 2 is neither active in the first year nor left out.
     const d = base({ budget: [line('other', 'Care', 12_000, 'essentials', 2)] })
-    expect(workingYearQuote(d)).toEqual({ annualReal: 0, source: 'budget', period: 'year', medicalReal: 0, leftOut: [], repeats: [] })
+    expect(workingYearQuote(d)).toEqual({ annualReal: 0, source: 'budget', period: 'year', medicalReal: 0, leftOut: [], repeats: [], countsRated: false })
     expect(confirmedWorkingYearCost(d), 'nothing to confirm').toBeNull()
   })
 
@@ -183,10 +186,17 @@ describe('the quote (KTD5)', () => {
       const q = workingYearQuote(base({ budget: [HOME, car(startYear)] }))
       expect(q.annualReal, `from year ${startYear}`).toBe(28_000) // 20,000 + 40,000 / 5
       expect(q.repeats).toEqual([{ label: 'A new car', annualAmountReal: 40_000, everyYears: 5 }])
-      expect(quoteLine(q)).toBe(
-        'Your budget’s first year after work stops comes to $28,000 a year. A new car, $40,000 every 5 years, counts here as $8,000 a year.',
-      )
+      // With a repeat at its average the figure is no year's own total, so the lead never says "first year" (the review
+      // of gap 4's line half): the first year itself costs $60,000 from year 0, or $20,000 from year 1.
+      expect(quoteLine(q)).toBe('Your budget after work stops counts here as $28,000 a year. A new car, $40,000 every 5 years, counts here as $8,000 a year.')
     }
+    expect(quoteLine(workingYearQuote(base({ budget: [HOME] }))), 'no repeat: the first-year lead').toBe('Your budget’s first year after work stops comes to $20,000 a year.')
+  })
+
+  it('a repeating line with no name is named by its category, never left as a blank in the sentence', () => {
+    const q = workingYearQuote(base({ budget: [HOME, { ...car(0), label: '' }] }))
+    expect(q.repeats.map((r) => r.label)).toEqual([copy.budgetCatTransportation])
+    expect(quoteLine(q)).toContain(`${copy.budgetCatTransportation}, $40,000 every 5 years, counts here as $8,000 a year.`)
   })
 
   it('a repeat that starts after its first cycle counts nothing (a cost that begins after the stop), and a later discretionary repeat stays left out and named', () => {
@@ -208,6 +218,17 @@ describe('the quote (KTD5)', () => {
     const leftOut = { ...DEV_SEEDS.dip, budget: DEV_SEEDS.dip.budget!.map((l) => (l.label === 'Go-go years' ? { ...l, growthRate: 0.05 } : l)) }
     expect(leftOut.budget.find((l) => l.label === 'Go-go years')!.endYear, '[test setup] a discretionary line that ends: left out of the quote').toBeDefined()
     expect(ratedQuoteNote(leftOut)).toBeNull()
+  })
+
+  it('the stopgap line follows the quote’s own count: a rated line the quote counts nothing for (a later essential, a later repeat) carries no line', () => {
+    const laterEssential = { ...line('housing', 'Property tax', 12_000, 'essentials', 3), growthRate: 0.04 }
+    const later = base({ budget: [HOME, laterEssential] })
+    expect(workingYearQuote(later).annualReal, '[test setup] the later essential counts nothing').toBe(20_000)
+    expect(ratedQuoteNote(later)).toBeNull()
+    const laterRepeat = base({ budget: [HOME, { ...car(5), growthRate: 0 }] })
+    expect(workingYearQuote(laterRepeat).annualReal, '[test setup] the later repeat counts nothing').toBe(20_000)
+    expect(ratedQuoteNote(laterRepeat)).toBeNull()
+    expect(ratedQuoteNote(base({ budget: [HOME, { ...car(1), growthRate: 0 }] })), 'a counted rated repeat').toBe(copy.workingCostQuoteRatedNote)
   })
 
   it('a non-finite or absent spending figure quotes $0 — never NaN or a stand-in', () => {

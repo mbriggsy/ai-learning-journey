@@ -91,6 +91,26 @@ export function rateReadBack(line: BudgetLine, startCalendarYear: number): strin
   return slots.budgetRateReadBack(pace, startCalendarYear + RATE_READ_BACK_YEARS, formatMoney(line.annualAmountReal * factor), line.everyYears !== undefined)
 }
 
+/**
+ * What the lines that change at their own rate add to the year-0 levels when those levels are quoted for a later sim
+ * year `t` (the date route's first year after work stops, the band's own crowned offset): each such line on in year 0
+ * costs its typed amount × (the run's factor at `t` − 1) more, through `ratedLineFactor`, the run's own figure. Exactly 0
+ * with no rated line on in year 0, or at t = 0. The year-0 reconcilers stay on typed amounts (gap 4's KTD6); only a
+ * sentence that names the first retired year's spending reads this.
+ */
+export function ratedLevelShiftAt(items: readonly BudgetLine[], startCalendarYear: number, t: number): { full: number; essentials: number } {
+  let full = 0
+  let essentials = 0
+  for (const line of items) {
+    const g = line.growthRate
+    if (g === undefined || !Number.isFinite(g) || !growthRateInRange(g) || !Number.isFinite(line.annualAmountReal) || !isActiveAt(line, 0)) continue
+    const extra = line.annualAmountReal * (ratedLineFactor(g, startCalendarYear, t) - 1)
+    full += extra
+    if (line.tier === 'essentials') essentials += extra
+  }
+  return { full, essentials }
+}
+
 /** How many charge years the repeat's read-back names before "and so on". */
 const REPEAT_YEARS_SHOWN = 3
 
@@ -151,11 +171,15 @@ export function budgetReadout(draft: ScenarioDraft, items: readonly BudgetLine[]
   const S = draft.annualSpendingReal
   const M = draft.health.oopMedicalAnnual
   const out: ReadoutLine[] = []
-  if (S !== undefined) out.push({ text: slots.budgetAnchorLead(formatMoney(S)), muted: false })
+  // A repeat charged in the first year makes every year-0 figure here that year's, never "a year" (gap 4's U8 and its review).
+  const repeatNote = firstYearRepeatNote(items)
+  const lead = repeatNote === null ? slots.budgetAnchorLead : slots.budgetAnchorLeadFirstYear
+  const target = repeatNote === null ? slots.budgetLinesTarget : slots.budgetLinesTargetFirstYear
+  if (S !== undefined) out.push({ text: lead(formatMoney(S)), muted: false })
   if (S !== undefined && M !== undefined && M > 0) {
     out.push({ text: slots.budgetMedicalCarried(formatMoney(M)), muted: true })
     out.push({
-      text: medicalExceedsTotal(S, M) ? slots.budgetMedicalExceedsTotal(formatMoney(M), formatMoney(S)) : slots.budgetLinesTarget(formatMoney(anchorTarget(S, M))),
+      text: medicalExceedsTotal(S, M) ? slots.budgetMedicalExceedsTotal(formatMoney(M), formatMoney(S)) : target(formatMoney(anchorTarget(S, M))),
       muted: false,
     })
   }
@@ -163,9 +187,7 @@ export function budgetReadout(draft: ScenarioDraft, items: readonly BudgetLine[]
   const running = items.reduce((sum, it) => (valued(it) ? sum + it.annualAmountReal : sum), 0)
   const essentialsAt0 = items.reduce((sum, it) => (it.tier === 'essentials' && valued(it) ? sum + it.annualAmountReal : sum), 0)
   if (items.some((it) => Number.isFinite(it.annualAmountReal))) {
-    // A repeat charged in the first year makes these the first year's figures, never "a year" (gap 4's U8).
-    const repeatNote = firstYearRepeatNote(items)
-    const total = repeatNote === null ? slots.budgetRunningTotal : slots.budgetRunningTotalFirstYear
+    const total =repeatNote === null ? slots.budgetRunningTotal : slots.budgetRunningTotalFirstYear
     const split = repeatNote === null ? slots.budgetTierSplit : slots.budgetTierSplitFirstYear
     out.push({ text: total(formatMoney(running)), muted: false })
     out.push({ text: split(formatMoney(essentialsAt0), formatMoney(running - essentialsAt0)), muted: false })

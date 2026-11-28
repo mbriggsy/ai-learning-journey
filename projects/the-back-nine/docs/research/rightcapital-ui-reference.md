@@ -584,7 +584,10 @@ Screens: `rc-cashflow-tax/help-retirement-cash-flows-summary-tab-cash-flows-51.p
   - Planned Saving ← deposits per ledger.
   - B9-only columns: Roth conversion; income not kept (R13's flag); a short year (`ranOut`).
   - Accounts tab ← `start`, `end`, `draw`, `conversion`, `rmd`, `contribution` per ledger (and per person for pre-tax).
-  - Federal vs State vs FICA split, Goals, Other Inflows, and Net Worth beyond invested money are not emitted today (6).
+  - Other Inflows ← `oneTimeIn`, an inheritance or gift in its year, with a drill column per item (`oneTimeInByItem`),
+    and the same money again under Planned Saving, kept in taxable (built 2026-11-28, gap 5's gift half; a home sale
+    joins it with that gap's home-sale half).
+  - Federal vs State vs FICA split, Goals, and Net Worth beyond invested money are not emitted today (6).
   - Maps: one year's ledger row feeds the Sankey (Highcharts' sankey module); build after the tables.
 
 ### 2.17 Tax → Tax Strategies (B9's recommendation in RightCapital's clothes)

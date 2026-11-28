@@ -26,7 +26,7 @@ facts stay out of this file.
 
 This map widens [5-workbench.md](5-workbench.md) and [5-workbench-plan.md](5-workbench-plan.md). Those two scoped a
 workbench room beside B9. The mandate makes RightCapital's whole feature set and flow the target. Their units remain the
-build pieces for the rows they cover (named below). Gap 1's units (U2–U8) are built; so are gap 3 and gap 4's line half (each marked in the order below).
+build pieces for the rows they cover (named below). Gap 1's units (U2–U8) are built; so are gap 2, gap 3 and gap 4's line half (each marked in the order below).
 
 ## How each one flows
 
@@ -148,7 +148,7 @@ business planning; stock plans; insurance-needs analysis; estate flowcharts and 
 ## The order (ruled 2026-11-22: this one, as recommended)
 
 1. **The year-by-year table** (U2–U7). It is "the amount you need to pull from each source", and every later row shows on it.
-2. **The workspace, with what-ifs on every input, kept by name** (U14–U16), and the flow question answered. Since the plan's 2026-11-23 amendment: U9 (a slim schema version 6), then U14–U16, then U25 (the workspace home).
+2. **The workspace, with what-ifs on every input, kept by name** (U14–U16), and the flow question answered. Since the plan's 2026-11-23 amendment: U9 (a slim schema version 6), then U14–U16, then U25 (the workspace home). *Built 2026-11-23 to 2026-11-24: U9, U14 and U15 (`5953cca9`, `00d8192a`, `7f8fccba`); U16 as Act 6's RC5 (the plan list and kept what-ifs); U25 superseded by the shell (RC2 and RC4: the home is Dashboard → Snapshot), per [the Act 6 plan](6-rightcapital-ui-plan.md).*
 3. **The inherited-IRA account kind** (U11–U13). *Built 2026-11-27 (U10 to U13 and U17): the kind, its ledger and producer, its screens, the Net Worth drawer and the tray's pace lever; its whole-file review done (`7927693f`). The cases version 1 refuses are each a build (register *Version 1 of the inherited IRA refuses fourteen cases in words…*).*
 4. **Repeating expenses, a per-line inflation rate, a fixed payment that ends** (U18 plus the register's mortgage entry). *Built 2026-11-27 as its own plan, [spending-line-repeat-and-rate-build-spec.md](features/spending-line-repeat-and-rate-build-spec.md): the line half (the repeat and the rate) whole; the loan half waits on whether his plan needs a loan.*
 5. **One-time money in** (inheritance, home sale).

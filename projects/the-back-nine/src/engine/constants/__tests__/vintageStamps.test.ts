@@ -79,7 +79,11 @@ describe('taxVintageStamp — the controls-surface clock producer', () => {
       // the band (77 or older in every plan year from 2026, past both 70½ and 72), nothing prices the Single Life Table
       // until U12, and `pnpm engine:identity` read every seed and plant byte-identical (82 of 82). A bump would fire every
       // saved vault's "the rules changed" note on an identical answer, which is alarm-when-fine. A conscious re-pin.
-      contentDigest: 1_216_567_413,
+      // Re-pinned 2026-11-28 (gap 5's U8): `homeSaleExclusion` joined the table (§121(b)'s $250,000 / $500,000, frozen
+      // since 1997). NO vintage bump: it prices only a home sale, which no saved plan can hold before schema version 10
+      // (landed the same day, with no writer until gap 5's U10 and U11), and the year loop reads it from U9. A bump would
+      // fire every saved vault's note on an identical answer. A conscious re-pin.
+      contentDigest: 2_366_336_303,
     })
   })
 })

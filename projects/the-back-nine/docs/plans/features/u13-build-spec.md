@@ -55,7 +55,7 @@ atomic change with: `ScenarioV3` type + `SCENARIO_V3_FIELDS` + `checkV3Fields` +
      re-implements it.
    - **Absent `savedAt`** (every vault saved before U13): the "~N years since your save" claim is
      SUPPRESSED — never fabricated from `startCalendarYear`, never defaulted to "today".
-2. **`taxVintageDetail?: TaxVintageV3`** — atomic object minted by **`taxVintageStamp()`** (tax.ts:433),
+2. **`taxVintageDetail?: TaxVintageV3`** — atomic object minted by **`taxVintageStamp()`** (tax.ts:449),
    the `healthcareVintageStamp` mirror. Keyed on `TAX_YEAR` + the legal basis string. The legacy opaque
    `taxVintage: string` stayed untouched (add-only).
    - Neither the RMD-age rule nor the senior-bonus sunset is stamped, and **neither got a clock** — the

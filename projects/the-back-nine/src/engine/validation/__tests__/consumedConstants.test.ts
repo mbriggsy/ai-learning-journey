@@ -210,6 +210,8 @@ const WITNESSES: ReadonlyArray<readonly [key: string, file: string, symbol: stri
   ['tax.capitalGainsBreakpoints', 'src/engine/taxCore.ts', 'capitalGainsBreakpoints'],
   ['tax.ssProvisionalThresholds', 'src/engine/taxCore.ts', 'ssProvisionalThresholds'],
   ['tax.rmdStartAge', 'src/engine/rmd.ts', 'rmdStartAge'],
+  // Gap 5's U8: the home-sale exclusion, read by its one producer (the year loop calls it from U9).
+  ['tax.homeSaleExclusion', 'src/engine/homeSale.ts', 'homeSaleExclusion'],
   ['state.* (the whole priced-profile family)', 'src/engine/stateTax.ts', 'STATE_TAX_PROFILES'],
   ['health.acaApplicablePercentage', 'src/engine/taxOverlay.ts', 'acaApplicablePercentage'],
   ['health.acaApplicablePercentageEnhanced', 'src/engine/taxOverlay.ts', 'acaApplicablePercentageEnhanced'],

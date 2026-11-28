@@ -382,6 +382,22 @@ export const mfjToSingleTransition = sourced(
   },
 )
 
+/** The main-home sale exclusion (§121; gap 5's plan, `docs/plans/features/one-time-money-in-build-spec.md`, KTD5):
+ *  the gain a sale of the main home may leave out of income, $250,000, or $500,000 on a joint return. FROZEN in
+ *  NOMINAL dollars since 1997: the constant stays the statute's figure, and its one consumer (`homeSaleTaxableGain` in
+ *  `src/engine/homeSale.ts`) divides it by the sale year's deflator beside the price paid, never here (insight 135:
+ *  left flat in a real-dollar engine it would be indexed, the rosy way). */
+export const homeSaleExclusion = sourced(
+  { single: 250_000, joint: 500_000 },
+  {
+    citation:
+      'IRC §121(b)(1) ($250,000) and §121(b)(2)(A) ($500,000 on a joint return where either spouse meets the ownership test, both meet the use test and neither is barred by a sale in the 2 years before), §121(b)(4) (a surviving spouse keeps $500,000 for a sale not later than 2 years after the date of death); no indexing clause, and absent from IRS Rev. Proc. 2025-32 (the 2026 inflation adjustments); IRS Publication 523 (2025), the gain and exclusion worksheets — the primary reads of the one-time money plan, read 2026-11-28',
+    directionalUntilPinned: false,
+    pinTo: 'IRC §121(b) and IRS Publication 523',
+    note: 'Nominal and unindexed: the consumer deflates it per sale year by the household-figure deflator intake hands it (KTD4). A path counts the joint figure while two people are living and in the first year after a death (the engine counts a person through the year they die), and the single figure after that or for a one-person household (KTD6). The late spouse’s half step-up (Pub 523) is not modeled: leaving it out overstates a survivor’s taxed gain, never understates it.',
+  },
+)
+
 /** NIIT — OUT but disclosed (neither sequencing nor conversion moves it; it only
  *  blunts a delta, never inverts a ranking). */
 export const niit = sourced(
@@ -454,6 +470,7 @@ export const taxConstants = {
   ssProvisionalThresholds,
   capitalGainsBreakpoints,
   mfjToSingleTransition,
+  homeSaleExclusion,
   niit,
   stateIncomeTax,
   inOutRule,

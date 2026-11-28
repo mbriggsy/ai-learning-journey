@@ -40,6 +40,8 @@ date-route note moved into U8, the line half's own drawer unit, as a stopgap wit
 loan sentence only once loans exist. U2 shipped as version 8 (`f3313636`), the note's words are in `src/ui/copy.ts`, and
 the loan half waits whole as one Tier 3 register entry.
 
+> **Out of date (corrected 2026-11-28):** version 9 went to gap 5's one-time money (`4b59f034`), so U14's loan record now takes the next free schema version when it is built. The current record is U14 and KTD9 in `docs/plans/features/spending-line-repeat-and-rate-build-spec.md` and the register's Tier 3 loan entry.
+
 ## Key Insight
 
 When an unanswered question gates part of a plan, write the plan for the path the build will actually take first. Give

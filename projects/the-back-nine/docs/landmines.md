@@ -309,6 +309,9 @@ even when one exists; the plain `/` route is the Unlock check.
 
 ## The unit test suite
 
+- **(b9-6, 11-28) `pnpm vitest run $(grep -l … )` with a grep that matches nothing runs the WHOLE suite** (no file
+  argument means every file: 291 files, 200 s, beside whatever else is running). Check the list is non-empty first, or
+  name the files by hand.
 - **(b9-3, 11-28) A passing test's `console.log` never reached the terminal here** (`pnpm vitest run <file>`, a 64-point
   measurement grid printed nothing, `tail -30` of the run showed only the summary). Write a measurement's output with
   `appendFileSync` to a file in the session's scratchpad and read the file; never trust a printed count you did not see.
@@ -406,6 +409,16 @@ tests
 
 ## The fit gate and e2e
 
+- **(b9-6, 11-28) Insight 186's held group name works only where the group is wider than its name.** `GROUP_NAME_HELD`
+  (`src/ui/kit/DataTable.tsx`) keeps a name sticky inside its own header cell, so a one-column group (Cash Flows' Other
+  inflows) has no room to move: scrolled half under Year and Age, the name slides under them as far as its column does.
+  That is no defect (the name moves with its figures), but U13's half-under check (`left ≥ leadsRight`) reds on it.
+  For a one-column group check the name never starts left of its own cell (`groupLeft`, `groupNamesHalfUnder` in
+  `e2e/rc-screens.spec.ts`) and that the group spans exactly its column.
+- **(b9-6, 11-28) A Playwright click on a header past the phone's first screen scrolls the table frame first**, so
+  whatever the click opens inherits that scroll unless it is a new frame (a Cash Flows drill did, until the table was
+  keyed by where the reader is, `CashFlows.tsx`). A capture that clicks into a drill and shoots shows that scroll: read
+  the frame's `scrollLeft` before blaming the layout.
 - **(b9-16, 11-27) An audit of "every box inside the row" catches the kit's hidden inputs first.** The ChoiceGroup's radios
   are screen-reader-only (`sr-only`) and a Base UI Select carries a hidden form input; each is a 1 px box off the flow,
   measured at x 0–1 outside the row. Measure what a person sees: `[data-choice]` labels and `input[type="text"]` (the U8

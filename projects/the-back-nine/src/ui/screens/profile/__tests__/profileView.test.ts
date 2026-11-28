@@ -238,6 +238,7 @@ describe('Expenses and Goals (RC13b)', () => {
     const d = DEV_SEEDS.daterepeat
     const living = expensesView(d).cards[0]!
     expect(living.rows[0]!.value).toBe(slots.workbenchFactSpendBudgetFirstYear('118,000'))
+    expect(`${living.rows[0]!.label} ${living.rows[0]!.value}`, 'the label names the budget once, the value never repeats it').toBe('Set by your budget $118,000 in your first year')
     expect(living.note).toContain(slots.budgetRepeatInFirstYear('A new car', '40,000', 5, 0))
     expect(living.note).toContain(' in your first year.')
     expect(living.note).not.toContain('a year.')

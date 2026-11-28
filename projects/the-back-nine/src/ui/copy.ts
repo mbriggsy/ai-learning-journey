@@ -6134,9 +6134,11 @@ export const slots = {
   workbenchFactPerYear: (amount: string): string => `$${amount} a year`,
   workbenchFactPerMonth: (amount: string): string => `$${amount} a month`,
   workbenchFactPerMonthAndYear: (month: string, year: string): string => `$${month} a month ($${year} a year)`,
-  workbenchFactSpendBudget: (total: string): string => `$${total} a year, set by your budget`,
+  /** The Living card's figure under the row label `profileRowBudget` ("Set by your budget"), its one host: the label
+   *  says where the figure comes from, so the value never repeats it (the line half's review, round 2's eye). */
+  workbenchFactSpendBudget: (total: string): string => `$${total} a year`,
   /** The same with a line that repeats charged in the first year (gap 4's U8): the figure is that year's. */
-  workbenchFactSpendBudgetFirstYear: (total: string): string => `$${total} in your first year, set by your budget`,
+  workbenchFactSpendBudgetFirstYear: (total: string): string => `$${total} in your first year`,
   workbenchFactPercent: (pct: string): string => `${pct}%`,
   /** An account or a stream, by whose it is: "Sam’s 401(k)", "Your pension". */
   workbenchFactOwned: (possessive: string, noun: string): string => upperFirst(`${possessive} ${noun}`),

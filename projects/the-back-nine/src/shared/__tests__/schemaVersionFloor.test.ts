@@ -12,7 +12,7 @@
  * absolute pin for that version goes with the revert too, because it lives in the same commit. A
  * `git revert` of a bump cannot take this file with it, because no bump's commit touches it: the floor
  * was set to 4 in the commit after the schema-v4 bump, and raised to 5 in the commit after build 2's
- * go-live (`a9cacf22`, which wrote 5), and to 6 in the commit after gap 2's U9 (`5953cca9`, which wrote 6), to 7 in the commit after gap 3's U13 (`d55681ab`, which wrote 7), and to 8 in the commit after gap 4's U2 (`f3313636`, which wrote 8).
+ * go-live (`a9cacf22`, which wrote 5), and to 6 in the commit after gap 2's U9 (`5953cca9`, which wrote 6), to 7 in the commit after gap 3's U13 (`d55681ab`, which wrote 7), to 8 in the commit after gap 4's U2 (`f3313636`, which wrote 8), and to 9 in the commit after gap 5's U1 (`4b59f034`, which wrote 9).
  * Each later bump raises this floor in its own follow-up commit, the same way.
  *
  * The rule (never revert a bump once a real save carries it; never lower the constant; roll forward) is
@@ -23,7 +23,7 @@ import { describe, expect, it } from 'vitest'
 import * as model from '../model'
 
 /** The highest version a real save may already carry. Raise it, in its own commit, after each bump. */
-const FLOOR = 8
+const FLOOR = 9
 
 /** Read through the module namespace, never a named import: a `git revert` of the bump that introduced the
  *  constant DELETES it, and a named import would then fail typecheck (TS2305) and red here on a matcher

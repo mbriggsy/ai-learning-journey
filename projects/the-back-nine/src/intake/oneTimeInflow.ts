@@ -19,7 +19,7 @@
  * year on a plan never saved. Intake reads no clock.
  */
 import type { CatalogMessage, CopyKey } from '@ui/copy'
-import type { InheritedLeftTo, OneTimeInflow, OneTimeInflowParams } from '@shared/model'
+import type { InheritedLeftTo, OneTimeGift, OneTimeInflow, OneTimeInflowParams } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
 
 /** The calendar years an item can fall in: the plan's first year through its last horizon year, both inclusive. `last`
@@ -57,9 +57,9 @@ export interface OneTimeInflowForm {
 /** The field each refusal belongs to, so the one rendered error's id matches that field's `aria-describedby`. */
 export type OneTimeInflowField = 'name' | 'year' | 'arrivedBySave' | 'amountReal' | 'whose' | 'leftTo'
 
-/** The form a saved item seeds (an absent item: a new, empty form). A couple's item with no heir reads as both
- *  people's; R17's answer is never seeded (the form's note). */
-export function oneTimeInflowFormFrom(item: OneTimeInflow | undefined, couple: boolean): OneTimeInflowForm {
+/** The form a saved inheritance or gift seeds (an absent item: a new, empty form). A couple's item with no heir reads as
+ *  both people's; R17's answer is never seeded (the form's note). A home sale has its own form (the plan's U10). */
+export function oneTimeInflowFormFrom(item: OneTimeGift | undefined, couple: boolean): OneTimeInflowForm {
   return {
     name: item?.name,
     year: item?.year,
@@ -98,7 +98,7 @@ export function buildOneTimeInflow(
   ctx: OneTimeInflowContext,
   id: string,
 ):
-  | { readonly ok: true; readonly item: OneTimeInflow }
+  | { readonly ok: true; readonly item: OneTimeGift }
   | { readonly ok: false; readonly field: OneTimeInflowField; readonly message: CatalogMessage } {
   const refuse = (field: OneTimeInflowField, message: CatalogMessage) => ({ ok: false, field, message }) as const
   const key = (messageKey: CopyKey): CatalogMessage => ({ messageKey })
@@ -142,13 +142,27 @@ export function oneTimeInflowProblems(item: OneTimeInflow, range: OneTimeYearRan
 
 /** One item as the engine runs it (KTD12): its calendar year, its amount as the cash that joins the taxable account,
  *  and, only for a couple's item that is one person's, the heir and who it goes to if that person has died first.
- *  Called only on a draft with no missing fact (`buildParams`' gate), so the year is in range. */
+ *  Called only on a draft with no missing fact (`buildParams`' gate), so the year is in range.
+ *
+ *  Exhaustive over the kind (insight 147), so no kind runs as another. A home sale THROWS until the plan's U10 gives it
+ *  params (its gain's figures, the deflator and the excludable flag, which the engine taxes from U9): run as a gift it
+ *  would count the kept money with no tax on the gain, the rosy reading. No writer creates a home sale before U10's
+ *  seed and U11's drawer, so the throw is unreachable from the app; it stands so nothing calm can stand there. */
 export function oneTimeInflowParams(d: ScenarioDraft, item: OneTimeInflow): OneTimeInflowParams {
-  return {
-    year: item.year,
-    cashReal: item.amountReal,
-    ...(d.people.length > 1 && item.heirIndex !== undefined && item.leftTo !== undefined
-      ? { heirIndex: item.heirIndex, leftTo: item.leftTo }
-      : {}),
+  switch (item.kind) {
+    case 'gift':
+      return {
+        year: item.year,
+        cashReal: item.amountReal,
+        ...(d.people.length > 1 && item.heirIndex !== undefined && item.leftTo !== undefined
+          ? { heirIndex: item.heirIndex, leftTo: item.leftTo }
+          : {}),
+      }
+    case 'homeSale':
+      throw new Error(`oneTimeInflowParams: a home sale ("${item.name}") has no params before gap 5's U10; never run it as a tax-free gift`)
+    default: {
+      const _exhaustive: never = item
+      return _exhaustive
+    }
   }
 }

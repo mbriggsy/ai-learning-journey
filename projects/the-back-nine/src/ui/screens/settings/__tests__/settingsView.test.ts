@@ -301,7 +301,9 @@ describe('how an inheritance or gift counts (gap 5’s U5, R14)', () => {
   })
 
   it('an item that comes to one of you adds the heir line; a plan with none has no row', () => {
-    const oneOf: ScenarioDraft = { ...INHERIT, oneTimeInflows: [{ ...INHERIT.oneTimeInflows![0]!, heirIndex: 0, leftTo: 'someone-else' }] }
+    const seeded = INHERIT.oneTimeInflows![0]!
+    if (seeded.kind !== 'gift') throw new Error('[test setup] the dateinherit seed holds a gift')
+    const oneOf: ScenarioDraft = { ...INHERIT, oneTimeInflows: [{ ...seeded, heirIndex: 0, leftTo: 'someone-else' }] }
     expect(rowsOf(oneOf).methodology.find((x) => x.seat === 'one-time-money')!.lines).toEqual([copy.settingsOneTimeLine, copy.settingsOneTimeHeirLine])
     for (const d of [RETIRED, SAVED]) expect(allRows(d).some((x) => x.seat === 'one-time-money')).toBe(false)
   })

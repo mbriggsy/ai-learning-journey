@@ -2054,12 +2054,17 @@ export interface ScenarioV2 {
 // (§7.3's rules (a) to (c)) — it must refuse the plan. The schema-v8 bump (gap 4's U2) adds two
 // NESTED optional fields on a budget line, its repeat (`everyYears`) and its own rate
 // (`growthRate`), and relabels the shape 8: a version-7 copy would charge such a line every year at
-// prices, answering differently (§7.3's rule (a)) — it must refuse the plan. Versions 3 to 7 carry
-// every field version 8 requires and never the new ones; the codec relabels 3 → 4 → 5 → 6 → 7 → 8
-// at decode, forever (`scenarioCodec.ts`). The sub-types keep their `V3`
+// prices, answering differently (§7.3's rule (a)) — it must refuse the plan. The schema-v9 bump
+// (gap 5's U1) adds one OPTIONAL top-level list, the one-time money in (`oneTimeInflows`, an
+// inheritance or gift), and relabels the shape 9: a version-8 copy would run the plan without the
+// money (§7.3's rule (a)). The schema-v10 bump (gap 5's U7) adds the home-sale kind to that list and
+// relabels the shape 10: a version-9 copy refuses the new kind as damaged and, read as a gift, would
+// count the kept money with no tax on the gain (§7.3's rules (a) and (b)) — it must refuse the plan.
+// Versions 3 to 9 carry every field version 10 requires and never the new ones; the codec relabels
+// 3 → 4 → 5 → 6 → 7 → 8 → 9 → 10 at decode, forever (`scenarioCodec.ts`). The sub-types keep their `V3`
 // names (`PersonInputsV3`, `SavedRecommendationV3`, `WorkingYearCostV3`, the `*VintageV3` stamps,
 // `SCENARIO_V3_FIELDS`, the codec's `checkV3Fields`): they name this field GENERATION, which
-// versions 4 to 8 carry; a shape a later version added is named for its version
+// versions 4 to 10 carry; a shape a later version added is named for its version
 // ({@link WorkingYearLeftOverV5}, {@link KeptWhatIfV6}, {@link InheritedIraV7}). When a future field must bump the version:
 // `docs/architecture.md` §7.3.
 //
@@ -2425,24 +2430,29 @@ export type IncomeStream = {
 } & IncomeTaxTreatment
 
 /** The kinds of one-time money in (gap 5's plan, KTD10), a list as {@link INCOME_TYPES} is. Version 9 holds the
- *  inheritance or gift; the home sale joins at version 10, with the home-sale half (the plan's U7). */
-export const ONE_TIME_INFLOW_KINDS = ['gift'] as const
+ *  inheritance or gift (`'gift'`); the home sale (`'homeSale'`) joins at version 10, with the home-sale half (the
+ *  plan's U7). Each kind is one member of the {@link OneTimeInflow} union, held equal to this list by the check below
+ *  the union. */
+export const ONE_TIME_INFLOW_KINDS = ['gift', 'homeSale'] as const
 export type OneTimeInflowKind = (typeof ONE_TIME_INFLOW_KINDS)[number]
 
-/** One persisted piece of one-time money in (schema version 9; gap 5's plan, `docs/plans/features/one-time-money-in-
- *  build-spec.md`, KTD10 and KTD12), on `CurrentScenario.oneTimeInflows`. Credited to the taxable account at the end
- *  of its calendar year at full cost basis, never an income stream (a stream's surplus is floored away) and never an
- *  account (an account would add the money to today's balances). Every field is FLAT on the item: the R7 registry's
- *  gate does not see nested fields (`src/ui/assumptionRegistry.ts`). */
-export interface OneTimeInflow {
+/** What every piece of one-time money in carries, whatever its kind. */
+interface OneTimeInflowCommon {
   /** Stable id, unique among the plan's items (a drawer edits an item by it). */
   readonly id: string
-  readonly kind: OneTimeInflowKind
-  /** The household's own name for it ("Mom's estate"). */
+  /** The household's own name for it ("Mom's estate", "Selling the house"). */
   readonly name: string
   /** The CALENDAR year the money arrives (KTD1: the engine turns it into a sim year as `year − startCalendarYear`;
    *  never a year counted from the work stop, which would move the money with every stop the date search tries). */
   readonly year: number
+  /** The money that joins the taxable account at the end of {@link year}, in today's dollars. A gift's is what is
+   *  received; a home sale's is what is kept to invest (each member says its own bounds). */
+  readonly amountReal: number
+}
+
+/** An inheritance or gift (schema version 9; gap 5's plan, KTD10 and KTD12): no tax on it (R7). */
+export interface OneTimeGift extends OneTimeInflowCommon {
+  readonly kind: 'gift'
   /** The money received, in today's dollars: the cash or investments after any estate or inheritance tax, or a gift
    *  of cash (R3). Above $0. */
   readonly amountReal: number
@@ -2455,11 +2465,58 @@ export interface OneTimeInflow {
   readonly leftTo?: InheritedLeftTo
 }
 
+/** A home sale (schema version 10; gap 5's plan, R4, R17 and KTD10). A home is the household's, so it names no heir.
+ *  Its gain (the sale amount in the sale year less what was paid) is taxed above the main-home exclusion (R8, R9).
+ *  A sale whose answer to "ever rented out or depreciated" is yes is refused in words at entry (R4), never saved. */
+export interface OneTimeHomeSale extends OneTimeInflowCommon {
+  readonly kind: 'homeSale'
+  /** What the household keeps to invest after paying off any loan on the home and buying the next one, before any
+   *  income tax on the sale, in today's dollars (R4): $0 allowed, at most {@link soldForReal}, and $0 when
+   *  {@link closed} (that money is in the balances already). */
+  readonly amountReal: number
+  /** What the home would sell for today after agent fees and closing costs, in TODAY's dollars (R4; a home keeps pace
+   *  with prices until it is sold, the plan's assumption). Above $0. */
+  readonly soldForReal: number
+  /** What was paid for the home, plus the closing costs paid when buying it and any improvements, less any gain rolled
+   *  into it from a home sold before May 1997 (R4), in the FIXED dollars it was paid in: never today's dollars, so the
+   *  engine deflates it to the sale year beside the exclusion (KTD4). $0 allowed. */
+  readonly paidDollars: number
+  /** The household's answer: owned and lived in as the main home of everyone in the household for at least 2 of the 5
+   *  years before the sale, with no other main home sold in the 2 years before it (R4). Intake reads it, with the
+   *  list's other sales, into whether the sale's gain can be left out (KTD6). */
+  readonly mainHome: boolean
+  /** Written, as the literal `true`, only when the sale had closed by the year the balances were saved (R17); then
+   *  {@link amountReal} is 0 and its tax still counts. ABSENT means not closed: never written as `false` (DND 009). */
+  readonly closed?: true
+}
+
+/** One persisted piece of one-time money in (gap 5's plan, `docs/plans/features/one-time-money-in-build-spec.md`,
+ *  KTD10), on `CurrentScenario.oneTimeInflows`: an inheritance or gift (version 9), or a home sale (version 10), told
+ *  apart by `kind`. Its kept money is credited to the taxable account at the end of its calendar year at full cost
+ *  basis, never an income stream (a stream's surplus is floored away) and never an account (an account would add the
+ *  money to today's balances). Every field is FLAT on the item: the R7 registry's gate does not see nested fields
+ *  (`src/ui/assumptionRegistry.ts`). A reader that treats the kinds differently switches on `kind` with a `never`
+ *  default (insight 147), so a new kind fails to compile wherever it would otherwise run as another. */
+export type OneTimeInflow = OneTimeGift | OneTimeHomeSale
+
+/** Every field any kind of {@link OneTimeInflow} carries (a plain `keyof` of the union keeps only the shared ones): the
+ *  key set the facts registry places by compile. */
+export type OneTimeInflowKey = keyof OneTimeGift | keyof OneTimeHomeSale
+
+/** The kind list and the union name the same kinds, both ways: a kind added to one and not the other fails to compile
+ *  here, so the codec can never accept a kind the type does not describe, nor the type hold one the codec refuses. */
+const _oneTimeKindsMatchUnion: [OneTimeInflowKind] extends [OneTimeInflow['kind']]
+  ? [OneTimeInflow['kind']] extends [OneTimeInflowKind]
+    ? true
+    : never
+  : never = true
+void _oneTimeKindsMatchUnion
+
 /**
  * The version every save writes — the ONE home of the current `schemaVersion` (the schema-v4
  * plan's KTD1). The mint (`scenarioFromDraft`), the codec's top arm and its "newer" threshold,
  * and the hydrate gate (`IntakeApp`) all read it; no production file re-types it, except the
- * codec's label-only steps (3 → 4, 4 → 5, 5 → 6, 6 → 7, 7 → 8 and 8 → 9), each of which names its LITERAL successor (a
+ * codec's label-only steps (3 → 4, 4 → 5, 5 → 6, 6 → 7, 7 → 8, 8 → 9 and 9 → 10), each of which names its LITERAL successor (a
  * step that jumps to "current" would carry an old plan past whatever step a later bump adds), and
  * their refusals of an older-labeled plan carrying a field only a later version writes. Declared here, above the type
  * it discriminates, as {@link BACKUP_FORMAT_VERSION} is: `model.ts` is the only home without an
@@ -2470,13 +2527,13 @@ export interface OneTimeInflow {
  * this constant after a real save — roll forward (`docs/architecture.md` §7.3). Each bump raises
  * the version-floor test in its own follow-up commit.
  */
-export const CURRENT_SCHEMA_VERSION = 9
+export const CURRENT_SCHEMA_VERSION = 10
 
 /** The current plaintext scenario: the account-level intake truth, written as
- *  {@link CURRENT_SCHEMA_VERSION} (versions 3 to 8 carry the same fields less the optional ones a
+ *  {@link CURRENT_SCHEMA_VERSION} (versions 3 to 9 carry the same fields less the optional ones a
  *  later version added — the left-over answer at 5; the ids, the kept what-ifs and the record's
  *  Roth plan at 6; the inherited-IRA kind, its facts and its pace lever at 7; a budget line's repeat
- *  and rate at 8; the one-time money list at 9 — and relabel at decode).
+ *  and rate at 8; the one-time money list at 9; its home-sale kind at 10 — and relabel at decode).
  *  See the section comment above for the label history, the define-now/write-at-U8 contract
  *  and the deliberate fidelity-over-duplication shape change vs v2. */
 export interface CurrentScenario {
@@ -2693,8 +2750,8 @@ export interface CurrentScenario {
    *  "damaged" after an ordinary edit. TOP-LEVEL, so the R7 registry and the facts registry each place
    *  it by compile. */
   readonly keptWhatIfs?: readonly KeptWhatIfV6[]
-  /** One-time money in (schema version 9; gap 5's plan, KTD2 and KTD10): inheritances and gifts, each credited to the
-   *  taxable account at the end of its calendar year. OPTIONAL, and ABSENT means none: never written as an empty list
+  /** One-time money in (schema version 9, the home sale at 10; gap 5's plan, KTD2 and KTD10): inheritances, gifts and
+   *  home sales, each one's kept money credited to the taxable account at the end of its calendar year. OPTIONAL, and ABSENT means none: never written as an empty list
    *  (DND 009; the identity recorder digests key presence), so a plan whose last item is deleted writes no key. A USER
    *  FACT carried through `...draft` at Save. A kept what-if carries the plan's items as they are (no lever touches
    *  them). TOP-LEVEL, so the R7 registry and the facts registry each place it by compile. */

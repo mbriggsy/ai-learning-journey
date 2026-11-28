@@ -52,8 +52,11 @@
  *   · 8 → 9 (gap 5's U1: the one-time money list), LABEL ONLY: it refuses first a plan whose disk label is
  *     3 to 8 and that carries the list (a writer bug, named), then relabels to its LITERAL successor, 9, and
  *     reads version 8 forever.
+ *   · 9 → 10 (gap 5's U7: the home-sale kind on that list), LABEL ONLY: it refuses first a plan whose disk
+ *     label is 3 to 9 and that carries a home sale (a writer bug, named), then relabels to its LITERAL
+ *     successor, 10, and reads version 9 forever.
  *   · {@link CURRENT_SCHEMA_VERSION} runs the field checks (`checkV3Fields` — they name the v3
- *     field GENERATION, which versions 4 to 9 carry, plus the fields versions 5 to 9 added).
+ *     field GENERATION, which versions 4 to 10 carry, plus the fields versions 5 to 10 added).
  * A non-integer version, or one below 1, is corruption, not a branch.
  *
  * TOLERANT READER: unknown extra fields pass through untouched — the additive-within-
@@ -93,6 +96,7 @@ import {
   INHERITED_PACE_KINDS,
   ONE_TIME_INFLOW_KINDS,
   CURRENT_SCHEMA_VERSION,
+  type OneTimeInflowKind,
   type AnyScenario,
   type Scenario,
   type ScenarioV2,
@@ -535,15 +539,19 @@ function checkInheritedIraV7(v: unknown, peopleCount: number, path: string): voi
   checkInheritedPaceV7(v.pace, `${path}.pace`)
 }
 
-/** One piece of one-time money in ({@link OneTimeInflow}, schema version 9; gap 5's plan, KTD10): its SHAPE only. The
- *  id is a non-empty string (unique across the list, checked by the caller); the kind in its version's vocabulary;
- *  the name a string; the year an integer, with no floor or ceiling against `startCalendarYear` (intake re-asks a
- *  year out of range and the engine refuses one by name: gap 4's KTD9 precedent); the amount finite, above $0 and
- *  inside the computable domain (insight 046: the year-end credit adds it away before the engine's own range gate).
- *  The heir fields (KTD12) come as a pair on a couple's plan, the heir an index into `people`, and never on a
- *  one-person plan (gap 3's `leftTo` rule). Returns the id. §7.3, from a version-8 copy's side: (a) yes — a copy
- *  without the list would run the plan without the money, so the plan must not open there; hence the bump and the
- *  8 → 9 step's refusal. */
+/** The fields only a home sale carries ({@link OneTimeHomeSale}): refused on an inheritance or gift. */
+const HOME_SALE_FIELDS = ['soldForReal', 'paidDollars', 'mainHome', 'closed'] as const
+
+/** One piece of one-time money in ({@link OneTimeInflow}, schema versions 9 and 10; gap 5's plan, KTD10): its SHAPE
+ *  only. Common to both kinds: the id a non-empty string (unique across the list, checked by the caller); the kind in
+ *  the vocabulary (a version-9 plan carrying a home sale is refused before this, by the 9 → 10 step); the name a
+ *  string; the year an integer, with no floor or ceiling against `startCalendarYear` (intake re-asks a year out of
+ *  range and the engine refuses one by name: gap 4's KTD9 precedent); the amount finite, at least $0 and inside the
+ *  computable domain (insight 046: the year-end credit adds it away before the engine's own range gate). Then each
+ *  kind's own arm: {@link checkOneTimeGiftV9} or {@link checkOneTimeHomeSaleV10}, each refusing the other kind's fields.
+ *  Returns the id. §7.3, from an older copy's side: (a) yes at both bumps — a version-8 copy would run the plan
+ *  without the money, and a version-9 copy refuses the home-sale kind as damaged (read as a gift it would count the
+ *  kept money with no tax on the gain), so the plan must not open there; hence each bump and its step's refusal. */
 function checkOneTimeInflowV9(v: unknown, peopleCount: number, path: string): string {
   needObject(v, path)
   const id = needId(v, 'id', path)
@@ -551,9 +559,30 @@ function checkOneTimeInflowV9(v: unknown, peopleCount: number, path: string): st
   needString(v, 'name', path)
   needInteger(v, 'year', path)
   needDollar(v, 'amountReal', path)
+  const kind = v.kind as OneTimeInflowKind
+  switch (kind) {
+    case 'gift':
+      checkOneTimeGiftV9(v, peopleCount, path)
+      break
+    case 'homeSale':
+      checkOneTimeHomeSaleV10(v, path)
+      break
+    default: {
+      const _exhaustive: never = kind
+      return _exhaustive
+    }
+  }
+  return id
+}
+
+/** An inheritance or gift's own arm ({@link OneTimeGift}, version 9): the amount above $0; no home-sale field; the
+ *  heir fields (KTD12) as a pair on a couple's plan, the heir an index into `people`, and never on a one-person plan
+ *  (gap 3's `leftTo` rule). */
+function checkOneTimeGiftV9(v: Obj, peopleCount: number, path: string): void {
   if ((v.amountReal as number) <= 0) {
     throw new Corrupt(`${path}.amountReal: an inheritance or gift is above $0 (an item with none is deleted, never saved)`)
   }
+  refuseFields(v, HOME_SALE_FIELDS, path, 'only a home sale carries what it sells for, what was paid, whether it was the main home and whether it closed')
   if (peopleCount > 1) {
     if (v.heirIndex !== undefined) {
       needInteger(v, 'heirIndex', path)
@@ -566,7 +595,29 @@ function checkOneTimeInflowV9(v: unknown, peopleCount: number, path: string): st
   } else {
     refuseFields(v, ['heirIndex', 'leftTo'], path, 'whose it is is asked of a couple only')
   }
-  return id
+}
+
+/** A home sale's own arm ({@link OneTimeHomeSale}, version 10; R4, R17): what it sells for, finite, above $0 and inside
+ *  the computable domain; what was paid, finite, at least $0 and inside it; the main-home answer a boolean; what is
+ *  kept at most what it sells for; `closed` only as the literal `true` (absent is not closed) and only with $0 kept;
+ *  no heir fields, on any plan (a home is the household's). */
+function checkOneTimeHomeSaleV10(v: Obj, path: string): void {
+  needDollar(v, 'soldForReal', path)
+  if ((v.soldForReal as number) <= 0) {
+    throw new Corrupt(`${path}.soldForReal: a home sale sells for above $0`)
+  }
+  needDollar(v, 'paidDollars', path)
+  needBoolean(v, 'mainHome', path)
+  if ((v.amountReal as number) > (v.soldForReal as number)) {
+    throw new Corrupt(`${path}.amountReal: what is kept from a home sale is at most what it sells for`)
+  }
+  if (v.closed !== undefined) {
+    if (v.closed !== true) throw new Corrupt(`${path}.closed: expected the literal true (a sale not closed carries no key)`)
+    if ((v.amountReal as number) !== 0) {
+      throw new Corrupt(`${path}.amountReal: a sale saved as closed keeps $0 (its money is in the balances already)`)
+    }
+  }
+  refuseFields(v, ['heirIndex', 'leftTo'], path, 'a home is the household’s, so a home sale names no heir')
 }
 
 /** An inherited IRA's pace ({@link InheritedPace}): the kind in its vocabulary, and a chosen last year (an integer)
@@ -1362,7 +1413,7 @@ function checkV3Fields(o: Obj): string[] {
       ids.add(id)
     })
   }
-  // One-time money in (schema version 9; gap 5's plan, KTD10), optional, ABSENT meaning none. Every item passes
+  // One-time money in (schema version 9, the home sale at 10; gap 5's plan, KTD10), optional, ABSENT meaning none. Every item passes
   // `checkOneTimeInflowV9`, and no two share an id. An EMPTY list decodes as none (gap 4's KTD9 accepted an empty
   // `loans` list on purpose): refusing it would send the whole saved plan to the damaged-data screen over one writer
   // slip. The writer never writes one, and the engine still refuses an empty list (its own arm, KTD2). Loud, like
@@ -1499,6 +1550,15 @@ function versionEightFieldIn(o: Obj): string | undefined {
  *  Read by the 8 → 9 step BEFORE any field is checked; the list arm judges its shape afterwards. */
 function versionNineFieldIn(o: Obj): string | undefined {
   return o.oneTimeInflows !== undefined ? 'scenario.oneTimeInflows' : undefined
+}
+
+/** The path of the first item only version 10 writes (a home sale on the one-time list) — `undefined` when the plan
+ *  carries none. Read by the 9 → 10 step BEFORE any field is checked, so it reads the raw list with care (a list that
+ *  is not an array, or an item that is not an object, is the list arm's to name afterwards). */
+function versionTenFieldIn(o: Obj): string | undefined {
+  if (!Array.isArray(o.oneTimeInflows)) return undefined
+  const at = o.oneTimeInflows.findIndex((item) => isObj(item) && item.kind === 'homeSale')
+  return at === -1 ? undefined : `scenario.oneTimeInflows[${at}]`
 }
 
 /**
@@ -1639,6 +1699,22 @@ export function decodeScenario(bytes: Uint8Array): ScenarioDecode {
       }
       parsed.schemaVersion = 9
       version = 9
+    }
+    // 9 → 10, LABEL ONLY (gap 5's U7): version 10 adds one KIND to the one-time money list, the home sale, with its own
+    // flat fields, so a version-9 plan is a version-10 plan holding no home sale, and the step writes nothing into it.
+    // Before the relabel, a plan whose DISK label is 3 to 9 and that carries a home sale is refused: no build writing
+    // those labels writes one, and after the relabel the kind vocabulary would accept it, so such a plan is a writer bug,
+    // named (§7.3). (A list at labels 3 to 8 is refused by the 8 → 9 step first.) The LITERAL successor again, never
+    // `CURRENT_SCHEMA_VERSION` (the 3 → 4 note above). Read forever.
+    if (version === 9) {
+      const newer = versionTenFieldIn(parsed)
+      if (newer !== undefined) {
+        throw new Corrupt(
+          `${newer}: a plan saved as version ${onDisk} cannot carry it — no build that writes version ${onDisk} writes it (writer bug)`,
+        )
+      }
+      parsed.schemaVersion = 10
+      version = 10
     }
     if (version === CURRENT_SCHEMA_VERSION) {
       const droppedAtoms = [...stepDrops, ...checkV3Fields(parsed)]

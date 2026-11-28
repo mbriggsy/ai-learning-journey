@@ -217,7 +217,7 @@ export function settingsRows(
       seat: 'one-time-money',
       name: copy.assumptionOneTimeName,
       values: oneTime.map((item) => `${item.name}: ${slots.oneTimeComesIn(formatMoney(item.amountReal), item.year)}`),
-      lines: [copy.settingsOneTimeLine, ...(oneTime.some((item) => item.heirIndex !== undefined) ? [copy.settingsOneTimeHeirLine] : [])],
+      lines: [copy.settingsOneTimeLine, ...(oneTime.some((item) => 'heirIndex' in item && item.heirIndex !== undefined) ? [copy.settingsOneTimeHeirLine] : [])],
     })
   }
   methodology.push(survivor)

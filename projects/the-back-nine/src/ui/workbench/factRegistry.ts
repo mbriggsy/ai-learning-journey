@@ -23,7 +23,7 @@
  * Add menus offer over made-up drafts that hold every field between them, and fails on a SHOWN field no drawer stamps,
  * or one stamped in a drawer this record does not name.
  */
-import type { EnteredAccount, InheritedIraV7, OneTimeInflow } from '@shared/model'
+import type { EnteredAccount, InheritedIraV7, OneTimeInflowKey } from '@shared/model'
 import type { IncomeStream } from '@shared/model'
 import type { HealthDraft, PersonDraft, ScenarioDraft } from '@store/memoryModel'
 import type { DrawerTarget } from '../screens/profile/profileView'
@@ -59,7 +59,7 @@ export type FactStamp =
   | `account.${keyof EnteredAccount}`
   | `inherited.${keyof InheritedIraV7}`
   | `income.${IncomeFactKey}`
-  | `inflow.${keyof OneTimeInflow}`
+  | `inflow.${OneTimeInflowKey}`
 
 const ACCOUNT_DRAWERS: readonly FactDrawerId[] = ['account', 'new-account']
 const INCOME_DRAWERS: readonly FactDrawerId[] = ['income', 'new-income']
@@ -183,18 +183,24 @@ export const INCOME_FACTS: Record<IncomeFactKey, FactDisposition> = {
   exclusionFraction: shown(...INCOME_DRAWERS),
 }
 
-/** An inheritance or gift's facts (gap 5's U4): its drawer (`OneTimeDrawer.tsx`) asks each one, from its Income card or
- *  Add income's entry. */
-export const INFLOW_FACTS: Record<keyof OneTimeInflow, FactDisposition> = {
+/** One-time money's facts, every kind's fields (gap 5's U4; the home sale's at U7): an inheritance or gift's drawer
+ *  (`OneTimeDrawer.tsx`) asks each of its own, from its Income card or Add income's entry. */
+export const INFLOW_FACTS: Record<OneTimeInflowKey, FactDisposition> = {
   id: notAFact('A stable id the tool mints so a drawer can name the item; never something the household told it.'),
   kind: notAFact(
-    'Version 9 holds one kind, the inheritance or gift: the Add menu entry picks it and the drawer is named for it, so there is no other kind to change it to.',
+    'The Add menu entry picks it and each kind’s drawer is named for it, so no drawer changes a saved item’s kind (the home sale, version 10’s kind, gets its own entry and drawer at gap 5’s U11).',
   ),
   name: shown(...INFLOW_DRAWERS),
   year: shown(...INFLOW_DRAWERS),
   amountReal: shown(...INFLOW_DRAWERS),
   heirIndex: shown(...INFLOW_DRAWERS),
   leftTo: shown(...INFLOW_DRAWERS),
+  // A home sale's own fields (version 10, gap 5's U7): an interim `not-a-fact` until U11's drawer asks them, because the
+  // registry's walk fails on a shown field no drawer stamps. U11 moves each to `shown` in its drawer.
+  soldForReal: notAFact('No drawer writes a home sale until gap 5’s U11, which asks what it sells for.'),
+  paidDollars: notAFact('No drawer writes a home sale until gap 5’s U11, which asks what was paid for it.'),
+  mainHome: notAFact('No drawer writes a home sale until gap 5’s U11, which asks whether it was the main home.'),
+  closed: notAFact('No drawer writes a home sale until gap 5’s U11, which asks whether it had closed by the save.'),
 }
 
 const RECORDS = [

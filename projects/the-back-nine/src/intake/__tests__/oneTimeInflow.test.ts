@@ -199,6 +199,21 @@ describe('the params the engine runs (KTD2, KTD12)', () => {
     expect(validateParams(params)).toBeNull()
   })
 
+  it('a home sale never runs as a tax-free gift: its params throw until gap 5’s U10 builds them (U7, insight 147)', () => {
+    const sale: OneTimeInflow = {
+      id: 'sale-a',
+      kind: 'homeSale',
+      name: 'Selling the house',
+      year: retired.startCalendarYear + 5,
+      amountReal: 300_000,
+      soldForReal: 900_000,
+      paidDollars: 300_000,
+      mainHome: true,
+    }
+    expect(missingRequiredFacts(withItems(retired, [BOTH, sale])), '[setup] nothing else blocks the run').toEqual([])
+    expect(() => buildSpineParams(withItems(retired, [BOTH, sale]))).toThrow(`a home sale ("Selling the house") has no params before gap 5's U10`)
+  })
+
   it('a plan with no item builds params with no new key, on both routes', () => {
     expect('oneTimeInflows' in buildSpineParams(retired)!.overlay!).toBe(false)
     expect('oneTimeInflows' in buildDateInput(DEV_SEEDS.dip)!.params.overlay!).toBe(false)

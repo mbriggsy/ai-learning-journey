@@ -236,6 +236,21 @@ describe('draftFromScenario — the one-time money list round-trips (schema vers
     expect(Object.hasOwn(reGift, 'heirIndex') || Object.hasOwn(reGift, 'leftTo'), 'a both-people’s item gains no heir key').toBe(false)
   })
 
+  it('a home sale, still to come or closed, keeps every field through scenario → draft → scenario (schema version 10, gap 5’s U7), and a sale not closed gains no closed key', () => {
+    const house = { id: 'oti-house', kind: 'homeSale', name: 'Selling the house', year: 2034, amountReal: 300_000, soldForReal: 900_000, paidDollars: 300_000, mainHome: true } as const
+    const condo = { id: 'oti-condo', kind: 'homeSale', name: 'The beach condo', year: 2026, amountReal: 0, soldForReal: 400_000, paidDollars: 150_000, mainHome: false, closed: true } as const
+    const withItems: CurrentScenario = { ...retiredV3(), oneTimeInflows: [estate, house, condo] }
+    const hydrated = draftFromScenario(withItems)
+    expect(hydrated.ok).toBe(true)
+    if (!hydrated.ok) return
+    expect(hydrated.draft.oneTimeInflows, 'the list reaches the draft').toEqual([estate, house, condo])
+    const reencoded = scenarioFromDraft(hydrated.draft)
+    expect(reencoded.ready).toBe(true)
+    if (!reencoded.ready) return
+    expect(reencoded.scenario).toEqual(withItems)
+    expect(Object.hasOwn(reencoded.scenario.oneTimeInflows![1]!, 'closed'), 'a sale still to come gains no closed key').toBe(false)
+  })
+
   it('a plan with no list writes no key, and a draft whose last item is deleted saves with no key (never an empty list)', () => {
     const plain = scenarioFromDraft(DEV_SEEDS.retired)
     expect(plain.ready).toBe(true)

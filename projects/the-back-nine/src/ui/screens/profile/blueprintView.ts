@@ -207,9 +207,11 @@ function ownerOf(d: ScenarioDraft, target: DrawerTarget): number | null {
     case 'account':
       return d.enteredAccounts[target.index]?.ownerIndex ?? null
     // A couple's inheritance or gift that is one person's sits in that person's cell; one that is both people's is the
-    // household's (gap 5's U4).
-    case 'one-time':
-      return d.oneTimeInflows?.[target.index]?.heirIndex ?? null
+    // household's (gap 5's U4), and so is a home sale, which carries no heir (gap 5's U7).
+    case 'one-time': {
+      const item = d.oneTimeInflows?.[target.index]
+      return item !== undefined && 'heirIndex' in item ? (item.heirIndex ?? null) : null
+    }
     default:
       return null
   }

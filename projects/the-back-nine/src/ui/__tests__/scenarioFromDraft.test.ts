@@ -28,11 +28,11 @@ describe('scenarioFromDraft — Save completeness + field-fidelity gate', () => 
     }
   })
 
-  it('THE MINT AT 9: the bytes a save writes read the typed literal 9 (the schema-v9 bump’s literal, 8 before it; it guards the constant, never a stale-stamping mint — insight 151)', () => {
+  it('THE MINT AT 10: the bytes a save writes read the typed literal 10 (the schema-v10 bump’s literal, 9 before it; it guards the constant, never a stale-stamping mint — insight 151)', () => {
     const r = scenarioFromDraft(DEV_SEEDS.date)
     if (!r.ready) throw new Error(r.detail)
     const onDisk = JSON.parse(new TextDecoder().decode(encodeScenario(r.scenario))) as { schemaVersion: unknown }
-    expect(onDisk.schemaVersion).toBe(9)
+    expect(onDisk.schemaVersion).toBe(10)
   })
 
   it.each([

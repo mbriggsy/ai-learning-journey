@@ -5,7 +5,7 @@ import { act, cleanup, fireEvent, render, screen, within } from '@testing-librar
 import { buildDateInput } from '@intake/intakeMap'
 import { nominalDeflator } from '@intake/priceFrame'
 import { formatMoney } from '@intake/moneyFormat'
-import type { OneTimeInflow } from '@shared/model'
+import type { OneTimeGift, OneTimeInflow } from '@shared/model'
 import type { MemoryModel, ScenarioDraft } from '@store/memoryModel'
 import { deriveStaleness } from '@store/staleness'
 import { DEV_SEEDS, SEED_BUILD_YEAR } from '../../../../devSeeds'
@@ -17,6 +17,7 @@ import { exposureForDraft } from '../../../../stalenessExposure'
 import { profileStore } from '../../__tests__/profileStore'
 import { blueprintView, type BlueprintInput } from '../../blueprintView'
 import { DrawerFor } from '../../drawerHost'
+import { storedGiftAt } from '../oneTimeFields'
 import { incomeView } from '../../profileView'
 import type { DrawerTarget } from '../../profileView'
 
@@ -33,7 +34,7 @@ afterEach(cleanup)
 const INHERIT = DEV_SEEDS.dateinherit // dip's working household, $250,000 in SEED_BUILD_YEAR + 4, both people's
 const RETIRED = DEV_SEEDS.retired
 const Y = SEED_BUILD_YEAR
-const gift = (over: Partial<OneTimeInflow> = {}): OneTimeInflow => ({ id: 'g1', kind: 'gift', name: 'Mom’s estate', year: Y + 3, amountReal: 200_000, ...over })
+const gift = (over: Partial<Omit<OneTimeGift, 'kind'>> = {}): OneTimeGift => ({ id: 'g1', kind: 'gift', name: 'Mom’s estate', year: Y + 3, amountReal: 200_000, ...over })
 const withGifts = (d: ScenarioDraft, items: readonly OneTimeInflow[]): ScenarioDraft => ({ ...d, oneTimeInflows: items })
 /** An epoch-day in the middle of `year` (`epochDayToCalendarYear` reads it as that year). */
 const dayIn = (year: number): number => Math.floor(Date.UTC(year, 6, 1) / 86_400_000)
@@ -154,6 +155,16 @@ describe('the drawer: add, edit, delete (R1 to R3)', () => {
     del()
     del()
     expect('oneTimeInflows' in model.getSnapshot().draft, 'the last item deleted removes the key (KTD2)').toBe(false)
+  })
+})
+
+describe('the gift drawer never opens a home sale (gap 5’s U7, insight 147)', () => {
+  it('storedGiftAt hands the drawer a gift and nothing for a new item, and throws on a home sale, so its Save can never rebuild a sale as a tax-free gift', () => {
+    const sale: OneTimeInflow = { id: 's1', kind: 'homeSale', name: 'Selling the house', year: Y + 8, amountReal: 300_000, soldForReal: 900_000, paidDollars: 300_000, mainHome: true }
+    const d = withGifts(RETIRED, [gift(), sale])
+    expect(storedGiftAt(d, 0)).toEqual(gift())
+    expect(storedGiftAt(d, 'new')).toBeUndefined()
+    expect(() => storedGiftAt(d, 1)).toThrow('storedGiftAt: a home sale ("Selling the house") reached the inheritance-or-gift drawer')
   })
 })
 

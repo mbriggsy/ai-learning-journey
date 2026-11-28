@@ -14,7 +14,7 @@ import { ChoiceGroup, DrawerFields, MoneyInput, TextInput, WholeInput } from '..
 import { copy, slots } from '../../../copy'
 import { tablePerson } from '../../../workbench/tableRun'
 import { ProfileIcon } from '../profileIcons'
-import { buildOneTime, deleteOneTime, oneTimeContext, oneTimeFlagWords, oneTimeLeftToWords, oneTimeReadBack, type OneTimeField } from './oneTimeFields'
+import { buildOneTime, deleteOneTime, oneTimeContext, oneTimeFlagWords, oneTimeLeftToWords, oneTimeReadBack, storedGiftAt, type OneTimeField } from './oneTimeFields'
 import { commitEdit, saveEdit } from './drawerSave'
 import type { DrawerBodyProps } from './drawerProps'
 import { Fact } from './Fact'
@@ -38,7 +38,7 @@ export function OneTimeDrawer({
 }: DrawerBodyProps & { readonly at: { readonly index: number } | 'new' }) {
   const [opened] = useState(() => model.getSnapshot().draft)
   const index = at === 'new' ? ('new' as const) : at.index
-  const stored = index === 'new' ? undefined : opened.oneTimeInflows?.[index]
+  const stored = storedGiftAt(opened, index)
   const ctx = oneTimeContext(opened, balancesYear)
   const [seed] = useState<OneTimeInflowForm>(() => oneTimeInflowFormFrom(stored, ctx.couple))
   // A new item's id, minted once per open (never shared with any id the plan holds).

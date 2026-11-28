@@ -442,7 +442,7 @@ describe('exposureForDraft — the pay check’s W (the working-years clock’s 
   })
 })
 
-// ── THE SOURCE-BIND on the CONSUMER (insights 032/081; the idiom is draftFromScenario.test.ts:481)
+// ── THE SOURCE-BIND on the CONSUMER (insights 032/081; the idiom is draftFromScenario.test.ts:496)
 //
 // F6, verbatim: mutating `IntakeApp.tsx`'s third argument to `{ ...exposureForDraft(draft), aca:
 // 'priced' }` left EVERY test green. No vitest arm renders the gate's notes through the

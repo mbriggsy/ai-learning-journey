@@ -19,7 +19,7 @@ import { oneTimeYearRange, isDateRoute } from '@intake/intakeMap'
 import { fieldErrorText } from '@intake/fieldErrors'
 import { formatMoney } from '@intake/moneyFormat'
 import { nominalDeflator } from '@intake/priceFrame'
-import type { OneTimeInflow } from '@shared/model'
+import type { OneTimeGift, OneTimeInflow } from '@shared/model'
 import { canonicalIdentityToken } from '@shared/model'
 import { balancesSaveYear } from '@store/staleness'
 import type { ScenarioDraft } from '@store/memoryModel'
@@ -29,6 +29,26 @@ import { tablePerson } from '../../../workbench/tableRun'
 import type { FieldErrors } from './drawerSave'
 
 export type OneTimeField = OneTimeInflowField
+
+/** The saved inheritance or gift the drawer edits (`'new'`: none). Exhaustive over the kind (insight 147, gap 5's U7):
+ *  a home sale THROWS until the plan's U11 gives it its own drawer, because the gift drawer's Save would rebuild it as a
+ *  tax-free gift and drop its sale figures. No writer creates a home sale before U10's seed, and U11 routes a sale's
+ *  card to its own drawer, so the throw is unreachable from the app once U11 lands. */
+export function storedGiftAt(d: ScenarioDraft, index: number | 'new'): OneTimeGift | undefined {
+  if (index === 'new') return undefined
+  const item = d.oneTimeInflows?.[index]
+  if (item === undefined) return undefined
+  switch (item.kind) {
+    case 'gift':
+      return item
+    case 'homeSale':
+      throw new Error(`storedGiftAt: a home sale ("${item.name}") reached the inheritance-or-gift drawer; its own drawer is gap 5's U11`)
+    default: {
+      const _exhaustive: never = item
+      return _exhaustive
+    }
+  }
+}
 
 /** The year the balances on screen were entered: the handed-down frame's, else the draft's own reading of the same rule
  *  (the header). */
@@ -122,6 +142,8 @@ export function oneTimeLeftToWords(d: ScenarioDraft, i: 0 | 1): { readonly legen
 export function oneTimeCardRows(d: ScenarioDraft, item: OneTimeInflow): readonly { readonly label: string; readonly value: string }[] {
   const comes = { label: copy.profileRowComesIn, value: slots.oneTimeComesIn(formatMoney(Math.round(item.amountReal)), item.year) }
   if (d.people.length < 2) return [comes]
-  const whose = item.heirIndex === undefined ? copy.blueprintBothOfYou : tablePerson(d, item.heirIndex, 0, 0).label
+  // Only an inheritance or gift can be one person's; a home sale is the household's (gap 5's U7).
+  const heir = 'heirIndex' in item ? item.heirIndex : undefined
+  const whose = heir === undefined ? copy.blueprintBothOfYou : tablePerson(d, heir, 0, 0).label
   return [comes, { label: copy.profileRowFor, value: whose }]
 }

@@ -281,6 +281,17 @@ const WITH_V9: CurrentScenario = {
   ],
 }
 
+/** Schema version 10 (gap 5's U7): version 9's two gifts, then a main-home sale still to come ([2]) and a sale of a home
+ *  that was not the main home, closed by the save, so it keeps $0 ([3]). Made up; the codec judges only the shapes. */
+const WITH_V10: CurrentScenario = {
+  ...WITH_V9,
+  oneTimeInflows: [
+    ...WITH_V9.oneTimeInflows!,
+    { id: 'oti-house', kind: 'homeSale', name: 'Selling the house', year: 2034, amountReal: 300_000, soldForReal: 900_000, paidDollars: 300_000, mainHome: true },
+    { id: 'oti-condo', kind: 'homeSale', name: 'The beach condo', year: 2026, amountReal: 0, soldForReal: 400_000, paidDollars: 150_000, mainHome: false, closed: true },
+  ],
+}
+
 /** Encode, surgically mutate the JSON, return the re-encoded bytes. */
 function mutated(base: Scenario | ScenarioV2 | CurrentScenario, mutate: (obj: Obj) => void): Uint8Array {
   const obj = JSON.parse(new TextDecoder().decode(encodeScenario(base))) as Obj
@@ -523,12 +534,38 @@ describe('versions 3 to 5 relabel to their successors; the ladder stays honest f
 
   // The schema-v9 bump's own literal (gap 5's U1). Under a reverted constant (8) every save fails its round trip and the
   // floor test reds on its own message once the follow-up commit raises FLOOR to 9.
-  it('THE ABSOLUTE PIN AT 9: a plan labeled with the literal 9 decodes as version 9 (the schema-v9 bump’s one typed literal here — every derived pin moves with the constant, so a reverted constant reds this pin)', () => {
+  it('THE ABSOLUTE PIN AT 9: a plan labeled with the literal 9 decodes as the current version — a version-9 save opens in this build and in every later one (the schema-v9 bump’s typed literal; it stays)', () => {
     const decoded = decodeScenario(asVersion(WITH_V9, 9))
     expect(decoded.ok, 'a version-9 save must open in this build and in every later one').toBe(true)
     if (!decoded.ok) return
-    expect(decoded.scenario.schemaVersion).toBe(9)
+    expect(decoded.scenario.schemaVersion).toBe(CURRENT_SCHEMA_VERSION)
     expect(decoded.droppedAtoms).toEqual([])
+  })
+
+  // The schema-v10 bump's own literal (gap 5's U7). Under a reverted constant (9) every save fails its round trip and the
+  // floor test reds on its own message once the follow-up commit raises FLOOR to 10.
+  it('THE ABSOLUTE PIN AT 10: a plan labeled with the literal 10 decodes as version 10 (the schema-v10 bump’s one typed literal here — every derived pin moves with the constant, so a reverted constant reds this pin)', () => {
+    const decoded = decodeScenario(asVersion(WITH_V10, 10))
+    expect(decoded.ok, 'a version-10 save must open in this build and in every later one').toBe(true)
+    if (!decoded.ok) return
+    expect(decoded.scenario.schemaVersion).toBe(10)
+    expect(decoded.droppedAtoms).toEqual([])
+  })
+
+  it('a plan whose DISK label is 9 and that carries a home sale is refused as a writer bug naming the item — its version-10 twin opens, so the version clause alone refuses it (insight 152)', () => {
+    const sale = { id: 'oti-house', kind: 'homeSale', name: 'Selling the house', year: 2034, amountReal: 300_000, soldForReal: 900_000, paidDollars: 300_000, mainHome: true } as const
+    const gift = { id: 'oti-1', kind: 'gift', name: 'An inheritance', year: 2030, amountReal: 100_000 } as const
+    for (const [list, at] of [[[sale], 0], [[gift, sale], 1]] as const) {
+      const plan: CurrentScenario = { ...CURRENT, oneTimeInflows: list }
+      expect(decodeScenario(asVersion(plan, 10)).ok, `the version-10 twin opens (the sale at [${at}])`).toBe(true)
+      expect(decodeScenario(asVersion(plan, 9)), `labeled 9, the sale at [${at}]`).toEqual({
+        ok: false,
+        reason: 'corrupt',
+        detail: `scenario.oneTimeInflows[${at}]: a plan saved as version 9 cannot carry it — no build that writes version 9 writes it (writer bug)`,
+      })
+    }
+    // A gift-only list at 9 is version 9's own, and opens.
+    expect(decodeScenario(asVersion({ ...CURRENT, oneTimeInflows: [gift] }, 9)).ok, 'a gift-only list at 9').toBe(true)
   })
 
   it('a plan whose DISK label is 3 to 8 and that carries the one-time money list is refused as a writer bug naming the field — its version-9 twin opens, so the version clause alone refuses it (insight 152)', () => {
@@ -636,7 +673,7 @@ describe('versions 3 to 5 relabel to their successors; the ladder stays honest f
     expect(start, '[test setup] decodeScenario is in the codec').toBeGreaterThan(-1)
     const body = source.slice(start, source.indexOf('\n}\n', start))
     const steps = [...body.matchAll(/if \(version === (\d+)\) \{([\s\S]*?)\n {4}\}/g)].filter(([, , block]) => block!.includes('version ='))
-    expect(steps.map(([, n]) => Number(n)), 'the label-only steps, in ladder order').toEqual([3, 4, 5, 6, 7, 8])
+    expect(steps.map(([, n]) => Number(n)), 'the label-only steps, in ladder order').toEqual([3, 4, 5, 6, 7, 8, 9])
     for (const [, n, block] of steps) {
       const next = Number(n) + 1
       expect([...block!.matchAll(/parsed\.schemaVersion = ([^\n]+)/g)].map((m) => m[1]!.trim()), `step ${n}: the label it writes`).toEqual([String(next)])
@@ -706,7 +743,8 @@ describe('the schema surface — docs/architecture.md §7.3 rules (b) and (c), h
     INHERITED_PACE_KINDS: ['law-minimum', 'even', 'even-to-year'],
     // The schema-v9 bump's new vocabulary (gap 5's U1), recorded in the bump's own commit; the home sale joins it with
     // the version-10 bump (the plan's U7).
-    ONE_TIME_INFLOW_KINDS: ['gift'],
+    // The home sale joins at the schema-v10 bump (gap 5's U7), recorded in the bump's own commit (§7.3 rule (b)).
+    ONE_TIME_INFLOW_KINDS: ['gift', 'homeSale'],
   }
   /** The one vocabulary the codec spells inline (the ticker classification's `kind`), as it spells it. */
   const RECORDED_INLINE_VOCABULARY = "['simple', 'exact']"
@@ -1771,8 +1809,8 @@ describe('the current shape — the v3 field set (U8, the first v3 writer), writ
 
   it('a NON-Corrupt throw from INSIDE a validator ESCAPES decodeScenario — a programming defect is never laundered into a calm dropped atom', () => {
     // THE TWO RE-THROWS THIS COVERS, and they CHAIN, so one arm holds both:
-    //   `scenarioCodec.ts:1422`  `if (!(e instanceof Corrupt)) throw e`  (the record's try/catch)
-    //   `scenarioCodec.ts:1649`  `throw e`                              (decodeScenario's outer catch)
+    //   `scenarioCodec.ts:1473`  `if (!(e instanceof Corrupt)) throw e`  (the record's try/catch)
+    //   `scenarioCodec.ts:1725`  `throw e`                              (decodeScenario's outer catch)
     // Both were UNEXERCISED. They were filed as "correct-by-inspection but SEAM-LESS" on the
     // reasoning that decodeScenario builds its input from `JSON.parse` — data properties only,
     // no getters — and that no validator here recurses or calls a method on an unchecked value.
@@ -2234,8 +2272,7 @@ describe('schema version 9 — one-time money in (gap 5’s U1, KTD10, KTD12)', 
   it.each([
     ['a duplicate id', (i: Obj) => (i.id = 'oti-estate'), 'oneTimeInflows[1].id: "oti-estate" is already another item\'s id'],
     ['an empty id', (i: Obj) => (i.id = ''), 'oneTimeInflows[1].id: expected a non-empty id'],
-    ['an unknown kind', (i: Obj) => (i.kind = 'lottery'), 'oneTimeInflows[1].kind: expected one of [gift]'],
-    ['a home sale (version 10’s kind)', (i: Obj) => (i.kind = 'homeSale'), 'oneTimeInflows[1].kind: expected one of [gift]'],
+    ['an unknown kind', (i: Obj) => (i.kind = 'lottery'), 'oneTimeInflows[1].kind: expected one of [gift, homeSale]'],
     ['a name that is not a string', (i: Obj) => (i.name = 7), 'oneTimeInflows[1].name: expected a string'],
     ['a fractional year', (i: Obj) => (i.year = 2030.5), 'oneTimeInflows[1].year: expected an integer'],
     ['a $0 gift', (i: Obj) => (i.amountReal = 0), 'oneTimeInflows[1].amountReal: an inheritance or gift is above $0 (an item with none is deleted, never saved)'],
@@ -2244,6 +2281,17 @@ describe('schema version 9 — one-time money in (gap 5’s U1, KTD10, KTD12)', 
     ['a leftTo with no heir', (i: Obj) => (i.leftTo = 'other-member'), 'oneTimeInflows[1].leftTo: who it goes to if the heir dies first is asked only of an item that is one person’s (writer bug)'],
   ])('refused, on the both-people’s gift: %s', (_name, mutate, detail) => {
     expect(detailOf(withItem(1, mutate))).toBe(detail)
+  })
+
+  it.each([
+    ['soldForReal', 500_000],
+    ['paidDollars', 200_000],
+    ['mainHome', true],
+    ['closed', true],
+  ] as const)('refused, on the both-people’s gift: a home sale’s own field, %s (gap 5’s U7)', (field, value) => {
+    expect(detailOf(withItem(1, (i) => (i[field] = value)))).toBe(
+      `oneTimeInflows[1].${field}: only a home sale carries what it sells for, what was paid, whether it was the main home and whether it closed (writer bug)`,
+    )
   })
 
   it.each([
@@ -2266,6 +2314,81 @@ describe('schema version 9 — one-time money in (gap 5’s U1, KTD10, KTD12)', 
     expect(detailOf(encodeScenario({ ...ONE_PERSON, oneTimeInflows: [{ ...item, leftTo: 'someone-else' }] }))).toBe(
       'oneTimeInflows[0].leftTo: whose it is is asked of a couple only (writer bug)',
     )
+  })
+})
+
+describe('schema version 10 — a home sale on the one-time list (gap 5’s U7, R4, R17, KTD10)', () => {
+  const detailOf = (bytes: Uint8Array): string => {
+    const d = decodeScenario(bytes)
+    return d.ok ? 'opened' : d.reason === 'corrupt' ? d.detail : d.reason
+  }
+  // The main-home sale still to come (oneTimeInflows[2]) and the closed sale that keeps $0 ([3]). Each refusal below
+  // breaks exactly one rule on an item that opens as it stands (insight 152).
+  const withItem = (index: number, mutate: (item: Obj) => void): Uint8Array =>
+    mutated(WITH_V10, (o) => mutate((o.oneTimeInflows as Obj[])[index]!))
+
+  it('two gifts and two home sales, one closed, round-trip byte for byte, nothing dropped', () => {
+    const bytes = encodeScenario(WITH_V10)
+    const decoded = decodeScenario(bytes)
+    expect(decoded).toEqual({ ok: true, scenario: WITH_V10, droppedAtoms: [] })
+    if (decoded.ok) expect(Array.from(encodeScenario(decoded.scenario))).toEqual(Array.from(bytes))
+  })
+
+  it('a sale that keeps $0 without closing opens (the whole sale pays off a loan and the next home); one that keeps all it sells for opens; one dollar more is refused', () => {
+    expect(detailOf(withItem(2, (i) => (i.amountReal = 0)))).toBe('opened')
+    expect(detailOf(withItem(2, (i) => (i.amountReal = 900_000)))).toBe('opened')
+    expect(detailOf(withItem(2, (i) => (i.amountReal = 900_001)))).toBe(
+      'oneTimeInflows[2].amountReal: what is kept from a home sale is at most what it sells for',
+    )
+  })
+
+  it('a sale at the computable-domain ceiling opens; one dollar above it is refused, on what it sells for and on what was paid', () => {
+    expect(detailOf(withItem(2, (i) => (i.soldForReal = ENGINE_MAX_DOLLAR)))).toBe('opened')
+    expect(detailOf(withItem(2, (i) => (i.soldForReal = MAX_REAL_DOLLAR + 1)))).toBe(
+      `oneTimeInflows[2].soldForReal: exceeds the ${MAX_REAL_DOLLAR} real-$ computable-domain ceiling (corruption)`,
+    )
+    expect(detailOf(withItem(2, (i) => (i.paidDollars = ENGINE_MAX_DOLLAR)))).toBe('opened')
+    expect(detailOf(withItem(2, (i) => (i.paidDollars = MAX_REAL_DOLLAR + 1)))).toBe(
+      `oneTimeInflows[2].paidDollars: exceeds the ${MAX_REAL_DOLLAR} real-$ computable-domain ceiling (corruption)`,
+    )
+    expect(detailOf(withItem(2, (i) => (i.paidDollars = 0))), 'a home paid nothing for (a gift of the house) opens').toBe('opened')
+  })
+
+  it.each([
+    ['no main-home answer', (i: Obj) => delete i.mainHome, 'oneTimeInflows[2].mainHome: expected a boolean'],
+    ['a main-home answer that is not a boolean', (i: Obj) => (i.mainHome = 'yes'), 'oneTimeInflows[2].mainHome: expected a boolean'],
+    ['no sold-for amount', (i: Obj) => delete i.soldForReal, 'oneTimeInflows[2].soldForReal: expected a finite number'],
+    ['no price paid', (i: Obj) => delete i.paidDollars, 'oneTimeInflows[2].paidDollars: expected a finite number'],
+    ['a negative price paid', (i: Obj) => (i.paidDollars = -1), 'oneTimeInflows[2].paidDollars: expected a non-negative real-$ amount (corruption)'],
+    ['a negative amount kept', (i: Obj) => (i.amountReal = -1), 'oneTimeInflows[2].amountReal: expected a non-negative real-$ amount (corruption)'],
+    [
+      'a $0 sold-for amount (with $0 kept)',
+      (i: Obj) => {
+        i.soldForReal = 0
+        i.amountReal = 0
+      },
+      'oneTimeInflows[2].soldForReal: a home sale sells for above $0',
+    ],
+    ['closed while keeping money', (i: Obj) => (i.closed = true), 'oneTimeInflows[2].amountReal: a sale saved as closed keeps $0 (its money is in the balances already)'],
+    [
+      'an heir',
+      (i: Obj) => {
+        i.heirIndex = 0
+        i.leftTo = 'someone-else'
+      },
+      'oneTimeInflows[2].heirIndex: a home is the household’s, so a home sale names no heir (writer bug)',
+    ],
+    ['who it goes to', (i: Obj) => (i.leftTo = 'other-member'), 'oneTimeInflows[2].leftTo: a home is the household’s, so a home sale names no heir (writer bug)'],
+  ])('refused, on the sale still to come: %s', (_name, mutate, detail) => {
+    expect(detailOf(withItem(2, mutate))).toBe(detail)
+  })
+
+  it.each([
+    ['closed written as false (absent is not closed)', (i: Obj) => (i.closed = false), 'oneTimeInflows[3].closed: expected the literal true (a sale not closed carries no key)'],
+    ['closed written as 1', (i: Obj) => (i.closed = 1), 'oneTimeInflows[3].closed: expected the literal true (a sale not closed carries no key)'],
+    ['closed while keeping money', (i: Obj) => (i.amountReal = 1), 'oneTimeInflows[3].amountReal: a sale saved as closed keeps $0 (its money is in the balances already)'],
+  ])('refused, on the closed sale: %s', (_name, mutate, detail) => {
+    expect(detailOf(withItem(3, mutate))).toBe(detail)
   })
 })
 

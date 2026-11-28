@@ -6,7 +6,11 @@
  *
  * LIVING EXPENSES: "How you give your spending" picks one figure (with its unit: a monthly figure read as yearly is the
  * 12x misentry) or a budget line by line (the worksheet: category, name, dollars a year, essential or extra, from and
- * through which year; add and remove rows). The reconciliation readout sits BELOW the lines and the Add button, so a
+ * through which year; add and remove rows). Gap 4's U8 gives each line how often it repeats (its years read back) and how
+ * its cost changes: with prices, the same dollar amount, or up by a percent the household types (a blank or out-of-range
+ * box holds the Save with words, never saved as "with prices"), with a later year's cost read back in today's dollars and,
+ * on the date route, a note under a fixed line whose last year moves with each stop tested. The switch back to one figure
+ * says the first year's figure becomes every year's. The reconciliation readout sits BELOW the lines and the Add button, so a
  * figure committed on blur never moves a control above the one being pressed (insight 035); its box is the walk's.
  * The survivor's share closes the drawer. Removing a line a kept what-if names leaves that what-if refusing by name
  * (`applyBundle`'s `line-gone`, never re-aimed at another line, R21).
@@ -14,11 +18,22 @@
  * OUT-OF-POCKET MEDICAL: the walk's own help, which carries the copy law (these costs already sit inside the spending
  * figure, and the figure's two jobs: the HSA's tax-free draw, and kept whole if one of you is on your own later).
  */
-import { useMemo, useState } from 'react'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { BUDGET_CATEGORIES, type BudgetCategory, type BudgetLineItem, type SpendEntryPeriod } from '@shared/model'
 import { freshStableId, idsInUse } from '@shared/stableIds'
 import { validateBudgetItems, budgetGoverns, type BudgetItemError } from '@budget/budgetModel'
-import { BUDGET_ERROR_COPY, budgetReadout, freshLine, isAmountError } from '@intake/budgetForm'
+import {
+  BUDGET_ERROR_COPY,
+  budgetReadout,
+  freshLine,
+  lineChangeOf,
+  lineErrorSlot,
+  rateReadBack,
+  repeatReadBack,
+  withLineChange,
+  type LineChange,
+  type LineErrorSlot,
+} from '@intake/budgetForm'
 import { CATEGORY_LABEL_KEYS, lineDisplayName } from '@intake/budgetLines'
 import { isDateRoute, oopHelpKeyFor, spendHelpKeyFor } from '@intake/intakeMap'
 import { periodGateTrips } from '@intake/sanity'
@@ -53,33 +68,72 @@ const TIER_ITEMS = [
 
 const CATEGORY_ITEMS: readonly { value: BudgetCategory; label: string }[] = BUDGET_CATEGORIES.map((c) => ({ value: c, label: copy[CATEGORY_LABEL_KEYS[c]] }))
 
-/** One worksheet row: its own errors once touched (or after a refused Save), the walk's line words. */
+/** How a line's cost changes (gap 4's U8, KTD4): every choice on screen at once, never hidden in a menu, because the
+ *  wrong one is a costly misreading (a rate read as "on top of prices" is the rosy side). */
+const CHANGE_ITEMS = [
+  { value: 'prices', label: copy.budgetChangePrices },
+  { value: 'same', label: copy.budgetChangeSame },
+  { value: 'rate', label: copy.budgetChangeRate },
+] as const satisfies readonly { value: LineChange; label: string }[]
+
+/** One worksheet row: its own errors once touched (or after a refused Save), the walk's line words. Gap 4's U8 adds the
+ *  line's repeat and how its cost changes, each read back in the household's own numbers. */
 function LineRow({
   item,
   n,
   errors,
+  attempted,
   readOnly,
   windowHelp,
   yearOf,
+  startCalendarYear,
+  dateRoute,
   onChange,
   onRemove,
 }: {
   readonly item: BudgetLineItem
   readonly n: number
   readonly errors: readonly BudgetItemError[]
+  /** A Save the worksheet refused: every line error shows, the rate box's blank one included. */
+  readonly attempted: boolean
   readonly readOnly: boolean
   readonly windowHelp: string
   /** The calendar year a count of years lands on, where year 0 has one (the all-retired route: the plan's first year);
    *  null on the date route, whose year 0 is the first retirement year the answer finds. */
   readonly yearOf: ((offset: number) => number) | null
+  /** The plan's first year: a rate grows from it on both routes (KTD4), so the rate's read-back names a year after it. */
+  readonly startCalendarYear: number
+  readonly dateRoute: boolean
   readonly onChange: (next: BudgetLineItem) => void
   readonly onRemove: () => void
 }) {
-  const amountError = errors.find(isAmountError)
-  const windowError = errors.find((e) => !isAmountError(e))
+  const errorFor = (slot: LineErrorSlot) => errors.find((e) => lineErrorSlot(e) === slot)
+  const amountError = errorFor('amount')
+  const windowError = errorFor('window')
+  const repeatError = errorFor('repeat')
+  const change = lineChangeOf(item)
+  const rateId = useId()
+  const readBackId = useId()
+  // The box's own blank refusal waits for the household to leave the box (or a refused Save): picking "Goes up by" moves
+  // focus into the empty box, and words under it before a keystroke would scold a choice just made (silent while typing,
+  // checked on leave).
+  const [rateLeft, setRateLeft] = useState(false)
+  const rateError = errorFor('rate') !== undefined && (rateLeft || attempted) ? errorFor('rate') : undefined
+  // The percent this row last held, so "Stays the same" and back keeps what was typed (a figure is never re-asked).
+  const lastRate = useRef(change === 'rate' && Number.isFinite(item.growthRate) ? item.growthRate : undefined)
+  const [focusRate, setFocusRate] = useState(false)
+  useEffect(() => {
+    if (!focusRate) return
+    setFocusRate(false)
+    document.getElementById(rateId)?.focus()
+  }, [focusRate, rateId])
   /** "That's 2028." under a From or Through box holding a count (never under a blank one). */
   const yearLine = (offset: number | undefined) =>
     yearOf !== null && offset !== undefined && Number.isFinite(offset) ? { description: slots.budgetWindowYearIs(yearOf(offset)) } : {}
+  const repeatWords = repeatReadBack(item, yearOf) ?? (item.everyYears === undefined ? copy.budgetRepeatBlankHelp : undefined)
+  const rateWords = rateReadBack(item, startCalendarYear)
+  // A fixed or rated line with a last year, on the date route: its years count from each stop tested (KTD1's stopgap).
+  const endNote = dateRoute && change !== 'prices' && item.endYear !== undefined
   return (
     <li className="flex flex-col gap-4 rounded-card border border-stone-300 p-4" data-budget-line={item.id ?? n}>
       <div className="flex items-start justify-between gap-3">
@@ -100,7 +154,7 @@ function LineRow({
         />
         <TextInput label={copy.budgetLineLabelLabel} value={item.label} readOnly={readOnly} onCommit={(label) => onChange({ ...item, label: label ?? '' })} />
         <MoneyInput
-          label={copy.budgetAmountLabel}
+          label={item.everyYears === undefined ? copy.budgetAmountLabel : copy.budgetAmountLabelEach}
           value={Number.isFinite(item.annualAmountReal) ? item.annualAmountReal : undefined}
           invalidMessage={copy.profileInvalidMoney}
           readOnly={readOnly}
@@ -137,7 +191,63 @@ function LineRow({
             onChange(end === undefined ? rest : { ...rest, endYear: end })
           }}
         />
+        <WholeInput
+          label={copy.budgetRepeatLabel}
+          suffix={copy.budgetRepeatUnit}
+          value={item.everyYears}
+          invalidMessage={copy.profileInvalidYearOffset}
+          readOnly={readOnly}
+          {...(repeatWords !== undefined ? { description: repeatWords } : {})}
+          {...(repeatError !== undefined ? { error: copy[BUDGET_ERROR_COPY[repeatError.kind]] } : {})}
+          onCommit={(every) => {
+            // Blank is every year: the key ABSENT, never an undefined-valued one (DND 009).
+            const { everyYears: _dropped, ...rest } = item
+            onChange(every === undefined ? rest : { ...rest, everyYears: every })
+          }}
+        />
+        <div className="flex min-w-0 flex-col gap-3">
+          <ChoiceGroup<LineChange>
+            legend={copy.budgetChangeLegend}
+            name={`budget-change-${item.id ?? n}`}
+            items={CHANGE_ITEMS}
+            value={change}
+            vertical
+            disabled={readOnly}
+            {...(rateWords !== null ? { describedByIds: readBackId } : {})}
+            onValueChange={(next) => {
+              if (next === change) return
+              if (change === 'rate' && Number.isFinite(item.growthRate)) lastRate.current = item.growthRate
+              onChange(withLineChange(item, next, lastRate.current))
+              if (next === 'rate') setFocusRate(true)
+            }}
+          />
+          {change === 'rate' ? (
+            <div onBlur={() => setRateLeft(true)}>
+              <PercentInput
+                id={rateId}
+                label={copy.budgetRateLabel}
+                value={item.growthRate !== undefined && Number.isFinite(item.growthRate) ? item.growthRate : undefined}
+                invalidMessage={copy.profileInvalidPercent}
+                readOnly={readOnly}
+                {...(rateError !== undefined ? { error: copy[BUDGET_ERROR_COPY[rateError.kind]] } : {})}
+                // A cleared box is NaN, never "with prices" (insight 059): the line's own rule holds the Save with words.
+                onCommit={(rate) => onChange({ ...item, growthRate: rate ?? Number.NaN })}
+              />
+            </div>
+          ) : null}
+        </div>
       </DrawerFields>
+      {/* The two long sentences run the row's full width, under the grid (two lines, never a narrow column of five). */}
+      {rateWords !== null ? (
+        <p id={readBackId} className="text-label text-stone-600 tabular-nums" data-budget-rate-readback="">
+          {rateWords}
+        </p>
+      ) : null}
+      {endNote ? (
+        <p className="text-label text-stone-600" data-budget-end-note="">
+          {copy.budgetDateRouteEndNote}
+        </p>
+      ) : null}
       <p className="text-label text-stone-600">{windowHelp}</p>
     </li>
   )
@@ -173,10 +283,18 @@ export function LivingDrawer({ model, open, readOnly, leaveAsk, onClose, onClose
   const readout = useMemo(() => budgetReadout(draft, form.lines, validation), [draft, form.lines, validation])
   const lineKey = (it: BudgetLineItem, i: number): string => it.id ?? `row-${i}`
   const setLines = (lines: readonly BudgetLineItem[]) => set('lines', { lines })
-  const windowHelp = isDateRoute(draft) ? copy.budgetWindowHelp : slots.budgetWindowHelpRetired(draft.startCalendarYear)
+  const dateRoute = isDateRoute(draft)
+  const windowHelp = dateRoute ? copy.budgetWindowHelp : slots.budgetWindowHelpRetired(draft.startCalendarYear)
   // The all-retired route's year 0 is the plan's first year (`blueprintView.ts`'s `stopAnchor` places its lines the same
   // way), so each box can name its calendar year; the date route's year 0 is the retirement year the answer finds.
-  const yearOf = isDateRoute(draft) ? null : (offset: number) => draft.startCalendarYear + offset
+  const yearOf = dateRoute ? null : (offset: number) => draft.startCalendarYear + offset
+  // Back to one figure from lines that repeat or change at their own rate: the figure it keeps, charged every year (the
+  // plan's readers' minor finding: harsh, and said on screen).
+  const seedDeparts = seed.lines.some((l) => l.everyYears !== undefined || l.growthRate !== undefined)
+  const backToSingleHint =
+    seedDeparts && draft.annualSpendingReal !== undefined
+      ? `${copy.budgetBackToSingleHint} ${slots.budgetBackToSingleKeeps(formatMoney(Math.round(draft.annualSpendingReal)))}`
+      : copy.budgetBackToSingleHint
   return (
     <ProfileDrawer
       open={open}
@@ -210,7 +328,7 @@ export function LivingDrawer({ model, open, readOnly, leaveAsk, onClose, onClose
           // 3's review, round 2). The next Save checks again.
           set('amount', {})
         }}
-        {...(seed.approach === 'budget' && form.approach === 'one' ? { description: copy.budgetBackToSingleHint } : {})}
+        {...(seed.approach === 'budget' && form.approach === 'one' ? { description: backToSingleHint } : {})}
       />
       {form.approach === 'one' ? (
         <Fact stamp="annualSpendingReal spendEntryPeriod">
@@ -253,9 +371,12 @@ export function LivingDrawer({ model, open, readOnly, leaveAsk, onClose, onClose
                       item={item}
                       n={i + 1}
                       errors={shown}
+                      attempted={attempted}
                       readOnly={readOnly}
                       windowHelp={windowHelp}
                       yearOf={yearOf}
+                      startCalendarYear={draft.startCalendarYear}
+                      dateRoute={dateRoute}
                       onChange={(next) => {
                         setTouchedLines((t) => new Set([...t, key]))
                         setLines(form.lines.map((it, j) => (j === i ? next : it)))

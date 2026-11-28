@@ -80,6 +80,8 @@ export interface BlueprintTile {
   readonly note?: string
   /** The answer's own work-optional date (the crown); its sentence is tied to the R13 caveat. */
   readonly crowned?: boolean
+  /** A budget line that repeats (gap 4's U8): a repeat mark beside its name, its words saying how often. */
+  readonly repeats?: boolean
   readonly target: DrawerTarget
 }
 
@@ -285,12 +287,29 @@ interface Placed {
   readonly rank: number
 }
 
+/** A repeating line's words (gap 4's U8, R11): "every N years", never "a year" or "for N years"; with an end, how many
+ *  times it is charged (its last on the calendar), counted through `isActiveAt`'s rule: start, then every N inside it. */
+function repeatValue(line: BudgetLineItem, everyYears: number, amount: string, stop: StopAnchor): string {
+  const times = line.endYear === undefined ? null : Math.floor((line.endYear - line.startYear) / everyYears) + 1
+  if (stop.kind === 'calendar') {
+    const from = stop.year + line.startYear
+    if (times === null) return slots.bpLineEveryFrom(amount, everyYears, from)
+    return times === 1 ? slots.bpLineOnceIn(amount, from) : slots.bpLineEveryTimes(amount, everyYears, times, from + (times - 1) * everyYears)
+  }
+  if (times === null) return slots.bpLineEveryOnward(amount, everyYears)
+  return times === 1 ? slots.bpLineOnce(amount) : slots.bpLineEveryTimesAfter(amount, everyYears, times)
+}
+
 function lineTile(line: BudgetLineItem, index: number, stop: StopAnchor): Placed {
   const legend = goalsLegend('spending')
   const amount = formatMoney(Math.round(line.annualAmountReal))
   const years = line.endYear === undefined ? null : line.endYear - line.startYear + 1
   const base = { id: `bp-line-${index}`, legend: legend.id, category: legend.label, tone: legend.tone, name: lineDisplayName(line), target: { kind: 'living' } } as const
   if (!Number.isInteger(line.startYear) || line.startYear < 0) return { tile: { ...base, value: copy.profileNotAnswered }, at: { kind: 'none' }, rank: 3 }
+  if (line.everyYears !== undefined) {
+    const tile = { ...base, value: repeatValue(line, line.everyYears, amount, stop), repeats: true }
+    return { tile, at: stop.kind === 'calendar' ? { kind: 'year', year: stop.year + line.startYear } : { kind: 'after', years: line.startYear }, rank: 3 }
+  }
   if (stop.kind === 'calendar') {
     const from = stop.year + line.startYear
     const value = years === null ? slots.bpLineFrom(amount, from) : slots.bpLineSpan(amount, years, stop.year + line.endYear!)

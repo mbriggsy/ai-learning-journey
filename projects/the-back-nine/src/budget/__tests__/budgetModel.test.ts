@@ -5,9 +5,10 @@ import {
   isActiveAt,
   isRampedBudget,
   isSurvivorSticky,
+  repeatsOnAtYearZero,
   validateBudgetItems,
 } from '@budget/budgetModel'
-import { EVERY_YEARS_MAX, EVERY_YEARS_MIN } from '@shared/spendingBounds'
+import { EVERY_YEARS_MAX, EVERY_YEARS_MIN, GROWTH_RATE_MAX } from '@shared/spendingBounds'
 import { copy } from '@ui/copy'
 
 const line = (over: Partial<BudgetLineItem>): BudgetLineItem => ({
@@ -105,6 +106,24 @@ describe('a line’s repeat — the window helper and the validator (gap 4’s U
     }
     for (const everyYears of [2, 50]) expect(validateBudgetItems([line({ everyYears })]).errors, `every ${everyYears}`).toEqual([])
     expect(copy.errBudgetRepeatRange).toContain(`from ${EVERY_YEARS_MIN.value} to ${EVERY_YEARS_MAX.value}`)
+  })
+
+  it('repeatsOnAtYearZero: only a valued repeat the window helper charges in year 0', () => {
+    const car = line({ label: 'Car', everyYears: 5 })
+    const items = [car, line({ label: 'Roof', startYear: 2, everyYears: 10 }), line({ label: 'Blank', everyYears: 4, annualAmountReal: Number.NaN }), line({})]
+    expect(repeatsOnAtYearZero(items)).toEqual([car])
+  })
+})
+
+// Gap 4's U8: the Living drawer's "Goes up by" stages NaN while its box is blank, so the validator is what holds the Save.
+describe('a line’s rate — the validator (gap 4’s U8, KTD4)', () => {
+  it('refuses a blank (NaN), a negative or a rate above the ceiling with its own kind; 0 and the ceiling pass; absent is with prices', () => {
+    for (const growthRate of [Number.NaN, -0.0001, 0.1501, Number.POSITIVE_INFINITY]) {
+      expect(validateBudgetItems([line({ growthRate })]).errors, `rate ${growthRate}`).toEqual([{ index: 0, kind: 'rate-out-of-range' }])
+    }
+    for (const growthRate of [0, 0.05, GROWTH_RATE_MAX.value]) expect(validateBudgetItems([line({ growthRate })]).errors, `rate ${growthRate}`).toEqual([])
+    expect(validateBudgetItems([line({})]).errors).toEqual([])
+    expect(copy.errBudgetRateRange).toContain(`up to ${GROWTH_RATE_MAX.value * 100}%`)
   })
 })
 

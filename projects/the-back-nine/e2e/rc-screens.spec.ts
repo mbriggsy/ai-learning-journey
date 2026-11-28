@@ -4121,6 +4121,84 @@ for (const size of RC12_SIZES) {
   })
 }
 
+// ── Gap 4's U8 · the Living drawer's repeat and rate (b9-16, 2026-11-27): a line row with both new controls open (the
+// repeat's years read back, "Goes up by" with its box, the rate's read-back of a later year's cost) and the date route's
+// note under a fixed line with a last year, at his window and on the phone. The drawer fits at open; after the row is
+// filled its body scrolls nothing sideways, Save stays in the window, every new line sits inside the row's box, and no
+// word in the row breaks across two lines (each word read through a Range: insight 180, a grid's widest control sets
+// every row's floor).
+for (const size of RC12_SIZES) {
+  test.describe(`Gap 4 · U8 · the Living drawer's repeat and rate ${size.title}`, () => {
+    test.use(size.use)
+    test('?seed=datefixed: Home with its repeat, "Goes up by" and its box, the read-back and the date route\'s note; the drawer fits, every new line inside its row, no word broken', async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 90_000)
+      const who = `datefixed U8 ${size.phone ? 'phone' : 'window'}`
+      await gotoSeedFinal(page, 'datefixed')
+      await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
+      await toProfile(page, RC13B_PAGES.expenses, size.phone)
+      await page.locator('main.result [data-profile-card="living"]').click()
+      await assertDrawerFits(page, who, size.phone)
+      const dialog = page.getByRole('dialog', { name: copy.profileKindLiving })
+      const row = dialog.locator('[data-budget-line]').first()
+      await expect(row.getByRole('textbox', { name: copy.budgetLineLabelLabel }), '[test setup] the Home line').toHaveValue('Home')
+      await expect(row.getByRole('radio', { name: copy.budgetChangeSame }), '[test setup] Home stays the same dollar amount').toBeChecked()
+      const through = row.getByRole('textbox', { name: copy.budgetWindowThroughLabel })
+      await through.scrollIntoViewIfNeeded()
+      await through.fill('9')
+      await through.press('Tab')
+      const repeat = row.getByRole('textbox', { name: copy.budgetRepeatLabel })
+      await repeat.fill('5')
+      await repeat.press('Tab')
+      await row.getByText(copy.budgetChangeRate, { exact: true }).click()
+      const rate = row.getByRole('textbox', { name: copy.budgetRateLabel })
+      await expect(rate, 'the choice moves focus into its box').toBeFocused()
+      await page.keyboard.type('4')
+      await rate.press('Tab')
+      await expect(row.getByText(slots.budgetRepeatYears([0, 5], false, false), { exact: true })).toBeVisible()
+      await expect(row.getByRole('textbox', { name: copy.budgetAmountLabelEach })).toBeVisible()
+      await expect(row.locator('[data-budget-rate-readback]')).toHaveText(/^That’s faster than prices are expected to rise, so in 2036 one would cost about \$[\d,]+ in today’s dollars\.$/)
+      await expect(row.locator('[data-budget-end-note]')).toHaveText(copy.budgetDateRouteEndNote)
+      await row.locator('[data-budget-end-note]').scrollIntoViewIfNeeded()
+      await settleLayout(page)
+      const r = await row.evaluate((root) => {
+        const box = root.getBoundingClientRect()
+        const outside: string[] = []
+        // The boxes a person reads or types in: the radios are drawn by their labels (`[data-choice]`); their own inputs are
+        // screen-reader-only and the Category select's form input is Base UI's hidden one (each 1 px, off the flow), so
+        // only the text boxes are measured.
+        const parts = ['[data-budget-rate-readback]', '[data-budget-end-note]', '[data-choice-group^="budget-change-"]', '[data-choice]', 'input[type="text"]']
+        for (const sel of parts) {
+          for (const el of root.querySelectorAll(sel)) {
+            const b = el.getBoundingClientRect()
+            if (b.width === 0 || b.height === 0 || b.left < box.left - 0.5 || b.right > box.right + 0.5) {
+              outside.push(`${sel} ${el.getAttribute('aria-label') ?? el.id} ${Math.round(b.left)}–${Math.round(b.right)} in ${Math.round(box.left)}–${Math.round(box.right)}`)
+            }
+          }
+        }
+        const splits: string[] = []
+        const walk = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
+        for (let n = walk.nextNode(); n !== null; n = walk.nextNode()) {
+          for (const m of (n.textContent ?? '').matchAll(/\S+/g)) {
+            const range = document.createRange()
+            range.setStart(n, m.index!)
+            range.setEnd(n, m.index! + m[0].length)
+            const tops = new Set([...range.getClientRects()].filter((x) => x.width > 0).map((x) => Math.round(x.top)))
+            if (tops.size > 1) splits.push(m[0])
+          }
+        }
+        const dlg = root.closest('[role="dialog"]')!
+        const body = dlg.querySelector('[data-profile-drawer-body]')!.parentElement!
+        return { outside, splits, bodySideways: body.scrollWidth - body.clientWidth, footerBottom: dlg.querySelector('footer')!.getBoundingClientRect().bottom, vh: window.innerHeight }
+      })
+      expect(r.outside, `${who}: a new line or box outside its row`).toEqual([])
+      expect(r.splits, `${who}: words broken across two lines`).toEqual([])
+      expect(r.bodySideways, `${who}: the drawer's body scrolls sideways`).toBeLessThanOrEqual(0)
+      expect(r.footerBottom, `${who}: Save and Cancel inside the window`).toBeLessThanOrEqual(r.vh + 0.5)
+      await noSidewaysScroll(page, who)
+    })
+  })
+}
+
 /** Open the Pre-retirement living expenses drawer from its Expenses card. */
 async function openWDrawer(page: Page, phone: boolean) {
   await toProfile(page, RC13B_PAGES.expenses, phone)

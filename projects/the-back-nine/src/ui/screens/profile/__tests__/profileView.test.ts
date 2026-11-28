@@ -232,4 +232,15 @@ describe('Expenses and Goals (RC13b)', () => {
     const blank = { ...d, health: { ...d.health, oopMedicalAnnual: undefined } }
     expect(expensesView(blank).cards[1]!.rows[0]!.value).toBe(copy.workbenchFactBlank)
   })
+
+  // Gap 4's U8: a repeat charged in the first year makes the year-0 figures that year's, and the repeat inside is named.
+  it('a repeat in the first year: the figure and the split say "in your first year", and the car inside them is named; none says "a year"', () => {
+    const d = DEV_SEEDS.daterepeat
+    const living = expensesView(d).cards[0]!
+    expect(living.rows[0]!.value).toBe(slots.workbenchFactSpendBudgetFirstYear('118,000'))
+    expect(living.note).toContain(slots.budgetRepeatInFirstYear('A new car', '40,000', 5, 0))
+    expect(living.note).toContain(' in your first year.')
+    expect(living.note).not.toContain('a year.')
+    expect(expensesView(DEV_SEEDS.budget).cards[0]!.rows[0]!.value, 'no repeat: "a year" as before').toBe(slots.workbenchFactSpendBudget('65,600'))
+  })
 })

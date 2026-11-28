@@ -27,7 +27,7 @@
  * owns the compiled-profile domain gate. Three gates, no overlap (the two-gate rule).
  */
 import type { BudgetLineItem } from '@shared/model'
-import { everyYearsInRange } from '@shared/spendingBounds'
+import { everyYearsInRange, growthRateInRange } from '@shared/spendingBounds'
 
 /** Survivor-sticky = essentials-tier AND a category whose cost does not shrink at
  *  widowhood (`other` errs sticky — conservative). See the module header. */
@@ -78,6 +78,16 @@ export interface BudgetItemError {
     | 'reversed-window'
     /** A repeat (schema version 8) that is not a whole number of years from 2 to 50 (`spendingBounds.ts`). */
     | 'repeat-out-of-range'
+    /** A yearly rate (schema version 8) that is not a figure from 0 to 15 % (`spendingBounds.ts`). The Living drawer's
+     *  "Goes up by" with its box blank stages NaN (gap 4's U8), so a blank box blocks the Save with words and is never
+     *  saved as "goes up with prices" (insight 059: blank and wrong stay apart). */
+    | 'rate-out-of-range'
+}
+
+/** The lines a repeat charges in year 0, valued (gap 4's U8 and U15): where the year-0 total is printed, the figure is
+ *  the first year's with these inside it, never a steady "a year". Read through {@link isActiveAt}, the one home. */
+export function repeatsOnAtYearZero(items: readonly BudgetLineItem[]): readonly BudgetLineItem[] {
+  return items.filter((it) => it.everyYears !== undefined && isActiveAt(it, 0) && Number.isFinite(it.annualAmountReal))
 }
 
 /** A non-blocking R19 caution about the budget as a whole. `zero-essentials` = an
@@ -107,6 +117,10 @@ export function validateBudgetItems(items: readonly BudgetLineItem[]): BudgetVal
       errors.push({ index, kind: 'reversed-window' })
     }
     if (item.everyYears !== undefined && !everyYearsInRange(item.everyYears)) errors.push({ index, kind: 'repeat-out-of-range' })
+    // Finiteness FIRST (insights 008 and 010: a NaN passes every relational compare).
+    if (item.growthRate !== undefined && (!Number.isFinite(item.growthRate) || !growthRateInRange(item.growthRate))) {
+      errors.push({ index, kind: 'rate-out-of-range' })
+    }
   })
 
   const warnings: BudgetWarning[] = []

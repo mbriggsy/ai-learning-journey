@@ -156,6 +156,8 @@ export const copy = {
   budgetCatOther: 'Other',
   budgetLineLabelLabel: 'Name, if you like',
   budgetAmountLabel: 'Dollars a year',
+  // Gap 4's U8: a repeating line's amount is one occurrence's cost (the tray's "dollars each time", U9).
+  budgetAmountLabelEach: 'Dollars each time',
   budgetTierLegend: 'Which kind is it?',
   budgetTierEssentials: 'Essential',
   budgetTierDiscretionary: 'Extra',
@@ -173,6 +175,22 @@ export const copy = {
   errBudgetWindowNegativeStart: 'The start year can’t sit before year 0.',
   errBudgetWindowReversed: 'The end year sits before the start — mind swapping them?',
   errBudgetRepeatRange: 'A repeat is a whole number of years, from 2 to 50. Leave it blank for every year.',
+  // Gap 4's U8, the Living drawer's repeat and rate (the pilot's drafts, shipped flagged). A repeat's box: blank is every
+  // year. How a line's dollars change: with prices (no rate stored), the same dollar amount every year (0), or up by a
+  // percent the household types (more than 0 up to 15 %, `spendingBounds.ts`).
+  budgetRepeatLabel: 'Repeats every',
+  budgetRepeatUnit: 'years',
+  budgetRepeatBlankHelp: 'Leave it blank for every year.',
+  budgetChangeLegend: 'How its cost changes',
+  budgetChangePrices: 'Goes up with prices',
+  budgetChangeSame: 'Stays the same dollar amount',
+  budgetChangeRate: 'Goes up by a percent you choose',
+  budgetRateLabel: 'Percent it goes up each year',
+  errBudgetRateRange: 'Type how much it goes up each year, more than 0% and up to 15%, or pick another choice above.',
+  // On the date route a line's years count from the stop the answer tests, so a fixed payment's last year moves with it
+  // (a stopgap while the calendar-frame end is open, gap 4's U11 files it).
+  budgetDateRouteEndNote:
+    'The tool tries different years for you to stop working, and this line’s last year moves with each one, so a payment that ends in a set calendar year can end too soon here.',
   // R19 whole-budget cautions — calm, never blocking.
   budgetWarnZeroEssentials: 'Nothing here is marked essential yet, so the safety floor reads as empty.',
   budgetWarnNoYearZero:
@@ -5153,6 +5171,30 @@ export const slots = {
    *  SEEN used, not just collected) — rendered in the sheet readout AND the governed spend step. */
   budgetTierSplit: (essentialsFormatted: string, extrasFormatted: string): string =>
     `Essentials about $${essentialsFormatted} · extras about $${extrasFormatted} a year.`,
+  /** Gap 4's U8: with a line that repeats charged in the first year, the year-0 figures are that year's, never "a year"
+   *  (the next sentence names the repeat inside them). */
+  budgetRunningTotalFirstYear: (totalFormatted: string): string => `Your lines add up to about $${totalFormatted} in your first year.`,
+  budgetTierSplitFirstYear: (essentialsFormatted: string, extrasFormatted: string): string =>
+    `Essentials about $${essentialsFormatted} · extras about $${extrasFormatted} in your first year.`,
+  /** The repeat inside a first year's figure, named with its cost and how often (and how many more repeat there). */
+  budgetRepeatInFirstYear: (name: string, amountFormatted: string, everyYears: number, more: number): string =>
+    `That includes “${name}” at $${amountFormatted}, which comes back every ${everyYears} years.` +
+    (more === 0 ? '' : ` ${more} more ${more === 1 ? 'line that repeats is' : 'lines that repeat are'} in it too.`),
+  /** Under a line's repeat (gap 4's U8): the years it is charged, in the household's own years, so a typed 50 meant as 5
+   *  shows itself (`spendingBounds.ts`). Calendar years on the all-retired route; counts from the stop on the date route. */
+  budgetRepeatYears: (years: readonly number[], more: boolean, calendar: boolean): string => {
+    const only = years.length === 1 && !more
+    const list = more ? `${years.join(', ')} and so on` : only ? String(years[0]) : `${years.slice(0, -1).join(', ')} and ${years[years.length - 1]}`
+    return calendar ? `Charged ${only ? 'only ' : ''}in ${list}.` : `Charged ${only ? 'only in year' : 'in years'} ${list}.`
+  },
+  /** Under a line that doesn't go up with prices (gap 4's U8, R11): its cost in a later calendar year in today's dollars,
+   *  worded as a price, and whether that is slower or faster than prices. `oneEach`: a repeating line's amount is one
+   *  occurrence's. */
+  budgetRateReadBack: (pace: 'slower' | 'faster' | 'same', year: number, amountFormatted: string, oneEach: boolean): string =>
+    `That’s ${pace === 'slower' ? 'slower than' : pace === 'faster' ? 'faster than' : 'about as fast as'} prices are expected to rise, so in ${year} ${oneEach ? 'one' : 'a year of it'} would cost about $${amountFormatted} in today’s dollars.`,
+  /** Back to one figure from a budget whose lines repeat or change at their own rate: the figure it keeps, every year. */
+  budgetBackToSingleKeeps: (totalFormatted: string): string =>
+    `Your first year’s $${totalFormatted} becomes the figure for every year, so lines that repeat or change at their own rate no longer count on their own.`,
   /** The remove-line control's accessible name (icon-only button). */
   budgetRemoveLine: (label: string): string => `Remove ${label}`,
   // --- R19 ceiling errors (F10) — the calm error grammar, QUOTING the statutory limit ----------
@@ -5419,7 +5461,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:2426` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:2449` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,
@@ -6048,6 +6090,8 @@ export const slots = {
   workbenchFactPerMonth: (amount: string): string => `$${amount} a month`,
   workbenchFactPerMonthAndYear: (month: string, year: string): string => `$${month} a month ($${year} a year)`,
   workbenchFactSpendBudget: (total: string): string => `$${total} a year, set by your budget`,
+  /** The same with a line that repeats charged in the first year (gap 4's U8): the figure is that year's. */
+  workbenchFactSpendBudgetFirstYear: (total: string): string => `$${total} in your first year, set by your budget`,
   workbenchFactPercent: (pct: string): string => `${pct}%`,
   /** An account or a stream, by whose it is: "Sam’s 401(k)", "Your pension". */
   workbenchFactOwned: (possessive: string, noun: string): string => upperFirst(`${possessive} ${noun}`),
@@ -6517,6 +6561,15 @@ export const slots = {
   /** A budget line placed by years after work stops (no calendar year: the stop year is the answer's). */
   bpLineOnward: (amount: string): string => `$${amount} a year from then on`,
   bpLineFor: (amount: string, years: number): string => `$${amount} a year for ${years === 1 ? 'one year' : `${years} years`}`,
+  /** A line that repeats (gap 4's U8): its cost each time and how often, never "a year" or "for N years"; with an end, how
+   *  many times and the last (placed on the calendar), or how many times (counted from the stop). */
+  bpLineEveryFrom: (amount: string, everyYears: number, fromYear: number): string => `$${amount} every ${everyYears} years, from ${fromYear} on`,
+  bpLineEveryTimes: (amount: string, everyYears: number, times: number, lastYear: number): string =>
+    `$${amount} every ${everyYears} years, ${times} times, the last in ${lastYear}`,
+  bpLineOnceIn: (amount: string, year: number): string => `$${amount} once, in ${year}`,
+  bpLineEveryOnward: (amount: string, everyYears: number): string => `$${amount} every ${everyYears} years from then on`,
+  bpLineEveryTimesAfter: (amount: string, everyYears: number, times: number): string => `$${amount} every ${everyYears} years, ${times} times`,
+  bpLineOnce: (amount: string): string => `$${amount} once`,
   /** A group of the timeline counted from the year work stops (year 0, the first retirement year: the budget's own frame). */
   bpAfterStop: (years: number): string =>
     years === 0 ? 'The first retirement year' : `${years === 1 ? 'One year' : `${years} years`} after the first retirement year`,

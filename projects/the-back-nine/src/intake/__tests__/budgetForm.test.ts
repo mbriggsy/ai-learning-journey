@@ -13,7 +13,19 @@ import type { BudgetLineItem } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
 import { copy, slots } from '@ui/copy'
 import { DEV_SEEDS } from '@ui/devSeeds'
-import { BUDGET_ERROR_COPY, budgetApplyFor, budgetReadout, freshLine, isAmountError } from '../budgetForm'
+import { medicareCostTrend } from '@engine/constants'
+import {
+  BUDGET_ERROR_COPY,
+  budgetApplyFor,
+  budgetReadout,
+  freshLine,
+  lineChangeOf,
+  lineErrorSlot,
+  rateReadBack,
+  repeatReadBack,
+  withLineChange,
+  type LineErrorSlot,
+} from '../budgetForm'
 import { formatMoney } from '../moneyFormat'
 
 const line = (patch?: Partial<BudgetLineItem>): BudgetLineItem => ({
@@ -70,17 +82,19 @@ describe('what Apply does with the staged lines (Card 9; build-gate 2)', () => {
 })
 
 describe('each line error names its own rule', () => {
-  it('every error kind has its own words, and the amount errors are told from the window errors (the two places a line shows them)', () => {
-    const cases: readonly [BudgetItemError['kind'], string, boolean][] = [
-      ['non-finite-amount', copy.errBudgetAmountNonFinite, true],
-      ['negative-amount', copy.errBudgetAmountNegative, true],
-      ['non-integer-window', copy.errBudgetWindowNonInteger, false],
-      ['negative-start', copy.errBudgetWindowNegativeStart, false],
-      ['reversed-window', copy.errBudgetWindowReversed, false],
+  it('every error kind has its own words, and each shows under its own box: the amount, the From year, the repeat or the rate', () => {
+    const cases: readonly [BudgetItemError['kind'], string, LineErrorSlot][] = [
+      ['non-finite-amount', copy.errBudgetAmountNonFinite, 'amount'],
+      ['negative-amount', copy.errBudgetAmountNegative, 'amount'],
+      ['non-integer-window', copy.errBudgetWindowNonInteger, 'window'],
+      ['negative-start', copy.errBudgetWindowNegativeStart, 'window'],
+      ['reversed-window', copy.errBudgetWindowReversed, 'window'],
+      ['repeat-out-of-range', copy.errBudgetRepeatRange, 'repeat'],
+      ['rate-out-of-range', copy.errBudgetRateRange, 'rate'],
     ]
-    for (const [kind, words, amount] of cases) {
+    for (const [kind, words, slot] of cases) {
       expect(copy[BUDGET_ERROR_COPY[kind]], kind).toBe(words)
-      expect(isAmountError({ index: 0, kind }), kind).toBe(amount)
+      expect(lineErrorSlot({ index: 0, kind }), kind).toBe(slot)
     }
   })
 
@@ -158,5 +172,88 @@ describe('the reconciliation readout (build-gate 1: the out-of-pocket medical ne
     expect(allExtras.find((l) => l.text === copy.budgetWarnZeroEssentials)?.muted).toBe(true)
     const later = [line({ startYear: 3 })]
     expect(budgetReadout(d, later, validateBudgetItems(later)).find((l) => l.text === copy.budgetWarnNoYearZero)?.muted).toBe(true)
+  })
+})
+
+// ── Gap 4's U8: how a line's cost changes, and the read-backs that show what an answer means in the household's numbers ──
+
+/** Prices' growth from 2026 to 2036 by the closed form, each rate read from the constants (DND 012: never the producer's
+ *  own loop): 2026 to 2035 at the near-term rate, 2035 to 2036 at the ultimate one (priceFrame.test.ts pins the split). */
+const PRICES_2026_TO_2036 = Math.pow(1 + medicareCostTrend.value.cpiNearTermAvg, 9) * Math.pow(1 + medicareCostTrend.value.cpiUltimate, 1)
+
+describe('how a line’s cost changes (gap 4’s U8, KTD4)', () => {
+  it('reads the three answers off the stored field: absent with prices, 0 the same dollar amount, anything else up by a percent (NaN while blank)', () => {
+    expect(lineChangeOf(line())).toBe('prices')
+    expect(lineChangeOf(line({ growthRate: 0 }))).toBe('same')
+    expect(lineChangeOf(line({ growthRate: 0.05 }))).toBe('rate')
+    expect(lineChangeOf(line({ growthRate: Number.NaN }))).toBe('rate')
+  })
+
+  it('writes each answer: with prices REMOVES the key (never an undefined-valued one), the same writes 0, up by keeps its figure, takes the last one or stages NaN', () => {
+    const rated = line({ growthRate: 0.05 })
+    const prices = withLineChange(rated, 'prices', undefined)
+    expect('growthRate' in prices).toBe(false)
+    expect(withLineChange(rated, 'same', undefined).growthRate).toBe(0)
+    expect(withLineChange(rated, 'rate', 0.02).growthRate, 'already up by: kept').toBe(0.05)
+    expect(withLineChange(line({ growthRate: 0 }), 'rate', 0.05).growthRate, 'back to the percent it held').toBe(0.05)
+    expect(withLineChange(line(), 'rate', undefined).growthRate, 'no figure yet: NaN, which the validator refuses').toBeNaN()
+    expect(validateBudgetItems([withLineChange(line(), 'rate', undefined)]).errors).toEqual([{ index: 0, kind: 'rate-out-of-range' }])
+  })
+})
+
+describe('the rate’s read-back (gap 4’s U8, R11): a later year’s cost in today’s dollars, through the run’s own factor', () => {
+  it('AE2: a $10,000 line that stays the same dollar amount on a 2026 plan costs about $7,355 in 2036, slower than prices', () => {
+    expect(formatMoney(10_000 / PRICES_2026_TO_2036), '[test setup] the hand-worked figure').toBe('7,355')
+    expect(rateReadBack(line({ annualAmountReal: 10_000, growthRate: 0 }), 2026)).toBe(slots.budgetRateReadBack('slower', 2036, '7,355', false))
+  })
+
+  it('a line going up 5 % a year reads faster than prices; one going up about as fast as prices reads about the same (within 1 %)', () => {
+    const faster = formatMoney((10_000 * Math.pow(1.05, 10)) / PRICES_2026_TO_2036)
+    expect(rateReadBack(line({ annualAmountReal: 10_000, growthRate: 0.05 }), 2026)).toBe(slots.budgetRateReadBack('faster', 2036, faster, false))
+    const near = formatMoney((10_000 * Math.pow(1.031, 10)) / PRICES_2026_TO_2036)
+    expect(Math.abs(Math.pow(1.031, 10) / PRICES_2026_TO_2036 - 1), '[test setup] 3.1 % is within 1 % of prices over ten years').toBeLessThan(0.01)
+    expect(rateReadBack(line({ annualAmountReal: 10_000, growthRate: 0.031 }), 2026)).toBe(slots.budgetRateReadBack('same', 2036, near, false))
+  })
+
+  it('a repeating line says what one would cost; nothing is read back with prices, a blank rate or no amount', () => {
+    expect(rateReadBack(line({ annualAmountReal: 10_000, growthRate: 0, everyYears: 5 }), 2026)).toBe(slots.budgetRateReadBack('slower', 2036, '7,355', true))
+    expect(rateReadBack(line({ annualAmountReal: 10_000 }), 2026)).toBeNull()
+    expect(rateReadBack(line({ annualAmountReal: 10_000, growthRate: Number.NaN }), 2026)).toBeNull()
+    expect(rateReadBack(line({ annualAmountReal: 10_000, growthRate: 0.16 }), 2026)).toBeNull()
+    expect(rateReadBack(line({ annualAmountReal: Number.NaN, growthRate: 0 }), 2026)).toBeNull()
+  })
+})
+
+describe('the repeat’s read-back (gap 4’s U8): the years it is charged, in the household’s own years', () => {
+  const at2026 = (k: number) => 2026 + k
+  it('calendar years on the all-retired route: three, then "and so on" while more follow inside the window', () => {
+    expect(repeatReadBack(line({ startYear: 3, everyYears: 5 }), at2026)).toBe(slots.budgetRepeatYears([2029, 2034, 2039], true, true))
+    expect(slots.budgetRepeatYears([2029, 2034, 2039], true, true)).toBe('Charged in 2029, 2034, 2039 and so on.')
+    expect(repeatReadBack(line({ startYear: 3, endYear: 14, everyYears: 5 }), at2026)).toBe('Charged in 2029, 2034 and 2039.')
+    expect(repeatReadBack(line({ startYear: 3, endYear: 18, everyYears: 5 }), at2026), 'a fourth inside the window').toBe('Charged in 2029, 2034, 2039 and so on.')
+    expect(repeatReadBack(line({ startYear: 3, endYear: 10, everyYears: 5 }), at2026)).toBe('Charged in 2029 and 2034.')
+    expect(repeatReadBack(line({ startYear: 3, endYear: 5, everyYears: 5 }), at2026)).toBe('Charged only in 2029.')
+  })
+
+  it('counts from the stop on the date route; nothing without a repeat the validator takes', () => {
+    expect(repeatReadBack(line({ startYear: 3, everyYears: 5 }), null)).toBe('Charged in years 3, 8, 13 and so on.')
+    expect(repeatReadBack(line({ startYear: 3, endYear: 5, everyYears: 5 }), null)).toBe('Charged only in year 3.')
+    expect(repeatReadBack(line(), null)).toBeNull()
+    expect(repeatReadBack(line({ everyYears: 1 }), null)).toBeNull()
+    expect(repeatReadBack(line({ everyYears: 2.5 }), null)).toBeNull()
+  })
+})
+
+describe('the readout with a repeat charged in the first year (gap 4’s U8)', () => {
+  it('the running total and the split are the first year’s, and the repeat inside them is named; with none, "a year" as before', () => {
+    const d = DEV_SEEDS.daterepeat
+    const items = d.budget!
+    const said = texts(d, items)
+    expect(said).toContain(slots.budgetRunningTotalFirstYear('118,000'))
+    expect(said).toContain(slots.budgetRepeatInFirstYear('A new car', '40,000', 5, 0))
+    expect(said.some((t) => t === slots.budgetRunningTotal('118,000')), 'never "a year" over a first-year repeat').toBe(false)
+    const later = items.map((l) => (l.everyYears !== undefined ? { ...l, startYear: 2 } : l))
+    expect(texts(d, later).some((t) => t.startsWith('That includes')), 'a repeat that starts later is not in the first year').toBe(false)
+    expect(texts(d, later)).toContain(slots.budgetRunningTotal('78,000'))
   })
 })

@@ -14,7 +14,8 @@
  * (`readOnly` on the view, which the drawers read).
  */
 import type { AccountKind, EnteredAccount, IncomeStream, IncomeType, RetirementState, TickerClassification } from '@shared/model'
-import { budgetGoverns } from '@budget/budgetModel'
+import { budgetGoverns, repeatsOnAtYearZero } from '@budget/budgetModel'
+import { firstYearRepeatNote } from '@intake/budgetForm'
 import { INCOME_TYPES } from '@shared/model'
 import type { CatchUpAccountKind } from '@engine/constants/contributions'
 import type { ScenarioDraft } from '@store/memoryModel'
@@ -451,7 +452,11 @@ export function savingsView(d: ScenarioDraft, readOnly: boolean): CardsPageView 
 export function spendingValue(d: ScenarioDraft): string {
   const annual = d.annualSpendingReal
   if (annual === undefined) return copy.profileNotAnswered
-  if (budgetGoverns(d.budget)) return slots.workbenchFactSpendBudget(formatMoney(Math.round(annual)))
+  // A repeat charged in the first year makes the year-0 total that year's figure, never "a year" (gap 4's U8).
+  if (budgetGoverns(d.budget)) {
+    const firstYear = repeatsOnAtYearZero(d.budget).length > 0
+    return (firstYear ? slots.workbenchFactSpendBudgetFirstYear : slots.workbenchFactSpendBudget)(formatMoney(Math.round(annual)))
+  }
   return d.spendEntryPeriod === 'month'
     ? slots.workbenchFactPerMonthAndYear(formatMoney(Math.round(annual / 12)), formatMoney(Math.round(annual)))
     : slots.workbenchFactPerYear(formatMoney(Math.round(annual)))
@@ -476,8 +481,12 @@ export const leftOverValue = (d: ScenarioDraft): string => LEFT_OVER_VALUE[worki
 export function expensesView(d: ScenarioDraft): CardsPageView {
   const governs = budgetGoverns(d.budget)
   const split = governs ? budgetTierSplitAtZero(d.budget) : null
+  // A repeat charged in the first year: the split is that year's, and the repeat inside it is named (gap 4's U8).
+  const repeatNote = governs && d.budget !== undefined ? firstYearRepeatNote(d.budget) : null
+  const splitWords = repeatNote === null ? slots.budgetTierSplit : slots.budgetTierSplitFirstYear
   const livingNote = [
-    ...(split !== null && split.essentials + split.extras > 0 ? [slots.budgetTierSplit(formatMoney(split.essentials), formatMoney(split.extras))] : []),
+    ...(split !== null && split.essentials + split.extras > 0 ? [splitWords(formatMoney(split.essentials), formatMoney(split.extras))] : []),
+    ...(repeatNote !== null ? [repeatNote] : []),
     ...(governs && d.budget !== undefined ? governedSpendNotes(d.budget) : []),
   ]
   const oop = d.health.oopMedicalAnnual

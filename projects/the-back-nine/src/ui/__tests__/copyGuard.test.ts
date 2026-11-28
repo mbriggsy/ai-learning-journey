@@ -775,6 +775,22 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     budgetMedicalExceedsTotal: slots.budgetMedicalExceedsTotal('6,500', '5,000'),
     budgetRunningTotal: slots.budgetRunningTotal('70,000'),
     budgetTierSplit: slots.budgetTierSplit('36,000', '42,000'),
+    budgetRunningTotalFirstYear: slots.budgetRunningTotalFirstYear('118,000'),
+    budgetTierSplitFirstYear: slots.budgetTierSplitFirstYear('76,000', '42,000'),
+    budgetRepeatInFirstYear: [slots.budgetRepeatInFirstYear('A new car', '40,000', 5, 0), slots.budgetRepeatInFirstYear('A new car', '40,000', 5, 1), slots.budgetRepeatInFirstYear('A new car', '40,000', 5, 2)].join(' '),
+    budgetRepeatYears: [
+      slots.budgetRepeatYears([2026, 2031, 2036], true, true),
+      slots.budgetRepeatYears([2026, 2031], false, true),
+      slots.budgetRepeatYears([2026], false, true),
+      slots.budgetRepeatYears([0, 5, 10], true, false),
+      slots.budgetRepeatYears([3], false, false),
+    ].join(' '),
+    budgetRateReadBack: [
+      slots.budgetRateReadBack('slower', 2036, '7,355', false),
+      slots.budgetRateReadBack('faster', 2036, '12,000', true),
+      slots.budgetRateReadBack('same', 2036, '10,050', false),
+    ].join(' '),
+    budgetBackToSingleKeeps: slots.budgetBackToSingleKeeps('118,000'),
     budgetRemoveLine: slots.budgetRemoveLine('Groceries'),
     stepDownNote: slots.stepDownNote(2030),
     oopHint: slots.oopHint('3,000', '3,400'),
@@ -1151,6 +1167,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     workbenchFactPerMonth: slots.workbenchFactPerMonth('2,450'),
     workbenchFactPerMonthAndYear: slots.workbenchFactPerMonthAndYear('12,500', '150,000'),
     workbenchFactSpendBudget: slots.workbenchFactSpendBudget('148,000'),
+    workbenchFactSpendBudgetFirstYear: slots.workbenchFactSpendBudgetFirstYear('118,000'),
     workbenchFactPercent: slots.workbenchFactPercent('70'),
     workbenchFactOwned: slots.workbenchFactOwned('your spouse’s', 'pension'),
     workbenchFactLeftOverSaved: slots.workbenchFactLeftOverSaved('16,985'),
@@ -1306,6 +1323,12 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     bpLineSpan: [slots.bpLineSpan('12,000', 5, 2030), slots.bpLineSpan('12,000', 1, 2026)].join(' '),
     bpLineOnward: slots.bpLineOnward('12,000'),
     bpLineFor: [slots.bpLineFor('12,000', 5), slots.bpLineFor('12,000', 1)].join(' '),
+    bpLineEveryFrom: slots.bpLineEveryFrom('40,000', 5, 2026),
+    bpLineEveryTimes: slots.bpLineEveryTimes('40,000', 5, 3, 2036),
+    bpLineOnceIn: slots.bpLineOnceIn('40,000', 2026),
+    bpLineEveryOnward: slots.bpLineEveryOnward('40,000', 5),
+    bpLineEveryTimesAfter: slots.bpLineEveryTimesAfter('40,000', 5, 3),
+    bpLineOnce: slots.bpLineOnce('40,000'),
     bpAfterStop: [slots.bpAfterStop(0), slots.bpAfterStop(1), slots.bpAfterStop(3)].join(' '),
     bpHidden: slots.bpHidden(['Roth', 'HSA']),
     // Act 6 · RC17, Analysis's Comparisons, Savings and Retirement Details tabs.
@@ -2675,7 +2698,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
   // 2026-09-08 — THE rec* SCOPE CANARY. copyGuard's scopes are prefix ALLOWLISTS, so a NEW `rec*` key
   // lands in NEITHER scope silently — the hole that left the RecommendationViz aria sentence outside
   // require-hedge until it was renamed `recDeltaVizAria`. `/^rec(?!over)/` is the net: a bare `/^rec/`
-  // would sweep the 16 `recovery*`/`recover*` intake keys (copy.ts:919-932, :981-998), which are correctly
+  // would sweep the 16 `recovery*`/`recover*` intake keys (copy.ts:937-950, :999-1016), which are correctly
   // unscoped. The two allowlists are SPLIT because the surfaces differ: an unscoped FLAT key rides only
   // the three universal gates (the `entries` loops at the top of this file — superlative and free-numeral
   // are verdict-scoped); an unscoped SLOT rides the four voice gates (survival-claim included) + catastrophe (the SLOT_RENDER loop

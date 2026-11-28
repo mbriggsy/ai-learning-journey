@@ -23,7 +23,7 @@
  * Fit decision (plan RC15): a scrolling page; its first frame holds the title, the intro and the panel's top row.
  */
 import { useId, useState, type ReactNode, type Ref } from 'react'
-import { ArrowDown, Crown, UserRound } from 'lucide-react'
+import { ArrowDown, Crown, Repeat, UserRound } from 'lucide-react'
 import { AddMenu, Button, Caveat, Checkbox, PageFrame, cn } from '../../kit'
 import { verdictDescribedBy } from '../../disclaimerId'
 import { addEntries } from './CardsPage'
@@ -95,6 +95,9 @@ function Tile({ tile, selected, onOpen, edge = 'left' }: TileProps) {
       </span>
       <span className="text-body break-words text-stone-900">
         {tile.crowned === true ? <Crown size={18} strokeWidth={1.5} aria-hidden="true" className="mr-1.5 inline-block align-[-3px] text-plum" /> : null}
+        {tile.repeats === true ? (
+          <Repeat size={16} strokeWidth={1.5} aria-hidden="true" className="mr-1.5 inline-block align-[-2px] text-stone-600" data-bp-repeat="" />
+        ) : null}
         {tile.name}
       </span>
       {tile.value !== undefined ? (

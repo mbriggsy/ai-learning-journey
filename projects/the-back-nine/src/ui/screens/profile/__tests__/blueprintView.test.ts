@@ -198,6 +198,26 @@ describe('Goals', () => {
     )
   })
 
+  // Gap 4's U8 (R11): a repeating line's tile says how often, never "a year" or "for N years", beside a repeat mark.
+  it('a line that repeats says "every N years": lifelong from its year, or how many times and the last; counted from the stop before a date', () => {
+    const retiredRepeat: ScenarioDraft = {
+      ...budgetRetired,
+      budget: budgetRetired.budget!.map((l, i) => (i === 0 ? { ...l, everyYears: 5 } : i === 5 ? { ...l, startYear: 1, endYear: 14, everyYears: 5 } : i === 6 ? { ...l, endYear: 3, everyYears: 5 } : l)),
+    }
+    const start = retiredRepeat.startCalendarYear
+    const tiles = goals(retiredRepeat).groups.flatMap((g) => g.tiles)
+    const tile = (k: number) => tiles.find((t) => t.id === `bp-line-${k}`)!
+    expect(tile(0).value).toBe(slots.bpLineEveryFrom('18,000', 5, start))
+    expect(tile(0).repeats).toBe(true)
+    // Years 1, 6 and 11 inside 1 to 14: three times, the last in the plan's first year + 11.
+    expect(tile(5).value).toBe(slots.bpLineEveryTimes('12,000', 5, 3, start + 11))
+    expect(tile(6).value).toBe(slots.bpLineOnceIn('6,000', start))
+    expect(tile(1).repeats, 'a line that does not repeat carries no mark').toBeUndefined()
+    const after = goals(DEV_SEEDS.daterepeat).after!.groups.flatMap((g) => g.tiles)
+    const car = DEV_SEEDS.daterepeat.budget!.findIndex((l) => l.everyYears !== undefined)
+    expect(after.find((t) => t.id === `bp-line-${car}`)!.value).toBe(slots.bpLineEveryOnward('40,000', 5))
+  })
+
   it('a window-edge date says it sits at the edge of what the math can confirm', () => {
     const b = goals(working, { answer: dateAnswer(working, track(15, 'window-edge-unconfirmed')) })
     expect(b.groups.flatMap((g) => g.tiles).find((t) => t.id === 'retirement-0')!.note).toBe(copy.dateWindowEdgeNote)

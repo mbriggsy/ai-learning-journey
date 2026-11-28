@@ -1189,6 +1189,11 @@ chair; chair from a digest script, never the raw result, and expect the window t
 
 ## Persistence and schema
 
+- **(b9-5, 11-28) The draft's `savedAt` is the stamp it was loaded with; a save never re-stamps the draft.**
+  `scenarioFromDraft` stamps a fresh `savedAt` per encode and the disk gets it, so after an in-session re-save the draft
+  still holds the previous save's day. "The year the balances were last saved" is the persisted plan's:
+  `balancesSaveYear(persist.scenario)` in `IntakeApp.tsx`, handed through the Shell's `balancesSaveYear` prop to Profile and
+  every drawer (`DrawerBodyProps.balancesSaveYear`); the draft's own reading is right only before any save.
 - **(b9-2, 11-28) Since gap 5's U1 (`4b59f034`) the codec refuses a one-time item's `heirIndex` / `leftTo` on a one-person plan**, as it refuses an inherited IRA's `leftTo` there: a writer that carries them onto a plan with one person fails the save's codec round trip. Write them only while `people.length > 1` (gap 3's spread in `src/intake/inheritedIra.ts`).
 - **(2026-09-27, b9-11)** a fixture or dev plant saved at the WALL CLOCK's today sits on the ledger's ambiguous ship day whenever a row lands — it reds CI on exactly that day and greens the next; stamp "saved by this build" at `FIRST_UNAMBIGUOUS_SAVE_DAY` (every existing fixture and plant already does); a date-derived pin (`?vault=stale`'s note count) is DERIVED from the ledger in both its unit arm and its fit arm, never hand-typed
 

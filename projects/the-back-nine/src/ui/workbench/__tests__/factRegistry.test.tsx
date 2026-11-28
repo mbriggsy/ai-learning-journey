@@ -7,7 +7,7 @@ import type { ScenarioDraft } from '@store/memoryModel'
 import { DrawerFor } from '../../screens/profile/drawerHost'
 import { expensesView, familyView, goalsView, incomeView, netWorthView, savingsView, type AddItem, type CardsPageView, type DrawerTarget } from '../../screens/profile/profileView'
 import { profileStore } from '../../screens/profile/__tests__/profileStore'
-import { ACCOUNT_FACTS, DRAFT_FACTS, elsewhereFacts, INHERITED_FACTS, shownFacts, type FactDrawerId } from '../factRegistry'
+import { ACCOUNT_FACTS, DRAFT_FACTS, elsewhereFacts, INFLOW_FACTS, INHERITED_FACTS, shownFacts, type FactDrawerId } from '../factRegistry'
 import { FULL, GOVERNED } from './factDrafts'
 
 /**
@@ -24,7 +24,7 @@ afterEach(cleanup)
 
 const ALL_DRAWERS: readonly FactDrawerId[] = [
   'person', 'state', 'salary', 'social-security', 'work-invest', 'income', 'new-income', 'account', 'new-account',
-  'living', 'medical', 'working-cost', 'health', 'medicare',
+  'living', 'medical', 'working-cost', 'health', 'medicare', 'one-time', 'new-one-time',
 ]
 
 const addTargets = (items: readonly AddItem[]): DrawerTarget[] =>
@@ -120,6 +120,7 @@ describe('the field walk: every saved fact has a drawer home (R14, R15)', () => 
       ...Object.entries(DRAFT_FACTS),
       ...Object.entries(ACCOUNT_FACTS).map(([k, v]) => [`account.${k}`, v] as const),
       ...Object.entries(INHERITED_FACTS).map(([k, v]) => [`inherited.${k}`, v] as const),
+      ...Object.entries(INFLOW_FACTS).map(([k, v]) => [`inflow.${k}`, v] as const),
     ]) {
       if (d.kind !== 'not-a-fact') continue
       expect(d.why.length, key).toBeGreaterThan(20)
@@ -130,6 +131,7 @@ describe('the field walk: every saved fact has a drawer home (R14, R15)', () => 
     const nonFacts = [
       'seed', 'savedAt', 'filing', 'startCalendarYear', 'savedRecommendation', 'taxVintage', 'appDefaultVersion',
       'healthcareVintage', 'taxVintageDetail', 'dateVintage', 'stateTaxVintage', 'keptWhatIfs', 'account.id', 'inherited.askedYear',
+      'inflow.id', 'inflow.kind',
     ]
     expect(FULL.keptWhatIfs?.length, '[non-vacuity] the made-up household keeps a what-if').toBeGreaterThan(0)
     expect(GOVERNED.budget?.every((l) => l.id !== undefined), '[non-vacuity] every line carries an id').toBe(true)

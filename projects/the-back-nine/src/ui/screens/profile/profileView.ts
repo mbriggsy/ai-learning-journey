@@ -39,6 +39,7 @@ import { copy, slots } from '../../copy'
 import { tablePerson } from '../../workbench/tableRun'
 import { accountName } from '../investment/investmentView'
 import type { AccountFacet } from './drawers/accountFields'
+import { oneTimeCardRows, oneTimeFlagWords, oneTimeSaveYear } from './drawers/oneTimeFields'
 
 export type ProfileScreenId =
   | 'profile-net-worth'
@@ -58,6 +59,9 @@ export type DrawerTarget =
   | { readonly kind: 'work-invest'; readonly index: 0 | 1 }
   | { readonly kind: 'income'; readonly index: number }
   | { readonly kind: 'new-income'; readonly type: IncomeType }
+  /** An inheritance or gift (gap 5's U4), by its place in the list; a new one from Add income. */
+  | { readonly kind: 'one-time'; readonly index: number }
+  | { readonly kind: 'new-one-time' }
   | { readonly kind: 'account'; readonly index: number; readonly facet: Exclude<AccountFacet, 'all'> }
   /** A new account; `ownerIndex` names its first owner (the first-run stepper's pre-made card for a working person). */
   | { readonly kind: 'new-account'; readonly accountKind: AccountKind; readonly ownerIndex?: 0 | 1 }
@@ -88,6 +92,7 @@ export type CardIcon =
   | 'health'
   | 'medicare'
   | 'money-picture'
+  | 'one-time'
 
 export interface CardView {
   /** Stamped on the card (`data-profile-card`): focus comes back to it when its drawer closes. */
@@ -264,7 +269,16 @@ function raiseValue(s: IncomeStream): string {
   return s.colaPct === undefined ? copy.profileNotAnswered : slots.profileRises(formatPercent(s.colaPct))
 }
 
-export function incomeView(d: ScenarioDraft, readOnly: boolean): CardsPageView {
+/** Income's Add menu: the other-income kinds, then an inheritance or gift (gap 5's U4, R1). Blueprint's Income group
+ *  offers the same entries. */
+export const incomeAddItems = (): readonly { readonly id: string; readonly label: string; readonly target: DrawerTarget }[] => [
+  ...INCOME_TYPES.map((type) => ({ id: type, label: incomeTypeLabel(type), target: { kind: 'new-income', type } as const })),
+  { id: 'one-time', label: copy.oneTimeKind, target: { kind: 'new-one-time' } },
+]
+
+/** `saveYear`: the year the plan's balances were last saved, from the persisted plan (absent before any save: the
+ *  draft's own reading, `oneTimeSaveYear`), for R15's note on an inheritance or gift's card. */
+export function incomeView(d: ScenarioDraft, readOnly: boolean, saveYear?: number): CardsPageView {
   const cards: CardView[] = []
   for (const i of BOTH) {
     if (!working(d, i)) continue
@@ -325,10 +339,23 @@ export function incomeView(d: ScenarioDraft, readOnly: boolean): CardsPageView {
       target: { kind: 'income', index },
     })
   })
-  const add: AddMenuView | null = readOnly
-    ? null
-    : { label: copy.profileAddIncome, items: INCOME_TYPES.map((type) => ({ id: type, label: incomeTypeLabel(type), target: { kind: 'new-income', type } as const })) }
+  // Gap 5's U4: each inheritance or gift, after the ongoing income; R15's flag as its note (R1, R15).
+  const balancesYear = oneTimeSaveYear(d, saveYear)
+  ;(d.oneTimeInflows ?? []).forEach((item, index) => {
+    const flag = oneTimeFlagWords(item.year, balancesYear)
+    cards.push({
+      id: `one-time-${index}`,
+      kind: copy.oneTimeKind,
+      icon: 'one-time',
+      name: item.name,
+      rows: oneTimeCardRows(d, item),
+      ...(flag !== null ? { note: flag } : {}),
+      target: { kind: 'one-time', index },
+    })
+  })
+  const add: AddMenuView | null = readOnly ? null : { label: copy.profileAddIncome, items: incomeAddItems() }
   const anyWorking = BOTH.some((i) => working(d, i))
+  const anyOneTime = (d.oneTimeInflows?.length ?? 0) > 0
   return {
     intro: copy.profileIncomeIntro,
     cards,
@@ -336,7 +363,18 @@ export function incomeView(d: ScenarioDraft, readOnly: boolean): CardsPageView {
     lines: [
       ...(anyWorking ? [copy.profileSalaryStopgap] : []),
       // Door words only where the Add menu is drawn (milestone 3's review, X12).
-      ...(d.incomeStreams.length === 0 ? [readOnly ? copy.profileIncomeOtherNoneReadOnly : copy.profileIncomeOtherNone] : []),
+      // With an inheritance or gift's card on the page, "no other income" would be false: the line names ongoing income.
+      ...(d.incomeStreams.length === 0
+        ? [
+            anyOneTime
+              ? readOnly
+                ? copy.profileIncomeOngoingNoneReadOnly
+                : copy.profileIncomeOngoingNone
+              : readOnly
+                ? copy.profileIncomeOtherNoneReadOnly
+                : copy.profileIncomeOtherNone,
+          ]
+        : []),
     ],
   }
 }
@@ -699,6 +737,10 @@ export function cardIdOf(target: DrawerTarget, newIndex?: number): string | null
       return `account-${target.index}`
     case 'new-income':
       return newIndex === undefined ? null : `income-${newIndex}`
+    case 'one-time':
+      return `one-time-${target.index}`
+    case 'new-one-time':
+      return newIndex === undefined ? null : `one-time-${newIndex}`
     case 'new-account':
       return newIndex === undefined ? null : `account-${newIndex}`
     case 'living':

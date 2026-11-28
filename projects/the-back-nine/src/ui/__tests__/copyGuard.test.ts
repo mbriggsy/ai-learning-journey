@@ -910,6 +910,17 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     errRothStartPast: slots.errRothStartPast('2026'),
     errOneTimeYearRange: slots.errOneTimeYearRange('2026', '2088'),
     errOneTimeYearFrom: slots.errOneTimeYearFrom('2026'),
+    // Gap 5's U4: the inheritance or gift drawer, card and gate, every arm that carries words of its own.
+    oneTimeYearHelp: slots.oneTimeYearHelp(2026, 2080),
+    oneTimeArrivedLegend: slots.oneTimeArrivedLegend(2026),
+    oneTimeLeftToLegend: slots.oneTimeLeftToLegend('Sam', false, 'Alex'),
+    oneTimeLeftToHelp: slots.oneTimeLeftToHelp('you', true),
+    oneTimeLeftToYes: slots.oneTimeLeftToYes('Alex'),
+    oneTimeComesIn: slots.oneTimeComesIn('250,000', 2030),
+    oneTimeReadBack: slots.oneTimeReadBack('250,000', 2030, '281,400', 'Sam', false),
+    oneTimeFlagBefore: slots.oneTimeFlagBefore(2028),
+    oneTimeFlagInYear: slots.oneTimeFlagInYear(2028),
+    stalenessOneTimeLine: slots.stalenessOneTimeLine('Mom’s estate', '250,000', 2027, 2028, false),
     // P3·U12 — the AssumptionPanel's market disclosure figures (read from productionMarket
     // at render; the % strings arrive pre-formatted — the templates stay numeral-free).
     assumptionMarketStocks: slots.assumptionMarketStocks('5%', '18%'),

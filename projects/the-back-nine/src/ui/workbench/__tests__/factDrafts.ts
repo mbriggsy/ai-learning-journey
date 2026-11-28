@@ -112,6 +112,9 @@ export const FULL: ScenarioDraft = {
       },
     },
   ],
+  // Gap 5's U4: an inheritance that is one person's and left to someone else, so its drawer asks every question
+  // (whose it is, and whether it still comes to the other).
+  oneTimeInflows: [{ id: 'gift-full', kind: 'gift', name: 'Mom’s estate', year: Y + 4, amountReal: 250_000, heirIndex: 1, leftTo: 'someone-else' }],
   incomeStreams: [
     {
       ownerIndex: 1,

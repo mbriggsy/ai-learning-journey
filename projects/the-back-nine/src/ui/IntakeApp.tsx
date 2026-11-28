@@ -43,7 +43,7 @@ import { useUnloadGuard } from './unloadGuard'
 import { Button, FieldNote, VaultCard, VaultHeading, VaultPage, VaultPending } from './kit'
 import { ReEntry } from './ReEntry'
 import { composeReentry, type ReentryView } from './reentryChrome'
-import { deriveStaleness } from '@store/staleness'
+import { balancesSaveYear, deriveStaleness } from '@store/staleness'
 import { exposureForDraft } from './stalenessExposure'
 import { copy } from './copy'
 import { DEFAULT_DISPLAY, type DisplaySettings } from './displaySettings'
@@ -1174,6 +1174,9 @@ export default function IntakeApp({
           ...(recordCard !== undefined ? { recordCard } : {}),
           // The aged-balances clause's honest year (review 2026-07-10): from the persist machine's OWN saved scenario.
           ...(aged !== undefined ? { agedBalancesYear: aged } : {}),
+          // Gap 5's U4 (R15, R17): the year the balances were last saved, from the LAST COMMITTED scenario (`PersistState`'s
+          // own: during a re-save or after a failed one the disk still holds the previous commit). Absent before any save.
+          ...(persist.kind !== 'unsaved' ? { balancesSaveYear: balancesSaveYear(persist.scenario) } : {}),
           ...(leaveAsk !== null
             ? {
                 leaveAsk: {

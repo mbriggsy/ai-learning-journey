@@ -171,11 +171,11 @@ export interface RcPair {
 
 export const RC_PAIRS: readonly RcPair[] = [
   { a: 'blue', b: 'green', where: 'your plan against the what-if or recommendation', verdict: { kind: 'floor' } },
-  { a: 'orange', b: 'green', where: 'pre-tax against Roth in a stack', verdict: { kind: 'floor' } },
-  { a: 'orange', b: 'red', where: 'the 24% and 32% bracket lines', verdict: { kind: 'floor' } },
+  { a: 'orange', b: 'green', where: 'pre-tax against Roth in a stack; Blueprint’s inheritance or gift beside retirement', verdict: { kind: 'floor' } },
+  { a: 'orange', b: 'red', where: 'the 24% and 32% bracket lines; Blueprint’s inheritance or gift beside spending', verdict: { kind: 'floor' } },
   { a: 'blue', b: 'red', where: 'taxable against expenses', verdict: { kind: 'floor' } },
   { a: 'indigo', b: 'orange', where: 'Social Security against withdrawals', verdict: { kind: 'floor' } },
-  { a: 'blue', b: 'orange', where: 'taxable against pre-tax in a stack', verdict: { kind: 'floor' } },
+  { a: 'blue', b: 'orange', where: 'taxable against pre-tax in a stack; Blueprint’s Social Security beside an inheritance or gift', verdict: { kind: 'floor' } },
   { a: 'blue', b: 'sky', where: 'taxable against HSA in a stack', verdict: { kind: 'floor' } },
   { a: 'sky', b: 'green', where: 'HSA against Roth in a stack', verdict: { kind: 'floor' } },
   { a: 'sandInk', b: 'orange', where: 'the 22% and 24% bracket lines, the 22% drawn in its ink', verdict: { kind: 'floor' } },
@@ -241,11 +241,12 @@ export const RC_PAIRS: readonly RcPair[] = [
   },
   // Blueprint (RC15): tiles side by side, each with a 4 px edge in its category's colour AND the category word printed
   // above its name. Net Worth's treatments take the stacks' colours (pre-tax orange, Roth green, taxable blue, HSA sky);
-  // Goals' retirement green, Social Security blue, Medicare sky, spending red; Income, Savings, Expenses green, blue, red
+  // Goals' retirement green, Social Security blue, Medicare sky, spending red, an inheritance or gift orange (gap 5's U4:
+  // its four neighbours are the rows naming it); Income, Savings, Expenses green, blue, red
   // (rows above). Its sky is the chrome's (`skyTile`, the hex the tiles draw), so every pair with it is its own row.
   { a: 'blue', b: 'skyTile', where: 'Blueprint taxable beside HSA tiles; Social Security beside Medicare', verdict: { kind: 'floor' } },
   { a: 'skyTile', b: 'green', where: 'Blueprint HSA beside Roth tiles; Medicare beside retirement', verdict: { kind: 'floor' } },
-  { a: 'orange', b: 'skyTile', where: 'Blueprint pre-tax beside HSA tiles', verdict: { kind: 'floor' } },
+  { a: 'orange', b: 'skyTile', where: 'Blueprint pre-tax beside HSA tiles; an inheritance or gift beside Medicare', verdict: { kind: 'floor' } },
   { a: 'skyTile', b: 'red', where: 'Blueprint Medicare beside spending tiles', verdict: { kind: 'floor' } },
   // Analysis's Retirement Details (RC17): income sources stacked per year and ringed in its donuts, bottom-up Social
   // Security deep indigo, other income light green (vertical lines), then the withdrawal stacks' own taxable blue, pre-tax orange (hatched),

@@ -4,7 +4,7 @@ import { FINAL_TIER_MS, FLOOR, PHONE, PHONE_DPR, REAL, REAL_DPR, SETTLED_RESULT,
 import { copy, slots, workingCostExtras, type TypedBelowAmount } from '../src/ui/copy'
 import { navModules } from '../src/ui/shell/routes'
 import { ENGINE_PRICING_LEDGER } from '../src/engine/pricingVersion'
-import { DEV_VAULT_PASSPHRASE as DEV_PASSPHRASE } from '../src/ui/devSeeds'
+import { DEV_VAULT_PASSPHRASE as DEV_PASSPHRASE, SEED_BUILD_YEAR } from '../src/ui/devSeeds'
 import { IN_FRAME_DISCLAIMER_ID } from '../src/ui/disclaimerId'
 import { FAN, assertHcText, enterSnapshot, hcAudit, hcFloorPx, hcMarkFailures, hcMarks, hcTextFailures, hoverMedian } from './hcTextAudit'
 
@@ -4194,6 +4194,98 @@ for (const size of RC12_SIZES) {
       expect(r.splits, `${who}: words broken across two lines`).toEqual([])
       expect(r.bodySideways, `${who}: the drawer's body scrolls sideways`).toBeLessThanOrEqual(0)
       expect(r.footerBottom, `${who}: Save and Cancel inside the window`).toBeLessThanOrEqual(r.vh + 0.5)
+      await noSidewaysScroll(page, who)
+    })
+  })
+}
+
+// ── Gap 5's U4 · an inheritance or gift on Income (b9-5, 2026-11-28): the drawer with every line it can draw on a plan
+// never saved (the year set to the plan's first year, so R17's question shows; one person's, so the still-comes question
+// shows; the read-back with its heir clause; the estimate line), and the Income page with two items after a second is
+// added through Add income's entry. The drawer fits at open; filled, its body scrolls nothing sideways, Save stays in the
+// window, every line and box sits inside the body and no word breaks across two lines (each read through a Range); the
+// page's two cards break no word either and nothing scrolls sideways.
+async function oneTimeLayout(scope: Locator): Promise<{ outside: string[]; splits: string[] }> {
+  return scope.evaluate((root) => {
+    const box = root.getBoundingClientRect()
+    const outside: string[] = []
+    // What a person reads or types in: the radios are drawn by their labels (`[data-choice]`, their own inputs are
+    // screen-reader-only), the text boxes, and every paragraph.
+    for (const sel of ['[data-choice]', 'input[type="text"]', 'p', 'legend', 'label']) {
+      for (const el of root.querySelectorAll(sel)) {
+        const b = el.getBoundingClientRect()
+        if (b.width === 0 || b.height === 0) continue
+        if (b.left < box.left - 0.5 || b.right > box.right + 0.5) outside.push(`${sel} ${Math.round(b.left)}–${Math.round(b.right)} in ${Math.round(box.left)}–${Math.round(box.right)}`)
+      }
+    }
+    const splits: string[] = []
+    const walk = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
+    for (let n = walk.nextNode(); n !== null; n = walk.nextNode()) {
+      for (const m of (n.textContent ?? '').matchAll(/[^\s-]+/g)) {
+        const range = document.createRange()
+        range.setStart(n, m.index!)
+        range.setEnd(n, m.index! + m[0].length)
+        const tops = new Set([...range.getClientRects()].filter((x) => x.width > 0).map((x) => Math.round(x.top)))
+        if (tops.size > 1) splits.push(m[0])
+      }
+    }
+    return { outside, splits }
+  })
+}
+
+for (const size of RC12_SIZES) {
+  test.describe(`Gap 5 · U4 · an inheritance or gift on Income ${size.title}`, () => {
+    test.use(size.use)
+    test('?seed=dateinherit: the drawer with R17, whose it is, the still-comes question, the read-back and the estimate line fits, every line inside, no word broken; a second item from Add income lands its card, the page breaks no word', async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 120_000)
+      const who = `dateinherit U4 ${size.phone ? 'phone' : 'window'}`
+      await gotoSeedFinal(page, 'dateinherit')
+      await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
+      await toProfile(page, PROFILE.income, size.phone)
+      await page.locator('main.result [data-profile-card="one-time-0"]').click()
+      await assertDrawerFits(page, who, size.phone)
+      const dialog = page.getByRole('dialog')
+      const year = dialog.getByRole('textbox', { name: copy.oneTimeYearFieldLabel })
+      await year.fill(String(SEED_BUILD_YEAR))
+      await year.press('Tab')
+      await expect(dialog.getByRole('group', { name: slots.oneTimeArrivedLegend(SEED_BUILD_YEAR) }), 'R17 on a plan never saved, its first year').toBeVisible()
+      await dialog.getByText(copy.oneTimeArrivedNo, { exact: true }).click()
+      await dialog.getByText('Sam', { exact: true }).click()
+      await dialog.getByText(copy.oneTimeLeftToNo, { exact: true }).click()
+      await expect(dialog.locator('[data-one-time-readback]')).toHaveText(/^The answer adds \$250,000 to your taxable account at the end of \d{4}, in every future where your savings last through \d{4} and Sam is living that year\. It joins at the end of the year, so none of it pays that year’s costs\.$/)
+      await dialog.locator('[data-one-time-estimate]').scrollIntoViewIfNeeded()
+      await settleLayout(page)
+      const body = dialog.locator('[data-profile-drawer-body]')
+      const r = await oneTimeLayout(body)
+      expect(r.outside, `${who}: a line or box outside the drawer's body`).toEqual([])
+      expect(r.splits, `${who}: words broken across two lines`).toEqual([])
+      const frame = await dialog.evaluate((dlg) => {
+        const scroller = dlg.querySelector('[data-profile-drawer-body]')!.parentElement!
+        return { sideways: scroller.scrollWidth - scroller.clientWidth, footerBottom: dlg.querySelector('footer')!.getBoundingClientRect().bottom, vh: window.innerHeight }
+      })
+      expect(frame.sideways, `${who}: the drawer's body scrolls sideways`).toBeLessThanOrEqual(0)
+      expect(frame.footerBottom, `${who}: Save and Cancel inside the window`).toBeLessThanOrEqual(frame.vh + 0.5)
+      await dialog.getByRole('button', { name: copy.profileDrawerCancel }).click()
+      await dialog.getByRole('button', { name: copy.profileUnsavedDrop }).click()
+      await expect(page.getByRole('dialog')).toHaveCount(0)
+      // A second item through Add income's own entry.
+      await page.getByRole('button', { name: copy.profileAddIncome }).click()
+      await page.getByRole('menuitem', { name: copy.oneTimeKind }).click()
+      const add = page.getByRole('dialog')
+      await add.getByRole('textbox', { name: copy.oneTimeNameLabel }).fill('Gift from Dad')
+      await add.getByRole('textbox', { name: copy.oneTimeYearFieldLabel }).fill(String(SEED_BUILD_YEAR + 6))
+      await add.getByRole('textbox', { name: copy.oneTimeAmountLabel }).fill('40000')
+      await add.getByRole('textbox', { name: copy.oneTimeAmountLabel }).press('Tab')
+      await add.getByText(copy.blueprintBothOfYou, { exact: true }).click()
+      await add.getByRole('button', { name: copy.profileDrawerSave }).click()
+      await expect(page.getByRole('dialog')).toHaveCount(0)
+      const second = page.locator('main.result [data-profile-card="one-time-1"]')
+      await expect(second).toContainText(slots.oneTimeComesIn('40,000', SEED_BUILD_YEAR + 6))
+      await settleLayout(page)
+      for (const id of ['one-time-0', 'one-time-1']) {
+        const card = await oneTimeLayout(page.locator(`main.result [data-profile-card="${id}"]`))
+        expect(card.splits, `${who}: ${id}'s words broken across two lines`).toEqual([])
+      }
       await noSidewaysScroll(page, who)
     })
   })

@@ -246,7 +246,14 @@ function IseBody({ body, ...h }: { readonly body: Extract<BlueprintView['body'],
           className="flex flex-col gap-4 border-t border-dashed border-stone-400 py-6 laptop:grid laptop:grid-cols-[4rem_minmax(0,1fr)_minmax(0,1fr)] laptop:gap-x-10"
           data-bp-lane={lane.id}
         >
-          <h3 className="text-chart-title font-regular text-plum laptop:flex laptop:items-center laptop:justify-center laptop:[writing-mode:vertical-rl] laptop:rotate-180">
+          <h3
+            className={cn(
+              'text-chart-title font-regular text-plum laptop:flex laptop:items-center laptop:justify-center laptop:[writing-mode:vertical-rl] laptop:rotate-180',
+              // A lane with both per-person cells and a "Both of you" row (Income with a both-people gift): its label spans
+              // both rows.
+              lane.cells !== null && lane.shared !== undefined && 'laptop:row-span-2',
+            )}
+          >
             {lane.label}
           </h3>
           {lane.cells !== null
@@ -263,7 +270,7 @@ function IseBody({ body, ...h }: { readonly body: Extract<BlueprintView['body'],
               ))
             : null}
           {lane.shared !== undefined ? (
-            <div className="flex min-w-0 flex-col gap-3 laptop:col-span-2" data-bp-shared="">
+            <div className={cn('flex min-w-0 flex-col gap-3 laptop:col-span-2', lane.cells !== null && 'laptop:col-start-2')} data-bp-shared="">
               <h4 className="text-body font-semibold text-stone-900 laptop:text-center">{lane.shared.label}</h4>
               <Tiles tiles={lane.shared.tiles} className="laptop:grid laptop:grid-cols-2 laptop:gap-x-10" {...h} />
             </div>

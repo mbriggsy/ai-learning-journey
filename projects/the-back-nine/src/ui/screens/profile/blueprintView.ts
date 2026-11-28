@@ -29,12 +29,11 @@
  */
 import type { BudgetLineItem, DateTrackOutcome } from '@shared/model'
 import type { ModelAnswer, ScenarioDraft } from '@store/memoryModel'
-import { ACCOUNT_KINDS, INCOME_TYPES } from '@shared/model'
+import { ACCOUNT_KINDS } from '@shared/model'
 import { budgetGoverns } from '@budget/budgetModel'
 import { formatMoney, formatPercent } from '@intake/moneyFormat'
 import { kindLabel } from '@intake/accountKinds'
 import { takesDeposits } from '@intake/sanity'
-import { incomeTypeLabel } from '@intake/otherIncome'
 import { isDateRoute } from '@intake/intakeMap'
 import { lineDisplayName } from '@intake/budgetLines'
 import { copy, slots } from '../../copy'
@@ -45,6 +44,7 @@ import { tablePerson } from '../../workbench/tableRun'
 import {
   accountCardName,
   expensesView,
+  incomeAddItems,
   incomeView,
   netWorthView,
   savingsView,
@@ -155,6 +155,9 @@ export interface BlueprintInput {
   readonly tab: BlueprintTab
   readonly readOnly: boolean
   readonly agedBalancesYear: number | undefined
+  /** The year the plan's balances were last saved (the persisted plan's; absent before any save): an inheritance or
+   *  gift's Income tile carries R15's note by it, as its card does (gap 5's U4). */
+  readonly balancesSaveYear?: number
   /** The store's committed answer and its re-figuring flag (the working household's stop year is the answer's). */
   readonly answer: ModelAnswer
   readonly refiguring: boolean
@@ -202,6 +205,10 @@ function ownerOf(d: ScenarioDraft, target: DrawerTarget): number | null {
       return d.incomeStreams[target.index]?.ownerIndex ?? null
     case 'account':
       return d.enteredAccounts[target.index]?.ownerIndex ?? null
+    // A couple's inheritance or gift that is one person's sits in that person's cell; one that is both people's is the
+    // household's (gap 5's U4).
+    case 'one-time':
+      return d.oneTimeInflows?.[target.index]?.heirIndex ?? null
     default:
       return null
   }
@@ -255,6 +262,9 @@ const GOALS_LEGEND: readonly LegendItem[] = [
   { id: 'social-security', label: copy.profileKindSocialSecurity, tone: 'blue' },
   { id: 'medicare', label: copy.profileKindMedicare, tone: 'sky' },
   { id: 'spending', label: copy.blueprintCatSpending, tone: 'coral' },
+  // Gap 5's U4: an inheritance or gift at its calendar year, orange (RC_PAIRS: beside green, blue, the tile sky and red).
+  // Drawn only on a plan that holds one (`blueprintView`'s legend).
+  { id: 'one-time', label: copy.oneTimeKind, tone: 'orange' },
 ]
 const goalsLegend = (id: string): LegendItem => GOALS_LEGEND.find((l) => l.id === id)!
 
@@ -283,7 +293,7 @@ interface Placed {
   readonly tile: BlueprintTile
   /** A calendar year, a count of years after the stop, or neither (a fact still missing). */
   readonly at: { readonly kind: 'year'; readonly year: number } | { readonly kind: 'after'; readonly years: number } | { readonly kind: 'none' }
-  /** Order inside a group: stops, claims, Medicare, then spending. */
+  /** Order inside a group: stops, claims, Medicare, spending, then an inheritance or gift. */
   readonly rank: number
 }
 
@@ -407,6 +417,23 @@ function goalsBody(d: ScenarioDraft, stop: StopAnchor): { body: BlueprintBody; l
   const lines: string[] = []
   if (budgetGoverns(d.budget) && d.budget !== undefined) d.budget.forEach((line, k) => placed.push(lineTile(line, k, stop, start)))
   else lines.push(copy.blueprintSpendingOneFigure)
+  // Each inheritance or gift at its own calendar year (KTD1: never a year counted from the work stop), on both routes.
+  const oneTime = goalsLegend('one-time')
+  ;(d.oneTimeInflows ?? []).forEach((item, k) =>
+    placed.push({
+      tile: {
+        id: `one-time-${k}`,
+        legend: oneTime.id,
+        category: oneTime.label,
+        tone: oneTime.tone,
+        name: item.name,
+        value: dollars(item.amountReal),
+        target: { kind: 'one-time', index: k },
+      },
+      at: { kind: 'year', year: item.year },
+      rank: 4,
+    }),
+  )
 
   const byRank = (a: Placed, b: Placed) => a.rank - b.rank
   const agesIn = (year: number): string | null => {
@@ -453,20 +480,28 @@ const ISE_LEGEND: readonly LegendItem[] = [
 ]
 const iseLegend = (id: IseLane['id']): LegendItem => ISE_LEGEND.find((l) => l.id === id)!
 
-function iseBody(d: ScenarioDraft, readOnly: boolean): BlueprintBody {
+function iseBody(d: ScenarioDraft, readOnly: boolean, saveYear: number | undefined): BlueprintBody {
   const perPerson = (cards: readonly CardView[], legend: LegendItem, empty: (i: number) => string | null) =>
     BOTH.map((i) => {
       const tiles = cards.filter((c) => ownerOf(d, c.target) === i).map((c) => tileOf(c, legend))
       return { tiles, empty: tiles.length === 0 ? empty(i) : null }
     })
-  const income = incomeView(d, readOnly).cards
+  const income = incomeView(d, readOnly, saveYear).cards
+  // The household's own income (a both-people inheritance or gift): a "Both of you" row under the two cells, the Expenses
+  // lane's shape (gap 5's U4). Absent while there is none.
+  const sharedIncome = income.filter((c) => ownerOf(d, c.target) === null).map((c) => tileOf(c, iseLegend('income')))
   const savings = savingsView(d, readOnly).cards
   const expenses = expensesView(d).cards
   return {
     kind: 'ise',
     people: BOTH.map((i) => personOf(d, i)),
     lanes: [
-      { id: 'income', label: iseLegend('income').label, cells: perPerson(income, iseLegend('income'), () => null) },
+      {
+        id: 'income',
+        label: iseLegend('income').label,
+        cells: perPerson(income, iseLegend('income'), () => null),
+        ...(sharedIncome.length > 0 ? { shared: { label: copy.blueprintBothOfYou, tiles: sharedIncome } } : {}),
+      },
       {
         id: 'savings',
         label: iseLegend('savings').label,
@@ -502,7 +537,7 @@ function addFor(tab: BlueprintTab, d: ScenarioDraft, readOnly: boolean, agedBala
   return {
     label: copy.blueprintAdd,
     items: [
-      { id: 'income', label: copy.blueprintAddIncome, items: INCOME_TYPES.map((type) => ({ id: type, label: incomeTypeLabel(type), target: { kind: 'new-income', type } as const })) },
+      { id: 'income', label: copy.blueprintAddIncome, items: incomeAddItems() },
       // This tab's accounts are Savings' (the deposits), so it offers only a kind that takes them (U10's per-page split): never
       // the inherited IRA, which Net Worth's Add menu offers.
       { id: 'account', label: copy.blueprintAddAccount, items: ACCOUNT_KINDS.filter(takesDeposits).map((k) => ({ id: k, label: kindLabel(k), target: { kind: 'new-account', accountKind: k } as const })) },
@@ -541,7 +576,8 @@ function hide(body: BlueprintBody, hidden: ReadonlySet<string>): BlueprintBody {
 export function blueprintView(input: BlueprintInput): BlueprintView {
   const { draft: d, tab, readOnly, agedBalancesYear, answer, refiguring, anchor } = input
   const hidden = input.hidden ?? new Set<string>()
-  const legend = legendFor(tab)
+  // Goals names an inheritance or gift only on a plan that holds one (an entry with no tile would be a category of nothing).
+  const legend = tab === 'goals' && (d.oneTimeInflows?.length ?? 0) === 0 ? legendFor(tab).filter((l) => l.id !== 'one-time') : legendFor(tab)
   const dateRoute = isDateRoute(d)
   let body: BlueprintBody
   let headline: string
@@ -562,7 +598,7 @@ export function blueprintView(input: BlueprintInput): BlueprintView {
     lines = goals.lines
   } else {
     headline = copy.blueprintTabIse
-    body = iseBody(d, readOnly)
+    body = iseBody(d, readOnly, input.balancesSaveYear)
   }
   const hiddenLabels = legend.filter((l) => hidden.has(l.id)).map((l) => l.label)
   const shown = hide(body, hidden)

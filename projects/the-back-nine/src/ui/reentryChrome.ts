@@ -15,7 +15,7 @@
  */
 import type { CurrentScenario } from '@shared/model'
 import { KIND_TO_BUCKET, type KindBucket } from '@intake/intakeMap'
-import type { StalenessReport } from '@store/staleness'
+import { balancesSaveYear, type StalenessReport } from '@store/staleness'
 import type { PricingFamily } from '@engine/pricingVersion'
 import { copy, slots, type CopyKey } from './copy'
 import { notePartsText, type GateDoor, type NoteParts } from './noteParts'
@@ -360,6 +360,19 @@ export function composeReentry(
     if (seenBoundaryYears.has(line.endCalendarYear)) continue
     seenBoundaryYears.add(line.endCalendarYear)
     noteLines.push(slots.stalenessBudgetLine(line.endCalendarYear))
+  }
+  // Gap 5's U4 (R15): one line per inheritance or gift dated in or before the year the balances were saved, beside the
+  // budget re-confirms (an input re-confirm, counted in `anyStale` by the report). Named with its amount and year, so two
+  // items never read alike; an identical sentence is said once (the notes key by their text).
+  const saveYear = balancesSaveYear(scenario)
+  const seenOneTime = new Set<string>()
+  for (const flagged of report.oneTimeMoney.atOrBeforeSave) {
+    const item = scenario.oneTimeInflows?.[flagged.index]
+    if (item === undefined) continue
+    const line = slots.stalenessOneTimeLine(item.name, formatDollar(item.amountReal), item.year, saveYear, flagged.inSaveYear)
+    if (seenOneTime.has(line)) continue
+    seenOneTime.add(line)
+    noteLines.push(line)
   }
 
   // ── the wall-time line (suppressed, never fabricated) ────────────────────────────────

@@ -3451,7 +3451,34 @@ export const copy = {
   profileNetWorthNoAccountsReadOnly: 'No accounts yet.',
   profileSavingsLimitsNote:
     'Each person’s deposits are held to this year’s legal limits, counted across all of that person’s accounts of one kind. Open an account to see its limit.',
-  profileIncomeOtherNone: 'No other income is entered. Add a pension, rental, annuity or other income with Add income.',
+  profileIncomeOtherNone: 'No other income is entered. Add a pension, rental, annuity, other income, or an inheritance or gift with Add income.',
+  // With an inheritance or gift's card on the page and no ongoing income (gap 5's U4): "no other income" would be false.
+  profileIncomeOngoingNone: 'No pension, rental, annuity or other ongoing income is entered. Add one with Add income.',
+  profileIncomeOngoingNoneReadOnly: 'No pension, rental, annuity or other ongoing income is entered.',
+  // --- AN INHERITANCE OR GIFT ON INCOME (gap 5's U4; `profileView.ts`'s card, `drawers/OneTimeDrawer.tsx`, the fields'
+  //     pure half `drawers/oneTimeFields.ts`; R1 to R3, R11, R14, R15, R17). The drawer's refusals are U3's `errOneTime*`
+  //     (above). Shipped flagged for Briggsy's later read (his 2026-11-22 rulings: the words ship). ---
+  oneTimeKind: 'Inheritance or gift',
+  oneTimeNewTitle: 'New inheritance or gift',
+  profileRowComesIn: 'Comes in',
+  profileRowFor: 'For',
+  oneTimeNameLabel: 'Name',
+  oneTimeNameHelp: 'Your own name for it, such as “Mom’s estate”.',
+  oneTimeYearFieldLabel: 'Year it comes in',
+  oneTimeArrivedYes: 'Yes, it had',
+  oneTimeArrivedNo: 'No, not yet',
+  oneTimeAmountLabel: 'Amount, in today’s dollars',
+  // R3: what belongs in the amount, and the two kinds that don't (taxed as money comes out; the giver's cost kept).
+  oneTimeAmountHelp:
+    'The cash or investments you expect to receive, after any estate or inheritance tax, or a gift of cash. An IRA, 401(k), 403(b) or annuity doesn’t go here, because it’s taxed as money comes out of it, and neither do shares given by someone living, which keep the giver’s cost.',
+  oneTimeWhoseLegend: 'Who is it coming to?',
+  oneTimeLeftToNo: 'No, it would go to someone else',
+  // R14 with D7's one unknowable: the household's own year and amount are counted as entered.
+  oneTimeEstimateNote:
+    'When an estate settles, and what it leaves, nobody can know ahead of time. The year and amount are your own estimate, and the answer counts them as you enter them.',
+  // R11's no-savings arm: a $0 plan runs out in its first year (`stepYear`: nothing left after the year's draw), so the
+  // year-end credit is never reached. The spine route only: the date route asks for an account first (`addAccount`).
+  oneTimeNoSavings: 'With $0 in savings, the plan runs out in its first year, so the answer counts none of this money.',
   profileSalaryStopgap:
     'B9 holds pay as one steady yearly figure in today’s dollars until work stops. Raises and part-time years come with a later build.',
   profileNetWorthInvestment: 'Investment',
@@ -5289,6 +5316,33 @@ export const slots = {
     `The year it comes in is one from ${firstYear} to ${lastYear}, the years this plan covers.`,
   /** …and while a person's age is still unknown, so the plan's last year is too: the first year alone. */
   errOneTimeYearFrom: (firstYear: string): string => `The year it comes in is ${firstYear} or later, from this plan’s first year on.`,
+  /** Gap 5's U4: the year box's help, the range named as the refusal names it (the plan's first year through its last). */
+  oneTimeYearHelp: (firstYear: number, lastYear: number | undefined): string =>
+    lastYear === undefined ? `A calendar year, ${firstYear} or later.` : `A calendar year from ${firstYear} to ${lastYear}, the years this plan covers.`,
+  /** R17: asked only of an item dated in the year the balances were last saved (the plan's first year if never saved). */
+  oneTimeArrivedLegend: (saveYear: number): string =>
+    `Had this money already come in when you entered your account balances in ${saveYear}?`,
+  /** KTD12's second question, for a couple's item that is one person's: does it still come to the other if that person
+   *  dies before it comes (the engine counts a person living through the year they die). */
+  oneTimeLeftToLegend: (heirMid: string, heirIsYou: boolean, otherMid: string): string =>
+    `If ${heirMid} ${heirIsYou ? 'die' : 'dies'} before it comes, would it still come to ${otherMid}?`,
+  oneTimeLeftToHelp: (heirMid: string, heirIsYou: boolean): string =>
+    `If not, the answer counts it only in futures where ${heirMid} ${heirIsYou ? 'are' : 'is'} living that year.`,
+  oneTimeLeftToYes: (other: string): string => `Yes, to ${other}`,
+  /** The card's "Comes in" row: the amount, in today's dollars as entered, and its calendar year. */
+  oneTimeComesIn: (amount: string, year: number): string => `$${amount} in ${year}`,
+  /** R11's read-back, in the household's own numbers: the amount added at the end of its year in today's dollars and,
+   *  past the price index's base year, in that year's dollars (`nominal`, null in the base year itself, where the two
+   *  are one figure); on the paths where it still comes (R6, KTD12: `heirMid` only for an item left to someone else). */
+  oneTimeReadBack: (amount: string, year: number, nominal: string | null, heirMid: string | null, heirIsYou: boolean): string =>
+    `The answer adds $${amount} to your taxable account at the end of ${year}${nominal === null ? '' : `, about $${nominal} in ${year}’s dollars`}, in every future where your savings last through ${year}${heirMid === null ? '' : ` and ${heirMid} ${heirIsYou ? 'are' : 'is'} living that year`}. It joins at the end of the year, so none of it pays that year’s costs.`,
+  /** R15 on the card and in the drawer: an item dated before the year the balances were last saved (the plan's first
+   *  year if never saved) … */
+  oneTimeFlagBefore: (saveYear: number): string =>
+    `Your account balances are from ${saveYear}, after this money’s year. If it came, those balances already hold it, and it counts twice until this item is deleted.`,
+  /** …and one dated in that year. */
+  oneTimeFlagInYear: (saveYear: number): string =>
+    `Your account balances are from ${saveYear}, this money’s year. If it came in before you entered them, they already hold it, and it counts twice until this item is deleted.`,
   // --- U7 verdict grammar (the confidence statement's magnitude clause) -----------------
   // The second line of the verdict, keyed off the engine's dollar DIRECTION
   // (DollarAdjustment.direction — NEVER re-derived UI-side) + its $/month figures, each pre-formatted
@@ -5542,7 +5596,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:2480` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:2491` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,
@@ -5792,6 +5846,12 @@ export const slots = {
    *  the user's frame, never a bare offset). */
   stalenessBudgetLine: (endCalendarYear: number): string =>
     `Part of your budget was set to end in ${endCalendarYear} — worth a look if that’s changed.`,
+  /** Gap 5's U4, R15 at the re-entry gate: one inheritance or gift dated in or before the year the balances were saved
+   *  (`report.oneTimeMoney.atOrBeforeSave`), named with its amount and year so two items never read alike. */
+  stalenessOneTimeLine: (name: string, amount: string, year: number, saveYear: number, inSaveYear: boolean): string =>
+    inSaveYear
+      ? `“${name}”, $${amount} in ${year}, is dated the year your balances were saved. If that money came in before the save, those balances already hold it, and it counts twice until the item is deleted on the Income page.`
+      : `“${name}”, $${amount} in ${year}, is dated before your balances were saved in ${saveYear}. If that money came, those balances already hold it, and it counts twice until the item is deleted on the Income page.`,
   /** The engine-method line (see `copy.stalenessPricing*`): ONE sentence naming only the families
    *  the household's run priced, Medicare last (its phrase carries its own trailing clause). */
   stalenessPricing: (families: string): string =>

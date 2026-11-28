@@ -223,6 +223,9 @@ export interface ShellProps {
   readonly recordCard?: { readonly record: SavedRecommendationV3; readonly status: SavedRecommendationStatus }
   /** The aged-balances clause's year (IntakeApp's `agedBalancesYearFor`), for the Invested accounts card. */
   readonly agedBalancesYear?: number
+  /** The year the plan's balances were last saved, from the persisted plan (IntakeApp's persist state; absent before any
+   *  save): an inheritance or gift's card, tile and drawer read it (gap 5's U4, R15, R17). */
+  readonly balancesSaveYear?: number
   /** The plan list's one write (RC5): IntakeApp applies the edit to the store's CURRENT list and writes it through the
    *  plan's one save path (KTD19); a Keep with no vault opens the save ceremony (`keep`: the kept id to reopen after). */
   readonly onWriteKept?: (edit: KeptEdit, keep?: string) => Promise<KeptWriteOutcome>
@@ -379,6 +382,7 @@ export default function Shell({
   recSave,
   recordCard,
   agedBalancesYear,
+  balancesSaveYear,
   onWriteKept,
   resumeKept,
   onResumed,
@@ -1621,6 +1625,7 @@ export default function Shell({
               readOnly={readOnly}
               headingRef={headingRef}
               agedBalancesYear={agedBalancesYear}
+              {...(balancesSaveYear !== undefined ? { balancesSaveYear } : {})}
               caveat={CASH_FLOWS_CAVEAT}
               answer={snapshot.answer}
               refiguring={snapshot.refiguring}
@@ -1659,7 +1664,7 @@ export default function Shell({
           </>
         ) : null}
         <DisplayDrawer open={displayOpen} settings={display} onSave={setDisplay} onClose={() => setDisplayOpen(false)} />
-        {drawers.render({ model, readOnly, ...(shownAsk !== undefined ? { leaveAsk: shownAsk } : {}) })}
+        {drawers.render({ model, readOnly, ...(shownAsk !== undefined ? { leaveAsk: shownAsk } : {}), ...(balancesSaveYear !== undefined ? { balancesSaveYear } : {}) })}
       </main>
     </>
   )

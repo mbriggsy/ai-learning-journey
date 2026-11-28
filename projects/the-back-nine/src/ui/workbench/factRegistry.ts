@@ -12,6 +12,7 @@
  * THE GATE REACHES EVERY LEVEL (the R7 registry's GATE-SCOPE warning, answered): `keyof ScenarioDraft` sees only
  * the draft's own keys, so the containers each get a sibling FLAT record of their own — a new field on a person, the
  * health answers, an account, an inherited IRA's facts (U13) or an income stream fails `tsc` here until it is placed. The income
+ * stream (and, since gap 5's U4, an inheritance or gift) is placed the same way. The income
  * stream is `{…} & IncomeTaxTreatment`, a union whose arms share only `type`, so a plain `keyof` would drop every
  * arm's own field (`executedAfter2018`, the most consequential answer in the union, among them). Its record is
  * keyed by {@link KeysOfEachArm}, a DISTRIBUTIVE keyof that takes each arm's keys in turn: an arm field added later
@@ -22,7 +23,7 @@
  * Add menus offer over made-up drafts that hold every field between them, and fails on a SHOWN field no drawer stamps,
  * or one stamped in a drawer this record does not name.
  */
-import type { EnteredAccount, InheritedIraV7 } from '@shared/model'
+import type { EnteredAccount, InheritedIraV7, OneTimeInflow } from '@shared/model'
 import type { IncomeStream } from '@shared/model'
 import type { HealthDraft, PersonDraft, ScenarioDraft } from '@store/memoryModel'
 import type { DrawerTarget } from '../screens/profile/profileView'
@@ -42,7 +43,7 @@ export type FactDisposition =
   /** Changed outside Profile, never in a drawer. */
   | { readonly kind: 'elsewhere'; readonly home: FactElsewhereId; readonly why: string }
   /** A container: its fields are walked by the named sibling record. */
-  | { readonly kind: 'nested'; readonly record: 'person' | 'health' | 'account' | 'inherited' | 'income' }
+  | { readonly kind: 'nested'; readonly record: 'person' | 'health' | 'account' | 'inherited' | 'income' | 'inflow' }
   /** Not something the household told the tool: the why. */
   | { readonly kind: 'not-a-fact'; readonly why: string }
 
@@ -58,9 +59,11 @@ export type FactStamp =
   | `account.${keyof EnteredAccount}`
   | `inherited.${keyof InheritedIraV7}`
   | `income.${IncomeFactKey}`
+  | `inflow.${keyof OneTimeInflow}`
 
 const ACCOUNT_DRAWERS: readonly FactDrawerId[] = ['account', 'new-account']
 const INCOME_DRAWERS: readonly FactDrawerId[] = ['income', 'new-income']
+const INFLOW_DRAWERS: readonly FactDrawerId[] = ['one-time', 'new-one-time']
 
 export const DRAFT_FACTS: Record<keyof ScenarioDraft, FactDisposition> = {
   people: { kind: 'nested', record: 'person' },
@@ -102,9 +105,8 @@ export const DRAFT_FACTS: Record<keyof ScenarioDraft, FactDisposition> = {
   keptWhatIfs: notAFact(
     'Choices the household is trying beside the plan, kept in the workbench: what-ifs, never facts the plan runs on.',
   ),
-  // Interim (gap 5's U1): the walk test fails on a shown field no drawer stamps, and the one-time drawer arrives in
-  // U4, which moves this to `nested` with its flat INFLOW_FACTS record.
-  oneTimeInflows: notAFact('No drawer writes this list until gap 5’s U4 (the one-time money drawer).'),
+  // Inheritances and gifts (gap 5's U4): each item's fields are walked by their own flat record.
+  oneTimeInflows: { kind: 'nested', record: 'inflow' },
 }
 
 export const PERSON_FACTS: Record<keyof PersonDraft, FactDisposition> = {
@@ -181,6 +183,20 @@ export const INCOME_FACTS: Record<IncomeFactKey, FactDisposition> = {
   exclusionFraction: shown(...INCOME_DRAWERS),
 }
 
+/** An inheritance or gift's facts (gap 5's U4): its drawer (`OneTimeDrawer.tsx`) asks each one, from its Income card or
+ *  Add income's entry. */
+export const INFLOW_FACTS: Record<keyof OneTimeInflow, FactDisposition> = {
+  id: notAFact('A stable id the tool mints so a drawer can name the item; never something the household told it.'),
+  kind: notAFact(
+    'Version 9 holds one kind, the inheritance or gift: the Add menu entry picks it and the drawer is named for it, so there is no other kind to change it to.',
+  ),
+  name: shown(...INFLOW_DRAWERS),
+  year: shown(...INFLOW_DRAWERS),
+  amountReal: shown(...INFLOW_DRAWERS),
+  heirIndex: shown(...INFLOW_DRAWERS),
+  leftTo: shown(...INFLOW_DRAWERS),
+}
+
 const RECORDS = [
   ['', DRAFT_FACTS],
   ['person.', PERSON_FACTS],
@@ -188,6 +204,7 @@ const RECORDS = [
   ['account.', ACCOUNT_FACTS],
   ['inherited.', INHERITED_FACTS],
   ['income.', INCOME_FACTS],
+  ['inflow.', INFLOW_FACTS],
 ] as const
 
 /** Every SHOWN field, by its stamp, with the drawers it may sit in: the list the field walk reads. */

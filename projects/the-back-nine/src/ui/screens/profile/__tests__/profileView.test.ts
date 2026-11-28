@@ -86,7 +86,8 @@ describe('Income', () => {
 
   it('the Add income menu offers every kind of other income; a read-only view has none', () => {
     const add = incomeView(working, false).add!
-    expect(leaves(add).map((t) => (t.kind === 'new-income' ? t.type : null))).toEqual(['pension', 'rental', 'alimony', 'annuity', 'other'])
+    // Gap 5's U4 (R1): an inheritance or gift is the last entry.
+    expect(leaves(add).map((t) => (t.kind === 'new-income' ? t.type : t.kind))).toEqual(['pension', 'rental', 'alimony', 'annuity', 'other', 'new-one-time'])
     expect(incomeView(working, true).add).toBeNull()
     // Milestone 3's review, X12's class: no door words where no Add menu is drawn.
     expect(incomeView(working, false).lines).toContain(copy.profileIncomeOtherNone)

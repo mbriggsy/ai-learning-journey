@@ -9,6 +9,7 @@ import {
   Building2,
   ChartColumnBig,
   CircleDollarSign,
+  Gift,
   HandCoins,
   HeartPulse,
   House,
@@ -69,5 +70,7 @@ export function ProfileIcon({ icon }: { readonly icon: CardIcon | 'investment' }
       return <WalletCards {...props} />
     case 'money-picture':
       return <ReceiptText {...props} />
+    case 'one-time':
+      return <Gift {...props} />
   }
 }

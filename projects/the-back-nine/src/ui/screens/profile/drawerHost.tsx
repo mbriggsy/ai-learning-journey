@@ -21,6 +21,7 @@ import { LivingDrawer, MedicalDrawer } from './drawers/ExpensesDrawers'
 import { PersonDrawer, StateDrawer } from './drawers/FamilyDrawers'
 import { HealthDrawer, MedicareDrawer } from './drawers/GoalsDrawers'
 import { SalaryDrawer, SocialSecurityDrawer, WorkInvestDrawer } from './drawers/IncomeDrawers'
+import { OneTimeDrawer } from './drawers/OneTimeDrawer'
 import { OtherIncomeDrawer } from './drawers/OtherIncomeDrawer'
 import { WorkingCostDrawer } from './drawers/WorkingCostDrawer'
 import type { DrawerBodyProps } from './drawers/drawerProps'
@@ -42,6 +43,10 @@ export function DrawerFor({ target, ...props }: DrawerBodyProps & { readonly tar
       return <OtherIncomeDrawer at={{ index: target.index }} {...props} />
     case 'new-income':
       return <OtherIncomeDrawer at={{ type: target.type }} {...props} />
+    case 'one-time':
+      return <OneTimeDrawer at={{ index: target.index }} {...props} />
+    case 'new-one-time':
+      return <OneTimeDrawer at="new" {...props} />
     case 'account':
       return <AccountDrawer at={{ index: target.index, facet: target.facet }} {...props} />
     case 'new-account':
@@ -80,7 +85,13 @@ export interface DrawerHost {
   /** The card whose drawer is open (it reads selected; the rest dim). */
   readonly selected: string | null
   /** The drawer itself, or null. */
-  readonly render: (props: { readonly model: MemoryModel; readonly readOnly: boolean; readonly leaveAsk?: DrawerLeaveAsk }) => React.ReactNode
+  readonly render: (props: {
+    readonly model: MemoryModel
+    readonly readOnly: boolean
+    readonly leaveAsk?: DrawerLeaveAsk
+    /** The persisted plan's balances save year (`DrawerBodyProps.balancesSaveYear`). */
+    readonly balancesSaveYear?: number
+  }) => React.ReactNode
 }
 
 export function useDrawerHost(fallback: () => HTMLElement | null): DrawerHost {
@@ -120,7 +131,7 @@ export function useDrawerHost(fallback: () => HTMLElement | null): DrawerHost {
     close,
     isOpen,
     selected: isOpen ? drawer.card : null,
-    render: ({ model, readOnly, leaveAsk }) =>
+    render: ({ model, readOnly, leaveAsk, balancesSaveYear }) =>
       drawer === null ? null : (
         <DrawerFor
           key={drawer.seq}
@@ -133,6 +144,7 @@ export function useDrawerHost(fallback: () => HTMLElement | null): DrawerHost {
           onClosed={closed}
           finalFocus={finalFocus}
           {...(drawer.checkAtOpen ? { checkAtOpen: true } : {})}
+          {...(balancesSaveYear !== undefined ? { balancesSaveYear } : {})}
         />
       ),
   }

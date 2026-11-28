@@ -369,6 +369,30 @@ describe('the date route (AE5; KTD1)', () => {
       expect(rows[4]!.leftOverCredit).toBe(none.distribution.ledgerRows![4]!.leftOverCredit)
     }
   })
+
+  // The gift half's review, round 1: every value check above ran a year with build 2's credit at $0, so a site that
+  // took the gift IN PLACE OF the left-over credit (`total > 0 ? total : creditThisYear`) passed. Here both land in one
+  // working year: the year's taxable account ends exactly the gift higher, the other buckets unmoved (insight 093).
+  it('a working year that also saves its left over credits both: the taxable account ends exactly the gift higher', () => {
+    const d = DEV_SEEDS.datesaved
+    const input = buildDateInput(d)
+    if (input === null) throw new Error('datesaved: the seed builds a date input')
+    const overlay = input.params.overlay!
+    const items = [gift(overlay.startCalendarYear + 4, 250_000)]
+    const withItem = { ...input, params: { ...input.params, overlay: { ...overlay, oneTimeInflows: items } } }
+    const rowsOf = (i: typeof input) => {
+      const params = buildCandidateParams(i, 9, 1)
+      const out = simulate(params, d.seed!, { namedFuture: steadyFuture(params), ledgerRows: true })
+      if (out.indeterminate || out.infeasible) throw new Error(`datesaved at 9: ${JSON.stringify(out)}`)
+      return out.distribution.ledgerRows!
+    }
+    const [mine, none] = [rowsOf(withItem)[4]!, rowsOf(input)[4]!]
+    expect(none.leftOverCredit, '[test setup] the year saves a left over').toBeGreaterThan(0)
+    expect(mine.leftOverCredit).toBe(none.leftOverCredit)
+    expect(mine.oneTimeIn).toBe(250_000)
+    expect(mine.end.taxable - none.end.taxable).toBeCloseTo(250_000, 6)
+    for (const k of ['pretax', 'roth', 'hsa'] as const) expect(mine.end[k], k).toBe(none.end[k])
+  })
 })
 
 describe('KTD3’s measure, the gift half: the year-end credit against money that arrives at an unknown point in its year', () => {

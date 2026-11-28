@@ -4249,7 +4249,8 @@ for (const size of RC12_SIZES) {
       const year = dialog.getByRole('textbox', { name: copy.oneTimeYearFieldLabel })
       await year.fill(String(SEED_BUILD_YEAR))
       await year.press('Tab')
-      await expect(dialog.getByRole('group', { name: slots.oneTimeArrivedLegend(SEED_BUILD_YEAR) }), 'R17 on a plan never saved, its first year').toBeVisible()
+      // A plan never saved: its balances are this session's, so R17 asks in the present tense (the gift half's review, round 1).
+      await expect(dialog.getByRole('group', { name: copy.oneTimeArrivedLegendNow }), 'R17 on a plan never saved, its first year').toBeVisible()
       await dialog.getByText(copy.oneTimeArrivedNo, { exact: true }).click()
       await dialog.getByText('Sam', { exact: true }).click()
       await dialog.getByText(copy.oneTimeLeftToNo, { exact: true }).click()

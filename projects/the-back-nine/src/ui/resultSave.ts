@@ -33,8 +33,8 @@
  * documented: `scenarioIdentityKey` (model.ts) canonicalizes with SORTED object keys — while
  * keeping ARRAY order, because a real people/budget/drawdown reorder MUST still read dirty.
  */
-import { scenarioIdentityKey, type CurrentScenario } from '@shared/model'
-import { epochDayToCalendarYear } from '@store/staleness'
+import { canonicalIdentityToken, scenarioIdentityKey, type CurrentScenario } from '@shared/model'
+import { balancesSaveYear, epochDayToCalendarYear } from '@store/staleness'
 import type { SaveReady } from './scenarioFromDraft'
 import type { ResaveCopyKey } from './unlockCopy'
 
@@ -187,4 +187,36 @@ export function agedBalancesYearFor(
   if (savedAt === undefined) return undefined
   const saveYear = epochDayToCalendarYear(savedAt)
   return epochDayToCalendarYear(todayEpochDay) - saveYear >= 1 ? saveYear : undefined
+}
+
+/**
+ * Gap 5's R15 and R17 frame: the calendar year the account balances ON SCREEN were entered, and whether that is now.
+ * An inheritance or gift dated in or before that year may already sit in those balances, so it counts twice (the
+ * card's and drawer's flag, R17's question in the drawer).
+ *
+ * - Never saved: undefined. The drawers read the draft's own rule (`balancesSaveYear`: the plan's first year) and treat
+ *   the balances as entered now, since they are this session's (or, on the stepper's Income step, not entered yet).
+ * - Saved, with the balances unchanged since: the last commit's year (`balancesSaveYear` over `persist.scenario`, the
+ *   LAST COMMITTED model; the draft's own `savedAt` is its load-time stamp, which a re-save never refreshes).
+ * - Saved, with the balances changed this session: TODAY's year, entered now. The yearly update re-enters balances that
+ *   may already hold this year's money, and reading the last save's year there would leave it unflagged and counted
+ *   twice until a Save (round 1 of the gift half's review: the rosy window between the update and the save).
+ *
+ * Only `enteredAccounts` are compared: they are the balances; any other edit leaves them as entered at the last save.
+ */
+export interface BalancesYear {
+  readonly year: number
+  /** The balances on screen were entered this session: R17 asks in the present tense, and the in-year flag names no year. */
+  readonly enteredNow: boolean
+}
+
+export function balancesYearFor(
+  persist: PersistState,
+  draft: Pick<CurrentScenario, 'enteredAccounts'>,
+  todayEpochDay: number,
+): BalancesYear | undefined {
+  if (persist.kind === 'unsaved') return undefined
+  return canonicalIdentityToken(draft.enteredAccounts) === canonicalIdentityToken(persist.scenario.enteredAccounts)
+    ? { year: balancesSaveYear(persist.scenario), enteredNow: false }
+    : { year: epochDayToCalendarYear(todayEpochDay), enteredNow: true }
 }

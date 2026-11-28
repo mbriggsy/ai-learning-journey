@@ -42,6 +42,7 @@ import { continueCheck } from '@intake/stepChecks'
 import { intakeStepIds, walkStepFields, type StepSectionId } from '@intake/steps'
 import type { MemoryModel, ScenarioDraft } from '@store/memoryModel'
 import { copy, slots, type CopyKey } from '../../copy'
+import type { BalancesYear } from '../../resultSave'
 import { tablePerson } from '../../workbench/tableRun'
 import {
   cardIdOf,
@@ -204,12 +205,14 @@ function goalsCards(d: ScenarioDraft, cards: readonly CardView[]): readonly Card
   return cards.filter((c) => asked(c.id))
 }
 
-export function setupPage(d: ScenarioDraft, step: SetupStepId): SetupPage {
+/** `balances`: the balances' year frame on a re-walk of a saved plan (IntakeApp's `balancesYearFor`), so the Income
+ *  step's inheritance or gift cards read R15 as the shell's do; absent before any save. */
+export function setupPage(d: ScenarioDraft, step: SetupStepId, balances?: BalancesYear): SetupPage {
   switch (step) {
     case 'family':
       return { kind: 'cards', view: { ...familyView(d), intro: copy.setupIntroFamily } }
     case 'income':
-      return { kind: 'cards', view: { ...incomeView(d, false), intro: copy.setupIntroIncome } }
+      return { kind: 'cards', view: { ...incomeView(d, false, balances), intro: copy.setupIntroIncome } }
     case 'savings': {
       const base = savingsView(d, false)
       const premade = premadeAccounts(d)

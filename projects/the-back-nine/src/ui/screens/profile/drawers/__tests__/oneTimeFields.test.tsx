@@ -11,6 +11,7 @@ import { deriveStaleness } from '@store/staleness'
 import { DEV_SEEDS, SEED_BUILD_YEAR } from '../../../../devSeeds'
 import { copy, slots } from '../../../../copy'
 import { composeReentry } from '../../../../reentryChrome'
+import type { BalancesYear } from '../../../../resultSave'
 import { scenarioFromDraft } from '../../../../scenarioFromDraft'
 import { exposureForDraft } from '../../../../stalenessExposure'
 import { profileStore } from '../../__tests__/profileStore'
@@ -37,7 +38,7 @@ const withGifts = (d: ScenarioDraft, items: readonly OneTimeInflow[]): ScenarioD
 /** An epoch-day in the middle of `year` (`epochDayToCalendarYear` reads it as that year). */
 const dayIn = (year: number): number => Math.floor(Date.UTC(year, 6, 1) / 86_400_000)
 
-function open(model: MemoryModel, target: DrawerTarget, balancesSaveYear?: number) {
+function open(model: MemoryModel, target: DrawerTarget, balancesYear?: BalancesYear) {
   render(
     <DrawerFor
       target={target}
@@ -47,7 +48,7 @@ function open(model: MemoryModel, target: DrawerTarget, balancesSaveYear?: numbe
       onClose={() => {}}
       onClosed={() => {}}
       finalFocus={() => null}
-      {...(balancesSaveYear !== undefined ? { balancesSaveYear } : {})}
+      {...(balancesYear !== undefined ? { balancesYear } : {})}
     />,
   )
   return screen.getByRole('dialog')
@@ -166,15 +167,17 @@ describe('the read-back (R11) and the save-year flag (R15, R17)', () => {
   it('the card flags an item dated before the persisted save year and one in it, never one after; the persisted year wins over the draft’s stale stamp', () => {
     // The draft was loaded from a 2026 save (its own stamp); the household re-saved in Y + 3 this session.
     const d = withGifts({ ...RETIRED, savedAt: dayIn(Y) }, [gift({ year: Y + 2 }), gift({ id: 'g2', year: Y + 3 }), gift({ id: 'g3', year: Y + 4 })])
-    const notes = (saveYear?: number) => incomeView(d, false, saveYear).cards.filter((c) => c.id.startsWith('one-time-')).map((c) => c.note)
-    expect(notes(Y + 3)).toEqual([slots.oneTimeFlagBefore(Y + 3), slots.oneTimeFlagInYear(Y + 3), undefined])
+    const notes = (balances?: BalancesYear) => incomeView(d, false, balances).cards.filter((c) => c.id.startsWith('one-time-')).map((c) => c.note)
+    expect(notes({ year: Y + 3, enteredNow: false })).toEqual([slots.oneTimeFlagBefore(Y + 3), slots.oneTimeFlagInYear(Y + 3), undefined])
+    // Balances changed this session are this year's: the in-year words name no year (review round 1, the yearly update).
+    expect(notes({ year: Y + 3, enteredNow: true })).toEqual([slots.oneTimeFlagBefore(Y + 3), copy.oneTimeFlagInYearNow, undefined])
     // With no persisted year handed down the draft's own stamp is the reading (here the older save: nothing flagged).
     expect(notes()).toEqual([undefined, undefined, undefined])
   })
 
   it('the drawer flags a year before the save year, and asks R17 for the save year itself, refusing a yes', () => {
     const { model } = profileStore(withGifts(RETIRED, [gift({ year: Y + 2 })]))
-    let dialog = open(model, { kind: 'one-time', index: 0 }, Y + 3)
+    let dialog = open(model, { kind: 'one-time', index: 0 }, { year: Y + 3, enteredNow: false })
     expect(dialog.querySelector('[data-one-time-flag]')).toHaveTextContent(slots.oneTimeFlagBefore(Y + 3))
     expect(within(dialog).queryByRole('group', { name: slots.oneTimeArrivedLegend(Y + 3) })).toBeNull()
     type(box(dialog, copy.oneTimeYearFieldLabel), String(Y + 3))
@@ -188,10 +191,16 @@ describe('the read-back (R11) and the save-year flag (R15, R17)', () => {
     save(dialog)
     expect(model.getSnapshot().draft.oneTimeInflows![0]!.year).toBe(Y + 3)
     cleanup()
-    // A plan never saved: its first year is the save year, so an item dated then is asked R17 too.
+    // A plan never saved: its first year is the save year, so an item dated then is asked R17 too, in the present tense
+    // (its balances are this session's, or on the stepper's Income step not entered yet: review round 1).
     dialog = open(profileStore(RETIRED).model, { kind: 'new-one-time' })
     type(box(dialog, copy.oneTimeYearFieldLabel), String(RETIRED.startCalendarYear))
-    expect(within(dialog).getByRole('group', { name: slots.oneTimeArrivedLegend(RETIRED.startCalendarYear) })).toBeInTheDocument()
+    expect(within(dialog).getByRole('group', { name: copy.oneTimeArrivedLegendNow })).toBeInTheDocument()
+    expect(within(dialog).getByRole('radio', { name: copy.oneTimeArrivedYesNow })).toBeInTheDocument()
+    cleanup()
+    // Balances changed since the save (the yearly update): today's year, asked in the present tense too.
+    dialog = open(profileStore(withGifts(RETIRED, [gift({ year: Y + 5 })])).model, { kind: 'one-time', index: 0 }, { year: Y + 5, enteredNow: true })
+    expect(within(dialog).getByRole('group', { name: copy.oneTimeArrivedLegendNow })).toBeInTheDocument()
   })
 
   it('the re-entry gate names each flagged item with its amount and year, in its before or in-year words; an item after the save says nothing', () => {

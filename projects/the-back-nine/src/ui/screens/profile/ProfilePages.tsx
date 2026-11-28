@@ -16,6 +16,7 @@ import { NetWorth } from './NetWorth'
 import { expensesView, familyView, goalsView, incomeView, netWorthView, profilePageTitle, savingsView, type ProfileScreenId } from './profileView'
 import { useDrawerHost } from './drawerHost'
 import type { DrawerLeaveAsk } from './drawers/ProfileDrawer'
+import type { BalancesYear } from '../../resultSave'
 
 export const PROFILE_SCREENS: readonly ProfileScreenId[] = [
   'profile-net-worth',
@@ -35,9 +36,9 @@ export interface ProfilePagesProps {
   readonly readOnly: boolean
   readonly headingRef: RefObject<HTMLHeadingElement | null>
   readonly agedBalancesYear: number | undefined
-  /** The year the plan's balances were last saved, from the persisted plan (absent before any save): an inheritance or
-   *  gift's card, tile and drawer read it (gap 5's U4, R15, R17). */
-  readonly balancesSaveYear?: number
+  /** The year the balances on screen were entered and whether that is now (`balancesYearFor`; absent before any save): an
+   *  inheritance or gift's card, tile and drawer read it (gap 5's U4, R15, R17). */
+  readonly balancesYear?: BalancesYear
   /** Net Worth's and Blueprint's R13 caveat (each prints a figure). */
   readonly caveat: readonly string[]
   /** Blueprint's Goals timeline: a working household's stop year is the committed answer's (`blueprintView.ts`). */
@@ -56,7 +57,7 @@ export interface ProfilePagesProps {
 
 const NO_HIDDEN: Readonly<Record<BlueprintTab, readonly string[]>> = { 'net-worth': [], goals: [], ise: [] }
 
-export function ProfilePages({ screen, draft, model, readOnly, headingRef, agedBalancesYear, balancesSaveYear, caveat, answer, refiguring, anchor, answerBanner, leaveAsk, onDrawerOpen }: ProfilePagesProps) {
+export function ProfilePages({ screen, draft, model, readOnly, headingRef, agedBalancesYear, balancesYear, caveat, answer, refiguring, anchor, answerBanner, leaveAsk, onDrawerOpen }: ProfilePagesProps) {
   const heading = useCallback(() => headingRef.current, [headingRef])
   const host = useDrawerHost(heading)
   const drawerOpen = host.isOpen
@@ -73,19 +74,19 @@ export function ProfilePages({ screen, draft, model, readOnly, headingRef, agedB
   const title = profilePageTitle(screen)
   const view = useMemo(() => {
     if (screen === 'profile-family') return familyView(draft)
-    if (screen === 'profile-income') return incomeView(draft, readOnly, balancesSaveYear)
+    if (screen === 'profile-income') return incomeView(draft, readOnly, balancesYear)
     if (screen === 'profile-savings') return savingsView(draft, readOnly)
     if (screen === 'profile-expenses') return expensesView(draft)
     if (screen === 'profile-goals') return goalsView(draft)
     return null
-  }, [screen, draft, readOnly, balancesSaveYear])
+  }, [screen, draft, readOnly, balancesYear])
   const worth = useMemo(() => (screen === 'profile-net-worth' ? netWorthView(draft, agedBalancesYear, readOnly) : null), [screen, draft, agedBalancesYear, readOnly])
   const blueprint = useMemo(
     () =>
       screen === 'profile-blueprint'
-        ? blueprintView({ draft, tab: bpTab, readOnly, agedBalancesYear, balancesSaveYear, answer, refiguring, anchor, hidden: hiddenSet })
+        ? blueprintView({ draft, tab: bpTab, readOnly, agedBalancesYear, balancesYear, answer, refiguring, anchor, hidden: hiddenSet })
         : null,
-    [screen, draft, bpTab, readOnly, agedBalancesYear, balancesSaveYear, answer, refiguring, anchor, hiddenSet],
+    [screen, draft, bpTab, readOnly, agedBalancesYear, balancesYear, answer, refiguring, anchor, hiddenSet],
   )
 
   return (
@@ -109,7 +110,7 @@ export function ProfilePages({ screen, draft, model, readOnly, headingRef, agedB
       ) : view !== null ? (
         <CardsPage screen={screen} title={title} headingRef={headingRef} view={view} selected={host.selected} onOpen={host.open} />
       ) : null}
-      {host.render({ model, readOnly, ...(leaveAsk !== undefined ? { leaveAsk } : {}), ...(balancesSaveYear !== undefined ? { balancesSaveYear } : {}) })}
+      {host.render({ model, readOnly, ...(leaveAsk !== undefined ? { leaveAsk } : {}), ...(balancesYear !== undefined ? { balancesYear } : {}) })}
     </>
   )
 }

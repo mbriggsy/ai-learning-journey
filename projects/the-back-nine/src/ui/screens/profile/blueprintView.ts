@@ -40,6 +40,7 @@ import { copy, slots } from '../../copy'
 import type { BandPlanClockAnchor } from '../../bandAnnotations'
 import { heroLead } from '../../dateHero'
 import { composeDateSplit } from '../../dateSplit'
+import type { BalancesYear } from '../../resultSave'
 import { tablePerson } from '../../workbench/tableRun'
 import {
   accountCardName,
@@ -155,9 +156,9 @@ export interface BlueprintInput {
   readonly tab: BlueprintTab
   readonly readOnly: boolean
   readonly agedBalancesYear: number | undefined
-  /** The year the plan's balances were last saved (the persisted plan's; absent before any save): an inheritance or
-   *  gift's Income tile carries R15's note by it, as its card does (gap 5's U4). */
-  readonly balancesSaveYear?: number
+  /** The year the balances on screen were entered and whether that is now (`balancesYearFor`; absent before any save): an
+   *  inheritance or gift's Income tile carries R15's note by it, as its card does (gap 5's U4). */
+  readonly balancesYear?: BalancesYear
   /** The store's committed answer and its re-figuring flag (the working household's stop year is the answer's). */
   readonly answer: ModelAnswer
   readonly refiguring: boolean
@@ -480,13 +481,13 @@ const ISE_LEGEND: readonly LegendItem[] = [
 ]
 const iseLegend = (id: IseLane['id']): LegendItem => ISE_LEGEND.find((l) => l.id === id)!
 
-function iseBody(d: ScenarioDraft, readOnly: boolean, saveYear: number | undefined): BlueprintBody {
+function iseBody(d: ScenarioDraft, readOnly: boolean, balances: BalancesYear | undefined): BlueprintBody {
   const perPerson = (cards: readonly CardView[], legend: LegendItem, empty: (i: number) => string | null) =>
     BOTH.map((i) => {
       const tiles = cards.filter((c) => ownerOf(d, c.target) === i).map((c) => tileOf(c, legend))
       return { tiles, empty: tiles.length === 0 ? empty(i) : null }
     })
-  const income = incomeView(d, readOnly, saveYear).cards
+  const income = incomeView(d, readOnly, balances).cards
   // The household's own income (a both-people inheritance or gift): a "Both of you" row under the two cells, the Expenses
   // lane's shape (gap 5's U4). Absent while there is none.
   const sharedIncome = income.filter((c) => ownerOf(d, c.target) === null).map((c) => tileOf(c, iseLegend('income')))
@@ -598,7 +599,7 @@ export function blueprintView(input: BlueprintInput): BlueprintView {
     lines = goals.lines
   } else {
     headline = copy.blueprintTabIse
-    body = iseBody(d, readOnly, input.balancesSaveYear)
+    body = iseBody(d, readOnly, input.balancesYear)
   }
   const hiddenLabels = legend.filter((l) => hidden.has(l.id)).map((l) => l.label)
   const shown = hide(body, hidden)

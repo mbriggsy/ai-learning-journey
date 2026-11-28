@@ -31,6 +31,7 @@
 import { useCallback, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { Check } from 'lucide-react'
 import type { MemoryModel } from '@store/memoryModel'
+import type { BalancesYear } from '../../resultSave'
 import { Button, cn } from '../../kit'
 import { copy } from '../../copy'
 import { CardsPage } from '../profile/CardsPage'
@@ -52,6 +53,9 @@ export interface StepperProps {
   readonly onComplete: () => void
   /** No plan is saved on this device yet (the walk's "nothing's saved" line stands beside the nav while true). */
   readonly notSaved: boolean
+  /** The balances' year frame (IntakeApp's `balancesYearFor`): on a re-walk of a saved plan, the Income step's
+   *  inheritance or gift cards and drawers read it as the shell's do (R15, R17). Absent before any save. */
+  readonly balancesYear?: BalancesYear
 }
 
 /** The chevron's shape, drawn on a layer under the step's words (never on the button: each button's own box is its cell,
@@ -145,7 +149,7 @@ function StepBar({ index, owes, onGo }: { readonly index: number; readonly owes:
   )
 }
 
-export function Stepper({ model, periodConfirmed, askNames, onCancelNewPlan, onComplete, notSaved }: StepperProps) {
+export function Stepper({ model, periodConfirmed, askNames, onCancelNewPlan, onComplete, notSaved, balancesYear }: StepperProps) {
   const snapshot = useSyncExternalStore(model.subscribe, model.getSnapshot)
   const draft = snapshot.draft
   // Setup reads no answer (the header): the drawers' store sends no recompute.
@@ -209,7 +213,7 @@ export function Stepper({ model, periodConfirmed, askNames, onCancelNewPlan, onC
     onComplete()
   }
 
-  const page = setupPage(draft, step)
+  const page = setupPage(draft, step, balancesYear)
   const names2 = setupNames(draft)
   const last = index === SETUP_STEPS.length - 1
   // Complete opens the plan only past every step's check: the box beside it says so only then (stepperView's D2).
@@ -288,7 +292,7 @@ export function Stepper({ model, periodConfirmed, askNames, onCancelNewPlan, onC
             )}
           </div>
         </main>
-        {host.render({ model: setupModel, readOnly: false })}
+        {host.render({ model: setupModel, readOnly: false, ...(balancesYear !== undefined ? { balancesYear } : {}) })}
         {names !== 'gone' ? (
           <NewPlanDrawer
             model={setupModel}

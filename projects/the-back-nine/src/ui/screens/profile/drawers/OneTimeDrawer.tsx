@@ -34,12 +34,12 @@ export function OneTimeDrawer({
   onClose,
   onClosed,
   finalFocus,
-  balancesSaveYear,
+  balancesYear,
 }: DrawerBodyProps & { readonly at: { readonly index: number } | 'new' }) {
   const [opened] = useState(() => model.getSnapshot().draft)
   const index = at === 'new' ? ('new' as const) : at.index
   const stored = index === 'new' ? undefined : opened.oneTimeInflows?.[index]
-  const ctx = oneTimeContext(opened, balancesSaveYear)
+  const ctx = oneTimeContext(opened, balancesYear)
   const [seed] = useState<OneTimeInflowForm>(() => oneTimeInflowFormFrom(stored, ctx.couple))
   // A new item's id, minted once per open (never shared with any id the plan holds).
   const [id] = useState(() => stored?.id ?? freshStableId(new Set([...idsInUse(opened), ...(opened.oneTimeInflows ?? []).map((i) => i.id)])))
@@ -49,7 +49,7 @@ export function OneTimeDrawer({
   const title = stored !== undefined ? stored.name : copy.oneTimeNewTitle
   // R15 over the year as it stands (a new item, or a year moved before the save year, is flagged before Save). A year IN
   // the save year draws R17's question instead, which asks exactly what that flag says, and refuses a yes.
-  const flag = form.year !== undefined && form.year < ctx.saveYear ? oneTimeFlagWords(form.year, ctx.saveYear) : null
+  const flag = form.year !== undefined && form.year < ctx.saveYear ? oneTimeFlagWords(form.year, ctx.saveYear, ctx.balancesNow) : null
   const readBack = oneTimeReadBack(opened, form, ctx)
   const people = ([0, 1] as const).map((i) => tablePerson(opened, i, 0, 0))
   const heir = form.whose === 0 || form.whose === 1 ? form.whose : null
@@ -64,7 +64,7 @@ export function OneTimeDrawer({
       onSave={() => {
         // A new item lands at the list's end: its card takes focus when the drawer closes.
         const landing = index === 'new' ? (model.getSnapshot().draft.oneTimeInflows?.length ?? 0) : index
-        const res = saveEdit(model, (d) => buildOneTime(d, index, seed, edit.read(), oneTimeContext(d, balancesSaveYear), id), NO_RULE_FIELD)
+        const res = saveEdit(model, (d) => buildOneTime(d, index, seed, edit.read(), oneTimeContext(d, balancesYear), id), NO_RULE_FIELD)
         if (!res.saved) {
           edit.setCheck(res.check)
           return false
@@ -112,10 +112,11 @@ export function OneTimeDrawer({
         </Fact>
         {asksArrivedBySave(form.year, ctx.saveYear) ? (
           <ChoiceGroup<'yes' | 'no'>
-            legend={slots.oneTimeArrivedLegend(ctx.saveYear)}
+            // Balances entered now (a plan never saved, or balances changed since its save): asked in the present tense.
+            legend={ctx.balancesNow ? copy.oneTimeArrivedLegendNow : slots.oneTimeArrivedLegend(ctx.saveYear)}
             name="one-time-arrived"
             items={[
-              { value: 'yes', label: copy.oneTimeArrivedYes },
+              { value: 'yes', label: ctx.balancesNow ? copy.oneTimeArrivedYesNow : copy.oneTimeArrivedYes },
               { value: 'no', label: copy.oneTimeArrivedNo },
             ]}
             value={form.arrivedBySave === undefined ? null : form.arrivedBySave ? 'yes' : 'no'}

@@ -36,6 +36,9 @@ export interface OneTimeInflowContext {
   readonly range: OneTimeYearRange
   readonly couple: boolean
   readonly saveYear: number
+  /** The balances on screen were entered this session (a plan never saved, or balances changed since its save): R17's
+   *  question is in the present tense, so its unanswered refusal is too. Words only; no decision reads it. */
+  readonly balancesNow?: boolean
 }
 
 /** The form an inheritance or gift is entered through. `whose` is a couple's answer to whose it is: one person, by
@@ -77,8 +80,10 @@ function yearRangeMessage(range: OneTimeYearRange): CatalogMessage {
     : { messageKey: 'errOneTimeYearRange', params: { firstYear: String(range.first), lastYear: String(range.last) } }
 }
 
-const inRange = (year: number, range: OneTimeYearRange): boolean =>
+/** Is a year inside the plan's years: the one range rule the tree, the problems and the drawer's read-back share. */
+export const inOneTimeYearRange = (year: number, range: OneTimeYearRange): boolean =>
   Number.isInteger(year) && year >= range.first && (range.last === undefined || year <= range.last)
+const inRange = inOneTimeYearRange
 
 /**
  * Build the saved item, or the first thing that blocks it, in the drawer's field order: a name; a year, inside the plan's
@@ -102,7 +107,7 @@ export function buildOneTimeInflow(
   if (form.year === undefined) return refuse('year', key('errOneTimeYearRequired'))
   if (!inRange(form.year, ctx.range)) return refuse('year', yearRangeMessage(ctx.range))
   if (asksArrivedBySave(form.year, ctx.saveYear)) {
-    if (form.arrivedBySave === undefined) return refuse('arrivedBySave', key('errOneTimeArrivedRequired'))
+    if (form.arrivedBySave === undefined) return refuse('arrivedBySave', key(ctx.balancesNow === true ? 'errOneTimeArrivedRequiredNow' : 'errOneTimeArrivedRequired'))
     if (form.arrivedBySave) return refuse('arrivedBySave', key('errOneTimeArrivedGift'))
   }
   if (form.amountReal === undefined) return refuse('amountReal', key('errOneTimeAmountRequired'))

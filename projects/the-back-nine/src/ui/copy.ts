@@ -411,7 +411,9 @@ export const copy = {
   errOneTimeYearRequired: 'Still need the year it comes in.',
   // R17: asked only of an item dated in the year the balances were last saved (the plan's first year if never saved).
   errOneTimeArrivedRequired: 'Still need whether the money had already come in when you entered your account balances.',
-  errOneTimeArrivedGift: 'Money that had already come in belongs in your account balances, not here, or it would count twice.',
+  // The same, while the balances on screen are being entered now (the drawer's present-tense question; review round 1).
+  errOneTimeArrivedRequiredNow: 'Still need whether this money has already come in.',
+  errOneTimeArrivedGift: 'Money that’s already come in belongs in your account balances, not here, or it would count twice.',
   errOneTimeAmountRequired: 'Still need the amount.',
   errOneTimeAmountZero: 'An inheritance or gift is more than $0. To leave one out, delete it instead.',
   // KTD12: whose it is is never inferred or defaulted to both (both reads rosy on the paths where its heir has died).
@@ -2972,7 +2974,7 @@ export const copy = {
   cashFlowsColOneTimeKept: 'Inheritances and gifts, kept in taxable',
   cashFlowsColOneTimeTaxable: 'Taxable, from inheritances and gifts',
   cashFlowsOneTimeNote:
-    'An inheritance or gift is counted as you entered it, at the end of its year: none of it pays that year’s bills. It goes into your taxable savings, so it shows again under Planned saving, kept in taxable. In a future where your savings run out first, none of it is counted.',
+    'An inheritance or gift is counted as you entered it, at the end of its year: none of it pays that year’s bills. It goes into your taxable savings, so on the Summary it also shows under Planned saving, kept in taxable. In a future where your savings run out first, none of it is counted.',
   cashFlowsPairedNote: 'Each year shows your plan’s row over the what-if’s, each named. The what-if is the one open on Analysis.',
   /** The steady sentence over a table that isn't your plan alone (a what-if's, or the paired form): the answer pinned
    *  above is your plan's, never this table's run. */
@@ -3486,10 +3488,18 @@ export const copy = {
   oneTimeYearFieldLabel: 'Year it comes in',
   oneTimeArrivedYes: 'Yes, it had',
   oneTimeArrivedNo: 'No, not yet',
+  // R17 while the balances on screen are being entered now (a plan never saved, or balances changed since the last
+  // save; `balancesYearFor` in `resultSave.ts`): asked in the present tense, since on the stepper's Income step the
+  // balances may not be entered yet. The gift half's review, round 1.
+  oneTimeArrivedLegendNow: 'Has this money already come in?',
+  oneTimeArrivedYesNow: 'Yes, it has',
+  // R15's in-year flag in that same case: the balances are this year's, so no year is named.
+  oneTimeFlagInYearNow: 'If this money has already come in, your account balances hold it, and it counts twice until this item is deleted.',
   oneTimeAmountLabel: 'Amount, in today’s dollars',
-  // R3: what belongs in the amount, and the two kinds that don't (taxed as money comes out; the giver's cost kept).
+  // R3: what belongs in the amount, and the kinds that don't (taxed as money comes out; the giver's cost kept; a home
+  // sale, whose gain can be taxed, until the plan's home-sale half is built: the gift half's review, round 1).
   oneTimeAmountHelp:
-    'The cash or investments you expect to receive, after any estate or inheritance tax, or a gift of cash. An IRA, 401(k), 403(b) or annuity doesn’t go here, because it’s taxed as money comes out of it, and neither do shares given by someone living, which keep the giver’s cost.',
+    'The cash or investments you expect to receive, after any estate or inheritance tax, or a gift of cash. An IRA, 401(k), 403(b) or annuity doesn’t go here, because it’s taxed as money comes out of it, and neither do shares given by someone living, which keep the giver’s cost. Money from selling a home doesn’t go here either: part of a sale’s gain can be taxed, and the tool doesn’t count that tax yet.',
   oneTimeWhoseLegend: 'Who is it coming to?',
   oneTimeLeftToNo: 'No, it would go to someone else',
   // R14 with D7's one unknowable: the household's own year and amount are counted as entered.
@@ -5354,7 +5364,9 @@ export const slots = {
    *  past the price index's base year, in that year's dollars (`nominal`, null in the base year itself, where the two
    *  are one figure); on the paths where it still comes (R6, KTD12: `heirMid` only for an item left to someone else). */
   oneTimeReadBack: (amount: string, year: number, nominal: string | null, heirMid: string | null, heirIsYou: boolean): string =>
-    `The answer adds $${amount} to your taxable account at the end of ${year}${nominal === null ? '' : `, about $${nominal} in ${year}’s dollars`}, in every future where your savings last through ${year}${heirMid === null ? '' : ` and ${heirMid} ${heirIsYou ? 'are' : 'is'} living that year`}. It joins at the end of the year, so none of it pays that year’s costs.`,
+    // R6: a future where both people died first never reaches the year (the plan ends at the last death), so the clause
+    // names who must be living, the heir or either of them (the gift half's review, round 1).
+    `The answer adds $${amount} to your taxable account at the end of ${year}${nominal === null ? '' : `, about $${nominal} in ${year}’s dollars`}, in every future where your savings last through ${year} and ${heirMid === null ? 'one of you is' : `${heirMid} ${heirIsYou ? 'are' : 'is'}`} living that year. It joins at the end of the year, so none of it pays that year’s costs.`,
   /** R15 on the card and in the drawer: an item dated before the year the balances were last saved (the plan's first
    *  year if never saved) … */
   oneTimeFlagBefore: (saveYear: number): string =>

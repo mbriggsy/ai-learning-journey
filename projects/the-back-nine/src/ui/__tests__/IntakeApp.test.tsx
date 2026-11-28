@@ -35,6 +35,7 @@ vi.mock('../shell/ShellSlot', () => ({
       leftOverClauseHost?: boolean
       readOnly?: boolean
       agedBalancesYear?: number
+      balancesYear?: { year: number; enteredNow: boolean }
       display?: { timeAxis: string; sameScale: boolean }
       onDisplayChange?: (next: { timeAxis: 'ages' | 'years'; sameScale: boolean }) => void
     }
@@ -42,6 +43,7 @@ vi.mock('../shell/ShellSlot', () => ({
     <div
       data-save-kind={shell.save.kind}
       data-aged={String(shell.agedBalancesYear ?? 'none')}
+      data-balances-year={shell.balancesYear === undefined ? 'none' : `${shell.balancesYear.year}:${String(shell.balancesYear.enteredNow)}`}
       data-backup={shell.backupOffered === true && shell.onBackup !== undefined ? 'offered' : 'none'}
       data-staleness={String(shell.stalenessNote ?? false)}
       data-left-over-host={String(shell.leftOverClauseHost ?? false)}
@@ -128,6 +130,7 @@ import { readyToApplyUpdate } from '../updateGate'
 import { holdUnsavedBuffer } from '@intake/unsavedBuffer'
 import { validateDraft } from '@intake/sanity'
 import type { ScenarioDraft } from '@store/memoryModel'
+import { epochDayToCalendarYear } from '@store/staleness'
 import { CURRENT_SCHEMA_VERSION, scenarioIdentityKey, type CurrentScenario } from '@shared/model'
 import { decodeScenario, encodeScenario } from '@shared/scenarioCodec'
 
@@ -486,6 +489,24 @@ describe('IntakeApp — the read-only verdict reaches deriveResultSave (Fork C i
       }
       expect(aged[0], '[test setup] an old save is aged on the writable tab').not.toBe('none')
       expect(aged[1], 'and on the read-only one').toBe(aged[0])
+    } finally {
+      h.model = fresh
+    }
+  })
+})
+
+describe('IntakeApp — the balances’ year reaches the shell off the LAST COMMITTED save, never the draft’s stamp (gap 5, R15 and R17)', () => {
+  it('a vault saved in an earlier year hands the shell that year, balances unchanged (the gift half’s review, round 1: a dropped hand-off left the suite green)', async () => {
+    // MUTANT: drop IntakeApp’s balancesYear spread: this reds. (Right after unlock the draft’s stamp and the commit’s
+    // agree, so which one is read is pinned by resultSave.test’s balancesYearFor arms, never here.)
+    const fresh = h.model
+    const savedAt = currentEpochDay() - 800
+    h.model = { ...(fresh as CurrentScenario), savedAt }
+    try {
+      render(<IntakeApp hydrateFromVault />)
+      await affirmGate()
+      const stub = await screen.findByText('result stub')
+      expect(stub).toHaveAttribute('data-balances-year', `${epochDayToCalendarYear(savedAt)}:false`)
     } finally {
       h.model = fresh
     }

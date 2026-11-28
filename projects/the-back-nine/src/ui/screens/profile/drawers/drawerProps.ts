@@ -4,6 +4,7 @@
  * store's draft.
  */
 import type { MemoryModel } from '@store/memoryModel'
+import type { BalancesYear } from '../../../resultSave'
 import type { DrawerLeaveAsk } from './ProfileDrawer'
 
 export interface DrawerBodyProps {
@@ -20,8 +21,8 @@ export interface DrawerBodyProps {
   /** Opened AT a refusal (Act 6 · RC14: the stepper's Next or Complete found one on this drawer's fields): the drawer opens
    *  showing it under its field, as its Save would (`openCheck`). */
   readonly checkAtOpen?: boolean
-  /** The calendar year the plan's balances were last saved, from the persisted plan (`balancesSaveYear` over IntakeApp's
-   *  persist state); absent before any save, where the draft's own reading holds (`oneTimeFields.ts`'s header). Read by
-   *  the inheritance or gift drawer (R15, R17). */
-  readonly balancesSaveYear?: number
+  /** The year the balances on screen were entered and whether that is now (`balancesYearFor` over IntakeApp's persist
+   *  state and live draft); absent before any save, where the draft's own reading holds (`oneTimeFields.ts`'s header).
+   *  Read by the inheritance or gift drawer (R15, R17). */
+  readonly balancesYear?: BalancesYear
 }

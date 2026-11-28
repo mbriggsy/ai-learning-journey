@@ -39,7 +39,8 @@ import { copy, slots } from '../../copy'
 import { tablePerson } from '../../workbench/tableRun'
 import { accountName } from '../investment/investmentView'
 import type { AccountFacet } from './drawers/accountFields'
-import { oneTimeCardRows, oneTimeFlagWords, oneTimeSaveYear } from './drawers/oneTimeFields'
+import { oneTimeBalancesNow, oneTimeCardRows, oneTimeFlagWords, oneTimeSaveYear } from './drawers/oneTimeFields'
+import type { BalancesYear } from '../../resultSave'
 
 export type ProfileScreenId =
   | 'profile-net-worth'
@@ -276,9 +277,9 @@ export const incomeAddItems = (): readonly { readonly id: string; readonly label
   { id: 'one-time', label: copy.oneTimeKind, target: { kind: 'new-one-time' } },
 ]
 
-/** `saveYear`: the year the plan's balances were last saved, from the persisted plan (absent before any save: the
- *  draft's own reading, `oneTimeSaveYear`), for R15's note on an inheritance or gift's card. */
-export function incomeView(d: ScenarioDraft, readOnly: boolean, saveYear?: number): CardsPageView {
+/** `balances`: the year the balances on screen were entered and whether that is now (`balancesYearFor`; absent before any
+ *  save: the draft's own reading, `oneTimeSaveYear`), for R15's note on an inheritance or gift's card. */
+export function incomeView(d: ScenarioDraft, readOnly: boolean, balances?: BalancesYear): CardsPageView {
   const cards: CardView[] = []
   for (const i of BOTH) {
     if (!working(d, i)) continue
@@ -340,9 +341,10 @@ export function incomeView(d: ScenarioDraft, readOnly: boolean, saveYear?: numbe
     })
   })
   // Gap 5's U4: each inheritance or gift, after the ongoing income; R15's flag as its note (R1, R15).
-  const balancesYear = oneTimeSaveYear(d, saveYear)
+  const balancesYear = oneTimeSaveYear(d, balances)
+  const balancesNow = oneTimeBalancesNow(balances)
   ;(d.oneTimeInflows ?? []).forEach((item, index) => {
-    const flag = oneTimeFlagWords(item.year, balancesYear)
+    const flag = oneTimeFlagWords(item.year, balancesYear, balancesNow)
     cards.push({
       id: `one-time-${index}`,
       kind: copy.oneTimeKind,

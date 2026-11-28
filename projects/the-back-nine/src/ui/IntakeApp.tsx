@@ -27,6 +27,7 @@ import { draftFromScenario } from './draftFromScenario'
 import { deriveRecommendationSave, type RecommendationSaveRefusal } from './recommendationSaveView'
 import {
   agedBalancesYearFor,
+  balancesYearFor,
   deriveResultSave,
   persistSeedFor,
   type PersistState,
@@ -43,7 +44,7 @@ import { useUnloadGuard } from './unloadGuard'
 import { Button, FieldNote, VaultCard, VaultHeading, VaultPage, VaultPending } from './kit'
 import { ReEntry } from './ReEntry'
 import { composeReentry, type ReentryView } from './reentryChrome'
-import { balancesSaveYear, deriveStaleness } from '@store/staleness'
+import { deriveStaleness } from '@store/staleness'
 import { exposureForDraft } from './stalenessExposure'
 import { copy } from './copy'
 import { DEFAULT_DISPLAY, type DisplaySettings } from './displaySettings'
@@ -262,6 +263,11 @@ export default function IntakeApp({
   // The Save beat appears only when the draft is genuinely persistable (an indeterminate answer
   // can reach the result screen — the gate, not the screen, decides saveability).
   const saveReady = useMemo(() => scenarioFromDraft(snapshot.draft), [snapshot.draft])
+  // Gap 5 (R15, R17): the year the balances on screen were entered and whether that is now, for the shell's and the
+  // stepper's inheritance or gift cards and drawers alike (`balancesYearFor`: the last commit's year while the balances
+  // are unchanged since, today's once they changed). Memoized on the two things it reads, so the pages' memos hold.
+  const enteredAccounts = snapshot.draft.enteredAccounts
+  const balancesYear = useMemo(() => balancesYearFor(persist, { enteredAccounts }, currentEpochDay()), [persist, enteredAccounts])
   // THE UNSAVED-WORK GUARD (2026-09-03 — the 2026-08-20 walk's "couple's own data" finding, the
   // honest half). Nothing persists until Save (the D1 law, docs/plans/2-first-answer.md:145), so a
   // tab close / refresh mid-intake silently discarded every typed step. This WARNS through the
@@ -1174,9 +1180,9 @@ export default function IntakeApp({
           ...(recordCard !== undefined ? { recordCard } : {}),
           // The aged-balances clause's honest year (review 2026-07-10): from the persist machine's OWN saved scenario.
           ...(aged !== undefined ? { agedBalancesYear: aged } : {}),
-          // Gap 5's U4 (R15, R17): the year the balances were last saved, from the LAST COMMITTED scenario (`PersistState`'s
-          // own: during a re-save or after a failed one the disk still holds the previous commit). Absent before any save.
-          ...(persist.kind !== 'unsaved' ? { balancesSaveYear: balancesSaveYear(persist.scenario) } : {}),
+          // Gap 5's U4 (R15, R17): the balances' year frame (above), off the LAST COMMITTED scenario (`PersistState`'s own:
+          // during a re-save or after a failed one the disk still holds the previous commit). Absent before any save.
+          ...(balancesYear !== undefined ? { balancesYear } : {}),
           ...(leaveAsk !== null
             ? {
                 leaveAsk: {
@@ -1224,6 +1230,9 @@ export default function IntakeApp({
       }}
       askNames={newPlan}
       notSaved={persist.kind === 'unsaved'}
+      // A re-walk (Settings, the gate's update) runs on a saved plan: its inheritance or gift cards and drawers read the
+      // same balances' year frame as the shell's, never the draft's load-time stamp (the gift half's review, round 1).
+      {...(balancesYear !== undefined ? { balancesYear } : {})}
       {...(onCancelNewPlan !== undefined ? { onCancelNewPlan } : {})}
       // Provenance: a vault-decrypted (or genuinely APPLIED dev-seed) draft answered the
       // spend period before it could ever be saved, and a completed intake whose draft trips

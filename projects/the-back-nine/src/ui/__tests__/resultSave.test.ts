@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { agedBalancesYearFor, deriveResultSave, unsavedWorkPending, type PersistState } from '../resultSave'
+import { agedBalancesYearFor, balancesYearFor, deriveResultSave, unsavedWorkPending, type PersistState } from '../resultSave'
 import { scenarioFromDraft, currentEpochDay, type SaveReady } from '../scenarioFromDraft'
 import { DEV_SEEDS, doctorRecordHolds, doctorRecordSuperseded } from '../devSeeds'
 import { scenarioIdentity, type SavedRecommendationV3, type CurrentScenario } from '@shared/model'
@@ -194,6 +194,35 @@ describe('agedBalancesYearFor — the honest entered-in year', () => {
     // Built 2024, updated + re-saved today: the persist scenario now carries TODAY's stamp,
     // whatever startCalendarYear still says.
     expect(agedBalancesYearFor(savedIn(TODAY), CLEAN, TODAY)).toBeUndefined()
+  })
+})
+
+describe('balancesYearFor — the year the balances on screen were entered (gap 5, R15 and R17; the gift half’s review, round 1)', () => {
+  const day = (y: number, m: number, d: number): number => Math.floor(Date.UTC(y, m - 1, d) / 86_400_000)
+  const TODAY = day(2028, 2, 10)
+  const saved: PersistState = { kind: 'saved', scenario: { ...retired.scenario, savedAt: day(2026, 5, 1) } }
+  const accounts = retired.scenario.enteredAccounts
+
+  it('never saved: nothing handed down (the drawers read the draft’s own rule, its balances this session’s)', () => {
+    expect(balancesYearFor({ kind: 'unsaved' }, { enteredAccounts: accounts }, TODAY)).toBeUndefined()
+  })
+
+  it('saved, balances unchanged since: the last commit’s year, not entered now; any other edit leaves it so', () => {
+    expect(balancesYearFor(saved, { enteredAccounts: accounts }, TODAY)).toEqual({ year: 2026, enteredNow: false })
+    // A copy with its keys reordered is the same balances (the canonical compare, never reference identity).
+    const reordered = accounts.map((a) => Object.fromEntries(Object.entries(a).reverse()) as typeof a)
+    expect(balancesYearFor(saved, { enteredAccounts: reordered }, TODAY)).toEqual({ year: 2026, enteredNow: false })
+  })
+
+  it('saved, balances changed this session (the yearly update): today’s year, entered now, in every disk state', () => {
+    expect(accounts.length, '[test setup] the seed holds an account to change').toBeGreaterThan(0)
+    const updated = accounts.map((a, i) => (i === 0 ? { ...a, valueToday: a.valueToday + 300_000 } : a))
+    const want = { year: 2028, enteredNow: true }
+    expect(balancesYearFor(saved, { enteredAccounts: updated }, TODAY)).toEqual(want)
+    expect(balancesYearFor({ kind: 'saving', scenario: saved.scenario }, { enteredAccounts: updated }, TODAY)).toEqual(want)
+    expect(balancesYearFor({ kind: 'save-failed', scenario: saved.scenario, errorKey: 'saveErrorFailed' }, { enteredAccounts: updated }, TODAY)).toEqual(want)
+    // An edit back to the saved balances reads as the save's again.
+    expect(balancesYearFor(saved, { enteredAccounts: [...accounts] }, TODAY)).toEqual({ year: 2026, enteredNow: false })
   })
 })
 

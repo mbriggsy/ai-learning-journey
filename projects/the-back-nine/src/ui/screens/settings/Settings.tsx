@@ -35,8 +35,9 @@ function Row({ row, onDoor }: { readonly row: SettingsRow; readonly onDoor: (doo
       </h3>
       {row.values.length > 0 ? (
         <div className="flex flex-col gap-1 border border-stone-300 bg-stone-200 px-3 py-2.5 text-body text-stone-900" data-settings-value="">
-          {row.values.map((v) => (
-            <p key={v} className="tabular-nums">
+          {/* Keyed by place and text: two values can read alike (two gifts with one name, amount and year). */}
+          {row.values.map((v, i) => (
+            <p key={`${i}:${v}`} className="tabular-nums">
               {v}
             </p>
           ))}

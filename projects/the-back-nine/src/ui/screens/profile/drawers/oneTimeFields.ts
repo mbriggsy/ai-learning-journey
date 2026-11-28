@@ -5,15 +5,16 @@
  * draft's list, deletes one, and writes the drawer's and the card's words: the read-back, the save-year flag, the
  * no-savings line.
  *
- * THE YEAR THE BALANCES WERE SAVED (R15, R17) is the persisted plan's (`balancesSaveYear` in `src/store/staleness.ts`: the
- * last save's year, the plan's first year when never saved), handed down from `IntakeApp`'s persist state. The draft's own
- * `savedAt` is the stamp it was loaded with: a re-save in a later year re-stamps the disk but not the draft, so reading the
- * draft would hide the flag a re-save in an item's own year turns on (KTD11). Where no persisted year is handed down (the
- * first-run stepper, before any save) the draft's own reading is the same rule: its `savedAt`, else its first year.
+ * THE YEAR THE BALANCES ON SCREEN WERE ENTERED (R15, R17) is handed down from `IntakeApp` to the shell and the stepper
+ * alike (`balancesYearFor` in `src/ui/resultSave.ts`): the last save's year while the balances are unchanged since, today's
+ * year once they were changed this session. The draft's own `savedAt` is the stamp it was loaded with: a re-save in a
+ * later year re-stamps the disk but not the draft, so reading the draft would hide the flag a re-save in an item's own
+ * year turns on (KTD11). Where nothing is handed down (a plan never saved) the draft's own reading is the same rule: its
+ * `savedAt`, else its first year, with the balances this session's.
  *
  * The list is presence-keyed (KTD2): the last item deleted removes the key, never an empty list.
  */
-import { buildOneTimeInflow, type OneTimeInflowContext, type OneTimeInflowField, type OneTimeInflowForm } from '@intake/oneTimeInflow'
+import { buildOneTimeInflow, inOneTimeYearRange, type OneTimeInflowContext, type OneTimeInflowField, type OneTimeInflowForm } from '@intake/oneTimeInflow'
 import { oneTimeYearRange, isDateRoute } from '@intake/intakeMap'
 import { fieldErrorText } from '@intake/fieldErrors'
 import { formatMoney } from '@intake/moneyFormat'
@@ -23,19 +24,24 @@ import { canonicalIdentityToken } from '@shared/model'
 import { balancesSaveYear } from '@store/staleness'
 import type { ScenarioDraft } from '@store/memoryModel'
 import { copy, slots } from '../../../copy'
+import type { BalancesYear } from '../../../resultSave'
 import { tablePerson } from '../../../workbench/tableRun'
 import type { FieldErrors } from './drawerSave'
 
 export type OneTimeField = OneTimeInflowField
 
-/** The year the plan's balances were last saved: the persisted plan's where one is handed down, else the draft's own
- *  reading of the same rule (the header). */
-export const oneTimeSaveYear = (d: ScenarioDraft, persisted: number | undefined): number => persisted ?? balancesSaveYear(d)
+/** The year the balances on screen were entered: the handed-down frame's, else the draft's own reading of the same rule
+ *  (the header). */
+export const oneTimeSaveYear = (d: ScenarioDraft, handed: BalancesYear | undefined): number => handed?.year ?? balancesSaveYear(d)
+
+/** Were the balances on screen entered this session: changed since the last save, or a plan never saved (nothing handed
+ *  down). R17 then asks in the present tense and the in-year flag names no year. */
+export const oneTimeBalancesNow = (handed: BalancesYear | undefined): boolean => handed?.enteredNow ?? true
 
 /** What the decision tree reads beside the form (KTD11): the engine's year range, whether the plan is a couple's, and
- *  the save year. */
-export function oneTimeContext(d: ScenarioDraft, persistedSaveYear: number | undefined): OneTimeInflowContext {
-  return { range: oneTimeYearRange(d), couple: d.people.length > 1, saveYear: oneTimeSaveYear(d, persistedSaveYear) }
+ *  the save year; plus, for the drawer's words, whether the balances were entered now. */
+export function oneTimeContext(d: ScenarioDraft, handed: BalancesYear | undefined): OneTimeInflowContext & { readonly balancesNow: boolean } {
+  return { range: oneTimeYearRange(d), couple: d.people.length > 1, saveYear: oneTimeSaveYear(d, handed), balancesNow: oneTimeBalancesNow(handed) }
 }
 
 /**
@@ -70,10 +76,13 @@ export function deleteOneTime(d: ScenarioDraft, index: number): ScenarioDraft {
   return rest
 }
 
-/** R15's words for an item dated in or before the save year (null after it): on the card, in the drawer. */
-export function oneTimeFlagWords(year: number | undefined, saveYear: number): string | null {
+/** R15's words for an item dated in or before the save year (null after it): on the card, in the drawer. In the save
+ *  year itself, balances entered now are this year's, so the words name no year (and on the stepper's Income step they
+ *  may not be entered yet). */
+export function oneTimeFlagWords(year: number | undefined, saveYear: number, balancesNow: boolean): string | null {
   if (year === undefined || year > saveYear) return null
-  return year < saveYear ? slots.oneTimeFlagBefore(saveYear) : slots.oneTimeFlagInYear(saveYear)
+  if (year < saveYear) return slots.oneTimeFlagBefore(saveYear)
+  return balancesNow ? copy.oneTimeFlagInYearNow : slots.oneTimeFlagInYear(saveYear)
 }
 
 /** The other person of a couple's (who an item left to the other goes to). */
@@ -88,7 +97,7 @@ const otherOf = (i: 0 | 1): 0 | 1 => (i === 0 ? 1 : 0)
 export function oneTimeReadBack(d: ScenarioDraft, form: OneTimeInflowForm, ctx: OneTimeInflowContext): string | null {
   const { year, amountReal } = form
   if (year === undefined || amountReal === undefined || !(amountReal > 0)) return null
-  if (!Number.isInteger(year) || year < ctx.range.first || (ctx.range.last !== undefined && year > ctx.range.last)) return null
+  if (!inOneTimeYearRange(year, ctx.range)) return null
   if (!isDateRoute(d) && d.enteredAccounts.reduce((s, a) => s + (Number.isFinite(a.valueToday) ? a.valueToday : 0), 0) <= 0) return copy.oneTimeNoSavings
   const deflator = nominalDeflator(d.startCalendarYear, year - d.startCalendarYear)
   const nominal = deflator === 1 ? null : formatMoney(Math.round(amountReal * deflator))

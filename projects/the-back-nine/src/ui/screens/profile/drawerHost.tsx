@@ -15,6 +15,7 @@
  */
 import { useCallback, useRef, useState } from 'react'
 import type { MemoryModel } from '@store/memoryModel'
+import type { BalancesYear } from '../../resultSave'
 import { cardIdOf, type DrawerTarget } from './profileView'
 import { AccountDrawer } from './drawers/AccountDrawer'
 import { LivingDrawer, MedicalDrawer } from './drawers/ExpensesDrawers'
@@ -89,8 +90,8 @@ export interface DrawerHost {
     readonly model: MemoryModel
     readonly readOnly: boolean
     readonly leaveAsk?: DrawerLeaveAsk
-    /** The persisted plan's balances save year (`DrawerBodyProps.balancesSaveYear`). */
-    readonly balancesSaveYear?: number
+    /** The balances' year frame (`DrawerBodyProps.balancesYear`). */
+    readonly balancesYear?: BalancesYear
   }) => React.ReactNode
 }
 
@@ -131,7 +132,7 @@ export function useDrawerHost(fallback: () => HTMLElement | null): DrawerHost {
     close,
     isOpen,
     selected: isOpen ? drawer.card : null,
-    render: ({ model, readOnly, leaveAsk, balancesSaveYear }) =>
+    render: ({ model, readOnly, leaveAsk, balancesYear }) =>
       drawer === null ? null : (
         <DrawerFor
           key={drawer.seq}
@@ -144,7 +145,7 @@ export function useDrawerHost(fallback: () => HTMLElement | null): DrawerHost {
           onClosed={closed}
           finalFocus={finalFocus}
           {...(drawer.checkAtOpen ? { checkAtOpen: true } : {})}
-          {...(balancesSaveYear !== undefined ? { balancesSaveYear } : {})}
+          {...(balancesYear !== undefined ? { balancesYear } : {})}
         />
       ),
   }

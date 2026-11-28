@@ -122,6 +122,23 @@ describe('the pages', () => {
     expect(cardIds(DEV_SEEDS.date, 'goals')).not.toContain('medicare')
     expect(cardIds(DEV_SEEDS.date65, 'goals')).toContain('medicare')
   })
+
+  // The gift half's review, round 1: a re-walk of a saved plan ran on the draft's load-time stamp, so a gift lost its
+  // counts-twice note after a re-save this session in a later year. The Income step reads the handed-down frame.
+  it('a re-walk’s Income step flags an inheritance or gift by the balances’ year handed down, never the draft’s own stamp', () => {
+    const y = DEV_SEEDS.dateinherit.startCalendarYear
+    const item = DEV_SEEDS.dateinherit.oneTimeInflows![0]!
+    expect(item.year, '[test setup] the seed’s gift falls after its first year').toBeGreaterThan(y)
+    // Loaded from a save in the plan's first year, re-saved in the gift's own year this session.
+    const d = { ...DEV_SEEDS.dateinherit, savedAt: Math.floor(Date.UTC(y, 6, 1) / 86_400_000) }
+    const note = (balances?: { year: number; enteredNow: boolean }) => {
+      const p = setupPage(d, 'income', balances)
+      if (p.kind !== 'cards') throw new Error('income is a cards page')
+      return p.view.cards.find((c) => c.id === 'one-time-0')?.note
+    }
+    expect(note(), 'the draft’s stamp alone predates the gift').toBeUndefined()
+    expect(note({ year: item.year, enteredNow: false })).toBe(slots.oneTimeFlagInYear(item.year))
+  })
 })
 
 describe('what the answer still waits for, beside Complete', () => {

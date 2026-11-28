@@ -132,9 +132,11 @@ describe('R17: an item dated in the year the balances were last saved asks wheth
     })
     expect(refusal({ ...filled, year: 2028, arrivedBySave: true }, saved2028)).toEqual({
       field: 'arrivedBySave',
-      words: 'Money that had already come in belongs in your account balances, not here, or it would count twice.',
+      words: 'Money that’s already come in belongs in your account balances, not here, or it would count twice.',
     })
     expect(buildOneTimeInflow({ ...filled, year: 2028, arrivedBySave: false }, saved2028, 'g').ok).toBe(true)
+    // Balances entered now (review round 1): the drawer asks in the present tense, and the unanswered refusal follows it.
+    expect(refusal({ ...filled, year: 2028 }, { ...saved2028, balancesNow: true })).toEqual({ field: 'arrivedBySave', words: 'Still need whether this money has already come in.' })
   })
 
   it('an item dated after the save year is never asked; the answer is never saved and never seeded', () => {

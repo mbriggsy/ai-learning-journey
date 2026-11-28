@@ -1,6 +1,16 @@
 import { describe, it, expect } from 'vitest'
 import { stateIncomeTax, type StateTaxYearContext } from '@engine/stateTax'
-import { isPricedState, medicareCostTrend, stateRateForYear, stateStandardDeductionFor } from '@engine/constants'
+import {
+  isPricedState,
+  medicareCostTrend,
+  ncHomeSaleGainExcludable,
+  ncHomeSaleGainNotExcludable,
+  paHomeSaleGainExcludable,
+  paHomeSaleGainNotExcludable,
+  STATE_TAX_PROFILES,
+  stateRateForYear,
+  stateStandardDeductionFor,
+} from '@engine/constants'
 
 // ===========================================================================
 // The PURE state-income-tax primitive — externally-derived DND-012 fixtures. Every expected number
@@ -261,5 +271,88 @@ describe('stateIncomeTax — the working-year floor channel (KTD7)', () => {
   it('the channel ABSENT is the literal pre-floor call — an explicit 0 prices the same as no channel', () => {
     const ctx = mk({ calendarYear: 2030, conversion: 34_000, pretaxDistribution: 20_000 })
     expect(Object.is(stateIncomeTax({ ...ctx, clampedOrdinaryBase: 0 }), stateIncomeTax(ctx))).toBe(true)
+  })
+})
+
+// ===========================================================================
+// A HOME SALE'S GAIN (gap 5's U8, KTD7): two presence-keyed channels, the federal taxed slice of an excludable sale
+// and the whole gain of any other. The rules, each from the state's own law, never from this function: North
+// Carolina starts from federal AGI (G.S. 105-153.4(a)), so it taxes whatever federal gross income holds, the slice
+// past §121's figures for an excludable sale and the whole gain otherwise, at the flat rate; Pennsylvania leaves out
+// the whole gain on a principal residence with no dollar limit (72 P.S. § 7303(a)(3)(vii)) and taxes any other
+// home's gain as net gains at the flat rate (§ 7303(a)(3)), with no age gate; Florida taxes nothing. Every fixture
+// sits on a base already above NC's deduction, so each channel's increment is the plain rate × its figure.
+// ===========================================================================
+describe('stateIncomeTax — a home sale’s gain (gap 5’s U8, KTD7)', () => {
+  /** AE2's couple: a $600,000 gain, $500,000 left out federally, a $100,000 federal slice. */
+  const SLICE = 100_000
+  const WHOLE = 600_000
+
+  it('NC taxes the federal slice of an excludable sale at the flat rate', () => {
+    const base = mk({ pretaxDistribution: 60_000 })
+    expect(stateIncomeTax({ ...base, homeSaleGainExcludable: SLICE }) - stateIncomeTax(base)).toBeCloseTo(SLICE * ncRate, 6)
+  })
+
+  it('NC taxes the whole gain of a sale that may leave nothing out', () => {
+    const base = mk({ pretaxDistribution: 60_000 })
+    expect(stateIncomeTax({ ...base, homeSaleGainNotExcludable: WHOLE }) - stateIncomeTax(base)).toBeCloseTo(WHOLE * ncRate, 6)
+  })
+
+  it('NC: the sale sits inside the base the deduction reduces (a sale alone, 2026: slice − deduction, × the rate)', () => {
+    expect(stateIncomeTax(mk({ homeSaleGainExcludable: SLICE }))).toBeCloseTo((SLICE - ncSdMfj) * ncRate, 6)
+  })
+
+  it('PA leaves an excludable sale out WHOLE, even the slice federal tax charges, under and over 59½', () => {
+    for (const minLivingAge of [45, 67]) {
+      const base = mk({ state: 'PA', minLivingAge, realizedGain: 20_000, ongoingTaxable: 5_000 })
+      expect(Object.is(stateIncomeTax({ ...base, homeSaleGainExcludable: SLICE }), stateIncomeTax(base)), `age ${minLivingAge}`).toBe(true)
+    }
+  })
+
+  it('PA taxes the whole gain of any other sale at the flat rate, with no 59½ gate', () => {
+    for (const minLivingAge of [45, 67]) {
+      const base = mk({ state: 'PA', minLivingAge, realizedGain: 20_000, ongoingTaxable: 5_000 })
+      expect(stateIncomeTax({ ...base, homeSaleGainNotExcludable: WHOLE }) - stateIncomeTax(base), `age ${minLivingAge}`).toBeCloseTo(WHOLE * paRate, 6)
+    }
+  })
+
+  it('FL taxes neither channel', () => {
+    expect(stateIncomeTax(mk({ state: 'FL', homeSaleGainExcludable: SLICE, homeSaleGainNotExcludable: WHOLE }))).toBe(0)
+  })
+
+  it('two sales in one year, one excludable and one not, each price through its own channel', () => {
+    const OTHER = 50_000
+    const nc = mk({ pretaxDistribution: 60_000 })
+    expect(stateIncomeTax({ ...nc, homeSaleGainExcludable: SLICE, homeSaleGainNotExcludable: OTHER }) - stateIncomeTax(nc)).toBeCloseTo(
+      (SLICE + OTHER) * ncRate,
+      6,
+    )
+    const pa = mk({ state: 'PA', realizedGain: 20_000 })
+    expect(stateIncomeTax({ ...pa, homeSaleGainExcludable: SLICE, homeSaleGainNotExcludable: OTHER }) - stateIncomeTax(pa)).toBeCloseTo(
+      OTHER * paRate,
+      6,
+    )
+  })
+
+  it('the channels ABSENT price today’s base bit for bit, and an explicit 0 prices the same as absent', () => {
+    for (const state of ['NC', 'PA'] as const) {
+      const ctx = mk({ state, calendarYear: 2030, pretaxDistribution: 40_000, conversion: 30_000, realizedGain: 12_000, minLivingAge: 58 })
+      const zeroed = stateIncomeTax({ ...ctx, homeSaleGainExcludable: 0, homeSaleGainNotExcludable: 0 })
+      expect(Object.is(zeroed, stateIncomeTax(ctx)), state).toBe(true)
+    }
+  })
+
+  it('each profile reads its sourced treatment: NC taxes both, PA exempts the excludable one, FL is none', () => {
+    expect(STATE_TAX_PROFILES.NC.homeSaleGainExcludableTreatment).toBe(ncHomeSaleGainExcludable.value)
+    expect(STATE_TAX_PROFILES.NC.homeSaleGainNotExcludableTreatment).toBe(ncHomeSaleGainNotExcludable.value)
+    expect(STATE_TAX_PROFILES.PA.homeSaleGainExcludableTreatment).toBe(paHomeSaleGainExcludable.value)
+    expect(STATE_TAX_PROFILES.PA.homeSaleGainNotExcludableTreatment).toBe(paHomeSaleGainNotExcludable.value)
+    expect([ncHomeSaleGainExcludable.value, ncHomeSaleGainNotExcludable.value, paHomeSaleGainExcludable.value, paHomeSaleGainNotExcludable.value]).toEqual([
+      'taxed-ordinary',
+      'taxed-ordinary',
+      'exempt',
+      'taxed-ordinary',
+    ])
+    expect([STATE_TAX_PROFILES.FL.homeSaleGainExcludableTreatment, STATE_TAX_PROFILES.FL.homeSaleGainNotExcludableTreatment]).toEqual(['none', 'none'])
   })
 })

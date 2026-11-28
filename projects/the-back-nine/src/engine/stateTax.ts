@@ -23,6 +23,9 @@
  *     income (ongoing other-income + realized gain) is taxed at the flat rate, no standard deduction.
  *     BELOW the qualified age the conservative arm taxes the distribution + conversion too (the
  *     under-59½ conversion exemption could not be primary-pinned; the date route can reach those ages).
+ *   - A home sale's gain (gap 5's KTD7) rides two channels of its own, never `realizedGain`: NC taxes the federal
+ *     slice of an excludable sale and the whole gain of any other; PA exempts an excludable sale whole (no dollar
+ *     limit) and taxes any other's whole gain at the flat rate.
  *   - FL (`no-income-tax`): a STRUCTURAL literal 0 — no base arithmetic at all, so a priced-$0 state is
  *     byte-identical to an absent state (the FL honesty demonstration; never a computed-then-zeroed
  *     value that would perturb the reduce-to-spine float lineage).
@@ -112,6 +115,16 @@ export interface StateTaxYearContext {
    *  structural 0) — never `pretaxDistribution` (PA's 59½ gate) or `ongoingTaxable` (PA's flat base).
    *  PRESENCE-keyed: absent ⇒ the literal base without it. */
   readonly inheritedDistribution?: number
+  /** A home sale's gain this year (gap 5's plan, KTD7), split by whether the sale may leave its gain out: the
+   *  federally taxed slices of the year's excludable sales (`homeSaleTaxableGain`'s `taxedReal`), priced by the
+   *  profile's `homeSaleGainExcludableTreatment` (NC taxes them; PA exempts them whole, its exclusion having no dollar
+   *  limit; FL is the structural 0) ... The CALLER sums each channel over the year's sales with every sale's gain
+   *  already floored at $0 (a loss on one home never offsets another's gain). Never `realizedGain`, the draws' own
+   *  gains, which PA taxes: an excluded gain there would be taxed. PRESENCE-keyed: absent ⇒ the literal base. */
+  readonly homeSaleGainExcludable?: number
+  /** ... and the whole gains of the year's other sales (`wholeGainReal`; with no exclusion it is their federal slice
+   *  too), priced by `homeSaleGainNotExcludableTreatment` (NC and PA both tax them, PA with no 59½ gate). */
+  readonly homeSaleGainNotExcludable?: number
 }
 
 /** How much of the clamped working year's outside ordinary income enters the state's base, by its
@@ -186,7 +199,15 @@ export function stateIncomeTax(ctx: StateTaxYearContext): number {
     // An inherited IRA's withdrawals (U12) on their own channel — `+ 0` exactly when no ledger rides.
     (ctx.inheritedDistribution === undefined
       ? 0
-      : includeByTreatment(ctx.inheritedDistribution, profile.inheritedDistributionTreatment, qualified))
+      : includeByTreatment(ctx.inheritedDistribution, profile.inheritedDistributionTreatment, qualified)) +
+    // A home sale's gain (gap 5's KTD7) on its two channels, inside the base the deduction reduces (NC's AGI holds
+    // it) — `+ 0` exactly when no sale rides, so a year without one prices the literal base.
+    (ctx.homeSaleGainExcludable === undefined
+      ? 0
+      : includeByTreatment(ctx.homeSaleGainExcludable, profile.homeSaleGainExcludableTreatment, qualified)) +
+    (ctx.homeSaleGainNotExcludable === undefined
+      ? 0
+      : includeByTreatment(ctx.homeSaleGainNotExcludable, profile.homeSaleGainNotExcludableTreatment, qualified))
   // The statute's deduction is a FROZEN NOMINAL figure (NC: no COLA; PA: none at all), so in the
   // engine's real dollars it shrinks every year — deflated by the ONE price index for this CALENDAR
   // year (identity at the anchor, so year 0 is the statute figure). Subtracting it flat would index

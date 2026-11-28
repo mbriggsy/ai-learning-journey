@@ -107,6 +107,19 @@ describe('consumedConstantEntries — the derivation is the run, not the registr
     }
   })
 
+  it('a state’s two home-sale treatments are consumed only by a run carrying one-time money (gap 5’s U8; U9 narrows it to a sale)', () => {
+    const gift = { year: 2030, cashReal: 100_000 }
+    for (const state of ['NC', 'PA'] as const) {
+      const keys = [`state.${state.toLowerCase()}HomeSaleGainExcludable`, `state.${state.toLowerCase()}HomeSaleGainNotExcludable`]
+      const without = keysOf(makeParams({ overlay: { ...baseOverlay, retirementState: state } }))
+      const withItem = keysOf(makeParams({ overlay: { ...baseOverlay, retirementState: state, oneTimeInflows: [gift] } }))
+      for (const key of keys) {
+        expect(without, key).not.toContain(key)
+        expect(withItem, key).toContain(key)
+      }
+    }
+  })
+
   it("an 'elsewhere' / unpriced household consumes NO state entries (the disclosed-out posture)", () => {
     const keys = keysOf(makeParams({ overlay: { ...baseOverlay, retirementState: 'elsewhere' } }))
     expect(keys.some((k) => k.startsWith('state.'))).toBe(false)

@@ -437,7 +437,7 @@ describe('deriveStaleness — the healthcare clocks (U17 §S4: the exposure thre
     ['part-b-trend', { partBTrendVintage: 'part-b-trend-2025x' }],
     // THE F1 CORRECTION, pinned as an equal member of the family. `irmaaTopTierFrozenThrough`
     // has no engine reader of its own; the table it DATES (`irmaa`) is read at simulate.ts:1547,
-    // solveAnchor.ts:229-239 and taxOverlay.ts:2144, and consumedConstants.ts:118 consumes the
+    // solveAnchor.ts:229-239 and taxOverlay.ts:2144, and consumedConstants.ts:126 consumes the
     // whole `health.` family on `healthcareEnabled`. Re-bucketing it to the aggregate reds here.
     ['irmaa-freeze', { irmaaTopTierFrozenThrough: hv.irmaaTopTierFrozenThrough + 1 }],
   ] as const)(
@@ -580,7 +580,7 @@ describe('deriveStaleness — the healthcare clocks (U17 §S4: the exposure thre
   it('extras-typical: the typical-exposed conjunct is NECESSARY BUT NOT SUFFICIENT — an ABSENT fork field on a run that priced no healthcare funds NO extras, so it must not name itself (U17 §S4)', () => {
     // The exact hole the ruling named: absence satisfies conjunct (c) while the run prices
     // nothing at all (`buildOverlay` resolves the extras vector only on `healthcareOn ||
-    // medicareOnly`; consumedConstants.ts:124 requires `medicareExtrasMonthly` present).
+    // medicareOnly`; consumedConstants.ts:132 requires `medicareExtrasMonthly` present).
     const exposedAbsent = {
       ...s,
       healthcareVintage: { ...hv, medicareExtrasTypicalVintage: 'extras-2024x' },

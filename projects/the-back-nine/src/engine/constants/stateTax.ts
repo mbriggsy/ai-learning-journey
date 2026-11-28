@@ -174,6 +174,27 @@ export const ncInheritedDistribution = sourced<StateIncomeTreatment>('taxed-ordi
   note: 'Taxed at the flat rate at any heir age, like the household’s own pre-tax withdrawals (ncRetirementIncome).',
 })
 
+/** NC, a home sale that may leave part of its gain out (gap 5's plan, KTD7): the federally taxed slice, the gain past
+ *  §121's $250,000 or $500,000, is in federal AGI, so it is in NC's base at the flat rate. The part §121 leaves out is
+ *  not in federal gross income, so it never reaches NC either. */
+export const ncHomeSaleGainExcludable = sourced<StateIncomeTreatment>('taxed-ordinary', {
+  citation:
+    'N.C.G.S. § 105-153.4(a) (NC taxable income begins at federal AGI) · IRC § 121(a) (the excluded gain is not in gross income, so it is not in AGI) · IRC § 61(a)(3), § 1001 (the gain past the exclusion is in gross income)',
+  directionalUntilPinned: false,
+  pinTo: 'ncleg.gov codified G.S. 105-153.4 + IRC § 121(a)',
+  note: 'The federal slice, taxed at the flat rate like any gain (ncCapitalGains, no long-term preference). The excluded part costs NC nothing because it never enters AGI. Its own entry so the treatment is read once, on its own channel.',
+})
+
+/** NC, a home sale that may leave nothing out (not the main home, or another main-home sale 2 or fewer calendar years
+ *  before): the whole gain is in federal AGI, so all of it is in NC's base at the flat rate. */
+export const ncHomeSaleGainNotExcludable = sourced<StateIncomeTreatment>('taxed-ordinary', {
+  citation:
+    'N.C.G.S. § 105-153.4(a) (NC taxable income begins at federal AGI) · IRC § 61(a)(3), § 1001 (the whole gain is in gross income when § 121 does not apply)',
+  directionalUntilPinned: false,
+  pinTo: 'ncleg.gov codified G.S. 105-153.4',
+  note: 'The whole gain at the flat rate. With no exclusion, the federal slice and the whole gain are the same figure.',
+})
+
 /** NC Roth conversion — the full taxable conversion is taxed as ordinary income at the flat
  *  rate, with NO age condition, NO source condition, NO exclusion (the ranking-relevant term
  *  the broad-brush rejection named). A purely LINEAR cost: rate × taxable conversion — no NC
@@ -292,6 +313,26 @@ export const paInheritedDistribution = sourced<StateIncomeTreatment>('exempt', {
   note: 'Exempt at every heir age, never through the 59½ gate (`paQualifiedAge`): gated, an under-59½ heir would be taxed, which is gloomy and false. PA inheritance tax on the account at the owner’s death is a separate tax, already settled before the heir’s withdrawals and not priced here.',
 })
 
+/** PA, a home sale that may leave its gain out (gap 5's plan, KTD7): EXEMPT whatever the gain. PA leaves out the
+ *  whole gain on a principal residence, with no dollar limit, so even the slice federal tax charges past §121's
+ *  $250,000 or $500,000 costs PA nothing. */
+export const paHomeSaleGainExcludable = sourced<StateIncomeTreatment>('exempt', {
+  citation:
+    '72 P.S. § 7303(a)(3)(vii) (net gains do not include the gain on the sale of the taxpayer’s principal residence, with no dollar limit) · 61 Pa. Code § 103.13(h) (owned and used as the principal residence 2 of the 5 years before the sale; no other such exclusion in the 2 years before; the surviving spouse); each quoted 2026-11-28 (gap 5’s plan, Sources)',
+  directionalUntilPinned: false,
+  pinTo: '72 P.S. § 7303(a)(3)(vii) + 61 Pa. Code § 103.13(h)',
+  note: 'Exempt in full at any age (a gain, never compensation, so PA’s 59½ gate never applies). Excludable is intake’s flag: the main-home answer and no other main-home sale 2 or fewer calendar years before (the federal and PA two-year rules, read on whole years). PA gives a surviving spouse no two-year window, so the joint-or-single question that decides the federal figure never reaches PA.',
+})
+
+/** PA, a home sale that may leave nothing out: the whole gain is PA net gains, taxed at the flat rate. */
+export const paHomeSaleGainNotExcludable = sourced<StateIncomeTreatment>('taxed-ordinary', {
+  citation:
+    '72 P.S. § 7303(a)(3) (net gains from the sale of property are a taxable class; the principal-residence exclusion of (a)(3)(vii) does not apply) · 72 P.S. § 7302 (the flat rate)',
+  directionalUntilPinned: false,
+  pinTo: '72 P.S. § 7303(a)(3)',
+  note: 'The whole gain at the flat rate, no 59½ gate (a gain, not a retirement-plan distribution), like the taxable account’s gains (paCapitalGains).',
+})
+
 /** PA taxable-account interest/dividends/gains — taxed at the flat 3.07%, NO LTCG preference
  *  and NO short/long distinction (PA's one "net gains" class). This flat rate on brokerage
  *  income is essentially the ONLY PA tax a retired couple pays. */
@@ -335,6 +376,13 @@ export interface StateTaxProfile {
   /** An inherited IRA's withdrawals (the Act 5 plan's KTD23) — their own channel, never the retirement-income or
    *  ongoing-income ones (PA exempts them at any age, which neither of those channels would). */
   readonly inheritedDistributionTreatment: StateIncomeTreatment
+  /** A home sale's gain (gap 5's plan, KTD7), on two channels so a state can treat a sale that may leave its gain out
+   *  apart from one that may not: the federally taxed slices of the year's excludable sales here (PA exempts them
+   *  whole; NC taxes them, as federal AGI holds them) ... */
+  readonly homeSaleGainExcludableTreatment: StateIncomeTreatment
+  /** ... and the whole gains of the year's other sales here (both NC and PA tax them). Never the capital-gains
+   *  channel, which carries the draws' own gains: PA would tax an excluded gain there. */
+  readonly homeSaleGainNotExcludableTreatment: StateIncomeTreatment
   /** `null` for a no-income-tax state (FL). */
   readonly rateSchedule: StateFlatRateSchedule | null
   /** `null` for a no-income-tax state (FL); `{mfj:0,single:0}` for PA (No provision). */
@@ -353,6 +401,8 @@ export const STATE_TAX_PROFILES: Readonly<Record<PricedState, StateTaxProfile>> 
     conversionTreatment: ncConversionTreatment.value,
     capGainsTreatment: ncCapitalGains.value,
     inheritedDistributionTreatment: ncInheritedDistribution.value,
+    homeSaleGainExcludableTreatment: ncHomeSaleGainExcludable.value,
+    homeSaleGainNotExcludableTreatment: ncHomeSaleGainNotExcludable.value,
     rateSchedule: ncRateSchedule.value,
     standardDeduction: ncStandardDeduction.value,
     qualifiedAge: null,
@@ -364,6 +414,8 @@ export const STATE_TAX_PROFILES: Readonly<Record<PricedState, StateTaxProfile>> 
     conversionTreatment: paConversionTreatment.value,
     capGainsTreatment: paCapitalGains.value,
     inheritedDistributionTreatment: paInheritedDistribution.value,
+    homeSaleGainExcludableTreatment: paHomeSaleGainExcludable.value,
+    homeSaleGainNotExcludableTreatment: paHomeSaleGainNotExcludable.value,
     rateSchedule: paRateSchedule.value,
     standardDeduction: paStandardDeduction.value,
     qualifiedAge: paQualifiedAge.value,
@@ -375,6 +427,8 @@ export const STATE_TAX_PROFILES: Readonly<Record<PricedState, StateTaxProfile>> 
     conversionTreatment: 'none',
     capGainsTreatment: 'none',
     inheritedDistributionTreatment: 'none',
+    homeSaleGainExcludableTreatment: 'none',
+    homeSaleGainNotExcludableTreatment: 'none',
     rateSchedule: null,
     standardDeduction: null,
     qualifiedAge: null,
@@ -495,6 +549,8 @@ export const stateTaxConstants = {
   ncConversionTreatment,
   ncCapitalGains,
   ncInheritedDistribution,
+  ncHomeSaleGainExcludable,
+  ncHomeSaleGainNotExcludable,
   paRateSchedule,
   paStandardDeduction,
   paBaseSystem,
@@ -504,5 +560,7 @@ export const stateTaxConstants = {
   paConversionTreatment,
   paCapitalGains,
   paInheritedDistribution,
+  paHomeSaleGainExcludable,
+  paHomeSaleGainNotExcludable,
   flIncomeTax,
 } satisfies Record<string, ConstantEntry>

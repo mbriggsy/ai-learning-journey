@@ -12,7 +12,7 @@
  * SEMANTICS (ranges, sums, age ordering) and remains in the path of every decoded
  * scenario before an answer renders — the codec never re-implements a domain rule,
  * so the two gates cannot disagree. It moves no field, and it changes the parsed object in
- * exactly two ways: it relabels a version-3, -4, -5, -6, -7 or -8 plan (the steps below), and it deletes a
+ * exactly two ways: it relabels a version-3, -4, -5, -6, -7, -8 or -9 plan (the steps below), and it deletes a
  * savedRecommendation that fails its checks — the one tolerated atom, reported on
  * `droppedAtoms` (the bottom of `checkV3Fields`, and the 5 → 6 step). Anything else it returns is the disk's.
  *

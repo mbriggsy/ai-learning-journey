@@ -500,6 +500,7 @@ describe('versions 3 to 5 relabel to their successors; the ladder stays honest f
     if (!decoded.ok) return
     expect(decoded.scenario.schemaVersion).toBe(CURRENT_SCHEMA_VERSION)
     expect(decoded.droppedAtoms).toEqual([])
+    expect(decoded.scenario, 'every step from 5 up writes nothing into the plan: it comes through field for field').toEqual(WITH_LEFT_OVER)
   })
 
   // The schema-v6 bump's own literal. Under a reverted constant (5) every save fails its round trip and the floor
@@ -510,6 +511,7 @@ describe('versions 3 to 5 relabel to their successors; the ladder stays honest f
     if (!decoded.ok) return
     expect(decoded.scenario.schemaVersion).toBe(CURRENT_SCHEMA_VERSION)
     expect(decoded.droppedAtoms).toEqual([])
+    expect(decoded.scenario, 'every step from 6 up writes nothing into the plan: it comes through field for field').toEqual(WITH_V6)
   })
 
   // The schema-v7 bump's own literal (U13). Under a reverted constant (6) every save fails its round trip and the floor
@@ -520,6 +522,7 @@ describe('versions 3 to 5 relabel to their successors; the ladder stays honest f
     if (!decoded.ok) return
     expect(decoded.scenario.schemaVersion).toBe(CURRENT_SCHEMA_VERSION)
     expect(decoded.droppedAtoms).toEqual([])
+    expect(decoded.scenario, 'every step from 7 up writes nothing into the plan: it comes through field for field').toEqual(WITH_V7)
   })
 
   // The schema-v8 bump's own literal (gap 4's U2). Under a reverted constant (7) every save fails its round trip and the
@@ -530,6 +533,7 @@ describe('versions 3 to 5 relabel to their successors; the ladder stays honest f
     if (!decoded.ok) return
     expect(decoded.scenario.schemaVersion).toBe(CURRENT_SCHEMA_VERSION)
     expect(decoded.droppedAtoms).toEqual([])
+    expect(decoded.scenario, 'every step from 8 up writes nothing into the plan: it comes through field for field').toEqual(WITH_V8)
   })
 
   // The schema-v9 bump's own literal (gap 5's U1). Under a reverted constant (8) every save fails its round trip and the
@@ -540,6 +544,7 @@ describe('versions 3 to 5 relabel to their successors; the ladder stays honest f
     if (!decoded.ok) return
     expect(decoded.scenario.schemaVersion).toBe(CURRENT_SCHEMA_VERSION)
     expect(decoded.droppedAtoms).toEqual([])
+    expect(decoded.scenario, 'every step from 9 up writes nothing into the plan: it comes through field for field').toEqual(WITH_V9)
   })
 
   // The schema-v10 bump's own literal (gap 5's U7). Under a reverted constant (9) every save fails its round trip and the
@@ -550,6 +555,7 @@ describe('versions 3 to 5 relabel to their successors; the ladder stays honest f
     if (!decoded.ok) return
     expect(decoded.scenario.schemaVersion).toBe(10)
     expect(decoded.droppedAtoms).toEqual([])
+    expect(decoded.scenario, 'every step from 10 up writes nothing into the plan: it comes through field for field').toEqual(WITH_V10)
   })
 
   it('a plan whose DISK label is 9 and that carries a home sale is refused as a writer bug naming the item — its version-10 twin opens, so the version clause alone refuses it (insight 152)', () => {

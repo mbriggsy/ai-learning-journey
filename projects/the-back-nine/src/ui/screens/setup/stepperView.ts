@@ -284,6 +284,8 @@ const FACT_STEPS: Readonly<Record<string, readonly SetupStepId[]>> = {
   inheritedEarlierLabel: ['net-worth'],
   inheritedLeftToLabel: ['net-worth'],
   inheritedPaceYearLabel: ['net-worth'],
+  // An inheritance or gift (gap 5's U3): it is added on Income (R1), so its year is re-asked there.
+  oneTimeYearLabel: ['income'],
   spendLabel: ['expenses'],
   enrolledPremiumLabel: ['goals'],
   slcspLabel: ['goals'],

@@ -259,12 +259,12 @@ describe('deriveStaleness — the tax clock', () => {
   it('is EXPOSURE-GATED on the overlay existing, NOT on healthcare — a run with a tax overlay and no healthcare still fires (the clock reads its OWN bit)', () => {
     // THE REPLACED CLAIM (U17 §S4's F-pass): this arm used to assert the federal clock takes NO
     // exposure gate, on the premise "a household without an overlay reaches no verdict to be
-    // stale about". That premise is FALSE — `buildParams` (intakeMap.ts:851-867) returns a full
+    // stale about". That premise is FALSE — `buildParams` (intakeMap.ts:876-892) returns a full
     // params object for the $0-portfolio/no-overlay household and it gets a real verdict. A test
     // that pins a defect is the defect's second copy, so it is rewritten, not relaxed.
     //
     // What survives is the half that WAS true and still matters: `taxEnabled: true` is hardcoded
-    // on every built overlay (intakeMap.ts:803), so the gate must be `overlayBuilt` — a clock
+    // on every built overlay (intakeMap.ts:825), so the gate must be `overlayBuilt` — a clock
     // wired to `medicare` instead would silence a real federal rulebook move for this household.
     const s = freshSave()
     const basisMoved = { ...s, taxVintageDetail: { ...s.taxVintageDetail!, legalBasis: 'TCJA (pre-OBBBA)' } }
@@ -275,7 +275,7 @@ describe('deriveStaleness — the tax clock', () => {
 
   it('is SILENT for the DEGENERATE household — no overlay ⇒ `taxEnabled` never set ⇒ consumedConstants skips the whole `tax.` family ⇒ their recompute is byte-identical under any vintage', () => {
     // The population: save-ready, $0 accounts, Social-Security-only income ⇒ `buildOverlay`'s
-    // early return (intakeMap.ts:728-733). Reachable — `stalenessExposure.test.ts` builds exactly
+    // early return (intakeMap.ts:749-755). Reachable — `stalenessExposure.test.ts` builds exactly
     // this draft and proves `missingRequiredFacts` is empty for it.
     const s = freshSave()
     const basisMoved = { ...s, taxVintageDetail: { ...s.taxVintageDetail!, legalBasis: 'TCJA (pre-OBBBA)' } }
@@ -712,7 +712,7 @@ describe('deriveStaleness — the date clocks', () => {
     // The population: 66/retired holding everything + 62/working holding nothing. They ARE on
     // the date route, and `dateSearch.ts:263` DOES force `accumulation` onto every candidate —
     // but it fills it from the BASE overlay's streams, and `contributionStreamsFor` returns `{}`
-    // for a non-working owner (intakeMap.ts:597-600). Their candidates sweep with empty streams and
+    // for a non-working owner (intakeMap.ts:605-608). Their candidates sweep with empty streams and
     // read no limit. Same fixture, same moved stamp, ONE differing read (insight 029).
     const s = freshDateSave()
     const bumped = {
@@ -1423,5 +1423,58 @@ describe('deriveStaleness — the engine-pricing ledger', () => {
     for (const reach of ['priced', 'unknown'] as const) {
       expect(deriveStaleness(savedOn(PRE_LEDGER_DAY), TODAY, withRead(MEDICARE_ONLY, { workingYearTax: reach }), ANSWERS_FRESH).pricing, reach).toEqual(retired.pricing)
     }
+  })
+})
+
+describe('gap 5’s R15 — one-time money dated in or before the year the balances were saved (KTD11)', () => {
+  // Every save day here falls on or after the ledger's newest ship day + 1, so no engine-pricing row is crossed and the
+  // flag is the only thing that can make a fresh save "worth a look". The years are relative to that day (never a typed
+  // year, insight 166): Y0 is its calendar year.
+  const D0 = FIRST_UNAMBIGUOUS_SAVE_DAY
+  const Y0 = epochDayToCalendarYear(D0)
+  const juneOf = (year: number): number => Date.UTC(year, 5, 15) / 86_400_000
+  const savedWith = (draft: ScenarioDraft, itemYear: number, savedAt: number | undefined): CurrentScenario => {
+    const r = scenarioFromDraft({ ...draft, oneTimeInflows: [{ id: 'gift-estate', kind: 'gift', name: 'Aunt Jo’s estate', year: itemYear, amountReal: 250_000 }] })
+    if (!r.ready) throw new Error('the gift fixture should be save-ready')
+    const { savedAt: _wallStamp, ...rest } = r.scenario
+    return savedAt === undefined ? rest : { ...rest, savedAt }
+  }
+  const flags = (s: CurrentScenario, today = TODAY) => deriveStaleness(s, today, ACA_PRICED, ANSWERS_FRESH).oneTimeMoney.atOrBeforeSave
+
+  it('balances saved two years on flag an item dated the year before (firm) and one dated that year (in the year); a later one is not flagged', () => {
+    const saved = juneOf(Y0 + 2)
+    expect(flags(savedWith(DEV_SEEDS.dateinherit, Y0 + 1, saved))).toEqual([{ index: 0, id: 'gift-estate', year: Y0 + 1, inSaveYear: false }])
+    expect(flags(savedWith(DEV_SEEDS.dateinherit, Y0 + 2, saved))).toEqual([{ index: 0, id: 'gift-estate', year: Y0 + 2, inSaveYear: true }])
+    expect(flags(savedWith(DEV_SEEDS.dateinherit, Y0 + 3, saved))).toEqual([])
+  })
+
+  it('balances saved in Y0 and viewed two years later flag nothing: they predate money dated Y0 + 1 (never today’s year)', () => {
+    expect(flags(savedWith(DEV_SEEDS.dateinherit, Y0 + 1, D0), juneOf(Y0 + 2))).toEqual([])
+  })
+
+  it('the same plan re-saved in the item’s own year flags it (the save stamp moves on every save)', () => {
+    expect(flags(savedWith(DEV_SEEDS.dateinherit, Y0 + 1, juneOf(Y0 + 1)))).toEqual([{ index: 0, id: 'gift-estate', year: Y0 + 1, inSaveYear: true }])
+  })
+
+  it('a spine-route plan flags exactly as a date-route one does', () => {
+    const saved = juneOf(Y0 + 2)
+    for (const year of [Y0 + 1, Y0 + 2, Y0 + 3]) {
+      expect(flags(savedWith(DEV_SEEDS.retired, year, saved)), String(year)).toEqual(flags(savedWith(DEV_SEEDS.dateinherit, year, saved)))
+    }
+  })
+
+  it('with no save stamp it keys on the plan’s first year', () => {
+    const start = DEV_SEEDS.dateinherit.startCalendarYear
+    expect(flags(savedWith(DEV_SEEDS.dateinherit, start, undefined))).toEqual([{ index: 0, id: 'gift-estate', year: start, inSaveYear: true }])
+    expect(flags(savedWith(DEV_SEEDS.dateinherit, start + 1, undefined))).toEqual([])
+  })
+
+  it('a flagged item is worth a line at the gate (anyStale) and never a rule that moved; the same save without it is quiet', () => {
+    const saved = juneOf(Y0 + 2)
+    const flagged = deriveStaleness(savedWith(DEV_SEEDS.dateinherit, Y0 + 1, saved), TODAY, ACA_PRICED, ANSWERS_FRESH)
+    const quiet = deriveStaleness(savedWith(DEV_SEEDS.dateinherit, Y0 + 3, saved), TODAY, ACA_PRICED, ANSWERS_FRESH)
+    expect(quiet.anyStale, '[control] nothing else on this save is stale').toBe(false)
+    expect(flagged.anyStale).toBe(true)
+    expect(flagged.rulesMoved).toBe(false)
   })
 })

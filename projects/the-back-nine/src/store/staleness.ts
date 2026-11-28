@@ -86,7 +86,7 @@
  * A bare vintage compare answers "did the TABLE move?", never "did THIS household's answer
  * move?". Shipped defect (pilot-verified 2026-07-25): `reentryChrome.ts` pushed one healthcare
  * line off the OR-collapse of all seven healthcare clocks, so an all-65+ household — which
- * takes `buildOverlay`'s Medicare-only branch (`intakeMap.ts:833-836`), ships NO
+ * takes `buildOverlay`'s Medicare-only branch (`intakeMap.ts:855-858`), ships NO
  * `enrolledPremium`, and can therefore NEVER open the engine's ACA gate
  * (`taxOverlay.ts:2701-2706`: `acaTable !== undefined && enrolledThisYear > 0 && pre65 > 0`) —
  * was told "Health-coverage rules have been updated" on a moved `acaStatus` stamp. They price
@@ -165,7 +165,7 @@
  * a moved left over under the smaller of the stored and live figures (R8), so neither is a rule
  * that moved.
  */
-import type { BudgetCategory, CurrentScenario } from '@shared/model'
+import type { BudgetCategory, CurrentScenario, OneTimeInflow } from '@shared/model'
 import { appDefaultEraFor, CURRENT_APP_DEFAULT_VERSION } from '@shared/appDefaults'
 import { healthcareVintageStamp } from '@engine/constants/health'
 import { taxVintageStamp } from '@engine/constants/tax'
@@ -255,15 +255,15 @@ export type ExposureRead = 'priced' | 'unpriced' | 'unknown'
 export interface StalenessExposure {
   /** Did the run BUILD a tax overlay at all (`overlayBuiltForRun` — the route's own builder's
    *  `params.overlay !== undefined`)? This is the FEDERAL tax family's gate: `taxEnabled: true`
-   *  is hardcoded on every built overlay (`intakeMap.ts:803`) and `consumedConstants.ts:109`
+   *  is hardcoded on every built overlay (`intakeMap.ts:825`) and `consumedConstants.ts:109`
    *  gates the whole `tax.` family on exactly that flag — so a run that took `buildOverlay`'s
-   *  degenerate early return (`intakeMap.ts:728-733`: no accounts, no premium, no income —
+   *  degenerate early return (`intakeMap.ts:749-755`: no accounts, no premium, no income —
    *  reachable today by a save-ready Social-Security-only household) re-prices NO tax constant
    *  and is byte-identical under any tax vintage.
    *
    *  ITS OWN BIT, NEVER INFERRED FROM `medicare` (insight 081's shape). The two are CORRELATED
    *  today — and only by an accident of the intake gate: `missingRequiredFacts` REQUIRES the
-   *  marketplace quote pair for any household with a pre-65 member (`intakeMap.ts:291-297`), and
+   *  marketplace quote pair for any household with a pre-65 member (`intakeMap.ts:292-298`), and
    *  an all-65+ household takes the Medicare-only branch, so EVERY save-ready built overlay
    *  happens to carry `healthcareEnabled`. That is a coincidence of two unrelated rules, not a
    *  law: it breaks the day a third overlay branch ships, or the day the quote pair becomes
@@ -286,14 +286,14 @@ export interface StalenessExposure {
    *  owner actually contribute (`contributionsPricedForRun`)? The date route is NOT sufficient
    *  on its own: `dateSearch.ts:263` forces `accumulation` onto EVERY candidate, but it
    *  truncates the BASE overlay's streams, and `contributionStreamsFor` returns `{}` for a
-   *  non-working owner (`intakeMap.ts:597-600`) — so a date-route household whose accounts all
+   *  non-working owner (`intakeMap.ts:605-608`) — so a date-route household whose accounts all
    *  belong to the retired spouse carries EMPTY streams on every candidate and reads no
    *  contribution limit (`consumedConstants.ts:130` gates the `contributions.` family on the
    *  construct's presence; the limits' only pricing read is `annualAdditionsCeilingFor`'s
    *  §415(c) match trim inside `contributionStreamsFor`, which never runs for them). */
   readonly contributions: ExposureRead
   /** Does the run's stock weight READ the dated ticker-blend table (`blendTableReadForRun`)?
-   *  `resolveBlend` (`intakeMap.ts:381`) consults it ONLY for an account whose ticker hits
+   *  `resolveBlend` (`intakeMap.ts:389`) consults it ONLY for an account whose ticker hits
    *  a row; an all-manual-blend household — or one whose portfolio totals $0, where
    *  `householdStockWeight` returns null and the run takes the inert `?? 0` — is PROVABLY
    *  inert under any `BLEND_SNAPSHOT_AS_OF` bump. `'priced'` still never NAMES itself (see
@@ -393,6 +393,36 @@ export interface ExpiredBudgetLine {
   /** The same boundary as a calendar year (`startCalendarYear + endYear`) — what the
    *  re-confirm quotes ("your travel budget was set to end in 2028 — is that still right?"). */
   readonly endCalendarYear: number
+}
+
+/** Gap 5's R15 (KTD11): one inheritance or gift dated in or before the calendar year the plan's balances were last saved.
+ *  If its money came, it is in those balances, so the item counts it twice; `inSaveYear` is the year itself, where that
+ *  holds only if the money came in before the save. */
+export interface OneTimeInflowAtOrBeforeSave {
+  /** Index into the persisted `oneTimeInflows` list. */
+  readonly index: number
+  readonly id: string
+  readonly year: number
+  readonly inSaveYear: boolean
+}
+
+/** The calendar year the plan's balances were last saved (gap 5's R15 and R17, one rule): `savedAt`'s year, or the plan's
+ *  first year on a plan never saved (a draft's balances are being entered in its first year). Never today's year: balances
+ *  saved in 2026 and viewed in 2028 still predate money dated 2027. */
+export function balancesSaveYear(scenario: Pick<CurrentScenario, 'savedAt' | 'startCalendarYear'>): number {
+  return scenario.savedAt === undefined ? scenario.startCalendarYear : epochDayToCalendarYear(scenario.savedAt)
+}
+
+/** R15's flag: every item dated in or before `saveYear`, in list order. On both routes alike (an item is keyed by its
+ *  calendar year on either), and beside, never inside, the budget's wall-clock check. The home sale's `closed` arm (the
+ *  plan's U10) joins here: a sale saved as closed is flagged only when dated before the save year. */
+export function oneTimeInflowsAtOrBeforeSave(
+  items: readonly OneTimeInflow[] | undefined,
+  saveYear: number,
+): readonly OneTimeInflowAtOrBeforeSave[] {
+  return (items ?? []).flatMap((item, index) =>
+    item.year <= saveYear ? [{ index, id: item.id, year: item.year, inSaveYear: item.year === saveYear }] : [],
+  )
 }
 
 export interface StalenessReport {
@@ -510,6 +540,10 @@ export interface StalenessReport {
    *  window can be "past" before work actually stops (Q6 — documented-inert, a dated
    *  supersession of the plan's route-agnostic wording). */
   readonly budget: { readonly expiredLines: readonly ExpiredBudgetLine[] }
+  /** Gap 5's R15: the plan's inheritances and gifts dated in or before the year its balances were last saved
+   *  ({@link balancesSaveYear}), each a line at the re-entry gate. Counted toward `anyStale` ONLY: no rule moved, and the
+   *  run counts the item as entered. */
+  readonly oneTimeMoney: { readonly atOrBeforeSave: readonly OneTimeInflowAtOrBeforeSave[] }
   /**
    * THE ENGINE'S OWN PRICING (`ENGINE_PRICING_LEDGER`) — a change to how the ENGINE CODE works a
    * figure out, with every constants stamp equal. Keyed on the vault's `savedAt` against each row's
@@ -540,7 +574,8 @@ export interface StalenessReport {
   /** Anything worth a line at the re-entry gate — `rulesMoved` OR an unattributed re-base OR a
    *  budget re-confirm OR an engine-pricing line (`pricing.moved`) OR a stale W answer
    *  (`workingYear.costStale`, KTD21) OR a moved left-over answer (`workingYear.leftOverStale`,
-   *  build 2's KTD9). */
+   *  build 2's KTD9) OR an inheritance or gift dated in or before the save year (`oneTimeMoney`,
+   *  gap 5's R15). */
   readonly anyStale: boolean
 }
 
@@ -636,7 +671,7 @@ export function deriveStaleness(
   // `taxEnabled: true` is hardcoded on every built overlay. The first half is true; the
   // conclusion was not — a household that builds NO overlay reaches a verdict all the same
   // (`buildParams` returns params with `initialPortfolio: 0` and the inert `stockWeight ?? 0`,
-  // `intakeMap.ts:858-867`), so "no overlay ⇒ nothing to be stale about" was false.
+  // `intakeMap.ts:883-892`), so "no overlay ⇒ nothing to be stale about" was false.
   const currentTax = taxVintageStamp()
   const savedTax = scenario.taxVintageDetail
   const taxStampMoved =
@@ -775,9 +810,9 @@ export function deriveStaleness(
   // gate keeps the CLAIM honest: "every date candidate carries the accumulation construct
   // (`dateSearch.ts:263`) ⇒ structurally exposed" is necessary but NOT sufficient, because the
   // forced construct is filled from the BASE overlay's streams and `contributionStreamsFor`
-  // returns `{}` for a non-working owner (`intakeMap.ts:597-600`). A 66/retired + 62/working couple
+  // returns `{}` for a non-working owner (`intakeMap.ts:605-608`). A 66/retired + 62/working couple
   // whose accounts all belong to the retired spouse is on the date route with EMPTY streams:
-  // `anyContributions` is false (`intakeMap.ts:765-771`), no `accumulation` reaches the base
+  // `anyContributions` is false (`intakeMap.ts:787-793`), no `accumulation` reaches the base
   // overlay, and the limit tables' only pricing read (the §415(c) match trim) never runs.
   //
   // The blend clock never NAMES itself on either route (see `date.blendMoved`'s own note): the
@@ -830,6 +865,11 @@ export function deriveStaleness(
       }
     })
   }
+
+  // ── gap 5's R15: one-time money dated in or before the save year (both routes) ────────
+  // Keyed on the year the balances were SAVED, never the wall year the budget check above reads: balances saved in 2026
+  // and viewed in 2028 predate money dated 2027, and a re-save in an item's own year turns its line on.
+  const oneTimeAtOrBeforeSave = oneTimeInflowsAtOrBeforeSave(scenario.oneTimeInflows, balancesSaveYear(scenario))
 
   // ── the engine's own pricing (the ledger — the engine-domain council, 2026-09-27) ────────
   // A row is CROSSED when the save predates its ship day, or the vault carries no `savedAt` at all
@@ -899,7 +939,8 @@ export function deriveStaleness(
     expiredLines.length > 0 ||
     pricingMoved ||
     workingYearCostMoved ||
-    workingYearLeftOverMoved
+    workingYearLeftOverMoved ||
+    oneTimeAtOrBeforeSave.length > 0
 
   return {
     elapsed,
@@ -921,6 +962,7 @@ export function deriveStaleness(
       leftOverStale: workingYearLeftOverMoved,
     },
     budget: { expiredLines },
+    oneTimeMoney: { atOrBeforeSave: oneTimeAtOrBeforeSave },
     pricing: {
       namedFamilies: pricingNamedFamilies,
       hedged: pricingHedged,

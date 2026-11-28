@@ -17,6 +17,8 @@ export const fieldErrorText = (m: CatalogMessage): string => {
       return slots.errWorkingCostStaleBelowQuote(m.params.heldFormatted, m.params.quoteFormatted)
     case 'errWorkingCostStaleKeep':
       return slots.errWorkingCostStaleKeep(m.params.keepLabel)
+    case 'errOneTimeYearRange':
+      return slots.errOneTimeYearRange(m.params.firstYear, m.params.lastYear)
     default:
       return slots[m.messageKey](m.params.limitFormatted)
   }

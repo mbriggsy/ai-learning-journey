@@ -262,8 +262,8 @@ North Carolina taxes the federal slice in every row; Florida taxes nothing.
 - **Files.**
   - New `src/intake/oneTimeInflow.ts`: the form, the decision tree, the problems, the params builder (U10 adds the sale's arm and read-back).
   - `src/intake/intakeMap.ts`: the overlay's early return, the presence-keyed spread; `missingRequiredFacts`.
-  - `src/intake/sanity.ts`: the item fields for `validateDraft` and `allRuleFields`.
-  - `src/store/staleness.ts`: KTD11's save-year flag, both routes.
+  - `src/intake/sanity.ts`: the item fields for `validateDraft` and `allRuleFields`. **As built (b9-4, 2026-11-28): no rule added.** The year out of range is KTD11's missing fact (`oneTimeInflowProblems`, read by `missingRequiredFacts`); a sanity rule on the same predicate would be its second home (insight 081), and through `allRuleFields` it would refuse a birth-year fix in Family over a gift at the horizon's edge, where KTD11 re-asks the year instead. A $0 or missing amount is refused by the form's tree and the codec; no other path writes an item.
+  - `src/store/staleness.ts`: KTD11's save-year flag, both routes. **As built:** `balancesSaveYear` (the one save-year rule R15 and R17 share) and `oneTimeInflowsAtOrBeforeSave`; the report's `oneTimeMoney.atOrBeforeSave` feeds `anyStale` only, and U4 draws its gate line. R17's answer is never saved and never seeded: the drawer asks it again on every edit of an item dated in the save year. The year range for the form and the missing fact is `oneTimeYearRange` (`intakeMap.ts`), off the same `horizonFor` the engine's `maxHorizonYears` reads. The new label `oneTimeYearLabel` sits on the stepper's Income step (`FACT_STEPS`).
   - `src/ui/devSeeds.ts`: `dateinherit` (a twist on `dateDipSeed`: $250,000 in a working year, both people's).
   - Tests: new `src/intake/__tests__/oneTimeInflow.test.ts`; `src/intake/__tests__/intakeMap.test.ts`; `src/store/__tests__/staleness.test.ts`; `src/ui/__tests__/devSeeds.test.ts` (its list of date seeds carrying W gains `dateinherit`); `src/ui/__tests__/stalenessExposure.test.ts` (`W_KEYED` gains `dateinherit`).
 - **Approach.**

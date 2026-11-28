@@ -307,6 +307,8 @@ describe('exposureForDraft — the working-year tax floor’s reach (ledger v12)
     // Gap 4's U4: `dip`'s household with a fixed-dollar Home line, and with a Living line up 5 % a year.
     'datefixed',
     'daterising',
+    // Gap 5's U3: `dip`'s household with a $250,000 inheritance in 2030, read through the W branch.
+    'dateinherit',
   ] as const
   const withoutW = (d: ScenarioDraft): ScenarioDraft => {
     const { workingYearCost: _w, ...rest } = d

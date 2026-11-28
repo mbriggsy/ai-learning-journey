@@ -404,6 +404,19 @@ export const copy = {
   errIncomeExclusionRequired: 'Still need the tax-free part of the annuity.',
   // The end age under the age it starts (milestone 3's review, X8): a stream paying now starts at the owner's age today.
   errIncomeEndBeforeStart: 'The age it stops can’t be before the age it starts paying, or before the owner’s age today if it’s paying now.',
+  // An inheritance or gift's form (gap 5's U3; `buildOneTimeInflow` in `src/intake/oneTimeInflow.ts`, the one decision
+  // tree), in the drawer's field order. The year's range rides a slot (`slots.errOneTimeYearRange`). Shipped flagged for
+  // Briggsy's later read (his 2026-11-22 rulings: the words ship).
+  errOneTimeNameRequired: 'Still need a name for it.',
+  errOneTimeYearRequired: 'Still need the year it comes in.',
+  // R17: asked only of an item dated in the year the balances were last saved (the plan's first year if never saved).
+  errOneTimeArrivedRequired: 'Still need whether the money had already come in when you entered your account balances.',
+  errOneTimeArrivedGift: 'Money that had already come in belongs in your account balances, not here, or it would count twice.',
+  errOneTimeAmountRequired: 'Still need the amount.',
+  errOneTimeAmountZero: 'An inheritance or gift is more than $0. To leave one out, delete it instead.',
+  // KTD12: whose it is is never inferred or defaulted to both (both reads rosy on the paths where its heir has died).
+  errOneTimeWhoseRequired: 'Still need whose it is: one of you, or both.',
+  errOneTimeLeftToRequired: 'Still need whether it would still come to the other of you if the one it’s for has died first.',
   // --- THE PAY CHECK'S W STEP, ITS MONEY PICTURE AND THE PANEL'S W ROW (U8;
   //     `docs/plans/features/working-year-pay-check-build-spec.md` KTD3, KTD5, KTD12, KTD17, KTD18,
   //     KTD21). Date route only, asked after the other-income loop: W is what a year costs while
@@ -678,6 +691,9 @@ export const copy = {
   inheritedRefusedDeathAfterAsked: 'An inherited IRA whose year of death is later than the year its figures are for',
   inheritedRefusedFigureMismatch:
     'An inherited IRA whose required withdrawal doesn’t match its heir’s age: the custodian may be using another person’s life, which this version can’t price, or the birth year in Family is a year off',
+  // An inheritance or gift whose year fell outside the plan's years after it was saved (gap 5's U3; KTD11: a birth year
+  // moved in Family moves the plan's last year), as the missing-fact lists name it after "Still needed:".
+  oneTimeYearLabel: 'Inheritance or gift: the year it comes in, within this plan’s years',
   // --- THE INHERITED IRA'S DRAWER (the Act 5 plan's U13; KTD17, KTD25; `src/intake/inheritedIraQuestions.ts`, the one
   //     decision tree). "The person who left it" is the dead owner throughout, never "the owner", which the drawer's own
   //     select would read as the heir. Each refusal is written from its predicate (insight 101): true for every answer that
@@ -1335,7 +1351,7 @@ export const copy = {
     'That figure doesn’t count what you’d pay for drug and supplement plans — you answered about nothing for them, so the lines below add none.',
   // ⚠️ "the benchmark premium itself" WAS IN BOTH LISTS AND WAS FALSE — struck 2026-08-03.
   // The benchmark (SLCSP) is not merely counted, it is the ANCHOR of the whole credit:
-  // `intakeMap.ts:828` builds `slcsp` into the overlay params, `taxOverlay.ts:314` calls it "the
+  // `intakeMap.ts:850` builds `slcsp` into the overlay params, `taxOverlay.ts:314` calls it "the
   // §36B PTC basis", and `slidingScalePtc` (healthOverlay.ts:222-232) computes
   // `max(0, slcsp − applicable% × MAGI)` FROM it. Telling the reader the tool ignores the one
   // figure the discount is calculated from is the same false-negation shape O16 fixed on the Roth
@@ -1344,7 +1360,7 @@ export const copy = {
   // STRUCK, NOT REPLACED WITH AN AFFIRMATION, and that is deliberate. The O16 house pattern is
   // affirm-with-residual, but these two strings are gated on `statePriced` ALONE
   // (`stateTaxDisclosure.ts:145`) — they carry no ACA-priced axis, so the identical sentence also
-  // ships to a Medicare-only household (`intakeMap.ts:833-836`) that has no benchmark at all.
+  // ships to a Medicare-only household (`intakeMap.ts:855-858`) that has no benchmark at all.
   // "The benchmark is already in these numbers" would be a NEW false claim for that population.
   // Affirming here needs the three-state gate the Roth strings have; until then, silence is true.
   //
@@ -3719,7 +3735,7 @@ export function workingCostExtras(stateTax: boolean): readonly string[] {
  * `slots[messageKey](params.limitFormatted)`, and every param-less violation renders
  * `copy[messageKey]` byte-identically to before.
  */
-export type SlottedErrorKey = 'errContributionCeiling' | 'errAdditionsCeiling' | 'errRothStartPast'
+export type SlottedErrorKey = 'errContributionCeiling' | 'errAdditionsCeiling' | 'errRothStartPast' | 'errOneTimeYearFrom'
 export interface SlottedErrorParams {
   /** The quoted bound, PRE-formatted at fire time — for the two ceiling errors the statutory
    *  limit dollar (intake money formatter: digits + grouping, no `$` — the slot template
@@ -3748,11 +3764,18 @@ export interface WorkingCostStaleBelowQuoteParams {
 export interface WorkingCostStaleKeepParams {
   readonly keepLabel: string
 }
+/** Gap 5's U3: an inheritance or gift's year outside the plan's years names both ends of the range (the engine's own:
+ *  the plan's first year through its last horizon year), each plain digits. */
+export interface OneTimeYearRangeParams {
+  readonly firstYear: string
+  readonly lastYear: string
+}
 export type CatalogMessage =
   | { readonly messageKey: CopyKey; readonly params?: undefined }
   | { readonly messageKey: SlottedErrorKey; readonly params: SlottedErrorParams }
   | { readonly messageKey: 'errWorkingCostStaleBelowQuote'; readonly params: WorkingCostStaleBelowQuoteParams }
   | { readonly messageKey: 'errWorkingCostStaleKeep'; readonly params: WorkingCostStaleKeepParams }
+  | { readonly messageKey: 'errOneTimeYearRange'; readonly params: OneTimeYearRangeParams }
 
 /**
  * The hedge vocabulary — the words a probabilistic reading is authored FROM (U10's
@@ -5256,6 +5279,12 @@ export const slots = {
    *  arrived test the ladder and band consume (§S0.1). */
   errRothStartPast: (yearFormatted: string): string =>
     `That year has already passed — this plan can start the conversions in ${yearFormatted} or later.`,
+  /** Gap 5's U3: an inheritance or gift's year outside the plan's years, the range named (`buildOneTimeInflow`): the
+   *  plan's first year through its last, the engine's own range. Both years arrive as params, never typed here. */
+  errOneTimeYearRange: (firstYear: string, lastYear: string): string =>
+    `The year it comes in is one from ${firstYear} to ${lastYear}, the years this plan covers.`,
+  /** …and while a person's age is still unknown, so the plan's last year is too: the first year alone. */
+  errOneTimeYearFrom: (firstYear: string): string => `The year it comes in is ${firstYear} or later, from this plan’s first year on.`,
   // --- U7 verdict grammar (the confidence statement's magnitude clause) -----------------
   // The second line of the verdict, keyed off the engine's dollar DIRECTION
   // (DollarAdjustment.direction — NEVER re-derived UI-side) + its $/month figures, each pre-formatted
@@ -5509,7 +5538,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:2476` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:2480` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,

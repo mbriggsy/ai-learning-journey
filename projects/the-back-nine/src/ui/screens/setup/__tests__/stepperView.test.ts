@@ -199,14 +199,18 @@ describe('a step’s ✓ only where none of its own facts is missing (the look a
   it('every fact the answer can wait for has a step (a new one would otherwise take every step’s ✓ away)', () => {
     const src = readFileSync('src/intake/intakeMap.ts', 'utf8')
     const body = src.slice(src.indexOf('export function missingRequiredFacts'), src.indexOf('// blend resolution'))
-    // An inherited IRA's facts are named by its own rules (`inheritedFactsProblems`, U13), each with its kind spelled.
+    // An inherited IRA's facts are named by its own rules (`inheritedFactsProblems`, U13), each with its kind spelled;
+    // an inheritance or gift's by its own (`oneTimeInflowProblems`, gap 5's U3) the same way.
     const inherited = readFileSync('src/intake/inheritedIra.ts', 'utf8')
+    const oneTime = readFileSync('src/intake/oneTimeInflow.ts', 'utf8')
     const absent = [
       ...[...body.matchAll(/labelKey: '(\w+)'(?!, kind: 'unrepresentable')/g)].map((m) => m[1]!),
       ...[...inherited.matchAll(/labelKey: '(\w+)', kind: 'absent'/g)].map((m) => m[1]!),
+      ...[...oneTime.matchAll(/labelKey: '(\w+)', kind: 'absent'/g)].map((m) => m[1]!),
     ]
     expect(absent.length).toBeGreaterThan(10)
     expect(absent, '[non-vacuity] the inherited IRA’s facts are read').toContain('inheritedEarlierLabel')
+    expect(absent, '[non-vacuity] the one-time money’s facts are read').toContain('oneTimeYearLabel')
     for (const key of absent) expect(factSteps(key), key).not.toEqual(SETUP_STEPS)
   })
 })

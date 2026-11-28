@@ -68,6 +68,7 @@ import { ratedLineFactors } from './priceFrame'
 import { annualAdditionsCeilingFor, contributionCeilingFor, contributionCeilingInYear, depositCeilingOf, isEmployerPlanKind } from './sanity'
 import { compileIncomeStreams } from './otherIncome'
 import { inheritedFactsProblems, inheritedLedgerParams, isInheritedAccount, type InheritedAccount } from './inheritedIra'
+import { oneTimeInflowParams, oneTimeInflowProblems, type OneTimeYearRange } from './oneTimeInflow'
 // One way only (build 2's KTD2): `workingYearQuote` imports nothing from this module, and the shown-state
 // leaf imports no intake module, so neither edge closes a loop.
 import { isWorkingYearCostStale, workingYearCostFigure } from './workingYearQuote'
@@ -341,6 +342,13 @@ export function missingRequiredFacts(d: ScenarioDraft): readonly MissingFact[] {
     }
     for (const p of inheritedFactsProblems(d, a)) out.push({ labelKey: p.labelKey, personIndex: a.ownerIndex as 0 | 1, kind: p.kind })
   })
+
+  // Gap 5's U3 (KTD11): an inheritance or gift whose year has fallen outside the plan's years (a birth year moved in
+  // Family moves the last one) is a year the drawer re-asks, never a silent drop or an engine refusal.
+  if (d.oneTimeInflows !== undefined) {
+    const range = oneTimeYearRange(d)
+    for (const item of d.oneTimeInflows) for (const p of oneTimeInflowProblems(item, range)) out.push({ labelKey: p.labelKey, kind: p.kind })
+  }
 
   return out
 }
@@ -709,6 +717,15 @@ function horizonFor(d: ScenarioDraft): number {
   return Math.max(1, Math.min(119 - youngest + 1, 100))
 }
 
+/** The calendar years an inheritance or gift can fall in (gap 5's KTD1, KTD11): the plan's first year through its last
+ *  horizon year, the exact range the engine's arm refuses outside of, because `buildParams` passes this same
+ *  {@link horizonFor} as `maxHorizonYears` on both routes. The last year is undefined while any person's age is unknown:
+ *  `horizonFor` would read a placeholder 65 for it, and the missing birth year already blocks the run. */
+export function oneTimeYearRange(d: ScenarioDraft): OneTimeYearRange {
+  const agesKnown = d.people.every((p) => p.currentAge !== undefined)
+  return { first: d.startCalendarYear, last: agesKnown ? d.startCalendarYear + horizonFor(d) - 1 : undefined }
+}
+
 function buildOverlay(d: ScenarioDraft, horizonYears: number): OverlayParams | undefined {
   const accounts = d.enteredAccounts
   // R40 — compile the ongoing other-income streams ONCE here (income is Y-invariant, KTD-8a: the
@@ -725,10 +742,15 @@ function buildOverlay(d: ScenarioDraft, horizonYears: number): OverlayParams | u
   // pension/rental and a spend figure (no entered accounts, no marketplace premium) must still get
   // a tax-aware overlay — income hits SS-§86 / ACA-MAGI / IRMAA-MAGI, so a tax-blind run would be
   // calm-but-wrong. (Pre-R40 only accounts or a health premium opened the overlay.)
+  // Gap 5's KTD2: an inheritance or gift opens it too. The money lands in the taxable account the tax overlay keeps, and
+  // the engine refuses the list without `taxEnabled`, so a household with no accounts, no premium and no income but a
+  // gift gets an overlay carrying it (its run still ends in year 0 on a $0 portfolio, before the money's year).
+  const oneTimeInflows = (d.oneTimeInflows ?? []).map((item) => oneTimeInflowParams(d, item))
   if (
     accounts.length === 0 &&
     d.health.enrolledPremiumMonthlyToday === undefined &&
-    income === undefined
+    income === undefined &&
+    oneTimeInflows.length === 0
   )
     return undefined
 
@@ -845,6 +867,9 @@ function buildOverlay(d: ScenarioDraft, horizonYears: number): OverlayParams | u
     ...(income !== undefined ? { income } : {}),
     ...(conversions !== undefined ? { conversions } : {}),
     ...(inheritedIras.length > 0 ? { inheritedIras } : {}),
+    // Gap 5's KTD2: PRESENCE-keyed, in the draft's order (the row's `oneTimeInByItem` is index-aligned with it). A plan
+    // with none writes no field: the engine refuses an empty list (one OFF shape).
+    ...(oneTimeInflows.length > 0 ? { oneTimeInflows } : {}),
   }
 }
 

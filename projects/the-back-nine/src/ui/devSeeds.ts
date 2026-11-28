@@ -790,6 +790,18 @@ const dateRisingSeed: ScenarioDraft = {
 }
 
 /**
+ * THE ONE-TIME MONEY WITNESS — `?seed=dateinherit` (gap 5's U3; the plan's AE5): `dip`'s household with a $250,000
+ * inheritance that is both people's (no heir, so it counts while either is living), arriving in 2030, sim year 4. Every
+ * stop the date search tests credits it at the end of calendar 2030 (KTD1): a working year on each stop from 2031 on, a
+ * retired one on the earlier stops. Its year is written from `SEED_BUILD_YEAR`, so rolling the seeds' year moves it too
+ * (insight 166). A date-route seed with a confirmed W minted on its own draft, fact-complete.
+ */
+const dateInheritSeed: ScenarioDraft = {
+  ...dateDipSeed,
+  oneTimeInflows: [{ id: 'gift-estate', kind: 'gift', name: 'Aunt Jo’s estate', year: SEED_BUILD_YEAR + 4, amountReal: 250_000 }],
+}
+
+/**
  * THE CUSTOM-DRAWDOWN-ORDER round-trip seed (U10 — the persisted 'custom' policy + `drawdownOrder`).
  * Every other seed rides the `proportional` default; this one is the ONLY seed that drives the
  * 'custom' policy and an explicit bucket order through `plantDevVault`'s scenarioFromDraft → codec
@@ -2169,6 +2181,8 @@ export const DEV_SEEDS = {
   // Gap 4's U4: budget lines that change at their own rate (a fixed-dollar Home line; a Living line up 5 % a year).
   datefixed: withConfirmedW(dateFixedSeed),
   daterising: withConfirmedW(dateRisingSeed),
+  // Gap 5's U3: a $250,000 inheritance, both people's, in 2030 (a working year on the later stops).
+  dateinherit: withConfirmedW(dateInheritSeed),
 } satisfies Record<string, ScenarioDraft>
 
 export type DevSeedKey = keyof typeof DEV_SEEDS

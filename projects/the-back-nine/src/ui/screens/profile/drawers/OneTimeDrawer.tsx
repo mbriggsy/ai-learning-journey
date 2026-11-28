@@ -151,7 +151,12 @@ export function OneTimeDrawer({
               disabled={readOnly}
               required
               {...err('whose')}
-              onValueChange={(v) => set('whose', { whose: v === 'both' ? 'both' : (Number(v) as 0 | 1) })}
+              // A different person asks the still-comes question about a different heir: the old answer never carries
+              // over (picked for Alex, "Yes, to Sam" would read selected as "Yes, to Alex"; the review's round 3).
+              onValueChange={(v) => {
+                const whose = v === 'both' ? ('both' as const) : (Number(v) as 0 | 1)
+                set('whose', whose === form.whose ? { whose } : { whose, leftTo: undefined })
+              }}
             />
           </Fact>
         ) : null}

@@ -125,6 +125,22 @@ describe('the drawer: add, edit, delete (R1 to R3)', () => {
     expect(model.getSnapshot().draft.oneTimeInflows![0]).toMatchObject({ heirIndex: 1, leftTo: 'someone-else' })
   })
 
+  // The review's round 3: the still-comes question is about one heir, so its answer never carries to the other person.
+  it('switching whose it is to the other person clears the still-comes answer, so it is asked again about the new heir', () => {
+    const { model } = profileStore(RETIRED)
+    const dialog = open(model, { kind: 'new-one-time' })
+    type(box(dialog, copy.oneTimeNameLabel), 'Aunt’s estate')
+    type(box(dialog, copy.oneTimeYearFieldLabel), String(Y + 5))
+    type(box(dialog, copy.oneTimeAmountLabel), '100000')
+    pick(dialog, 'Alex')
+    pick(dialog, slots.oneTimeLeftToYes('Sam'))
+    pick(dialog, 'Sam')
+    // MUTANT: keep the old leftTo across the switch: "Yes, to Alex" reads selected and Save keeps it: this reds.
+    expect(within(dialog).getByRole('radio', { name: slots.oneTimeLeftToYes('Alex') })).not.toBeChecked()
+    save(dialog)
+    expect(within(dialog).getByText(copy.errOneTimeLeftToRequired)).toBeInTheDocument()
+  })
+
   it('an edit replaces the item in place with its own id; Delete (twice) takes the last item and the key with it', () => {
     const { model } = profileStore(withGifts(RETIRED, [gift({ id: 'keep-me' })]))
     let dialog = open(model, { kind: 'one-time', index: 0 })

@@ -1185,6 +1185,7 @@ chair; chair from a digest script, never the raw result, and expect the window t
 
 ## Engine and tax math
 
+- **(b9-8, 11-28) Any change to `taxConstants`' VALUES reds `vintageStamps.test.ts`'s content digest** ("the table CONTENT is bound to the stamp pair"), a new entry included (`homeSaleExclusion`, gap 5's U8). Read the red as the question it asks: a priced figure that moved bumps `TAX_YEAR` or the `legalBasis` sentence; a figure nothing saved can reach yet re-pins the digest with its reason written beside the earlier re-pins. The state table has its own clock: a new state profile key moves `stateTaxVintageStamp` (gap 5's KTD7).
 - **(b9-8, 11-27) An inherited IRA's required beginning date is April 1 of the year AFTER the applicable age** (`requiredBeginningYear`, `src/engine/rmd.ts`): a 1952 owner (73) has April 1, 2026, so a 2025 death is before it (no yearly minimum, no death-year amount). A fixture's inherited facts are checked by `inheritedFactsProblems`, never by hand; the fact registry's test guards FULL's.
 - **(b9-1, 11-15) `checkDrawn`'s `fundingNet` leaves out what an HSA pays:** the HSA's qualified spend (an owner-65+ Medicare premium, its surcharge included) is paid outside the gross-up, so two answers whose Medicare differs can show equal `fundingNet` past their shortfalls. What savings funds is `grossWithdrawal + hsaSpend` (the probe field since U1b): an identity on `fundingNet` alone holds on HSA-free households and fails on one with an HSA (`TM_NEAR_IRMAA_LINE_HSA`).
 - **(b9-4, 11-14) The typed-below survivor part's bound (once "the coda") rests on a death crediting NOTHING** (council `wf_dfb7949b-4a7`'s "U12
@@ -1254,6 +1255,7 @@ refusal witness), so `gotoSeedFinal` times out on it — anchor on `main.result`
 
 ## CI
 
+- **(b9-8, 11-28) Two commits pushed together run CI once, on the head:** `gh run list --commit <the first one's full sha>` prints nothing (U7's `878bb291` under the floor's `4a852e79`). Read the head's runs for both, and name it in the close's check line so the next session doesn't read an empty list as a missing run.
 - **(b9-12, 11-27) A failed job's log through a pipe: `gh` refuses it unless told to allow escape sequences.**
   `gh run view <run> --log-failed` printed nothing while the run's other jobs were still going, and
   `gh api repos/{owner}/{repo}/actions/jobs/<job id>/logs > file` wrote one line, "the response contains terminal escape

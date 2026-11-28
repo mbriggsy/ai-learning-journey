@@ -90,6 +90,27 @@ describe('how a line’s cost changes', () => {
     expect(Math.abs(factor - expected) / expected).toBeLessThan(1e-12)
   })
 
+  it('a rate is stored at the grain the box shows: "15.004" saves as 15% (shown 15, allowed); "0.001", under the grain, is no figure (refused in words, never "the same dollar amount"); "3.75" exactly as typed (gap 4’s leftover (e))', () => {
+    const at = (text: string) => {
+      const { model } = profileStore(RETIRED)
+      const { dialog, row } = openLiving(model)
+      pick(row, copy.budgetChangeRate)
+      const box = within(row).getByLabelText(copy.budgetRateLabel)
+      type(box, text)
+      save(dialog)
+      return { model, row, box }
+    }
+    const high = at('15.004')
+    expect(high.box).toHaveValue('15')
+    expect(firstLine(high.model).growthRate, 'the 15% the box shows, inside "up to 15%"').toBe(0.15)
+    const tiny = at('0.001')
+    expect(within(tiny.row).getByRole('radio', { name: copy.budgetChangeRate }), 'the choice stays "goes up by"').toBeChecked()
+    expect(within(tiny.row).getByLabelText(copy.budgetRateLabel)).toHaveValue('')
+    expect(within(tiny.row).getByText(copy.errBudgetRateRange), 'refused beside the box, asking for a figure').toBeInTheDocument()
+    expect(firstLine(tiny.model).growthRate, 'nothing refused reaches the store').toBeUndefined()
+    expect(firstLine(at('3.75').model).growthRate, 'a figure on the grid keeps its exact parse').toBe(3.75 / 100)
+  })
+
   it('"Stays the same" and back keeps the percent typed (a figure is never re-asked)', () => {
     const { model } = profileStore(RETIRED)
     const { row } = openLiving(model)

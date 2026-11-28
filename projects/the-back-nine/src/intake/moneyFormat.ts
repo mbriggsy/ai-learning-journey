@@ -50,8 +50,22 @@ export function parsePercent(text: string): number | undefined {
   return Number.isFinite(n) ? n / 100 : undefined
 }
 
-const pctFmt = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 })
+/** The decimals of a percent a percent box shows: the one grain {@link formatPercent} and {@link snapPercentToShown} read. */
+const PERCENT_DIGITS = 2
+const pctFmt = new Intl.NumberFormat('en-US', { maximumFractionDigits: PERCENT_DIGITS })
 
 export function formatPercent(fraction: number | undefined): string {
   return fraction === undefined ? '' : pctFmt.format(fraction * 100)
+}
+
+/**
+ * A parsed rate snapped to the grain its box shows, so the figure stored and judged is the figure on screen (gap 4's
+ * review, leftover (e)): "15.004" is the 15% the box shows (inside "up to 15%"), "0.001" is the 0% it shows (refused
+ * beside it as not more than 0%), never a hidden 15.004% refused under a "15" or a hidden 0.001% allowed under a "0". A
+ * figure already on the grain keeps its exact parse, so "3.75" stores `3.75 / 100` to the bit.
+ */
+export function snapPercentToShown(fraction: number): number {
+  const scale = 100 * 10 ** PERCENT_DIGITS
+  const snapped = Math.round(fraction * scale) / scale
+  return Math.abs(snapped - fraction) < 1e-12 ? fraction : snapped
 }

@@ -37,7 +37,7 @@ import {
 import { CATEGORY_LABEL_KEYS, lineDisplayName } from '@intake/budgetLines'
 import { isDateRoute, oopHelpKeyFor, spendHelpKeyFor } from '@intake/intakeMap'
 import { periodGateTrips } from '@intake/sanity'
-import { formatMoney } from '@intake/moneyFormat'
+import { formatMoney, snapPercentToShown } from '@intake/moneyFormat'
 import { oopExceedsBudgetlessSpend } from '@intake/steps'
 import { OOP_MEDICAL_TYPICAL_HOUSEHOLD } from '@intake/referenceData'
 import { Button, ChoiceGroup, DrawerFields, MoneyInput, PercentInput, Select, TextInput, WholeInput } from '../../../kit'
@@ -233,8 +233,13 @@ function LineRow({
                 invalidMessage={copy.profileInvalidPercent}
                 readOnly={readOnly}
                 {...(rateError !== undefined ? { error: copy[BUDGET_ERROR_COPY[rateError.kind]] } : {})}
-                // A cleared box is NaN, never "with prices" (insight 059): the line's own rule holds the Save with words.
-                onCommit={(rate) => onChange({ ...item, growthRate: rate ?? Number.NaN })}
+                // A cleared box is NaN, never "with prices" (insight 059): the line's own rule holds the Save with words. A
+                // typed rate is stored at the grain the box shows, so the rule judges the figure on screen (leftover (e));
+                // one that shows as 0% is NaN too, never 0, which is "stays the same dollar amount" (`lineChangeOf`).
+                onCommit={(rate) => {
+                  const shown = rate === undefined ? Number.NaN : snapPercentToShown(rate)
+                  onChange({ ...item, growthRate: shown === 0 && rate! > 0 ? Number.NaN : shown })
+                }}
               />
             </div>
           ) : null}

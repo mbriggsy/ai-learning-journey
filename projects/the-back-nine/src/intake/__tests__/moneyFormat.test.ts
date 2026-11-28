@@ -1,6 +1,6 @@
 // The money and percent text's own arms, moved out of `fields.test.tsx` with their functions by Act 6's RC0, unchanged.
 import { describe, expect, it } from 'vitest'
-import { parseMoney, formatMoney, parsePercent, formatPercent } from '../moneyFormat'
+import { parseMoney, formatMoney, parsePercent, formatPercent, snapPercentToShown } from '../moneyFormat'
 
 describe('parseMoney / formatMoney', () => {
   it('strips $/commas/spaces and parses the raw number', () => {
@@ -46,5 +46,15 @@ describe('parsePercent / formatPercent (R40 — enter a percent, store a FRACTIO
     expect(formatPercent(0.5)).toBe('50')
     expect(formatPercent(0.025)).toBe('2.5')
     expect(formatPercent(undefined)).toBe('')
+  })
+})
+
+describe('snapPercentToShown (gap 4’s leftover (e): store the figure the box shows)', () => {
+  it('snaps to two decimals of a percent, and keeps a figure already on that grain to the bit', () => {
+    expect(snapPercentToShown(parsePercent('15.004')!)).toBe(0.15)
+    expect(formatPercent(snapPercentToShown(parsePercent('15.004')!))).toBe('15')
+    expect(snapPercentToShown(parsePercent('12.3456')!)).toBe(0.1235)
+    expect(snapPercentToShown(parsePercent('0.001')!)).toBe(0)
+    for (const typed of ['3.75', '1.1', '15', '0.07', '2.33']) expect(snapPercentToShown(parsePercent(typed)!), typed).toBe(parsePercent(typed))
   })
 })

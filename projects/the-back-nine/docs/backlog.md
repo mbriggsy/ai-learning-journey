@@ -1,6 +1,6 @@
 # The Back Nine — Open Backlog
 
-> The complete open register *(this header is GATED — `pnpm verify:doc-stats` reds when its numbers disagree with the body below or when any other doc re-types the count)*: **270 open items** (347 entries, 77 closed and kept as records; two entries are half-closed and counted open — the runner-up, and the unwitnessable household whose mechanism shipped while its sentence stays open) consolidated
+> The complete open register *(this header is GATED — `pnpm verify:doc-stats` reds when its numbers disagree with the body below or when any other doc re-types the count)*: **271 open items** (348 entries, 77 closed and kept as records; two entries are half-closed and counted open — the runner-up, and the unwitnessable household whose mechanism shipped while its sentence stays open) consolidated
 > from **136 raw obligations** (a source audit of the shipped code + a salvage sweep of the 246 KB
 > `TODO.md` archive it replaced). Every raw obligation is accounted for — the `ids` on each entry are its
 > provenance.
@@ -3994,6 +3994,15 @@ notes on `recommendationView.ts` and `RecommendationSurface.tsx`. The editor is 
 - **Direction.** None: no wrong answer, a what-if the household cannot try.
 - **Prescription.** A tray row per item: leave it out, or move it to another year inside the plan's years. A kept what-if needs a lever kind for it, a new value in `WHAT_IF_LEVER_KINDS` (`src/shared/model.ts`), which the codec checks, so it takes a schema step judged under `docs/architecture.md` §7.3 (rule (b)). `applyBundle` (`src/intake/whatIf.ts`) writes the copy's list, and a lever whose item the plan has since deleted is refused by name there, never by the codec (§7.3: a kept what-if may outlive what it names). The home sale's item joins the row when that half is built.
 - ⚑ NEGATIVE: never write the plan's own list from the tray outside its apply step.
+
+### On the yearly update, a gift that arrived since the last save is flagged only after Complete, and only on Profile — the walk shows Income before the balances are re-entered, and Complete lands on Snapshot
+
+`S` · **pilot** (build) · filed 2026-11-28 (b9-7) by the gift half's whole-file review, round 2 (`wf_1a6c80c2-3df`: the frontend-races and adv-temporal lenses; real 2 of 2 each, split on materiality, both "not new")
+
+- **The gap (read).** The gate's Update opens the stepper on Family, and Income (step 2) renders before Net Worth (step 4) (`SETUP_STEPS` in `src/ui/screens/setup/stepperView.ts`). On a plan saved in 2025 with a gift dated 2026 that has since arrived, the unlock gate names nothing (2026 is after the save year), Income reads the saved year (no note; a new 2026 item is not asked R17), and re-entering the balances on Net Worth flips the frame to today's year, entered now (`balancesYearFor` in `src/ui/resultSave.ts`), but nothing on the walk shows it. Complete lands on Snapshot; R15's words then show only on Profile → Income's card, its Blueprint tile and its drawer, so the answer reads the money twice until the household opens Income.
+- **Direction.** Rosy: the gift counts twice, in the balances and as the item, on the calm answer.
+- **Prescription.** On the walk's last step, beside Complete, one plain line per item `oneTimeFlagWords` flags under the live frame once that frame reads entered now (`stalenessOneTimeLine`'s shape), never through `missingBlock` (it returns null when no fact is missing). The alternative: Complete lands on Income when one is flagged. New words ship flagged for Briggsy's read.
+- ⚑ NEGATIVE: R15's own surfaces (the card, the tile, the drawer, the gate) stay as built; this adds a surface on the walk, it moves none.
 
 ### Money coming in beyond what the household spends is thrown away — a Social Security or pension check that arrives while one of you still works never reaches savings
 

@@ -107,12 +107,18 @@ vi.mock('../screens/setup/Stepper', () => ({
     periodConfirmed = false,
     onComplete,
     notSaved,
+    balancesYear,
   }: {
     periodConfirmed?: boolean
     onComplete?: () => void
     notSaved?: boolean
+    balancesYear?: { year: number; enteredNow: boolean }
   }) => (
-    <div data-period-confirmed={String(periodConfirmed)} data-not-saved={String(notSaved)}>
+    <div
+      data-period-confirmed={String(periodConfirmed)}
+      data-not-saved={String(notSaved)}
+      data-balances-year={balancesYear === undefined ? 'none' : `${balancesYear.year}:${String(balancesYear.enteredNow)}`}
+    >
       flow stub
       <button type="button" onClick={() => onComplete?.()}>
         complete-stub
@@ -506,7 +512,19 @@ describe('IntakeApp — the balances’ year reaches the shell off the LAST COMM
       render(<IntakeApp hydrateFromVault />)
       await affirmGate()
       const stub = await screen.findByText('result stub')
-      expect(stub).toHaveAttribute('data-balances-year', `${epochDayToCalendarYear(savedAt)}:false`)
+      const saveYear = epochDayToCalendarYear(savedAt)
+      expect(stub).toHaveAttribute('data-balances-year', `${saveYear}:false`)
+      // Round 2: the yearly update. A balance changed this session is today's, entered now; changed back, the save's
+      // again. MUTANT: memo deps [persist] alone (persist moves only on a save) keeps the save's year: this reds.
+      const accounts = appModel.getSnapshot().draft.enteredAccounts
+      expect(accounts.length, '[test setup] the vault holds an account').toBeGreaterThan(0)
+      act(() => appModel.update((d) => ({ ...d, enteredAccounts: accounts.map((a, i) => (i === 0 ? { ...a, valueToday: a.valueToday + 1_000 } : a)) })))
+      expect(await screen.findByText('result stub')).toHaveAttribute('data-balances-year', `${epochDayToCalendarYear(currentEpochDay())}:true`)
+      act(() => appModel.update((d) => ({ ...d, enteredAccounts: accounts })))
+      expect(await screen.findByText('result stub')).toHaveAttribute('data-balances-year', `${saveYear}:false`)
+      // …and the re-walk (Review) hands the stepper the same frame. MUTANT: drop IntakeApp's spread on <Stepper>: this reds.
+      fireEvent.click(screen.getByRole('button', { name: 'review-stub' }))
+      expect(await screen.findByText('flow stub')).toHaveAttribute('data-balances-year', `${saveYear}:false`)
     } finally {
       h.model = fresh
     }

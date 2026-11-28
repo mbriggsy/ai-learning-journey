@@ -508,3 +508,21 @@ describe('the no-IndexedDB-write-until-Save seam (against the REAL store layer; 
     expect(await databaseNames()).toEqual([])
   }, 60_000)
 })
+
+describe('a re-walk of a saved plan reads the balances’ year handed down (gap 5, R15 and R17; the gift half’s review, round 2)', () => {
+  it('the Income step’s gift card and its drawer follow the frame, never the draft’s own load-time stamp', async () => {
+    const d0 = DEV_SEEDS.dateinherit
+    const item = d0.oneTimeInflows![0]!
+    expect(item.year, '[test setup] the gift falls after the plan’s first year').toBeGreaterThan(d0.startCalendarYear)
+    // Loaded from a save in the plan's first year (the draft's stamp); re-saved in the gift's own year this session.
+    const model = freshModel({ ...d0, savedAt: Math.floor(Date.UTC(d0.startCalendarYear, 6, 1) / 86_400_000) })
+    render(<Stepper model={model} periodConfirmed askNames={false} onComplete={vi.fn()} notSaved={false} balancesYear={{ year: item.year, enteredNow: false }} />)
+    next()
+    expect(title()).toBe(setupTitle('income'))
+    // MUTANT: setupPage(draft, step) without the frame (Stepper's page): the note goes missing: this reds.
+    expect(card('one-time-0')).toHaveTextContent(slots.oneTimeFlagInYear(item.year))
+    // MUTANT: host.render without the frame (Stepper's drawer host): R17 is never asked of the gift's year: this reds.
+    await open('one-time-0')
+    expect(within(dialog()).getByRole('group', { name: slots.oneTimeArrivedLegend(item.year) })).toBeInTheDocument()
+  })
+})

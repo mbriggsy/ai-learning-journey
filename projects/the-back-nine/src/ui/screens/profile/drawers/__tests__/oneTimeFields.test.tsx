@@ -151,6 +151,8 @@ describe('the read-back (R11) and the save-year flag (R15, R17)', () => {
     const nominal = formatMoney(Math.round(built.cashReal * nominalDeflator(INHERIT.startCalendarYear, built.year - INHERIT.startCalendarYear)))
     expect(nominal, '[non-vacuity] a later year’s dollars differ from today’s').not.toBe(formatMoney(built.cashReal))
     expect(dialog.querySelector('[data-one-time-readback]')).toHaveTextContent(slots.oneTimeReadBack(formatMoney(built.cashReal), built.year, nominal, null, false))
+    // R6 in words, typed out (the slot above is the renderer under test): a future where both died first is never credited.
+    expect(dialog.querySelector('[data-one-time-readback]')?.textContent).toMatch(/last through \d{4} and one of you is living that year\./)
     expect(dialog.querySelector('[data-one-time-estimate]')).toHaveTextContent(copy.oneTimeEstimateNote)
   })
 

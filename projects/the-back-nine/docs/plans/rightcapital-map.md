@@ -73,11 +73,11 @@ Sizes are rough: S is about a session, M a few, L a week of sessions.
 | Accounts: bank, brokerage, IRA/401k, Roth, HSA, inherited IRA | Taxable, pre-tax, Roth and HSA per person, one stock/bond/cash mix per account. No bank-account kind. No inherited IRA (register Tier 0 *An inherited IRA has no account kind…*) | Gap: bank accounts S (workbench U10); inherited IRA L (U11–U13) |
 | Holdings: ticker or CUSIP, quantity, cost basis per position | One mix per account. Position entry is shape-ratified and not built ([decisions/portfolio-holdings.md](../decisions/portfolio-holdings.md)) | Gap: M (U20) |
 | Home and other property: value, growth, property tax | None. Property tax or upkeep can be a budget line | Gap only if a sale is planned (see one-time money) |
-| Debts: mortgage balance, rate, term | None. A payment can be a budget line, but every line grows with inflation, so a fixed payment reads too high in later years (register *Every spending line keeps pace with inflation…*) | Gap: a fixed-dollar line that can end. S |
+| Debts: mortgage balance, rate, term | No loan record. Since gap 4's line half (2026-11-27) a payment can be a budget line that "Stays the same dollar amount", priced in today's dollars through the one price index, but it is charged in retired years only and its last year counts from the stop | Gap: the loan on Net Worth, L (the loan half of [gap 4's plan](features/spending-line-repeat-and-rate-build-spec.md); deferred until a plan needs a loan, register Tier 3 *A mortgage or other fixed-payment loan has no record of its own…*) |
 | Insurance policies (life, disability, LTC) | None | Out (no insurance-needs work); the LTC cost row below stays |
 | Living expenses, one figure or by category, extra expenses with start and end | One figure, or an itemized budget: categories, essentials vs discretionary, start and end years (`BudgetLineItem`) | Have |
-| A goal that repeats (a new car every five years) | No repeat. A one-year line covers a single purchase | Gap: S (U18) |
-| A different inflation rate per expense | Every line flat in today's dollars | Gap: S (rides with the mortgage row) |
+| A goal that repeats (a new car every five years) | A budget line repeats every N years (gap 4's U3, 2026-11-27); a household with one spending figure has no repeat (register Tier 3 *A household with one spending figure can't mark a repeat or a rate…*) | Have |
+| A different inflation rate per expense | A budget line goes up with prices, stays the same dollar amount, or goes up by its own percent (gap 4's U4, 2026-11-27) | Have |
 | Retirement age per person | Yes. For a working household B9 also searches the stop date itself (the work-optional date, R26–R28) | Ahead |
 | Retirement health costs: pre-Medicare, Original Medicare, Medigap, Advantage, IRMAA | Marketplace premium with the subsidy and its cliff, Part B with IRMAA on the two-year lookback, the extras premium (Part D, Medigap or Advantage), out-of-pocket costs, HSA (R24) | Have |
 | Long-term care cost for a stretch at the end of life | None (register *Long-term care is neither modeled nor listed as left out*) | Gap: M |
@@ -128,7 +128,7 @@ Sizes are rough: S is about a session, M a few, L a week of sessions.
 
 | RightCapital | B9 today | Status |
 |---|---|---|
-| A market drop now or at retirement, lower returns, higher inflation, higher taxes, a Social Security cut, a longer life; one at a time and combined, odds re-run | None in the app. A historical replay exists in the engine for validation only (`historical.ts`) | Gap: M (U4 starts it). For gap 8's `/brief` (2026-11-23): a fixed shock in year k applied to every path, such as a drop at retirement, uses no draw, since [architecture.md](../architecture.md) §3 allows a fixed tilt on the one shared draw; the workbench plan's KTD30 ("a fall in a later year would need a draw of its own") holds only for a fall in a random year |
+| A market drop now or at retirement, lower returns, higher inflation, higher taxes, a Social Security cut, a longer life; one at a time and combined, odds re-run | None in the app. A historical replay exists in the engine for validation only (`historical.ts`) | Gap: M (U4 starts it). For gap 8's `/brief` (2026-11-23): a fixed shock in year k applied to every path, such as a drop at retirement, uses no draw, since [architecture.md](../architecture.md) §3 allows a fixed tilt on the one shared draw; the workbench plan's KTD30 ("a fall in a later year would need a draw of its own") holds only for a fall in a random year. Higher inflation must also move the deflator of every line priced through the index (gap 4's rated lines, `src/intake/priceFrame.ts`, and its loans once built), or a fixed payment reads unchanged under the test (gap 4's plan, Deferred to Follow-Up Work) |
 
 ### 7. Investments
 
@@ -150,7 +150,7 @@ business planning; stock plans; insurance-needs analysis; estate flowcharts and 
 1. **The year-by-year table** (U2–U7). It is "the amount you need to pull from each source", and every later row shows on it.
 2. **The workspace, with what-ifs on every input, kept by name** (U14–U16), and the flow question answered. Since the plan's 2026-11-23 amendment: U9 (a slim schema version 6), then U14–U16, then U25 (the workspace home).
 3. **The inherited-IRA account kind** (U11–U13). Tier 0: one entered as a traditional IRA reads rosy three ways today.
-4. **Repeating expenses, a per-line inflation rate, a fixed payment that ends** (U18 plus the register's mortgage entry).
+4. **Repeating expenses, a per-line inflation rate, a fixed payment that ends** (U18 plus the register's mortgage entry). *Built 2026-11-27 as its own plan, [spending-line-repeat-and-rate-build-spec.md](features/spending-line-repeat-and-rate-build-spec.md): the line half (the repeat and the rate) whole; the loan half waits on whether his plan needs a loan.*
 5. **One-time money in** (inheritance, home sale).
 6. **Fill-to-a-line conversions and the yearly income-against-the-lines view** (U19, U22).
 7. **Social Security claim comparison**, on the what-if runner.

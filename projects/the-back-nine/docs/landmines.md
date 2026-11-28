@@ -669,6 +669,12 @@ said squeaky clears `temp/` UNCONDITIONALLY; its step 4 now deletes only the clo
   2) after one apply, and `:2917–2926` in `docs/backlog.md` came out half-moved (`:2940–2926`) with no line naming it. Move
   each UNMOVED token through `git diff -U0 HEAD -- <code file>`'s line map (a line inside a changed hunk maps to nothing:
   judge it by content), then `git grep -n -E '<file>[^|]{0,200}:[0-9]+–[0-9]+'` and check each en-dash end by hand.
+- **(b9-4, 11-28) Moving the pair-check's UNMOVED bare tokens through the line map by find-and-replace breaks where the
+  apply already moved a named token onto a number an old bare token still holds.** The pay-less spec's line 103 held
+  `:829-835` (moved to `:851-857`) beside an unmoved bare `:851-857`, so a text match could not tell the two apart (2
+  then 3 matches). Map each token with the re-anchor tool's own `mappingFor` (inside a changed hunk: judge by content),
+  and move a line like that by position: read its bare tokens in order, check them against what HEAD's line held, and
+  write the mapped list back.
 - **(b9-2, 11-28) `node scripts/check-citation-pairs.mjs HEAD <file>` throws `Command failed: git grep -l -E <file>:[0-9]`** when no doc cites the file (git grep exits 1 on no match): that means nothing to pair, never a failure.
 - **(b9-15, 11-27) `pnpm doc:reanchor <BASE> --apply` a second time against the same base shifts every citation twice.**
   It maps each cited line through the diff BASE → tree, so after one apply the docs already hold the new numbers and a

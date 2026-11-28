@@ -114,6 +114,9 @@ export type WhatIfRefusal =
   | { readonly kind: 'line-gone'; readonly lineId: string }
   /** A replaced line whose plan line now repeats on a different schedule than the one stored (gap 4's KTD13). */
   | { readonly kind: 'line-repeat-changed'; readonly lineId: string }
+  /** A replaced line that repeats, whose plan line now starts in a different year than the one stored: the replace writes
+   *  the stored window, so the what-if's charge years would shift (gap 4's review, leftover (a)). */
+  | { readonly kind: 'line-start-changed'; readonly lineId: string }
   | { readonly kind: 'line-already-there'; readonly lineId: string }
   | { readonly kind: 'spending-no-budget' }
   | { readonly kind: 'spending-total-on-budget' }
@@ -200,6 +203,11 @@ const ARMS: { readonly [K in WhatIfLeverKind]: Arm<K> } = {
       // since is refused by name: an old amount under a new repeat would run several times too low, the rosy side.
       const live = lines[at]!
       if (live.everyYears !== l.line.everyYears) return { kind: 'line-repeat-changed', lineId: id }
+      // The replace writes the STORED window (gap 2's behaviour). For a line that repeats, the start sets which years
+      // it is charged in, so a plan line whose start has moved since would shift every charge: a car kept at start 3,
+      // every 5 years, against a plan line now at 0 charges 3, 8, 13 for 0, 5, 10, later and fewer in the horizon
+      // (rosy). Refused by name; a line that does not repeat keeps gap 2's stale window, where the phase is moot.
+      if (live.everyYears !== undefined && live.startYear !== l.line.startYear) return { kind: 'line-start-changed', lineId: id }
       const { growthRate: _stored, ...kept } = l.line
       lines[at] = live.growthRate !== undefined ? { ...kept, growthRate: live.growthRate } : kept
     } else lines.splice(at, 1)

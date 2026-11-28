@@ -333,6 +333,8 @@ describe('the bundle the rail holds', () => {
       { kind: 'stop-year-all-retired' },
       { kind: 'stop-year-outside-window', calendarYear: 2050, offsetYears: 24 },
       { kind: 'line-gone', lineId: 'x' },
+      { kind: 'line-repeat-changed', lineId: 'x' },
+      { kind: 'line-start-changed', lineId: 'x' },
       { kind: 'line-already-there', lineId: 'x' },
       { kind: 'spending-no-budget' },
       { kind: 'spending-total-on-budget' },

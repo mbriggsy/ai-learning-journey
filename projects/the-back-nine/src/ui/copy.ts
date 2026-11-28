@@ -3057,6 +3057,9 @@ export const copy = {
   // Gap 4's U9 (KTD13): the plan line's repeat moved after the what-if was kept, so its amount means something else now.
   workbenchRailRefusedLineRepeat:
     'A spending line this what-if changes now repeats on a different schedule in your plan, so it isn’t run.',
+  // Gap 4's review, leftover (a): a repeating line's plan start moved after the what-if was kept, so its charge years would shift.
+  workbenchRailRefusedLineStart:
+    'A spending line this what-if changes repeats, and it now starts in a different year in your plan, so the years it’s charged would shift. It isn’t run.',
   workbenchRailRefusedLineThere: 'A line this what-if adds is already in your plan, so it isn’t run.',
   workbenchRailRefusedNoBudget: 'Your plan has no budget lines, so a line can’t be added or changed here; the one spending figure can.',
   workbenchRailRefusedTotalOnBudget: 'Your plan’s spending is set by its budget lines, so the one figure can’t be changed here; the lines can.',

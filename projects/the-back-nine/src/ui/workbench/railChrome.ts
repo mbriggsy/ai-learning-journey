@@ -669,6 +669,7 @@ const REFUSAL_KEYS: Readonly<Record<Exclude<WhatIfRunRefusal['kind'], 'stop-year
   'stop-year-all-retired': 'workbenchRailRefusedAllRetired',
   'line-gone': 'workbenchRailRefusedLineGone',
   'line-repeat-changed': 'workbenchRailRefusedLineRepeat',
+  'line-start-changed': 'workbenchRailRefusedLineStart',
   'line-already-there': 'workbenchRailRefusedLineThere',
   'spending-no-budget': 'workbenchRailRefusedNoBudget',
   'spending-total-on-budget': 'workbenchRailRefusedTotalOnBudget',

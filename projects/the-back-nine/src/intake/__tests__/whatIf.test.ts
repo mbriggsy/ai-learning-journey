@@ -325,6 +325,20 @@ describe('a replaced line’s repeat and rate follow the plan line (gap 4’s U9
     })
   })
 
+  it('a repeating plan line whose start has moved since the line was kept is refused by name (the stored window would shift every charge year: later and fewer, the rosy side)', () => {
+    const repeating: ScenarioDraft = { ...dip, budget: dip.budget!.map((l) => (l.id === 'line-food' ? { ...l, startYear: 0, everyYears: 5 } : l)) }
+    const kept = line({ id: 'line-food', label: 'Living', annualAmountReal: 18_000, startYear: 3, everyYears: 5 })
+    expect(applyBundle(repeating, [{ kind: 'spending', op: 'replace', line: kept }])).toEqual({
+      ok: false,
+      refusal: { kind: 'line-start-changed', lineId: 'line-food' },
+    })
+    // The same start runs; a line that does not repeat keeps gap 2's stale window (no refusal over its start).
+    expect(applyBundle(repeating, [{ kind: 'spending', op: 'replace', line: { ...kept, startYear: 0 } }]).ok).toBe(true)
+    const { everyYears: _r, ...flat } = kept
+    const plain: ScenarioDraft = { ...dip, budget: dip.budget!.map((l) => (l.id === 'line-food' ? { ...l, startYear: 0 } : l)) }
+    expect(applyBundle(plain, [{ kind: 'spending', op: 'replace', line: flat }]).ok).toBe(true)
+  })
+
   it('an added line keeps its own repeat and rate as stored', () => {
     const car = line({ id: 'new-car', category: 'transportation', label: 'A new car', annualAmountReal: 40_000, everyYears: 5, growthRate: 0.03 })
     const out = applied(dip, [{ kind: 'spending', op: 'add', line: car }])

@@ -6070,7 +6070,7 @@ export const slots = {
   /** The tray's compared value for a figure the household entered (exact, a fact). */
   trayDollars: (amount: string): string => `$${amount}`,
   /** A repeating line's figure in the tray (gap 4's U9): the cost each time and how often, never "a year"; "every N years" held on one line (no-break spaces: free, the phone split "5" from "years"). */
-  trayLineEvery: (amount: string, everyYears: number): string => `$${amount} every ${everyYears} years`,
+  trayLineEvery: (amount: string, everyYears: number): string => `$${amount} every\u00a0${everyYears}\u00a0years`,
   /** The tray's compared value for a claim age. */
   trayAge: (age: number): string => `Age ${age}`,
   /** The tray's compared value for the plan's stock share. */

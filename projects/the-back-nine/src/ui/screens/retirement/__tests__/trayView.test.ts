@@ -111,7 +111,7 @@ describe('a line that repeats or changes at its own rate, carried (gap 4’s U9;
   it('a repeat line’s row compares "$40,000 every 5 years", never "a year"; a line without one compares its dollars', () => {
     const v = trayView(input(DEV_SEEDS.daterepeat))
     expect(row(v, 'spending:line:line-car')!.compared).toBe(slots.trayLineEvery('40,000', 5))
-    expect(slots.trayLineEvery('40,000', 5)).toBe('$40,000 every 5 years') // "every 5 years" held on one line
+    expect(slots.trayLineEvery('40,000', 5)).toBe('$40,000 every\u00a05\u00a0years') // "every 5 years" held on one line
     expect(row(v, 'spending:line:line-food')!.compared).toBe(slots.trayDollars('16,000'))
   })
 

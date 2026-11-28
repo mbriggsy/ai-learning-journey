@@ -838,6 +838,8 @@ is a guess a verifier must check, never a fact
   <base>` (only those files' citations may move, by the edit's delta), then `--apply`. Undo any hand fix first so nothing
   moves twice. The real index and HEAD are never touched.
 
+- **(b9-6, 11-28; U6's helper) Doc-to-doc line citations are never checked.** `verify:doc-stats` arm 4 resolves only citations into code; `backlog.md:NNNN`, `architecture.md:NNN` and `glossary.md:159`-style citations were already stale before gap 5's U6 and shift with every doc edit. Read a doc-to-doc line citation by its content, never its number (insight 136's class; a doc audit's to sweep).
+
 ## Copy and copyGuard
 
 - (migrated from TODO's standing block by b9-5, 11-20) **One composer feeds every host** (the Result's slot, the gate, the seat in the sheet AND on the money-picture step): a change reds the fit gate's `PAY_CHECK_UNLOCKS` (TM's and the pension's doorless blocks and their seat blocks in the open sheet), the coordinate-tap arm, `reentry.test.tsx`, `resultPayCheckLine.test.tsx`, `IntakeApp.test.tsx`, `src/engine/__tests__/typedBelowTaxRider.test.ts` (it reads the near-line household's spans; U2's full suite caught it, no lane's own files did) and the caddie `intake:typedbelow` arm; since U2 also `src/intake/__tests__/typedBelowAmount.pbt.test.ts` (the amount rule through the real slots), `assumptionPanel.test.tsx`, `workingCostStep.test.tsx`, `devSeeds.test.ts` and `notePartsBlock.test.tsx`. The unit suite never runs Playwright: grep `e2e/` for every slot a round renames.
@@ -1204,9 +1206,12 @@ chair; chair from a digest script, never the raw result, and expect the window t
 
 - **(b9-5, 11-28) The draft's `savedAt` is the stamp it was loaded with; a save never re-stamps the draft.**
   `scenarioFromDraft` stamps a fresh `savedAt` per encode and the disk gets it, so after an in-session re-save the draft
-  still holds the previous save's day. "The year the balances were last saved" is the persisted plan's:
-  `balancesSaveYear(persist.scenario)` in `IntakeApp.tsx`, handed through the Shell's `balancesSaveYear` prop to Profile and
-  every drawer (`DrawerBodyProps.balancesSaveYear`); the draft's own reading is right only before any save.
+  still holds the previous save's day. "The year the balances on screen were entered" is `balancesYearFor` in
+  `src/ui/resultSave.ts` (the last commit's year while `enteredAccounts` are unchanged since, today's once they changed),
+  computed once in `IntakeApp.tsx` and handed as `balancesYear` to the Shell AND the Stepper, then to Profile, Blueprint
+  and every drawer (`DrawerBodyProps.balancesYear`). The stepper renders the same Income composer and drawer host as the
+  shell, so a prop handed to one must reach both (b9-7's review, round 1); the draft's own reading is right only before
+  any save.
 - **(b9-2, 11-28) Since gap 5's U1 (`4b59f034`) the codec refuses a one-time item's `heirIndex` / `leftTo` on a one-person plan**, as it refuses an inherited IRA's `leftTo` there: a writer that carries them onto a plan with one person fails the save's codec round trip. Write them only while `people.length > 1` (gap 3's spread in `src/intake/inheritedIra.ts`).
 - **(2026-09-27, b9-11)** a fixture or dev plant saved at the WALL CLOCK's today sits on the ledger's ambiguous ship day whenever a row lands — it reds CI on exactly that day and greens the next; stamp "saved by this build" at `FIRST_UNAMBIGUOUS_SAVE_DAY` (every existing fixture and plant already does); a date-derived pin (`?vault=stale`'s note count) is DERIVED from the ledger in both its unit arm and its fit arm, never hand-typed
 

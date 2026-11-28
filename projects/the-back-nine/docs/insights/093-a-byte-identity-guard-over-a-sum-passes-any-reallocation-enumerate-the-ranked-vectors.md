@@ -3,7 +3,7 @@ title: A byte-identity guard over a SUM passes any reallocation — a CRN law mu
 date: 2026-07-18
 phase: Act 4 · the U14 ultramode-review fold
 modules: [src/engine/validation/rankingStability.ts]
-tags: [crn, byte-identity, conservation, presence-companion, insight-029, perturbation, solver, producer-omission-oracle, converse-pin, multi-site-write, destination-delta, zero-delta, asset-location, working-year-credit, growth-scale, per-ledger-arm, inherited-ledger, pooled-ratio]
+tags: [crn, byte-identity, conservation, presence-companion, insight-029, perturbation, solver, producer-omission-oracle, converse-pin, multi-site-write, destination-delta, zero-delta, asset-location, working-year-credit, growth-scale, per-ledger-arm, inherited-ledger, pooled-ratio, presence-keyed, same-expression, absent-path, engine-identity, reduce-to-spine, rated-track, growthRate, cashTermsForYear, factor-of-one, empty-list, key-presence]
 ---
 
 ## Problem
@@ -82,3 +82,26 @@ ledger's missing growth smeared into the buckets and the sum held. A per-ledger 
 
 Lesson: where growth is applied as a ratio over a pooled total, the total cannot see which holding got it. Every new
 ledger inside a conserved total needs its own growth arm, at a return chosen so the expected factor is exact.
+
+## Extended (2026-11-27): a presence-keyed construct that joins an engine sum keeps byte identity only when its absent path runs the same expression, not merely the same value
+
+This insight's first half says a byte-identity check over a sum is weaker than it reads. This case is the builder's
+side: how to keep byte identity at all when a new optional term joins a sum. Gap 4's U4 (`3ed10191`) added a spending
+line that changes at its own rate to the engine's yearly spending, and a plan with no such line had to run
+byte-identical (the reduce-to-spine law; `engine:identity` compares bytes). Before U4 the sum was one line,
+`(budget.sticky[k] ?? 0) + r * (budget.scalableEssentials[k] ?? 0)`. Now `cashTermsForYear` reads each profile into a
+local, adds the rated tracks to the locals only inside `if (budget.rated !== undefined)`, and then runs the old
+`sticky + r * scalableEssentials` on the locals (`src/engine/simulate.ts:587-602`). The compile writes no `rated` key at
+all when no line carries a rate (`src/budget/budgetToSpending.ts:128-129`, pinned in its test), and `validateParams`
+refuses an empty list (`src/engine/simulate.ts:1607-1609`). `engine:identity` read IDENTICAL on 84 of 84 keys.
+
+Two shapes that keep the value but not the bytes would have failed. Every line on the rated path with a factor that
+"works out to 1": a factor computed by another path is not bit-identical to 1 (the price index's rate changes by year),
+which is why the plan's KTD4 refused it. Or an empty `rated: []`: the identity recorder digests the run's inputs with their keys in order, so a
+newly present key moves the `inputs` digest even where every output agrees (`scripts/engine-sweep/record.ts:57-58`).
+
+Lesson: when an optional construct joins an existing sum, the absent path must run the old arithmetic exactly: the
+same operands in the same order, and no new key in the inputs. Gate the new terms on the construct's presence, fold
+them into locals before the old expression, and write no key when it is absent. A neutral stand-in (a factor of 1, an
+empty list) is equal in value and still moves the bytes the check compares. [[055]] is the presence-keyed precedent the
+field's docblock and the compile cite.

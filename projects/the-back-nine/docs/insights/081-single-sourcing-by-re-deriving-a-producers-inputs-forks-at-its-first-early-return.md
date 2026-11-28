@@ -3,7 +3,7 @@ title: Single-sourcing by re-deriving a producer's INPUTS forks at its first ear
 date: 2026-07-10
 phase: Act 3 follow-up (the Medicare pricing unit — ultramode fold, wf_f185192f-11c)
 modules: [ui, intake]
-tags: [single-source, producer, early-return, disclosure, proxy, mutant, vacuous-witness, source-bind, medicare, counterfactual-run, producer-write, weakmap-memo, two-lists, host-list, clause-host, core-carries-decision]
+tags: [single-source, producer, early-return, disclosure, proxy, mutant, vacuous-witness, source-bind, medicare, counterfactual-run, producer-write, weakmap-memo, two-lists, host-list, clause-host, core-carries-decision, membership-test, countsRated, producer-record, two-causes, predicate-naming, quoteIsAveraged, ratedQuoteNote, first-year-lead, working-year-quote, rated-line]
 ---
 
 ## Problem
@@ -83,3 +83,30 @@ The rule held three more times in build 2's copy, each in a new shape.
 
 **What the three add:** a host list in a prescription is a claim, and so is "these two lists say the same thing". Put
 the decision, and the list a test reads, in the one core every host reads; then a host nobody named still follows.
+
+## Extended (2026-11-27): a note that ran its own count, and a predicate named after one of two causes (gap 4's line half, review rounds 1 and 2)
+
+Two more forks, both on the W question's budget quote (`workingYearQuote` in `src/intake/workingYearQuote.ts`), one per
+review round.
+
+- **A second count of "which lines the quote counts" forked the day it shipped.** U15 (`a7b97513`) added a note under
+  the quote: a line that changes at its own rate is counted at its first-year price. `ratedQuoteNote` decided which lines
+  the quote counts with its own test, any rated line not left out (`!leftOutOfQuote`). The quote itself counts less than
+  that: a repeat only if it starts inside its first cycle, any other line only if it is on in year 0. So an essential
+  that starts in year 3, or a repeat that starts after its first cycle, added $0 to the quote and still got the note.
+  Five of the review's seven lenses found it. Round 1 (`4cd23dc8`) had the quote write down what it counted while it
+  counts (`countsRated`), and the note reads that.
+- **A predicate named after one cause missed the other.** The same round 1 commit stopped the quote's lead from saying
+  "first year" when a repeat is counted at its yearly average, with `averaged = quote.repeats.length > 0`. But the figure
+  is no year's own total for a second reason too: a rated line is counted at its plan-first-year price, and the engine
+  charges it its price in the year work stops. So on `daterising` and `datefixed` the lead still read "Your budget's
+  first year after work stops comes to $36,000 a year" while the engine priced that year at $37,445 and $33,086 (a 2031
+  stop; P0 by round 2's verifier). The two below-notes had no test at all and always said "first year". Round 2
+  (`3598bae0`) added `quoteIsAveraged` beside the quote (a repeat at its average, or `countsRated`); the lead and both
+  below-notes read it, and all three now say "counts here as".
+
+**What the two add:** a sentence about what a producer counted reads the producer's own record of it, never a second
+membership test, however close the test looks. And when a property has two causes, a predicate named after one of them
+(`repeats.length > 0` standing in for "this figure is no year's own total") is a fork waiting for the second cause. Name
+the predicate after the property, keep it beside the producer, and have every sentence that leans on the property read
+it.

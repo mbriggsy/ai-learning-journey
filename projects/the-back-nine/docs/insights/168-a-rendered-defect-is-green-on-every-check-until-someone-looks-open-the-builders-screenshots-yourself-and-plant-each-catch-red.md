@@ -3,7 +3,7 @@ title: A rendered defect is green on every check until someone looks — ten def
 date: 2026-11-25
 phase: Act 6, the RightCapital clone (RC1 to RC7, b9-4 to b9-6, 2026-11-24)
 modules: [e2e/held/rc-look.spec.ts, e2e/rc-screens.spec.ts, e2e/hcTextAudit.ts, src/viz/charts/]
-tags: [look-audit, screenshots, eye-in-the-loop, orchestrator, builder-agent, green-checks, visual-defect, calm-but-wrong, ellipsis-exemption, planted-red, highcharts, fit, phone, clone, vacuous-audit, zero-labels, presence-count, html-overlay, donut, hole, geometric-check, assertCentreInHole, hcAudit, held-instrument, rc-look, RC_ONLY, env-filter, index-lookup, by-id, screenById, wrong-screen, rename, instrument-state, known-state, call-log, progress-mark, stepper-check, legend-paging, series-name, aligned-columns, unnamed-column, inherited-ira, svg-clip]
+tags: [look-audit, screenshots, eye-in-the-loop, orchestrator, builder-agent, green-checks, visual-defect, calm-but-wrong, ellipsis-exemption, planted-red, highcharts, fit, phone, clone, vacuous-audit, zero-labels, presence-count, html-overlay, donut, hole, geometric-check, assertCentreInHole, hcAudit, held-instrument, rc-look, RC_ONLY, env-filter, index-lookup, by-id, screenById, wrong-screen, rename, instrument-state, known-state, call-log, progress-mark, stepper-check, legend-paging, series-name, aligned-columns, unnamed-column, inherited-ira, svg-clip, narrow-column, full-width, living-drawer, row-audit, sr-only, hidden-input, base-ui-select, instrument-blind-spot, hyphen, word-split, range-check, no-break-space, nbsp, number-and-unit, every-n-years, fan-note, lone-word, orphan, text-wrap-pretty, text-pretty, blueprint-tile, fix-the-class]
 ---
 
 ## Problem
@@ -117,3 +117,32 @@ every fact; round 2 dropped a step's ✓ when its check refuses).
 - **The eye's third catch was words.** Beside two named inherited groups, the household's own unnamed "Required
   withdrawal" column read as the year's whole required amount: it stood blank in 2026 while about $8,755 was required
   from the inherited IRAs. Once some columns name whose money they hold, an unnamed one reads as all of it. Name it too.
+
+## Extended (2026-11-27, gap 4's U8 look `b67796a0` and the line half's review round 2 `3598bae0`): an audit's own blind spots come first, and a break between two whole words passes every word check
+
+- **A layout no check named** (U8, b9-16). The Living drawer's new rate read-back and the date route's note ran five
+  lines each in the row's narrow right column, beside an empty left one. Nothing overflowed and no word broke, so every
+  arm passed. The eye moved both to the row's full width under the grid.
+- **The audit flagged its own blind spots before the page's** (U8's fit arm, b9-16). The check that every box sits
+  inside the row first caught the kit's hidden inputs: the ChoiceGroup's radios are screen-reader-only and Base UI's
+  Select carries a hidden form input, each a 1 px box off the flow at x 0–1, outside the row. Then a word-split check
+  over Probability's column caught "extra-coverage" breaking after its hyphen, which prose may do. Both were the
+  instrument's faults, not the page's. The arms now measure what a person sees: the `[data-choice]` labels, the text
+  boxes, and the parts of a word between hyphens (`/[^\s-]+/` in the Gap 4 · U15 arm). The landmine is in
+  `docs/landmines.md`, "The fit gate and e2e".
+- **A number torn from its unit** (round 2, b9-18). The eye, at 1440×731 and 390 on `datefixed`, `daterising` and
+  `daterepeat`, found the date route's fan note breaking "5" from "years" at both sizes. It had caught the same break on
+  the tray in U9 (`653aee4e`, b9-15), and that fix went to the one string it saw (`trayLineEvery`, no-break spaces). U8
+  and U15, written later the same evening, then wrote six more "every N years" strings with plain spaces, the fan note's
+  sentence (`budgetRepeatInFirstYear`) among them. Round 2 changed every one in prose: W's repeat sentence, the
+  first-year repeat sentence, Probability's clause and Blueprint's four repeat values, all in `src/ui/copy.ts`.
+- **A last word alone on its line** (round 2, b9-18). A Blueprint tile's value read "…going up 5% a" over a lone "year"
+  at both sizes. The tile values now take `text-pretty` (CSS `text-wrap: pretty`, in `Tile`,
+  `src/ui/screens/profile/Blueprint.tsx`), which balances the last lines.
+
+What these add: a word-split check reads whole words, so a break between two words passes it, whether it tears a number
+from its unit or leaves one word alone on a line. Hold a number to its unit with a no-break space in the copy, and let a
+short wrapped value balance with `text-wrap: pretty`. When the eye catches one break of a shape, fix every string of that
+shape in the same pass (grep for the shape), because the next unit writes it again. And when an audit goes red, first
+ask whether it measured something a person sees: a hidden input or a hyphen is the instrument's blind spot, not the
+page's fault.

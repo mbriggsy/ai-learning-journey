@@ -3,7 +3,7 @@ title: A screenshot proves ONE column — a per-width seat is governed by the WI
 date: 2026-09-06
 phase: Post-Act-4 (the gap to a friend betting real money) — the council-held 320 shape, ruled by his eye and built the same day
 modules: [src/viz/chartText.tsx, src/viz/ConfidenceBand.tsx, src/viz/OddsLadder.tsx, e2e/chart-text.spec.ts, docs/caddie/cold-read-log.md]
-tags: [cold-read, screenshot-evidence, per-width-seat, measured-catalog, chart-text, oracle-vs-eye, arithmetic-check, the-room-is-not-the-ink, css-outlives-string, nowrap, inline-block, width-gate, overflow-wrap-anywhere, mid-word-break, caption-clipped, squeezed-table, coupled-axes, whole-combinations, text-swap, unreachable-member, plant-set, worst-product, single-axis-scaling, plant-first, household-acts, disclosure-state, wrong-axis, dpr, centering, placement-ruling, fit-budget, tight-seeds, binding-column, height-table, measure-before-ruling, content-outranks-fit]
+tags: [cold-read, screenshot-evidence, per-width-seat, measured-catalog, chart-text, oracle-vs-eye, arithmetic-check, the-room-is-not-the-ink, css-outlives-string, nowrap, inline-block, width-gate, overflow-wrap-anywhere, mid-word-break, caption-clipped, squeezed-table, coupled-axes, whole-combinations, text-swap, unreachable-member, plant-set, worst-product, single-axis-scaling, plant-first, household-acts, disclosure-state, wrong-axis, dpr, centering, placement-ruling, fit-budget, tight-seeds, binding-column, height-table, measure-before-ruling, content-outranks-fit, tier-floor, first-pixel-of-tier, breakpoint-seam, seam-1088, wide-floor-768, laptop-tier, top-bar, household-names, flex-item-floor, min-w-min, min-w-0, break-words, wrap-anywhere, min-content]
 ---
 
 ## Problem
@@ -138,3 +138,26 @@ that failed: the column that looks roomy on the failing seed can be the one that
 And content outranks a pilot's fit call: nothing was cut. That one arm now binds to the R13 caveat in frame with the
 tray's handle reachable, a dated amendment to the Act 6 plan's section 4.0 fit decision (`e65d659f`); every other
 one-frame arm keeps the handle in frame.
+
+## Extended (2026-11-27): a tier's floor is its tightest width, so measure a layout at each tier's first pixel
+
+The 1088 seam (b9-12, `8b3fe497`). The `laptop:` tier starts at 68rem (`src/ui/styles/theme.css`), 1088 px at the
+default font, and at that one pixel the top bar gets wider three ways at once: the mark shows its title
+(`laptop:inline`), each module's padding goes from 12 to 16 px a side (`laptop:px-4`), and the gear shows its word. With
+two 20-letter names (`tablewidest`) the names' column had 140 px at 1087 and 41 px at 1088. The `wide:` tier's first
+pixel, 768, was worse: the names' column shrank to 0 (every word broken, the bar 771 px tall), and the modules and the
+controls alone needed 697 px of a 688 px row (768 less the bar's two 40 px gutters). The fit checks measured 390 and
+1440, which meet neither floor. U17's look at 1088 found the seam's half; the 768 half turned up only when the fix
+measured every width from 768 to 1440 before changing anything.
+
+The names also had the wrong floor. They were a flex item with `min-w-0` and `wrap-anywhere`: `min-w-0` lets the item
+shrink to nothing, and `wrap-anywhere` drops its smallest width to one letter, so the row squeezed the names before
+anything else gave. Now (`src/ui/shell/TopBar.tsx:131`) they carry `min-w-min` with `break-words`. `break-words` still
+breaks a word too long for any line, but it leaves the item's smallest width at its longest word, and `min-w-min` holds
+it there, so the bar wraps the names under the mark instead of breaking them.
+
+**What it adds:** the widths a layout is judged at are a catalog too, and its worst members are each tier's first
+pixel, where everything the tier adds arrives at once with the least room. Measure at every tier floor (768 and 1088
+here), not only at the named sizes. And a flex item holding words gets a floor at its longest word (`min-w-min` with
+`break-words`), never `min-w-0` with `wrap-anywhere`. [[180]]'s 2026-11-27 extension is the same seam in a grid (the
+tray's names column), and [[187]] is the same commit's other half (the Analysis tabs at the same floors).

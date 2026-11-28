@@ -3,7 +3,7 @@ title: A plan's own mechanical step can be obsoleted by a decision made LATER in
 date: 2026-06-18
 phase: P2 (the doc-restructure close — M6 step 4/5)
 modules: [src/shared/model.ts, src/store/db.ts, docs/roadmap.md]
-tags: [doc-reconciliation, plan-staleness, ground-truth-first, restructure, blast-radius, deferred-obligation, code-comments, supersession, precedence, constraint-reason, static-legend, mechanical-limit]
+tags: [doc-reconciliation, plan-staleness, ground-truth-first, restructure, blast-radius, deferred-obligation, code-comments, supersession, precedence, constraint-reason, static-legend, mechanical-limit, retired-step, template, plan-writing, verification-contract, caddie-walk, amended-plan, rulings, scope-seat, test-cadence]
 ---
 
 ## Problem
@@ -37,3 +37,22 @@ was "static". It read like a design rule. The pay check's deepen had recorded th
 `legendKey` in `src/intake/fields.tsx`, fed by `slots.workingCostLegendFigure`), and the question now names the figure.
 Before obeying a constraint a plan states, find why it exists. A limit of today's component is a build item; only a
 reason about the household binds. See also [[164]] (a plan fails on what its sentences imply).
+
+## Extended (2026-11-27): a plan written from the template puts back a step Briggsy retired
+
+Gap 4's draft plan (`b3a68293`) took its checks from the project's standing pattern. Its Verification Contract asked
+for "a Caddie walk before it is called shipped" on every new screen, and three units' Verification lines named a
+Caddie walk. Briggsy's 2026-11-22 rulings had dropped that: no extra Caddie read, and the words ship flagged for his
+later read. The workbench plan's verification lines already said so, each marked "Amended 2026-11-26"
+(`docs/plans/5-workbench-plan.md`). The deepening's three seats let it through, and only the doc review's scope seat
+caught it (`f0f77605`). The same seat also dropped a version-7 fixture mint and a planted fault on the version floor,
+which the draft had copied from the version-4 pattern (`mint-v4.mts`, [[151]]); the version-6 and version-7 bumps had
+shipped without either. The plan now lists the Caddie walk among the things considered and not built
+(`docs/plans/features/spending-line-repeat-and-rate-build-spec.md`).
+
+The draft listed this insight in its own Sources and still did it. That is because the step was not a stale one waiting
+to be run: it was written fresh, after the ruling, from sources that never got the ruling. The older build specs still
+show Caddie walks, and the caddie skill's own trigger still says "pre-walk every U-batch"
+(`.claude/skills/caddie/SKILL.md`). Before writing a plan's verification, read the newest amended plan's verification
+lines for steps his rulings retired, not the template or an older spec. See also [[154]] (a rule's authority is who
+ruled it, not the document it sits in).

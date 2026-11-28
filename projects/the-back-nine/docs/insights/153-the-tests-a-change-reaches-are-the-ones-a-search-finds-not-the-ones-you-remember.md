@@ -3,7 +3,7 @@ title: The tests a change reaches are the ones a search finds, not the ones you 
 date: 2026-11-23
 phase: The RightCapital mandate, gap 1 (the workbench's year-by-year table, U7)
 modules: [src/ui/workbench/, src/ui/devSeeds.ts, src/ui/__tests__/, scripts/__tests__/breakpoint-mirrors.test.ts]
-tags: [test-cadence, reached-tests, partial-run, ci-red, grep-the-tests, sweep-tests, hand-pinned-list, guard-tests, breakpoint-mirrors, dev-seeds, source-bind, readFileSync, moved-code, regex-pin, slot-change, e2e-outside-tsconfig, coordinate-tap-arm, parallel-lanes, grep-by-field, import-search, path-reading-test, moved-surface, deleted-surface, e2e-selectors, live-copy-key, derive-from-registry, navModules, route-table, phone-menu, rc-screens, stale-expected-list, vacuous-guard]
+tags: [test-cadence, reached-tests, partial-run, ci-red, grep-the-tests, sweep-tests, hand-pinned-list, guard-tests, breakpoint-mirrors, dev-seeds, source-bind, readFileSync, moved-code, regex-pin, slot-change, e2e-outside-tsconfig, coordinate-tap-arm, parallel-lanes, grep-by-field, import-search, path-reading-test, moved-surface, deleted-surface, e2e-selectors, live-copy-key, derive-from-registry, navModules, route-table, phone-menu, rc-screens, stale-expected-list, vacuous-guard, touched-files, changed-export, return-value-change, vitest-related, import-graph, startTotal, inheritedRowTotals, transitive-consumer]
 ---
 
 ## Problem
@@ -132,3 +132,27 @@ sat in, and the fix removes the list instead of searching harder for it.
 tokens, `copyGuard`, the harness partition) or the full suite, because an import search finds nothing that reads a
 deletion. And when several commits go up in one push, a red belongs to the whole range, not to the tip: bisect it
 locally, or push a unit and its fix separately when the unit's own run matters.
+
+## Extended (2026-11-27, gap 3's review round 3): "every touched unit file green" is the narrowest list there is; the tests that read a changed function are found from its name
+
+- **What went red.** Gap 3's review rounds 2 and 3 (`7927693f`, b9-11, 59 files) changed what `startTotal`
+  (`src/ui/screens/retirement/analysisRuns.ts`) returns: it now leaves out an inherited IRA's balance that leaves the
+  run at the year's top (an account left to someone else, the year after its heir's death), so that year's withdrawal
+  rate no longer reads low. The close's gate line said "every touched unit file green locally".
+  `src/ui/__tests__/inheritedRowTotals.test.ts`, which the commit never touched, calls `startTotal` directly and again
+  through Snapshot's `steadyStats` (`src/ui/screens/dashboard/snapshotView.ts` imports it too). Its fixture carried
+  exactly that ledger and still expected the old opening total (530,000, not 500,000) and the old rate. CI's unit job
+  failed 2 of 6266 (run 46047529193). The code was the right side; `8bd108b1` (b9-12) moved the two expectations to it
+  and pinned that the engine's own `ledgerRowStartTotal` still keeps the balance for the reconciliation.
+- **Why the list missed it.** The test files a commit edits are the ones its author already thought of. A change to
+  what an exported function returns reaches every test that calls it, directly or through another module that does,
+  and none of those needs an edit to go red.
+- **The search that finds them.** Before the push, grep each changed export's name across `src/`, not only the
+  `__tests__` folders, so a consumer like `snapshotView.ts` shows up, and run the tests of every hit. Or hand the
+  changed sources to `pnpm vitest related <files>`, which walks the import graph out from them (static imports only,
+  per Vitest's docs): round 2 of gap 4's line half (`3598bae0f`, b9-18) ran it on its eight changed sources, 114 test
+  files. It cannot see a test that reads a file by path (the RC3 case above) or an `e2e/` spec (Vitest excludes
+  `e2e/**`), so those two searches stay.
+
+**What it adds.** The files a commit touched are not the reached set, even for a plain change to one function's
+result. The reached set starts from each changed export's name and runs through every module that calls it.

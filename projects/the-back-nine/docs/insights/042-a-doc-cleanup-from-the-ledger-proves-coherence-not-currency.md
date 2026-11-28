@@ -3,7 +3,7 @@ title: A doc cleanup re-authored "from the ledger" proves coherence, not currenc
 date: 2026-06-19
 phase: P2 (Act 2 — Where You Stand)
 modules: [README.md, docs/roadmap.md, scripts/verify-doc-stats.ts]
-tags: [docs, drift, test-count, single-source, verify-gate, coherence-vs-currency, cold-read, summary-surface, spec-drift, reachability-claim, filing-list, verify-against-code, comment-paraphrase, record-folder, inherited-conclusion]
+tags: [docs, drift, test-count, single-source, verify-gate, coherence-vs-currency, cold-read, summary-surface, spec-drift, reachability-claim, filing-list, verify-against-code, comment-paraphrase, record-folder, inherited-conclusion, direction-bullet, rosy-twin, two-producers, plan-case-list, tier-ladder, gloomy-in-every-case]
 ---
 
 ## Problem
@@ -64,3 +64,28 @@ it lowers is already outside or routed". The review's docs lens and three verifi
 **The rule, all three channels:** a spec, a plan's KTD and a record folder are each a draft of the truth. A doc or a
 comment written from one is verified against the code and the measurements before it ships, and a wrong sentence is
 fixed at its source as well as at the copy.
+
+## Extended (2026-11-27): a direction bullet written from the plan's case list misses the case only the code holds
+
+Gap 4's U11 (b9-17, `969ab33a`) filed the line half's accepted leans as one register entry, *Gap 4's line half leans
+harsh in three rare places its plan accepted*, with the Direction "Gloomy in every case". Each case came from the plan
+(`docs/plans/features/spending-line-repeat-and-rate-build-spec.md`: KTD4, KTD5, Scope Boundaries), and the plan called
+each one harsh. KTD5's case: on a survivor's working year, the part of W held whole is S (never more than W), read
+from what the budget charges at k = 0. A sticky repeat that is on in year 0 sits in S at its full amount while W counts it at amount ÷ N, so
+more of W is held whole: harsh.
+
+The line half's review (round 1, `4cd23dc8`; its docs lens read U11's docs against the code) found the twin. W's
+quote counts a repeat at amount ÷ N whenever it starts inside its first cycle, years 0 to N − 1 (`workingYearQuote`,
+`src/intake/workingYearQuote.ts`). S reads only year 0 (`typedStickyAtYearZero`, `src/engine/simulate.ts`). A repeat
+that starts in year 2 is in W and missing from S, so on a survivor's working year its share is scaled down by the
+survivor ratio instead of held whole: rosy. The direction set the tier. The register's tier ladder sends any entry with
+a rosy case to Tier 0 (step 3); "gloomy in every case" had filed it at Tier 1 (step 6). The review moved it to Tier 0,
+retitled *Gap 4's line half: four rare places where a repeat or a rate is counted off from what the household said*,
+with the Direction "Either".
+
+**The rule:** a direction claim about a rule that two producers read (here intake's W quote and the engine's held
+share) is checked against each producer's own list of what it counts, not against the case the plan named. The plan
+named the case both producers count. The rosy one was a line one producer counts and the other doesn't. Before writing
+"in every case", list what each side counts and walk the lines only one side holds: there the gap can run the other
+way. This is the same channel as the extensions above. A doc written from the plan inherits what the plan left out,
+not only what it got wrong.

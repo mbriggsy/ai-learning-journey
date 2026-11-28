@@ -46,6 +46,7 @@ import type { SavedRecommendationStatus } from '@store/savedRecommendation'
 import { isDepleted, type DateTrackOutcome, type Headline, type SavedRecommendationV3, type WhatIfLeverV6 } from '@shared/model'
 import { isDateRoute, missingRequiredFacts } from '@intake/intakeMap'
 import { blockedLeadFor, missingFactLines } from '@intake/missingFacts'
+import { firstYearRepeatOf } from '@intake/budgetForm'
 import { BAR_RUNG, agedLadderMarks, curveMarks, offsetHasPassed, type CurveMark } from '@viz/curveMarks'
 import { niceLattice, type DollarLattice } from '@viz/bandData'
 import type { OddsSeries } from '@viz/charts/oddsByStopYearOptions'
@@ -637,7 +638,9 @@ export function probabilityView(input: ProbabilityInput): ProbabilityView {
   if (elevated.kind === 'spine' && elevated.view.kind === 'reading' && answer.kind === 'headline') {
     const raw = rawDisplayed(answer)
     const spend = raw === null ? undefined : spendClauseFor(snapshot.spend, raw, answer.result.headline.outcomeState)
-    const verdict = raw === null ? null : composeVerdictReading(raw, spend)
+    // The run's own budget: a repeat charged in its first year makes the quoted spend that year's (gap 4's U15).
+    const firstYear = firstYearRepeatOf(answer.draft.budget)
+    const verdict = raw === null ? null : composeVerdictReading(raw, spend, firstYear)
     intro = {
       ...(elevated.view.refiguring === true ? { eyebrow: copy.answerRefiguringVerdict } : {}),
       lead: verdict === null ? copy.snapshotRingNoReading : `${verdict.word}: ${verdict.reading} ${copy.confidenceCoverageCaption}.`,
@@ -647,7 +650,7 @@ export function probabilityView(input: ProbabilityInput): ProbabilityView {
     // Held while pending AND once sized: the reserve is the sized sentence at its widest figure, so the landed clause
     // sits inside the box the pending one held (measured: dropping the reserve at the landing moved the R13 caveat
     // 40 px up on `surplus`).
-    if (raw !== null && (spend?.kind === 'pending' || spend?.kind === 'sized')) clauseReserve = reserveClauseFor(raw) ?? undefined
+    if (raw !== null && (spend?.kind === 'pending' || spend?.kind === 'sized')) clauseReserve = reserveClauseFor(raw, firstYear) ?? undefined
     if (spend !== undefined) spendState = spend.kind
   } else if (elevated.kind === 'date' && elevated.view.kind === 'dates') {
     const v = elevated.view

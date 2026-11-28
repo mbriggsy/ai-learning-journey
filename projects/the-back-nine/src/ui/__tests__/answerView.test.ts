@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { COHORT_FADE, truncateFanAtThinCohort } from '@viz/cohort'
 import { caveatSeat, selectElevatedAnswer, resolvedFocusKey } from '../answerView'
-import { copy } from '../copy'
+import { copy, slots } from '../copy'
+import { bandTrackNote } from '../fanNotes'
 import { READING_FIXTURES, SURVIVOR_FIXTURES } from '../preview/fixtures'
 import { DATE_FIXTURES, DATE_WINDOW_TOP } from '../preview/dateFixtures'
 import { DEV_SEEDS } from '../devSeeds'
@@ -580,5 +581,31 @@ describe('caveatSeat — where the R13 caveat sits, one decision for every reach
       'compute-error': true,
     }
     expect(new Set(rows.map(([, s]) => s.answer.kind))).toEqual(new Set(Object.keys(kinds)))
+  })
+})
+
+// Gap 4's U15 (R12's repeat half): on the date route the fan's track note quotes the budget's first-year levels ("a year
+// to start"); a repeat charged in that first year is named beside them, and only then.
+describe('selectElevatedAnswer — the spending levels with a repeat in the first year (gap 4’s U15)', () => {
+  const answeredAt = (answer: ModelAnswer, answered: ScenarioDraft, live: ScenarioDraft): MemoryModelSnapshot => ({
+    draft: live,
+    answer: answer.kind === 'headline' || answer.kind === 'date' ? { ...answer, draft: answered } : answer,
+    solve: { kind: 'idle' },
+    spend: { kind: 'idle' },
+    refiguring: false,
+    runningInWorker: true,
+  })
+  it('on `daterepeat` the levels carry the car and the track note names it; on `dip` (no repeat) neither does', () => {
+    const band = dateBandTo(40, 6)
+    const r = selectElevatedAnswer(answeredAt(datesAnswer(confirmedAt(6), band), DEV_SEEDS.daterepeat, DEV_SEEDS.daterepeat), noop)
+    if (r.kind !== 'date' || r.view.kind !== 'dates') throw new Error('expected a date dates view')
+    const named = slots.budgetRepeatInFirstYear('A new car', '40,000', 5, 0)
+    expect(r.view.spendLevels?.firstYearRepeat).toBe(named)
+    expect(bandTrackNote(r.view)).toContain(` ${named}`)
+    const plain = selectElevatedAnswer(answeredAt(datesAnswer(confirmedAt(6), band), DEV_SEEDS.dip, DEV_SEEDS.dip), noop)
+    if (plain.kind !== 'date' || plain.view.kind !== 'dates') throw new Error('expected a date dates view')
+    expect(plain.view.spendLevels, '[test setup] dip carries a budget').toBeDefined()
+    expect(plain.view.spendLevels?.firstYearRepeat).toBeUndefined()
+    expect(bandTrackNote(plain.view)).not.toContain('comes back every')
   })
 })

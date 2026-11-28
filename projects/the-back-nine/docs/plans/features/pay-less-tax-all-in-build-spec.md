@@ -84,7 +84,7 @@ The MEASURED probe substituted its vector before `adoptObservedOutcome`. The gra
 - `selectionTieTolerance` (`heldOutSeed.ts:139`), which is vector-generic;
 - `gradeAxisFor`: the axis label is keyed by goal, and `GradeStatistic 'pay-less-tax'` keeps its name;
 - `demotionAxisCalibrated` (`gradeCalibration.ts:166`) is unchanged.
-- ⚑ SKEPTIC (missing readers; each follows through sites 1-2, named so nothing is assumed): the hero delta itself (`recommendationView.ts:648-660` `winnerDisplaysAhead` / `deltaReal`, and the zero-collapse guard at `:667`, which decide dollar vs no-dollar); `runnerUpVizFor` (`recommendationView.ts line 879-880 at b69c28483`, leave-more gated today); `namedDriverProbe` / `namedDriverProbeSteps` (`gradeCalibration.ts:402-439`), which re-rank under `rankCandidates` and drive F2's `aca-enhanced-subsidies` driver and the coin-flip hinge `recGradeNoteHingeAca` (`copy.ts:2227-2228`). That sentence will now fire on PREMIUM-driven flips, so it joins the §8 Caddie read.
+- ⚑ SKEPTIC (missing readers; each follows through sites 1-2, named so nothing is assumed): the hero delta itself (`recommendationView.ts:648-660` `winnerDisplaysAhead` / `deltaReal`, and the zero-collapse guard at `:667`, which decide dollar vs no-dollar); `runnerUpVizFor` (`recommendationView.ts line 879-880 at b69c28483`, leave-more gated today); `namedDriverProbe` / `namedDriverProbeSteps` (`gradeCalibration.ts:402-439`), which re-rank under `rankCandidates` and drive F2's `aca-enhanced-subsidies` driver and the coin-flip hinge `recGradeNoteHingeAca` (`copy.ts:2231-2232`). That sentence will now fire on PREMIUM-driven flips, so it joins the §8 Caddie read.
 
 **D5 Byte-identity when healthcare is off.**
 - The premium and Medicare yearly values start at 0 (`taxOverlay.ts:2579-2585`, map).
@@ -109,7 +109,7 @@ Result: the all-in vector equals the tax vector element by element, and its mean
   - the stamp is global, so leave-more records re-stale too. That over-re-run is accepted under the file's when-in-doubt rule.
 - Re-pin `pricingVersion.test.ts:150-176` to `{ solverCodeVersion: 10, newestRepriceRow: 7 }`, and retitle it "v8, v9 and v10 were ranking logic only". (Then; the 2026-10-09 survivor-medical lean, a scored pricing change, re-pinned it to `{ solverCodeVersion: 11, newestRepriceRow: 11 }`, and since the 2026-10-27 RIB-LIM order — scored, no ledger row — it reads `{ solverCodeVersion: 12, newestRepriceRow: 11 }`.)
 - **No ledger row** (`pricingVersion.ts:46-53`): no figure from a saved household's spine recompute moves. `FIRST_UNAMBIGUOUS_SAVE_DAY` stays put.
-- **No `FINGERPRINT_SCHEMA` bump and no objective tag** (`solverRunFingerprint.ts:63-65`). Either would add a false 'inputs-changed' cause, which renders "Your numbers have changed since then." (`copy.ts:2014`). Saved records must report ONE cause, 'solver-changed', which renders "The way strategies are worked out has changed since then." (the string is at `copy.ts:2017`, mapped from the cause at `savedRecordCopy.ts:19`). That sentence is true. Records persist no dollar figure (then; `model.ts:2685-2762` now: since schema version 6, 2026-11-23, the action also carries the crowned Roth conversion plan, its yearly amount included).
+- **No `FINGERPRINT_SCHEMA` bump and no objective tag** (`solverRunFingerprint.ts:63-65`). Either would add a false 'inputs-changed' cause, which renders "Your numbers have changed since then." (`copy.ts:2018`). Saved records must report ONE cause, 'solver-changed', which renders "The way strategies are worked out has changed since then." (the string is at `copy.ts:2021`, mapped from the cause at `savedRecordCopy.ts:19`). That sentence is true. Records persist no dollar figure (then; `model.ts:2685-2762` now: since schema version 6, 2026-11-23, the action also carries the crowned Roth conversion plan, its yearly amount included).
 - **Persisted id `'pay-less-tax'` stays.** It lives in `model.ts:273` RECOMMENDATION_GOALS, the codec needVocab gate (`:2573`) and the fingerprint canon (`solverRunFingerprint.ts:121`). Renaming it is a one-way door: memories dropped, plus a false 'inputs-changed'.
 - **v10 collision:** `council-log.md`'s 2026-10-04 *Adoption of the roster-recall fix* row and `backlog.md:1149-1158` earmark v10 for the unmerged gap-fill (`b9-v10-gapfill-wip`). Note in the register's recall entry: "v10 = the all-in objective; a revived gap-fill re-measures on all-in and takes a later version." The council rows stay as records.
 
@@ -130,12 +130,12 @@ Result: the all-in vector equals the tax vector element by element, and its mean
 - `solve.ts:214-224, :385-390` (deltaSkew wording).
 - `stateTaxDisclosure.ts:152-156`: the priced-state layer reaches the hero through the tax addend; the logic is unchanged.
 - `recommendationView.ts:102` and `line 719 at b69c28483`.
-- `copy.ts:2135` comment and `:5479`.
+- `copy.ts:2139` comment and `:5493`.
 - the `recommendationView.test.ts line 596 at b69c28483` comment.
 
 The viz suppression off leave-more stays correct, because all-in is still lower-is-better.
 
-**Copy (HIS, §6):** `recDeltaPayLessTax` (`copy.ts:5710-5711`, read), `goalPayLessTaxGloss` (`:2175`), `recDiscNiit` (`:2330-2331`), `recDiscStateTax` (`:2265-2266`), the optional new `recDisc*`, and `recDeltaTypical*` (`src/ui/copy.ts:3690-3709`) only under a "$X less" hero.
+**Copy (HIS, §6):** `recDeltaPayLessTax` (`copy.ts:5724-5725`, read), `goalPayLessTaxGloss` (`:2179`), `recDiscNiit` (`:2334-2335`), `recDiscStateTax` (`:2265-2266`), the optional new `recDisc*`, and `recDeltaTypical*` (`src/ui/copy.ts:3694-3713`) only under a "$X less" hero.
 
 **Calibration:**
 - Add "an objective-statistic change" to the RE-MEASURE triggers at `fallback.ts:44, :58, :72` (map).
@@ -205,7 +205,7 @@ The viz suppression off leave-more stays correct, because all-in is still lower-
       - Otherwise append the decomposition to the register's as-built note.
       - *Why over Spec 1's record-only:* Spec 1 records the bias but never checks whether it decides a crown. On this point calm-but-wrong is a live risk.
 15. Land Briggsy's chosen strings (§6). Then:
-    - add a `SLOT_RENDER` sample for any new slot, cohort arm or `recDisc*` key (`copyGuard.test.ts:1056-1060`, the burned/070 completeness test);
+    - add a `SLOT_RENDER` sample for any new slot, cohort arm or `recDisc*` key (`copyGuard.test.ts:1071-1075`, the burned/070 completeness test);
     - update the pinned DISCLOSURE_ORDER test (`recommendationView.ts:133-134`, map) if a scope disclosure is added;
     - add the `recommendationView.test` arms (§5.5).
 16. Docs (§7). Then `pnpm doc:reanchor`, grepping the dry run for "(bare, after", the tool's 5th blind class. Then doc-stats.
@@ -333,8 +333,8 @@ Today's objective crowns $100k. All-in crowns $84k, by about $28k.
 **Constraints the drafts meet.** This was a hand-lint against `copyGuard.ts:146-310` + `HEDGE_TOKENS` (`copy.ts` lines 2658-2872 at 1c08f2288); the suite runs on whatever he picks.
 - A hedge ("about" / "could"); `recDelta*` and `recDisc*` are require-hedge swept (`copyGuard.ts:122-126`).
 - No superlative, no clause-leading directive verb (`:262`), no "pays off" or "better off" (`:251-252`), no em-dash apposition on the figure.
-- The hero stays one line (`recommendationView.ts:178-180`) and keeps "than today’s plan" (the userBaseline seam, `copy.ts:2176-2183`).
-- The slot keeps its one-arg signature, so `recommendationView.ts:687` and `copyGuard.test.ts:915` need no wiring change.
+- The hero stays one line (`recommendationView.ts:178-180`) and keeps "than today’s plan" (the userBaseline seam, `copy.ts:2180-2187`).
+- The slot keeps its one-arg signature, so `recommendationView.ts:687` and `copyGuard.test.ts:930` need no wiring change.
 - Rejected: "health costs" and "in your pocket". Out-of-pocket and cost-sharing are not counted, and funded-year accrual makes any wealth claim an overclaim. Also do not reuse the health sheet's "Lifetime health costs" lexeme: one lexeme with two referents is the O14 class.
 
 **Hero `recDeltaPayLessTax`.** Today: "Keeps about $X more out of your lifetime tax than today’s plan."

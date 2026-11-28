@@ -8,7 +8,7 @@ import type { WorkingYearStateTaxReading } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
 import { formatMoney } from './moneyFormat'
 import { threeThenMore } from './missingFacts'
-import type { WorkingYearQuote } from './workingYearQuote'
+import { leftOutOfQuote, type WorkingYearQuote } from './workingYearQuote'
 
 /** The help's two lists (R1), in reading order: what a working year's figure holds (`workingCostHelpCountItems`, the
  *  one home the Result door's cost list reads too), then what the tool works out itself. Each list sits under its own
@@ -61,6 +61,14 @@ function repeatSentences(quote: WorkingYearQuote): readonly string[] {
     slots.workingCostQuoteRepeat(r.label, formatMoney(r.annualAmountReal), String(r.everyYears), formatMoney(r.annualAmountReal / r.everyYears)),
   )
   return more > 0 ? [...lines, slots.workingCostQuoteRepeatMore(more)] : lines
+}
+
+/** Gap 4's U15 (KTD4's stopgap while its build is open, U11 files it): W is one flat figure for every working year, so a
+ *  budget line the quote counts that changes at its own rate is counted at its first-year price; the question says so
+ *  wherever such a line is in the quote (never under a line the quote leaves out). */
+export function ratedQuoteNote(d: ScenarioDraft): string | null {
+  const rated = d.budget?.some((l) => l.growthRate !== undefined && !leftOutOfQuote(l))
+  return rated === true ? copy.workingCostQuoteRatedNote : null
 }
 
 export function leftOutLine(quote: WorkingYearQuote): string | null {

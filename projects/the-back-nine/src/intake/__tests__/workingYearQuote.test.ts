@@ -22,7 +22,7 @@ import {
 import { workingYearCostStaleNote } from '../workingYearLeftOver'
 import { isDateRoute, missingRequiredFacts, pricedStateForRun } from '../intakeMap'
 import { threeThenMore } from '../missingFacts'
-import { quoteLine } from '../workingCostFace'
+import { quoteLine, ratedQuoteNote } from '../workingCostFace'
 import { STATE_TAX_PROFILES } from '@engine/constants/stateTax'
 import type { StateBaseSystem } from '@engine/constants'
 import {
@@ -33,7 +33,7 @@ import {
 } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
 import { DEV_SEEDS } from '@ui/devSeeds'
-import { slots } from '@ui/copy'
+import { copy, slots } from '@ui/copy'
 
 /**
  * The pay check's W on the intake side (`docs/plans/features/working-year-pay-check-build-spec.md`
@@ -197,6 +197,17 @@ describe('the quote (KTD5)', () => {
     expect(extra.annualReal).toBe(20_000)
     expect(extra.leftOut).toEqual([{ label: 'A new car', category: 'transportation' }])
     expect(extra.repeats).toEqual([])
+  })
+
+  // Gap 4's U15 (KTD4's stopgap): W is one flat figure, so a rated line the quote counts is at its first-year price.
+  it('a line in the quote that doesn’t go up with prices carries the stopgap line; one the quote leaves out, or none, does not', () => {
+    expect(ratedQuoteNote(DEV_SEEDS.datefixed)).toBe(copy.workingCostQuoteRatedNote)
+    expect(ratedQuoteNote(DEV_SEEDS.daterising)).toBe(copy.workingCostQuoteRatedNote)
+    expect(ratedQuoteNote(DEV_SEEDS.dip)).toBeNull()
+    expect(ratedQuoteNote(DEV_SEEDS.retired), 'no budget').toBeNull()
+    const leftOut = { ...DEV_SEEDS.dip, budget: DEV_SEEDS.dip.budget!.map((l) => (l.label === 'Go-go years' ? { ...l, growthRate: 0.05 } : l)) }
+    expect(leftOut.budget.find((l) => l.label === 'Go-go years')!.endYear, '[test setup] a discretionary line that ends: left out of the quote').toBeDefined()
+    expect(ratedQuoteNote(leftOut)).toBeNull()
   })
 
   it('a non-finite or absent spending figure quotes $0 — never NaN or a stand-in', () => {

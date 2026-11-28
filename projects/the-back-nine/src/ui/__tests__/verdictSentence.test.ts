@@ -5,7 +5,7 @@
  */
 import { describe, expect, it } from 'vitest'
 import { slots } from '../copy'
-import { composeVerdictReading, spendClauseFor, type VerdictDisplay } from '../verdictSentence'
+import { composeVerdictReading, reserveClauseFor, spendClauseFor, type VerdictDisplay } from '../verdictSentence'
 import { formatSolvedSpend } from '../money'
 import type { SpendAnswer } from '@store/memoryModel'
 import type { SpendSolveUnsizedReason } from '@engine/spendSolve'
@@ -89,5 +89,52 @@ describe('the three clause forms', () => {
     expect(formatSolvedSpend(11_100, 100)).toBe('11,100')
     expect(() => formatSolvedSpend(11_150, 100)).toThrow()
     expect(() => formatSolvedSpend(0, 100)).toThrow()
+  })
+})
+
+// Gap 4's U15 (R12's repeat half): the clause that quotes the entered spend says, right after it, when it is the first
+// year's with a repeat inside it; the reserve carries the same words, so the landed clause never outgrows the box
+// (insight 035).
+describe('the first-year repeat inside the quoted spend (gap 4’s U15)', () => {
+  const car = { name: 'A new car', amount: '40,000', everyYears: 5, more: 0 }
+  const words = slots.verdictFirstYear('A new car', '40,000', 5, 0)
+  const TRIM_SHOWN: VerdictDisplay = { ...ROOM_SHOWN, outcomeState: 'off-track', direction: 'trim' }
+
+  it('room and trim, on every spend form, name the first year right after "$6,500 a month"; with no repeat the clause is unchanged', () => {
+    expect(words).toBe(' in your first year, with “A new car” at $40,000 in it, which comes back every 5 years')
+    for (const [shown, spend] of [
+      [ROOM_SHOWN, undefined],
+      [ROOM_SHOWN, { kind: 'pending' }],
+      [ROOM_SHOWN, { kind: 'unsized', reason: 'budget-governed' }],
+      [ROOM_SHOWN, { kind: 'unsized', reason: 'within-a-step' }],
+      [ROOM_SHOWN, { kind: 'unsized', reason: 'survivor-short' }],
+      [ROOM_SHOWN, { kind: 'sized', monthlyReal: 7_100, failedAtMonthlyReal: 7_200 }],
+      [TRIM_SHOWN, undefined],
+      [TRIM_SHOWN, { kind: 'pending' }],
+      [TRIM_SHOWN, { kind: 'sized', monthlyReal: 5_000, failedAtMonthlyReal: 5_100 }],
+    ] as const) {
+      const plain = composeVerdictReading(shown, spend)!.clause
+      const named = composeVerdictReading(shown, spend, car)!.clause
+      expect(named, `${shown.direction} ${spend?.kind ?? 'idle'}`).toContain(`$6,500 a month${words}`)
+      // Only the words are added: taking them out (with the comma a sentence that runs on after them needs, where it was
+      // not already there) gives the clause back.
+      expect([named.replace(words, ''), named.replace(`${words},`, '')], `${shown.direction} ${spend?.kind ?? 'idle'}`).toContain(plain)
+      expect(composeVerdictReading(shown, spend, null)!.clause).toBe(plain)
+    }
+  })
+
+  it('the hold and rethink clauses quote no figure, so they carry no first-year words', () => {
+    for (const direction of ['on-the-line', 'rethink'] as const) {
+      const shown: VerdictDisplay = { ...ROOM_SHOWN, outcomeState: direction === 'rethink' ? 'already-failing' : 'borderline', direction }
+      expect(composeVerdictReading(shown, undefined, car)!.clause).toBe(composeVerdictReading(shown)!.clause)
+    }
+  })
+
+  it('the reserve carries the words too and is never shorter than the landed sized clause', () => {
+    const reserve = reserveClauseFor(ROOM_SHOWN, car)!
+    expect(reserve).toContain(`$6,500 a month${words}.`)
+    const landed = composeVerdictReading(ROOM_SHOWN, { kind: 'sized', monthlyReal: 19_400, failedAtMonthlyReal: 19_500 }, car)!.clause
+    expect(reserve.length).toBeGreaterThanOrEqual(landed.length)
+    expect(reserveClauseFor(ROOM_SHOWN, null)).toBe(reserveClauseFor(ROOM_SHOWN))
   })
 })

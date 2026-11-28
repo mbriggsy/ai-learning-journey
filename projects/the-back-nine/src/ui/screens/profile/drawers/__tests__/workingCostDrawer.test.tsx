@@ -175,6 +175,16 @@ describe('the W question — the quote, the gate and "yes" (KTD3, KTD5)', () => 
     expect(screen.queryByRole('alert')).toBeNull()
   })
 
+  // Gap 4's U15 (KTD4's stopgap): a line in the quote that doesn't go up with prices counts at its first-year price.
+  it('a budget whose quote counts a fixed-dollar line says it counts at its first-year price, and the fork reads it; none on `dip`', () => {
+    openW(DEV_SEEDS.datefixed)
+    expect(screen.getByText(copy.workingCostQuoteRatedNote)).toBeInTheDocument()
+    expect(fork()).toHaveAccessibleDescription(expect.stringContaining(copy.workingCostQuoteRatedNote))
+    cleanup()
+    openW(DEV_SEEDS.dip)
+    expect(screen.queryByText(copy.workingCostQuoteRatedNote)).toBeNull()
+  })
+
   it('a Save with W unanswered is refused at the fork, invalid and required, described by the gate AND the quote; the store untouched', () => {
     const { model, recompute } = openW(dateNoW())
     const before = model.getSnapshot().draft

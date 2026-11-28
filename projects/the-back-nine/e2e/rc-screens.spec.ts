@@ -4199,6 +4199,85 @@ for (const size of RC12_SIZES) {
   })
 }
 
+// ── Gap 4's U15 · Probability's spending clause with a repeat in the first year (b9-16, 2026-11-27): the clause that
+// quotes the entered spend says when it is the first year's and names the repeat inside it, so the key-metric column
+// grows by a sentence. On `surpluswidestrelief` (retired, a budget, direction room, the widest names: the longest clause
+// a repeat can make), its Travel line set to repeat through the Living drawer and saved: at his window the column, the
+// halves, the ACTION ITEMS handle and the one R13 caveat stay in the first frame; on the phone the caveat stays reachable;
+// no word of the column breaks across two lines; nothing scrolls sideways.
+for (const size of RC12_SIZES) {
+  test.describe(`Gap 4 · U15 · Probability's spending clause with a first-year repeat ${size.title}`, () => {
+    test.use(size.use)
+    test('?seed=surpluswidestrelief, Travel set to repeat every 5 years: the clause names the first year and the repeat; the frame holds', async ({ page }) => {
+      test.setTimeout(2 * FINAL_TIER_MS + 120_000)
+      const who = `surpluswidestrelief U15 ${size.phone ? 'phone' : 'window'}`
+      await gotoSeedFinal(page, 'surpluswidestrelief')
+      await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
+      // The frame BEFORE the repeat, on the same seed and page: the ACTION ITEMS handle law is held wherever it held here
+      // (this seed is not one of RC4's frame seeds: its widest names may already set the handle below the frame).
+      const measureFrame = () =>
+        page.evaluate(() => ({
+          scrollY: window.scrollY,
+          halves: Math.max(...[...document.querySelectorAll('[data-half]')].map((el) => el.getBoundingClientRect().bottom)),
+          metrics: document.querySelector('[data-metrics]')!.getBoundingClientRect().bottom,
+          caveat: document.querySelector('main.result [data-caveat]')!.getBoundingClientRect().bottom,
+          handle: document.querySelector('[aria-controls="b9-action-items"]')?.getBoundingClientRect().bottom ?? Number.POSITIVE_INFINITY,
+        }))
+      await toProbability(page, who)
+      const before = await measureFrame()
+      await toProfile(page, RC13B_PAGES.expenses, size.phone)
+      await page.locator('main.result [data-profile-card="living"]').click()
+      const dialog = page.getByRole('dialog', { name: copy.profileKindLiving })
+      await expect(dialog).toBeVisible()
+      const row = dialog.locator('[data-budget-line]').nth(1)
+      await expect(row.getByRole('textbox', { name: copy.budgetLineLabelLabel }), '[test setup] the Travel line').toHaveValue('Travel')
+      const repeat = row.getByRole('textbox', { name: copy.budgetRepeatLabel })
+      await repeat.scrollIntoViewIfNeeded()
+      await repeat.fill('5')
+      await repeat.press('Tab')
+      await dialog.getByRole('button', { name: copy.profileDrawerSave }).click()
+      await expect(page.getByRole('dialog'), 'the Save closes the drawer').toHaveCount(0)
+      await page.getByRole('link', { name: copy.shellHomeLabel }).first().click()
+      await toProbability(page, who)
+      const tail = '“Travel” at $360,000 in it, which comes back every 5 years.'
+      await expect(page.locator('[data-metrics]'), `${who}: the clause names the first year and the repeat`).toContainText(tail, { timeout: FINAL_TIER_MS })
+      await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
+      await settleLayout(page)
+      await expect(page.locator('[data-metrics]')).toContainText('a month in your first year, with “Travel” at $360,000 in it')
+      const splits = await page.locator('[data-metrics]').evaluate((root) => {
+        const out: string[] = []
+        const walk = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
+        for (let n = walk.nextNode(); n !== null; n = walk.nextNode()) {
+          // A hyphenated compound may break after its hyphen in running prose (the column's Medicare note, "extra-coverage"):
+          // each part is read as its own word, so only a break INSIDE letters counts.
+          for (const m of (n.textContent ?? '').matchAll(/[^\s-]+/g)) {
+            const range = document.createRange()
+            range.setStart(n, m.index!)
+            range.setEnd(n, m.index! + m[0].length)
+            if (new Set([...range.getClientRects()].filter((x) => x.width > 0).map((x) => Math.round(x.top))).size > 1) out.push(m[0])
+          }
+        }
+        return out
+      })
+      expect(splits, `${who}: words broken across two lines`).toEqual([])
+      if (size.phone) {
+        await assertCaveatReachable(page, who)
+        await assertOneVisibleCaveat(page, null)
+      } else {
+        await assertOneVisibleCaveat(page, REAL.height)
+        const frame = await measureFrame()
+        const was = `(before the repeat: caveat ${before.caveat.toFixed(1)}, handle ${before.handle.toFixed(1)})`
+        expect(frame.scrollY).toBe(0)
+        expect(frame.metrics, `${who}: the key-metric column in the first frame ${was}`).toBeLessThanOrEqual(REAL.height)
+        expect(frame.halves, `${who}: the halves in the first frame ${was}`).toBeLessThanOrEqual(REAL.height)
+        if (before.handle <= REAL.height) expect(frame.handle, `${who}: the ACTION ITEMS handle in the first frame ${was}`).toBeLessThanOrEqual(REAL.height)
+        else console.log(`${who}: the ACTION ITEMS handle sat below the frame before the repeat ${was}; now ${frame.handle.toFixed(1)}`)
+      }
+      await noSidewaysScroll(page, who)
+    })
+  })
+}
+
 /** Open the Pre-retirement living expenses drawer from its Expenses card. */
 async function openWDrawer(page: Page, phone: boolean) {
   await toProfile(page, RC13B_PAGES.expenses, phone)

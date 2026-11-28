@@ -805,6 +805,21 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     verdictRoomSurvivorShort: slots.verdictRoomSurvivorShort('6,500'),
     verdictTrimLead: slots.verdictTrimLead('10,000'),
     verdictTrimSized: slots.verdictTrimSized('10,000', '6,400'),
+    // Gap 4's U15: every clause form that quotes the entered spend, with the first-year words in it.
+    verdictFirstYear: (() => {
+      const q = slots.verdictFirstYear('A new car', '40,000', 5, 0)
+      const q2 = slots.verdictFirstYear('A new car', '40,000', 5, 2)
+      return [
+        slots.verdictRoomClause('9,833', q),
+        slots.verdictRoomLead('9,833', q2),
+        slots.verdictRoomWithinStep('9,833', q),
+        slots.verdictRoomSurvivorShort('9,833', q),
+        slots.verdictRoomSized('9,833', '12,400', q),
+        slots.verdictTrimClause('9,833', q),
+        slots.verdictTrimLead('9,833', q),
+        slots.verdictTrimSized('9,833', '6,400', q),
+      ].join(' ')
+    })(),
     verdictRethinkClause: slots.verdictRethinkClause(),
     verdictHoldClause: slots.verdictHoldClause(),
     verdictSurvivorStepDown: slots.verdictSurvivorStepDown('1,200'),
@@ -2698,7 +2713,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
   // 2026-09-08 — THE rec* SCOPE CANARY. copyGuard's scopes are prefix ALLOWLISTS, so a NEW `rec*` key
   // lands in NEITHER scope silently — the hole that left the RecommendationViz aria sentence outside
   // require-hedge until it was renamed `recDeltaVizAria`. `/^rec(?!over)/` is the net: a bare `/^rec/`
-  // would sweep the 16 `recovery*`/`recover*` intake keys (copy.ts:937-950, :999-1016), which are correctly
+  // would sweep the 16 `recovery*`/`recover*` intake keys (copy.ts:941-954, :1003-1020), which are correctly
   // unscoped. The two allowlists are SPLIT because the surfaces differ: an unscoped FLAT key rides only
   // the three universal gates (the `entries` loops at the top of this file — superlative and free-numeral
   // are verdict-scoped); an unscoped SLOT rides the four voice gates (survival-claim included) + catastrophe (the SLOT_RENDER loop

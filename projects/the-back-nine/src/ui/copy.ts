@@ -191,6 +191,10 @@ export const copy = {
   // (a stopgap while the calendar-frame end is open, gap 4's U11 files it).
   budgetDateRouteEndNote:
     'The tool tries different years for you to stop working, and this line’s last year moves with each one, so a payment that ends in a set calendar year can end too soon here.',
+  // Gap 4's U15 (KTD4's stopgap, U11 files the build): W is one flat figure, so a rated line in the quote is counted at
+  // its first-year price in every working year.
+  workingCostQuoteRatedNote:
+    'A line that doesn’t go up with prices counts here at its first-year price, since this is one figure for every working year.',
   // R19 whole-budget cautions — calm, never blocking.
   budgetWarnZeroEssentials: 'Nothing here is marked essential yet, so the safety floor reads as empty.',
   budgetWarnNoYearZero:
@@ -5238,32 +5242,32 @@ export const slots = {
    *  lane idle, a held word, a mismatched direction) or an unsized reason that does not deny room
    *  (`budget-governed`, `non-monotone`, `unbracketed`, `below-grid` — the lane sized no figure, not
    *  that there is none); `within-a-step` and `survivor-short` get their own room-denying forms below. */
-  verdictRoomClause: (spendFormatted: string): string =>
-    `There looks to be room to spend more than $${spendFormatted} a month. This answer doesn’t work out how much more.`,
+  verdictRoomClause: (spendFormatted: string, firstYear = ''): string =>
+    `There looks to be room to spend more than $${spendFormatted} a month${firstYear}. This answer doesn’t work out how much more.`,
   /** 'room' while the spend solve is IN FLIGHT — the first sentence alone (council wf_faa1af2d-052:
    *  the shipped "doesn't work out" tail would read falsely final while the figure is coming). */
-  verdictRoomLead: (spendFormatted: string): string => `There looks to be room to spend more than $${spendFormatted} a month.`,
+  verdictRoomLead: (spendFormatted: string, firstYear = ''): string => `There looks to be room to spend more than $${spendFormatted} a month${firstYear}.`,
   /** 'room', UNSIZED because the headroom is under one $100 step (`spendSolve` `within-a-step`: the
    *  entered spend passes, a run one step above it FAILED — both run). The shipped fallback's "room to
    *  spend more" oversold a sub-$100 margin (the register's Tier 0 room sentence), so this form claims
    *  NO room and quotes no step: the edge is a reading, never a figure. PILOT-DRAFTED, RULED by
    *  Briggsy's cold read of `seed:steer` 2026-09-27 (taste-corpus E19) — they stand. */
-  verdictRoomWithinStep: (spendFormatted: string): string =>
-    `Spending more than $${spendFormatted} a month would start to sit close to the line.`,
+  verdictRoomWithinStep: (spendFormatted: string, firstYear = ''): string =>
+    `Spending more than $${spendFormatted} a month${firstYear === '' ? '' : `${firstYear},`} would start to sit close to the line.`,
   /** 'room', UNSIZED because the survivor reading at the entered spend is not on track
    *  (`spendSolve` `survivor-short`): the joint reading has room, the one-of-you reading does not, so
    *  the lane quotes no more — and the shipped fallback invited more spending to exactly the household
    *  the survivor law protects. Claims no room. PILOT DRAFT — the words are Briggsy's. */
-  verdictRoomSurvivorShort: (spendFormatted: string): string =>
-    `At $${spendFormatted} a month, your plan would not read on track for one of you on your own. So this answer doesn’t suggest spending more.`,
+  verdictRoomSurvivorShort: (spendFormatted: string, firstYear = ''): string =>
+    `At $${spendFormatted} a month${firstYear}, your plan would not read on track for one of you on your own. So this answer doesn’t suggest spending more.`,
   /** 'room' SIZED by the spend solve (spendSolve.ts): F is the $100-grid EDGE the engine still reads as
    *  on track with room — a run AT F passed and a run a step above FAILED (both run; the highest passing
    *  spend under the pre-scan's monotonicity check, which refuses a non-monotone scan). The edge
    *  is NAMED (the Hawk's veto: never an on-track claim at the edge without it). The council's duration
    *  phrase ("held every year in today's dollars") was CUT on Briggsy's ruling, 2026-09-26 ("too
    *  wordy"; he also declined the two-word "every year") — never re-add it without his read. */
-  verdictRoomSized: (spendFormatted: string, solvedFormatted: string): string =>
-    `There looks to be room to spend more than $${spendFormatted} a month. At about $${solvedFormatted} a month, your plan would still read on track. Above that, it starts to sit close to the line.`,
+  verdictRoomSized: (spendFormatted: string, solvedFormatted: string, firstYear = ''): string =>
+    `There looks to be room to spend more than $${spendFormatted} a month${firstYear}. At about $${solvedFormatted} a month, your plan would still read on track. Above that, it starts to sit close to the line.`,
   /** direction 'trim' — off-track. FIGURE-LESS since 2026-09-25 (council wf_8c2ece49-79a, Tier 0): the
    *  engine's trim magnitude is a coarse proxy (`confidence.ts` `buildDollar`: −spend × the gap below
    *  on-track), never a solve — and on the `retired` worsened frame it was WRONG by ~2×: it quoted
@@ -5275,10 +5279,11 @@ export const slots = {
    *  spend solve shipped (`spendSolve.ts`, 2026-09-26) this is the UNSIZED fallback; the solved form is
    *  `verdictTrimSized`, the in-flight one `verdictTrimLead`. The already-failing case keeps its own
    *  `verdictRethinkClause` (Council 2026-06-29). */
-  verdictTrimClause: (spendFormatted: string): string =>
-    `Spending less than $${spendFormatted} a month would let your plan cover more futures. This answer doesn’t work out how much less.`,
+  verdictTrimClause: (spendFormatted: string, firstYear = ''): string =>
+    `Spending less than $${spendFormatted} a month${firstYear === '' ? '' : `${firstYear},`} would let your plan cover more futures. This answer doesn’t work out how much less.`,
   /** 'trim' while the spend solve is IN FLIGHT — the first sentence alone (see verdictRoomLead). */
-  verdictTrimLead: (spendFormatted: string): string => `Spending less than $${spendFormatted} a month would let your plan cover more futures.`,
+  verdictTrimLead: (spendFormatted: string, firstYear = ''): string =>
+    `Spending less than $${spendFormatted} a month${firstYear === '' ? '' : `${firstYear},`} would let your plan cover more futures.`,
   /** 'trim' SIZED by the spend solve — the same verified F as verdictRoomSized, but TWO sentences, never
    *  the room sentence's third. Its tail ("Above that, it starts to sit close to the line.") was CUT on
    *  Briggsy's ruling, 2026-10-14 (b9-toronto1), on the register's *The trim sentence ends "Above that…"*
@@ -5288,8 +5293,17 @@ export const slots = {
    *  off-track point on the $100 grid over ($5,200, $6,500]). The Hawk's veto is untouched — it governs
    *  the TARGET (F reads `room`, never the bare 0.85 edge; `spendSolve.ts`), and the room sentence keeps
    *  its named edge. Never re-add a tail here without his read. */
-  verdictTrimSized: (spendFormatted: string, solvedFormatted: string): string =>
-    `Spending less than $${spendFormatted} a month would let your plan cover more futures. At about $${solvedFormatted} a month, it would read on track.`,
+  verdictTrimSized: (spendFormatted: string, solvedFormatted: string, firstYear = ''): string =>
+    `Spending less than $${spendFormatted} a month${firstYear === '' ? '' : `${firstYear},`} would let your plan cover more futures. At about $${solvedFormatted} a month, it would read on track.`,
+  /** Gap 4's U15 (R12's repeat half): the quoted monthly spend is the first year's whenever a line that repeats is charged
+   *  in it (a year-0 car read as every year's spending is the rosy side), so the clause says so right after "$X a month",
+   *  with the repeat inside it ("$9,833 a month in your first year, with “A new car” at $40,000 in it, which comes back
+   *  every 5 years"). Each clause slot above takes it as its optional last argument (empty: the clause as it was). Inside
+   *  the sentence, never a sentence of its own: a second sentence re-quoting the figure pushed the R13 caveat 2 px out of
+   *  his window on the widest names (`e2e/rc-screens.spec.ts`, Gap 4 · U15). */
+  verdictFirstYear: (name: string, amountFormatted: string, everyYears: number, more: number): string =>
+    ` in your first year, with “${name}” at $${amountFormatted} in it, which comes back every ${everyYears} years` +
+    (more === 0 ? '' : `, and ${more} more ${more === 1 ? 'line that repeats' : 'lines that repeat'}`),
   /** direction 'rethink' — already-failing (0 of 10, unfundable from the start). FIGURE-LESS and
    *  LEVER-AGNOSTIC (it also renders for an already-RETIRED household, so it names no accumulation
    *  lever): the shortfall is structural, not a trim away — a single sufficient-sounding figure here
@@ -5461,7 +5475,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:2449` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:2464` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,

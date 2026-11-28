@@ -40,6 +40,8 @@ export function bandTrackNote(view: Pick<DatesView, 'band' | 'spendLevels' | 'wo
         : w === undefined
           ? slots.bandPricesFullBudgetWithLevels(full, essentials)
           : slots.bandCountsWorkingYearsWithLevels(w.figure, w.last, full, essentials)
+    // Both levels are the first year's ("to start"); a repeat charged in it is named (gap 4's U15).
+    if (s.firstYearRepeat !== undefined) note = `${note} ${s.firstYearRepeat}`
   }
   return view.refiguring === true ? `${note} ${copy.answerRefiguringCaption}` : note
 }

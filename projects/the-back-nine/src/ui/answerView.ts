@@ -21,6 +21,7 @@
 import type { MemoryModelSnapshot, SpendAnswer } from '@store/memoryModel'
 import { isDateRoute } from '@intake/intakeMap'
 import { workingYearFigureBesideQuote, type WorkingYearFigureBesideQuote } from '@intake/workingYearLeftOver'
+import { firstYearRepeatNote } from '@intake/budgetForm'
 import type {
   BandFan,
   DateBand,
@@ -117,6 +118,14 @@ function spineBand(
   return { band: fan, bandAnnotations, bandAges }
 }
 
+/** The budget's two first-year spending levels the fan's track note names (`fanNotes.ts`), and the repeat charged in
+ *  that first year, in words, where there is one (gap 4's U15). */
+export interface SpendLevels {
+  readonly essentials: number
+  readonly full: number
+  readonly firstYearRepeat?: string
+}
+
 /**
  * The DATE band + its household-clock annotations — the date-route analog of {@link spineBand}. The
  * engine carries the crowned candidate's projection fan bundled with its outcome-state tag in
@@ -134,7 +143,7 @@ function dateBand(
   readonly band?: DateBand
   readonly bandAnnotations?: readonly XAnnotation[]
   readonly bandAges?: (yearsFromNow: number) => string
-  readonly spendLevels?: { readonly essentials: number; readonly full: number }
+  readonly spendLevels?: SpendLevels
   readonly workingYearFigure?: WorkingYearFigureBesideQuote
 } {
   const rawBand = outcome.band
@@ -175,10 +184,13 @@ function dateBand(
   // (the line-sum omits the injected OOP medical and mis-tiers; both failures are mutation-pinned
   // in budgetToSpending.test.ts). Absent without a budget: a household with one spending level has
   // no gap to name, and inventing a second figure is worse than staying quiet.
+  // Gap 4's U15: both levels are the first year's ("a year to start"); a repeat charged in it is named beside them.
+  const firstYearRepeat = budgetGoverns(draft.budget) ? firstYearRepeatNote(draft.budget) : null
   const spendLevels = budgetGoverns(draft.budget)
     ? {
         essentials: budgetYearZeroEssentialsTotal(draft.budget, draft.health.oopMedicalAnnual),
         full: budgetYearZeroFullTotal(draft.budget, draft.health.oopMedicalAnnual),
+        ...(firstYearRepeat !== null ? { firstYearRepeat } : {}),
       }
     : undefined
   // W8-R7: the figure the run counts a working year at, where it prints different from today's quote (the caption names
@@ -410,7 +422,7 @@ export type FuckOffDateView =
        *  line-sum (which omits the injected OOP medical and mis-tiers). Absent when the household
        *  never built a budget: there is no second level to name, and the copy that would quote it
        *  must not render rather than invent one. */
-      readonly spendLevels?: { readonly essentials: number; readonly full: number }
+      readonly spendLevels?: SpendLevels
       /** W8-R7 (`docs/plans/features/typed-below-walk8-form-build-spec.md`, U3): the figure the run counts a working
        *  year at, beside today's quote, where the two print differently (`workingYearFigureBesideQuote`); absent where
        *  they print alike or the run carries no W. The full-budget caption names both. */

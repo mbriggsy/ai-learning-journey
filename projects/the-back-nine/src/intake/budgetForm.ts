@@ -112,12 +112,25 @@ export function repeatReadBack(line: BudgetLine, yearOf: ((offset: number) => nu
   return slots.budgetRepeatYears(yearOf === null ? shown : shown.map(yearOf), more, yearOf !== null)
 }
 
-/** The year-0 figures' words with a repeat charged in the first year: "in your first year", and the repeat named. */
-export function firstYearRepeatNote(items: readonly BudgetLine[]): string | null {
-  const repeats = repeatsOnAtYearZero(items)
+/** A repeat charged in the first year, as a sentence names it: the first such line's name, its cost and how often, and
+ *  how many more repeat there (gap 4's U8 and U15: the readout, the Expenses card, the verdict and the fan read it). */
+export interface FirstYearRepeat {
+  readonly name: string
+  readonly amount: string
+  readonly everyYears: number
+  readonly more: number
+}
+export function firstYearRepeatOf(items: readonly BudgetLine[] | undefined): FirstYearRepeat | null {
+  const repeats = repeatsOnAtYearZero(items ?? [])
   const first = repeats[0]
   if (first === undefined || first.everyYears === undefined) return null
-  return slots.budgetRepeatInFirstYear(lineDisplayName(first), formatMoney(first.annualAmountReal), first.everyYears, repeats.length - 1)
+  return { name: lineDisplayName(first), amount: formatMoney(first.annualAmountReal), everyYears: first.everyYears, more: repeats.length - 1 }
+}
+
+/** The year-0 figures' words with a repeat charged in the first year: "in your first year", and the repeat named. */
+export function firstYearRepeatNote(items: readonly BudgetLine[] | undefined): string | null {
+  const r = firstYearRepeatOf(items)
+  return r === null ? null : slots.budgetRepeatInFirstYear(r.name, r.amount, r.everyYears, r.more)
 }
 
 /** One line of the reconciliation readout: muted lines are the quiet ones (what is carried, the ramp note, a warning). */

@@ -100,7 +100,7 @@ export interface WorkingYearQuote {
 
 /** Is a budget line a retirement-only splurge the quote leaves out? A discretionary line that ends,
  *  or starts after the budget's first year. */
-function leftOutOfQuote(item: BudgetLineItem): boolean {
+export function leftOutOfQuote(item: BudgetLineItem): boolean {
   return item.tier === 'discretionary' && (item.endYear !== undefined || item.startYear > 0)
 }
 

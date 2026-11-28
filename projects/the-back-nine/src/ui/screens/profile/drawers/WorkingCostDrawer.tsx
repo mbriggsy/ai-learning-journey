@@ -33,7 +33,7 @@ import type { SpendEntryPeriod, WorkingYearLeftOverKind } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
 import { epochDayToCalendarYear } from '@store/staleness'
 import { useGestureHold } from '@intake/gestureHold'
-import { helpLeaveOutItems, STATE_HELP, leftOutLine, quoteLine, withWorkingYearCost } from '@intake/workingCostFace'
+import { helpLeaveOutItems, STATE_HELP, leftOutLine, quoteLine, ratedQuoteNote, withWorkingYearCost } from '@intake/workingCostFace'
 import {
   heldYesBelowQuote,
   stateTaxBelongsInW,
@@ -147,6 +147,7 @@ function WorkingCostFace({ draft, rootRef, readOnly, onWrite, onPeriodTap, onPer
   const keepConditionId = `${id}-keep-condition`
   const quoteId = `${id}-quote`
   const leftId = `${id}-left`
+  const ratedId = `${id}-rated`
   const keepTapped = useRef(false)
   const [figureOpen, setFigureOpen] = useState(() => w?.kind === 'entered')
   const [pendingPeriod, setPendingPeriod] = useState<SpendEntryPeriod>(() => (w?.kind === 'entered' ? w.entryPeriod : 'month'))
@@ -197,10 +198,15 @@ function WorkingCostFace({ draft, rootRef, readOnly, onWrite, onPeriodTap, onPer
   }, [noteShown, rootRef])
 
   const left = leftOutLine(quote)
+  // Gap 4's U15: a line in the quote that changes at its own rate is counted at its first-year price (KTD4's stopgap).
+  // It reads the budget, which nothing in this drawer edits, so it never moves under a press.
+  const rated = ratedQuoteNote(draft)
   const typed = w?.kind === 'entered' ? (w.entryPeriod === 'month' ? w.amountReal / 12 : w.amountReal) : undefined
   // The gate's message sits where the household is answering: at the fork until a figure is asked, then at the figure.
   const gateOnFigure = showFigure
-  const forkDescribedBy = [noteShown ? staleId : null, quoteId, left !== null ? leftId : null].filter((s): s is string => s !== null).join(' ')
+  const forkDescribedBy = [noteShown ? staleId : null, quoteId, left !== null ? leftId : null, rated !== null ? ratedId : null]
+    .filter((s): s is string => s !== null)
+    .join(' ')
   const medical = draft.health.oopMedicalAnnual
   // Keep (rulings 21, 34): a typed figure always; a held yes, or a figure kept from one, only where its figure is not
   // below today's quote. Read off the note's own draft, like everything the note draws.
@@ -250,6 +256,11 @@ function WorkingCostFace({ draft, rootRef, readOnly, onWrite, onPeriodTap, onPer
       {offersYes && left !== null ? (
         <p className="text-label text-stone-600" id={leftId}>
           {left}
+        </p>
+      ) : null}
+      {offersYes && rated !== null ? (
+        <p className="text-label text-stone-600" id={ratedId} data-working-cost-rated="">
+          {rated}
         </p>
       ) : null}
       <HelpList lead={copy.workingCostHelpCountLead} items={workingCostHelpCountItems(stateTaxBelongsInW(draft))} />

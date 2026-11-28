@@ -21,6 +21,7 @@ import { copy, slots } from './copy'
 import { formatPerMonth, formatSolvedSpend } from './money'
 import type { SpendAnswer } from '@store/memoryModel'
 import type { SpendSolveUnsizedReason } from '@engine/spendSolve'
+import type { FirstYearRepeat } from '@intake/budgetForm'
 import { OUTCOME_PRESENTATION } from './outcomeStates'
 
 /** The displayed verdict tuple — structurally satisfied by the store's `DisplayTriple` (`rawDisplayed`) and
@@ -92,12 +93,21 @@ export function spendClauseFor(
  *  band below never jumps when the figure lands). The figure is the widest the solve can return on
  *  this side: the room cap (3× the entered spend) for room, the entered spend itself for trim. Null
  *  for a direction that is never sized. Presentation only — never rendered visibly, never announced. */
-export function reserveClauseFor(shown: VerdictDisplay): string | null {
+export function reserveClauseFor(shown: VerdictDisplay, firstYear?: FirstYearRepeat | null): string | null {
   const entered = formatPerMonth(shown.spendPerMonthReal)
   const grid = (m: number) => formatPerMonth(Math.floor(m / 100) * 100)
-  if (shown.direction === 'room') return slots.verdictRoomSized(entered, grid(shown.spendPerMonthReal * 3))
-  if (shown.direction === 'trim') return slots.verdictTrimSized(entered, grid(shown.spendPerMonthReal))
+  // The first-year words ride the reserve too, so the landed clause still fits the box (gap 4's U15).
+  const q = firstYearWords(firstYear)
+  if (shown.direction === 'room') return slots.verdictRoomSized(entered, grid(shown.spendPerMonthReal * 3), q)
+  if (shown.direction === 'trim') return slots.verdictTrimSized(entered, grid(shown.spendPerMonthReal), q)
   return null
+}
+
+/** The words right after "$X a month" when that spend is the first year's with a repeat in it (gap 4's U15): "in your
+ *  first year, with … in it". Empty otherwise, which leaves every clause as it was. */
+function firstYearWords(firstYear: FirstYearRepeat | null | undefined): string {
+  if (firstYear === null || firstYear === undefined) return ''
+  return slots.verdictFirstYear(firstYear.name, firstYear.amount, firstYear.everyYears, firstYear.more)
 }
 
 /** The verdict's second line — the dollar grammar. Every $/month enters through a slot
@@ -115,20 +125,24 @@ function magnitudeClause(
   direction: DollarAdjustment['direction'],
   spendPerMonthReal: number,
   spend: SpendClause | undefined,
+  firstYear: FirstYearRepeat | null | undefined,
 ): string {
   const entered = formatPerMonth(spendPerMonthReal)
+  // Room and trim quote the entered spend, so each says, right after it, when it is the first year's with a repeat inside
+  // (gap 4's U15); the hold and rethink clauses quote no figure.
+  const q = firstYearWords(firstYear)
   const solved = spend?.kind === 'sized' ? formatSolvedSpend(spend.monthlyReal, spend.failedAtMonthlyReal - spend.monthlyReal) : null
   switch (direction) {
     case 'room':
-      if (solved !== null) return slots.verdictRoomSized(entered, solved)
-      if (spend?.kind === 'pending') return slots.verdictRoomLead(entered)
+      if (solved !== null) return slots.verdictRoomSized(entered, solved, q)
+      if (spend?.kind === 'pending') return slots.verdictRoomLead(entered, q)
       // The lane ran both sides and found no room to quote: never "room to spend more" (the Tier 0).
-      if (spend?.kind === 'unsized' && spend.reason === 'within-a-step') return slots.verdictRoomWithinStep(entered)
-      if (spend?.kind === 'unsized' && spend.reason === 'survivor-short') return slots.verdictRoomSurvivorShort(entered)
-      return slots.verdictRoomClause(entered)
+      if (spend?.kind === 'unsized' && spend.reason === 'within-a-step') return slots.verdictRoomWithinStep(entered, q)
+      if (spend?.kind === 'unsized' && spend.reason === 'survivor-short') return slots.verdictRoomSurvivorShort(entered, q)
+      return slots.verdictRoomClause(entered, q)
     case 'trim':
-      if (solved !== null) return slots.verdictTrimSized(entered, solved)
-      return spend?.kind === 'pending' ? slots.verdictTrimLead(entered) : slots.verdictTrimClause(entered)
+      if (solved !== null) return slots.verdictTrimSized(entered, solved, q)
+      return spend?.kind === 'pending' ? slots.verdictTrimLead(entered, q) : slots.verdictTrimClause(entered, q)
     case 'on-the-line':
       return slots.verdictHoldClause()
     case 'rethink':
@@ -151,12 +165,12 @@ export function verdictReadingText(outcomeState: OutcomeState, xOfTen: number): 
 /** Compose the rendered verdict sentence pieces for a displayed triple. Returns `null` only
  *  for `indeterminate` (not a verdict — the surface shows its own incompleteness copy; the
  *  sixth-state asymmetry, outcomeStates.ts). */
-export function composeVerdictReading(shown: VerdictDisplay, spend?: SpendClause): VerdictReading | null {
+export function composeVerdictReading(shown: VerdictDisplay, spend?: SpendClause, firstYear?: FirstYearRepeat | null): VerdictReading | null {
   const wordKey = OUTCOME_PRESENTATION[shown.outcomeState].verdictWordKey
   if (wordKey === null) return null
   return {
     word: copy[wordKey],
     reading: verdictReadingText(shown.outcomeState, shown.xOfTen),
-    clause: magnitudeClause(shown.direction, shown.spendPerMonthReal, spend),
+    clause: magnitudeClause(shown.direction, shown.spendPerMonthReal, spend, firstYear),
   }
 }

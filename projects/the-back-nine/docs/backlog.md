@@ -1,6 +1,6 @@
 # The Back Nine — Open Backlog
 
-> The complete open register *(this header is GATED — `pnpm verify:doc-stats` reds when its numbers disagree with the body below or when any other doc re-types the count)*: **268 open items** (344 entries, 76 closed and kept as records; two entries are half-closed and counted open — the runner-up, and the unwitnessable household whose mechanism shipped while its sentence stays open) consolidated
+> The complete open register *(this header is GATED — `pnpm verify:doc-stats` reds when its numbers disagree with the body below or when any other doc re-types the count)*: **267 open items** (344 entries, 77 closed and kept as records; two entries are half-closed and counted open — the runner-up, and the unwitnessable household whose mechanism shipped while its sentence stays open) consolidated
 > from **136 raw obligations** (a source audit of the shipped code + a salvage sweep of the 246 KB
 > `TODO.md` archive it replaced). Every raw obligation is accounted for — the `ids` on each entry are its
 > provenance.
@@ -2245,7 +2245,9 @@ Briggsy's eye, and should not be re-filed as a copy defect without a read.
   - An absent answer reproduces today's two-adult run byte-identically.
   - Never price Alaska's or Hawaii's table without a state answer that names them; "somewhere else" does not.
 
-### An inherited IRA has no account kind — entered as a traditional IRA it is held too long, offered for conversion, and missing from the income the cliffs read
+### ✅ CLOSED 2026-11-27 — An inherited IRA has no account kind — entered as a traditional IRA it is held too long, offered for conversion, and missing from the income the cliffs read
+
+**✅ CLOSED 2026-11-27 (b9-18, the docs pass b9-17 found owed)** — built by gap 3 (the Act 5 plan's U10 to U13 and U17, the ⚑ Built bullet below), and the whole-file review this entry waited on is done (rounds 1 to 3: `43e70c5c`, `3d472807`, `7927693f`; engine identity IDENTICAL 83 of 83). The cases version 1 refuses continue in *Version 1 of the inherited IRA refuses fourteen cases in words…* (next); the review's small leftovers in *Gap 3's review: the inherited screens' smaller leftovers*. The negatives below stay binding.
 
 `M` · **pilot** (build) · **briggsy** (the question's words) · filed 2026-11-09 (the-back-nine-b6) while scoping the workbench's account entry ([plans/5-workbench.md](plans/5-workbench.md))
 

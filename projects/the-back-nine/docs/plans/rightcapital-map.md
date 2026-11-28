@@ -26,7 +26,7 @@ facts stay out of this file.
 
 This map widens [5-workbench.md](5-workbench.md) and [5-workbench-plan.md](5-workbench-plan.md). Those two scoped a
 workbench room beside B9. The mandate makes RightCapital's whole feature set and flow the target. Their units remain the
-build pieces for the rows they cover (named below). Gap 1's units (U2–U8) are built; the rest are not.
+build pieces for the rows they cover (named below). Gap 1's units (U2–U8) are built; so are gap 3 and gap 4's line half (each marked in the order below).
 
 ## How each one flows
 
@@ -70,7 +70,7 @@ Sizes are rough: S is about a session, M a few, L a week of sessions.
 | Pension, annuity, rental, other income | Start and end age, raise rule, taxable share, survivor share (R40) | Have |
 | Self-employment income | None | Out unless the household has it |
 | Savings: yearly deposits per account, employer match | Per-account deposits, match, HSA, the legal limits by age, all stopping at the work-stop date (R30, R31) | Have |
-| Accounts: bank, brokerage, IRA/401k, Roth, HSA, inherited IRA | Taxable, pre-tax, Roth and HSA per person, one stock/bond/cash mix per account. No bank-account kind. No inherited IRA (register Tier 0 *An inherited IRA has no account kind…*) | Gap: bank accounts S (workbench U10); inherited IRA L (U11–U13) |
+| Accounts: bank, brokerage, IRA/401k, Roth, HSA, inherited IRA | Taxable, pre-tax, Roth and HSA per person, one stock/bond/cash mix per account. No bank-account kind. An inherited traditional IRA from a non-spouse with a death in 2020 or later has its own kind and forced-withdrawal schedule; every other inherited case is refused in words (register *Version 1 of the inherited IRA refuses fourteen cases in words…*) | Gap: bank accounts S (workbench U10). Inherited IRA built 2026-11-27 (gap 3); each refused case is its own build |
 | Holdings: ticker or CUSIP, quantity, cost basis per position | One mix per account. Position entry is shape-ratified and not built ([decisions/portfolio-holdings.md](../decisions/portfolio-holdings.md)) | Gap: M (U20) |
 | Home and other property: value, growth, property tax | None. Property tax or upkeep can be a budget line | Gap only if a sale is planned (see one-time money) |
 | Debts: mortgage balance, rate, term | No loan record. Since gap 4's line half (2026-11-27) a payment can be a budget line that "Stays the same dollar amount", priced in today's dollars through the one price index, but only in retired years (a working year charges it inside W at its first-year price) and its last year counts from the stop | Gap: the loan on Net Worth, L (the loan half of [gap 4's plan](features/spending-line-repeat-and-rate-build-spec.md); deferred until a plan needs a loan, register Tier 3 *A mortgage or other fixed-payment loan has no record of its own…*) |
@@ -149,7 +149,7 @@ business planning; stock plans; insurance-needs analysis; estate flowcharts and 
 
 1. **The year-by-year table** (U2–U7). It is "the amount you need to pull from each source", and every later row shows on it.
 2. **The workspace, with what-ifs on every input, kept by name** (U14–U16), and the flow question answered. Since the plan's 2026-11-23 amendment: U9 (a slim schema version 6), then U14–U16, then U25 (the workspace home).
-3. **The inherited-IRA account kind** (U11–U13). Tier 0: one entered as a traditional IRA reads rosy three ways today.
+3. **The inherited-IRA account kind** (U11–U13). *Built 2026-11-27 (U10 to U13 and U17): the kind, its ledger and producer, its screens, the Net Worth drawer and the tray's pace lever; its whole-file review done (`7927693f`). The cases version 1 refuses are each a build (register *Version 1 of the inherited IRA refuses fourteen cases in words…*).*
 4. **Repeating expenses, a per-line inflation rate, a fixed payment that ends** (U18 plus the register's mortgage entry). *Built 2026-11-27 as its own plan, [spending-line-repeat-and-rate-build-spec.md](features/spending-line-repeat-and-rate-build-spec.md): the line half (the repeat and the rate) whole; the loan half waits on whether his plan needs a loan.*
 5. **One-time money in** (inheritance, home sale).
 6. **Fill-to-a-line conversions and the yearly income-against-the-lines view** (U19, U22).

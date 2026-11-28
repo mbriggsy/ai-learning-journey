@@ -752,7 +752,7 @@ said squeaky clears `temp/` UNCONDITIONALLY; its step 4 now deletes only the clo
   `src/engine/reference/solver-cases/index.ts`), the ambiguous-basename class. Run `git grep -n "index\.ts:[0-9]"` and fix
   by content. Its missed-bare-token class recurred: backlog's `:401-407` sat ~90 characters after `simulate.ts:487-490`,
   and pair-check's DOCHUNK section caught it. It also never moves a doc's citations INTO ITSELF, and neither tool flagged
-  it: two new register entries shifted `docs/backlog.md:1980`, `:2267`, `:2342` (cited from inside the register) by +36.
+  it: two new register entries shifted `docs/backlog.md:1980`, `:2269`, `:2344` (cited from inside the register) by +36.
   After any edit that adds lines to a doc, run `git grep -n "<doc>:[0-9]"` across the repo, the doc itself included, and
   compare HEAD vs tree content at each shifted number.
 

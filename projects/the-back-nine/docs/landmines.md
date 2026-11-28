@@ -309,6 +309,9 @@ even when one exists; the plain `/` route is the Unlock check.
 
 ## The unit test suite
 
+- **(b9-3, 11-28) A passing test's `console.log` never reached the terminal here** (`pnpm vitest run <file>`, a 64-point
+  measurement grid printed nothing, `tail -30` of the run showed only the summary). Write a measurement's output with
+  `appendFileSync` to a file in the session's scratchpad and read the file; never trust a printed count you did not see.
 - **(b9-18, 11-27) `ActionItemsTray.test.tsx`'s tray reads the ANSWERED draft, fixed when `openTray` renders** (its `answer`,
   `spine(draft)` or `dated(...)`): an `appModel.update` made after it never reaches a row (a plan line's repeat moved from
   5 to 4 years still printed "every 5 years" and Refresh ran). A test of a refusal that a later plan edit causes must
@@ -661,6 +664,11 @@ said squeaky clears `temp/` UNCONDITIONALLY; its step 4 now deletes only the clo
 
 ## Citations and the doc gates
 
+- **(b9-3, 11-28) `doc:reanchor` misses a bare `:N` more than 60 characters past its file name, and `check-citation-pairs.mjs`
+  never sees an en-dash range end.** At `b66b3f4a` the pair-check listed 27 UNMOVED continuations (taxOverlay 25, simulate
+  2) after one apply, and `:2917–2926` in `docs/backlog.md` came out half-moved (`:2940–2926`) with no line naming it. Move
+  each UNMOVED token through `git diff -U0 HEAD -- <code file>`'s line map (a line inside a changed hunk maps to nothing:
+  judge it by content), then `git grep -n -E '<file>[^|]{0,200}:[0-9]+–[0-9]+'` and check each en-dash end by hand.
 - **(b9-2, 11-28) `node scripts/check-citation-pairs.mjs HEAD <file>` throws `Command failed: git grep -l -E <file>:[0-9]`** when no doc cites the file (git grep exits 1 on no match): that means nothing to pair, never a failure.
 - **(b9-15, 11-27) `pnpm doc:reanchor <BASE> --apply` a second time against the same base shifts every citation twice.**
   It maps each cited line through the diff BASE → tree, so after one apply the docs already hold the new numbers and a

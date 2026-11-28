@@ -248,6 +248,9 @@ export function composeReentry(
   // ALWAYS has a line here — `rulesMoved` can never fire an alarm nothing is allowed to explain.
   if (report.healthcare.acaMoved) noteLines.push(copy.stalenessAca)
   if (report.healthcare.medicareMoved) noteLines.push(copy.stalenessMedicare)
+  // The price path's own reader outside health (gap 4's leftover (c)): a spending line at its own rate, re-priced by a
+  // new edition of the trend table. Off the same mapping, so a named `part-b-trend` on a run with no Medicare has a line.
+  if (report.healthcare.ratedSpendingMoved) noteLines.push(copy.stalenessRatedSpending)
   // THE ENGINE'S OWN METHOD (the ledger — `report.pricing`, already exposure-gated upstream): ONE
   // named line over every exposed family (the calm-not-dashboard fold: a line per family would stack
   // up to five sentences on the gate), then at most one nameless twin, then the conditional spending

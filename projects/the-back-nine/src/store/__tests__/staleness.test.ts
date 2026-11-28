@@ -87,6 +87,7 @@ const ACA_PRICED: StalenessExposure = {
   contributions: 'priced',
   blend: 'priced',
   spending: 'priced',
+  ratedSpending: 'priced',
   workingYearTax: 'priced',
   workingYearCost: 'priced',
   pricedState: undefined,
@@ -102,6 +103,7 @@ const MEDICARE_ONLY: StalenessExposure = {
   contributions: 'unpriced',
   blend: 'unpriced',
   spending: 'unpriced',
+  ratedSpending: 'unpriced',
   workingYearTax: 'unpriced',
   workingYearCost: 'unpriced',
   pricedState: undefined,
@@ -116,6 +118,7 @@ const NO_OVERLAY: StalenessExposure = {
   contributions: 'unpriced',
   blend: 'unpriced',
   spending: 'unpriced',
+  ratedSpending: 'unpriced',
   workingYearTax: 'unpriced',
   workingYearCost: 'unpriced',
   pricedState: undefined,
@@ -134,6 +137,7 @@ const OVERLAY_NO_HEALTH: StalenessExposure = {
   contributions: 'unpriced',
   blend: 'unpriced',
   spending: 'unpriced',
+  ratedSpending: 'unpriced',
   workingYearTax: 'unpriced',
   workingYearCost: 'unpriced',
   pricedState: undefined,
@@ -147,6 +151,7 @@ const UNDECIDABLE: StalenessExposure = {
   contributions: 'unknown',
   blend: 'unknown',
   spending: 'unknown',
+  ratedSpending: 'unknown',
   workingYearTax: 'unknown',
   workingYearCost: 'unknown',
   pricedState: undefined,
@@ -456,6 +461,23 @@ describe('deriveStaleness — the healthcare clocks (U17 §S4: the exposure thre
     },
   )
 
+  // ── GAP 4's LEFTOVER (c): the price path's edition re-prices a spending line at its own rate ────────────────
+  it('part-b-trend NAMES the rated-spending line for a run that prices no Medicare but carries a line at its own rate', () => {
+    const moved = withStamp({ partBTrendVintage: 'part-b-trend-2025x' })
+    const rated = deriveStaleness(moved, TODAY, withRead(NO_OVERLAY, { ratedSpending: 'priced' }), ANSWERS_FRESH)
+    expect(rated.healthcare.movedClocks).toEqual(['part-b-trend'])
+    expect(rated.healthcare.ratedSpendingMoved).toBe(true)
+    expect(rated.healthcare.medicareMoved, 'no Medicare priced, so no Medicare line').toBe(false)
+    expect(rated.rulesMoved).toBe(true)
+    // Undecidable for the rated read, unpriced for Medicare: the nameless aggregate, never silence.
+    const undecided = deriveStaleness(moved, TODAY, withRead(NO_OVERLAY, { ratedSpending: 'unknown' }), ANSWERS_FRESH)
+    expect(undecided.unattributed.clocks).toEqual(['part-b-trend'])
+    expect(undecided.healthcare.ratedSpendingMoved).toBe(false)
+    // A Medicare clock that dates no price path stays silent on the same run.
+    const partB = withStamp({ partBStandardMonthly: hv.partBStandardMonthly + 10 })
+    expect(deriveStaleness(partB, TODAY, withRead(NO_OVERLAY, { ratedSpending: 'priced' }), ANSWERS_FRESH).healthcare.silencedClocks).toEqual(['part-b'])
+  })
+
   // ── THE 2028 IRMAA RE-INDEX, MODELLED (the F1 ruling's own witness) ───────────────────────
   it('THE TRIPWIRE SHAPE: the 2028 top-tier re-index — brackets re-pinned AND `topTierFrozenThrough` moved forward, exactly as `irmaaTopTierReindex.tripwire.test.ts:32-43` prescribes — NAMES the Medicare line for a Medicare-priced household', () => {
     // The whole point of the correction. Under the withdrawn "no engine reader ⇒ aggregate"
@@ -621,14 +643,15 @@ describe('deriveStaleness — every healthcare clock names exactly the families 
   }
 
   /** WHICH SENTENCE each clock is allowed to speak — the law, restated by hand. */
-  const FAMILY: Readonly<Record<HealthcareClock, { readonly aca: boolean; readonly medicare: boolean }>> = {
-    'coverage-year': { aca: true, medicare: true }, // "the ACA/IRMAA tables" (model.ts:3304)
-    'aca-status': { aca: true, medicare: false },
-    'fpl-guideline': { aca: true, medicare: false },
-    'irmaa-freeze': { aca: false, medicare: true }, // dates the IRMAA schedule (the F1 ruling)
-    'part-b': { aca: false, medicare: true },
-    'extras-typical': { aca: false, medicare: true },
-    'part-b-trend': { aca: false, medicare: true },
+  const FAMILY: Readonly<Record<HealthcareClock, { readonly aca: boolean; readonly medicare: boolean; readonly ratedSpending: boolean }>> = {
+    'coverage-year': { aca: true, medicare: true, ratedSpending: false }, // "the ACA/IRMAA tables" (model.ts:3304)
+    'aca-status': { aca: true, medicare: false, ratedSpending: false },
+    'fpl-guideline': { aca: true, medicare: false, ratedSpending: false },
+    'irmaa-freeze': { aca: false, medicare: true, ratedSpending: false }, // dates the IRMAA schedule (the F1 ruling)
+    'part-b': { aca: false, medicare: true, ratedSpending: false },
+    'extras-typical': { aca: false, medicare: true, ratedSpending: false },
+    // The trend table carries the price path a spending line at its own rate is divided by (gap 4's leftover (c)).
+    'part-b-trend': { aca: false, medicare: true, ratedSpending: true },
   }
 
   const CLOCKS = Object.keys(MUTATION) as readonly HealthcareClock[]
@@ -650,11 +673,12 @@ describe('deriveStaleness — every healthcare clock names exactly the families 
       expect(report.healthcare.movedClocks, `${clock}: fires, and alone`).toEqual([clock])
       expect(report.healthcare.acaMoved, `${clock}: the ACA line`).toBe(FAMILY[clock].aca)
       expect(report.healthcare.medicareMoved, `${clock}: the Medicare line`).toBe(FAMILY[clock].medicare)
+      expect(report.healthcare.ratedSpendingMoved, `${clock}: the rated-spending line`).toBe(FAMILY[clock].ratedSpending)
       expect(report.rulesMoved, `${clock}: a named clock raises the echo`).toBe(true)
       // THE SELF-CONTRADICTION KILL at the report level (its end-to-end twin, over the real
       // composer, is in `reentry.test.tsx`): a named clock ALWAYS has a family to speak through.
       expect(
-        report.healthcare.acaMoved || report.healthcare.medicareMoved,
+        report.healthcare.acaMoved || report.healthcare.medicareMoved || report.healthcare.ratedSpendingMoved,
         `${clock}: rulesMoved with no family boolean — an alarm nothing is allowed to explain`,
       ).toBe(true)
     },

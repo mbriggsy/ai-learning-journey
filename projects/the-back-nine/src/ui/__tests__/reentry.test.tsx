@@ -230,6 +230,21 @@ describe('composeReentry — the read-back', () => {
     expect(copy.stalenessMedicare).not.toBe(copy.stalenessAca)
   })
 
+  it('a new price-path edition speaks the rated-spending line where the run carries a line at its own rate, through the real producers (gap 4’s leftover (c))', () => {
+    const trendMoved = (s: CurrentScenario): CurrentScenario => ({
+      ...s,
+      healthcareVintage: { ...s.healthcareVintage!, partBTrendVintage: 'part-b-trend-2025x' },
+    })
+    const r = readySave('datefixed')
+    if (!r.ready) throw new Error('datefixed should be save-ready')
+    const fixed = trendMoved(r.scenario)
+    const view = composeReentry(fixed, reportFor(fixed, exposureForDraft(DEV_SEEDS.datefixed)), NO_SENTENCES)
+    expect(view.noteLines).toContain(copy.stalenessRatedSpending)
+    expect(view.noteLines, 'its Medicare is priced too, so both lines').toContain(copy.stalenessMedicare)
+    const plain = trendMoved(freshSave())
+    expect(composeReentry(plain, reportFor(plain), NO_SENTENCES).noteLines, 'no line at its own rate: Medicare’s alone').toEqual([copy.stalenessMedicare])
+  })
+
   it('the AGGREGATE is pushed AT MOST ONCE even when several unattributable clocks fire together (ReEntry keys each note <p> by its own TEXT — a second push collides on the React key)', () => {
     // THE ONE PLACE THIS FILE OVERRIDES A REAL EXPOSURE, and why: after the F-pass the aggregate's
     // only reachable-from-a-seed member is the BLEND clock, so no dev seed can put three clocks in

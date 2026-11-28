@@ -1518,6 +1518,7 @@ describe('the stale aged plant (the re-entry gate notes, exposure-gated)', () =>
       contributions: 'unpriced',
       blend: 'unpriced',
       spending: 'unpriced',
+      ratedSpending: 'unpriced',
       workingYearTax: 'unpriced',
       workingYearCost: 'unpriced',
       pricedState: undefined,

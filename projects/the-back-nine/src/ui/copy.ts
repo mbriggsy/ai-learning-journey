@@ -1848,6 +1848,10 @@ export const copy = {
   // carries the verdict.
   stalenessMedicare:
     'Medicare cost figures have been updated since your save — this reading uses today’s.',
+  // The price path's edition (`part-b-trend`), where the run prices a spending line at its own rate (gap 4's leftover
+  // (c)): such a line is measured against the expected rise in prices, so a new edition moves it. Shipped flagged.
+  stalenessRatedSpending:
+    'The expected rise in prices has been updated since your save. Spending lines that stay the same dollar amount or go up by their own percent are measured against it, so this reading uses today’s.',
   // U17 §S4 — narrowed to the CONTRIBUTION clock alone. The fund-data (blend) clause moved out
   // to the nameless aggregate below: `BLEND_SNAPSHOT_AS_OF` is one MAX date over the whole
   // ticker table, so it fires for a household holding none of the re-dated funds, and naming

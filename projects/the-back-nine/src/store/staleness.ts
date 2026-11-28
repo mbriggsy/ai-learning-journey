@@ -191,9 +191,10 @@ export type HealthcareClock =
   | 'extras-typical'
   | 'part-b-trend'
 
-/** The two priced healthcare rulebooks, each with its OWN exposure read and its OWN sentence.
- *  A clock may date one or both. */
-export type HealthcareFamily = 'aca' | 'medicare'
+/** The two priced healthcare rulebooks, each with its OWN exposure read and its OWN sentence, and the one non-health
+ *  reader of a healthcare table: `ratedSpending`, a spending line priced at its own rate, divided by the price path the
+ *  Medicare cost-trend table carries (gap 4's leftover (c)). A clock may date one or more. */
+export type HealthcareFamily = 'aca' | 'medicare' | 'ratedSpending'
 
 /**
  * WHICH PRICED TABLE(S) EACH CLOCK DATES — the ONE mapping, read by BOTH the bucketing and the
@@ -217,6 +218,9 @@ export type HealthcareFamily = 'aca' | 'medicare'
  *   · `irmaa-freeze` — dates the IRMAA schedule, which IS engine-read on every healthcare-priced
  *     run (see the header's ruling). Medicare, exactly like `part-b`.
  *   · `part-b` / `part-b-trend` / `extras-typical` — the Medicare cost figures.
+ *   · `part-b-trend` also dates `ratedSpending`: the trend table carries the price path (`cpiGrowth` reads
+ *     `medicareCostTrend`), and a spending line at its own rate is divided by that path's growth (`priceFrame.ts`), so a
+ *     new edition re-prices it on a run that prices no Medicare at all (the register's gap 4 leftover (c)).
  */
 const HEALTHCARE_CLOCK_FAMILIES: Readonly<
   Record<HealthcareClock, readonly [HealthcareFamily, ...HealthcareFamily[]]>
@@ -227,7 +231,7 @@ const HEALTHCARE_CLOCK_FAMILIES: Readonly<
   'irmaa-freeze': ['medicare'],
   'part-b': ['medicare'],
   'extras-typical': ['medicare'],
-  'part-b-trend': ['medicare'],
+  'part-b-trend': ['medicare', 'ratedSpending'],
 }
 
 /** A clock that fired but may only be spoken NAMELESSLY (bucket 3): the blend snapshot (whose
@@ -308,6 +312,10 @@ export interface StalenessExposure {
    *  ratio above 1 reads `'priced'`: refused when committed, yet a vault can carry one, and there the
    *  lean moves the spend the other way. An unbuildable draft reads `'unknown'` like every sibling. */
   readonly spending: ExposureRead
+  /** Does the run carry a spending line priced at its own rate (`ratedBudgetForRun` — the built params' compiled budget
+   *  holds a rated track)? Such a line is divided by the price path's growth, which the Medicare cost-trend table carries,
+   *  so `part-b-trend` dates it too. `'unpriced'` is a PROOF: no rated track, no reader of the path outside Medicare. */
+  readonly ratedSpending: ExposureRead
   /** Can the 2026-10-20 working-year tax floor move THIS run (`workingYearTaxForRun` — the engine's own
    *  `dateSearch.workingYearTaxReach` over every candidate the date search sweeps, on the no-death and
    *  every single-death timeline)? The ledger's ROW-LEVEL `reach: 'working-years'` read (v12): `'priced'`
@@ -472,6 +480,9 @@ export interface StalenessReport {
     readonly acaMoved: boolean
     /** The Medicare twin of {@link acaMoved}, off the same mapping. */
     readonly medicareMoved: boolean
+    /** The price path's edition moved (`part-b-trend`) AND the run prices a spending line at its own rate: its own line,
+     *  off the same mapping, so a run that prices no Medicare still hears why its answer moved. */
+    readonly ratedSpendingMoved: boolean
     /** Fired, but PROVEN unexposed ⇒ silenced (bucket 2). Carried for the test seam ONLY — it
      *  enters NEITHER predicate and NO copy. Without it a silence arm could pass because the
      *  fixture failed to move the stamp rather than because the gate bit (insight 029). */
@@ -724,7 +735,8 @@ export function deriveStaleness(
   const currentHealth = healthcareVintageStamp()
   const savedHealth = scenario.healthcareVintage
   /** Read the exposure governing one family — the ONE place a family maps to its read. */
-  const readFor = (f: HealthcareFamily): ExposureRead => (f === 'aca' ? exposure.aca : exposure.medicare)
+  const readFor = (f: HealthcareFamily): ExposureRead =>
+    f === 'aca' ? exposure.aca : f === 'medicare' ? exposure.medicare : exposure.ratedSpending
   /** Route one fired healthcare clock into its bucket, off the families it DATES. NAMED as soon
    *  as ONE dated family is priced (that family's line is true for them); SILENT only when EVERY
    *  dated family is proven unpriced (nothing it dates was consumed); AGGREGATE otherwise. The
@@ -782,7 +794,11 @@ export function deriveStaleness(
     // ITS "no exposure gate" COMMENT WAS FALSE and is swept here (U17 §S4, insight 087): the
     // trend schedule `partBPricingByT` is constructed ONLY under
     // `healthcareEnabled && config.taxEnabled` (`taxOverlay.ts:2152-2153`), so a run that built
-    // no healthcare overlay never constructs it and re-prices nothing under the new edition.
+    // no healthcare overlay never constructs it and re-prices no Medicare figure under the new edition.
+    // It can still re-price a spending line at its own rate (the trend table carries the price path
+    // `priceFrame.ts` divides by), which is why the clock dates `ratedSpending` too (gap 4's leftover (c)).
+    // The same path's reach into the tax thresholds on a tax-on, healthcare-off run is the register's
+    // open price-index entry (unreachable today: intake forces the quote pair).
     if (
       savedHealth.partBTrendVintage !== undefined &&
       savedHealth.partBTrendVintage !== currentHealth.partBTrendVintage
@@ -801,6 +817,7 @@ export function deriveStaleness(
     readFor(f) === 'priced' && movedClocks.some((c) => HEALTHCARE_CLOCK_FAMILIES[c].includes(f))
   const acaMoved = familyMoved('aca')
   const medicareMoved = familyMoved('medicare')
+  const ratedSpendingMoved = familyMoved('ratedSpending')
 
   const allRetired = scenario.people.every((p) => p.workStatus === 'retired')
 
@@ -952,6 +969,7 @@ export function deriveStaleness(
       movedClocks,
       acaMoved,
       medicareMoved,
+      ratedSpendingMoved,
       silencedClocks,
     },
     unattributed: { moved: unattributedMoved, clocks: unattributedClocks },

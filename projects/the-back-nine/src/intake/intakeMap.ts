@@ -1179,6 +1179,15 @@ export function survivorMedicalLeanForRun(d: ScenarioDraft): boolean {
   return params !== null && survivorMedicalLeanMoves(params)
 }
 
+/** "Does THIS run carry a spending line priced at its own rate?" — the built params' compiled budget holds a rated track
+ *  (gap 4's U4: a line that stays the same dollar amount or goes up by its own percent). Such a line is divided by the
+ *  price path's growth (`priceFrame.ts`'s `cpiGrowth`, which reads `medicareCostTrend`), so a new edition of that table
+ *  re-prices it even where no Medicare is priced (the register's gap 4 leftover (c)). Route-unioned like its siblings:
+ *  the compiled budget is Y-invariant and rides every swept candidate. */
+export function ratedBudgetForRun(d: ScenarioDraft): boolean {
+  return (builtRunParams(d)?.budget?.rated?.length ?? 0) > 0
+}
+
 /** "Can the 2026-10-20 working-year tax floor move THIS run?" — the engine-pricing ledger's ROW-LEVEL
  *  `reach: 'working-years'` read (ledger v12, both of its families) for U17 §S4's staleness gate. Each
  *  route walks its OWN producer through the engine's one predicate (insights 080/081 — never an age,

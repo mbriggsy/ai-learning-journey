@@ -52,6 +52,7 @@ describe('exposureForDraft — the SPINE route (both healthcare reads exact: one
       contributions: 'unpriced',
       blend: 'unpriced',
       spending: 'unpriced',
+      ratedSpending: 'unpriced',
       workingYearTax: 'unpriced',
       workingYearCost: 'unpriced',
       pricedState: undefined,
@@ -99,6 +100,15 @@ describe('exposureForDraft — the SPINE route (both healthcare reads exact: one
   })
 })
 
+describe('exposureForDraft — a spending line at its own rate (gap 4’s leftover (c))', () => {
+  it('reads the built run’s rated track on either route: a fixed-dollar or rising line is priced; none is a proof of unpriced', () => {
+    expect(exposureForDraft(DEV_SEEDS.datefixed).ratedSpending).toBe('priced')
+    expect(exposureForDraft(DEV_SEEDS.daterising).ratedSpending).toBe('priced')
+    expect(exposureForDraft(DEV_SEEDS.dip).ratedSpending, 'the same household with no rated line').toBe('unpriced')
+    expect(exposureForDraft(DEV_SEEDS.retired).ratedSpending).toBe('unpriced')
+  })
+})
+
 describe('exposureForDraft — THE AGE/OVERLAY DIVERGENCE (insight 080’s scar, made falsifiable)', () => {
   // All-65+ ages, positive spend, IRMAA seed present, and NO accounts / NO income / NO premium —
   // so `missingRequiredFacts` is empty (the spine route needs no account) while `buildOverlay`
@@ -123,6 +133,7 @@ describe('exposureForDraft — THE AGE/OVERLAY DIVERGENCE (insight 080’s scar,
       contributions: 'unpriced',
       blend: 'unpriced',
       spending: 'unpriced',
+      ratedSpending: 'unpriced',
       workingYearTax: 'unpriced',
       workingYearCost: 'unpriced',
       pricedState: undefined,
@@ -244,6 +255,7 @@ describe('exposureForDraft — no run at all', () => {
       contributions: 'unknown',
       blend: 'unknown',
       spending: 'unknown',
+      ratedSpending: 'unknown',
       workingYearTax: 'unknown',
       workingYearCost: 'unknown',
       pricedState: undefined,
@@ -477,7 +489,7 @@ describe('the SHIPPED consumer binds to this seam (source-bind, not replication)
     // Any of these appearing in the component means someone re-typed a decision that belongs to
     // the seam (the class that made the S0 verifier's `+ 3` survive 1096 green tests).
     expect(src, 'never a hand-written exposure literal in the component').not.toMatch(
-      /(aca|medicare|overlayBuilt|contributions|blend|spending|workingYearTax|workingYearCost)\s*:\s*'(priced|unpriced|unknown)'/,
+      /(aca|medicare|overlayBuilt|contributions|blend|spending|ratedSpending|workingYearTax|workingYearCost)\s*:\s*'(priced|unpriced|unknown)'/,
     )
   })
 })

@@ -137,11 +137,13 @@ import {
   type DepletionYear,
   type DrawdownPolicy,
   type FilingStatus,
+  INHERITED_LEFT_TO,
   type InheritedLedgerParams,
   type LedgerInheritedEntry,
   type LedgerBalances,
   type LedgerLoopRow,
   type LedgerWorkingYear,
+  type OneTimeInflowParams,
   type RetirementState,
 } from '@shared/model'
 
@@ -462,6 +464,14 @@ export interface TaxYearInputs {
    *  run in the year after the heir's death when it was left to someone else. Needs tax on (it throws
    *  otherwise). ABSENT ⇒ every term below is structurally absent: byte-identical (AE7). */
   readonly inheritedLedgers?: readonly InheritedLedgerParams[]
+  /** Gap 5's U2: one-time money in (`OverlayParams.oneTimeInflows`, passed through; KTD1 to KTD3, KTD12). PRESENT ⇒
+   *  each item whose calendar year is the loop's year adds its cash to the year-end taxable credit, at the same four
+   *  sites as build 2's left-over credit (`stepYear`'s contribution, the basis at full value, the taxable fold after
+   *  the growth scale, the knife-edge branch) and never to `contributionTotal`, which feeds the ACA empty-overlap
+   *  throw; a couple's one-person item left to someone else counts only while its heir is living; a year that runs
+   *  the money out forfeits it. Needs tax on (it throws otherwise). ABSENT ⇒ every site reads build 2's credit alone
+   *  and no row carries a one-time field: byte-identical. */
+  readonly oneTimeInflows?: readonly OneTimeInflowParams[]
   /** PROBE-ONLY — the pay check's observation hook ({@link WorkingYearProbe}); never set by product code. */
   readonly _workingYearProbe?: WorkingYearProbe
   // --- U6/U7 band fan: an OPTIONAL output sink (not an input). ABSENT ⇒ no observation, the
@@ -2327,6 +2337,10 @@ export function runTaxAwareDecumulation(
   const inheritedInput = taxInputs.inheritedLedgers
   const ledgers: InheritedLedgerRun[] | undefined =
     inheritedInput === undefined ? undefined : buildInheritedLedgers(inheritedInput, config, people, netWithdrawals.length)
+  // Gap 5's U2: the one-time money, checked once (validateParams twins every throw, so `simulate` returns the calm
+  // indeterminate instead). Absent ⇒ undefined, and no one-time code runs in the loop.
+  const oneTimeItems = taxInputs.oneTimeInflows
+  if (oneTimeItems !== undefined) checkOneTimeInflows(oneTimeItems, config, people)
 
   let buckets = initialBuckets
   let basis = initialTaxableBasis ?? 0
@@ -2406,7 +2420,9 @@ export function runTaxAwareDecumulation(
       (medicareOnsetSimYear !== undefined && household !== undefined) ||
       (medicareExtrasMonthly !== undefined && household !== undefined) ||
       // U12: an inherited ledger's heir-death exit reads the heir's canonical slot (the SIXTH consumer).
-      (ledgers !== undefined && household !== undefined)
+      (ledgers !== undefined && household !== undefined) ||
+      // Gap 5's U2: a one-person item's heir rule reads the heir's canonical slot too (the SEVENTH; KTD12).
+      (oneTimeItems !== undefined && household !== undefined)
     ) {
       alive = aliveCanonical(people, householdYears, t)
       const injected = householdYears[t]
@@ -2492,6 +2508,13 @@ export function runTaxAwareDecumulation(
     const inheritedThisYear =
       ledgers !== undefined && alive !== null && household !== undefined
         ? inheritedYearTerms(ledgers, alive, household.startCalendarYear + t, t)
+        : undefined
+    // Gap 5's U2 (KTD1, KTD12): the year's one-time money, each item by its calendar year, on a path still living in
+    // it (the loop ends at the last death). Composed here, folded at year end (KTD3's one local below); nothing in
+    // the year's tax, draw or MAGI reads it. Absent ⇒ undefined, and every year-end site reads build 2's credit alone.
+    const oneTimeThisYear =
+      oneTimeItems !== undefined && alive !== null && household !== undefined
+        ? oneTimeYearTerms(oneTimeItems, alive, household.startCalendarYear + t)
         : undefined
 
     // Roth conversion (M5): clamp to feasibility AFTER reserving the non-convertible RMD, using the
@@ -2945,6 +2968,13 @@ export function runTaxAwareDecumulation(
               rmdToTaxable: ledgerRmdToTaxable,
               contribution: ranOut ? { taxable: 0, pretax: 0, roth: 0, hsa: 0 } : { taxable: cTaxable, pretax: cPretaxTotal, roth: cRoth, hsa: cHsa },
               leftOverCredit: ranOut ? 0 : creditThisYear,
+              // Gap 5's U2 (KTD9): present only in a run carrying one-time money; forfeited (0 throughout) at a run-out.
+              ...(oneTimeThisYear !== undefined
+                ? {
+                    oneTimeIn: ranOut ? 0 : oneTimeThisYear.total,
+                    oneTimeInByItem: ranOut ? oneTimeThisYear.byItem.map(() => 0) : oneTimeThisYear.byItem,
+                  }
+                : {}),
               growthScale: ledgerScale,
               end: { taxable: buckets.taxable, pretax: buckets.pretax, roth: buckets.roth, hsa: buckets.hsa ?? 0 },
               ...(pretaxLedger && ledgerPretaxStart ? { pretaxEndByPerson: [...pretaxLedger] } : {}),
@@ -3013,14 +3043,21 @@ export function runTaxAwareDecumulation(
     // also feeds the ACA empty-overlap throw — and a depleted year forfeits it with the deposits.
     // U12: an inherited ledger left to someone else leaves the total in the year after the heir's death — an
     // outflow beside the year's spending, never spending and never anyone's income (`+` only when one exits).
+    // Gap 5's KTD3: the year's one-time money joins build 2's credit in ONE local that all four year-end sites read.
+    // With none this year it IS `creditThisYear` (the same number, read the same way at every site), so each site's
+    // expression is today's (insight 093). ⚑ Never folded into `contributionTotal` (the ACA empty-overlap throw reads
+    // it: an inheritance in a pre-65 ACA-priced year would make the run infeasible), nor into `leftOverCredit` or
+    // `probe.creditComposed`, which stay build 2's credit alone.
     const inheritedExit = inheritedThisYear?.exit ?? 0
+    const yearEndTaxableCash =
+      oneTimeThisYear !== undefined && oneTimeThisYear.total > 0 ? creditThisYear + oneTimeThisYear.total : creditThisYear
     const step = stepYear(
       state,
       rs,
       rb,
       inheritedExit > 0 ? grossWithdrawal + hsaSpendThisYear + inheritedExit : grossWithdrawal + hsaSpendThisYear,
       stockWeight,
-      creditThisYear > 0 ? contributionTotal + creditThisYear : contributionTotal,
+      yearEndTaxableCash > 0 ? contributionTotal + yearEndTaxableCash : contributionTotal,
     )
     state = step.state
     // Band fan (U6/U7): observe the post-step total — $0 exactly on the depletion year. Pure
@@ -3151,16 +3188,16 @@ export function runTaxAwareDecumulation(
       // U12: the paced cash moved to taxable is already-taxed money, so it enters at FULL basis, like the RMD excess.
       if (inheritedToTaxable > 0) basis += inheritedToTaxable
       // Build 2's left-over credit (site 2 of 4): after-tax pay, so it enters at FULL basis, after the
-      // pro-rata reduction, exactly as a taxable deposit does.
-      if (creditThisYear > 0) basis += creditThisYear
+      // pro-rata reduction, exactly as a taxable deposit does. Gap 5's one-time money rides it (after-tax cash).
+      if (yearEndTaxableCash > 0) basis += yearEndTaxableCash
 
       buckets = {
         // C2 §2c: each destination bucket takes its contribution AFTER the growth scale, at face
         // value (the end-of-year credit earns no arrival-year growth — the pinned conservative
         // convention; a before-the-scale fold would either grant phantom growth or smear the
         // inflow pro-rata across every bucket). `+ 0` exactly when nothing is contributed.
-        // Build 2's left-over credit (site 3 of 4) lands here too, after the scale, at face value.
-        taxable: creditThisYear > 0 ? taxablePost * scale + cTaxable + creditThisYear : taxablePost * scale + cTaxable,
+        // Build 2's left-over credit (site 3 of 4) lands here too, after the scale, at face value, with gap 5's money.
+        taxable: yearEndTaxableCash > 0 ? taxablePost * scale + cTaxable + yearEndTaxableCash : taxablePost * scale + cTaxable,
         pretax: pretaxPostScaled,
         roth: rothPost * scale + cRoth,
         // The MEDICAL-EARMARKED 4th bucket (U3 · M5): the year's qualified spend leaves it, then it
@@ -3179,8 +3216,8 @@ export function runTaxAwareDecumulation(
       // total by the whole contribution, not dust. With no contribution this is byte-identical
       // to the pre-C2 zeroing (EMPTY_BUCKETS / 0 / fill(0)).
       // Build 2's left-over credit (site 4 of 4): stepYear credited it into the state too, so the fresh
-      // buckets hold it in taxable at full basis — with or without a deposit this year.
-      basis = creditThisYear > 0 ? cTaxable + creditThisYear : cTaxable
+      // buckets hold it in taxable at full basis — with or without a deposit this year (gap 5's money with it).
+      basis = yearEndTaxableCash > 0 ? cTaxable + yearEndTaxableCash : cTaxable
       // U12: the fresh buckets hold only the year's inflows, so the inherited ledgers rebuild empty too.
       if (ledgers) for (const l of ledgers) l.balance = 0
       if (pretaxLedger) {
@@ -3194,10 +3231,10 @@ export function runTaxAwareDecumulation(
       }
       buckets =
         yearC === undefined
-          ? creditThisYear > 0
-            ? { taxable: creditThisYear, pretax: 0, roth: 0, hsa: 0 }
+          ? yearEndTaxableCash > 0
+            ? { taxable: yearEndTaxableCash, pretax: 0, roth: 0, hsa: 0 }
             : EMPTY_BUCKETS
-          : { taxable: creditThisYear > 0 ? cTaxable + creditThisYear : cTaxable, pretax: cPretaxTotal, roth: cRoth, hsa: cHsa }
+          : { taxable: yearEndTaxableCash > 0 ? cTaxable + yearEndTaxableCash : cTaxable, pretax: cPretaxTotal, roth: cRoth, hsa: cHsa }
     }
 
     // The year-by-year sink (U3): the funded year's row, once the ledgers are re-derived.
@@ -3215,6 +3252,71 @@ export function runTaxAwareDecumulation(
     totalTaxPaidReal,
     ...(ledgers ? { finalInherited: ledgers.reduce((acc, l) => acc + l.balance, 0) } : {}),
   }
+}
+
+// =========================================================================
+// One-time money in (gap 5's plan, `docs/plans/features/one-time-money-in-build-spec.md`: KTD1 to KTD3, KTD12)
+// =========================================================================
+
+/**
+ * The overlay's backstop for one-time money: `validateParams`' arm (`oneTimeInflowsRefusal` in `simulate.ts`), mirrored
+ * for a direct caller. Finiteness first (insight 010: a NaN amount would sail through every compare and poison the
+ * taxable bucket). The plan's horizon is not known here, so a year past a path's end is simply never reached (R6);
+ * a year before the first would never be reached either, and is refused instead, since no path could count it.
+ */
+function checkOneTimeInflows(items: readonly OneTimeInflowParams[], config: TaxOverlayConfig, people: readonly OverlayPerson[]): void {
+  if (!('household' in config) || !config.taxEnabled) {
+    throw new Error('[taxOverlay] one-time money needs tax on — it lands in the taxable account the overlay keeps (gap 5, KTD2)')
+  }
+  if (items.length === 0) {
+    throw new Error('[taxOverlay] one-time money is absent when the household has none, never an empty list (gap 5, KTD2)')
+  }
+  const start = config.household.startCalendarYear
+  items.forEach((item, i) => {
+    if (!Number.isInteger(item.year) || item.year < start) {
+      throw new Error(`[taxOverlay] one-time item ${i}: the year must be a whole calendar year from ${start} on (got ${item.year})`)
+    }
+    if (!(Number.isFinite(item.cashReal) && item.cashReal >= 0)) {
+      throw new Error(`[taxOverlay] one-time item ${i}: the cash must be finite and at least 0 (insight 010)`)
+    }
+    if ((item.heirIndex === undefined) !== (item.leftTo === undefined)) {
+      throw new Error(`[taxOverlay] one-time item ${i}: heirIndex and leftTo ride together (KTD12)`)
+    }
+    if (item.heirIndex !== undefined) {
+      if (people.length < 2) {
+        throw new Error(`[taxOverlay] one-time item ${i}: whose it is is asked for a couple only (KTD12)`)
+      }
+      if (!Number.isInteger(item.heirIndex) || people[item.heirIndex] === undefined) {
+        throw new Error(`[taxOverlay] one-time item ${i}: heirIndex ${item.heirIndex} is not one of the household’s people`)
+      }
+      if (!(INHERITED_LEFT_TO as readonly string[]).includes(item.leftTo!)) {
+        throw new Error(`[taxOverlay] one-time item ${i}: leftTo must be one of ${INHERITED_LEFT_TO.join(', ')}`)
+      }
+    }
+  })
+}
+
+/** One year's one-time money: the total credited at year end and each item's share of it (index-aligned). */
+interface OneTimeYearTerms {
+  readonly total: number
+  readonly byItem: readonly number[]
+}
+
+/**
+ * The year's one-time money (KTD1, KTD12). An item counts in its own calendar year; a couple's one-person item left to
+ * someone else counts only while its heir is living that year (living while `t < deathOffset`, the engine's rule:
+ * the year of the death counts), the inherited IRA exit's `alive[heirIndex]` read. Every other item counts while
+ * anyone is living, which every year the loop reaches is (a path ends at its last death).
+ */
+function oneTimeYearTerms(items: readonly OneTimeInflowParams[], alive: readonly boolean[], calendarYear: number): OneTimeYearTerms {
+  let total = 0
+  const byItem = items.map((item) => {
+    if (item.year !== calendarYear) return 0
+    if (item.leftTo === 'someone-else' && alive[item.heirIndex!] !== true) return 0
+    total += item.cashReal
+    return item.cashReal
+  })
+  return { total, byItem }
 }
 
 // =========================================================================

@@ -25,7 +25,7 @@ confidence fan cannot flag a wrong fixed rate either ([[050]]), so nothing furth
 ## Fix
 
 The plan names one unit, the fraction (0.05 means 5%), in each field's decision (KTD4 for `growthRate`, KTD7 for the
-loan's `interestRate`) and in the field's own docblock (`src/shared/model.ts:718-724`). The bounds live in one cited
+loan's `interestRate`) and in the field's own docblock (`src/shared/model.ts:744-750`). The bounds live in one cited
 module, `src/shared/spendingBounds.ts`, written as the literals `parsePercent` makes (`parsePercent('15') === 0.15`), and
 every check reads it: the codec, `validateBudgetItems` and the Living drawer. An end-to-end test types "5" into the
 drawer and follows it to the engine: saved as 0.05, priced at sim year 10 as 1.05^10 divided by prices' growth

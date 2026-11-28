@@ -50,6 +50,7 @@ import {
   type AccumulationParams,
   type CompiledBudget,
   type InheritedLedgerParams,
+  type OneTimeInflowParams,
   type OverlayParams,
   type BandFan,
   type BandFanYear,
@@ -1068,6 +1069,42 @@ function inheritedIrasRefusal(
   return null
 }
 
+/**
+ * Gap 5's U2 (KTD1, KTD2, KTD12): the R19 arm for one-time money in, the twin of every throw in the overlay's
+ * `checkOneTimeInflows`, so a bad item returns the calm indeterminate, never a mid-path throw. A year must fall from the
+ * plan's first calendar year through its last horizon year (a year outside never meets a path). The worker hands
+ * params over by structured clone, so each shape is checked before anything reads it. null when every item passes.
+ */
+function oneTimeInflowsRefusal(
+  items: readonly OneTimeInflowParams[],
+  o: OverlayParams,
+  params: SimulationParams,
+  finiteNonNeg: (x: number) => boolean,
+): string | null {
+  if (!Array.isArray(items)) return 'overlay oneTimeInflows must be a list'
+  if (items.length === 0) return 'overlay oneTimeInflows must be absent when the household has none (one OFF shape)'
+  if (!o.taxEnabled) return 'overlay oneTimeInflows need taxEnabled (the money lands in the taxable account the tax overlay keeps)'
+  const firstYear = o.startCalendarYear
+  const lastYear = firstYear + params.maxHorizonYears - 1
+  for (let i = 0; i < items.length; i++) {
+    const item: unknown = items[i]
+    const at = `overlay oneTimeInflows[${i}]`
+    if (typeof item !== 'object' || item === null) return `${at} shape invalid`
+    const it = item as OneTimeInflowParams
+    if (!Number.isInteger(it.year) || it.year < firstYear || it.year > lastYear)
+      return `${at} year must be a calendar year from ${firstYear} to ${lastYear} (the plan's first year through its horizon)`
+    if (!finiteNonNeg(it.cashReal)) return `${at} cashReal invalid`
+    if ((it.heirIndex === undefined) !== (it.leftTo === undefined)) return `${at} heirIndex and leftTo ride together`
+    if (it.heirIndex !== undefined) {
+      if (params.people.length < 2) return `${at} heirIndex and leftTo are for a couple only`
+      if (!Number.isInteger(it.heirIndex) || it.heirIndex < 0 || it.heirIndex >= params.people.length)
+        return `${at} heirIndex invalid (must index the household people)`
+      if (!(INHERITED_LEFT_TO as readonly string[]).includes(it.leftTo!)) return `${at} leftTo invalid`
+    }
+  }
+  return null
+}
+
 export function validateParams(params: SimulationParams): string | null {
   // Finite, ≥ 0, AND inside the engine's computable dollar domain (the upper bound is
   // what keeps every downstream compounding finite — see ENGINE_MAX_DOLLAR in engineDomain.ts; it
@@ -1239,6 +1276,10 @@ export function validateParams(params: SimulationParams): string | null {
     const inh = o.inheritedIras
     if (inh !== undefined) {
       const refused = inheritedIrasRefusal(inh, o, params, finiteNonNeg)
+      if (refused !== null) return refused
+    }
+    if (o.oneTimeInflows !== undefined) {
+      const refused = oneTimeInflowsRefusal(o.oneTimeInflows, o, params, finiteNonNeg)
       if (refused !== null) return refused
     }
     const bucketSum = portfolioTotal(b, inh?.map((l) => l.balance))
@@ -2349,6 +2390,9 @@ export function simulate(
           // The Act 5 plan's U12: the inherited IRAs' ledgers, spread ONLY when carried (absent ⇒ the
           // byte-identical taxInputs, AE7), inside `taxInputs` so the essentials-floor pass runs the SAME ledgers.
           ...(overlay.inheritedIras !== undefined ? { inheritedLedgers: overlay.inheritedIras } : {}),
+          // Gap 5's U2: the one-time money, spread ONLY when carried (absent ⇒ the byte-identical taxInputs), inside
+          // `taxInputs` so the essentials-floor pass credits the SAME money.
+          ...(overlay.oneTimeInflows !== undefined ? { oneTimeInflows: overlay.oneTimeInflows } : {}),
           ...(options?._workingYearProbe !== undefined ? { _workingYearProbe: options._workingYearProbe } : {}),
           ...(overlay.healthcareEnabled || overlay.accumulation ? { bridgeYearMask: bridgeMask } : {}),
           // U3 · M3 Slice 4 healthcare streams: spread ONLY when the overlay is enabled, so a

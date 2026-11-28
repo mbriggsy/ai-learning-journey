@@ -504,6 +504,28 @@ export interface InheritedLedgerParams {
   readonly leftTo?: InheritedLeftTo
 }
 
+/**
+ * One piece of one-time money in as the engine runs it (gap 5's plan, `docs/plans/features/one-time-money-in-build-
+ * spec.md`, KTD1 to KTD3 and KTD12; the saved form is {@link OneTimeInflow}). Its cash joins the taxable account at
+ * the END of its calendar year at full cost basis, through the same four year-end sites as build 2's left-over credit,
+ * on every path that is still funded and still living in that year: never income, never spending, never a deposit
+ * (`contributionTotal` feeds the ACA empty-overlap throw), and a year that runs the money out forfeits it.
+ */
+export interface OneTimeInflowParams {
+  /** The CALENDAR year the money arrives; the engine reads it as sim year `year − startCalendarYear` (KTD1), so
+   *  every stop the date search tests credits the same calendar year. */
+  readonly year: number
+  /** The money that joins the taxable account, in today's dollars: a gift's amount (U9 adds a home sale's kept
+   *  figure). At least $0. */
+  readonly cashReal: number
+  /** On a couple's plan only, for an item that is ONE person's: that person, an index into `people` (KTD12). Present
+   *  exactly when {@link leftTo} is; both absent for an item that is both people's and on a one-person plan. */
+  readonly heirIndex?: number
+  /** `'someone-else'`: the item counts only while {@link heirIndex} is living in its year (living while
+   *  `t < deathOffset`); `'other-member'`: it counts while anyone is. */
+  readonly leftTo?: InheritedLeftTo
+}
+
 /** The engine-side tax/accounts overlay input (U2). `taxEnabled` and `rmdEnabled` are INDEPENDENT
  *  switches (RMD is a forced-distribution mechanic, not a tax). `buckets` must sum to
  *  `initialPortfolio` (validated, R19); the >10yr-younger-spouse JLLS divisor (M6b·A) and the
@@ -648,6 +670,10 @@ export interface OverlayParams {
   /** One ledger per entered inherited IRA. Requires `taxEnabled` (R19). Their balances count in
    *  `initialPortfolio` beside `buckets` (the R19 sum gate reads both). */
   readonly inheritedIras?: readonly InheritedLedgerParams[]
+  // --- Gap 5's U2: one-time money in (KTD2). ABSENT ⇒ the byte-identical engine: every year-end site reads build 2's
+  //     credit alone, and no row carries a one-time field. Never an empty list (R19 refuses one). ---
+  /** One entry per inheritance or gift (U9 adds a home sale). Requires `taxEnabled` (R19). */
+  readonly oneTimeInflows?: readonly OneTimeInflowParams[]
 }
 
 // ---------------------------------------------------------------------------
@@ -863,6 +889,7 @@ export interface LedgerInheritedEntry {
  *  happened during year t, `start` is year t's opening and `end` its close. In a funded year each ledger
  *  reconciles by the loop's own arithmetic:
  *    taxable_end = (start − draw + rmdToTaxable + Σ inherited movedToTaxable) × growthScale + contribution + leftOverCredit
+ *                  + oneTimeIn (gap 5; present only in a run carrying one-time money)
  *    pretax_end  = (start − conversion − draw − rmdToTaxable) × growthScale + contribution
  *    roth_end    = (start + conversion − draw) × growthScale + contribution
  *    hsa_end     = (start − hsaSpend) × growthScale + contribution
@@ -896,6 +923,14 @@ export interface LedgerLoopRow {
   readonly contribution: LedgerBalances
   /** Build 2's left-over credit to taxable (0 when none). */
   readonly leftOverCredit: number
+  /** Gap 5's one-time money (KTD9): the year's total credited to taxable at year end, at full basis (0 in a year
+   *  with none, and in the year the money runs out, which forfeits it). PRESENT only when the run carries
+   *  `OverlayParams.oneTimeInflows`, so a run without any keeps its row shape byte for byte. */
+  readonly oneTimeIn?: number
+  /** Each item's share of {@link oneTimeIn}, index-aligned with `OverlayParams.oneTimeInflows` (the drill names an
+   *  item by it): 0 for an item of another year, an item whose heir has died (KTD12), and every item in the year
+   *  the money runs out, so the drill never names money the run did not count. Present with `oneTimeIn`. */
+  readonly oneTimeInByItem?: readonly number[]
   /** The one shared growth factor the year applied to every ledger's after-withdrawal balance. */
   readonly growthScale: number
   readonly end: LedgerBalances
@@ -1203,7 +1238,7 @@ export interface TaxAwareDistribution {
    *  concentrates in the pre-65 ACA years and may barely move the portfolio median. */
   readonly lifetimeNetPremiumReal: readonly number[]
   /** Σ Medicare cost actually paid across the path's funded years (real $; base Part B + IRMAA +
-   *  the Part D / Medigap / MA extras, per enrolled person — `taxOverlay.ts:3050`; P3·U11), an
+   *  the Part D / Medigap / MA extras, per enrolled person — `taxOverlay.ts:3087`; P3·U11), an
    *  addend of the pay-less-tax all-in cost. Same accrual rule as its siblings. */
   readonly lifetimeMedicareCostReal: readonly number[]
   /** The inherited IRAs' summed balance at the path's horizon end (real $; the Act 5 plan's U12) — counted

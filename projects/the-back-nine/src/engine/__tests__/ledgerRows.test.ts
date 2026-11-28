@@ -104,7 +104,7 @@ const dateRows = (key: keyof typeof DEV_SEEDS, saved: number | undefined, offset
 /** A ledger's flows reconcile into its close (the loop's own arithmetic; `LedgerLoopRow`'s docblock). */
 const expectReconciles = (r: LedgerYearRow) => {
   const g = r.growthScale
-  expect(Math.abs((r.start.taxable - r.draw.taxable + r.rmdToTaxable) * g + r.contribution.taxable + r.leftOverCredit - r.end.taxable), `taxable t=${r.t}`).toBeLessThan(GRAIN)
+  expect(Math.abs((r.start.taxable - r.draw.taxable + r.rmdToTaxable) * g + r.contribution.taxable + r.leftOverCredit + (r.oneTimeIn ?? 0) - r.end.taxable), `taxable t=${r.t}`).toBeLessThan(GRAIN)
   expect(Math.abs((r.start.pretax - r.conversion - r.draw.pretax - r.rmdToTaxable) * g + r.contribution.pretax - r.end.pretax), `pretax t=${r.t}`).toBeLessThan(GRAIN)
   expect(Math.abs((r.start.roth + r.conversion - r.draw.roth) * g + r.contribution.roth - r.end.roth), `roth t=${r.t}`).toBeLessThan(GRAIN)
   expect(Math.abs((r.start.hsa - r.hsaSpend) * g + r.contribution.hsa - r.end.hsa), `hsa t=${r.t}`).toBeLessThan(GRAIN)
@@ -157,6 +157,17 @@ describe('the ledger sink', () => {
     expect(capped[0]!.leftOverCredit).toBe(5_000)
     expect(capped[0]!.incomeNotKept).toBe(11_985)
     expectReconciles(capped[0]!)
+  })
+
+  it('reconciles a year with one-time money in its own term, and chains it into the next year (gap 5’s U2, KTD9)', () => {
+    const base = world()
+    const params: SimulationParams = { ...base, overlay: { ...base.overlay!, oneTimeInflows: [{ year: 2028, cashReal: 75_000 }] } }
+    const rows = rowsOf(params)
+    expect(rows[2]!.oneTimeIn).toBe(75_000)
+    expect(rows[2]!.oneTimeInByItem).toEqual([75_000])
+    expect(rows.filter((r) => r.t !== 2).every((r) => r.oneTimeIn === 0)).toBe(true)
+    for (const r of rows) if (!r.ranOut) expectReconciles(r)
+    for (let k = 1; k < rows.length; k++) expect(rows[k]!.start).toStrictEqual(rows[k - 1]!.end)
   })
 
   it('chains each row’s close into the next row’s opening, ledger by ledger', () => {

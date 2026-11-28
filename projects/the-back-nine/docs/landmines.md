@@ -61,6 +61,11 @@ working tree untouched; `fsck` proves nothing else was hit.
 
 ## Windows and the shell
 
+- **(b9-15, 11-27) The Edit tool writes a `\u00a0` typed in its replacement as the literal no-break character, not the
+  six-letter escape.** `trayLineEvery`'s "every\u00a05\u00a0years" landed as U+00A0 bytes in `src/ui/copy.ts` and its test,
+  so ESLint's `no-irregular-whitespace` redded CI's quick job on `653aee4e` (fixed in `004df90f`); a Python heredoc
+  carrying the same escape was refused by Claude Code's removal check. Write such an escape through a script FILE (a
+  `.py` in the scratchpad, `'\\u00a0'` in its source), then `grep -c $'\xc2\xa0' <file>` must read 0.
 - **(b9-7, 11-24; re-read b9-9, 11-25) `src/ui/shell/__tests__/Shell.test.tsx` and `copyGuard.test.ts` are CRLF
   throughout** (`Shell.test.tsx` was mixed, CRLF with a 59-line LF tail, until a later commit made it whole: 565 of 565
   lines at `48dbb7c1`, counted as CR bytes). An edit tool or script can flip a whole file's endings, so keep added lines
@@ -642,6 +647,11 @@ said squeaky clears `temp/` UNCONDITIONALLY; its step 4 now deletes only the clo
 
 ## Citations and the doc gates
 
+- **(b9-15, 11-27) `pnpm doc:reanchor <BASE> --apply` a second time against the same base shifts every citation twice.**
+  It maps each cited line through the diff BASE → tree, so after one apply the docs already hold the new numbers and a
+  second pass moves them again (its dry run printed the first apply's count, 72, unchanged). An edit made after the
+  apply that adds or removes a line in a cited file needs `--only-missed`, or keep that file's line count (b9-15 folded a
+  two-line comment back to one); check one moved citation by its text against `git show <BASE>:<file>`.
 - **(b9-12, 11-27) `scripts/check-citation-pairs.mjs` reads ONE code file per run, and crashes on a file no doc cites.**
   It takes `<BASE> <code file>` and ignores any further argument, so b9-12's first run over two moved files checked only
   the first. And where no tracked doc cites the file by line, its `git grep` exits 1 and the script throws (a Node stack,

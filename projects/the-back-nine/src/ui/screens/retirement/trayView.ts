@@ -472,6 +472,23 @@ export function drawerLine(
   }
 }
 
+/**
+ * The line an amount typed in a line row replaces with (gap 4's review, leftover (b)). The row's label speaks the LIVE
+ * plan line's repeat ("dollars each time, every 4 years"), so the figure is typed for that repeat: the replace takes it,
+ * and for a line that repeats the live start too (it sets the years charged, and a typed amount is the same at any
+ * start), so a kept what-if refused for either (`line-repeat-changed`, `line-start-changed`) runs once a figure is
+ * typed. Every other field is the shown line's (the kept replace, else the plan line). The kind picker's write keeps
+ * the stored repeat: an old amount nobody retyped under a new repeat is KTD13's rosy case.
+ */
+export function lineAmountLine(line: WhatIfBudgetLineV6, shown: WhatIfBudgetLineV6, amount: number): WhatIfBudgetLineV6 {
+  const { everyYears: _stored, ...rest } = shown
+  return {
+    ...rest,
+    ...(line.everyYears !== undefined ? { everyYears: line.everyYears, startYear: line.startYear } : {}),
+    annualAmountReal: amount,
+  }
+}
+
 /** A budget line changed to `next`: a replace, or none when it is the plan's line again. */
 export function lineCommit(line: WhatIfBudgetLineV6, next: WhatIfBudgetLineV6): WhatIfLeverV6 | null {
   return sameLine(next, line) ? null : { kind: 'spending', op: 'replace', line: next }

@@ -14,6 +14,7 @@ import {
   claimCommit,
   depositCommit,
   employerCommit,
+  lineAmountLine,
   lineCommit,
   addedLineWords,
   drawerLine,
@@ -123,6 +124,21 @@ describe('a line that repeats or changes at its own rate, carried (gap 4’s U9;
     // review of gap 4's line half: the arm above compared two identical lines and pinned nothing).
     expect(lineCommit(rated, { ...rated, growthRate: 0.07, everyYears: 3 })).toBeNull()
     expect(lineCommit({ ...car, growthRate: 0 }, car)).toBeNull()
+  })
+
+  it('an amount typed in the row takes the plan line’s repeat, and its start where it repeats; the rest is the shown line’s (gap 4’s leftover (b))', () => {
+    const live = { ...car, everyYears: 4, startYear: 1 }
+    const kept = { ...car, growthRate: 0.03, tier: 'discretionary' as const, startYear: 3, endYear: 20 }
+    expect(lineAmountLine(live, kept, 35_000)).toEqual({ ...kept, everyYears: 4, startYear: 1, annualAmountReal: 35_000 })
+    // A plan line that no longer repeats: the repeat goes, and the stored window stays (gap 2's stale window, phase moot).
+    const { everyYears: _gone, ...flat } = live
+    const got = lineAmountLine(flat, kept, 35_000)
+    expect('everyYears' in got).toBe(false)
+    expect(got.startYear).toBe(3)
+    expect(got.endYear).toBe(20)
+    // A plan line that never repeated, under a replace that never did: only the amount moves.
+    const { everyYears: _none, ...plain } = car
+    expect(lineAmountLine(plain, { ...plain, startYear: 2 }, 9_000)).toEqual({ ...plain, startYear: 2, annualAmountReal: 9_000 })
   })
 
   it('an added line that repeats reads "$40,000 every 5 years" on its row too; one without reads "a year"', () => {

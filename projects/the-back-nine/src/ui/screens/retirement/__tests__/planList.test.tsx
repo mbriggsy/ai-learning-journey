@@ -600,3 +600,47 @@ describe('insight 159: a reopened kept what-if, edited and put back while its ru
     expect(leftTitle(), 'back at its kept bundle: kept, not changed').toBe('Spend less')
   })
 })
+
+describe('a kept what-if refused for its line’s repeat or start, then a new amount typed in the tray (gap 4’s leftover (b))', () => {
+  // `budget`'s retired household with a car bought now and every 4 years in its plan; the kept what-if was kept when the
+  // car came every 5 years (or started 2 years on), so it is refused by name. The row's label speaks the plan's repeat,
+  // so a figure typed there is a figure for that repeat: the replace takes the plan line's repeat and, for a line that
+  // repeats, its start, and Refresh runs it. Loaded from the plan list, never edited in place (the unit suite's landmine:
+  // the tray reads the answered draft).
+  const car = { id: 'line-car', category: 'transportation', label: 'A new car', annualAmountReal: 30_000, tier: 'essentials', startYear: 0, everyYears: 4 } as const
+  const base: ScenarioDraft = {
+    ...DEV_SEEDS.budget,
+    budget: [...DEV_SEEDS.budget.budget!, car],
+    annualSpendingReal: DEV_SEEDS.budget.annualSpendingReal! + car.annualAmountReal,
+  }
+  const cases = [
+    { what: 'repeat', stored: { ...car, everyYears: 5, annualAmountReal: 25_000 }, refusal: copy.workbenchRailRefusedLineRepeat },
+    { what: 'start', stored: { ...car, startYear: 2, annualAmountReal: 25_000 }, refusal: copy.workbenchRailRefusedLineStart },
+  ] as const
+
+  for (const c of cases) {
+    it(`refused for its ${c.what}: an amount typed in the row clears the refusal, and Refresh runs the plan line’s repeat and start`, async () => {
+      const user = userEvent.setup()
+      const kept: KeptWhatIfV6 = { id: 'kept-car', name: 'A cheaper car', levers: [{ kind: 'spending', op: 'replace', line: c.stored }] }
+      const { left } = mount({ kept: [kept], base })
+      await pick(user, copy.probabilityPickerLabel, 'A cheaper car')
+      expect(left.many.request, 'refused: nothing runs').not.toHaveBeenCalled()
+      expect(document.querySelector('[data-half="alternative"] [data-half-status]')!.textContent).toBe(c.refusal)
+      fireEvent.click(screen.getByRole('button', { name: copy.trayHandle }))
+      const tray = document.getElementById('b9-action-items') as HTMLElement
+      const field = within(tray)
+        .getAllByLabelText(slots.workbenchRailLineAmountEvery('A new car', 4))
+        .find((el) => el instanceof HTMLInputElement && el.type === 'text')!
+      act(() => field.focus())
+      fireEvent.change(field, { target: { value: '28,000' } })
+      act(() => field.blur())
+      fireEvent.click(within(tray).getByRole('button', { name: copy.trayRefresh }))
+      await waitFor(() => expect(left.many.request).toHaveBeenCalledTimes(1))
+      const run = left.many.request.mock.calls[0]![0]
+      // The run's budget carries the car at the typed figure on the plan's repeat and start: $28,000 in years 0, 4, 8.
+      const b = run.params.budget!
+      const level = (k: number) => (b.sticky[k] ?? 0) + (b.scalableEssentials[k] ?? 0) + (b.discretionary[k] ?? 0)
+      expect([0, 2, 4, 5, 8].map((k) => Math.round(level(k) - level(1)))).toEqual([28_000, 0, 28_000, 0, 28_000])
+    })
+  }
+})

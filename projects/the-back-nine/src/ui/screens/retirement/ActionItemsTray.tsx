@@ -36,6 +36,7 @@ import {
   claimCommit,
   depositCommit,
   employerCommit,
+  lineAmountLine,
   lineCommit,
   addedLineWords,
   drawerLine,
@@ -536,7 +537,7 @@ function Row({ row, set, draft, anchor, wallCalendarYear, pending, awaiting, onA
                 changed={lever?.kind === 'spending' && lever.op === 'replace' && lever.line.annualAmountReal !== c.line.annualAmountReal}
                 invalidMessage={copy.errBudgetAmountNonFinite}
                 className={WIDE_BOX}
-                onCommit={(v) => write({ ...c.shown, annualAmountReal: v ?? c.line.annualAmountReal })}
+                onCommit={(v) => write(lineAmountLine(c.line, c.shown, v ?? c.line.annualAmountReal))}
               />
               {/* The line's kind, or taken out of this what-if: one picker, so the row holds two controls at the tray's width. */}
               <Select<BudgetTier | 'out'>

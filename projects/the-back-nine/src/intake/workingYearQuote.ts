@@ -102,6 +102,15 @@ export interface WorkingYearQuote {
   readonly countsRated: boolean
 }
 
+/** Is the budget quote's figure no year's own total after work stops? It counts a repeat at its yearly average (KTD5) or
+ *  a line that changes at its own rate at its plan-first-year price (KTD4), which the engine charges at its price in the
+ *  year work stops. Then no sentence calls it "your budget's first year after work stops": the quote's lead
+ *  (`quoteLine`) and the below-notes (`workingCostBelowBudget`, `workingCostTypedBelowCountsBudget`) read this one
+ *  predicate (the line half's review, round 2; the leftovers entry's (d)). */
+export function quoteIsAveraged(quote: Pick<WorkingYearQuote, 'repeats' | 'countsRated'>): boolean {
+  return quote.repeats.length > 0 || quote.countsRated
+}
+
 /** Is a budget line a retirement-only splurge the quote leaves out? A discretionary line that ends,
  *  or starts after the budget's first year. */
 export function leftOutOfQuote(item: BudgetLineItem): boolean {
@@ -472,7 +481,7 @@ export function stateTaxBelongsInW(d: ScenarioDraft): boolean {
  *  stale and its note says so (`heldYesBelowQuote`). Never a block (D7): the face prints a calm note. */
 export function workingYearCostTypedBelowQuote(
   d: ScenarioDraft,
-): { readonly typed: string; readonly quote: string; readonly source: WorkingYearQuote['source'] } | null {
+): { readonly typed: string; readonly quote: string; readonly source: WorkingYearQuote['source']; readonly averaged: boolean } | null {
   const w = d.workingYearCost
   if (w?.kind !== 'entered' || w.keptOverQuoteReal !== undefined) return null
   const quote = workingYearQuote(d)
@@ -481,7 +490,7 @@ export function workingYearCostTypedBelowQuote(
   // two identical figures printed as one under the other (the round review's P0).
   if (!(quote.annualReal > 0 && roundCents(w.amountReal) < quote.annualReal)) return null
   const [typed, quoted] = formatMoneyPair(w.amountReal, quote.annualReal)
-  return { typed, quote: quoted, source: quote.source }
+  return { typed, quote: quoted, source: quote.source, averaged: quoteIsAveraged(quote) }
 }
 
 /** The W step gate's message (`working-cost-unanswered`, sanity.ts; the U11 Caddie walk's (ad)), read off the

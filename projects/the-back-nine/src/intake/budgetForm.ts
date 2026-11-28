@@ -9,7 +9,7 @@ import { copy, slots, type CopyKey } from '@ui/copy'
 import type { BudgetLineItem as BudgetLine } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
 import { growthRateInRange } from '@shared/spendingBounds'
-import { isActiveAt, isRampedBudget, repeatsOnAtYearZero, type BudgetItemError, type BudgetValidation } from '@budget/budgetModel'
+import { budgetGoverns, isActiveAt, isRampedBudget, repeatsOnAtYearZero, type BudgetItemError, type BudgetValidation } from '@budget/budgetModel'
 import { anchorTarget } from '@budget/budgetToSpending'
 import { formatMoney } from './moneyFormat'
 import { medicalExceedsTotal } from './budgetChecks'
@@ -96,7 +96,10 @@ export function rateReadBack(line: BudgetLine, startCalendarYear: number): strin
  * year `t` (the date route's first year after work stops, the band's own crowned offset): each such line on in year 0
  * costs its typed amount × (the run's factor at `t` − 1) more, through `ratedLineFactor`, the run's own figure. Exactly 0
  * with no rated line on in year 0, or at t = 0. The year-0 reconcilers stay on typed amounts (gap 4's KTD6); only a
- * sentence that names the first retired year's spending reads this.
+ * sentence that names the first retired year's spending reads this, and the repeat it names beside it is priced at the
+ * same `t` (`firstYearRepeatOf`'s `at`). A sentence with no crowned offset to price at never calls a typed figure the
+ * first retired year's while a rated line is on in year 0 (`hasRatedLineAtYearZero`). Routes by the compile's own tests:
+ * a rated line is one carrying a valid `growthRate` (intakeMap's rated tracks), and essentials ≡ not discretionary.
  */
 export function ratedLevelShiftAt(items: readonly BudgetLine[], startCalendarYear: number, t: number): { full: number; essentials: number } {
   let full = 0
@@ -109,6 +112,15 @@ export function ratedLevelShiftAt(items: readonly BudgetLine[], startCalendarYea
     if (line.tier === 'essentials') essentials += extra
   }
   return { full, essentials }
+}
+
+/** Is a line that changes at its own rate on in year 0 (the lines `ratedLevelShiftAt` prices)? Then a typed year-0 figure
+ *  is not the first retired year's cost on the date route, wherever the stop falls after the plan's first year. */
+export function hasRatedLineAtYearZero(items: readonly BudgetLine[] | undefined): boolean {
+  return (items ?? []).some((line) => {
+    const g = line.growthRate
+    return g !== undefined && Number.isFinite(g) && growthRateInRange(g) && Number.isFinite(line.annualAmountReal) && isActiveAt(line, 0)
+  })
 }
 
 /** How many charge years the repeat's read-back names before "and so on". */
@@ -140,16 +152,29 @@ export interface FirstYearRepeat {
   readonly everyYears: number
   readonly more: number
 }
-export function firstYearRepeatOf(items: readonly BudgetLine[] | undefined): FirstYearRepeat | null {
+
+/** The sim year a sentence prices its first year at, where that is not the plan's own first year: the date route's fan
+ *  note, at the band's crowned offset (`ratedLevelShiftAt`'s `t`). Without one the cost is the typed amount (t = 0). */
+export interface RepeatPricedAt {
+  readonly startCalendarYear: number
+  readonly t: number
+}
+
+/** `at`: a repeat that changes at its own rate is named at its cost in that sim year, through the run's own factor, so the
+ *  sentence agrees with the level it sits beside (the fan note's full figure holds the line at that price: the line
+ *  half's review, round 2). Every other caller names the typed amount, the plan's first-year price. */
+export function firstYearRepeatOf(items: readonly BudgetLine[] | undefined, at?: RepeatPricedAt): FirstYearRepeat | null {
   const repeats = repeatsOnAtYearZero(items ?? [])
   const first = repeats[0]
   if (first === undefined || first.everyYears === undefined) return null
-  return { name: lineDisplayName(first), amount: formatMoney(first.annualAmountReal), everyYears: first.everyYears, more: repeats.length - 1 }
+  const g = first.growthRate
+  const factor = at !== undefined && g !== undefined && Number.isFinite(g) && growthRateInRange(g) ? ratedLineFactor(g, at.startCalendarYear, at.t) : 1
+  return { name: lineDisplayName(first), amount: formatMoney(first.annualAmountReal * factor), everyYears: first.everyYears, more: repeats.length - 1 }
 }
 
 /** The year-0 figures' words with a repeat charged in the first year: "in your first year", and the repeat named. */
-export function firstYearRepeatNote(items: readonly BudgetLine[] | undefined): string | null {
-  const r = firstYearRepeatOf(items)
+export function firstYearRepeatNote(items: readonly BudgetLine[] | undefined, at?: RepeatPricedAt): string | null {
+  const r = firstYearRepeatOf(items, at)
   return r === null ? null : slots.budgetRepeatInFirstYear(r.name, r.amount, r.everyYears, r.more)
 }
 
@@ -172,9 +197,13 @@ export function budgetReadout(draft: ScenarioDraft, items: readonly BudgetLine[]
   const M = draft.health.oopMedicalAnnual
   const out: ReadoutLine[] = []
   // A repeat charged in the first year makes every year-0 figure here that year's, never "a year" (gap 4's U8 and its review).
+  // The anchor and the lines' share describe S, which the SAVED budget reconciled, so their words follow the saved lines;
+  // the running total, the split and the repeat sentence describe the staged lines and follow those (round 2: a saved car
+  // removed mid-edit left "$118,000 a year" over an S that charges it in the first year only).
   const repeatNote = firstYearRepeatNote(items)
-  const lead = repeatNote === null ? slots.budgetAnchorLead : slots.budgetAnchorLeadFirstYear
-  const target = repeatNote === null ? slots.budgetLinesTarget : slots.budgetLinesTargetFirstYear
+  const anchorRepeats = budgetGoverns(draft.budget) && firstYearRepeatOf(draft.budget) !== null
+  const lead = anchorRepeats ? slots.budgetAnchorLeadFirstYear : slots.budgetAnchorLead
+  const target = anchorRepeats ? slots.budgetLinesTargetFirstYear : slots.budgetLinesTarget
   if (S !== undefined) out.push({ text: lead(formatMoney(S)), muted: false })
   if (S !== undefined && M !== undefined && M > 0) {
     out.push({ text: slots.budgetMedicalCarried(formatMoney(M)), muted: true })
@@ -187,7 +216,7 @@ export function budgetReadout(draft: ScenarioDraft, items: readonly BudgetLine[]
   const running = items.reduce((sum, it) => (valued(it) ? sum + it.annualAmountReal : sum), 0)
   const essentialsAt0 = items.reduce((sum, it) => (it.tier === 'essentials' && valued(it) ? sum + it.annualAmountReal : sum), 0)
   if (items.some((it) => Number.isFinite(it.annualAmountReal))) {
-    const total =repeatNote === null ? slots.budgetRunningTotal : slots.budgetRunningTotalFirstYear
+    const total = repeatNote === null ? slots.budgetRunningTotal : slots.budgetRunningTotalFirstYear
     const split = repeatNote === null ? slots.budgetTierSplit : slots.budgetTierSplitFirstYear
     out.push({ text: total(formatMoney(running)), muted: false })
     out.push({ text: split(formatMoney(essentialsAt0), formatMoney(running - essentialsAt0)), muted: false })

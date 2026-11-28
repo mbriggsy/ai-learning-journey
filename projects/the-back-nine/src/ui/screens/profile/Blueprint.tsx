@@ -101,7 +101,7 @@ function Tile({ tile, selected, onOpen, edge = 'left' }: TileProps) {
         {tile.name}
       </span>
       {tile.value !== undefined ? (
-        <span className="text-body font-semibold break-words text-stone-900 tabular-nums" data-bp-value="">
+        <span className="text-body font-semibold break-words text-pretty text-stone-900 tabular-nums" data-bp-value="">
           {tile.value}
         </span>
       ) : null}

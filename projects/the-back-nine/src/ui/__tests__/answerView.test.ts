@@ -623,4 +623,56 @@ describe('selectElevatedAnswer — the spending levels with a repeat in the firs
     expect(rising.view.spendLevels?.essentials, 'Living is an essential').toBeCloseTo(plain.view.spendLevels!.essentials + extra, 6)
     expect(extra, '[test setup] about $1,700 more').toBeGreaterThan(1_600)
   })
+
+  // Round 2 of the line half's review. Every figure hand-derived from the index's near-term 3.2 % (2027 on), never through
+  // `ratedLineFactor`. A split answer: the floor crowns at `floorAt`, the lifestyle (and the band) at `bandAt`.
+  const splitAt = (floorAt: number, bandAt: number): ModelAnswer => {
+    const a = datesAnswer(confirmedAt(bandAt), dateBandTo(40, bandAt))
+    if (a.kind !== 'date' || a.outcome.kind !== 'dates') throw new Error('[test setup] a dates answer')
+    return { ...a, outcome: { ...a.outcome, floor: confirmedAt(floorAt) } }
+  }
+  const levelsOf = (d: ScenarioDraft, answer: ModelAnswer) => {
+    const r = selectElevatedAnswer(answeredAt(answer, d, d), noop)
+    if (r.kind !== 'date' || r.view.kind !== 'dates') throw new Error('expected a date dates view')
+    return r.view
+  }
+  const withLine = (d: ScenarioDraft, label: string, patch: Partial<NonNullable<ScenarioDraft['budget']>[number]>): ScenarioDraft => ({
+    ...d,
+    budget: d.budget!.map((l) => (l.label === label ? { ...l, ...patch } : l)),
+  })
+
+  it('a rated repeat charged in the first year is named at its price at the band’s offset, the same price the full figure holds: $40,000 × 1.05^6 ÷ 1.032^6 = $44,373; $40,000 ÷ 1.032^6 = $33,112 for one that stays the same dollar amount', () => {
+    const rising = withLine(DEV_SEEDS.daterepeat, 'A new car', { growthRate: 0.05 })
+    const v = levelsOf(rising, datesAnswer(confirmedAt(6), dateBandTo(40, 6)))
+    expect(v.spendLevels?.firstYearRepeat).toBe(slots.budgetRepeatInFirstYear('A new car', '44,373', 5, 0))
+    expect(v.spendLevels?.full, 'the full figure holds the car at the same price').toBeCloseTo(118_000 + 4_372.878436648, 4)
+    const fixed = withLine(DEV_SEEDS.daterepeat, 'A new car', { growthRate: 0, endYear: 12 })
+    expect(levelsOf(fixed, datesAnswer(confirmedAt(6), dateBandTo(40, 6))).spendLevels?.firstYearRepeat).toBe(slots.budgetRepeatInFirstYear('A new car', '33,112', 5, 0))
+    expect(levelsOf(DEV_SEEDS.daterepeat, datesAnswer(confirmedAt(6), dateBandTo(40, 6))).spendLevels?.firstYearRepeat, 'a car that goes up with prices keeps its typed price').toBe(
+      slots.budgetRepeatInFirstYear('A new car', '40,000', 5, 0),
+    )
+  })
+
+  it('the shift prices only rated lines on in year 0, splits by tier, and reads the band’s offset, not the floor’s', () => {
+    // A rated EXTRA: the full figure moves by 42,000 × (1.08^6 ÷ 1.032^6 − 1) = $13,171.35; the essentials never do.
+    const extra = levelsOf(withLine(DEV_SEEDS.dip, 'Go-go years', { growthRate: 0.08 }), datesAnswer(confirmedAt(6), dateBandTo(40, 6))).spendLevels!
+    expect(extra.full).toBeCloseTo(78_000 + 13_171.353637911, 4)
+    expect(extra.essentials, 'an extra is never in the essentials').toBe(36_000)
+    // A rated line starting in year 2 is in no year-0 total, so nothing moves.
+    const later = levelsOf(withLine(DEV_SEEDS.dip, 'Living', { growthRate: 0.05, startYear: 2 }), datesAnswer(confirmedAt(6), dateBandTo(40, 6))).spendLevels!
+    expect(later.full).toBe(62_000)
+    expect(later.essentials).toBe(20_000)
+    // Floor at 3, band (lifestyle) at 8: priced at 8, 16,000 × (1.05^8 ÷ 1.032^8 − 1) = $2,373.71, never at 3 ($851.90).
+    const split = levelsOf(DEV_SEEDS.daterising, splitAt(3, 8)).spendLevels!
+    expect(split.full).toBeCloseTo(78_000 + 2_373.707438106, 4)
+  })
+
+  it('the track note puts the repeat right after the full figure on the full arm, and after the full figure’s sentence on the floor arm', () => {
+    const named = slots.budgetRepeatInFirstYear('A new car', '40,000', 5, 0)
+    const full = bandTrackNote(levelsOf(DEV_SEEDS.daterepeat, datesAnswer(confirmedAt(6), dateBandTo(40, 6)))) ?? ''
+    expect(full).toBe(slots.bandPricesFullBudgetWithLevels('120,000', '76,000', named))
+    expect(full.indexOf(named), 'before the essentials figure').toBeLessThan(full.indexOf('Your essentials alone'))
+    const floor = bandTrackNote(levelsOf(DEV_SEEDS.daterepeat, datesAnswer(confirmedAt(6), dateBandTo(40, 6, 1_000_000, 'floor'))))
+    expect(floor).toBe(`${slots.bandPricesEssentialsWithLevels('76,000', '120,000')} ${named}`)
+  })
 })

@@ -8,7 +8,7 @@ import type { WorkingYearStateTaxReading } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
 import { formatMoney } from './moneyFormat'
 import { threeThenMore } from './missingFacts'
-import { workingYearQuote, type WorkingYearQuote } from './workingYearQuote'
+import { quoteIsAveraged, workingYearQuote, type WorkingYearQuote } from './workingYearQuote'
 
 /** The help's two lists (R1), in reading order: what a working year's figure holds (`workingCostHelpCountItems`, the
  *  one home the Result door's cost list reads too), then what the tool works out itself. Each list sits under its own
@@ -40,8 +40,10 @@ export function withWorkingYearCost(d: ScenarioDraft, w: ScenarioDraft['workingY
 export function quoteLine(quote: WorkingYearQuote): string {
   const amount = formatMoney(quote.annualReal)
   if (quote.source === 'budget') {
-    // With a repeat counted at its average the figure is no year's own total, so the lead never says "first year".
-    const averaged = quote.repeats.length > 0
+    // With a repeat counted at its average, or a line that changes at its own rate counted at its plan-first-year price
+    // (the engine charges it its price in the year work stops), the figure is no year's own total after work stops, so
+    // the lead never says "first year" (`quoteIsAveraged`, the below-notes' predicate too).
+    const averaged = quoteIsAveraged(quote)
     const medical = formatMoney(quote.medicalReal)
     const total =
       quote.medicalReal > 0
@@ -70,8 +72,9 @@ function repeatSentences(quote: WorkingYearQuote): readonly string[] {
  *  budget line the quote counts that changes at its own rate is counted at its first-year price; the question says so
  *  wherever such a line is in the quote (never under a line the quote leaves out). */
 export function ratedQuoteNote(d: ScenarioDraft): string | null {
-  // The quote's own record of which lines it counted (a later-start essential or a later repeat counts nothing).
-  return workingYearQuote(d).countsRated ? copy.workingCostQuoteRatedNote : null
+  // The quote's own record of which lines it counted (a later-start essential or a later repeat counts nothing). The
+  // price is the plan's first year's, named as that year (round 2).
+  return workingYearQuote(d).countsRated ? slots.workingCostQuoteRatedNoteAt(d.startCalendarYear) : null
 }
 
 export function leftOutLine(quote: WorkingYearQuote): string | null {

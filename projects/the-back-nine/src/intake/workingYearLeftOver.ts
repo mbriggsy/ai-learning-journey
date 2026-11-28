@@ -75,6 +75,7 @@ import {
   writeConfirmedWorkingYearCost,
 } from './workingYearQuote'
 import { LEFT_OVER_FACE, LEFT_OVER_MOVED, LEFT_OVER_W_CLAUSE } from './workingYearLeftOverState'
+import { hasRatedLineAtYearZero } from './budgetForm'
 
 /** The reply as the question's radios name it, written onto `d` — or `d` unchanged where the live draft no
  *  longer passes R5's gate. `shownFigure` is the whole-dollar year-0 Left over the face showed (≥ 1 by
@@ -471,11 +472,16 @@ function nowSegment(f: Omit<TailFigures, 'quote'>, afterWork: string | null, non
   }
 }
 /** The after-work sentence, said where the spending moved (`quoteMoved`: on a state-only move the two figures are the
- *  same), off the draft's spending figure (door 1's anchor), "about" only under a budget. */
+ *  same), off the draft's spending figure (door 1's anchor), "about" only under a budget. Under a budget with a line that
+ *  changes at its own rate on in year 0, the anchor is the typed year-0 total while the engine charges that line its price
+ *  in the year work stops, and this sentence has no crowned year to price at (the re-entry gate runs before any run), so
+ *  it names no figure (the line half's review, round 2: the fan note prices the same year at the stop). */
 function afterWorkSentence(d: ScenarioDraft): string | null {
   const spending = d.annualSpendingReal
   if (workingYearCostStaleness(d)?.quoteMoved !== true || spending === undefined || !Number.isFinite(spending) || spending <= 0) return null
-  return slots.workingCostStaleAfterWork(formatMoney(spending), workingYearQuote(d).source === 'spending')
+  const fromSpending = workingYearQuote(d).source === 'spending'
+  if (!fromSpending && hasRatedLineAtYearZero(d.budget)) return copy.workingCostStaleAfterWorkRated
+  return slots.workingCostStaleAfterWork(formatMoney(spending), fromSpending)
 }
 /** The either-way lead, in the draft's act (`WORKING_COST_ACT_COPY`). */
 const eitherWayLead = (d: ScenarioDraft): string => copy[WORKING_COST_ACT_COPY[workingYearCostAct(d)].eitherWay]
@@ -779,7 +785,7 @@ export function workingYearCostTypedBelowNote(d: ScenarioDraft): string | null {
   if (t === null) return null
   const answerLean = savedWaitingOnW(d) === null
   return t.source === 'budget'
-    ? slots.workingCostBelowBudget(t.typed, t.quote, answerLean)
+    ? slots.workingCostBelowBudget(t.typed, t.quote, answerLean, t.averaged)
     : slots.workingCostBelowSpending(t.typed, t.quote, answerLean)
 }
 
@@ -1357,11 +1363,11 @@ type FreshTypedBelow = NonNullable<ReturnType<typeof freshTypedBelow>>
 
 /** The counts sentence, in the quote's own words (the spending, or the budget twin). Its lean is its own slot since the
  *  walk-9 form council's call (2) ({@link typedBelowLean}). */
-const TYPED_BELOW_COUNTS: Readonly<Record<FreshTypedBelow['source'], (answer: TypedBelowAnswer, typed: string, quote: string) => string>> = {
-  spending: slots.workingCostTypedBelowCounts,
+const TYPED_BELOW_COUNTS: Readonly<Record<FreshTypedBelow['source'], (answer: TypedBelowAnswer, typed: string, quote: string, averaged: boolean) => string>> = {
+  spending: (answer, typed, quote) => slots.workingCostTypedBelowCounts(answer, typed, quote),
   budget: slots.workingCostTypedBelowCountsBudget,
 }
-const typedBelowCounts = (t: FreshTypedBelow, answer: TypedBelowAnswer): string => TYPED_BELOW_COUNTS[t.source](answer, t.typed, t.quote)
+const typedBelowCounts = (t: FreshTypedBelow, answer: TypedBelowAnswer): string => TYPED_BELOW_COUNTS[t.source](answer, t.typed, t.quote, t.averaged)
 
 /** R8's cap as the line said it before the rebuild — min(stored, year 0 at the typed figure), whole dollars — read only
  *  on the whole-window read's `unknown` arm (the plan's Minor faults: live, kept fail-safe so the credit is still said);

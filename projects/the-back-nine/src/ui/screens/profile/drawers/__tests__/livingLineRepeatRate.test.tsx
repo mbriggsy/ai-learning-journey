@@ -178,4 +178,30 @@ describe('back to one figure from lines that repeat or change at their own rate'
     act(() => fireEvent.click(within(dialog).getByRole('radio', { name: copy.profileLivingApproachOne })))
     expect(within(dialog).getByRole('group', { name: copy.profileLivingApproachLegend })).toHaveAccessibleDescription(copy.budgetBackToSingleHint)
   })
+
+  // The line half's review (insight 180's sibling host): removing every line goes back to one figure too, so it says so.
+  it('removing every line says the same words as the switch over a budget that departs; nothing over a plain one', () => {
+    const removeAll = (dialog: HTMLElement) => {
+      for (const b of within(dialog).getAllByRole('button', { name: /^Remove / })) act(() => fireEvent.click(b))
+    }
+    let { dialog } = openLiving(profileStore(DEV_SEEDS.datefixed).model)
+    removeAll(dialog)
+    expect(dialog.querySelector('[data-budget-line]'), '[test setup] every line removed').toBeNull()
+    expect(dialog.querySelector('[data-budget-back-to-single]')).toHaveTextContent(`${copy.budgetBackToSingleHint} ${slots.budgetBackToSingleKeeps('78,000')}`)
+    cleanup()
+    ;({ dialog } = openLiving(profileStore(RETIRED).model))
+    removeAll(dialog)
+    expect(dialog.querySelector('[data-budget-back-to-single]'), 'a plain budget: nothing departs').toBeNull()
+  })
+})
+
+describe('the change choice’s description', () => {
+  it('on the date route a fixed line’s end note joins the choice’s description, beside the rate’s read-back when both show', () => {
+    const { row } = openLiving(profileStore(GOVERNED).model)
+    const group = () => within(row).getByRole('group', { name: copy.budgetChangeLegend })
+    type(within(row).getByLabelText(copy.budgetWindowThroughLabel), '5')
+    pick(row, copy.budgetChangeSame)
+    expect(group()).toHaveAccessibleDescription(expect.stringContaining(copy.budgetDateRouteEndNote))
+    expect(group().getAttribute('aria-describedby'), 'never a "null" or an empty id').not.toMatch(/null|\s{2}|^\s|\s$/)
+  })
 })

@@ -3313,3 +3313,24 @@ describe('workingYearFigureBesideQuote — the band caption’s working-year fig
     expect(workingYearFigureBesideQuote(d)).toBeNull()
   })
 })
+
+// Round 2 of gap 4's line-half review: W's stale line said the budget is "about $X a year to start" off the typed year-0
+// total, while the engine charges a line that changes at its own rate its price in the year work stops (the fan note's
+// "to start" since round 1). The line has no crowned year to price at, so with such a line on in year 0 it names no figure.
+describe('W’s stale after-work sentence under a budget with a line that changes at its own rate', () => {
+  const budgetOf = (living: { readonly growthRate?: number }): ScenarioDraft => ({
+    ...DEV_SEEDS.datesavedrisen,
+    budget: [
+      { id: 'line-home', category: 'housing', label: 'Home', annualAmountReal: 30_000, tier: 'essentials', startYear: 0 },
+      { id: 'line-living', category: 'food', label: 'Living', annualAmountReal: 60_000, tier: 'essentials', startYear: 0, ...living },
+    ],
+    annualSpendingReal: 90_000,
+  })
+  it('names the budget and no figure with a rising line on in year 0; the twin without a rate keeps "about $90,000 a year to start"', () => {
+    const rated = lineText(budgetOf({ growthRate: 0.05 }))
+    expect(rated, '[test setup] the quote moved, so the line speaks').not.toBeNull()
+    expect(rated).toContain(copy.workingCostStaleAfterWorkRated)
+    expect(rated).not.toContain('a year to start')
+    expect(lineText(budgetOf({}))).toContain(slots.workingCostStaleAfterWork('90,000', false))
+  })
+})

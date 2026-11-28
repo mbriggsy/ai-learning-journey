@@ -191,10 +191,10 @@ export const copy = {
   // (a stopgap while the calendar-frame end is open, gap 4's U11 files it).
   budgetDateRouteEndNote:
     'The tool tries different years for you to stop working, and this line’s last year moves with each one, so a payment that ends in a set calendar year can end too soon here.',
-  // Gap 4's U15 (KTD4's stopgap, U11 files the build): W is one flat figure, so a rated line in the quote is counted at
-  // its first-year price in every working year.
-  workingCostQuoteRatedNote:
-    'A line that doesn’t go up with prices counts here at its first-year price, since this is one figure for every working year.',
+  // `slots.workingCostStaleAfterWork`'s budget arm where a line that changes at its own rate is on in year 0 (the line
+  // half's review, round 2): the typed year-0 total is not what the first year after work stops costs there, and the
+  // stale line has no stop year to price it at, so it names the budget and no figure (the fan note prices that year).
+  workingCostStaleAfterWorkRated: 'Once you’ve both stopped working, it already uses your budget.',
   // R19 whole-budget cautions — calm, never blocking.
   budgetWarnZeroEssentials: 'Nothing here is marked essential yet, so the safety floor reads as empty.',
   budgetWarnNoYearZero:
@@ -3975,6 +3975,13 @@ const shortWords = (a: TypedBelowAmount): string => amountWords(a, false, SHORT_
 const creditWords = (a: TypedBelowAmount, f: TypedBelowSpanFrame): string => amountWords(a, !f.oneYear, CREDIT_NOUN)
 /** The quote by its source (R9): "your spending of $Q a year", or the budget twin (an exhaustive Record, insight 147). The
  *  one home for the quote's dollars on the line: the lean says them ({@link slots.workingCostTypedBelowLean}). */
+/** The budget quote as the W below-notes name it: "your budget’s first year after work stops, which comes to $Q a year",
+ *  or, where the quote is no year's own total (`quoteIsAveraged`), the lead's own words, "your budget after work stops,
+ *  which counts here as $Q a year" (`workingCostQuoteBudgetAveraged`; the line half's review, round 2). */
+const budgetQuoteNamed = (quoteFormatted: string, averaged: boolean): string =>
+  averaged
+    ? `your budget after work stops, which counts here as $${quoteFormatted} a year`
+    : `your budget’s first year after work stops, which comes to $${quoteFormatted} a year`
 const SPAN_QUOTE: Readonly<Record<TypedBelowQuoteSource, (quoteFormatted: string) => string>> = {
   spending: (q) => `your spending of $${q} a year`,
   budget: (q) => `your budget’s $${q} a year`,
@@ -4237,11 +4244,14 @@ export const slots = {
    *  qualifier is what makes the two surfaces legible together (Briggsy's copy law: a same-named
    *  quantity quoted twice with different values wears its definition on EACH mention).
    *
-   *  Figures arrive PRE-FORMATTED from the compiled-budget producers (never re-typed, never summed
-   *  at the call site — `budgetYearZeroEssentialsTotal` omits neither the injected OOP medical nor
-   *  the scalable-essentials tier; both failure modes are mutation-pinned). */
-  /** `afterFull` (gap 4's U15, moved by its review): a sentence about the full budget's first year (a repeat charged in
-   *  it) sits right after the full figure, never after the essentials one, which may not hold it. */
+   *  Figures arrive PRE-FORMATTED: each is a compiled-budget producer's year-0 total (never re-typed, never a line-sum
+   *  at the call site — `budgetYearZeroEssentialsTotal` omits neither the injected OOP medical nor the scalable-essentials
+   *  tier; both failure modes are mutation-pinned) plus each line that changes at its own rate priced at the band's offset
+   *  (`ratedLevelShiftAt`, gap 4's line-half review: the one intended addition, since "to start" is that year).
+   *
+   *  `afterFull` (gap 4's U15, moved by its review): a sentence about the full budget's first year (a repeat charged in
+   *  it, priced at the same offset) sits right after the full figure, never after the essentials one, which may not
+   *  hold it. */
   bandPricesFullBudgetWithLevels: (fullFormatted: string, essentialsFormatted: string, afterFull?: string): string =>
     `This range prices your full budget — about $${fullFormatted} a year to start.${afterFull ? ` ${afterFull}` : ''} Your essentials alone, medical included, would be about $${essentialsFormatted}.`,
   /** U11 walk 8's W8-R7 (`docs/plans/features/typed-below-walk8-form-build-spec.md`, U3): the full-budget caption where
@@ -4467,11 +4477,19 @@ export const slots = {
     `Your budget’s first year after work stops comes to $${totalFormatted} a year.`,
   workingCostQuoteBudgetMedical: (totalFormatted: string, medicalFormatted: string): string =>
     `Your budget’s first year after work stops, with $${medicalFormatted} of out-of-pocket medical, comes to $${totalFormatted} a year.`,
-  /** The budget quote's lead where it counts a line that repeats at its yearly average (gap 4's KTD5): the figure is no
-   *  year's own total, so it never says "first year"; the repeat sentences after it say how each line counts. */
+  /** The budget quote's lead where it counts a line that repeats at its yearly average (gap 4's KTD5) or a line that
+   *  changes at its own rate at its plan-first-year price (KTD4; the line half's review, round 2): the figure is no year's
+   *  own total after work stops (the engine charges a rated line its price in the year work stops), so it never says
+   *  "first year"; the repeat sentences and the rate note after it say how each line counts. */
   workingCostQuoteBudgetAveraged: (totalFormatted: string): string => `Your budget after work stops counts here as $${totalFormatted} a year.`,
   workingCostQuoteBudgetAveragedMedical: (totalFormatted: string, medicalFormatted: string): string =>
     `Your budget after work stops, with $${medicalFormatted} of out-of-pocket medical, counts here as $${totalFormatted} a year.`,
+  /** Gap 4's U15 (KTD4's stopgap, U11 files the build): W is one flat figure, so a rated line in the quote is counted at
+   *  its price in the plan's first year (`startCalendarYear`: a rated line's factor is exactly 1 there) in every working
+   *  year. Named as that year, as Blueprint's tile does ("at its 2026 price"): under a lead that no longer names a year,
+   *  the old "first-year price" had no year to point at (the line half's review, round 2). */
+  workingCostQuoteRatedNoteAt: (buildYear: number): string =>
+    `A line that doesn’t go up with prices counts here at its ${buildYear} price, since this is one figure for every working year.`,
   /** The lines the quote left out (KTD5) — at most three names, then the rest counted. */
   workingCostLeftOut: (names: string): string =>
     `That leaves out extras that end or start in a later year, since those read as plans for after work: ${names}.`,
@@ -4480,7 +4498,7 @@ export const slots = {
   /** A repeating line inside the budget quote (gap 4's U3, KTD5): counted at its yearly average, since W is one flat
    *  figure for every working year. One sentence per line, at most three, then the rest counted. */
   workingCostQuoteRepeat: (label: string, amountFormatted: string, everyYears: string, averageFormatted: string): string =>
-    `${label}, $${amountFormatted} every ${everyYears} years, counts here as $${averageFormatted} a year.`,
+    `${label}, $${amountFormatted} every ${everyYears}\u00a0years, counts here as $${averageFormatted} a year.`,
   workingCostQuoteRepeatMore: (more: number): string => `${more} more lines that repeat count the same way.`,
   /** The stale note (KTD21, role="note", present before any tap): the last figure, the current
    *  quote where it moved, and which input moved — the spending figures (spending, budget lines or
@@ -4824,8 +4842,10 @@ export const slots = {
    *  picks: `workingYearCostTypedBelowNote`. */
   workingCostBelowSpending: (typedFormatted: string, quoteFormatted: string, answerLean: boolean): string =>
     `Your $${typedFormatted} a year is below your spending figure of $${quoteFormatted} a year. ${belowLean(typedFormatted, answerLean)}`,
-  workingCostBelowBudget: (typedFormatted: string, quoteFormatted: string, answerLean: boolean): string =>
-    `Your $${typedFormatted} a year is below your budget’s first year after work stops, which comes to $${quoteFormatted} a year. ${belowLean(typedFormatted, answerLean)}`,
+  /** `averaged` (`quoteIsAveraged`: the quote counts a repeat at its average or a rated line at its first-year price):
+   *  the quote is no year's own total, so it is named as the lead names it, "counts here as" (the line half's review). */
+  workingCostBelowBudget: (typedFormatted: string, quoteFormatted: string, answerLean: boolean, averaged = false): string =>
+    `Your $${typedFormatted} a year is below ${budgetQuoteNamed(quoteFormatted, averaged)}. ${belowLean(typedFormatted, answerLean)}`,
   /** U11 walk 6's R1 (the same Tier 0 entry's ⚑ MEASURED bullet: the refuter's prescription, its words): the note above
    *  reaches only the W surfaces, and a household that types the figure and leaves never sees them again, so the
    *  Result's standing line and the re-entry gate say it too, while the typed figure is FRESH (a stale one rides W's own
@@ -4840,8 +4860,8 @@ export const slots = {
    *  now ({@link slots.workingCostTypedBelowLean}), drawn after any moved clause and before the cap sentence. */
   workingCostTypedBelowCounts: (answer: TypedBelowAnswer, typedFormatted: string, quoteFormatted: string): string =>
     `${answer} answer counts a working year at your own figure of $${typedFormatted} a year, below your spending of $${quoteFormatted} a year.`,
-  workingCostTypedBelowCountsBudget: (answer: TypedBelowAnswer, typedFormatted: string, quoteFormatted: string): string =>
-    `${answer} answer counts a working year at your own figure of $${typedFormatted} a year, below your budget’s first year after work stops, which comes to $${quoteFormatted} a year.`,
+  workingCostTypedBelowCountsBudget: (answer: TypedBelowAnswer, typedFormatted: string, quoteFormatted: string, averaged = false): string =>
+    `${answer} answer counts a working year at your own figure of $${typedFormatted} a year, below ${budgetQuoteNamed(quoteFormatted, averaged)}.`,
   /** THE LEAN (the walk-9 form council's call (2)): the floor a working year almost never costs less than, in the quote's
    *  own dollars ({@link SPAN_QUOTE}: its one home on the line, so no run reprints them), then the whole-answer lean in the
    *  host's noun (KD9) — or, in the details sheet, the floor alone ({@link TypedBelowLeanForm}). The composer keys the form
@@ -5193,7 +5213,7 @@ export const slots = {
     `Essentials about $${essentialsFormatted} · extras about $${extrasFormatted} in your first year.`,
   /** The repeat inside a first year's figure, named with its cost and how often (and how many more repeat there). */
   budgetRepeatInFirstYear: (name: string, amountFormatted: string, everyYears: number, more: number): string =>
-    `That includes “${name}” at $${amountFormatted}, which comes back every ${everyYears} years.` +
+    `That includes “${name}” at $${amountFormatted}, which comes back every ${everyYears}\u00a0years.` +
     (more === 0 ? '' : ` ${more} more ${more === 1 ? 'line that repeats is' : 'lines that repeat are'} in it too.`),
   /** Under a line's repeat (gap 4's U8): the years it is charged, in the household's own years, so a typed 50 meant as 5
    *  shows itself (`spendingBounds.ts`). Calendar years on the all-retired route; counts from the stop on the date route. */
@@ -5313,7 +5333,7 @@ export const slots = {
    *  the sentence, never a sentence of its own: a second sentence re-quoting the figure pushed the R13 caveat 2 px out of
    *  his window on the widest names (`e2e/rc-screens.spec.ts`, Gap 4 · U15). */
   verdictFirstYear: (name: string, amountFormatted: string, everyYears: number, more: number): string =>
-    ` in your first year, with “${name}” at $${amountFormatted} in it, which comes back every ${everyYears} years` +
+    ` in your first year, with “${name}” at $${amountFormatted} in it, which comes back every ${everyYears}\u00a0years` +
     (more === 0 ? '' : `, and ${more} more ${more === 1 ? 'line that repeats' : 'lines that repeat'}`),
   /** direction 'rethink' — already-failing (0 of 10, unfundable from the start). FIGURE-LESS and
    *  LEVER-AGNOSTIC (it also renders for an already-RETIRED household, so it names no accumulation
@@ -5486,7 +5506,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:2472` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:2476` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,
@@ -6588,17 +6608,19 @@ export const slots = {
   bpLineFor: (amount: string, years: number): string => `$${amount} a year for ${years === 1 ? 'one year' : `${years} years`}`,
   /** A line that repeats (gap 4's U8): its cost each time and how often, never "a year" or "for N years"; with an end, how
    *  many times and the last (placed on the calendar), or how many times (counted from the stop). */
-  bpLineEveryFrom: (amount: string, everyYears: number, fromYear: number): string => `$${amount} every ${everyYears} years, from ${fromYear} on`,
+  bpLineEveryFrom: (amount: string, everyYears: number, fromYear: number): string => `$${amount} every ${everyYears}\u00a0years, from ${fromYear} on`,
   bpLineEveryTimes: (amount: string, everyYears: number, times: number, lastYear: number): string =>
-    `$${amount} every ${everyYears} years, ${times} times, the last in ${lastYear}`,
+    `$${amount} every ${everyYears}\u00a0years, ${times} times, the last in ${lastYear}`,
   bpLineOnceIn: (amount: string, year: number): string => `$${amount} once, in ${year}`,
-  bpLineEveryOnward: (amount: string, everyYears: number): string => `$${amount} every ${everyYears} years from then on`,
-  bpLineEveryTimesAfter: (amount: string, everyYears: number, times: number): string => `$${amount} every ${everyYears} years, ${times} times`,
+  bpLineEveryOnward: (amount: string, everyYears: number): string => `$${amount} every ${everyYears}\u00a0years from then on`,
+  bpLineEveryTimesAfter: (amount: string, everyYears: number, times: number): string => `$${amount} every ${everyYears}\u00a0years, ${times} times`,
   bpLineOnce: (amount: string): string => `$${amount} once`,
   /** A line that doesn't go up with prices (gap 4's review): the tile names how its cost changes, so "$6,000 a year" is
    *  never read as the same cost in today's dollars every year. A rising line's amount is its price in the plan's first
    *  year (`buildYear`), the year its rate runs from. */
   bpLineSameDollars: (value: string, eachTime: boolean): string => `${value}, the same dollar amount each ${eachTime ? 'time' : 'year'}`,
+  /** The same for a repeat whose window holds one charge ("once"): no "each time" (the line half's review, round 2). */
+  bpLineSameDollarsOnce: (value: string): string => `${value}, not going up with prices`,
   bpLineRising: (value: string, buildYear: number, percent: string): string => `${value}, at its ${buildYear} price, going up ${percent}% a year`,
   /** A group of the timeline counted from the year work stops (year 0, the first retirement year: the budget's own frame). */
   bpAfterStop: (years: number): string =>

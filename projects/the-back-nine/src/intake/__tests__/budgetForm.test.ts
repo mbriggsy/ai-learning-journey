@@ -256,4 +256,19 @@ describe('the readout with a repeat charged in the first year (gap 4’s U8)', (
     expect(texts(d, later).some((t) => t.startsWith('That includes')), 'a repeat that starts later is not in the first year').toBe(false)
     expect(texts(d, later)).toContain(slots.budgetRunningTotal('78,000'))
   })
+
+  // The line half's review: the anchor and the lines' share describe S, which the SAVED budget reconciled (round 2: keyed
+  // on the staged lines, a saved car removed mid-edit left "$118,000 a year" over an S charged so in its first year only).
+  it('the anchor and the lines’ share follow the saved budget: "in your first year" at rest and with the saved car removed mid-edit; a car staged over a saved budget without one keeps "a year"', () => {
+    const d: ScenarioDraft = { ...DEV_SEEDS.daterepeat, health: { ...DEV_SEEDS.daterepeat.health, oopMedicalAnnual: 6_500 } }
+    const atRest = texts(d, d.budget!)
+    expect(atRest).toContain(slots.budgetAnchorLeadFirstYear('118,000'))
+    expect(atRest).toContain(slots.budgetLinesTargetFirstYear('111,500'))
+    const mid = texts(d, d.budget!.filter((l) => l.everyYears === undefined))
+    expect(mid).toContain(slots.budgetAnchorLeadFirstYear('118,000'))
+    expect(mid).toContain(slots.budgetLinesTargetFirstYear('111,500'))
+    expect(mid, 'the staged lines hold no repeat: their own total is "a year"').toContain(slots.budgetRunningTotal('78,000'))
+    const car: BudgetLineItem = { id: 'line-car', category: 'transportation', label: 'A new car', annualAmountReal: 40_000, tier: 'essentials', startYear: 0, everyYears: 5 }
+    expect(texts(DEV_SEEDS.dip, [...DEV_SEEDS.dip.budget!, car])).toContain(slots.budgetAnchorLead('78,000'))
+  })
 })

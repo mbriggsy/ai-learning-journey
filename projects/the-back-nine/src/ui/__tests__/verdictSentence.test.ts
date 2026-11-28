@@ -101,7 +101,7 @@ describe('the first-year repeat inside the quoted spend (gap 4’s U15)', () => 
   const TRIM_SHOWN: VerdictDisplay = { ...ROOM_SHOWN, outcomeState: 'off-track', direction: 'trim' }
 
   it('room and trim, on every spend form, name the first year right after "$6,500 a month"; with no repeat the clause is unchanged', () => {
-    expect(words).toBe(' in your first year, with “A new car” at $40,000 in it, which comes back every 5 years')
+    expect(words).toBe(' in your first year, with “A new car” at $40,000 in it, which comes back every 5\u00a0years')
     for (const [shown, spend] of [
       [ROOM_SHOWN, undefined],
       [ROOM_SHOWN, { kind: 'pending' }],

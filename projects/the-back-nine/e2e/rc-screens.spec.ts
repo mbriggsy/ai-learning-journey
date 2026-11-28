@@ -4239,7 +4239,7 @@ for (const size of RC12_SIZES) {
       await expect(page.getByRole('dialog'), 'the Save closes the drawer').toHaveCount(0)
       await page.getByRole('link', { name: copy.shellHomeLabel }).first().click()
       await toProbability(page, who)
-      const tail = '“Travel” at $360,000 in it, which comes back every 5 years.'
+      const tail = '“Travel” at $360,000 in it, which comes back every 5\u00a0years.'
       await expect(page.locator('[data-metrics]'), `${who}: the clause names the first year and the repeat`).toContainText(tail, { timeout: FINAL_TIER_MS })
       await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
       await settleLayout(page)

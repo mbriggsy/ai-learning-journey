@@ -289,22 +289,26 @@ interface Placed {
 
 /** A repeating line's words (gap 4's U8, R11): "every N years", never "a year" or "for N years"; with an end, how many
  *  times it is charged (its last on the calendar), counted through `isActiveAt`'s rule: start, then every N inside it. */
-function repeatValue(line: BudgetLineItem, everyYears: number, amount: string, stop: StopAnchor): string {
+function repeatValue(line: BudgetLineItem, everyYears: number, amount: string, stop: StopAnchor): { readonly value: string; readonly once: boolean } {
   const times = line.endYear === undefined ? null : Math.floor((line.endYear - line.startYear) / everyYears) + 1
+  const once = times === 1
   if (stop.kind === 'calendar') {
     const from = stop.year + line.startYear
-    if (times === null) return slots.bpLineEveryFrom(amount, everyYears, from)
-    return times === 1 ? slots.bpLineOnceIn(amount, from) : slots.bpLineEveryTimes(amount, everyYears, times, from + (times - 1) * everyYears)
+    if (times === null) return { value: slots.bpLineEveryFrom(amount, everyYears, from), once }
+    return { value: once ? slots.bpLineOnceIn(amount, from) : slots.bpLineEveryTimes(amount, everyYears, times, from + (times - 1) * everyYears), once }
   }
-  if (times === null) return slots.bpLineEveryOnward(amount, everyYears)
-  return times === 1 ? slots.bpLineOnce(amount) : slots.bpLineEveryTimesAfter(amount, everyYears, times)
+  if (times === null) return { value: slots.bpLineEveryOnward(amount, everyYears), once }
+  return { value: once ? slots.bpLineOnce(amount) : slots.bpLineEveryTimesAfter(amount, everyYears, times), once }
 }
 
-/** A line's value with how its cost changes (gap 4's review): a line that goes up with prices reads as before. */
-function withRate(value: string, line: BudgetLineItem, buildYear: number): string {
+/** A line's value with how its cost changes (gap 4's review): a line that goes up with prices reads as before. `charges`:
+ *  a repeat charged more than once says "each time"; one charged once (its window holds one charge, `repeatValue`'s
+ *  "once") never implies a second (round 2: "once, in 2026, the same dollar amount each time"). */
+function withRate(value: string, line: BudgetLineItem, buildYear: number, charges: 'yearly' | 'repeat' | 'once'): string {
   const g = line.growthRate
   if (g === undefined || !Number.isFinite(g)) return value
-  return g === 0 ? slots.bpLineSameDollars(value, line.everyYears !== undefined) : slots.bpLineRising(value, buildYear, formatPercent(g))
+  if (g !== 0) return slots.bpLineRising(value, buildYear, formatPercent(g))
+  return charges === 'once' ? slots.bpLineSameDollarsOnce(value) : slots.bpLineSameDollars(value, charges === 'repeat')
 }
 
 function lineTile(line: BudgetLineItem, index: number, stop: StopAnchor, buildYear: number): Placed {
@@ -314,16 +318,17 @@ function lineTile(line: BudgetLineItem, index: number, stop: StopAnchor, buildYe
   const base = { id: `bp-line-${index}`, legend: legend.id, category: legend.label, tone: legend.tone, name: lineDisplayName(line), target: { kind: 'living' } } as const
   if (!Number.isInteger(line.startYear) || line.startYear < 0) return { tile: { ...base, value: copy.profileNotAnswered }, at: { kind: 'none' }, rank: 3 }
   if (line.everyYears !== undefined) {
-    const tile = { ...base, value: withRate(repeatValue(line, line.everyYears, amount, stop), line, buildYear), repeats: true }
+    const r = repeatValue(line, line.everyYears, amount, stop)
+    const tile = { ...base, value: withRate(r.value, line, buildYear, r.once ? 'once' : 'repeat'), repeats: true }
     return { tile, at: stop.kind === 'calendar' ? { kind: 'year', year: stop.year + line.startYear } : { kind: 'after', years: line.startYear }, rank: 3 }
   }
   if (stop.kind === 'calendar') {
     const from = stop.year + line.startYear
     const value = years === null ? slots.bpLineFrom(amount, from) : slots.bpLineSpan(amount, years, stop.year + line.endYear!)
-    return { tile: { ...base, value: withRate(value, line, buildYear) }, at: { kind: 'year', year: from }, rank: 3 }
+    return { tile: { ...base, value: withRate(value, line, buildYear, 'yearly') }, at: { kind: 'year', year: from }, rank: 3 }
   }
   const value = years === null ? slots.bpLineOnward(amount) : slots.bpLineFor(amount, years)
-  return { tile: { ...base, value: withRate(value, line, buildYear) }, at: { kind: 'after', years: line.startYear }, rank: 3 }
+  return { tile: { ...base, value: withRate(value, line, buildYear, 'yearly') }, at: { kind: 'after', years: line.startYear }, rank: 3 }
 }
 
 function goalsBody(d: ScenarioDraft, stop: StopAnchor): { body: BlueprintBody; lines: string[] } {

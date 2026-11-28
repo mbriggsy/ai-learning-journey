@@ -218,6 +218,25 @@ describe('Goals', () => {
     expect(after.find((t) => t.id === `bp-line-${car}`)!.value).toBe(slots.bpLineEveryOnward('40,000', 5))
   })
 
+  // Gap 4's line-half review: a line that doesn't go up with prices names how its cost changes (round 1); a repeat charged
+  // once never says "each time" (round 2: "once, in 2026, the same dollar amount each time").
+  it('a line with its own rate names it: the same dollar amount each year or each time, or its plan-first-year price going up N% a year; a repeat charged once never says "each time"', () => {
+    const rated: ScenarioDraft = {
+      ...budgetRetired,
+      budget: budgetRetired.budget!.map((l, i) =>
+        i === 0 ? { ...l, growthRate: 0 } : i === 2 ? { ...l, growthRate: 0.08 } : i === 5 ? { ...l, everyYears: 5, growthRate: 0 } : i === 6 ? { ...l, endYear: 3, everyYears: 5, growthRate: 0 } : l,
+      ),
+    }
+    const start = rated.startCalendarYear
+    const tiles = goals(rated).groups.flatMap((g) => g.tiles)
+    const tile = (k: number) => tiles.find((t) => t.id === `bp-line-${k}`)!
+    expect(tile(0).value).toBe(slots.bpLineSameDollars(slots.bpLineFrom('18,000', start), false))
+    expect(tile(2).value).toBe(slots.bpLineRising(slots.bpLineFrom('9,600', start), start, '8'))
+    expect(tile(5).value).toBe(slots.bpLineSameDollars(slots.bpLineEveryFrom('12,000', 5, start), true))
+    expect(tile(6).value).toBe(slots.bpLineSameDollarsOnce(slots.bpLineOnceIn('6,000', start)))
+    expect(tile(1).value, 'a line that goes up with prices reads as before').toBe(slots.bpLineFrom('4,800', start))
+  })
+
   it('a window-edge date says it sits at the edge of what the math can confirm', () => {
     const b = goals(working, { answer: dateAnswer(working, track(15, 'window-edge-unconfirmed')) })
     expect(b.groups.flatMap((g) => g.tiles).find((t) => t.id === 'retirement-0')!.note).toBe(copy.dateWindowEdgeNote)

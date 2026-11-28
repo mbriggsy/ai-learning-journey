@@ -19,7 +19,7 @@ import {
 } from '../workingYearQuote'
 // The joined note (W's sentence and its lean) is composed in `workingYearLeftOver` (the U11 walk's (ae)): every
 // draft in this file carries no left-over answer, so its lean is the spending-alone one wherever the spending rose.
-import { workingYearCostStaleNote } from '../workingYearLeftOver'
+import { workingYearCostStaleNote, workingYearCostTypedBelowNote } from '../workingYearLeftOver'
 import { isDateRoute, missingRequiredFacts, pricedStateForRun } from '../intakeMap'
 import { threeThenMore } from '../missingFacts'
 import { quoteLine, ratedQuoteNote } from '../workingCostFace'
@@ -188,7 +188,7 @@ describe('the quote (KTD5)', () => {
       expect(q.repeats).toEqual([{ label: 'A new car', annualAmountReal: 40_000, everyYears: 5 }])
       // With a repeat at its average the figure is no year's own total, so the lead never says "first year" (the review
       // of gap 4's line half): the first year itself costs $60,000 from year 0, or $20,000 from year 1.
-      expect(quoteLine(q)).toBe('Your budget after work stops counts here as $28,000 a year. A new car, $40,000 every 5 years, counts here as $8,000 a year.')
+      expect(quoteLine(q)).toBe('Your budget after work stops counts here as $28,000 a year. A new car, $40,000 every 5\u00a0years, counts here as $8,000 a year.')
     }
     expect(quoteLine(workingYearQuote(base({ budget: [HOME] }))), 'no repeat: the first-year lead').toBe('Your budget’s first year after work stops comes to $20,000 a year.')
   })
@@ -196,7 +196,7 @@ describe('the quote (KTD5)', () => {
   it('a repeating line with no name is named by its category, never left as a blank in the sentence', () => {
     const q = workingYearQuote(base({ budget: [HOME, { ...car(0), label: '' }] }))
     expect(q.repeats.map((r) => r.label)).toEqual([copy.budgetCatTransportation])
-    expect(quoteLine(q)).toContain(`${copy.budgetCatTransportation}, $40,000 every 5 years, counts here as $8,000 a year.`)
+    expect(quoteLine(q)).toContain(`${copy.budgetCatTransportation}, $40,000 every 5\u00a0years, counts here as $8,000 a year.`)
   })
 
   it('a repeat that starts after its first cycle counts nothing (a cost that begins after the stop), and a later discretionary repeat stays left out and named', () => {
@@ -211,8 +211,8 @@ describe('the quote (KTD5)', () => {
 
   // Gap 4's U15 (KTD4's stopgap): W is one flat figure, so a rated line the quote counts is at its first-year price.
   it('a line in the quote that doesn’t go up with prices carries the stopgap line; one the quote leaves out, or none, does not', () => {
-    expect(ratedQuoteNote(DEV_SEEDS.datefixed)).toBe(copy.workingCostQuoteRatedNote)
-    expect(ratedQuoteNote(DEV_SEEDS.daterising)).toBe(copy.workingCostQuoteRatedNote)
+    expect(ratedQuoteNote(DEV_SEEDS.datefixed)).toBe(slots.workingCostQuoteRatedNoteAt(2026))
+    expect(ratedQuoteNote(DEV_SEEDS.daterising)).toBe(slots.workingCostQuoteRatedNoteAt(2026))
     expect(ratedQuoteNote(DEV_SEEDS.dip)).toBeNull()
     expect(ratedQuoteNote(DEV_SEEDS.retired), 'no budget').toBeNull()
     const leftOut = { ...DEV_SEEDS.dip, budget: DEV_SEEDS.dip.budget!.map((l) => (l.label === 'Go-go years' ? { ...l, growthRate: 0.05 } : l)) }
@@ -228,7 +228,38 @@ describe('the quote (KTD5)', () => {
     const laterRepeat = base({ budget: [HOME, { ...car(5), growthRate: 0 }] })
     expect(workingYearQuote(laterRepeat).annualReal, '[test setup] the later repeat counts nothing').toBe(20_000)
     expect(ratedQuoteNote(laterRepeat)).toBeNull()
-    expect(ratedQuoteNote(base({ budget: [HOME, { ...car(1), growthRate: 0 }] })), 'a counted rated repeat').toBe(copy.workingCostQuoteRatedNote)
+    expect(ratedQuoteNote(base({ budget: [HOME, { ...car(1), growthRate: 0 }] })), 'a counted rated repeat').toBe(slots.workingCostQuoteRatedNoteAt(2026))
+  })
+
+  // Round 2 of the line half's review: the engine charges a rated line its price in the year work stops, so a quote that
+  // counts one at its first-year price is no year's own total after work stops and its lead never says "first year".
+  it('a quote counting a line with its own rate leads "counts here as" on both rated seeds; a rated line the quote counts nothing for keeps the first-year lead', () => {
+    expect(quoteLine(workingYearQuote(DEV_SEEDS.daterising))).toBe('Your budget after work stops counts here as $36,000 a year.')
+    expect(quoteLine(workingYearQuote(DEV_SEEDS.datefixed))).toBe('Your budget after work stops counts here as $36,000 a year.')
+    const laterEssential = { ...line('housing', 'Property tax', 12_000, 'essentials', 3), growthRate: 0.04 }
+    expect(quoteLine(workingYearQuote(base({ budget: [HOME, laterEssential] })))).toBe('Your budget’s first year after work stops comes to $20,000 a year.')
+  })
+
+  it('with out-of-pocket medical, an averaged quote takes the medical twin of the averaged lead', () => {
+    const q = workingYearQuote(base({ budget: [HOME, car(0)], health: { oopMedicalAnnual: 8_000 } }))
+    expect(q.annualReal, '[test setup] 20,000 + 8,000 + 40,000 / 5').toBe(36_000)
+    expect(quoteLine(q)).toBe(
+      'Your budget after work stops, with $8,000 of out-of-pocket medical, counts here as $36,000 a year. A new car, $40,000 every 5\u00a0years, counts here as $8,000 a year.',
+    )
+  })
+
+  it('a left-out line with no name is named by its category in the left-out list', () => {
+    const q = workingYearQuote(base({ budget: [HOME, { ...line('travel', '', 9_000, 'discretionary', 0, 3) }] }))
+    expect(q.leftOut).toEqual([{ label: copy.budgetCatTravel, category: 'travel' }])
+  })
+
+  it('a typed figure below an averaged quote names the quote as the lead does, "counts here as", never "first year"', () => {
+    const typedBelow: ScenarioDraft = {
+      ...DEV_SEEDS.daterising,
+      workingYearCost: { kind: 'entered', amountReal: 30_000, entryPeriod: 'year', stateTaxReading: 'unpriced' },
+    }
+    expect(workingYearCostTypedBelowQuote(typedBelow)).toEqual({ typed: '30,000', quote: '36,000', source: 'budget', averaged: true })
+    expect(workingYearCostTypedBelowNote(typedBelow)).toContain('below your budget after work stops, which counts here as $36,000 a year.')
   })
 
   it('a non-finite or absent spending figure quotes $0 — never NaN or a stand-in', () => {
@@ -798,8 +829,8 @@ describe('workingYearCostTypedBelowQuote — a typed figure below today’s quot
     workingYearCost: { kind: 'entered', amountReal, entryPeriod, stateTaxReading: yes.stateTaxReading },
   })
   it('$84,000 typed under a $90,000 spending figure: both figures, yearly; never stale (a typed figure answers no quote)', () => {
-    expect(workingYearCostTypedBelowQuote(typed(84_000))).toEqual({ typed: '84,000', quote: '90,000', source: 'spending' })
-    expect(workingYearCostTypedBelowQuote(typed(84_000, 'month')), 'a monthly figure is named by its yearly money').toEqual({ typed: '84,000', quote: '90,000', source: 'spending' })
+    expect(workingYearCostTypedBelowQuote(typed(84_000))).toEqual({ typed: '84,000', quote: '90,000', source: 'spending', averaged: false })
+    expect(workingYearCostTypedBelowQuote(typed(84_000, 'month')), 'a monthly figure is named by its yearly money').toEqual({ typed: '84,000', quote: '90,000', source: 'spending', averaged: false })
     expect(isWorkingYearCostStale(typed(84_000)), 'the retype clears the stale line: why the note exists').toBe(false)
     expect(slots.workingCostBelowSpending('84,000', '90,000', true)).toBe(
       'Your $84,000 a year is below your spending figure of $90,000 a year. A working year almost always costs at least what you spend, so this answer can look better than it really is.',
@@ -820,6 +851,7 @@ describe('workingYearCostTypedBelowQuote — a typed figure below today’s quot
       typed: '84,999.84',
       quote: '84,999.96',
       source: 'spending',
+      averaged: false,
     })
   })
   it('null at or above the quote, for a kept or said-yes figure (their own stale line names it), and with no quote', () => {

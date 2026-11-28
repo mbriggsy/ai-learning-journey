@@ -180,18 +180,21 @@ function dateBand(
     ? deriveDateBandAnnotations(ageA, ageB, band.offsetYears, last.yearsFromNow, savedAnchor, bandFloorKeyed, cutYears !== rawBand.fan.byYear)
     : undefined
   const bandAges = haveAges ? deriveBandAgesAt(ageA, ageB) : undefined
-  // THE TWO SPENDING LEVELS — derived through the compiled-budget producers, never summed here
-  // (the line-sum omits the injected OOP medical and mis-tiers; both failures are mutation-pinned
-  // in budgetToSpending.test.ts). Absent without a budget: a household with one spending level has
-  // no gap to name, and inventing a second figure is worse than staying quiet.
+  // THE TWO SPENDING LEVELS — each the compiled-budget producer's year-0 total (never a line-sum here: the line-sum
+  // omits the injected OOP medical and mis-tiers; both failures are mutation-pinned in budgetToSpending.test.ts), plus
+  // one intended addition: each line that changes at its own rate, on in year 0, priced at the band's offset
+  // (`ratedLevelShiftAt`). Absent without a budget: a household with one spending level has no gap to name, and
+  // inventing a second figure is worse than staying quiet.
   // Gap 4's U15: both levels are the first year's ("a year to start"); a repeat charged in it is named beside them.
   // "To start" is the first year after work stops, the band's own crowned offset: a line that changes at its own rate
   // costs its factor there, not its typed amount (the review of gap 4's line half), so each such line is priced at that
-  // offset through the run's own factor. Exactly + 0 without one, so every other plan reads the same figures.
-  const firstYearRepeat = budgetGoverns(draft.budget) ? firstYearRepeatNote(draft.budget) : null
+  // offset through the run's own factor, and the repeat the note names beside the full figure is priced at the same
+  // offset (round 2). Exactly + 0 and the typed amount without one, so every other plan reads the same figures.
+  const at = draft.startCalendarYear !== undefined ? { startCalendarYear: draft.startCalendarYear, t: band.offsetYears } : undefined
+  const firstYearRepeat = budgetGoverns(draft.budget) ? firstYearRepeatNote(draft.budget, at) : null
   const shift =
-    budgetGoverns(draft.budget) && draft.startCalendarYear !== undefined
-      ? ratedLevelShiftAt(draft.budget, draft.startCalendarYear, band.offsetYears)
+    budgetGoverns(draft.budget) && at !== undefined
+      ? ratedLevelShiftAt(draft.budget, at.startCalendarYear, at.t)
       : { full: 0, essentials: 0 }
   const spendLevels = budgetGoverns(draft.budget)
     ? {
@@ -424,9 +427,10 @@ export type FuckOffDateView =
        *  Briggsy on the real surface, 2026-07-30: "I need to see what my essential spend looks like
        *  along with what my desired spend looks like.")
        *
-       *  Both are FIRST-YEAR (retirement-year 0) totals in today's dollars, derived through
-       *  `budgetYearZeroEssentialsTotal` / `budgetYearZeroFullTotal` — the compiled routing, never a
-       *  line-sum (which omits the injected OOP medical and mis-tiers). Absent when the household
+       *  Both are FIRST-YEAR (retirement-year 0) totals in today's dollars: `budgetYearZeroEssentialsTotal` /
+       *  `budgetYearZeroFullTotal` — the compiled routing, never a line-sum (which omits the injected OOP medical and
+       *  mis-tiers) — plus each line that changes at its own rate priced at the band's offset (`ratedLevelShiftAt`,
+       *  gap 4's line-half review: the one intended addition, not a line-sum). Absent when the household
        *  never built a budget: there is no second level to name, and the copy that would quote it
        *  must not render rather than invent one. */
       readonly spendLevels?: SpendLevels

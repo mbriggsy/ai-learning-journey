@@ -109,6 +109,7 @@ export const DRAFT_DISPOSITIONS: Record<keyof ScenarioDraft, AssumptionDispositi
   people: { kind: 'profile', why: 'Names, birth years, work, stop ages, pay and Social Security: Profile → Family and Income.' },
   enteredAccounts: { kind: 'profile', why: 'The accounts, their balances, deposits and mix: Profile → Net Worth and Savings.' },
   incomeStreams: { kind: 'profile', why: 'Pensions and other income: Profile → Income.' },
+  oneTimeInflows: { kind: 'profile', why: 'Inheritances and gifts the household expects once: Profile → Income.' },
   tickerClassifications: {
     kind: 'internal',
     why: 'Rides the accounts: a per-ticker classification is edited where its account is edited (its Profile drawer), never as a free-floating row.',

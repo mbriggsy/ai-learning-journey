@@ -29,9 +29,9 @@ here exists because the aged surface that record lands on was not honest before 
    via the persisted seed when no clock fired is what keeps the screenshot promise. U17's real content is
    the **action-warning copy register**, not a re-presentation mechanism.
 2. **The "Act-4 `schemaVersion` 3 bump" is counterfactual.** v3 is the shipped forward-written shape
-   (`model.ts:2409-2418`; codec `> 3` = newer-version). `savedRecommendation?` landed **additive-optional
+   (`model.ts:2440-2449`; codec `> 3` = newer-version). `savedRecommendation?` landed **additive-optional
    within v3**, presence-keyed, following the `rothConversion` / `savedAt` / `retirementState` precedents
-   (`scenarioCodec.ts:1096-1099` was the pattern copied).
+   (`scenarioCodec.ts:1134-1137` was the pattern copied).
 
 ---
 
@@ -74,7 +74,7 @@ refusal (`RothLever.tsx line 49 at 7f56682e9`).
 ### S0.2 The plan clock is years-since-BUILT — renamed and prosed
 
 `Result.tsx` derives the anchor from `startCalendarYear`, which is the plan's **BUILD** year (written once
-at `memoryModel.ts:523`, never re-anchored, survives every re-save). Four separate comments already forbade
+at `memoryModel.ts:527`, never re-anchored, survives every re-save). Four separate comments already forbade
 attributing that quantity to the save (`staleness.ts:29`, `resultSave.ts:172`, `copy.ts:5358`,
 `FuckOffDate.tsx line 112 at 95c715e19`) — and the band's `'saved'` label did exactly that.
 
@@ -275,10 +275,10 @@ headline, where it would read as current).
   stays green. The identity consumers were enumerated first: `resultSave.ts`'s two compares and the
   round-trip guard.
 - **The `JSON.stringify` accident was removed, not documented.** `resultSave.ts` justified its compare with
-  *"decodeScenario builds every object."* It does **not** — `scenarioCodec.ts:1570-1572` is a validated
+  *"decodeScenario builds every object."* It does **not** — `scenarioCodec.ts:1643-1645` is a validated
   pass-through cast, and the behavior was safe only because `JSON.parse` preserves `encodeScenario`'s
   insertion order, so a future field reorder would have broken dirty-detection silently. The fix is
-  `scenarioIdentityKey` (`model.ts:3190`), which rebuilds plain objects with SORTED keys and throws on a
+  `scenarioIdentityKey` (`model.ts:3227`), which rebuilds plain objects with SORTED keys and throws on a
   non-serializable value, so key order and absent-vs-undefined can never read as a change.
 
 **Shipped 2026-07-25, commit `374299c9`, CI green by explicit run id 30163571502**, carrying one ruling
@@ -396,7 +396,7 @@ verdict prefix, unlike `staleness*`, so they clear the scoped gates rather than 
 
 **The four mint obligations**, all discharged in `src/store/savedRecommendationMint.ts`:
 
-1. `validateSavedRecommendation` (`scenarioCodec.ts:1045`) is called BEFORE the record touches the draft
+1. `validateSavedRecommendation` (`scenarioCodec.ts:1083`) is called BEFORE the record touches the draft
    (`savedRecommendationMint.ts:148`) — the SAME validator the decode path runs, never a parallel copy. It
    had ZERO product callers before this stage.
 2. A non-empty `droppedAtoms` at the gesture **refuses aloud** and never reports a saved recommendation
@@ -416,7 +416,7 @@ load-bearing.**
   `fingerprintOf`/`currentDraftFingerprint` in exactly the `SolverRunFingerprint | null` shape the
   trichotomy wants, and explicitly bans a re-typed subset. But that did not mean "no seam work here": both
   were private closures inside `createMemoryModel` and **neither was on the returned surface**, so the
-  stage's seam work was **EXPOSING `currentDraftFingerprint()` on `MemoryModel`** (`memoryModel.ts:458`,
+  stage's seam work was **EXPOSING `currentDraftFingerprint()` on `MemoryModel`** (`memoryModel.ts:462`,
   returned at `:997`, derived at `:708`) — not re-deriving it. The committed `SolveAnswer.fingerprint` is
   the MINT basis, *not* the trichotomy's fresh fingerprint.
 - **The mint is NOT independent of the plan-save machine.** The record participates in the dirty/clean
@@ -443,7 +443,7 @@ tallest producible card moves it zero pixels. Two dev plants carry records — `
 
 **One sweep in `session.ts` is done:** a comment there once claimed `scenarioFromDraft` "REFUSES on a
 non-empty [dropped-atom] list." It does not — `scenarioFromDraft.ts:122` returns `ready:true`, and
-`draftFromScenario.test.ts:594` pins that a dropped atom never refuses the whole save. The comment now states
+`draftFromScenario.test.ts:628` pins that a dropped atom never refuses the whole save. The comment now states
 the opposite explicitly, matching the recovery-path twin that never repeated the error.
 
 **S5's residue was swept 2026-07-27:** `d5d77191` (insight 084's Caddie schema caps, the binding

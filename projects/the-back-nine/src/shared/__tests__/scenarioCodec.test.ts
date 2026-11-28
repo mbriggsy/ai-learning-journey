@@ -50,6 +50,7 @@ import {
   INHERITED_ASKED_FIGURE_KINDS,
   INHERITED_LEFT_TO,
   INHERITED_PACE_KINDS,
+  ONE_TIME_INFLOW_KINDS,
   type EnteredAccount,
   type SavedRecommendationV3,
   type Scenario,
@@ -270,6 +271,16 @@ const WITH_V8: CurrentScenario = {
   ],
 }
 
+/** Schema version 9 (gap 5's U1): an inheritance that is Sam's alone and would not come to Pat if Sam died first, and a
+ *  gift that is both people's. Made up; the codec judges only the shapes. */
+const WITH_V9: CurrentScenario = {
+  ...WITH_V8,
+  oneTimeInflows: [
+    { id: 'oti-estate', kind: 'gift', name: 'Mom’s estate', year: 2031, amountReal: 200_000, heirIndex: 1, leftTo: 'someone-else' },
+    { id: 'oti-gift', kind: 'gift', name: 'A gift from Aunt Jo', year: 2028, amountReal: 25_000 },
+  ],
+}
+
 /** Encode, surgically mutate the JSON, return the re-encoded bytes. */
 function mutated(base: Scenario | ScenarioV2 | CurrentScenario, mutate: (obj: Obj) => void): Uint8Array {
   const obj = JSON.parse(new TextDecoder().decode(encodeScenario(base))) as Obj
@@ -451,9 +462,9 @@ describe('versions 3 to 5 relabel to their successors; the ladder stays honest f
     expect({ ...decoded.scenario, schemaVersion: 4 }).toEqual(onDisk)
   })
 
-  it('the maximal version-4 plan holds every top-level field this build knows except those a later version added (the version-5 answer, the version-6 kept what-ifs), and every account kind but the version-7 one — a sample of the surface a version-4 build could write, never the §7.3 rule', () => {
+  it('the maximal version-4 plan holds every top-level field this build knows except those a later version added (the version-5 answer, the version-6 kept what-ifs, the version-9 one-time money), and every account kind but the version-7 one — a sample of the surface a version-4 build could write, never the §7.3 rule', () => {
     const onDisk = JSON.parse(new TextDecoder().decode(frozenBytes('scenario-v4-maximal.json'))) as Obj
-    const laterFields: readonly string[] = ['workingYearLeftOver', 'keptWhatIfs']
+    const laterFields: readonly string[] = ['workingYearLeftOver', 'keptWhatIfs', 'oneTimeInflows']
     expect(Object.keys(onDisk).sort()).toEqual(SCENARIO_V3_FIELDS.filter((k) => !laterFields.includes(k)).sort())
     const arms = (onDisk.incomeStreams as Obj[]).map((x) => `${String(x.type)}${x.type === 'annuity' ? (x.qualified === true ? '-q' : '-nq') : ''}`)
     expect(arms.sort(), 'every income-stream arm').toEqual(['alimony', 'annuity-nq', 'annuity-q', 'other', 'pension', 'rental'])
@@ -502,12 +513,35 @@ describe('versions 3 to 5 relabel to their successors; the ladder stays honest f
 
   // The schema-v8 bump's own literal (gap 4's U2). Under a reverted constant (7) every save fails its round trip and the
   // floor test reds on its own message once the follow-up commit raises FLOOR to 8.
-  it('THE ABSOLUTE PIN AT 8: a plan labeled with the literal 8 decodes as version 8 (the schema-v8 bump’s one typed literal here — every derived pin moves with the constant, so a reverted constant reds this pin)', () => {
+  it('THE ABSOLUTE PIN AT 8: a plan labeled with the literal 8 decodes as the current version — a version-8 save opens in this build and in every later one (the schema-v8 bump’s typed literal; it stays)', () => {
     const decoded = decodeScenario(asVersion(WITH_V8, 8))
     expect(decoded.ok, 'a version-8 save must open in this build and in every later one').toBe(true)
     if (!decoded.ok) return
-    expect(decoded.scenario.schemaVersion).toBe(8)
+    expect(decoded.scenario.schemaVersion).toBe(CURRENT_SCHEMA_VERSION)
     expect(decoded.droppedAtoms).toEqual([])
+  })
+
+  // The schema-v9 bump's own literal (gap 5's U1). Under a reverted constant (8) every save fails its round trip and the
+  // floor test reds on its own message once the follow-up commit raises FLOOR to 9.
+  it('THE ABSOLUTE PIN AT 9: a plan labeled with the literal 9 decodes as version 9 (the schema-v9 bump’s one typed literal here — every derived pin moves with the constant, so a reverted constant reds this pin)', () => {
+    const decoded = decodeScenario(asVersion(WITH_V9, 9))
+    expect(decoded.ok, 'a version-9 save must open in this build and in every later one').toBe(true)
+    if (!decoded.ok) return
+    expect(decoded.scenario.schemaVersion).toBe(9)
+    expect(decoded.droppedAtoms).toEqual([])
+  })
+
+  it('a plan whose DISK label is 3 to 8 and that carries the one-time money list is refused as a writer bug naming the field — its version-9 twin opens, so the version clause alone refuses it (insight 152)', () => {
+    // On the current fixture, which carries no field of versions 6 to 8, so at every label only the 8 → 9 step can refuse.
+    const plan: CurrentScenario = { ...CURRENT, oneTimeInflows: [{ id: 'oti-1', kind: 'gift', name: 'An inheritance', year: 2030, amountReal: 100_000 }] }
+    expect(decodeScenario(asVersion(plan, 9)).ok, 'the version-9 twin opens').toBe(true)
+    for (const label of [3, 4, 5, 6, 7, 8]) {
+      expect(decodeScenario(asVersion(plan, label)), `labeled ${label}`).toEqual({
+        ok: false,
+        reason: 'corrupt',
+        detail: `scenario.oneTimeInflows: a plan saved as version ${label} cannot carry it — no build that writes version ${label} writes it (writer bug)`,
+      })
+    }
   })
 
   it('a plan whose DISK label is 3 to 7 and that carries a budget line’s repeat or rate is refused as a writer bug naming the field — its version-8 twin opens, so the version clause alone refuses it (insight 152)', () => {
@@ -602,7 +636,7 @@ describe('versions 3 to 5 relabel to their successors; the ladder stays honest f
     expect(start, '[test setup] decodeScenario is in the codec').toBeGreaterThan(-1)
     const body = source.slice(start, source.indexOf('\n}\n', start))
     const steps = [...body.matchAll(/if \(version === (\d+)\) \{([\s\S]*?)\n {4}\}/g)].filter(([, , block]) => block!.includes('version ='))
-    expect(steps.map(([, n]) => Number(n)), 'the label-only steps, in ladder order').toEqual([3, 4, 5, 6, 7])
+    expect(steps.map(([, n]) => Number(n)), 'the label-only steps, in ladder order').toEqual([3, 4, 5, 6, 7, 8])
     for (const [, n, block] of steps) {
       const next = Number(n) + 1
       expect([...block!.matchAll(/parsed\.schemaVersion = ([^\n]+)/g)].map((m) => m[1]!.trim()), `step ${n}: the label it writes`).toEqual([String(next)])
@@ -670,6 +704,9 @@ describe('the schema surface — docs/architecture.md §7.3 rules (b) and (c), h
     INHERITED_ASKED_FIGURE_KINDS: ['not-asked', 'custodian', 'computed', 'death-year'],
     INHERITED_LEFT_TO: ['other-member', 'someone-else'],
     INHERITED_PACE_KINDS: ['law-minimum', 'even', 'even-to-year'],
+    // The schema-v9 bump's new vocabulary (gap 5's U1), recorded in the bump's own commit; the home sale joins it with
+    // the version-10 bump (the plan's U7).
+    ONE_TIME_INFLOW_KINDS: ['gift'],
   }
   /** The one vocabulary the codec spells inline (the ticker classification's `kind`), as it spells it. */
   const RECORDED_INLINE_VOCABULARY = "['simple', 'exact']"
@@ -714,6 +751,7 @@ describe('the schema surface — docs/architecture.md §7.3 rules (b) and (c), h
     INHERITED_ASKED_FIGURE_KINDS,
     INHERITED_LEFT_TO,
     INHERITED_PACE_KINDS,
+    ONE_TIME_INFLOW_KINDS,
   }
   const why = (what: string): string =>
     `${what} changed while CURRENT_SCHEMA_VERSION is ${CURRENT_SCHEMA_VERSION}: an older copy would ` +
@@ -1733,8 +1771,8 @@ describe('the current shape — the v3 field set (U8, the first v3 writer), writ
 
   it('a NON-Corrupt throw from INSIDE a validator ESCAPES decodeScenario — a programming defect is never laundered into a calm dropped atom', () => {
     // THE TWO RE-THROWS THIS COVERS, and they CHAIN, so one arm holds both:
-    //   `scenarioCodec.ts:1370`  `if (!(e instanceof Corrupt)) throw e`  (the record's try/catch)
-    //   `scenarioCodec.ts:1576`  `throw e`                              (decodeScenario's outer catch)
+    //   `scenarioCodec.ts:1422`  `if (!(e instanceof Corrupt)) throw e`  (the record's try/catch)
+    //   `scenarioCodec.ts:1649`  `throw e`                              (decodeScenario's outer catch)
     // Both were UNEXERCISED. They were filed as "correct-by-inspection but SEAM-LESS" on the
     // reasoning that decodeScenario builds its input from `JSON.parse` — data properties only,
     // no getters — and that no validator here recurses or calls a method on an unchecked value.
@@ -2155,6 +2193,79 @@ describe('schema version 8 — a budget line’s repeat and its own rate (gap 4�
       line.growthRate = 0.2
     })
     expect(detailOf(lever)).toBe('keptWhatIfs[4].levers[0].line.growthRate: expected a yearly rate in [0, 0.15] (with prices is written as absence)')
+  })
+})
+
+describe('schema version 9 — one-time money in (gap 5’s U1, KTD10, KTD12)', () => {
+  const detailOf = (bytes: Uint8Array): string => {
+    const d = decodeScenario(bytes)
+    return d.ok ? 'opened' : d.reason === 'corrupt' ? d.detail : d.reason
+  }
+  // The heir's item (oneTimeInflows[0]) and the both-people's gift ([1]).
+  const withItem = (index: number, mutate: (item: Obj) => void): Uint8Array =>
+    mutated(WITH_V9, (o) => mutate((o.oneTimeInflows as Obj[])[index]!))
+  /** A one-person plan: Pat alone, with Pat's account, filing single. Checked to open on its own before any arm reads it. */
+  const ONE_PERSON: CurrentScenario = {
+    ...CURRENT,
+    people: [CURRENT.people[0]!],
+    enteredAccounts: CURRENT.enteredAccounts.filter((a) => a.ownerIndex === 0),
+    incomeStreams: (CURRENT.incomeStreams ?? []).filter((s) => s.ownerIndex === 0),
+    filing: 'single',
+  }
+
+  it('both items, a one-person heir’s and a both-people’s gift, round-trip byte for byte, nothing dropped', () => {
+    const bytes = encodeScenario(WITH_V9)
+    const decoded = decodeScenario(bytes)
+    expect(decoded).toEqual({ ok: true, scenario: WITH_V9, droppedAtoms: [] })
+    if (decoded.ok) expect(Array.from(encodeScenario(decoded.scenario))).toEqual(Array.from(bytes))
+  })
+
+  it('an empty list decodes as a plan with none (a writer slip never sends the whole plan to the damaged-data screen)', () => {
+    expect(detailOf(mutated(WITH_V9, (o) => (o.oneTimeInflows = [])))).toBe('opened')
+  })
+
+  it('a gift at the computable-domain ceiling opens; one dollar above it is refused (the codec is the restore path’s only range gate)', () => {
+    expect(detailOf(withItem(1, (i) => (i.amountReal = ENGINE_MAX_DOLLAR)))).toBe('opened')
+    expect(detailOf(withItem(1, (i) => (i.amountReal = MAX_REAL_DOLLAR + 1)))).toBe(
+      `oneTimeInflows[1].amountReal: exceeds the ${MAX_REAL_DOLLAR} real-$ computable-domain ceiling (corruption)`,
+    )
+  })
+
+  it.each([
+    ['a duplicate id', (i: Obj) => (i.id = 'oti-estate'), 'oneTimeInflows[1].id: "oti-estate" is already another item\'s id'],
+    ['an empty id', (i: Obj) => (i.id = ''), 'oneTimeInflows[1].id: expected a non-empty id'],
+    ['an unknown kind', (i: Obj) => (i.kind = 'lottery'), 'oneTimeInflows[1].kind: expected one of [gift]'],
+    ['a home sale (version 10’s kind)', (i: Obj) => (i.kind = 'homeSale'), 'oneTimeInflows[1].kind: expected one of [gift]'],
+    ['a name that is not a string', (i: Obj) => (i.name = 7), 'oneTimeInflows[1].name: expected a string'],
+    ['a fractional year', (i: Obj) => (i.year = 2030.5), 'oneTimeInflows[1].year: expected an integer'],
+    ['a $0 gift', (i: Obj) => (i.amountReal = 0), 'oneTimeInflows[1].amountReal: an inheritance or gift is above $0 (an item with none is deleted, never saved)'],
+    ['a negative gift', (i: Obj) => (i.amountReal = -5), 'oneTimeInflows[1].amountReal: expected a non-negative real-$ amount (corruption)'],
+    ['a null amount (a NaN through JSON)', (i: Obj) => (i.amountReal = null), 'oneTimeInflows[1].amountReal: expected a finite number'],
+    ['a leftTo with no heir', (i: Obj) => (i.leftTo = 'other-member'), 'oneTimeInflows[1].leftTo: who it goes to if the heir dies first is asked only of an item that is one person’s (writer bug)'],
+  ])('refused, on the both-people’s gift: %s', (_name, mutate, detail) => {
+    expect(detailOf(withItem(1, mutate))).toBe(detail)
+  })
+
+  it.each([
+    ['an heir with no leftTo', (i: Obj) => delete i.leftTo, 'oneTimeInflows[0].leftTo: expected one of [other-member, someone-else]'],
+    ['a leftTo outside its vocabulary', (i: Obj) => (i.leftTo = 'the-kids'), 'oneTimeInflows[0].leftTo: expected one of [other-member, someone-else]'],
+    ['an heir past the people list', (i: Obj) => (i.heirIndex = 2), 'oneTimeInflows[0].heirIndex: expected an index into people (0 to 1)'],
+    ['a negative heir', (i: Obj) => (i.heirIndex = -1), 'oneTimeInflows[0].heirIndex: expected an index into people (0 to 1)'],
+    ['a fractional heir', (i: Obj) => (i.heirIndex = 0.5), 'oneTimeInflows[0].heirIndex: expected an integer'],
+  ])('refused, on the heir’s item: %s', (_name, mutate, detail) => {
+    expect(detailOf(withItem(0, mutate))).toBe(detail)
+  })
+
+  it('a one-person plan opens with an item that names no heir, and refuses heir fields (whose it is is asked of a couple only)', () => {
+    const item = { id: 'oti-1', kind: 'gift', name: 'An inheritance', year: 2030, amountReal: 100_000 } as const
+    expect(detailOf(encodeScenario(ONE_PERSON)), '[setup] the one-person plan opens on its own').toBe('opened')
+    expect(detailOf(encodeScenario({ ...ONE_PERSON, oneTimeInflows: [item] }))).toBe('opened')
+    expect(detailOf(encodeScenario({ ...ONE_PERSON, oneTimeInflows: [{ ...item, heirIndex: 0, leftTo: 'someone-else' }] }))).toBe(
+      'oneTimeInflows[0].heirIndex: whose it is is asked of a couple only (writer bug)',
+    )
+    expect(detailOf(encodeScenario({ ...ONE_PERSON, oneTimeInflows: [{ ...item, leftTo: 'someone-else' }] }))).toBe(
+      'oneTimeInflows[0].leftTo: whose it is is asked of a couple only (writer bug)',
+    )
   })
 })
 

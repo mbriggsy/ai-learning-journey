@@ -197,6 +197,10 @@ export interface ScenarioDraft
       // `...draft` at Save, never seeded and never re-stamped; the plan's own answer never reads it (a
       // what-if runs on a copy of the draft), so no injected builder may touch it.
       | 'keptWhatIfs'
+      // One-time money in (schema version 9; gap 5's plan, KTD2; ABSENT = none). A USER FACT carried via `...draft`
+      // at Save, never seeded and never re-stamped, and never held as an empty list: deleting the last item removes
+      // the key, so a plan with none writes nothing.
+      | 'oneTimeInflows'
       // Act-4 · U17 — the saved-recommendation record (additive-optional; ABSENT = never saved
       // one). A USER FACT carried via `...draft` at Save (the chosenGoal/retirementState
       // precedent), MINTED ONCE by the S5 save gesture and NEVER re-stamped: putting it in

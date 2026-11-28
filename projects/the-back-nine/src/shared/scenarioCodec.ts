@@ -12,7 +12,7 @@
  * SEMANTICS (ranges, sums, age ordering) and remains in the path of every decoded
  * scenario before an answer renders — the codec never re-implements a domain rule,
  * so the two gates cannot disagree. It moves no field, and it changes the parsed object in
- * exactly two ways: it relabels a version-3, -4, -5, -6 or -7 plan (the steps below), and it deletes a
+ * exactly two ways: it relabels a version-3, -4, -5, -6, -7 or -8 plan (the steps below), and it deletes a
  * savedRecommendation that fails its checks — the one tolerated atom, reported on
  * `droppedAtoms` (the bottom of `checkV3Fields`, and the 5 → 6 step). Anything else it returns is the disk's.
  *
@@ -49,8 +49,11 @@
  *     whose disk label is 3 to 7 and that carries either field on a plan line or on a kept what-if's
  *     added or replacing line (a writer bug, named), then relabels to its LITERAL successor, 8, and
  *     reads version 7 forever.
+ *   · 8 → 9 (gap 5's U1: the one-time money list), LABEL ONLY: it refuses first a plan whose disk label is
+ *     3 to 8 and that carries the list (a writer bug, named), then relabels to its LITERAL successor, 9, and
+ *     reads version 8 forever.
  *   · {@link CURRENT_SCHEMA_VERSION} runs the field checks (`checkV3Fields` — they name the v3
- *     field GENERATION, which versions 4 to 8 carry, plus the fields versions 5 to 8 added).
+ *     field GENERATION, which versions 4 to 9 carry, plus the fields versions 5 to 9 added).
  * A non-integer version, or one below 1, is corruption, not a branch.
  *
  * TOLERANT READER: unknown extra fields pass through untouched — the additive-within-
@@ -88,6 +91,7 @@ import {
   INHERITED_ASKED_FIGURE_KINDS,
   INHERITED_LEFT_TO,
   INHERITED_PACE_KINDS,
+  ONE_TIME_INFLOW_KINDS,
   CURRENT_SCHEMA_VERSION,
   type AnyScenario,
   type Scenario,
@@ -529,6 +533,40 @@ function checkInheritedIraV7(v: unknown, peopleCount: number, path: string): voi
   if (peopleCount > 1) needVocab(v, 'leftTo', INHERITED_LEFT_TO, path)
   else refuseFields(v, ['leftTo'], path, 'who gets it if the heir dies first is asked of a couple only')
   checkInheritedPaceV7(v.pace, `${path}.pace`)
+}
+
+/** One piece of one-time money in ({@link OneTimeInflow}, schema version 9; gap 5's plan, KTD10): its SHAPE only. The
+ *  id is a non-empty string (unique across the list, checked by the caller); the kind in its version's vocabulary;
+ *  the name a string; the year an integer, with no floor or ceiling against `startCalendarYear` (intake re-asks a
+ *  year out of range and the engine refuses one by name: gap 4's KTD9 precedent); the amount finite, above $0 and
+ *  inside the computable domain (insight 046: the year-end credit adds it away before the engine's own range gate).
+ *  The heir fields (KTD12) come as a pair on a couple's plan, the heir an index into `people`, and never on a
+ *  one-person plan (gap 3's `leftTo` rule). Returns the id. §7.3, from a version-8 copy's side: (a) yes — a copy
+ *  without the list would run the plan without the money, so the plan must not open there; hence the bump and the
+ *  8 → 9 step's refusal. */
+function checkOneTimeInflowV9(v: unknown, peopleCount: number, path: string): string {
+  needObject(v, path)
+  const id = needId(v, 'id', path)
+  needVocab(v, 'kind', ONE_TIME_INFLOW_KINDS, path)
+  needString(v, 'name', path)
+  needInteger(v, 'year', path)
+  needDollar(v, 'amountReal', path)
+  if ((v.amountReal as number) <= 0) {
+    throw new Corrupt(`${path}.amountReal: an inheritance or gift is above $0 (an item with none is deleted, never saved)`)
+  }
+  if (peopleCount > 1) {
+    if (v.heirIndex !== undefined) {
+      needInteger(v, 'heirIndex', path)
+      const heir = v.heirIndex as number
+      if (heir < 0 || heir >= peopleCount) throw new Corrupt(`${path}.heirIndex: expected an index into people (0 to ${peopleCount - 1})`)
+      needVocab(v, 'leftTo', INHERITED_LEFT_TO, path)
+    } else {
+      refuseFields(v, ['leftTo'], path, 'who it goes to if the heir dies first is asked only of an item that is one person’s')
+    }
+  } else {
+    refuseFields(v, ['heirIndex', 'leftTo'], path, 'whose it is is asked of a couple only')
+  }
+  return id
 }
 
 /** An inherited IRA's pace ({@link InheritedPace}): the kind in its vocabulary, and a chosen last year (an integer)
@@ -1324,6 +1362,20 @@ function checkV3Fields(o: Obj): string[] {
       ids.add(id)
     })
   }
+  // One-time money in (schema version 9; gap 5's plan, KTD10), optional, ABSENT meaning none. Every item passes
+  // `checkOneTimeInflowV9`, and no two share an id. An EMPTY list decodes as none (gap 4's KTD9 accepted an empty
+  // `loans` list on purpose): refusing it would send the whole saved plan to the damaged-data screen over one writer
+  // slip. The writer never writes one, and the engine still refuses an empty list (its own arm, KTD2). Loud, like
+  // every field but the record: an item is the household's own money.
+  if (o.oneTimeInflows !== undefined) {
+    needArray(o.oneTimeInflows, 'scenario.oneTimeInflows')
+    const ids = new Set<string>()
+    o.oneTimeInflows.forEach((item, i) => {
+      const id = checkOneTimeInflowV9(item, peopleCount, `oneTimeInflows[${i}]`)
+      if (ids.has(id)) throw new Corrupt(`oneTimeInflows[${i}].id: "${id}" is already another item's id`)
+      ids.add(id)
+    })
+  }
   // ─────────────────────────────────────────────────────────────────────────────────────────
   // Act-4 · U17 — the saved-recommendation record: THE FIRST AND ONLY TOLERATED DROP IN THIS
   // CODEC, a DELIBERATE, spec-named divergence from the file's loud-over-silent discipline
@@ -1441,6 +1493,12 @@ function versionEightFieldIn(o: Obj): string | undefined {
     }
   }
   return undefined
+}
+
+/** The path of the field only version 9 writes (the one-time money list) — `undefined` when the plan carries none.
+ *  Read by the 8 → 9 step BEFORE any field is checked; the list arm judges its shape afterwards. */
+function versionNineFieldIn(o: Obj): string | undefined {
+  return o.oneTimeInflows !== undefined ? 'scenario.oneTimeInflows' : undefined
 }
 
 /**
@@ -1566,6 +1624,21 @@ export function decodeScenario(bytes: Uint8Array): ScenarioDecode {
       }
       parsed.schemaVersion = 8
       version = 8
+    }
+    // 8 → 9, LABEL ONLY (gap 5's U1): version 9 adds one OPTIONAL top-level field, the one-time money list, so a
+    // version-8 plan is a version-9 plan holding none, and the step writes nothing into it. Before the relabel, a plan
+    // whose DISK label is 3 to 8 and that carries the list is refused: no build writing those labels writes it, and a
+    // copy at those labels would run the plan without the money (§7.3's rule (a)), so such a plan is a writer bug,
+    // named. The LITERAL successor again, never `CURRENT_SCHEMA_VERSION` (the 3 → 4 note above). Read forever.
+    if (version === 8) {
+      const newer = versionNineFieldIn(parsed)
+      if (newer !== undefined) {
+        throw new Corrupt(
+          `${newer}: a plan saved as version ${onDisk} cannot carry it — no build that writes version ${onDisk} writes it (writer bug)`,
+        )
+      }
+      parsed.schemaVersion = 9
+      version = 9
     }
     if (version === CURRENT_SCHEMA_VERSION) {
       const droppedAtoms = [...stepDrops, ...checkV3Fields(parsed)]

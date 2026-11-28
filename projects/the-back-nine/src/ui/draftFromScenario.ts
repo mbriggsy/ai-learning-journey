@@ -7,7 +7,7 @@
  * the reload path can `appModel.update(() => hydrated.draft)` and recompute — exactly mirroring the
  * `?seed` hydration (IntakeApp), never a field-mapping layer that could drift from the codec.
  *
- * WHY IT'S ALMOST A CLEAN STRIP, PROVEN BY THE COMPILE. `memoryModel.ts:234-238` asserts, at
+ * WHY IT'S ALMOST A CLEAN STRIP, PROVEN BY THE COMPILE. `memoryModel.ts:238-242` asserts, at
  * type-check time, that `keyof ScenarioDraft ⊆ keyof CurrentScenario` AND `keyof CurrentScenario ⊆ keyof
  * ScenarioDraft ∪ {schemaVersion}` — i.e. a `CurrentScenario` IS a `ScenarioDraft` plus the
  * `schemaVersion` discriminant. So the field SET is a shallow strip of that one key; every other
@@ -17,7 +17,7 @@
  *
  * THE ONE ARITY GAP (why this returns a RESULT, not a bare draft). The draft types `people` as a
  * strict two-tuple (the married-couple model; single-user is deferred — TODO), but the codec only
- * gates `people.length >= 1` (scenarioCodec.ts:328 — it also validates the legacy v1/v2 degenerate
+ * gates `people.length >= 1` (scenarioCodec.ts:332 — it also validates the legacy v1/v2 degenerate
  * case). A vault WE wrote is always two-person (scenarioFromDraft encodes a two-tuple, GCM-
  * authenticated on disk), so the failure arm is defensive: a `!== 2` scenario is an unsupported shape
  * we refuse to silently coerce into the two-tuple (that would be the calm-but-wrong sin — dropping or
@@ -54,7 +54,7 @@ export type HydratedDraft =
 
 /** The decoded persisted scenario → the in-memory draft the result screen recomputes from. A strip of
  *  the `schemaVersion` discriminant (the ONLY key a `CurrentScenario` carries that the draft does not —
- *  memoryModel.ts:230-238) plus the two-person arity narrowing the codec's `>= 1` array can't prove,
+ *  memoryModel.ts:234-242) plus the two-person arity narrowing the codec's `>= 1` array can't prove,
  *  with an id minted on every account and budget line that lacks one (the open-time mint, above). */
 export function draftFromScenario(scenario: CurrentScenario): HydratedDraft {
   if (scenario.people.length !== 2) {

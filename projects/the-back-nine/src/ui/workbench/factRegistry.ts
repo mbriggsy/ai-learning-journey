@@ -102,6 +102,9 @@ export const DRAFT_FACTS: Record<keyof ScenarioDraft, FactDisposition> = {
   keptWhatIfs: notAFact(
     'Choices the household is trying beside the plan, kept in the workbench: what-ifs, never facts the plan runs on.',
   ),
+  // Interim (gap 5's U1): the walk test fails on a shown field no drawer stamps, and the one-time drawer arrives in
+  // U4, which moves this to `nested` with its flat INFLOW_FACTS record.
+  oneTimeInflows: notAFact('No drawer writes this list until gap 5’s U4 (the one-time money drawer).'),
 }
 
 export const PERSON_FACTS: Record<keyof PersonDraft, FactDisposition> = {

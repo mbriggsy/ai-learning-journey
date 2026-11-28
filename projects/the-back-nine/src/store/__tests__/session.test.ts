@@ -797,8 +797,8 @@ describe('the schema-v4, -v5 and -v6 bumps — a newer plan is refused before an
     if (!minted.ready) throw new Error(minted.detail)
     expect((await session.save(minted.scenario)).ok).toBe(true)
     const raw = await diskPlaintext(db, PASSPHRASE)
-    // The typed literal, read raw (insight 151): the bytes a version-8 build writes (7 until the schema-v8 bump).
-    expect(raw.schemaVersion).toBe(8)
+    // The typed literal, read raw (insight 151): the bytes a version-9 build writes (8 until the schema-v9 bump).
+    expect(raw.schemaVersion).toBe(9)
     expect(raw.schemaVersion).toBe(CURRENT_SCHEMA_VERSION)
     expect('workingYearLeftOver' in raw, 'an unanswered plan is written with no answer key').toBe(false)
     await session.lock()
@@ -829,7 +829,7 @@ describe('the schema-v4, -v5 and -v6 bumps — a newer plan is refused before an
     const raw = await diskPlaintext(db, PASSPHRASE)
     const before = v5 as unknown as Record<string, unknown>
     // The typed literal, read raw (insight 151).
-    expect(raw.schemaVersion).toBe(8)
+    expect(raw.schemaVersion).toBe(9)
     // An id on every account and line — and each entry is otherwise the version-5 entry, key for key.
     const rawAccounts = raw.enteredAccounts as Record<string, unknown>[]
     const rawLines = raw.budget as Record<string, unknown>[]

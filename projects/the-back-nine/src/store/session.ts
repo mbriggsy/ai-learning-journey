@@ -442,7 +442,7 @@ export function createSession(db: VaultDb): VaultSession {
         // `decoded.droppedAtoms` IS DELIBERATELY IGNORED HERE — the ruling, not an oversight. The
         // asymmetry is with the WRITE side, and it is REPORT-vs-IGNORE, not refuse-vs-ignore:
         // `scenarioFromDraft` returns `ready: true` ALONGSIDE a non-empty list (scenarioFromDraft.ts:122;
-        // draftFromScenario.test.ts:594 pins that a dropped atom never refuses the whole save), and it is
+        // draftFromScenario.test.ts:628 pins that a dropped atom never refuses the whole save), and it is
         // S5's save GESTURE that rules on the report. Nothing on the write path refuses by itself.
         // This is the READ side, and the drop's whole charter is this codepath: a household's plan
         // must never become unopenable at unlock because its recommendation MEMORY went bad. The

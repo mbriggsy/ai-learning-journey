@@ -90,7 +90,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   adopted the old figure. No official national Medigap average exists to pin to; the constant's
   `pinTo` says so explicitly rather than naming a source that isn't published.
 - **Per-person explicit persisted provenance stamp.** `MedicareExtrasEntryV3`
-  (`src/shared/model.ts:2877`) discriminates on `kind` — `'none' | 'entered' | 'typical' |
+  (`src/shared/model.ts:2914`) discriminates on `kind` — `'none' | 'entered' | 'typical' |
   'unanswered'` — with `adoptionVintage` recording the era adopted, keyed to the SAVED era and
   never re-derived from `value == current-typical` (the `src/shared/appDefaults.ts:8-15`
   saved-era inversion trap). `'unanswered'` is the honest persisted hole: it funds the typical
@@ -110,7 +110,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   `ScenarioDraft` by deliberate design (`src/ui/assumptionRegistry.ts:86`) — a nested `health.*`
   sub-field would dodge the compile gate (the assumptionRegistry.ts:83 landmine) — and is
   registered `{ kind: 'row-editable', seats: ['medicare-extras'] }` at
-  `src/ui/assumptionRegistry.ts:159`. The panel seat (`src/intake/AssumptionPanel.tsx` (lines 1140–1156 at `87e3c8070`; deleted by Act 6 · RC18))
+  `src/ui/assumptionRegistry.ts:160`. The panel seat (`src/intake/AssumptionPanel.tsx` (lines 1140–1156 at `87e3c8070`; deleted by Act 6 · RC18))
   re-hosts the SAME `MedicareExtrasFork` face over the same write shape, `onWrite` adapting to
   the host's commit seam — and passes `standingNote`, which the intake step does not: when the
   fork is UNANSWERED the panel shows the read-only line naming the typical the plan is funding
@@ -235,8 +235,8 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
 
 ## Ship gates (all met at close)
 
-- **Codec.** The persisted per-person entry is range-gated in `src/shared/scenarioCodec.ts:1120-1149`:
-  the `'entered'` dollar runs `needFinite` → `needNonNegativeDollar` (`scenarioCodec.ts:547`,
+- **Codec.** The persisted per-person entry is range-gated in `src/shared/scenarioCodec.ts:1158-1187`:
+  the `'entered'` dollar runs `needFinite` → `needNonNegativeDollar` (`scenarioCodec.ts:585`,
   throws `Corrupt`) — deliberately NOT the siblings' `optFinite` / finite-only
   `checkFiniteArray`, because a negative extras premium inside the funding sum is the insight-046
   optimistic class the engine cannot backstop. Both biconditionals are enforced in both

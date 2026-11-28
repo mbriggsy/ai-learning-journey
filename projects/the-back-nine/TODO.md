@@ -490,9 +490,9 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    `tsc` until written) · `recommendationView.ts:349-353` · the intake picker **4 → 11 vertical arms**
    against `verify:fit`. Engine cost is genuinely near-zero (`stateTax.ts:163` structural early return).
    ⚑ **The filed "every saved vault decodes Corrupt" blocker is FALSE — do not act on it, and do NOT loosen
-   the compile tie.** `_V3FieldsCover` (`model.ts:3315-3317`) covers only `keyof CurrentScenario`;
-   `checkStateTaxVintageV3` (`scenarioCodec.ts:906-911`) is hand-written and compels no `needString`. Safe
-   because `scenarioCodec.ts:1158-1159` gates `retirementState` via `needVocab(STATE_ROSTER)`, so no
+   the compile tie.** `_V3FieldsCover` (`model.ts:3353-3355`) covers only `keyof CurrentScenario`;
+   `checkStateTaxVintageV3` (`scenarioCodec.ts:944-949`) is hand-written and compels no `needString`. Safe
+   because `scenarioCodec.ts:1196-1197` gates `retirementState` via `needVocab(STATE_ROSTER)`, so no
    pre-widening vault can *be* a household in a newly-priced state. The prescribed remedy — loosening
    `stateTax.ts:429-433` — would **re-open the exact hole that tie was minted to close** (`:424-428`).
    ⚑ **His call, sharpened:** does the refusal reach the **headline + date** (`engineProtocol.ts:436`/`:484`)
@@ -717,7 +717,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     covered `years: 1, passed: true`. (b) THE LADDER is register `L` · **pilot**, and the v2→v3 ALGORITHM IS
     PRESCRIBED: `model.ts:2048-2050` mints synthetic entered accounts from the old aggregates "so the ladder
     stays total"; the write primitive exists (`db.ts:232 rewriteModel`, pinned `db.test.ts:180`); today's
-    ladder is decode-and-return with NO migrate step (`scenarioCodec.ts:1478-1485`, the v1/v2 arms), and a v1 vault survives
+    ladder is decode-and-return with NO migrate step (`scenarioCodec.ts:1536-1543`, the v1/v2 arms), and a v1 vault survives
     every store seam on real IndexedDB (`e2e/vaultHarness.ts:24-25`) to die only at `IntakeApp.tsx:818`.
     Two new defects ride with it: `session.ts:464-468` claims the writer and UNLOCKS before the version is
     judged (the recovery path claims unconditionally, `:539`), and `backup.ts:209-213` LANDS a legacy backup
@@ -739,7 +739,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     · **no document a friend reads** — the in-app honest-limits total is two sentences, and the app tells
     them to "validate with a professional" while handing that professional nothing readable · ✅ the solve
     lane's EDIT-TIME cancel shipped 2026-09-03 (`engineClient.ts:279 createResettableEngine` +
-    `memoryModel.ts:783-786`); what remains is the interactive tier and the MAIN-THREAD FALLBACK, which still
+    `memoryModel.ts:787-790`); what remains is the interactive tier and the MAIN-THREAD FALLBACK, which still
     freezes the tab for the whole solve and says nothing — its `reset` is a documented no-op
     (`engineClient.ts:51-63`; the old `:55` anchor named nothing about freezing).
     ⚑ **Folded 2026-09-06 from the superseded b9-3 plan (its item 8 — icons · WebKit arm · enlarged-text arm) — its 2026-09-04 re-verify clause, still live:** ✅ PWA icons DONE 2026-09-08 (his eye audits the silhouette sheet — path in the register's device entry) · ✅ WebKit e2e
@@ -794,9 +794,9 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     riders, the open copy obligations, the deferred richer market draw, and the `dateinvert` (c) mint —
     its own session, a size-L parameter hunt.
     ⚑ **2026-09-04:** two bullets were half-dead and are closed — the `partBTrendVintage` "no exposure gate"
-    clause was swept in `staleness.ts:747-750` but still lived verbatim at `model.ts:3258` (swept), and
+    clause was swept in `staleness.ts:747-750` but still lived verbatim at `model.ts:3295` (swept), and
     Plan 4's "the record carries `seedA`/`seedB`" (`plans/4-recommendation.md:283`) had outlived its own
-    "kill BEFORE S5 mints" deadline — the shipped `SavedRecommendationV3` (`model.ts:2684-2706`) has no seed
+    "kill BEFORE S5 mints" deadline — the shipped `SavedRecommendationV3` (`model.ts:2721-2743`) has no seed
     field (struck in the plan). ⚑ (b)'s SOURCE twin outlived that close — `heldOutSeed.ts:13-14` still said
     the U17 record stores the seed — and was swept 2026-09-25 (the register bullet is closed with it).
     ✅ **NC's RETIRED CERTIFICATION CHECKPOINT — SWEPT 2026-08-14.** Six shipped surfaces (not the
@@ -839,7 +839,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     flag) and BOTH candidate fixes cost something — "mint through `update()`" turns a deferred false-arm
     into an immediate one; an eager mint in `createMemoryModel` breaks the WRITTEN contract #1b (mint at the
     FIRST ENGINE RUN, `plans/2-first-answer.md:57`) with no test that would catch it. His ruling, framed as
-    those two arms. Two half-swept false comments closed 2026-09-04: `model.ts:3258` and
+    those two arms. Two half-swept false comments closed 2026-09-04: `model.ts:3295` and
     `plans/4-recommendation.md:283`.
 
 ---

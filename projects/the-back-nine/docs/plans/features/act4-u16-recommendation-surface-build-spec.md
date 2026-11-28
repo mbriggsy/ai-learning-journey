@@ -169,7 +169,7 @@ standing valve; the §7 triggers in `docs/decisions/market-model.md` stay live a
 - The pre-dispatch `blocked` arm stays DISTINCT from the committed withheld payload — two calm
   renders, both naming the true reason (§Q5). The gap vocabulary shipped as
   `SolvePreconditionGap = 'goal-unset' | SolveBlockReason` over `SolveBlockReason = 'no-pretax' |
-  'spine-unready'` (`memoryModel.ts:311`, `:316`):
+  'spine-unready'` (`memoryModel.ts:315`, `:320`):
   `goal-unset` steers to the GoalPicker, and the single `buckets-defaulted` gap this spec first
   prescribed became the builder's TYPED refusal `no-pretax` | `spine-unready` landing verbatim as
   the gap, each with its own true note (the steer-seed increment, 2026-07-23, commits `8b9cab61` +
@@ -399,7 +399,7 @@ to a single commit.
   `ScenarioDraft` key to ride, and the vocabulary cannot key on `keyof ScenarioDraft`. A new id
   fails `tsc` until its builder and its humane string are authored. Both dispositions render here
   as read-only notes — no inert editing affordance ships on this surface (wall #5). `heirBracket`
-  also holds a `row-editable` seat in `assumptionRegistry.ts:125`, and its editor is **NOT inline**:
+  also holds a `row-editable` seat in `assumptionRegistry.ts:126`, and its editor is **NOT inline**:
   it shipped 2026-08-14 as the AssumptionPanel `heir-bracket` seat, on Result.tsx's measured
   67–161px breach and insight 058's one-editor-home rule. `r7-editable` therefore means "an editable
   home exists somewhere", never "render a control right here".

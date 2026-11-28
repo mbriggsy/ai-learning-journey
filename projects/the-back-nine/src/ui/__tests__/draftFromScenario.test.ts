@@ -217,6 +217,40 @@ describe('draftFromScenario — a budget line’s repeat and rate round-trip (sc
   })
 })
 
+describe('draftFromScenario — the one-time money list round-trips (schema version 9, gap 5’s U1)', () => {
+  const estate = { id: 'oti-estate', kind: 'gift', name: 'Mom’s estate', year: 2031, amountReal: 200_000, heirIndex: 1, leftTo: 'someone-else' } as const
+  const gift = { id: 'oti-gift', kind: 'gift', name: 'A gift from Aunt Jo', year: 2028, amountReal: 25_000 } as const
+
+  it('every field survives scenario → draft → scenario, and an item that is both people’s gains no heir key', () => {
+    const withItems: CurrentScenario = { ...retiredV3(), oneTimeInflows: [estate, gift] }
+    const hydrated = draftFromScenario(withItems)
+    expect(hydrated.ok).toBe(true)
+    if (!hydrated.ok) return
+    expect(hydrated.draft.oneTimeInflows, 'the list reaches the draft').toEqual([estate, gift])
+    const reencoded = scenarioFromDraft(hydrated.draft)
+    expect(reencoded.ready).toBe(true)
+    if (!reencoded.ready) return
+    expect(reencoded.scenario).toEqual(withItems)
+    // `toEqual` ignores an undefined-valued key, so absence is read by key.
+    const reGift = reencoded.scenario.oneTimeInflows![1]!
+    expect(Object.hasOwn(reGift, 'heirIndex') || Object.hasOwn(reGift, 'leftTo'), 'a both-people’s item gains no heir key').toBe(false)
+  })
+
+  it('a plan with no list writes no key, and a draft whose last item is deleted saves with no key (never an empty list)', () => {
+    const plain = scenarioFromDraft(DEV_SEEDS.retired)
+    expect(plain.ready).toBe(true)
+    if (!plain.ready) return
+    expect(Object.hasOwn(plain.scenario, 'oneTimeInflows'), 'a plan with none writes no key').toBe(false)
+    const hydrated = draftFromScenario({ ...retiredV3(), oneTimeInflows: [gift] })
+    expect(hydrated.ok).toBe(true)
+    if (!hydrated.ok) return
+    const { oneTimeInflows: _deleted, ...emptied } = hydrated.draft
+    const saved = scenarioFromDraft(emptied)
+    expect(saved.ready, 'the plan stays saveable').toBe(true)
+    if (saved.ready) expect(Object.hasOwn(saved.scenario, 'oneTimeInflows')).toBe(false)
+  })
+})
+
 describe('scenarioFromDraft — the healthcare vintage stamp (P3-U11, write-time truth)', () => {
   it('every save carries the CURRENT build vintage stamp', () => {
     const r = scenarioFromDraft(DEV_SEEDS.retired)

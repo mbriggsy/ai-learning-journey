@@ -2389,11 +2389,42 @@ export type IncomeStream = {
   readonly survivorPct: number
 } & IncomeTaxTreatment
 
+/** The kinds of one-time money in (gap 5's plan, KTD10), a list as {@link INCOME_TYPES} is. Version 9 holds the
+ *  inheritance or gift; the home sale joins at version 10, with the home-sale half (the plan's U7). */
+export const ONE_TIME_INFLOW_KINDS = ['gift'] as const
+export type OneTimeInflowKind = (typeof ONE_TIME_INFLOW_KINDS)[number]
+
+/** One persisted piece of one-time money in (schema version 9; gap 5's plan, `docs/plans/features/one-time-money-in-
+ *  build-spec.md`, KTD10 and KTD12), on `CurrentScenario.oneTimeInflows`. Credited to the taxable account at the end
+ *  of its calendar year at full cost basis, never an income stream (a stream's surplus is floored away) and never an
+ *  account (an account would add the money to today's balances). Every field is FLAT on the item: the R7 registry's
+ *  gate does not see nested fields (`src/ui/assumptionRegistry.ts`). */
+export interface OneTimeInflow {
+  /** Stable id, unique among the plan's items (a drawer edits an item by it). */
+  readonly id: string
+  readonly kind: OneTimeInflowKind
+  /** The household's own name for it ("Mom's estate"). */
+  readonly name: string
+  /** The CALENDAR year the money arrives (KTD1: the engine turns it into a sim year as `year − startCalendarYear`;
+   *  never a year counted from the work stop, which would move the money with every stop the date search tries). */
+  readonly year: number
+  /** The money received, in today's dollars: the cash or investments after any estate or inheritance tax, or a gift
+   *  of cash (R3). Above $0. */
+  readonly amountReal: number
+  /** On a couple's plan only, for an item that is ONE person's: that person, an index into `people` (KTD12). Absent
+   *  when the item is both people's, and always on a one-person plan. Present exactly when {@link leftTo} is. */
+  readonly heirIndex?: number
+  /** Whether the item still comes to the other person when {@link heirIndex} has died first (gap 3's vocabulary):
+   *  `'other-member'` it does, `'someone-else'` it doesn't, and the year loop then counts it only while the heir is
+   *  living in its year. Present exactly when `heirIndex` is. */
+  readonly leftTo?: InheritedLeftTo
+}
+
 /**
  * The version every save writes — the ONE home of the current `schemaVersion` (the schema-v4
  * plan's KTD1). The mint (`scenarioFromDraft`), the codec's top arm and its "newer" threshold,
  * and the hydrate gate (`IntakeApp`) all read it; no production file re-types it, except the
- * codec's label-only steps (3 → 4, 4 → 5, 5 → 6, 6 → 7 and 7 → 8), each of which names its LITERAL successor (a
+ * codec's label-only steps (3 → 4, 4 → 5, 5 → 6, 6 → 7, 7 → 8 and 8 → 9), each of which names its LITERAL successor (a
  * step that jumps to "current" would carry an old plan past whatever step a later bump adds), and
  * their refusals of an older-labeled plan carrying a field only a later version writes. Declared here, above the type
  * it discriminates, as {@link BACKUP_FORMAT_VERSION} is: `model.ts` is the only home without an
@@ -2404,13 +2435,13 @@ export type IncomeStream = {
  * this constant after a real save — roll forward (`docs/architecture.md` §7.3). Each bump raises
  * the version-floor test in its own follow-up commit.
  */
-export const CURRENT_SCHEMA_VERSION = 8
+export const CURRENT_SCHEMA_VERSION = 9
 
 /** The current plaintext scenario: the account-level intake truth, written as
- *  {@link CURRENT_SCHEMA_VERSION} (versions 3 to 7 carry the same fields less the optional ones a
+ *  {@link CURRENT_SCHEMA_VERSION} (versions 3 to 8 carry the same fields less the optional ones a
  *  later version added — the left-over answer at 5; the ids, the kept what-ifs and the record's
  *  Roth plan at 6; the inherited-IRA kind, its facts and its pace lever at 7; a budget line's repeat
- *  and rate at 8 — and relabel at decode).
+ *  and rate at 8; the one-time money list at 9 — and relabel at decode).
  *  See the section comment above for the label history, the define-now/write-at-U8 contract
  *  and the deliberate fidelity-over-duplication shape change vs v2. */
 export interface CurrentScenario {
@@ -2627,6 +2658,12 @@ export interface CurrentScenario {
    *  "damaged" after an ordinary edit. TOP-LEVEL, so the R7 registry and the facts registry each place
    *  it by compile. */
   readonly keptWhatIfs?: readonly KeptWhatIfV6[]
+  /** One-time money in (schema version 9; gap 5's plan, KTD2 and KTD10): inheritances and gifts, each credited to the
+   *  taxable account at the end of its calendar year. OPTIONAL, and ABSENT means none: never written as an empty list
+   *  (DND 009; the identity recorder digests key presence), so a plan whose last item is deleted writes no key. A USER
+   *  FACT carried through `...draft` at Save. A kept what-if carries the plan's items as they are (no lever touches
+   *  them). TOP-LEVEL, so the R7 registry and the facts registry each place it by compile. */
+  readonly oneTimeInflows?: readonly OneTimeInflow[]
   /** Act-4 · U17 — the SAVED RECOMMENDATION record (the spec's Q5 payload). ADDITIVE-OPTIONAL
    *  within schemaVersion 3 (the chosenGoal/rothConversion/savedAt tolerant-reader precedent —
    *  a pre-U17 vault lacks the field and decodes unchanged; NO schemaVersion bump). ABSENCE IS
@@ -2707,7 +2744,7 @@ export interface SavedRecommendationV3 {
    *  2026-09-03 edit-time kill the pending arm does too; produced by the private `fingerprintOf` at
    *  `:698`) — the identity of the run this record actually describes — and NEVER from a fresh
    *  recompute taken at save time. The trichotomy's `freshFingerprint` is the OTHER operand,
-   *  `MemoryModel.currentDraftFingerprint()` (`memoryModel.ts:718`): what the draft WOULD solve
+   *  `MemoryModel.currentDraftFingerprint()` (`memoryModel.ts:722`): what the draft WOULD solve
    *  now. The two are equal at the mint and diverge afterwards, and that divergence IS the mechanism
    *  — so minting from the fresh side instead would stamp the record with inputs the recommendation
    *  was never computed against, which on a stale draft is a calm-but-wrong memory rather than a
@@ -3308,6 +3345,7 @@ export const SCENARIO_V3_FIELDS = [
   'workingYearCost',
   'workingYearLeftOver',
   'keptWhatIfs',
+  'oneTimeInflows',
   'savedRecommendation',
 ] as const
 
